@@ -229,65 +229,61 @@ const PvEView = ({ onBack }) => {
   if (mode === 'explore') {
     return (
       <div className="w-full h-full flex flex-col">
-        <div className="flex items-center justify-between p-6 bg-black/40 backdrop-blur-md border-b border-white/10 z-10">
-          <button onClick={() => setMode(null)} className="flex items-center gap-2 text-white/70 hover:text-white transition-colors">
-            <ChevronLeft className="w-5 h-5" /> Exit Map
+        <div className="flex items-center justify-between p-6 bg-black/40 backdrop-blur-md border-b border-white/5 z-10">
+          <button onClick={() => setMode(null)} className="flex items-center gap-3 text-white/50 hover:text-white transition-colors text-xs tracking-widest uppercase">
+            <ChevronLeft className="w-4 h-4" /> Terminate Map
           </button>
-          <div className="flex items-center gap-2">
-            <MapIcon className="w-5 h-5 text-blue-400" />
-            <span className="font-bold text-white">Real-Time Exploration</span>
-          </div>
-          <div className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold border border-blue-500/30">
-            GPS Active
+          
+          <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-white/80 text-xs font-mono tracking-wider">GPS: ACTIVE</span>
           </div>
         </div>
         
-        <div className="flex-1 relative bg-slate-900">
+        <div className="flex-1 relative bg-[#050505]">
           <MapContainer 
-            center={[40.7128, -74.0060]} // Default NYC
+            center={[40.7128, -74.0060]} 
             zoom={13} 
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: '100%', height: '100%', filter: 'grayscale(100%) invert(100%) contrast(90%) brightness(80%)' }}
             className="z-0"
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attribution='&copy; OpenStreetMap'
               url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
             {/* Mock Player */}
             <Marker position={[40.7128, -74.0060]}>
-              <Popup>You are here</Popup>
+              <Popup className="custom-popup">
+                <div className="text-xs font-mono">OPERATOR</div>
+              </Popup>
             </Marker>
             
             {/* Mock Chests */}
             <Marker position={[40.7150, -74.0090]}>
               <Popup>
-                <div className="text-center">
-                  <h3 className="font-bold">Rare Chest</h3>
-                  <p className="text-xs mb-2">Contains: Gold, XP</p>
-                  <button className="px-3 py-1 bg-blue-500 text-white rounded text-xs w-full">Open</button>
-                </div>
-              </Popup>
-            </Marker>
-            <Marker position={[40.7100, -74.0020]}>
-              <Popup>
-                <div className="text-center">
-                  <h3 className="font-bold text-purple-600">Epic Chest</h3>
-                  <p className="text-xs mb-2">Contains: Weapon Part</p>
-                  <button className="px-3 py-1 bg-purple-500 text-white rounded text-xs w-full">Open</button>
+                <div className="text-center p-2">
+                  <h3 className="font-bold text-sm mb-1">Cache detected</h3>
+                  <button className="px-4 py-1 bg-black text-white text-xs border border-white/20">Extract</button>
                 </div>
               </Popup>
             </Marker>
           </MapContainer>
 
           {/* Overlay UI for Exploration */}
-          <div className="absolute bottom-8 left-8 right-8 z-[400] flex justify-between items-end pointer-events-none">
-            <div className="bg-black/80 backdrop-blur p-4 rounded-xl border border-white/10 pointer-events-auto">
-              <h4 className="text-white font-bold mb-1">Nearby Scanners</h4>
-              <p className="text-white/50 text-xs">2 Chests detected within 1km</p>
+          <div className="absolute bottom-8 left-8 z-[400] pointer-events-none">
+            <div className="bg-black/80 backdrop-blur-xl p-6 rounded-2xl border border-white/10 pointer-events-auto min-w-[200px]">
+              <h4 className="text-white font-light text-xs uppercase tracking-widest mb-4">Scanner Feed</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-white/40">Signal Strength</span>
+                  <span className="text-emerald-400">98%</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-white/40">Objects Nearby</span>
+                  <span className="text-white">2</span>
+                </div>
+              </div>
             </div>
-            <button className="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-full shadow-lg pointer-events-auto transition-transform hover:scale-110">
-              <Navigation className="w-6 h-6" />
-            </button>
           </div>
         </div>
       </div>
@@ -297,25 +293,46 @@ const PvEView = ({ onBack }) => {
   if (mode === 'ai') {
     return (
       <div className="w-full h-full flex flex-col p-8 items-center justify-center">
-        <button onClick={() => setMode(null)} className="absolute top-8 left-8 flex items-center gap-2 text-white/50 hover:text-white transition-colors">
-          <ChevronLeft className="w-5 h-5" /> Back
+        <button onClick={() => setMode(null)} className="absolute top-8 left-8 flex items-center gap-3 text-white/50 hover:text-white transition-colors text-xs tracking-widest uppercase">
+          <ChevronLeft className="w-4 h-4" /> Abort
         </button>
-        <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-thin text-white mb-2 tracking-[0.2em] uppercase">Simulation Training</h2>
+          <p className="text-white/30 text-xs font-light tracking-wide">Select Difficulty Protocol</p>
+        </div>
+
+        <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
-            { name: 'Training Dummies', level: '1-10', diff: 'Easy', color: 'bg-green-500' },
-            { name: 'Cyber Sentinels', level: '10-30', diff: 'Medium', color: 'bg-yellow-500' },
-            { name: 'Void Walkers', level: '30-50', diff: 'Hard', color: 'bg-red-500' },
-            { name: 'Omega Boss', level: '50+', diff: 'Extreme', color: 'bg-purple-500' },
+            { name: 'Training Dummies', level: '01-10', diff: 'Low', color: 'border-green-500/30' },
+            { name: 'Cyber Sentinels', level: '10-30', diff: 'Med', color: 'border-yellow-500/30' },
+            { name: 'Void Walkers', level: '30-50', diff: 'High', color: 'border-orange-500/30' },
+            { name: 'Omega Boss', level: '50+', diff: 'Ext', color: 'border-red-500/30' },
           ].map((fight, i) => (
-            <button key={i} className="bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 p-6 rounded-2xl flex items-center justify-between group transition-all">
-              <div className="text-left">
-                <h3 className="text-xl font-bold text-white mb-1">{fight.name}</h3>
-                <p className="text-white/50 text-sm">Level {fight.level}</p>
+            <motion.button 
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={`relative bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-white/20 p-8 rounded-xl flex items-center justify-between group transition-all duration-300 overflow-hidden`}
+            >
+              <div className="flex items-center gap-6 relative z-10">
+                <div className={`w-12 h-12 rounded-full border ${fight.color} bg-white/[0.02] flex items-center justify-center text-xs font-mono text-white/60`}>
+                  {fight.level}
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-light text-white mb-1 tracking-wide group-hover:text-white transition-colors">{fight.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors" />
+                    <span className="text-white/30 text-xs uppercase tracking-wider">Simulation</span>
+                  </div>
+                </div>
               </div>
-              <div className={`px-3 py-1 rounded-full text-xs font-bold text-black ${fight.color}`}>
-                {fight.diff}
+              
+              <div className="relative z-10 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-4 group-hover:translate-x-0">
+                <ChevronLeft className="w-5 h-5 text-white rotate-180" />
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -324,25 +341,41 @@ const PvEView = ({ onBack }) => {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8">
-      <h2 className="text-4xl font-black text-white mb-12">Select PvE Mode</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        <button
-          onClick={() => setMode('ai')}
-          className="group h-80 bg-gradient-to-br from-blue-900/40 to-black border border-white/10 hover:border-blue-500 rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all"
-        >
-          <Target className="w-16 h-16 text-blue-400 mb-6 group-hover:scale-110 transition-transform" />
-          <h3 className="text-3xl font-bold text-white mb-2">Fight AI Units</h3>
-          <p className="text-white/50">Challenge artificial intelligence opponents in arena combat to gain XP and loot.</p>
-        </button>
+      <div className="text-center mb-16">
+        <h2 className="text-3xl font-thin text-white mb-3 tracking-[0.2em] uppercase">Operations</h2>
+        <div className="h-px w-20 bg-white/20 mx-auto" />
+      </div>
 
-        <button
-          onClick={() => setMode('explore')}
-          className="group h-80 bg-gradient-to-br from-emerald-900/40 to-black border border-white/10 hover:border-emerald-500 rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => setMode('ai')}
+          className="group relative h-72 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-blue-500/30 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 overflow-hidden"
         >
-          <MapIcon className="w-16 h-16 text-emerald-400 mb-6 group-hover:scale-110 transition-transform" />
-          <h3 className="text-3xl font-bold text-white mb-2">Real-World Explore</h3>
-          <p className="text-white/50">Use GPS to find chests, events, and resources on the real-world map (Pokemon Go style).</p>
-        </button>
+          <div className="mb-6 p-4 rounded-full bg-blue-500/10 border border-blue-500/20 group-hover:scale-110 transition-transform duration-500">
+            <Target className="w-8 h-8 text-blue-400" />
+          </div>
+          <h3 className="text-xl font-light text-white mb-2 tracking-widest uppercase">Combat Sim</h3>
+          <p className="text-white/30 text-xs font-light tracking-wide max-w-xs">Engage artificial constructs in controlled environments.</p>
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.button>
+
+        <motion.button
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => setMode('explore')}
+          className="group relative h-72 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 hover:border-emerald-500/30 rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all duration-500 overflow-hidden"
+        >
+          <div className="mb-6 p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 group-hover:scale-110 transition-transform duration-500">
+            <MapIcon className="w-8 h-8 text-emerald-400" />
+          </div>
+          <h3 className="text-xl font-light text-white mb-2 tracking-widest uppercase">World Scan</h3>
+          <p className="text-white/30 text-xs font-light tracking-wide max-w-xs">Initialize GPS tracking for resource acquisition.</p>
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.button>
       </div>
     </div>
   );
