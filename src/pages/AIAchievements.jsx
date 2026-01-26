@@ -474,6 +474,12 @@ function AIAchievementsView({ onClosePage }) {
           
           {/* LEFT COLUMN: Library + Game Banner below */}
           <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-4">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-black tracking-tighter text-white">
+                Library
+              </h1>
+            </div>
             
 
 

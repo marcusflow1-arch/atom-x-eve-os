@@ -764,19 +764,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             <div className="relative z-10 w-full h-full">
 
               {/* Header */}
-              <div className="absolute top-8 left-8 z-50 flex items-center gap-6">
-                <h1 className="text-2xl font-bold text-white tracking-wide">Atom X Eve Achievements</h1>
-                <div className="h-6 w-px bg-white/10" />
 
-                {/* Library Link */}
-                <button
-                  onClick={() => navigate(createPageUrl('Library'))}
-                  className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-                >
-                  <Gamepad2 className="w-5 h-5 text-cyan-400" />
-                  <span className="text-lg font-semibold">Library</span>
-                </button>
-              </div>
 
               {/* HORIZONTAL GENRE FILTER (Top) */}
               <div 
