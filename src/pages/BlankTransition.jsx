@@ -82,11 +82,8 @@ export default function BlankTransition() {
 
 
 
-      {/* Reward preview for selected level - aligned with selected number */}
-      <div
-        className="fixed z-10 px-6"
-        style={{ top: `calc(80px + ${(50 - level + 0.5) * 5}vh)`, left: '12%', right: '24px', transform: 'translateY(-50%)' }}
-      >
+      {/* Reward preview (static for all levels) */}
+      <div className="fixed top-24 left-[12%] right-6 px-6 z-10">
         <div
           className="rounded-3xl p-8 md:p-10 relative overflow-hidden"
           style={{
