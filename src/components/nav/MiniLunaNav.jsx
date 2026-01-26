@@ -32,7 +32,7 @@ export default function MiniLunaNav({ title }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap order-2">
           <button
             onClick={() => navigate(createPageUrl('LunaTemplate'))}
             className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/70 hover:bg-white/5 hover:text-white flex items-center gap-2"
