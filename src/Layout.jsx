@@ -884,6 +884,18 @@ function LayoutContent({ children, currentPageName }) {
                             Entertainment
                           </button>
 
+                          {/* Streaming */}
+                          <button
+                            onClick={() => navigate(createPageUrl('Streaming'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/streaming')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Streaming
+                          </button>
+
                           {/* Discord */}
                           <a
                             href="https://discord.gg/VJQQNxAa"
