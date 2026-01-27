@@ -25,7 +25,7 @@ export default function StreamerRightPane({ streamer }) {
         </div>
 
         {/* Live chat (smaller) */}
-        <div className="flex-[2] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col">
+        <div className="flex-[2] h-[520px] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col">
           <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
             <span className="text-white/80 text-sm font-semibold">Live Chat</span>
             <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">1.2k watching</Badge>
