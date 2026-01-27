@@ -140,6 +140,9 @@ function AIAchievementsView({ onClosePage }) {
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
 
+  // Settings overlay state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   // Path subpage state
   const [activePathTab, setActivePathTab] = useState('power'); // 'power' or 'ai'
 
