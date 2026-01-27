@@ -37,13 +37,13 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
           }));
         }
         if (mounted) {
-          setFeatured(items);
+          const dayKey = new Date().toISOString().slice(0,10);
+          let sum = 0; for (let i = 0; i < dayKey.length; i++) sum += dayKey.charCodeAt(i);
+          const idx = items.length ? (sum % items.length) : 0;
+          const pick = items.length ? items[idx] : null;
+          setFeatured(pick ? [pick] : []);
+          setCurrent(0);
           setLoadingFeatured(false);
-          if (items.length > 1) {
-            timer = setInterval(() => {
-              setCurrent((c) => (c + 1) % items.length);
-            }, 8000);
-          }
         }
       } catch {
         if (mounted) setLoadingFeatured(false);
@@ -242,11 +242,16 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
 
                   {/* Top badges */}
                   <div className="absolute top-4 left-4 flex items-center gap-2">
-                    <div className={`px-3 py-1 rounded text-xs font-bold uppercase shadow ${featured[current]?.live ? 'bg-red-600 text-white' : 'bg-white/10 text-white/80 border border-white/10'}`}>
-                      {featured[current]?.live ? 'LIVE' : 'FEATURED'}
+                    <div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-cyan-500/20 text-cyan-200 border border-cyan-400/30">
+                      Game of the Day
                     </div>
+                    {featured[current]?.live && (
+                      <div className="px-3 py-1 rounded text-[10px] font-bold uppercase shadow bg-red-600 text-white">
+                        Live
+                      </div>
+                    )}
                     {featured[current]?.sub && (
-                      <div className="px-3 py-1 rounded text-xs bg-black/50 text-white/80 border border-white/10 backdrop-blur-md flex items-center gap-1">
+                      <div className="px-3 py-1 rounded text-[10px] bg-black/50 text-white/80 border border-white/10 backdrop-blur-md flex items-center gap-1">
                         <MessageSquare className="w-3 h-3 text-white/60" />
                         {featured[current].sub}
                       </div>
