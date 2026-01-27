@@ -1766,12 +1766,17 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <div className="w-full relative z-50">
         <div className="flex gap-6 items-start">
           {/* Left Column: Quick Actions + Stream Player */}
-          <div className="flex-1 min-w-0 flex flex-col gap-6">
+          <div className="flex-1 min-w-0 flex flex-col gap-6 relative">
             <QuickActionsBar 
               navigate={navigate} 
               onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)} 
             />
-            
+            {showLiveDropdown && (
+              <div className="absolute left-1 top-[76px] z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/10 backdrop-blur-md">
+                <Radio className="w-3 h-3 text-red-400" />
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Go Live</span>
+              </div>
+            )}
             <AnimatePresence>
               {showLiveDropdown && (
                 <motion.div

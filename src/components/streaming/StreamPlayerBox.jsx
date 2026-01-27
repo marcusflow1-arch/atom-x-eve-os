@@ -14,21 +14,22 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
     >
         {isLive ? (
             <div className="w-full h-full relative">
-                 {/* Mock Live Stream Content */}
-                 <img src="https://source.unsplash.com/random/1280x720?gaming" className="w-full h-full object-cover" />
+                 {/* Mock Live Stream Content removed */}
                  
                  {/* Overlay Gradient */}
                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                  {/* Top Status */}
-                 <div className="absolute top-6 left-6 flex items-center gap-3">
-                    <div className="bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse shadow-lg shadow-red-600/20">
-                        LIVE
-                    </div>
-                    <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2 border border-white/10">
-                        <MessageSquare className="w-3 h-3 text-white/60" />
-                        1.2k Viewers
-                    </div>
+                 <div className="absolute top-6 left-6">
+                   <div className="bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse shadow-lg shadow-red-600/20">
+                     LIVE
+                   </div>
+                 </div>
+                 <div className="absolute top-6 right-6">
+                   <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2 border border-white/10">
+                     <MessageSquare className="w-3 h-3 text-white/60" />
+                     1.2k Viewers
+                   </div>
                  </div>
 
                  {/* Center Play Button (On Hover) */}
