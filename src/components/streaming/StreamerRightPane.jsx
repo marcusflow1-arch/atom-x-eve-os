@@ -48,13 +48,13 @@ export default function StreamerRightPane({ streamer }) {
       </div>
 
       {/* Bottom: Profile Info Bar & Content */}
-      <div className="mt-6 flex flex-col gap-6">
-        {/* Streamer Info Bar */}
-        <div className="w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="mt-4 flex flex-col">
+        {/* Streamer Info Bar - Clean Strip */}
+        <div className="w-full px-2 py-4 flex flex-col md:flex-row items-center justify-between gap-6 relative">
           
           {/* Left: Avatar + Identity */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-white/10 shadow-lg">
+            <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/10">
               {streamer?.avatar ? (
                 <img src={streamer.avatar} alt={name} className="w-full h-full object-cover" />
               ) : (
@@ -62,51 +62,41 @@ export default function StreamerRightPane({ streamer }) {
               )}
             </div>
             <div className="flex flex-col">
-              <h2 className="text-xl font-bold text-white tracking-wide">{name}</h2>
-              <span className="text-sm text-white/60 font-medium">Chill • Creative • Supportive</span>
+              <h2 className="text-lg font-bold text-white tracking-wide">{name}</h2>
+              <span className="text-xs text-white/50 font-medium uppercase tracking-wider">Follow</span>
             </div>
           </div>
 
           {/* Center: Controls & Navigation */}
-          <div className="flex items-center gap-6">
-            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-white/70" />
-            </div>
-            
-            <div className="flex items-center bg-black/20 rounded-full p-1 border border-white/5">
-              <button className="px-5 py-2 rounded-full text-sm font-semibold bg-white/10 text-white shadow-sm transition-all hover:bg-white/20">
-                Schedule
-              </button>
-              <button className="px-5 py-2 rounded-full text-sm font-semibold text-white/50 hover:text-white transition-all">
-                Cards
-              </button>
-            </div>
+          <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+             <Gamepad2 className="w-5 h-5 text-white/50 mb-1" />
+             <div className="flex items-center gap-8 text-sm font-medium">
+                <button className="text-white border-b-2 border-white pb-1 px-1">Schedule</button>
+                <button className="text-white/50 hover:text-white transition-colors pb-1 px-1">Cards</button>
+             </div>
           </div>
 
           {/* Right: Actions & Stats */}
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-white/60">
-               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-               <span className="font-mono text-sm">1,245 Watching</span>
-            </div>
-            
-            <div className="h-8 w-px bg-white/10" />
-
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-white/10 bg-white/5 hover:bg-white/10">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="rounded-full w-10 h-10 text-white/70 hover:text-white hover:bg-white/10">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-              </Button>
-              <Button className="rounded-full px-6 font-bold bg-white text-black hover:bg-slate-200">
+            </Button>
+            
+            <Button className="rounded-full px-6 bg-white text-black font-bold hover:bg-slate-200">
                 Subscribe
-              </Button>
+            </Button>
+            
+            <div className="flex items-center gap-1.5 text-white/60 ml-2">
+               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+               <span className="font-mono text-sm font-semibold">1.2K</span>
             </div>
           </div>
         </div>
 
         {/* Separator Line */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="w-full h-px bg-white/10 mb-6" />
 
         {/* Cards Content (Full Width) */}
         <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
