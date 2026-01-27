@@ -42,7 +42,7 @@ export default function DiscoverStreamingList() {
 
   return (
     <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
+      <div className="mx-auto max-w-7xl grid grid-cols-1 gap-6">
         {/* Left: Streamer cards column */}
         <div
           className="overflow-y-auto no-scrollbar pr-2"
@@ -98,11 +98,7 @@ export default function DiscoverStreamingList() {
           </div>
         </div>
 
-        {/* Right: Placeholder panel for streamer info (empty for now) */}
-        <div
-          className="hidden md:block rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl"
-          style={{ minHeight: 'calc(100vh - 160px)' }}
-        />
+
       </div>
 
       {/* Local styles for hidden scrollbar */}
