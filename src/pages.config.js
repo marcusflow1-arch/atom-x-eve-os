@@ -52,6 +52,8 @@ import Streaming from './pages/Streaming';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import OnboardingHome from './pages/OnboardingHome';
+import StreamingHome from './pages/StreamingHome';
+import Discover from './pages/Discover';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +112,8 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "OnboardingHome": OnboardingHome,
+    "StreamingHome": StreamingHome,
+    "Discover": Discover,
 }
 
 export const pagesConfig = {
