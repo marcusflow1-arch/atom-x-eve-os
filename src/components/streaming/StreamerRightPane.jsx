@@ -1,11 +1,12 @@
-import React from 'react';
-import { Gamepad2, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gamepad2, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StreamerRightPane({ streamer }) {
   const name = streamer?.name || 'Streamer';
+  const [activeTab, setActiveTab] = useState('schedule');
 
   return (
     <div className="w-full">
@@ -71,8 +72,18 @@ export default function StreamerRightPane({ streamer }) {
           <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
              <Gamepad2 className="w-5 h-5 text-white/50 mb-1" />
              <div className="flex items-center gap-8 text-sm font-medium">
-                <button className="text-white border-b-2 border-white pb-1 px-1">Schedule</button>
-                <button className="text-white/50 hover:text-white transition-colors pb-1 px-1">Cards</button>
+                <button 
+                  onClick={() => setActiveTab('schedule')}
+                  className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'schedule' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
+                >
+                  Schedule
+                </button>
+                <button 
+                  onClick={() => setActiveTab('cards')}
+                  className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'cards' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
+                >
+                  Cards
+                </button>
              </div>
           </div>
 
@@ -98,41 +109,71 @@ export default function StreamerRightPane({ streamer }) {
         {/* Separator Line */}
         <div className="w-full h-px bg-white/10 mb-6" />
 
-        {/* Cards Content (Full Width) */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-             <div className="flex items-center gap-3">
-               <h3 className="text-lg font-bold text-white">Stream Collection</h3>
-               <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
+        {/* Tab Content */}
+        {activeTab === 'schedule' ? (
+           <div className="w-full">
+             <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white font-bold text-lg">Streaming Schedule <span className="text-white/40 text-sm font-normal ml-2">Jan 26 - Feb 8, 2026</span></h3>
+                <div className="flex items-center gap-2">
+                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
+                   <Button variant="outline" className="h-8 px-4 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-xs font-semibold">Today</Button>
+                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-4 h-4" /></Button>
+                </div>
              </div>
-             
-             <div className="flex gap-2">
-                {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
-                  <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
-                    {filter}
-                  </button>
+
+             <div className="grid grid-cols-7 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                  <div key={day} className="bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors">
+                     <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{day}</span>
+                     <span className={`text-xl font-bold ${i === 0 ? 'text-cyan-400' : 'text-white'}`}>{26 + i}</span>
+                     {i === 0 && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none" />}
+                  </div>
+                ))}
+                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
+                  <div key={`${day}-2`} className="bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors">
+                     <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{day}</span>
+                     <span className="text-xl font-bold text-white">{2 + i}</span>
+                  </div>
                 ))}
              </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="group relative aspect-[3/4] rounded-2xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                
-                <div className="absolute top-3 left-3">
-                  <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[10px] h-5">Common</Badge>
+             <p className="text-center text-white/30 text-xs mt-4">Timezone is localized • Viewers see your schedule in their own timezone</p>
+           </div>
+        ) : (
+           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+             <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-lg font-bold text-white">Stream Collection</h3>
+                  <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
                 </div>
                 
-                <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                  <div className="text-sm font-bold text-white">Item Name {i+1}</div>
-                  <div className="text-[10px] text-white/60">Unlockable Reward</div>
+                <div className="flex gap-2">
+                   {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
+                     <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                       {filter}
+                     </button>
+                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
+             </div>
+   
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+               {Array.from({ length: 10 }).map((_, i) => (
+                 <div key={i} className="group relative aspect-[3/4] rounded-2xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer">
+                   <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                   
+                   <div className="absolute top-3 left-3">
+                     <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[10px] h-5">Common</Badge>
+                   </div>
+                   
+                   <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                     <div className="text-sm font-bold text-white">Item Name {i+1}</div>
+                     <div className="text-[10px] text-white/60">Unlockable Reward</div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           </div>
+        )}
       </div>
     </div>
   );
