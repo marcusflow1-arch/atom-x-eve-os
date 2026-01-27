@@ -33,7 +33,8 @@ const GENRES = [
     rank: 'Warlord',
     xp: 92,
     skillPoints: 5,
-    paths: ['Synergy', 'Raid', 'Trade']
+    paths: ['Synergy', 'Raid', 'Trade'],
+    matchGenres: ['mmo', 'mmorpg']
   },
   { 
     id: 'scifi', 
@@ -48,7 +49,8 @@ const GENRES = [
     rank: 'Pilot',
     xp: 78,
     skillPoints: 3,
-    paths: ['Cybernetics', 'Spaceflight', 'Hacking']
+    paths: ['Cybernetics', 'Spaceflight', 'Hacking'],
+    matchGenres: ['sci-fi', 'scifi', 'sci_fi']
   },
   { 
     id: 'fantasy', 
@@ -63,7 +65,8 @@ const GENRES = [
     rank: 'Mage',
     xp: 45,
     skillPoints: 1,
-    paths: ['Sorcery', 'Enchanting', 'Lore']
+    paths: ['Sorcery', 'Enchanting', 'Lore'],
+    matchGenres: ['fantasy', 'rpg']
   },
   { 
     id: 'action', 
@@ -78,7 +81,8 @@ const GENRES = [
     rank: 'Warrior',
     xp: 60,
     skillPoints: 2,
-    paths: ['Combo', 'Reflex', 'Power']
+    paths: ['Combo', 'Reflex', 'Power'],
+    matchGenres: ['action', 'fighting']
   },
   { 
     id: 'shooter', 
@@ -93,7 +97,8 @@ const GENRES = [
     rank: 'Sniper',
     xp: 99,
     skillPoints: 8,
-    paths: ['Precision', 'Tactics', 'Loadout']
+    paths: ['Precision', 'Tactics', 'Loadout'],
+    matchGenres: ['shooter', 'shooting', 'fps']
   },
   { 
     id: 'adventure', 
@@ -108,7 +113,8 @@ const GENRES = [
     rank: 'Explorer',
     xp: 30,
     skillPoints: 1,
-    paths: ['Survival', 'Navigation', 'Crafting']
+    paths: ['Survival', 'Navigation', 'Crafting'],
+    matchGenres: ['adventure', 'open_world']
   },
   { 
     id: 'fear', 
@@ -123,7 +129,8 @@ const GENRES = [
     rank: 'Survivor',
     xp: 15,
     skillPoints: 0,
-    paths: ['Stealth', 'Willpower', 'Investigation']
+    paths: ['Stealth', 'Willpower', 'Investigation'],
+    matchGenres: ['horror', 'survival']
   },
   { 
     id: 'simulation', 
@@ -138,7 +145,8 @@ const GENRES = [
     rank: 'Architect',
     xp: 55,
     skillPoints: 2,
-    paths: ['Management', 'Efficiency', 'Design']
+    paths: ['Management', 'Efficiency', 'Design'],
+    matchGenres: ['simulation', 'strategy']
   },
 ];
 
