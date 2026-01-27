@@ -284,7 +284,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
     .some(s => location.pathname.toLowerCase().includes(s));
   const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
@@ -756,6 +756,18 @@ function LayoutContent({ children, currentPageName }) {
                           >
                             <Users className="w-4 h-4" />
                             Friends
+                          </button>
+
+                          {/* Streaming */}
+                          <button
+                            onClick={() => navigate(createPageUrl('Streaming'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+                              location.pathname.toLowerCase().includes('/streaming')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            Streaming
                           </button>
 
                           <a
