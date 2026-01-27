@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SponsorsSection from './profile/SponsorsSection';
 import ProductsGrid from './profile/ProductsGrid';
 import ViewerSeasonalPass from './ViewerSeasonalPass';
-import { Pencil, Save } from 'lucide-react';
+import { Pencil, Save, Plus, Upload, Trash2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import ScheduleEditModal from './modals/ScheduleEditModal';
 
 export default function StreamerRightPane({ streamer, allowEditing = true }) {
   const name = streamer?.name || 'Streamer';
@@ -17,6 +19,57 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Schedule State
+  const [scheduleEvents, setScheduleEvents] = useState({});
+  const [editingScheduleDate, setEditingScheduleDate] = useState(null);
+  
+  // Gallery State
+  const [galleryItems, setGalleryItems] = useState(
+    Array.from({ length: 8 }).map((_, i) => ({
+      id: `init-${i}`,
+      url: `https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}`,
+      type: 'image'
+    }))
+  );
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  const handleScheduleSave = (data) => {
+    if (editingScheduleDate) {
+      const dateKey = format(editingScheduleDate, 'yyyy-MM-dd');
+      setScheduleEvents(prev => ({
+        ...prev,
+        [dateKey]: data
+      }));
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsUploading(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setGalleryItems(prev => [
+        ...prev,
+        {
+          id: `new-${Date.now()}`,
+          url: file_url,
+          type: file.type.startsWith('video') ? 'video' : 'image'
+        }
+      ]);
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeGalleryItem = (id) => {
+    setGalleryItems(prev => prev.filter(item => item.id !== id));
+  };
 
   // Calculate the 14 days to show, starting from the Monday of the current base date's week
   const startDate = startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }); // Monday start
@@ -75,6 +128,15 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
             <StreamerCardDetailModal card={selectedCard} onClose={() => setSelectedCard(null)} />
         )}
       </AnimatePresence>
+
+      {/* Schedule Edit Modal */}
+      <ScheduleEditModal 
+        isOpen={!!editingScheduleDate} 
+        onClose={() => setEditingScheduleDate(null)} 
+        date={editingScheduleDate}
+        initialData={editingScheduleDate ? scheduleEvents[format(editingScheduleDate, 'yyyy-MM-dd')] : null}
+        onSave={handleScheduleSave}
+      />
 
       {/* Bottom: Profile Info Bar & Content */}
       <div className="mt-4 flex flex-col">
@@ -192,12 +254,48 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
                                 const isCurrentDay = isToday(date);
                                 const dayName = format(date, 'EEE');
                                 const dayNumber = format(date, 'd');
+                                const dateKey = format(date, 'yyyy-MM-dd');
+                                const eventData = scheduleEvents[dateKey];
                                 
                                 return (
-                                    <div key={i} className={`bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors ${isCurrentDay ? 'bg-white/[0.03]' : ''}`}>
+                                    <div key={i} className={`bg-[#0f1419] p-2 min-h-[140px] flex flex-col items-center gap-1 relative group hover:bg-[#1a1f2e] transition-colors ${isCurrentDay ? 'bg-white/[0.03]' : ''}`}>
                                         <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{dayName}</span>
                                         <span className={`text-xl font-bold ${isCurrentDay ? 'text-cyan-400' : 'text-white'}`}>{dayNumber}</span>
+                                        
+                                        {/* Event Data Display */}
+                                        {eventData && (
+                                            <div className="w-full mt-2 flex flex-col gap-1">
+                                                {eventData.timeRange && (
+                                                    <Badge variant="outline" className="w-full justify-center text-[10px] h-5 border-cyan-500/30 text-cyan-400 bg-cyan-500/5 px-1 truncate">
+                                                        {eventData.timeRange}
+                                                    </Badge>
+                                                )}
+                                                {eventData.game && (
+                                                    <div className="text-[10px] text-white/80 font-medium text-center truncate px-1">
+                                                        {eventData.game}
+                                                    </div>
+                                                )}
+                                                {eventData.notes && (
+                                                    <div className="text-[9px] text-white/50 text-center line-clamp-2 leading-tight px-1">
+                                                        {eventData.notes}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         {isCurrentDay && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none box-border border-b-2 border-cyan-500/50" />}
+                                        
+                                        {/* Edit Button Overlay */}
+                                        {isEditingProfile && allowEditing && (
+                                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                                                <button 
+                                                    onClick={() => setEditingScheduleDate(date)}
+                                                    className="w-8 h-8 rounded-full bg-cyan-500 text-black flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-cyan-500/20"
+                                                >
+                                                    <Plus className="w-5 h-5" />
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -250,16 +348,64 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
                     
                     {activeTab === 'gallery' && (
                         <div className="w-full select-none pt-4">
-                            <h3 className="text-white font-bold text-lg mb-6">Gallery</h3>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-white font-bold text-lg">Gallery</h3>
+                                {isEditingProfile && allowEditing && (
+                                    <input 
+                                        type="file" 
+                                        ref={fileInputRef} 
+                                        onChange={handleFileUpload} 
+                                        className="hidden" 
+                                        accept="image/*,video/*"
+                                    />
+                                )}
+                            </div>
+                            
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {Array.from({ length: 8 }).map((_, i) => (
-                                    <div key={i} className="aspect-video bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
-                                        <img src={`https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                            <span className="text-white font-bold text-sm">View Image</span>
+                                {galleryItems.map((item) => (
+                                    <div key={item.id} className="aspect-video bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
+                                        {item.type === 'video' ? (
+                                            <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                        ) : (
+                                            <img src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                        )}
+                                        
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
+                                            <span className="text-white font-bold text-sm">View</span>
+                                            
+                                            {isEditingProfile && allowEditing && (
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        removeGalleryItem(item.id);
+                                                    }}
+                                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))}
+
+                                {/* Add New Button */}
+                                {isEditingProfile && allowEditing && (
+                                    <div 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="aspect-video bg-white/5 rounded-xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all cursor-pointer flex flex-col items-center justify-center group"
+                                    >
+                                        {isUploading ? (
+                                            <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-cyan-500/20 flex items-center justify-center mb-2 transition-colors">
+                                                    <Plus className="w-5 h-5 text-white/60 group-hover:text-cyan-400" />
+                                                </div>
+                                                <span className="text-xs font-bold text-white/40 group-hover:text-cyan-400 transition-colors">Add Media</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
                         </div>
