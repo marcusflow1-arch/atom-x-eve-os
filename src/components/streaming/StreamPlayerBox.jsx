@@ -87,6 +87,9 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
                   </div>
                 </div>
               </div>
+              <div className="flex justify-end mt-4">
+                <Button onClick={onToggleLive} className="bg-red-600 hover:bg-red-700 text-white border-none">Go Live</Button>
+              </div>
             </div>
           </div>
         )}

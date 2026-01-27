@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { Search, Flame, Users as UsersIcon, Clock3, Sparkles, LayoutGrid, Gamepad2, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import StreamPlayerBox from "@/components/streaming/StreamPlayerBox";
+import { Button } from "@/components/ui/button";
 
 // Small utility to format large numbers
 const formatNumber = (n) => {
@@ -25,6 +27,12 @@ export default function StreamingGamesLive() {
   const [activeTab, setActiveTab] = useState("trending");
   const [search, setSearch] = useState("");
   const [activeGenre, setActiveGenre] = useState("All");
+  // Aura Go Live box states
+  const [isLive, setIsLive] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [volume, setVolume] = useState(70);
+  const [showPlayerSettings, setShowPlayerSettings] = useState(false);
+  const [isSettingsMaximized, setIsSettingsMaximized] = useState(false);
 
   // Fetch games and streams
   useEffect(() => {
@@ -171,6 +179,28 @@ export default function StreamingGamesLive() {
 
           {/* RIGHT: Content */}
           <div className="flex-1 min-w-0">
+            {/* Aura Streaming Box with Go Live */}
+            <div className="relative mb-6">
+              <StreamPlayerBox
+                isLive={isLive}
+                onToggleLive={() => setIsLive((v) => !v)}
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying((p) => !p)}
+                volume={volume}
+                onVolumeChange={setVolume}
+                settingsOpen={showPlayerSettings}
+                onCloseSettings={() => setShowPlayerSettings(false)}
+                isSettingsMaximized={isSettingsMaximized}
+                onToggleSettingsMaximize={() => setIsSettingsMaximized((m) => !m)}
+              />
+              <button
+                onClick={() => setShowPlayerSettings((s) => !s)}
+                className="absolute left-3 top-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/90 backdrop-blur-md hover:bg-black/60 transition"
+              >
+                <Radio className="w-3.5 h-3.5 text-red-400" />
+                <span className="text-xs font-bold uppercase tracking-wider">Go Live</span>
+              </button>
+            </div>
             {/* Tabs */}
             <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-hide">
               {TOP_TABS.map(({ id, label, icon: Icon }) => {
