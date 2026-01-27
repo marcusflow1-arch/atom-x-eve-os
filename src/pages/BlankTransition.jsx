@@ -172,35 +172,35 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
 
         {/* Corner Glow Effects */}
         <motion.div
-          className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none"
+          className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
           animate={{
             boxShadow: [
               "0 0 0px rgba(59, 130, 246, 0)",
-              "0 0 15px rgba(59, 130, 246, 0.6)",
+              "0 0 10px rgba(59, 130, 246, 0.5)",
               "0 0 0px rgba(59, 130, 246, 0)"
             ]
           }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           style={{
-            borderLeft: "2px solid rgba(59, 130, 246, 0.5)",
-            borderBottom: "2px solid rgba(59, 130, 246, 0.5)",
-            borderBottomLeftRadius: "0.75rem"
+            borderLeft: "1px solid rgba(59, 130, 246, 0.4)",
+            borderBottom: "1px solid rgba(59, 130, 246, 0.4)",
+            borderBottomLeftRadius: "0.5rem"
           }}
         />
         <motion.div
-          className="absolute top-0 right-0 w-10 h-10 pointer-events-none"
+          className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
           animate={{
             boxShadow: [
               "0 0 0px rgba(59, 130, 246, 0)",
-              "0 0 15px rgba(59, 130, 246, 0.6)",
+              "0 0 10px rgba(59, 130, 246, 0.5)",
               "0 0 0px rgba(59, 130, 246, 0)"
             ]
           }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           style={{
-            borderRight: "2px solid rgba(59, 130, 246, 0.5)",
-            borderTop: "2px solid rgba(59, 130, 246, 0.5)",
-            borderTopRightRadius: "0.75rem"
+            borderRight: "1px solid rgba(59, 130, 246, 0.4)",
+            borderTop: "1px solid rgba(59, 130, 246, 0.4)",
+            borderTopRightRadius: "0.5rem"
           }}
         />
       </ShinyCard>
