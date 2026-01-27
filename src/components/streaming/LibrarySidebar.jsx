@@ -29,16 +29,17 @@ export default function LibrarySidebar() {
   return (
     <>
       {/* Trigger Button (Fixed on left) */}
-      <motion.button
-        initial={{ x: 0 }}
-        animate={{ x: isOpen ? 320 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed left-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl border transition-all duration-300 ${isOpen ? 'bg-white text-black border-white' : 'bg-black/60 text-white border-white/20 backdrop-blur-md hover:bg-white/10 hover:scale-110'}`}
-        style={{ marginLeft: isOpen ? '1rem' : '0' }}
-      >
-        {isOpen ? <X className="w-6 h-6" /> : <Library className="w-6 h-6" />}
-      </motion.button>
+      {!isOpen && (
+        <motion.button
+            initial={{ x: 0 }}
+            animate={{ x: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            onClick={() => setIsOpen(true)}
+            className="fixed left-6 top-1/2 -translate-y-1/2 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-2xl border bg-black/60 text-white border-white/20 backdrop-blur-md hover:bg-white/10 hover:scale-110 transition-all duration-300"
+        >
+            <Library className="w-6 h-6" />
+        </motion.button>
+      )}
 
       {/* Backdrop */}
       <AnimatePresence>
@@ -62,12 +63,25 @@ export default function LibrarySidebar() {
         className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 bg-[#0f1419]/95 backdrop-blur-xl border-r border-white/10 z-50 shadow-[10px_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="p-6 pt-8 border-b border-white/5 flex items-center gap-3 bg-gradient-to-r from-indigo-600/20 to-transparent">
+        <div className="p-6 pt-8 border-b border-white/5 flex items-center gap-3 bg-gradient-to-r from-indigo-600/20 to-transparent relative">
             <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                 <Library className="w-6 h-6 text-white" />
             </div>
             <div>
-                <h2 className="text-xl font-bold text-white tracking-wide">My Library</h2>
+                <h2 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
+                    My Library
+                    <button 
+                        onClick={() => setIsOpen(false)}
+                        className="w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors"
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            backdropFilter: 'blur(4px)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)'
+                        }}
+                    >
+                        <X className="w-3 h-3" />
+                    </button>
+                </h2>
                 <p className="text-xs text-white/40 font-medium">Your History & Favorites</p>
             </div>
         </div>

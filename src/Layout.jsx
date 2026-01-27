@@ -284,7 +284,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/discover']
     .some(s => location.pathname.toLowerCase().includes(s));
   const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
