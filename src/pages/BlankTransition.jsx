@@ -445,29 +445,21 @@ export default function BlankTransition() {
                 </div>
               </div>
 
-              {/* Achievements Section */}
+              {/* Achievements Section - Card Grid */}
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-4">
                   <Trophy className="w-5 h-5 text-purple-400" />
                   <h3 className="text-xl font-bold">Achievements</h3>
+                  <span className="text-white/40 text-sm ml-2">({achievements.length} total)</span>
                 </div>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {achievements.map((ach) => (
-                    <div
+                    <AchievementCard
                       key={ach.id}
-                      className={`
-                        flex items-center gap-3 px-4 py-2 rounded-full border transition-all
-                        ${ach.unlocked 
-                          ? 'bg-white/10 border-white/20' 
-                          : 'bg-black/30 border-white/5 opacity-60'
-                        }
-                      `}
-                    >
-                      <Star className={`w-4 h-4 ${ach.unlocked ? 'text-yellow-400 fill-yellow-400' : 'text-white/30'}`} />
-                      <span className="text-sm font-medium">{ach.name}</span>
-                      <Badge className={`text-[10px] ${rarityColors[ach.rarity]}`}>{ach.rarity}</Badge>
-                      <span className="text-xs text-yellow-400/80">+{ach.xp} XP</span>
-                    </div>
+                      achievement={ach}
+                      isUnlocked={ach.unlocked}
+                      onClick={(a) => setSelectedAchievement(a)}
+                    />
                   ))}
                 </div>
               </div>
