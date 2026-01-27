@@ -278,7 +278,6 @@ export default function BlankTransition() {
       </div>
 
       {/* Left Rail: Games list */}
-      <div className="fixed left-0 top-0 h-screen w-px bg-white/20 z-[25]" />
       <div className="fixed left-0 top-20 bottom-0 w-[12%] min-w-[140px] z-[26] overflow-y-auto relative">
         <div className="py-2 flex flex-col items-stretch gap-1 select-none px-2">
           {/* Back button */}
