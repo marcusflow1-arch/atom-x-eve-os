@@ -142,7 +142,6 @@ export default function SettingsPanel() {
         </TabsContent>
 
 
-        </TabsContent>
       </Tabs>
     </div>
   );
