@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GenreSelector from '@/components/profile/GenreSelector';
 import { 
@@ -14,6 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import MiniLunaNav from '../components/nav/MiniLunaNav';
 import { Button } from '@/components/ui/button';
 import ShinyCard from '@/components/shared/ShinyCard';
+import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 // --- MOCK DATA ---
 
