@@ -493,13 +493,28 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
 
 
 export default function GenreMastery({ onClose }) {
-  const navigate = useNavigate();
-  const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
-  const [progressionData, setProgressionData] = useState([]);
-  const [viewingLevel, setViewingLevel] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const scrollContainerRef = useRef(null);
-  const carouselRef = useRef(null);
+    const navigate = useNavigate();
+    const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
+    const [progressionData, setProgressionData] = useState([]);
+    const [viewingLevel, setViewingLevel] = useState(null);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const scrollContainerRef = useRef(null);
+    const carouselRef = useRef(null);
+
+    // Fetch games from database
+    const { data: allGames = [], isLoading: gamesLoading } = useQuery({
+      queryKey: ['games-for-genre-mastery'],
+      queryFn: () => base44.entities.Game.list(),
+    });
+
+    // Filter games by selected genre
+    const genreGames = useMemo(() => {
+      if (!allGames || allGames.length === 0 || !selectedGenre) return [];
+      return allGames.filter(game => {
+        const gameGenre = (game.genre || '').toLowerCase();
+        return selectedGenre.matchGenres?.some(mg => gameGenre.includes(mg));
+      });
+    }, [allGames, selectedGenre]);
 
   // Escape key to go back to Luna
   useEffect(() => {
