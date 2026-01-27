@@ -1776,7 +1776,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             {showLiveDropdown && (
               <button
                 className="absolute left-1 top-[76px] z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/10 backdrop-blur-md hover:bg-black/60 transition-colors"
-                onClick={() => setShowStreamSettings(true)}
+                onClick={() => setShowStreamSettings((prev) => !prev)}
               >
                 <Radio className="w-3 h-3 text-red-400" />
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">Go Live</span>

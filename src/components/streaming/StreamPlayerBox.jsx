@@ -24,6 +24,13 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
                 >
                   {isSettingsMaximized ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}
                 </button>
+                <span
+                  onClick={onCloseSettings}
+                  className="ml-1 text-white/70 hover:text-white cursor-pointer select-none text-lg leading-none"
+                  title="Close"
+                >
+                  x
+                </span>
               </div>
             </div>
             <div className="flex-1 overflow-auto bg-black/50 p-4">
