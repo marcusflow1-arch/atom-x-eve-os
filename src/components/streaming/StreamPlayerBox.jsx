@@ -2,7 +2,7 @@ import React from 'react';
 import { Play, Pause, MessageSquare, WifiOff, Volume2, Settings, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange, settingsOpen, onCloseSettings, isSettingsMaximized, onToggleSettingsMaximize }) {
+export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange, onOpenSettings, settingsOpen, onCloseSettings, isSettingsMaximized, onToggleSettingsMaximize }) {
   return (
     <div 
         className="flex-[3] rounded-3xl overflow-hidden min-h-[400px] relative group border border-white/10 shadow-2xl"
@@ -12,6 +12,15 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }}
     >
+        {/* Go Live trigger - top-left over the box */}
+        <button
+          onClick={() => (typeof onOpenSettings === 'function' ? onOpenSettings() : (typeof onToggleLive === 'function' ? onToggleLive() : null))}
+          className="absolute top-2 left-2 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/50 border border-white/15 text-white/90 backdrop-blur-md hover:bg-black/70 transition"
+          title="Go Live"
+        >
+          <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse mr-1" />
+          <span className="text-[11px] font-bold uppercase tracking-wider">Go Live</span>
+        </button>
         {settingsOpen && (
           <div className={isSettingsMaximized ? 'fixed inset-0 z-[200] flex flex-col' : 'absolute inset-0 z-30 flex flex-col'}>
             <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10">
