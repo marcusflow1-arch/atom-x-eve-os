@@ -906,6 +906,59 @@ function AIAchievementsView({ onClosePage }) {
         />
       )}
 
+      {/* Settings Overlay */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm"
+            onClick={() => setSettingsOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl h-[70vh] rounded-3xl overflow-hidden"
+              style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              {/* Close Button */}
+              <button 
+                onClick={() => setSettingsOpen(false)}
+                className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Settings Content */}
+              <div className="p-8 h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Settings</h2>
+                    <p className="text-white/50 text-sm">Configure your preferences</p>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center text-white/30">
+                  <p>Settings content coming soon...</p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating Score Display */}
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
