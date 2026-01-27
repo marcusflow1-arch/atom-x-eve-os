@@ -727,7 +727,6 @@ export default function StreamingHome() {
                                         </div>
                                     </DialogContent>
                                 </Dialog>
-                                </div>
                             </div>
                         )}
                     </motion.div>
