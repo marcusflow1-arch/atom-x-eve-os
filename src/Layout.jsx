@@ -758,7 +758,7 @@ function LayoutContent({ children, currentPageName }) {
                             Friends
                           </button>
 
-                          {/* Streaming */}
+                          {/* Streaming (Renamed to Aura) */}
                           <button
                             onClick={() => navigate(createPageUrl('Streaming'))}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
@@ -767,7 +767,7 @@ function LayoutContent({ children, currentPageName }) {
                                 : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
                           >
-                            Streaming
+                            Aura
                           </button>
 
                           <a
@@ -874,7 +874,7 @@ function LayoutContent({ children, currentPageName }) {
                             Entertainment
                           </button>
 
-                          {/* Streaming */}
+                          {/* Streaming (Renamed to Aura) */}
                           <button
                             onClick={() => navigate(createPageUrl('Streaming'))}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
@@ -883,7 +883,7 @@ function LayoutContent({ children, currentPageName }) {
                                 : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
                           >
-                            Streaming
+                            Aura
                           </button>
 
                           {/* Discord */}
