@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, Image as ImageIcon, Video, Link as LinkIcon, Upload, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export default function SponsorsSection() {
+export default function SponsorsSection({ allowEditing = true }) {
   const [isEditing, setIsEditing] = useState(false);
   const [sponsors, setSponsors] = useState([
     {
@@ -44,12 +44,14 @@ export default function SponsorsSection() {
             Partners & Sponsors
             {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
             </h3>
+            {allowEditing && (
             <button 
                 onClick={() => setIsEditing(!isEditing)}
                 className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
             >
                 <Settings className="w-4 h-4" />
             </button>
+            )}
         </div>
         {isEditing && (
             <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={() => setSponsors([...sponsors, { id: Date.now(), name: '', description: '', media: [], tier: 'Bronze' }])}>
