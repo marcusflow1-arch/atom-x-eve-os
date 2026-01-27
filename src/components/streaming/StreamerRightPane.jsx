@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { Gamepad2, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import StreamerCardDetailModal from './StreamerCardDetailModal';
+import { addDays, subDays, startOfWeek, format, isSameDay, isToday } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StreamerRightPane({ streamer }) {
   const name = streamer?.name || 'Streamer';
-  const [activeTab, setActiveTab] = useState('schedule');
+  const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
+
+  // Calculate the 14 days to show, starting from the Monday of the current base date's week
+  const startDate = startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }); // Monday start
+  const scheduleDays = Array.from({ length: 14 }).map((_, i) => addDays(startDate, i));
+
+  const handlePrevTwoWeeks = () => setScheduleBaseDate(prev => subDays(prev, 14));
+  const handleNextTwoWeeks = () => setScheduleBaseDate(prev => addDays(prev, 14));
+  const handleToday = () => setScheduleBaseDate(new Date());
+
+  const endDate = scheduleDays[13];
+  const dateRangeString = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
 
   return (
     <div className="w-full">
@@ -83,13 +96,13 @@ export default function StreamerRightPane({ streamer }) {
              <Gamepad2 className="w-5 h-5 text-white/50 mb-1" />
              <div className="flex items-center gap-8 text-sm font-medium">
                 <button 
-                  onClick={() => setActiveTab('schedule')}
+                  onClick={() => setActiveTab(activeTab === 'schedule' ? null : 'schedule')}
                   className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'schedule' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
                 >
                   Schedule
                 </button>
                 <button 
-                  onClick={() => setActiveTab('cards')}
+                  onClick={() => setActiveTab(activeTab === 'cards' ? null : 'cards')}
                   className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'cards' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
                 >
                   Cards
