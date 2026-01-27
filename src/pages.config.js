@@ -113,7 +113,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "LunaTemplate",
+    mainPage: "OnboardingHome",
     Pages: PAGES,
     Layout: __Layout,
 };

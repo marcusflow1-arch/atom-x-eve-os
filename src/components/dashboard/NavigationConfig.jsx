@@ -1,4 +1,3 @@
-
 import { 
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
@@ -9,6 +8,12 @@ import { createPageUrl } from '@/utils';
 
 // Hierarchical navigation structure with main pages and sub-pages
 export const NAV_HIERARCHY = [
+    {
+        name: 'Welcome',
+        icon: Globe,
+        path: createPageUrl('OnboardingHome'),
+        subPages: []
+    },
     {
         name: 'Luna Dashboard',
         icon: Home,
