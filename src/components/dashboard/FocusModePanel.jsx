@@ -1762,46 +1762,65 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
     <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
-      {/* Top Section - Quick Access Icons */}
+      {/* Top Section - Quick Access Icons & Live Streaming */}
       <div className="w-full relative z-50">
-        <QuickAccessRow 
-          onOpenCalendar={onOpenCalendar}
-          onDateTimeClick={handleDateTimeClick}
-          navigate={navigate}
-          onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)}
-        />
-        
-        {/* Live Dropdown (In-Flow) */}
-        <AnimatePresence>
-          {showLiveDropdown && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 24, marginBottom: 24 }}
-              exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-full overflow-hidden"
-            >
-              <div className="flex gap-6 h-[400px]">
-                {/* Streaming Box - Aligns with Quick Actions (Friends to Leaderboard) */}
-                <div className="flex-1 min-w-0">
-                  <StreamPlayerBox 
+        <div className="flex gap-6 items-start">
+          {/* Left Column: Quick Actions + Stream Player */}
+          <div className="flex-1 min-w-0 flex flex-col gap-6">
+            <QuickActionsBar 
+              navigate={navigate} 
+              onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)} 
+            />
+            
+            <AnimatePresence>
+              {showLiveDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-full overflow-hidden"
+                >
+                  <div className="h-[400px] w-full">
+                    <StreamPlayerBox 
                       isLive={isLive} 
                       onToggleLive={() => setIsLive(!isLive)}
                       isPlaying={isPlaying}
                       onTogglePlay={() => setIsPlaying(!isPlaying)}
                       volume={volume}
                       onVolumeChange={setVolume}
-                  />
-                </div>
-                
-                {/* Chat Box - Aligns with Calendar */}
-                <div className="w-[280px] flex-shrink-0">
-                  <StreamChatBox isLive={isLive} />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* Right Column: System Status + Calendar + Chat */}
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
+             <DateTimeTile onClick={handleDateTimeClick} />
+             <AddToCalendarButton 
+               onClick={onOpenCalendar} 
+               clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
+             />
+             
+             <AnimatePresence>
+              {showLiveDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-full overflow-hidden"
+                >
+                  <div className="h-[400px] w-full">
+                    <StreamChatBox isLive={isLive} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       {/* Banner Section - Moved Down */}
