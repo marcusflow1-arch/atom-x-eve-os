@@ -171,7 +171,7 @@ export default function StreamerRightPane({ streamer }) {
                     className="w-full overflow-hidden"
                     onDoubleClick={() => setActiveTab(null)}
                 >
-                    {activeTab === 'schedule' ? (
+                    {activeTab === 'schedule' && (
                     <div className="w-full select-none pt-4">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-white font-bold text-lg">Streaming Schedule <span className="text-white/40 text-sm font-normal ml-2">{dateRangeString}</span></h3>
@@ -199,7 +199,9 @@ export default function StreamerRightPane({ streamer }) {
                         </div>
                         <p className="text-center text-white/30 text-xs mt-4">Double-click content to collapse • Timezone is localized</p>
                     </div>
-                    ) : (
+                    )}
+                    
+                    {activeTab === 'cards' && (
                     <div className="w-full select-none pt-4">
                         <div className="flex items-center justify-between mb-6 px-2">
                             <div className="flex items-center gap-3">
@@ -239,7 +241,9 @@ export default function StreamerRightPane({ streamer }) {
                         </div>
                         <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
                     </div>
-                    ) : activeTab === 'gallery' ? (
+                    )}
+                    
+                    {activeTab === 'gallery' && (
                         <div className="w-full select-none pt-4">
                             <h3 className="text-white font-bold text-lg mb-6">Gallery</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -254,7 +258,9 @@ export default function StreamerRightPane({ streamer }) {
                             </div>
                             <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
                         </div>
-                    ) : activeTab === 'games' ? (
+                    )}
+                    
+                    {activeTab === 'games' && (
                         <div className="w-full select-none pt-4">
                             <h3 className="text-white font-bold text-lg mb-6">Games Played</h3>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -272,7 +278,7 @@ export default function StreamerRightPane({ streamer }) {
                             </div>
                             <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
                         </div>
-                    ) : null}
+                    )}
                 </motion.div>
             )}
         </AnimatePresence>
