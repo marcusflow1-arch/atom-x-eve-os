@@ -483,6 +483,20 @@ export default function BlankTransition() {
         </AnimatePresence>
       </div>
 
+      {/* Achievement Detail Overlay */}
+      <AnimatePresence>
+        {selectedAchievement && (
+          <AchievementDetailOverlay
+            achievement={selectedAchievement}
+            onClose={() => setSelectedAchievement(null)}
+            onTrack={() => {}}
+            isTracked={false}
+            onShare={() => {}}
+            onChallenge={() => {}}
+          />
+        )}
+      </AnimatePresence>
+
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
