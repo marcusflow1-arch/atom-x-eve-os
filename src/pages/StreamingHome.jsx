@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff } from 'lucide-react';
+import { Play, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
