@@ -129,37 +129,33 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
     >
       <ShinyCard>
         {/* Card Content */}
-        <div className="absolute inset-0 flex flex-col items-center p-3" style={{ transform: "translateZ(10px)" }}>
+        <div className="absolute inset-0 flex flex-col items-center p-2" style={{ transform: "translateZ(10px)" }}>
           {/* Header */}
-          <div className="w-full flex justify-between items-start mb-2">
-            <Badge variant="outline" className={`text-[9px] px-1.5 py-0.5 border ${badgeColor}`}>
+          <div className="w-full flex justify-between items-start mb-1">
+            <Badge variant="outline" className={`text-[7px] px-1 py-0 border ${badgeColor}`}>
               {achievement.rarity}
             </Badge>
-            <div className="text-yellow-400 font-bold text-[10px]">{achievement.points} pts</div>
+            <div className="text-yellow-400 font-bold text-[8px]">{achievement.points}</div>
           </div>
 
           {/* Icon Area */}
-          <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(20px)" }}>
-            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-3xl shadow-inner border border-white/10">
+          <div className="flex-1 flex items-center justify-center w-full my-1" style={{ transform: "translateZ(20px)" }}>
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl shadow-inner border border-white/10">
               {achievement.icon || '🏆'}
             </div>
           </div>
 
           {/* Info */}
           <div className="w-full text-center mt-auto" style={{ transform: "translateZ(15px)" }}>
-            <h3 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
-            <p className="text-slate-400 text-[10px] line-clamp-2">{achievement.description}</p>
+            <h3 className="text-white font-bold text-[10px] leading-tight mb-0.5 line-clamp-2">{achievement.title}</h3>
           </div>
 
           {/* Status */}
-          <div className="mt-2 w-full border-t border-white/10 pt-2 flex justify-center">
+          <div className="mt-1 w-full border-t border-white/10 pt-1 flex justify-center">
             {isUnlocked ? (
-              <div className="flex items-center gap-1 text-green-400 text-[10px]">
-                <Check className="w-3 h-3" />
-                <span>Unlocked</span>
-              </div>
+              <Check className="w-3 h-3 text-green-400" />
             ) : (
-              <span className="text-slate-500 text-[10px]">Locked</span>
+              <span className="text-slate-500 text-[8px]">Locked</span>
             )}
           </div>
         </div>
