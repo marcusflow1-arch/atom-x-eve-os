@@ -47,90 +47,98 @@ export default function StreamerRightPane({ streamer }) {
         </div>
       </div>
 
-      {/* Bottom: profile tile + cards section */}
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6 items-start">
-        {/* Profile tile */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden ring-1 ring-white/15">
+      {/* Bottom: Profile Info Bar & Content */}
+      <div className="mt-6 flex flex-col gap-6">
+        {/* Streamer Info Bar */}
+        <div className="w-full rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          
+          {/* Left: Avatar + Identity */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-white/10 shadow-lg">
               {streamer?.avatar ? (
                 <img src={streamer.avatar} alt={name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-white/10" />
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-white font-semibold truncate">{name}</div>
-              <div className="text-xs text-white/50 truncate">Personality: Variety</div>
+            <div className="flex flex-col">
+              <h2 className="text-xl font-bold text-white tracking-wide">{name}</h2>
+              <span className="text-sm text-white/60 font-medium">Chill • Creative • Supportive</span>
             </div>
           </div>
 
-          {/* Center icon + follow */}
-          <div className="flex flex-col items-center justify-center mt-4">
-            <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-white/80" />
+          {/* Center: Controls & Navigation */}
+          <div className="flex items-center gap-6">
+            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <Gamepad2 className="w-5 h-5 text-white/70" />
             </div>
-            <Button className="mt-3 h-8 px-4 text-xs">Follow</Button>
+            
+            <div className="flex items-center bg-black/20 rounded-full p-1 border border-white/5">
+              <button className="px-5 py-2 rounded-full text-sm font-semibold bg-white/10 text-white shadow-sm transition-all hover:bg-white/20">
+                Schedule
+              </button>
+              <button className="px-5 py-2 rounded-full text-sm font-semibold text-white/50 hover:text-white transition-all">
+                Cards
+              </button>
+            </div>
           </div>
 
-          {/* Two small dropdowns */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Select>
-              <SelectTrigger className="h-9 rounded-xl bg-white/10 border-white/15 text-xs text-white/80">
-                <SelectValue placeholder="Schedule" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="thisweek">This week</SelectItem>
-                <SelectItem value="next2">Next 2 weeks</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="h-9 rounded-xl bg-white/10 border-white/15 text-xs text-white/80">
-                <SelectValue placeholder="Cards" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="powers">Powers</SelectItem>
-                <SelectItem value="equipment">Equipment</SelectItem>
-                <SelectItem value="companion">Companion</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Decorative lines with center circle */}
-          <div className="relative mt-5">
-            <div className="h-px bg-white/20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-6 h-6 rounded-full bg-black/40 border border-white/20" />
+          {/* Right: Actions & Stats */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-white/60">
+               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+               <span className="font-mono text-sm">1,245 Watching</span>
             </div>
-            <div className="absolute inset-x-6 top-0 translate-y-[-8px] h-px bg-white/30" />
+            
+            <div className="h-8 w-px bg-white/10" />
+
+            <div className="flex items-center gap-3">
+              <Button variant="outline" size="icon" className="rounded-full w-10 h-10 border-white/10 bg-white/5 hover:bg-white/10">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+              </Button>
+              <Button className="rounded-full px-6 font-bold bg-white text-black hover:bg-slate-200">
+                Subscribe
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Cards section */}
-        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-          <div className="flex flex-wrap items-center gap-3 mb-3 text-white/80 text-sm font-semibold">
-            <span className="text-white/90">Game Title</span>
-            <span className="opacity-50">•</span>
-            <span>Collectible</span>
-            <span className="opacity-50">•</span>
-            <span>Achievements</span>
+        {/* Separator Line */}
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+        {/* Cards Content (Full Width) */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+          <div className="flex items-center justify-between mb-6">
+             <div className="flex items-center gap-3">
+               <h3 className="text-lg font-bold text-white">Stream Collection</h3>
+               <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
+             </div>
+             
+             <div className="flex gap-2">
+                {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
+                  <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                    {filter}
+                  </button>
+                ))}
+             </div>
           </div>
 
-          {/* Filter row */}
-          <div className="flex items-center gap-2 mb-4">
-            {['Powers', 'Equipment', 'Companion'].map((t) => (
-              <Button key={t} variant="outline" className="h-8 px-3 rounded-xl text-xs">
-                {t}
-              </Button>
-            ))}
-          </div>
-
-          {/* Placeholder cards grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/5] rounded-2xl border border-white/10 bg-white/5">
-                <div className="w-full h-full rounded-2xl bg-gradient-to-br from-slate-800/60 to-slate-700/40" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="group relative aspect-[3/4] rounded-2xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                <div className="absolute top-3 left-3">
+                  <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[10px] h-5">Common</Badge>
+                </div>
+                
+                <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                  <div className="text-sm font-bold text-white">Item Name {i+1}</div>
+                  <div className="text-[10px] text-white/60">Unlockable Reward</div>
+                </div>
               </div>
             ))}
           </div>
