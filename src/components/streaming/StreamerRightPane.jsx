@@ -6,12 +6,16 @@ import StreamerCardDetailModal from './StreamerCardDetailModal';
 import { addDays, subDays, startOfWeek, format, isSameDay, isToday } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import SponsorsSection from './profile/SponsorsSection';
+import ProductsGrid from './profile/ProductsGrid';
+import { Pencil, Save } from 'lucide-react';
 
 export default function StreamerRightPane({ streamer }) {
   const name = streamer?.name || 'Streamer';
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Calculate the 14 days to show, starting from the Monday of the current base date's week
   const startDate = startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }); // Monday start
@@ -112,6 +116,16 @@ export default function StreamerRightPane({ streamer }) {
 
           {/* Right: Actions & Stats */}
           <div className="flex items-center gap-4">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`rounded-full w-10 h-10 ${isEditingProfile ? 'text-cyan-400 bg-cyan-400/10' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                onClick={() => setIsEditingProfile(!isEditingProfile)}
+                title={isEditingProfile ? "Save Profile" : "Edit Profile"}
+            >
+                {isEditingProfile ? <Save className="w-5 h-5" /> : <Pencil className="w-4 h-4" />}
+            </Button>
+
             <Button variant="ghost" size="icon" className="rounded-full w-10 h-10 text-white/70 hover:text-white hover:bg-white/10">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -215,6 +229,13 @@ export default function StreamerRightPane({ streamer }) {
                 </motion.div>
             )}
         </AnimatePresence>
+
+        {/* Sponsors & Partners Section */}
+        <SponsorsSection isEditing={isEditingProfile} />
+
+        {/* Products & Events Grid */}
+        <ProductsGrid isEditing={isEditingProfile} />
+
       </div>
     </div>
   );

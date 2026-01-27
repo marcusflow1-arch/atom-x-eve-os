@@ -1,97 +1,253 @@
-import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Plus, X, Image as ImageIcon, Video, Link as LinkIcon, Upload } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
-const DEFAULT_SPONSORS = [
-  {
-    id: "monster",
-    name: "Monster Energy",
-    category: "Energy Drinks",
-    logo: "https://images.unsplash.com/photo-1613478223719-2c3a4b7779cb?w=200&auto=format&fit=crop",
-    link: "https://www.monsterenergy.com/",
-    showcase: [
-      "https://images.unsplash.com/photo-1542442828-287225c2ad3c?w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1558640477-1aa0aa61d7c0?w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1574755393849-623942496936?w=1200&auto=format&fit=crop",
-    ],
-    products: [
-      { id: "p1", name: "Monster Hoodie", price: 59, image: "https://images.unsplash.com/photo-1520975682031-662b1f4ebd5b?w=600&auto=format&fit=crop" },
-      { id: "p2", name: "Collector Can Pack", price: 24, image: "https://images.unsplash.com/photo-1581291519195-ef11498d1cf5?w=600&auto=format&fit=crop" },
-      { id: "p3", name: "Esports Cap", price: 29, image: "https://images.unsplash.com/photo-1520975693411-1f8a8aa4c6ed?w=600&auto=format&fit=crop" },
-      { id: "p4", name: "VIP Event Ticket", price: 0, image: "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?w=600&auto=format&fit=crop" },
-    ],
-  },
-  {
-    id: "razer",
-    name: "Razer",
-    category: "Gaming Gear",
-    logo: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&auto=format&fit=crop",
-    link: "https://www.razer.com/",
-    showcase: [
-      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=1200&auto=format&fit=crop",
-    ],
-    products: [
-      { id: "r1", name: "Pro Mouse", price: 129, image: "https://images.unsplash.com/photo-1549921296-3ecf9c6a1333?w=600&auto=format&fit=crop" },
-      { id: "r2", name: "RGB Keyboard", price: 169, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop" },
-      { id: "r3", name: "Gaming Headset", price: 99, image: "https://images.unsplash.com/photo-1585079542156-2755d9b6043a?w=600&auto=format&fit=crop" },
-    ],
-  },
-];
+export default function SponsorsSection({ isEditing }) {
+  const [sponsors, setSponsors] = useState([
+    {
+      id: 1,
+      name: 'Moon Tech',
+      description: 'The future of gaming peripherals. Experience low latency and high precision.',
+      link: 'https://moontech.gg/aura',
+      logo: 'https://source.unsplash.com/random/100x100?tech,logo',
+      media: [
+        { type: 'video', url: 'https://source.unsplash.com/random/800x450?gaming,setup' },
+        { type: 'image', url: 'https://source.unsplash.com/random/200x200?keyboard' },
+        { type: 'image', url: 'https://source.unsplash.com/random/200x200?mouse' },
+      ],
+      tier: 'Gold'
+    }
+  ]);
 
-export default function SponsorsSection({ sponsors = DEFAULT_SPONSORS, onSponsorChange }) {
-  const [sIndex, setSIndex] = useState(0);
-  const sponsor = sponsors[sIndex];
-  const [showIndex, setShowIndex] = useState(0);
+  const [aboutMe, setAboutMe] = useState("Hey there! I'm a variety streamer who loves connecting with chat and exploring new games together. When I'm not streaming, you can find me making music or hiking in the mountains.");
 
-  const nextSponsor = () => { const ni = (sIndex + 1) % sponsors.length; setSIndex(ni); setShowIndex(0); onSponsorChange?.(sponsors[ni]); };
-  const prevSponsor = () => { const pi = (sIndex - 1 + sponsors.length) % sponsors.length; setSIndex(pi); setShowIndex(0); onSponsorChange?.(sponsors[pi]); };
+  const handleMediaUpload = (sponsorId) => {
+    // Mock upload
+    alert("Media upload dialog would open here");
+  };
 
-  const nextShow = () => setShowIndex((i) => (i + 1) % sponsor.showcase.length);
-  const prevShow = () => setShowIndex((i) => (i - 1 + sponsor.showcase.length) % sponsor.showcase.length);
+  const handleLogoUpload = (sponsorId) => {
+    // Mock upload
+    alert("Logo upload dialog would open here");
+  };
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-8 mb-10">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-white font-bold text-xl">Partners & Sponsors</h3>
-        <div className="flex items-center gap-2">
-          <button onClick={prevSponsor} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white"><ChevronLeft className="w-4 h-4"/></button>
-          <button onClick={nextSponsor} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white"><ChevronRight className="w-4 h-4"/></button>
-        </div>
+    <div className="w-full mt-8">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+          Partners & Sponsors
+          {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
+        </h3>
+        {isEditing && (
+            <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={() => setSponsors([...sponsors, { id: Date.now(), name: '', description: '', media: [], tier: 'Bronze' }])}>
+                <Plus className="w-4 h-4 mr-2" /> Add Sponsor
+            </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left Identity */}
-        <div className="col-span-12 md:col-span-4">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10 bg-white/10 flex-shrink-0">
-              <img src={sponsor.logo} alt={sponsor.name} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <div className="text-white font-bold text-lg">{sponsor.name}</div>
-              <div className="text-white/60 text-sm">{sponsor.category}</div>
-              <Button asChild className="mt-3 rounded-xl h-9 px-4 bg-cyan-600 hover:bg-cyan-500">
-                <a href={sponsor.link} target="_blank" rel="noreferrer">
-                  Visit Sponsor <ExternalLink className="w-4 h-4 ml-2" />
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col gap-8">
+        {sponsors.map((sponsor, index) => (
+          <div key={sponsor.id} className={`relative ${isEditing ? 'p-6 bg-white/5 border border-white/10 rounded-2xl' : ''}`}>
+             {isEditing ? (
+                // EDIT MODE
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left: Basic Info */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Name</label>
+                            <Input 
+                                value={sponsor.name} 
+                                onChange={(e) => {
+                                    const newSponsors = [...sponsors];
+                                    newSponsors[index].name = e.target.value;
+                                    setSponsors(newSponsors);
+                                }}
+                                className="bg-black/20 border-white/10"
+                                placeholder="Sponsor Name"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Description</label>
+                            <Textarea 
+                                value={sponsor.description}
+                                onChange={(e) => {
+                                    const newSponsors = [...sponsors];
+                                    newSponsors[index].description = e.target.value;
+                                    setSponsors(newSponsors);
+                                }}
+                                className="bg-black/20 border-white/10 min-h-[100px]"
+                                placeholder="Sponsor Description"
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Tier</label>
+                                <select className="w-full bg-black/20 border border-white/10 rounded-md px-3 py-2 text-sm text-white">
+                                    <option>Gold</option>
+                                    <option>Silver</option>
+                                    <option>Bronze</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Affiliate Link</label>
+                                <Input 
+                                    value={sponsor.link}
+                                    onChange={(e) => {
+                                        const newSponsors = [...sponsors];
+                                        newSponsors[index].link = e.target.value;
+                                        setSponsors(newSponsors);
+                                    }}
+                                    className="bg-black/20 border-white/10"
+                                    placeholder="https://..."
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Logo</label>
+                            <div 
+                                onClick={() => handleLogoUpload(sponsor.id)}
+                                className="h-20 w-full border-2 border-dashed border-white/10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors"
+                            >
+                                {sponsor.logo ? (
+                                    <img src={sponsor.logo} alt="Logo" className="h-16 object-contain" />
+                                ) : (
+                                    <div className="flex flex-col items-center">
+                                        <Upload className="w-4 h-4 text-white/40 mb-1" />
+                                        <span className="text-[10px] text-white/40">Upload Logo</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-        {/* Right Showcase */}
-        <div className="col-span-12 md:col-span-8">
-          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-            <img src={sponsor.showcase[showIndex]} alt="Sponsor showcase" className="w-full h-[320px] object-cover" />
-            <button onClick={prevShow} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60">
-              <ChevronLeft className="w-4 h-4 mx-auto" />
-            </button>
-            <button onClick={nextShow} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60">
-              <ChevronRight className="w-4 h-4 mx-auto" />
-            </button>
+                    {/* Middle: About Me Edit (Integrated here as per request to have it in middle in view mode) */}
+                    <div className="space-y-4">
+                         <div className="h-full flex flex-col">
+                            <label className="text-xs font-bold text-white/40 uppercase mb-1 block">About Me (Displayed in Middle)</label>
+                            <Textarea 
+                                value={aboutMe}
+                                onChange={(e) => setAboutMe(e.target.value)}
+                                className="bg-black/20 border-white/10 flex-1 min-h-[200px]"
+                                placeholder="Write something about yourself..."
+                            />
+                            <p className="text-[10px] text-white/30 mt-2">This content will be displayed between the sponsor details and media.</p>
+                         </div>
+                    </div>
+
+                    {/* Right: Media */}
+                    <div className="space-y-4">
+                        <label className="text-xs font-bold text-white/40 uppercase mb-1 block">Media Gallery</label>
+                        <div 
+                            className="aspect-video w-full bg-black/40 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition-colors"
+                            onClick={() => handleMediaUpload(sponsor.id)}
+                        >
+                            <Video className="w-8 h-8 text-white/20 mb-2" />
+                            <span className="text-sm text-white/40 font-medium">Big media (click to add)</span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2">
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="aspect-square bg-black/20 border border-white/10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-white/5">
+                                    <Plus className="w-4 h-4 text-white/20" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 text-white/20 hover:text-red-400 hover:bg-red-500/10" onClick={() => {
+                        const newSponsors = sponsors.filter(s => s.id !== sponsor.id);
+                        setSponsors(newSponsors);
+                    }}>
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+             ) : (
+                // VIEW MODE - 3 Column Layout
+                <div className="w-full bg-[#0f1419]/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm relative overflow-hidden group">
+                     {/* Background Glow */}
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
+                     
+                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
+                        {/* Left Col: Sponsor Info (3 cols) */}
+                        <div className="lg:col-span-3 flex flex-col items-center text-center lg:items-start lg:text-left space-y-4">
+                            <div className="w-24 h-24 bg-white rounded-2xl p-4 shadow-lg shadow-cyan-500/10 flex items-center justify-center mb-2">
+                                <img src={sponsor.logo} alt={sponsor.name} className="w-full h-full object-contain" />
+                            </div>
+                            <div>
+                                <h4 className="text-2xl font-black text-white tracking-tight mb-2">{sponsor.name}</h4>
+                                <p className="text-sm text-slate-400 leading-relaxed mb-4">{sponsor.description}</p>
+                                <a 
+                                    href={sponsor.link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-xs font-bold text-cyan-400 hover:text-cyan-300 uppercase tracking-wider transition-colors"
+                                >
+                                    <LinkIcon className="w-3 h-3" />
+                                    Visit Partner
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Middle Col: About Me + Partnership Title (5 cols) */}
+                        <div className="lg:col-span-5 flex flex-col justify-center h-full relative px-4 lg:px-8 border-t lg:border-t-0 lg:border-l lg:border-r border-white/5 py-8 lg:py-0">
+                            <div className="text-center">
+                                <span className="inline-block py-1 px-3 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4">
+                                    Streamer Partnership
+                                </span>
+                                <h3 className="text-xl font-bold text-white mb-4">About Me</h3>
+                                <div className="relative">
+                                    <p className="text-slate-300 leading-relaxed text-base italic">
+                                        "{aboutMe}"
+                                    </p>
+                                    <div className="mt-6 flex justify-center gap-2">
+                                        {/* Social Icons Mock */}
+                                        {[1,2,3].map(i => (
+                                            <div key={i} className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center cursor-pointer transition-colors">
+                                                <div className="w-4 h-4 bg-white/20 rounded-sm" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Col: Media (4 cols) */}
+                        <div className="lg:col-span-4 space-y-4">
+                             {/* Big Media */}
+                             <div className="aspect-video w-full rounded-xl overflow-hidden bg-black relative group/media cursor-pointer shadow-2xl">
+                                <img src={sponsor.media[0]?.url} className="w-full h-full object-cover opacity-80 group-hover/media:opacity-100 transition-opacity" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover/media:scale-110 transition-transform">
+                                        <PlayIcon className="w-5 h-5 text-white fill-white" />
+                                    </div>
+                                </div>
+                             </div>
+                             {/* Small Thumbs */}
+                             <div className="grid grid-cols-4 gap-2">
+                                {[...Array(4)].map((_, i) => (
+                                    <div key={i} className="aspect-square rounded-lg bg-white/5 overflow-hidden cursor-pointer hover:ring-2 ring-cyan-500/50 transition-all">
+                                        {sponsor.media[i+1] && <img src={sponsor.media[i+1].url} className="w-full h-full object-cover" />}
+                                    </div>
+                                ))}
+                             </div>
+                        </div>
+                     </div>
+                </div>
+             )}
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
+}
+
+function PlayIcon({ className }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3" />
+        </svg>
+    )
 }
