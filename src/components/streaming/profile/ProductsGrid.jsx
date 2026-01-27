@@ -6,8 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, X, Tag, ShoppingBag, Calendar, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export default function ProductsGrid() {
-  const [isEditing, setIsEditing] = useState(false);
+export default function ProductsGrid({ allowEditing = true }) {
+  const [isEditingState, setIsEditingState] = useState(false);
+  const isEditing = isEditingState && allowEditing;
   const [products, setProducts] = useState([
     {
       id: 1,
@@ -71,12 +72,14 @@ export default function ProductsGrid() {
             Available Products & Events
             {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
             </h3>
-            <button 
-                onClick={() => setIsEditing(!isEditing)}
-                className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
-            >
-                <Settings className="w-4 h-4" />
-            </button>
+            {allowEditing && (
+                <button 
+                    onClick={() => setIsEditingState(!isEditing)}
+                    className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+                >
+                    <Settings className="w-4 h-4" />
+                </button>
+            )}
         </div>
         {isEditing && (
             <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={addProduct}>

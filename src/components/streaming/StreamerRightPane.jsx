@@ -11,7 +11,7 @@ import ProductsGrid from './profile/ProductsGrid';
 import ViewerSeasonalPass from './ViewerSeasonalPass';
 import { Pencil, Save } from 'lucide-react';
 
-export default function StreamerRightPane({ streamer }) {
+export default function StreamerRightPane({ streamer, allowEditing = true }) {
   const name = streamer?.name || 'Streamer';
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -133,15 +133,17 @@ export default function StreamerRightPane({ streamer }) {
 
           {/* Right: Actions & Stats */}
           <div className="flex items-center gap-4">
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`rounded-full w-10 h-10 ${isEditingProfile ? 'text-cyan-400 bg-cyan-400/10' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                onClick={() => setIsEditingProfile(!isEditingProfile)}
-                title={isEditingProfile ? "Save Profile" : "Edit Profile"}
-            >
-                {isEditingProfile ? <Save className="w-5 h-5" /> : <Pencil className="w-4 h-4" />}
-            </Button>
+            {allowEditing && (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={`rounded-full w-10 h-10 ${isEditingProfile ? 'text-cyan-400 bg-cyan-400/10' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                    onClick={() => setIsEditingProfile(!isEditingProfile)}
+                    title={isEditingProfile ? "Save Profile" : "Edit Profile"}
+                >
+                    {isEditingProfile ? <Save className="w-5 h-5" /> : <Pencil className="w-4 h-4" />}
+                </Button>
+            )}
 
             <Button variant="ghost" size="icon" className="rounded-full w-10 h-10 text-white/70 hover:text-white hover:bg-white/10">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -287,10 +289,10 @@ export default function StreamerRightPane({ streamer }) {
         </AnimatePresence>
 
         {/* Sponsors & Partners Section */}
-        <SponsorsSection isEditing={isEditingProfile} />
+        <SponsorsSection isEditing={isEditingProfile} allowEditing={allowEditing} />
 
         {/* Products & Events Grid */}
-        <ProductsGrid isEditing={isEditingProfile} />
+        <ProductsGrid isEditing={isEditingProfile} allowEditing={allowEditing} />
 
         {/* Seasonal Pass Section */}
         <div className="w-full mt-12 mb-20">
