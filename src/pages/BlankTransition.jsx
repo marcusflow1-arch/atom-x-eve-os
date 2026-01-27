@@ -452,7 +452,7 @@ export default function BlankTransition() {
                   <h3 className="text-xl font-bold">Achievements</h3>
                   <span className="text-white/40 text-sm ml-2">({achievements.length} total)</span>
                 </div>
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                   {achievements.map((ach) => (
                     <AchievementCard
                       key={ach.id}
