@@ -371,13 +371,6 @@ export default function StreamingHome() {
               <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2">
                  <div className="flex items-center gap-2 mb-1">
                     <Gamepad2 className="w-5 h-5 text-white/50" />
-                    <button 
-                        onClick={() => setIsEditingTabs(!isEditingTabs)}
-                        className={`p-1 rounded-full transition-all ${isEditingTabs ? 'bg-white text-black' : 'text-white/30 hover:text-white'}`}
-                        title="Edit Sections"
-                    >
-                        <Settings className="w-3 h-3" />
-                    </button>
                  </div>
                  <div className="flex items-center gap-8 text-sm font-medium">
                     <button 
