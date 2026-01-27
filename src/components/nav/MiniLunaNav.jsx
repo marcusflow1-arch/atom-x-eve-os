@@ -7,7 +7,16 @@ export default function MiniLunaNav({ title }) {
   const navigate = useNavigate();
 
   const openDrawer = () => {
-    window.dispatchEvent(new CustomEvent('openAppDrawer'));
+    if (typeof window !== 'undefined') {
+      // Prefer direct call if available
+      // @ts-ignore
+      if (typeof window.openAppDrawer === 'function') {
+        // @ts-ignore
+        window.openAppDrawer();
+      } else {
+        window.dispatchEvent(new CustomEvent('openAppDrawer'));
+      }
+    }
   };
 
   return (

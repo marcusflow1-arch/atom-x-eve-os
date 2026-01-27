@@ -299,7 +299,14 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     const openDrawer = () => setDrawerOpen(true);
     window.addEventListener('openAppDrawer', openDrawer);
-    return () => window.removeEventListener('openAppDrawer', openDrawer);
+    // Expose an explicit global function as a fallback
+    // @ts-ignore
+    window.openAppDrawer = openDrawer;
+    return () => {
+      window.removeEventListener('openAppDrawer', openDrawer);
+      try { // @ts-ignore
+        delete window.openAppDrawer; } catch {}
+    };
   }, []);
 
   const navGroups = NAV_GROUPS;
