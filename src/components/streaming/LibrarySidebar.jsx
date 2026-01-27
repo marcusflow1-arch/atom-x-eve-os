@@ -68,22 +68,22 @@ export default function LibrarySidebar() {
                 <Library className="w-6 h-6 text-white" />
             </div>
             <div>
-                <h2 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white tracking-wide">
                     My Library
-                    <button 
-                        onClick={() => setIsOpen(false)}
-                        className="w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors"
-                        style={{
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            backdropFilter: 'blur(4px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)'
-                        }}
-                    >
-                        <X className="w-3 h-3" />
-                    </button>
                 </h2>
                 <p className="text-xs text-white/40 font-medium">Your History & Favorites</p>
             </div>
+            <button 
+                onClick={() => setIsOpen(false)}
+                className="ml-auto w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors"
+                style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+            >
+                <X className="w-3 h-3" />
+            </button>
         </div>
 
         {/* Scrollable Content */}
