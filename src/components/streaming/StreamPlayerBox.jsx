@@ -1,8 +1,59 @@
 import React from 'react';
 import { Play, Pause, MessageSquare, WifiOff, Volume2, Settings, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { base44 } from '@/api/base44Client';
 
 export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange, onOpenSettings, settingsOpen, onCloseSettings, isSettingsMaximized, onToggleSettingsMaximize }) {
+  // Featured streams/videos for offline state
+  const [featured, setFeatured] = React.useState([]);
+  const [current, setCurrent] = React.useState(0);
+  const [loadingFeatured, setLoadingFeatured] = React.useState(true);
+
+  React.useEffect(() => {
+    let mounted = true;
+    let timer;
+    (async () => {
+      try {
+        // Try live streams first
+        const liveRes = await base44.entities.Stream.filter({ is_live: true }, '-started_at', 10);
+        const live = liveRes?.data || liveRes || [];
+        let items = live.map((s) => ({
+          id: s.id,
+          title: s.title || 'Live Stream',
+          image: s.preview_image_url || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200',
+          sub: s.viewer_count ? `${s.viewer_count} watching` : 'Live now',
+          live: true,
+        }));
+        if (items.length === 0) {
+          // Fallback: recorded videos
+          const vidRes = await base44.entities.StreamVideo.list();
+          const vids = vidRes?.data || vidRes || [];
+          items = vids.slice(0, 10).map((v) => ({
+            id: v.id,
+            title: v.title || 'Featured Video',
+            image: v.thumbnail_url || 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=1200',
+            sub: v.duration ? `${Math.round((v.duration || 0) / 60)} min` : 'Video',
+            live: false,
+          }));
+        }
+        if (mounted) {
+          setFeatured(items);
+          setLoadingFeatured(false);
+          if (items.length > 1) {
+            timer = setInterval(() => {
+              setCurrent((c) => (c + 1) % items.length);
+            }, 8000);
+          }
+        }
+      } catch {
+        if (mounted) setLoadingFeatured(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+      if (timer) clearInterval(timer);
+    };
+  }, []);
   return (
     <div 
         className="flex-[3] rounded-3xl overflow-hidden min-h-[400px] relative group border border-white/10 shadow-2xl"
@@ -174,21 +225,50 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
                  </div>
             </div>
         ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-black/40 text-center p-8">
-                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                    <WifiOff className="w-8 h-8 text-white/40" />
+            <div className="w-full h-full relative">
+              {/* Featured media background */}
+              {loadingFeatured && featured.length === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-8 h-8 border-4 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Currently Offline</h2>
-                <p className="text-white/40 max-w-md">
-                    You are not streaming right now. Go live to interact with your audience!
-                </p>
-                <Button 
-                    className="mt-6 bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-600/20"
-                    onClick={onToggleLive}
-                >
-                    <Play className="w-4 h-4 mr-2" />
-                    Start Test Stream
-                </Button>
+              ) : featured.length > 0 ? (
+                <>
+                  <img
+                    src={featured[current]?.image}
+                    alt={featured[current]?.title || 'Featured'}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+
+                  {/* Top badges */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2">
+                    <div className={`px-3 py-1 rounded text-xs font-bold uppercase shadow ${featured[current]?.live ? 'bg-red-600 text-white' : 'bg-white/10 text-white/80 border border-white/10'}`}>
+                      {featured[current]?.live ? 'LIVE' : 'FEATURED'}
+                    </div>
+                    {featured[current]?.sub && (
+                      <div className="px-3 py-1 rounded text-xs bg-black/50 text-white/80 border border-white/10 backdrop-blur-md flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3 text-white/60" />
+                        {featured[current].sub}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Center play */}
+                  <div className="absolute inset-0 flex items-start justify-center pt-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button className="w-16 h-16 rounded-full bg-white/10 border border-white/20 backdrop-blur-lg flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all">
+                      <Play className="w-6 h-6 text-white" />
+                    </button>
+                  </div>
+
+                  {/* Bottom info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 className="text-white font-bold text-xl drop-shadow-md line-clamp-1">{featured[current]?.title}</h3>
+                    <p className="text-sm text-white/60">{featured[current]?.live ? 'Happening now' : 'Recommended for you'}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-white/50">No featured content available</div>
+              )}
             </div>
         )}
     </div>
