@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import ShinyCard from '@/components/shared/ShinyCard';
+import StreamerRightPane from './StreamerRightPane';
 
 const mockStreamers = Array.from({ length: 14 }).map((_, i) => ({
   id: `str_${i + 1}`,
@@ -42,7 +43,7 @@ export default function DiscoverStreamingList() {
 
   return (
     <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl grid grid-cols-1 gap-6">
+      <div className="mx-auto max-w-7xl grid grid-cols-[minmax(140px,10%)_1fr] gap-6">
         {/* Left: Streamer cards column */}
         <div
           className="overflow-y-auto no-scrollbar pr-2"
@@ -99,9 +100,10 @@ export default function DiscoverStreamingList() {
         </div>
 
 
+        <StreamerRightPane streamer={mockStreamers[selected]} />
       </div>
 
-      {/* Local styles for hidden scrollbar */}
+      {/* Local styles for hidden scrollbar */
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
