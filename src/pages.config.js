@@ -19,6 +19,7 @@ import Clan from './pages/Clan';
 import ClanHub from './pages/ClanHub';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
+import Discover from './pages/Discover';
 import EnvGuide from './pages/EnvGuide';
 import Events from './pages/Events';
 import Farm from './pages/Farm';
@@ -37,6 +38,7 @@ import Library from './pages/Library';
 import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
+import OnboardingHome from './pages/OnboardingHome';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
@@ -49,11 +51,9 @@ import StreamWatch from './pages/StreamWatch';
 import StreamerProfile from './pages/StreamerProfile';
 import StreamerProfileEdit from './pages/StreamerProfileEdit';
 import Streaming from './pages/Streaming';
+import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import OnboardingHome from './pages/OnboardingHome';
-import StreamingHome from './pages/StreamingHome';
-import Discover from './pages/Discover';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +79,7 @@ export const PAGES = {
     "ClanHub": ClanHub,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
+    "Discover": Discover,
     "EnvGuide": EnvGuide,
     "Events": Events,
     "Farm": Farm,
@@ -97,6 +98,7 @@ export const PAGES = {
     "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
+    "OnboardingHome": OnboardingHome,
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
@@ -109,11 +111,9 @@ export const PAGES = {
     "StreamerProfile": StreamerProfile,
     "StreamerProfileEdit": StreamerProfileEdit,
     "Streaming": Streaming,
+    "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "OnboardingHome": OnboardingHome,
-    "StreamingHome": StreamingHome,
-    "Discover": Discover,
 }
 
 export const pagesConfig = {
