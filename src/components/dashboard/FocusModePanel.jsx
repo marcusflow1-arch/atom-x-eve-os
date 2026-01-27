@@ -1781,44 +1781,33 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                   className="w-full overflow-hidden"
                 >
-                  <div className="h-[400px] w-full">
-                    <StreamPlayerBox 
-                      isLive={isLive} 
-                      onToggleLive={() => setIsLive(!isLive)}
-                      isPlaying={isPlaying}
-                      onTogglePlay={() => setIsPlaying(!isPlaying)}
-                      volume={volume}
-                      onVolumeChange={setVolume}
-                    />
+                  <div className="h-[400px] w-full flex gap-4">
+                    <div className="h-full w-[70%]">
+                      <StreamPlayerBox 
+                        isLive={isLive} 
+                        onToggleLive={() => setIsLive(!isLive)}
+                        isPlaying={isPlaying}
+                        onTogglePlay={() => setIsPlaying(!isPlaying)}
+                        volume={volume}
+                        onVolumeChange={setVolume}
+                      />
+                    </div>
+                    <div className="h-full w-[30%]">
+                      <StreamChatBox isLive={isLive} />
+                    </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
           
-          {/* Right Column: System Status + Calendar + Chat */}
+          {/* Right Column: System Status + Calendar */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
              <DateTimeTile onClick={handleDateTimeClick} />
              <AddToCalendarButton 
                onClick={onOpenCalendar} 
                clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
              />
-             
-             <AnimatePresence>
-              {showLiveDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden"
-                >
-                  <div className="h-[400px] w-full">
-                    <StreamChatBox isLive={isLive} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </div>
