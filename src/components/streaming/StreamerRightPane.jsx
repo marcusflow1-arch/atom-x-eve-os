@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Gamepad2, Play, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AnimatePresence } from 'framer-motion';
+import StreamerCardDetailModal from './StreamerCardDetailModal';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function StreamerRightPane({ streamer }) {
   const name = streamer?.name || 'Streamer';
   const [activeTab, setActiveTab] = useState('schedule');
+  const [selectedCard, setSelectedCard] = useState(null);
 
   return (
     <div className="w-full">
@@ -47,6 +50,13 @@ export default function StreamerRightPane({ streamer }) {
           </div>
         </div>
       </div>
+
+      {/* Card Details Modal */}
+      <AnimatePresence>
+        {selectedCard && (
+            <StreamerCardDetailModal card={selectedCard} onClose={() => setSelectedCard(null)} />
+        )}
+      </AnimatePresence>
 
       {/* Bottom: Profile Info Bar & Content */}
       <div className="mt-4 flex flex-col">
@@ -139,8 +149,8 @@ export default function StreamerRightPane({ streamer }) {
              <p className="text-center text-white/30 text-xs mt-4">Timezone is localized • Viewers see your schedule in their own timezone</p>
            </div>
         ) : (
-           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
-             <div className="flex items-center justify-between mb-6">
+           <div className="w-full">
+             <div className="flex items-center justify-between mb-6 px-2">
                 <div className="flex items-center gap-3">
                   <h3 className="text-lg font-bold text-white">Stream Collection</h3>
                   <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
@@ -155,19 +165,23 @@ export default function StreamerRightPane({ streamer }) {
                 </div>
              </div>
    
-             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-               {Array.from({ length: 10 }).map((_, i) => (
-                 <div key={i} className="group relative aspect-[3/4] rounded-2xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer">
+             {/* 50% smaller cards (increased grid columns) */}
+             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+               {Array.from({ length: 20 }).map((_, i) => (
+                 <div 
+                    key={i} 
+                    onClick={() => setSelectedCard({ name: `Item Name ${i+1}`, id: i })}
+                    className="group relative aspect-[3/4] rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:scale-105 hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
+                 >
                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                    
-                   <div className="absolute top-3 left-3">
-                     <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[10px] h-5">Common</Badge>
+                   <div className="absolute top-1.5 left-1.5">
+                     <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[8px] h-4 px-1">Common</Badge>
                    </div>
                    
-                   <div className="absolute bottom-3 left-3 right-3 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                     <div className="text-sm font-bold text-white">Item Name {i+1}</div>
-                     <div className="text-[10px] text-white/60">Unlockable Reward</div>
+                   <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                     <div className="text-xs font-bold text-white truncate">Item {i+1}</div>
                    </div>
                  </div>
                ))}
