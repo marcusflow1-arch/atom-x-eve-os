@@ -42,19 +42,174 @@ const generateGameAchievements = (game) => {
     'First Steps', 'Veteran', 'Master', 'Champion', 'Legend',
     'Explorer', 'Collector', 'Speedrunner', 'Perfectionist', 'Unstoppable'
   ];
+  const achievementIcons = ['🎮', '⚔️', '🏆', '👑', '🌟', '🗺️', '💎', '⚡', '✨', '🔥'];
+  const categories = ['standard', 'ability', 'equipment', 'companion'];
   const rarities = ['Common', 'Rare', 'Epic', 'Legendary'];
   const achievements = [];
   const count = Math.floor(Math.random() * 5) + 5;
   for (let i = 0; i < count; i++) {
+    const rarity = rarities[Math.floor(Math.random() * rarities.length)];
     achievements.push({
       id: `${game.id}-ach-${i}`,
+      title: achievementNames[i % achievementNames.length],
       name: achievementNames[i % achievementNames.length],
-      rarity: rarities[Math.floor(Math.random() * rarities.length)],
+      description: `Complete ${achievementNames[i % achievementNames.length].toLowerCase()} objectives in ${game.title}`,
+      icon: achievementIcons[i % achievementIcons.length],
+      rarity: rarity,
+      category: categories[Math.floor(Math.random() * categories.length)],
+      points: Math.floor(Math.random() * 200) + 50,
       xp: Math.floor(Math.random() * 200) + 50,
+      game: game.title,
       unlocked: Math.random() > 0.6,
+      reward: {
+        name: `${achievementNames[i % achievementNames.length]} Reward`,
+        description: `Exclusive reward for unlocking this achievement`,
+        stats: { Attack: Math.floor(Math.random() * 50), Defense: Math.floor(Math.random() * 30) }
+      }
     });
   }
   return achievements;
+};
+
+// Achievement Card Component with liquid glass effect
+const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
+
+  function handleMouseMove(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const mouseXPos = event.clientX - rect.left;
+    const mouseYPos = event.clientY - rect.top;
+    x.set(mouseXPos / width - 0.5);
+    y.set(mouseYPos / height - 0.5);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
+  const rarityColors = {
+    Common: "border-slate-500 shadow-slate-500/20",
+    Rare: "border-blue-500 shadow-blue-500/30",
+    Epic: "border-purple-500 shadow-purple-500/30",
+    Legendary: "border-orange-500 shadow-orange-500/40",
+    Mythic: "border-red-500 shadow-red-500/40",
+  };
+
+  const rarityBadgeColors = {
+    Common: "bg-slate-500/15 text-slate-300 border-slate-500/30",
+    Rare: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+    Epic: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+    Legendary: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+    Mythic: "bg-red-500/15 text-red-300 border-red-500/30",
+  };
+
+  const rarityColor = rarityColors[achievement.rarity] || rarityColors.Common;
+  const badgeColor = rarityBadgeColors[achievement.rarity] || rarityBadgeColors.Common;
+
+  return (
+    <motion.div
+      onClick={() => onClick(achievement)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d"
+      }}
+      whileHover={{ scale: 1.05, z: 50 }}
+      className={`relative w-full aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
+    >
+      <ShinyCard>
+        {/* Card Content */}
+        <div className="absolute inset-0 flex flex-col items-center p-3" style={{ transform: "translateZ(10px)" }}>
+          {/* Header */}
+          <div className="w-full flex justify-between items-start mb-2">
+            <Badge variant="outline" className={`text-[9px] px-1.5 py-0.5 border ${badgeColor}`}>
+              {achievement.rarity}
+            </Badge>
+            <div className="text-yellow-400 font-bold text-[10px]">{achievement.points} pts</div>
+          </div>
+
+          {/* Icon Area */}
+          <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(20px)" }}>
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-3xl shadow-inner border border-white/10">
+              {achievement.icon || '🏆'}
+            </div>
+          </div>
+
+          {/* Info */}
+          <div className="w-full text-center mt-auto" style={{ transform: "translateZ(15px)" }}>
+            <h3 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
+            <p className="text-slate-400 text-[10px] line-clamp-2">{achievement.description}</p>
+          </div>
+
+          {/* Status */}
+          <div className="mt-2 w-full border-t border-white/10 pt-2 flex justify-center">
+            {isUnlocked ? (
+              <div className="flex items-center gap-1 text-green-400 text-[10px]">
+                <Check className="w-3 h-3" />
+                <span>Unlocked</span>
+              </div>
+            ) : (
+              <span className="text-slate-500 text-[10px]">Locked</span>
+            )}
+          </div>
+        </div>
+
+        {/* Shine Effect */}
+        <motion.div
+          style={{
+            opacity: useTransform(rotateX, (val) => Math.abs(val) / 20 + 0.1),
+            background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.15) 55%, transparent 80%)",
+            transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"])
+          }}
+          className="absolute inset-0 z-10 pointer-events-none"
+        />
+
+        {/* Corner Glow Effects */}
+        <motion.div
+          className="absolute bottom-0 left-0 w-10 h-10 pointer-events-none"
+          animate={{
+            boxShadow: [
+              "0 0 0px rgba(59, 130, 246, 0)",
+              "0 0 15px rgba(59, 130, 246, 0.6)",
+              "0 0 0px rgba(59, 130, 246, 0)"
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          style={{
+            borderLeft: "2px solid rgba(59, 130, 246, 0.5)",
+            borderBottom: "2px solid rgba(59, 130, 246, 0.5)",
+            borderBottomLeftRadius: "0.75rem"
+          }}
+        />
+        <motion.div
+          className="absolute top-0 right-0 w-10 h-10 pointer-events-none"
+          animate={{
+            boxShadow: [
+              "0 0 0px rgba(59, 130, 246, 0)",
+              "0 0 15px rgba(59, 130, 246, 0.6)",
+              "0 0 0px rgba(59, 130, 246, 0)"
+            ]
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          style={{
+            borderRight: "2px solid rgba(59, 130, 246, 0.5)",
+            borderTop: "2px solid rgba(59, 130, 246, 0.5)",
+            borderTopRightRadius: "0.75rem"
+          }}
+        />
+      </ShinyCard>
+    </motion.div>
+  );
 };
 
 export default function BlankTransition() {
