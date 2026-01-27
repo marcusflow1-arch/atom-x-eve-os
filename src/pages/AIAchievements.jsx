@@ -5,7 +5,7 @@ import {
   Trophy, Search, Filter, ChevronRight,
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
-  MessageSquare, Users, Star, TrendingUp, BookOpen, Swords, Crown, Target
+  MessageSquare, Users, Star, TrendingUp, BookOpen, Swords, Crown, Target, Settings, Calendar
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
