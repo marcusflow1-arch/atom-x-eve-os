@@ -33,7 +33,7 @@ export default function ScheduleEditModal({ isOpen, onClose, date, initialData, 
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <label className="text-sm font-medium text-white/70">Time Range</label>
+            <label className="text-sm font-medium text-white/70">Time</label>
             <Input
               value={formData.timeRange}
               onChange={(e) => setFormData({ ...formData, timeRange: e.target.value })}
@@ -51,11 +51,11 @@ export default function ScheduleEditModal({ isOpen, onClose, date, initialData, 
             />
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-medium text-white/70">Activity / Notes</label>
+            <label className="text-sm font-medium text-white/70">Special Events / Giveaways</label>
             <Textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="e.g. Doing giveaways, ranked climb..."
+              placeholder="e.g. Giveaways, Special Event Details..."
               className="bg-black/20 border-white/10 text-white min-h-[100px]"
             />
           </div>
