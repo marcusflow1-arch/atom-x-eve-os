@@ -125,7 +125,7 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
         transformStyle: "preserve-3d"
       }}
       whileHover={{ scale: 1.05, z: 50 }}
-      className={`relative w-full aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
+      className={`relative w-full aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group border ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
     >
       <ShinyCard>
         {/* Card Content */}
