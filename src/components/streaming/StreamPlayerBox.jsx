@@ -103,15 +103,15 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
                    </div>
                  </div>
 
-                 {/* Center Play Button (On Hover) */}
-                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <button 
-                        onClick={onTogglePlay}
-                        className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-white/20 hover:scale-110 transition-all"
-                    >
-                        {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
-                    </button>
-                 </div>
+                 {/* Center Play/Pause */}
+                  <div className="absolute inset-0 z-30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                     <button 
+                         onClick={onTogglePlay}
+                         className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-white/20 hover:scale-110 transition-all"
+                     >
+                         {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white" />}
+                     </button>
+                  </div>
 
                  {/* Bottom Controls */}
                  <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
