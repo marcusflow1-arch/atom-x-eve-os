@@ -325,6 +325,42 @@ export default function OnboardingHome() {
       </section>
 
       {/* Footer */}
+      {/* SECTION 5: System Map & Page Guide */}
+      <section className="relative py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl md:text-5xl font-bold mb-3">How the App is Organized</h2>
+            <p className="text-white/60">A quick guide to every major area and what you can do there</p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: Home, title: 'Dashboard (Home)', summary: 'Your command center with quick access to everything.', bullets: ['Open overlays: Achievements, Skill Tree, Friends', 'Switch between User and AI modes', 'Jump to Store, Library, Clan, Forum'], page: 'LunaTemplate', color: 'from-cyan-500 to-blue-600' },
+              { icon: ShoppingBag, title: 'Store', summary: 'Browse, buy, and trade games and items.', bullets: ['Explore categories and featured games', 'Open marketplace and trading posts', 'View limited editions and deals'], page: 'Store', color: 'from-amber-500 to-orange-500' },
+              { icon: LibraryIcon, title: 'Library', summary: 'Manage owned games and launch sessions.', bullets: ['Open game details and launchers', 'See recent achievements per game', 'Access game-specific overlays'], page: 'Library', color: 'from-purple-500 to-pink-500' },
+              { icon: Trophy, title: 'Achievements', summary: 'Track, unlock, and showcase achievements.', bullets: ['View unlock requirements', 'Open card details and rewards', 'Share, challenge, and discuss'], page: 'AIAchievements', color: 'from-yellow-500 to-orange-500' },
+              { icon: Layers, title: 'Genre Mastery', summary: 'Progression path and rewards per genre.', bullets: ['Inspect level track rewards', 'Preview legendary unlocks', 'Jump into featured games'], page: 'GenreMastery', color: 'from-teal-500 to-emerald-600' },
+              { icon: Swords, title: 'AI Battle', summary: 'PvE/PvP encounters tuned by your AI.', bullets: ['Enter battles from curated queues', 'Earn XP and unique rewards', 'Practice builds and loadouts'], page: 'AIBattle', color: 'from-rose-500 to-red-600' },
+              { icon: MessageSquare, title: 'Community', summary: 'Forums, guides, and social posts.', bullets: ['Read/write posts and guides', 'Challenge friends to unlocks', 'Follow hot topics'], page: 'Community', color: 'from-indigo-500 to-blue-700' },
+              { icon: Users, title: 'Clan', summary: 'Group play, events, and shared progress.', bullets: ['View clan dashboard and roster', 'Join events and raids', 'Post announcements and chat'], page: 'Clan', color: 'from-sky-500 to-cyan-600' },
+              { icon: Crown, title: 'Season Pass', summary: 'Seasonal rewards and progression.', bullets: ['Track seasonal XP', 'Preview next unlocks', 'Claim earned items'], page: 'SeasonalPass', color: 'from-lime-500 to-green-600' },
+              { icon: Hammer, title: 'Blacksmith', summary: 'Upgrade and evolve your cards and gear.', bullets: ['Level up and enhance items', 'Combine and ascend cards', 'Trade or list valuables'], page: 'Blacksmith', color: 'from-slate-500 to-zinc-600' },
+              { icon: Radio, title: 'Streaming Hub', summary: 'Stream, record, and manage VODs.', bullets: ['Go live or upload recordings', 'Manage titles, tags, and visibility', 'Track views and interactions'], page: 'StreamingHub', color: 'from-fuchsia-500 to-purple-600' },
+            ].map((cfg) => (
+              <PageGuideCard
+                key={cfg.title}
+                icon={cfg.icon}
+                title={cfg.title}
+                summary={cfg.summary}
+                bullets={cfg.bullets}
+                color={cfg.color}
+                onClick={() => navigate(createPageUrl(cfg.page))}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <footer className="relative py-12 px-6 border-t border-white/5">
         <div className="max-w-6xl mx-auto text-center">
           <p className="text-white/30 text-sm">© 2025 Atom × Eve. All rights reserved.</p>
