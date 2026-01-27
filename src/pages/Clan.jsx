@@ -308,7 +308,7 @@ export default function ClanPage() {
     // Render Logic
     if (isTransitioning) {
         return (
-            <div className="h-screen flex flex-col items-center justify-center bg-[#0a0c10] text-white">
+            <div className="h-screen flex flex-col items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
                 <Shield className="w-16 h-16 text-cyan-400 mb-6 animate-pulse" />
                 <h2 className="text-xl font-bold tracking-widest mb-2">ACCESSING DIVISION</h2>
                 <p className="text-white/40 text-sm">Synchronizing membership data...</p>
@@ -319,7 +319,7 @@ export default function ClanPage() {
     // Entry Gate - obey backend authority
     if (entryState === 'pending') {
         return (
-            <div className="h-screen flex items-center justify-center bg-[#0a0c10] text-white">
+            <div className="h-screen flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
                 <div className="text-center">
                     <Shield className="w-16 h-16 text-cyan-400 mb-4 animate-pulse" />
                     <p className="text-white/50">Validating access...</p>
@@ -335,7 +335,7 @@ export default function ClanPage() {
     // Guard: wait for confirmed clan before rendering main UI
     if (!clanForRender) {
         return (
-            <div className="h-screen flex items-center justify-center bg-[#0a0c10] text-white">
+            <div className="h-screen flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
                 <div className="text-center">
                     <Shield className="w-16 h-16 text-cyan-400 mb-4 animate-pulse" />
                     <p className="text-white/50">Preparing your division...</p>
@@ -345,8 +345,15 @@ export default function ClanPage() {
     }
 
     return (
-        <div className="h-screen w-full relative overflow-hidden bg-[#0a0c10] text-white font-sans selection:bg-cyan-500/30">
-            
+        <div className="h-screen w-full relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+
+            {/* Ambient Glow Effects */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
+                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
+            </div>
+
             {/* Game Workspace Overlay */}
             <AnimatePresence>
                 {selectedGame && (
