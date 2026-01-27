@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Pause, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff, X, Volume2, Settings, Maximize, Mic } from 'lucide-react';
+import { Play, Pause, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff, X, Volume2, Settings, Maximize, Mic, Plus, Trash2, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -18,6 +18,7 @@ export default function StreamingHome() {
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
+  const [isEditingTabs, setIsEditingTabs] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false); // Kept for header edit, but sections handle their own
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
@@ -246,7 +247,16 @@ export default function StreamingHome() {
 
               {/* Center: Controls & Navigation */}
               <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2">
-                 <Gamepad2 className="w-5 h-5 text-white/50 mb-1" />
+                 <div className="flex items-center gap-2 mb-1">
+                    <Gamepad2 className="w-5 h-5 text-white/50" />
+                    <button 
+                        onClick={() => setIsEditingTabs(!isEditingTabs)}
+                        className={`p-1 rounded-full transition-all ${isEditingTabs ? 'bg-white text-black' : 'text-white/30 hover:text-white'}`}
+                        title="Edit Sections"
+                    >
+                        <Settings className="w-3 h-3" />
+                    </button>
+                 </div>
                  <div className="flex items-center gap-8 text-sm font-medium">
                     <button 
                       onClick={() => setActiveTab(activeTab === 'schedule' ? null : 'schedule')}
@@ -295,20 +305,179 @@ export default function StreamingHome() {
                         exit={{ opacity: 0, height: 0, y: 20 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                         className="w-full overflow-hidden mb-8"
+                        onDoubleClick={() => setActiveTab(null)}
                     >
-                        {/* Tab Contents (Simplified for brevity, same structure as RightPane) */}
-                        <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-white capitalize">{activeTab} Manager</h3>
-                                <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
+                        {activeTab === 'schedule' && (
+                        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10 relative">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                    Streaming Schedule 
+                                    <span className="text-white/40 text-sm font-normal ml-2">{dateRangeString}</span>
+                                    {isEditingTabs && <Badge className="bg-white text-black text-[10px] ml-2">EDITING</Badge>}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <Button onClick={handlePrevTwoWeeks} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
+                                    <Button onClick={handleToday} variant="outline" className="h-8 px-4 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-xs font-semibold">Today</Button>
+                                    <Button onClick={handleNextTwoWeeks} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-4 h-4" /></Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
+                                </div>
                             </div>
-                            <div className="h-40 flex items-center justify-center border-2 border-dashed border-white/10 rounded-xl text-white/30">
-                                {activeTab === 'schedule' && "Schedule Editor Placeholder"}
-                                {activeTab === 'cards' && "Card Collection Manager Placeholder"}
-                                {activeTab === 'gallery' && "Gallery Uploads Placeholder"}
-                                {activeTab === 'games' && "Game Library Manager Placeholder"}
+
+                            <div className="grid grid-cols-7 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
+                                {scheduleDays.map((date, i) => {
+                                    const isCurrentDay = isToday(date);
+                                    const dayName = format(date, 'EEE');
+                                    const dayNumber = format(date, 'd');
+                                    
+                                    return (
+                                        <div key={i} className={`bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors ${isCurrentDay ? 'bg-white/[0.03]' : ''} ${isEditingTabs ? 'cursor-pointer hover:bg-white/5' : ''}`}>
+                                            <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{dayName}</span>
+                                            <span className={`text-xl font-bold ${isCurrentDay ? 'text-cyan-400' : 'text-white'}`}>{dayNumber}</span>
+                                            {isCurrentDay && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none box-border border-b-2 border-cyan-500/50" />}
+                                            
+                                            {/* Edit Overlay */}
+                                            {isEditingTabs && (
+                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Plus className="w-6 h-6 text-white/60" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <p className="text-center text-white/30 text-xs mt-4">Double-click content to collapse • Timezone is localized</p>
+                        </div>
+                        )}
+                        
+                        {activeTab === 'cards' && (
+                        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+                            <div className="flex items-center justify-between mb-6 px-2">
+                                <div className="flex items-center gap-3">
+                                <h3 className="text-lg font-bold text-white">Stream Collection</h3>
+                                <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
+                                </div>
+                                
+                                <div className="flex gap-2">
+                                {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
+                                    <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                                    {filter}
+                                    </button>
+                                ))}
+                                <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
+                                </div>
+                            </div>
+                
+                            {/* Cards Grid */}
+                            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                            {Array.from({ length: 20 }).map((_, i) => (
+                                <div 
+                                    key={i} 
+                                    onClick={(e) => { e.stopPropagation(); setSelectedCard({ name: `Item Name ${i+1}`, id: i }); }}
+                                    className="group relative aspect-[3/4] rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:scale-105 hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
+                                >
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                
+                                <div className="absolute top-1.5 left-1.5">
+                                    <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[8px] h-4 px-1">Common</Badge>
+                                </div>
+                                
+                                <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                                    <div className="text-xs font-bold text-white truncate">Item {i+1}</div>
+                                </div>
+                                </div>
+                            ))}
                             </div>
                         </div>
+                        )}
+                        
+                        {activeTab === 'gallery' && (
+                            <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                        Gallery
+                                        {isEditingTabs && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        {isEditingTabs && (
+                                            <Button size="sm" className="bg-white text-black hover:bg-slate-200">
+                                                <Upload className="w-3 h-3 mr-2" /> Upload
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                                    {isEditingTabs && (
+                                        <div className="aspect-video w-[280px] flex-shrink-0 bg-white/5 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2">
+                                                <Plus className="w-5 h-5 text-white/60" />
+                                            </div>
+                                            <span className="text-xs font-bold text-white/40">Add Image</span>
+                                        </div>
+                                    )}
+                                    {Array.from({ length: 8 }).map((_, i) => (
+                                        <div key={i} className="aspect-video w-[280px] flex-shrink-0 bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
+                                            <img src={`https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                {isEditingTabs ? (
+                                                    <Button variant="destructive" size="icon" className="rounded-full">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-white font-bold text-sm">View Image</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {activeTab === 'games' && (
+                            <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                        Games Played
+                                        {isEditingTabs && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
+                                    </h3>
+                                    <div className="flex items-center gap-2">
+                                        {isEditingTabs && (
+                                            <Button size="sm" className="bg-white text-black hover:bg-slate-200">
+                                                <Plus className="w-3 h-3 mr-2" /> Add Game
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                                    {isEditingTabs && (
+                                        <div className="w-[200px] flex-shrink-0 bg-white/5 border-2 border-dashed border-white/10 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 min-h-[80px]">
+                                            <Plus className="w-6 h-6 text-white/40 mb-2" />
+                                            <span className="text-xs font-bold text-white/40">Add Game</span>
+                                        </div>
+                                    )}
+                                    {['Valorant', 'Apex Legends', 'League of Legends', 'Overwatch 2', 'Minecraft', 'Destiny 2', 'Elden Ring', 'Cyberpunk 2077'].map((game, i) => (
+                                        <div key={i} className="w-[200px] flex-shrink-0 bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer group relative">
+                                            <div className="w-12 h-12 rounded-lg bg-black/40 overflow-hidden flex-shrink-0">
+                                                <img src={`https://source.unsplash.com/random/100x100?game,${game}&sig=${i}`} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-bold text-white truncate">{game}</div>
+                                                <div className="text-xs text-white/40 truncate">FPS • Action</div>
+                                            </div>
+                                            {isEditingTabs && (
+                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button className="text-red-400 hover:text-red-300">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
