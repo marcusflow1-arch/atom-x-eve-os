@@ -5,8 +5,9 @@ import { createPageUrl } from '@/utils';
 import { 
   Gamepad2, Brain, Trophy, Users, Sparkles, Play, 
   ChevronRight, Zap, Layers, Radio, ArrowRight,
-  BookOpen, Swords, Crown, Heart
+  BookOpen, Swords, Crown, Heart, Home, ShoppingBag, Library as LibraryIcon, MessageSquare, Target, Hammer
 } from 'lucide-react';
+import PageGuideCard from '@/components/onboarding/PageGuideCard';
 import { Button } from '@/components/ui/button';
 
 // Core Loop Pillar Card
