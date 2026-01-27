@@ -29,7 +29,7 @@ export default function StreamingHome() {
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
-  const [isEditingTabs, setIsEditingTabs] = useState(false);
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
@@ -40,7 +40,16 @@ export default function StreamingHome() {
   const [profileAvatar, setProfileAvatar] = useState(user?.avatar_url);
   const [scheduleData, setScheduleData] = useState({}); // { 'YYYY-MM-DD': { time: '...', title: '...' } }
   const [editingScheduleDay, setEditingScheduleDay] = useState(null); // Date object
-  const [scheduleForm, setScheduleForm] = useState({ time: '', title: '' });
+  const [scheduleForm, setScheduleForm] = useState({ time: '', title: '', game: '', isGiveaway: false });
+
+  const handleClearSchedule = (date) => {
+      const dateKey = format(date, 'yyyy-MM-dd');
+      setScheduleData(prev => {
+          const newState = { ...prev };
+          delete newState[dateKey];
+          return newState;
+      });
+  };
   const [galleryImages, setGalleryImages] = useState(Array.from({ length: 8 }).map((_, i) => ({ id: i, url: `https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}` })));
   const [myGames, setMyGames] = useState(['Valorant', 'Apex Legends', 'League of Legends', 'Overwatch 2', 'Minecraft', 'Destiny 2', 'Elden Ring', 'Cyberpunk 2077']);
   const [showGamePicker, setShowGamePicker] = useState(false);
@@ -87,10 +96,10 @@ export default function StreamingHome() {
   };
 
   const handleScheduleClick = (date) => {
-      if (!isEditingTabs) return;
+      if (!isEditingProfile) return;
       const dateKey = format(date, 'yyyy-MM-dd');
       setEditingScheduleDay(date);
-      setScheduleForm(scheduleData[dateKey] || { time: '', title: '' });
+      setScheduleForm(scheduleData[dateKey] || { time: '', title: '', game: '', isGiveaway: false });
   };
 
   const saveScheduleDay = () => {
@@ -438,7 +447,7 @@ export default function StreamingHome() {
                                 <h3 className="text-white font-bold text-lg flex items-center gap-2">
                                     Streaming Schedule 
                                     <span className="text-white/40 text-sm font-normal ml-2">{dateRangeString}</span>
-                                    {isEditingTabs && <Badge className="bg-white text-black text-[10px] ml-2">EDITING</Badge>}
+                                    {isEditingProfile && <Badge className="bg-white text-black text-[10px] ml-2">EDITING</Badge>}
                                 </h3>
                                 <div className="flex items-center gap-2">
                                     <Button onClick={handlePrevTwoWeeks} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
@@ -459,10 +468,8 @@ export default function StreamingHome() {
                                     return (
                                         <div 
                                             key={i} 
-                                            onClick={() => handleScheduleClick(date)}
                                             className={`bg-[#0f1419] p-2 min-h-[140px] flex flex-col items-center relative group hover:bg-[#1a1f2e] transition-colors 
                                                 ${isCurrentDay ? 'bg-white/[0.03]' : ''} 
-                                                ${isEditingTabs ? 'cursor-pointer hover:bg-white/5' : ''}
                                             `}
                                         >
                                             <div className="w-full flex justify-between items-start mb-2 px-1">
@@ -471,26 +478,40 @@ export default function StreamingHome() {
                                             </div>
                                             
                                             {dayData ? (
-                                                <div className="w-full bg-white/5 rounded p-2 border border-white/5 text-center">
+                                                <div className="w-full bg-white/5 rounded p-2 border border-white/5 text-center relative z-0">
                                                     <div className="text-[10px] text-cyan-300 font-bold mb-1">{dayData.time}</div>
-                                                    <div className="text-xs text-white leading-tight font-medium break-words">{dayData.title}</div>
+                                                    <div className="text-xs text-white leading-tight font-medium break-words mb-1">{dayData.title}</div>
+                                                    {dayData.game && <div className="text-[9px] text-white/60 mb-1 italic">{dayData.game}</div>}
+                                                    {dayData.isGiveaway && <Badge className="text-[8px] h-4 px-1 bg-yellow-500/20 text-yellow-300 border-yellow-500/30">GIVEAWAY</Badge>}
                                                 </div>
                                             ) : (
                                                 <div className="flex-1 flex items-center justify-center">
-                                                    {isCurrentDay && !isEditingTabs && <span className="text-[10px] text-white/20 italic">No stream</span>}
+                                                    {isCurrentDay && !isEditingProfile && <span className="text-[10px] text-white/20 italic">No stream</span>}
                                                 </div>
                                             )}
 
                                             {isCurrentDay && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none box-border border-b-2 border-cyan-500/50" />}
                                             
-                                            {/* Edit Overlay */}
-                                            {isEditingTabs && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 backdrop-blur-[1px]">
-                                                    <div className="flex flex-col items-center gap-1">
-                                                        <Pencil className="w-4 h-4 text-white/80" />
-                                                        <span className="text-[9px] text-white/60 font-medium">Edit Day</span>
+                                            {/* Edit Controls */}
+                                            {isEditingProfile && (
+                                                <>
+                                                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleScheduleClick(date); }}
+                                                            className="w-8 h-8 rounded-full bg-cyan-500 text-black flex items-center justify-center hover:scale-110 transition-transform shadow-lg pointer-events-auto"
+                                                        >
+                                                            <Plus className="w-5 h-5" />
+                                                        </button>
                                                     </div>
-                                                </div>
+                                                    <div className="absolute top-1 right-1 z-10">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleClearSchedule(date); }}
+                                                            className="p-1 rounded-full bg-black/60 text-white/40 hover:text-red-400 hover:bg-black/80 transition-colors"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                     );
@@ -525,6 +546,25 @@ export default function StreamingHome() {
                                             placeholder="e.g. Ranked Climb"
                                             className="bg-black/20 border-white/10 text-white"
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-white/60">Game</label>
+                                        <Input 
+                                            value={scheduleForm.game}
+                                            onChange={(e) => setScheduleForm({...scheduleForm, game: e.target.value})}
+                                            placeholder="e.g. Valorant"
+                                            className="bg-black/20 border-white/10 text-white"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <input 
+                                            type="checkbox"
+                                            id="giveaway"
+                                            checked={scheduleForm.isGiveaway}
+                                            onChange={(e) => setScheduleForm({...scheduleForm, isGiveaway: e.target.checked})}
+                                            className="w-4 h-4 rounded border-white/10 bg-black/20 text-cyan-500 focus:ring-cyan-500/50"
+                                        />
+                                        <label htmlFor="giveaway" className="text-sm font-medium text-white/80 cursor-pointer">Doing a Giveaway?</label>
                                     </div>
                                 </div>
                                 <DialogFooter>
@@ -581,10 +621,10 @@ export default function StreamingHome() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-white font-bold text-lg flex items-center gap-2">
                                         Gallery
-                                        {isEditingTabs && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
+                                        {isEditingProfile && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
                                     </h3>
                                     <div className="flex items-center gap-2">
-                                        {isEditingTabs && (
+                                        {isEditingProfile && (
                                             <Button size="sm" className="bg-white text-black hover:bg-slate-200">
                                                 <Upload className="w-3 h-3 mr-2" /> Upload
                                             </Button>
@@ -593,7 +633,7 @@ export default function StreamingHome() {
                                     </div>
                                 </div>
                                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                                    {isEditingTabs && (
+                                    {isEditingProfile && (
                                         <div 
                                             onClick={handleGalleryUpload}
                                             className="aspect-video w-[280px] flex-shrink-0 bg-white/5 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 transition-colors"
@@ -608,7 +648,7 @@ export default function StreamingHome() {
                                         <div key={img.id} className="aspect-video w-[280px] flex-shrink-0 bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
                                             <img src={img.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                {isEditingTabs ? (
+                                                {isEditingProfile ? (
                                                     <div className="flex gap-2">
                                                         <Button 
                                                             variant="destructive" 
@@ -637,10 +677,10 @@ export default function StreamingHome() {
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-white font-bold text-lg flex items-center gap-2">
                                         Games Played
-                                        {isEditingTabs && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
+                                        {isEditingProfile && <Badge className="bg-white text-black text-[10px]">EDITING</Badge>}
                                     </h3>
                                     <div className="flex items-center gap-2">
-                                        {isEditingTabs && (
+                                        {isEditingProfile && (
                                             <Button size="sm" className="bg-white text-black hover:bg-slate-200">
                                                 <Plus className="w-3 h-3 mr-2" /> Add Game
                                             </Button>
@@ -649,7 +689,7 @@ export default function StreamingHome() {
                                     </div>
                                 </div>
                                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                                    {isEditingTabs && (
+                                    {isEditingProfile && (
                                         <div 
                                             onClick={() => setShowGamePicker(true)}
                                             className="w-[200px] flex-shrink-0 bg-white/5 border-2 border-dashed border-white/10 rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer hover:bg-white/10 min-h-[80px]"
@@ -667,7 +707,7 @@ export default function StreamingHome() {
                                                 <div className="text-sm font-bold text-white truncate">{game}</div>
                                                 <div className="text-xs text-white/40 truncate">FPS • Action</div>
                                             </div>
-                                            {isEditingTabs && (
+                                            {isEditingProfile && (
                                                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button 
                                                         className="text-red-400 hover:text-red-300 bg-black/50 rounded-full p-1"
