@@ -132,75 +132,89 @@ export default function StreamerRightPane({ streamer }) {
         {/* Separator Line */}
         <div className="w-full h-px bg-white/10 mb-6" />
 
-        {/* Tab Content */}
-        {activeTab === 'schedule' ? (
-           <div className="w-full">
-             <div className="flex items-center justify-between mb-6">
-                <h3 className="text-white font-bold text-lg">Streaming Schedule <span className="text-white/40 text-sm font-normal ml-2">Jan 26 - Feb 8, 2026</span></h3>
-                <div className="flex items-center gap-2">
-                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
-                   <Button variant="outline" className="h-8 px-4 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-xs font-semibold">Today</Button>
-                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-4 h-4" /></Button>
-                </div>
-             </div>
+        {/* Tab Content - Collapsible */}
+        <AnimatePresence>
+            {activeTab && (
+                <motion.div 
+                    initial={{ opacity: 0, height: 0, y: 20 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: 20 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="w-full overflow-hidden"
+                    onDoubleClick={() => setActiveTab(null)}
+                >
+                    {activeTab === 'schedule' ? (
+                    <div className="w-full select-none pt-4">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-white font-bold text-lg">Streaming Schedule <span className="text-white/40 text-sm font-normal ml-2">{dateRangeString}</span></h3>
+                            <div className="flex items-center gap-2">
+                            <Button onClick={handlePrevTwoWeeks} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-4 h-4" /></Button>
+                            <Button onClick={handleToday} variant="outline" className="h-8 px-4 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-xs font-semibold">Today</Button>
+                            <Button onClick={handleNextTwoWeeks} variant="outline" size="icon" className="h-8 w-8 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-4 h-4" /></Button>
+                            </div>
+                        </div>
 
-             <div className="grid grid-cols-7 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                  <div key={day} className="bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors">
-                     <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{day}</span>
-                     <span className={`text-xl font-bold ${i === 0 ? 'text-cyan-400' : 'text-white'}`}>{26 + i}</span>
-                     {i === 0 && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none" />}
-                  </div>
-                ))}
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, i) => (
-                  <div key={`${day}-2`} className="bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors">
-                     <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{day}</span>
-                     <span className="text-xl font-bold text-white">{2 + i}</span>
-                  </div>
-                ))}
-             </div>
-             <p className="text-center text-white/30 text-xs mt-4">Timezone is localized • Viewers see your schedule in their own timezone</p>
-           </div>
-        ) : (
-           <div className="w-full">
-             <div className="flex items-center justify-between mb-6 px-2">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-bold text-white">Stream Collection</h3>
-                  <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
-                </div>
-                
-                <div className="flex gap-2">
-                   {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
-                     <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
-                       {filter}
-                     </button>
-                   ))}
-                </div>
-             </div>
-   
-             {/* 50% smaller cards (increased grid columns) */}
-             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-               {Array.from({ length: 20 }).map((_, i) => (
-                 <div 
-                    key={i} 
-                    onClick={() => setSelectedCard({ name: `Item Name ${i+1}`, id: i })}
-                    className="group relative aspect-[3/4] rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:scale-105 hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
-                 >
-                   <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
-                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                   
-                   <div className="absolute top-1.5 left-1.5">
-                     <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[8px] h-4 px-1">Common</Badge>
-                   </div>
-                   
-                   <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                     <div className="text-xs font-bold text-white truncate">Item {i+1}</div>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-        )}
+                        <div className="grid grid-cols-7 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10">
+                            {scheduleDays.map((date, i) => {
+                                const isCurrentDay = isToday(date);
+                                const dayName = format(date, 'EEE');
+                                const dayNumber = format(date, 'd');
+                                
+                                return (
+                                    <div key={i} className={`bg-[#0f1419] p-4 min-h-[140px] flex flex-col items-center gap-2 relative group hover:bg-[#1a1f2e] transition-colors ${isCurrentDay ? 'bg-white/[0.03]' : ''}`}>
+                                        <span className="text-xs font-bold text-white/40 uppercase tracking-wider">{dayName}</span>
+                                        <span className={`text-xl font-bold ${isCurrentDay ? 'text-cyan-400' : 'text-white'}`}>{dayNumber}</span>
+                                        {isCurrentDay && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none box-border border-b-2 border-cyan-500/50" />}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <p className="text-center text-white/30 text-xs mt-4">Double-click content to collapse • Timezone is localized</p>
+                    </div>
+                    ) : (
+                    <div className="w-full select-none pt-4">
+                        <div className="flex items-center justify-between mb-6 px-2">
+                            <div className="flex items-center gap-3">
+                            <h3 className="text-lg font-bold text-white">Stream Collection</h3>
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20">Season 0</Badge>
+                            </div>
+                            
+                            <div className="flex gap-2">
+                            {['All', 'Powers', 'Equipment', 'Companions'].map((filter, i) => (
+                                <button key={filter} className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${i === 0 ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                                {filter}
+                                </button>
+                            ))}
+                            </div>
+                        </div>
+            
+                        {/* 50% smaller cards (increased grid columns) */}
+                        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
+                        {Array.from({ length: 20 }).map((_, i) => (
+                            <div 
+                                key={i} 
+                                onClick={(e) => { e.stopPropagation(); setSelectedCard({ name: `Item Name ${i+1}`, id: i }); }}
+                                className="group relative aspect-[3/4] rounded-xl border border-white/10 bg-white/5 overflow-hidden transition-all hover:scale-105 hover:border-white/30 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
+                            >
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            
+                            <div className="absolute top-1.5 left-1.5">
+                                <Badge className="bg-black/40 backdrop-blur-md border-white/10 text-[8px] h-4 px-1">Common</Badge>
+                            </div>
+                            
+                            <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
+                                <div className="text-xs font-bold text-white truncate">Item {i+1}</div>
+                            </div>
+                            </div>
+                        ))}
+                        </div>
+                        <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
+                    </div>
+                    )}
+                </motion.div>
+            )}
+        </AnimatePresence>
       </div>
     </div>
   );
