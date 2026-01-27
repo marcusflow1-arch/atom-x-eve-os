@@ -606,22 +606,46 @@ export default function GenreMastery({ onClose }) {
 
 
 
-      {/* Left Rail: Vertical line and level markers */}
+      {/* Left Rail: Games list for selected genre */}
       <div className="fixed left-0 top-0 h-screen w-px bg-white/20 z-[25]" />
-      <div className="fixed left-0 top-20 bottom-0 w-[10%] z-[26] overflow-y-auto">
-        <div className="py-2 flex flex-col items-center gap-0 select-none">
-          {Array.from({ length: 50 }, (_, i) => i + 1).map((n) => (
-            <motion.div
-              key={n}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.6 }}
-              className="h-[5vh] w-full flex items-center justify-center text-white/90 text-2xl cursor-pointer hover:text-white"
-              onClick={() => navigate(createPageUrl(`BlankTransition?genre=${selectedGenre.id}&level=${n}`))}
-            >
-              {n}
-            </motion.div>
-          ))}
+      <div className="fixed left-0 top-20 bottom-0 w-[12%] min-w-[140px] z-[26] overflow-y-auto">
+        <div className="py-2 flex flex-col items-stretch gap-1 select-none px-2">
+          {gamesLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+            </div>
+          ) : genreGames.length === 0 ? (
+            <div className="text-center py-8 text-white/40 text-xs">
+              No games in this genre
+            </div>
+          ) : (
+            genreGames.map((game) => (
+              <motion.div
+                key={game.id}
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: false, amount: 0.5 }}
+                whileHover={{ x: 4 }}
+                className="flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-white/10 border border-transparent hover:border-white/10 transition-all"
+                onClick={() => navigate(createPageUrl(`BlankTransition?genre=${selectedGenre.id}&game=${game.id}`))}
+              >
+                {/* Game thumbnail */}
+                <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 border border-white/10">
+                  {game.cover_image ? (
+                    <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                      {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: "w-4 h-4 text-white/40" })}
+                    </div>
+                  )}
+                </div>
+                {/* Game title */}
+                <span className="text-xs font-medium text-white/70 truncate">
+                  {game.title}
+                </span>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
 
