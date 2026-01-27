@@ -125,83 +125,319 @@ const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
       whileHover={{ scale: 1.05, z: 50 }}
       className={`relative w-full aspect-[3/4] rounded-lg overflow-hidden cursor-pointer group border ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}
     >
-      <ShinyCard>
-        {/* Card Content */}
-        <div className="absolute inset-0 flex flex-col items-center p-2" style={{ transform: "translateZ(10px)" }}>
-          {/* Header */}
-          <div className="w-full flex justify-between items-start mb-1">
-            <Badge variant="outline" className={`text-[7px] px-1 py-0 border ${badgeColor}`}>
-              {achievement.rarity}
-            </Badge>
-            <div className="text-yellow-400 font-bold text-[8px]">{achievement.points}</div>
-          </div>
+      {/* Liquid Glass Background */}
+      <div 
+        className="absolute inset-0 rounded-lg"
+        style={{
+          background: 'rgba(148, 163, 184, 0.06)',
+          backdropFilter: 'blur(50px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+          border: '1px solid rgba(148, 163, 184, 0.15)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
+        }}
+      />
 
-          {/* Icon Area */}
-          <div className="flex-1 flex items-center justify-center w-full my-1" style={{ transform: "translateZ(20px)" }}>
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl shadow-inner border border-white/10">
-              {achievement.icon || '🏆'}
-            </div>
-          </div>
+      {/* Card Content */}
+      <div className="absolute inset-0 flex flex-col items-center p-2" style={{ transform: "translateZ(10px)" }}>
+        {/* Header */}
+        <div className="w-full flex justify-between items-start mb-1">
+          <Badge variant="outline" className={`text-[7px] px-1 py-0 border ${badgeColor}`}>
+            {achievement.rarity}
+          </Badge>
+          <div className="text-yellow-400 font-bold text-[8px]">{achievement.points}</div>
+        </div>
 
-          {/* Info */}
-          <div className="w-full text-center mt-auto" style={{ transform: "translateZ(15px)" }}>
-            <h3 className="text-white font-bold text-[10px] leading-tight mb-0.5 line-clamp-2">{achievement.title}</h3>
-          </div>
-
-          {/* Status */}
-          <div className="mt-1 w-full border-t border-white/10 pt-1 flex justify-center">
-            {isUnlocked ? (
-              <Check className="w-3 h-3 text-green-400" />
-            ) : (
-              <span className="text-slate-500 text-[8px]">Locked</span>
-            )}
+        {/* Icon Area */}
+        <div className="flex-1 flex items-center justify-center w-full my-1" style={{ transform: "translateZ(20px)" }}>
+          <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-xl shadow-inner border border-white/10">
+            {achievement.icon || '🏆'}
           </div>
         </div>
 
-        {/* Shine Effect */}
-        <motion.div
-          style={{
-            opacity: useTransform(rotateX, (val) => Math.abs(val) / 20 + 0.1),
-            background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.15) 45%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.15) 55%, transparent 80%)",
-            transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"])
-          }}
-          className="absolute inset-0 z-10 pointer-events-none"
-        />
+        {/* Info */}
+        <div className="w-full text-center mt-auto" style={{ transform: "translateZ(15px)" }}>
+          <h3 className="text-white font-bold text-[10px] leading-tight mb-0.5 line-clamp-2">{achievement.title}</h3>
+        </div>
 
-        {/* Corner Glow Effects */}
-        <motion.div
-          className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
-          animate={{
-            boxShadow: [
-              "0 0 0px rgba(59, 130, 246, 0)",
-              "0 0 10px rgba(59, 130, 246, 0.5)",
-              "0 0 0px rgba(59, 130, 246, 0)"
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          style={{
-            borderLeft: "1px solid rgba(59, 130, 246, 0.4)",
-            borderBottom: "1px solid rgba(59, 130, 246, 0.4)",
-            borderBottomLeftRadius: "0.5rem"
-          }}
-        />
-        <motion.div
-          className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
-          animate={{
-            boxShadow: [
-              "0 0 0px rgba(59, 130, 246, 0)",
-              "0 0 10px rgba(59, 130, 246, 0.5)",
-              "0 0 0px rgba(59, 130, 246, 0)"
-            ]
-          }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          style={{
-            borderRight: "1px solid rgba(59, 130, 246, 0.4)",
-            borderTop: "1px solid rgba(59, 130, 246, 0.4)",
-            borderTopRightRadius: "0.5rem"
-          }}
-        />
-      </ShinyCard>
+        {/* Status */}
+        <div className="mt-1 w-full border-t border-white/10 pt-1 flex justify-center">
+          {isUnlocked ? (
+            <Check className="w-3 h-3 text-green-400" />
+          ) : (
+            <span className="text-slate-500 text-[8px]">Locked</span>
+          )}
+        </div>
+      </div>
+
+      {/* Shine Effect */}
+      <motion.div
+        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+        style={{
+          background: useTransform(mouseX, [-0.5, 0.5], [
+            'linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) 0%, transparent 100%)',
+            'linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) 100%, transparent 100%)'
+          ])
+        }}
+      />
+
+      {/* Corner Glow Effects */}
+      <motion.div
+        className="absolute bottom-0 left-0 w-6 h-6 pointer-events-none"
+        animate={{
+          boxShadow: [
+            "0 0 0px rgba(59, 130, 246, 0)",
+            "0 0 10px rgba(59, 130, 246, 0.5)",
+            "0 0 0px rgba(59, 130, 246, 0)"
+          ]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        style={{
+          borderLeft: "1px solid rgba(59, 130, 246, 0.4)",
+          borderBottom: "1px solid rgba(59, 130, 246, 0.4)",
+          borderBottomLeftRadius: "0.5rem"
+        }}
+      />
+      <motion.div
+        className="absolute top-0 right-0 w-6 h-6 pointer-events-none"
+        animate={{
+          boxShadow: [
+            "0 0 0px rgba(59, 130, 246, 0)",
+            "0 0 10px rgba(59, 130, 246, 0.5)",
+            "0 0 0px rgba(59, 130, 246, 0)"
+          ]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        style={{
+          borderRight: "1px solid rgba(59, 130, 246, 0.4)",
+          borderTop: "1px solid rgba(59, 130, 246, 0.4)",
+          borderTopRightRadius: "0.5rem"
+        }}
+      />
+    </motion.div>
+  );
+};
+
+// Achievement Detail Overlay with CardEnhancementOverlay UI
+const AchievementDetailOverlay = ({ achievement, onClose }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+  const rotateX = useTransform(mouseY, [-150, 150], [15, -15]);
+  const rotateY = useTransform(mouseX, [-150, 150], [-15, 15]);
+  const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    const cX = clientX - left - width / 2;
+    const cY = clientY - top - height / 2;
+    x.set(cX);
+    y.set(cY);
+  }
+
+  function handleMouseLeave() {
+    x.set(0);
+    y.set(0);
+  }
+
+  const rarityGlows = {
+    Common: 'rgba(100,116,139,0.3)',
+    Rare: 'rgba(59,130,246,0.3)',
+    Epic: 'rgba(168,85,247,0.3)',
+    Legendary: 'rgba(249,115,22,0.3)',
+    Mythic: 'rgba(244,63,94,0.3)',
+  };
+
+  const rarityBadgeStyles = {
+    Common: 'bg-slate-500/20 text-slate-400 border-slate-500/50',
+    Rare: 'bg-blue-500/20 text-blue-400 border-blue-500/50',
+    Epic: 'bg-purple-500/20 text-purple-400 border-purple-500/50',
+    Legendary: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+    Mythic: 'bg-red-500/20 text-red-400 border-red-500/50',
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div 
+        className="relative w-full max-w-6xl h-[85vh] flex gap-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute -top-12 right-0 z-50 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Left Panel: Achievement Card with 3D tilt */}
+        <motion.div 
+          initial={{ x: -50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="w-1/3 flex flex-col relative p-6 items-center justify-center"
+        >
+          <div className="flex flex-col items-center justify-center">
+            {/* Interactive Liquid Glass Card */}
+            <div 
+              className="relative group perspective-1000 w-full max-w-[280px] aspect-[2.5/3.5]"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              <motion.div
+                className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border border-white/20"
+                style={{
+                  rotateX,
+                  rotateY,
+                  transformStyle: "preserve-3d",
+                  background: 'rgba(148, 163, 184, 0.06)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+                  boxShadow: `0 0 30px ${rarityGlows[achievement.rarity] || rarityGlows.Common}`
+                }}
+              >
+                {/* Card Content */}
+                <div className="absolute inset-0 z-0 flex flex-col items-center justify-center p-6" style={{ transform: "translateZ(0)" }}>
+                  <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center text-6xl mb-4 border border-white/20">
+                    {achievement.icon || '🏆'}
+                  </div>
+                  <h3 className="text-xl font-bold text-white text-center">{achievement.title}</h3>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Badge className={`${rarityBadgeStyles[achievement.rarity] || rarityBadgeStyles.Common} border`}>
+                      {achievement.rarity}
+                    </Badge>
+                    <span className="text-yellow-400 font-bold text-sm">{achievement.points} pts</span>
+                  </div>
+                </div>
+
+                {/* Shine Layer */}
+                <motion.div 
+                  className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
+                  style={{
+                    background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
+                  }}
+                />
+
+                {/* Glossy Overlay */}
+                <div className="absolute inset-0 z-10 bg-gradient-to-tr from-white/10 via-transparent to-black/30 pointer-events-none" />
+              </motion.div>
+              
+              {/* Floor Reflection */}
+              <div className="absolute -bottom-10 left-4 right-4 h-4 bg-black/60 blur-xl rounded-full" />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h2 className="text-2xl font-black text-white mb-1 tracking-tight">{achievement.title}</h2>
+              <div className="flex items-center justify-center gap-2">
+                <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">{achievement.game || "Unknown Game"}</Badge>
+                <Badge className={`${rarityBadgeStyles[achievement.rarity] || rarityBadgeStyles.Common} border`}>
+                  {achievement.rarity}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Right Panel: Achievement Details */}
+        <motion.div 
+          initial={{ x: 50, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="flex-1 flex flex-col py-6 pr-6"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="h-full flex flex-col"
+          >
+            <div className="mb-6 pl-2">
+              <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                <ScrollText className="w-6 h-6 text-cyan-400" />
+                Achievement Record
+              </h3>
+              <p className="text-white/40 text-sm">Detailed information about this achievement</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-2xl p-6 border border-white/10">
+                <div className="space-y-6">
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Description</label>
+                    <p className="text-slate-300 leading-relaxed italic text-sm">
+                      "{achievement.description || "Complete the required objectives to unlock this achievement and earn exclusive rewards."}"
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/10">
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Game</label>
+                      <p className="text-white font-medium">{achievement.game || "Unknown Game"}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Rarity</label>
+                      <Badge className={`${rarityBadgeStyles[achievement.rarity] || rarityBadgeStyles.Common} border`}>
+                        {achievement.rarity}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white/10">
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Category</label>
+                      <p className="text-white font-medium capitalize">{achievement.category || "Standard"}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Points</label>
+                      <p className="text-yellow-400 font-bold text-xl">{achievement.points || achievement.xp || 0}</p>
+                    </div>
+                  </div>
+
+                  {achievement.reward && (
+                    <div className="pt-4 border-t border-white/10">
+                      <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Reward</label>
+                      <div className="bg-black/30 p-4 rounded-lg border border-white/5">
+                        <h4 className="text-white font-bold mb-1">{achievement.reward.name}</h4>
+                        <p className="text-slate-400 text-sm mb-3">{achievement.reward.description}</p>
+                        {achievement.reward.stats && Object.keys(achievement.reward.stats).length > 0 && (
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            {Object.entries(achievement.reward.stats).map(([key, value]) => (
+                              <div key={key} className="bg-white/5 p-2 rounded border border-white/5">
+                                <div className="text-xs text-slate-400 uppercase tracking-wide">{key}</div>
+                                <div className="text-lg font-bold text-white">{value}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t border-white/10">
+                    <label className="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-3">Status</label>
+                    <div className="flex items-center gap-3">
+                      {achievement.unlocked ? (
+                        <div className="flex items-center gap-2 text-green-400">
+                          <Check className="w-5 h-5" />
+                          <span className="font-bold">Unlocked</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-slate-400">
+                          <div className="w-5 h-5 rounded-full border-2 border-slate-500" />
+                          <span className="font-medium">Locked</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 };
