@@ -1000,6 +1000,7 @@ export default function LunaTemplate() {
   const { equipItem, unequipItem, equippedItems, setWeaponModelUrl, weaponModelUrl } = useEquipment();
   const { activeSkills, triggerSkill } = useSkills();
   const [showSettings, setShowSettings] = useState(false);
+  const [showLive, setShowLive] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
@@ -1054,6 +1055,7 @@ export default function LunaTemplate() {
     const params = new URLSearchParams(location.search);
     const panel = params.get('panel');
     setShowSettings(panel === 'settings');
+    setShowLive(panel === 'live');
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
@@ -1555,6 +1557,58 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
+            {/* LIVE STREAM SECTION (Condition Rendered) */}
+            <AnimatePresence>
+              {showLive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full flex gap-6 overflow-hidden"
+                >
+                  {/* Streamy Box */}
+                  <div className="flex-[2] aspect-video bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                            <span className="text-white/40">Stream Offline</span>
+                        </div>
+                    </div>
+                    {/* Mock Controls */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-3">
+                            <button className="text-white hover:text-cyan-400"><Play className="w-5 h-5 fill-current" /></button>
+                            <span className="text-white text-sm">00:00 / 00:00</span>
+                        </div>
+                        <button className="text-white hover:text-cyan-400"><Settings className="w-5 h-5" /></button>
+                    </div>
+                  </div>
+
+                  {/* Chat Box */}
+                  <div className="flex-1 bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden h-auto min-h-[300px]">
+                    <div className="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                        <span className="text-white font-bold text-sm">Stream Chat</span>
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    </div>
+                    <div className="flex-1 p-3 space-y-2 overflow-y-auto">
+                        <div className="text-xs text-white/60">Welcome to the chat!</div>
+                        <div className="flex gap-2">
+                            <span className="text-cyan-400 text-xs font-bold">Bot:</span>
+                            <span className="text-white text-xs">Stream starting soon...</span>
+                        </div>
+                    </div>
+                    <div className="p-3 border-t border-white/10 bg-white/5">
+                        <input 
+                            type="text" 
+                            placeholder="Send a message..." 
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* TOP SECTION: Game Banner + Memories (directly under header tabs) */}
             <div className="flex gap-6 mb-6">
               {/* Large Hero Tile - Game Banner (Sumi-e Style) with Video */}
