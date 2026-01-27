@@ -504,41 +504,42 @@ export default function StreamingHome() {
                                 })}
                             </div>
 
-                            {/* Schedule Edit Modal */}
-                            <Dialog open={!!editingScheduleDay} onOpenChange={(open) => !open && setEditingScheduleDay(null)}>
-                                <DialogContent className="bg-[#1a1f2e] border-white/10 text-white">
-                                    <DialogHeader>
-                                        <DialogTitle>Edit Schedule: {editingScheduleDay && format(editingScheduleDay, 'MMMM do, yyyy')}</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4 py-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-white/60">Time</label>
-                                            <Input 
-                                                value={scheduleForm.time}
-                                                onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})}
-                                                placeholder="e.g. 7:00 PM EST"
-                                                className="bg-black/20 border-white/10 text-white"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-white/60">Activity / Title</label>
-                                            <Input 
-                                                value={scheduleForm.title}
-                                                onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})}
-                                                placeholder="e.g. Ranked Climb"
-                                                className="bg-black/20 border-white/10 text-white"
-                                            />
-                                        </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <Button variant="ghost" onClick={() => setEditingScheduleDay(null)}>Cancel</Button>
-                                        <Button onClick={saveScheduleDay} className="bg-white text-black hover:bg-gray-200">Save</Button>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
                             <p className="text-center text-white/30 text-xs mt-4">Double-click content to collapse • Timezone is localized</p>
                         </div>
                         )}
+
+                        {/* Schedule Edit Modal */}
+                        <Dialog open={!!editingScheduleDay} onOpenChange={(open) => !open && setEditingScheduleDay(null)}>
+                            <DialogContent className="bg-[#1a1f2e] border-white/10 text-white">
+                                <DialogHeader>
+                                    <DialogTitle>Edit Schedule: {editingScheduleDay && format(editingScheduleDay, 'MMMM do, yyyy')}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-white/60">Time</label>
+                                        <Input 
+                                            value={scheduleForm.time}
+                                            onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})}
+                                            placeholder="e.g. 7:00 PM EST"
+                                            className="bg-black/20 border-white/10 text-white"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-white/60">Activity / Title</label>
+                                        <Input 
+                                            value={scheduleForm.title}
+                                            onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})}
+                                            placeholder="e.g. Ranked Climb"
+                                            className="bg-black/20 border-white/10 text-white"
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="ghost" onClick={() => setEditingScheduleDay(null)}>Cancel</Button>
+                                    <Button onClick={saveScheduleDay} className="bg-white text-black hover:bg-gray-200">Save</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                         
                         {activeTab === 'cards' && (
                         <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
