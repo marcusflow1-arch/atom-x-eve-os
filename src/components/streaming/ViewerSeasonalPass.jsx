@@ -92,27 +92,28 @@ const RewardModal = ({ level, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-md z-[500] flex items-center justify-center p-8"
+      className="fixed inset-0 bg-black/40 backdrop-blur-md z-[500] flex items-center justify-center p-8"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        exit={{ scale: 0.95, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
         className="max-w-5xl w-full relative flex flex-col md:flex-row items-start gap-8"
         style={{
-          background: 'rgba(20, 25, 35, 0.95)',
-          backdropFilter: 'blur(30px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '24px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(50px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(50px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '32px',
           padding: '48px',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.5)'
+          boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05)'
         }}
       >
         <button
             onClick={onClose}
-            className="absolute -top-4 -right-4 md:-top-12 md:right-0 z-20 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+            className="absolute -top-4 -right-4 md:-top-12 md:right-0 z-20 w-10 h-10 bg-white/5 hover:bg-white/20 border border-white/10 rounded-full flex items-center justify-center transition-colors"
           >
             <X className="w-6 h-6 text-white" />
         </button>
@@ -126,37 +127,37 @@ const RewardModal = ({ level, onClose }) => {
           />
           
           <div className="text-center">
-            <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-2 px-3 py-1 text-xs backdrop-blur-md`}>
+            <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-2 px-3 py-1 text-xs backdrop-blur-md shadow-lg`}>
               SEASON {level.season} • {level.cardReward.rarity.toUpperCase()}
             </Badge>
-            <h2 className="text-3xl font-black text-white tracking-tight">{level.cardReward.name}</h2>
+            <h2 className="text-3xl font-black text-white tracking-tight drop-shadow-md">{level.cardReward.name}</h2>
           </div>
         </div>
 
         {/* Right Side: Details & Bonus Equipment */}
         <div className="flex-1 flex flex-col gap-6 w-full">
           <div className="relative">
-            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest">Reward Details</h3>
-            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+            <h3 className="text-xs font-bold text-white/50 mb-3 uppercase tracking-widest">Reward Details</h3>
+            <p className="text-sm text-slate-200 mb-6 leading-relaxed font-medium">
               {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
             </p>
 
             <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-blue-400" />
                   <span className="text-slate-300 text-sm">Item Type</span>
                 </div>
                 <span className="text-white font-bold text-sm">{level.cardReward.type}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-yellow-400" />
                   <span className="text-slate-300 text-sm">Power Score</span>
                 </div>
                 <span className="text-white font-bold text-sm">850</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
+              <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span className="text-slate-300 text-sm">Reward ID</span>
