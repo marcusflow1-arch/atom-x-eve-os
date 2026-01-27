@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff, X } from 'lucide-react';
+import { Play, Pause, Gamepad2, ChevronLeft, ChevronRight, Save, Pencil, MessageSquare, WifiOff, X, Volume2, Settings, Maximize, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -18,7 +18,9 @@ export default function StreamingHome() {
   const [activeTab, setActiveTab] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false); // Kept for header edit, but sections handle their own
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [volume, setVolume] = useState(80);
 
   // User Data (Fallback if auth not ready)
   const displayName = user?.full_name || user?.username || "My Channel";
@@ -42,18 +44,82 @@ export default function StreamingHome() {
         
         {/* Top Section: Video & Chat */}
         <div className="flex gap-4 flex-col lg:flex-row">
-            {/* Stream Box */}
-            <div className="flex-[3] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden min-h-[400px] lg:min-h-[520px] relative group">
+            {/* Stream Box (Liquid Glass) */}
+            <div 
+                className="flex-[3] rounded-3xl overflow-hidden min-h-[400px] lg:min-h-[520px] relative group border border-white/10 shadow-2xl"
+                style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                }}
+            >
                 {isLive ? (
-                    <div className="w-full h-full bg-black relative">
+                    <div className="w-full h-full relative">
                          {/* Mock Live Stream Content */}
-                         <img src="https://source.unsplash.com/random/1280x720?gaming" className="w-full h-full object-cover opacity-80" />
-                         <div className="absolute top-4 left-4 bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse">
-                            LIVE
+                         <img src="https://source.unsplash.com/random/1280x720?gaming" className="w-full h-full object-cover" />
+                         
+                         {/* Overlay Gradient */}
+                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                         {/* Top Status */}
+                         <div className="absolute top-6 left-6 flex items-center gap-3">
+                            <div className="bg-red-600 px-3 py-1 rounded text-white text-xs font-bold uppercase animate-pulse shadow-lg shadow-red-600/20">
+                                LIVE
+                            </div>
+                            <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded text-white text-xs font-medium flex items-center gap-2 border border-white/10">
+                                <MessageSquare className="w-3 h-3 text-white/60" />
+                                1.2k Viewers
+                            </div>
                          </div>
-                         <div className="absolute bottom-4 left-4 text-white drop-shadow-md">
-                            <h3 className="font-bold text-lg">My Awesome Stream Title</h3>
-                            <p className="text-sm opacity-80">Playing: Valorant</p>
+
+                         {/* Center Play Button (On Hover) */}
+                         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                            <button 
+                                onClick={() => setIsPlaying(!isPlaying)}
+                                className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-lg border border-white/20 flex items-center justify-center pointer-events-auto hover:bg-white/20 hover:scale-110 transition-all"
+                            >
+                                {isPlaying ? <Pause className="w-6 h-6 text-white" /> : <Play className="w-6 h-6 text-white ml-1" />}
+                            </button>
+                         </div>
+
+                         {/* Bottom Controls */}
+                         <div className="absolute bottom-0 left-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            {/* Stream Info */}
+                            <div className="mb-4">
+                                <h3 className="font-bold text-xl text-white drop-shadow-md">My Awesome Stream Title</h3>
+                                <p className="text-sm text-cyan-400 font-medium">Playing: Valorant</p>
+                            </div>
+
+                            {/* Control Bar */}
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-4">
+                                    <button onClick={() => setIsPlaying(!isPlaying)} className="text-white hover:text-cyan-400 transition-colors">
+                                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                    </button>
+                                    
+                                    <div className="flex items-center gap-2 group/vol">
+                                        <Volume2 className="w-5 h-5 text-white" />
+                                        <div className="w-0 overflow-hidden group-hover/vol:w-24 transition-all duration-300">
+                                            <div className="w-20 h-1 bg-white/30 rounded-full ml-2 relative cursor-pointer">
+                                                <div className="absolute left-0 top-0 bottom-0 bg-white rounded-full" style={{ width: `${volume}%` }} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs text-white/60 font-mono">
+                                        <span className="text-red-500">●</span> 02:14:35
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    <button className="text-white/70 hover:text-white transition-colors" title="Settings">
+                                        <Settings className="w-5 h-5" />
+                                    </button>
+                                    <button className="text-white/70 hover:text-white transition-colors" title="Fullscreen">
+                                        <Maximize className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
                          </div>
                     </div>
                 ) : (
@@ -66,7 +132,7 @@ export default function StreamingHome() {
                             You are not streaming right now. Go live to interact with your audience!
                         </p>
                         <Button 
-                            className="mt-6 bg-red-600 hover:bg-red-700 text-white border-none"
+                            className="mt-6 bg-red-600 hover:bg-red-700 text-white border-none shadow-lg shadow-red-600/20"
                             onClick={toggleLiveStatus}
                         >
                             <Play className="w-4 h-4 mr-2" />
@@ -76,33 +142,50 @@ export default function StreamingHome() {
                 )}
             </div>
 
-            {/* Chat Box */}
-            <div className="flex-[2] h-[400px] lg:h-[520px] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col">
-                <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-white/5">
-                    <span className="text-white/80 text-sm font-semibold flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" /> Stream Chat
+            {/* Chat Box (Liquid Glass) */}
+            <div 
+                className="flex-[2] h-[400px] lg:h-[520px] rounded-3xl overflow-hidden flex flex-col border border-white/10 shadow-2xl"
+                style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                }}
+            >
+                <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+                    <span className="text-white font-bold text-sm flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-cyan-400" /> Stream Chat
                     </span>
                     {isLive ? (
-                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">Online</Badge>
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Online</span>
+                        </div>
                     ) : (
-                        <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">Offline</Badge>
+                        <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-slate-500" />
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Offline</span>
+                        </div>
                     )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 relative">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 relative scrollbar-hide">
                     {isLive ? (
                         <>
+                            <div className="text-center py-4">
+                                <p className="text-xs text-white/30 uppercase tracking-widest font-bold">Welcome to the chat</p>
+                            </div>
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <div key={i} className="flex gap-3 items-start animate-in slide-in-from-bottom-2 fade-in duration-300" style={{ animationDelay: `${i * 100}ms` }}>
-                                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex-shrink-0 overflow-hidden">
-                                        <img src={`https://source.unsplash.com/random/100x100?face&sig=${i}`} className="w-full h-full object-cover" />
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex-shrink-0 overflow-hidden p-0.5">
+                                        <img src={`https://source.unsplash.com/random/100x100?face&sig=${i}`} className="w-full h-full object-cover rounded-full" />
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-cyan-400">Viewer_{i + 1}</span>
-                                            <span className="text-[10px] text-white/30">{format(new Date(), 'h:mm a')}</span>
+                                            <span className="text-xs font-bold text-cyan-400 hover:underline cursor-pointer">Viewer_{i + 1}</span>
+                                            {i % 3 === 0 && <Badge className="bg-purple-500/20 text-purple-300 text-[8px] h-4 px-1 border-0">SUB</Badge>}
+                                            <span className="text-[10px] text-white/20">{format(new Date(), 'h:mm a')}</span>
                                         </div>
-                                        <p className="text-sm text-white/80 leading-snug mt-0.5">
+                                        <p className="text-sm text-white/80 leading-snug mt-0.5 font-medium shadow-black drop-shadow-sm">
                                             This is a simulated chat message! loving the stream!
                                         </p>
                                     </div>
@@ -111,19 +194,26 @@ export default function StreamingHome() {
                         </>
                     ) : (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white/30">
-                            <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
-                            <p>Chat is offline</p>
+                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+                                <MessageSquare className="w-6 h-6 opacity-40" />
+                            </div>
+                            <p className="text-sm font-medium">Chat is offline</p>
                         </div>
                     )}
                 </div>
 
-                <div className="p-3 border-t border-white/10 bg-white/5">
+                <div className="p-4 border-t border-white/10 bg-white/[0.02]">
                     <div className="relative">
                         <input 
                             disabled={!isLive}
                             placeholder={isLive ? "Send a message..." : "Chat is disabled when offline"}
-                            className="w-full h-10 rounded-xl bg-black/20 border border-white/10 px-4 text-sm text-white focus:outline-none focus:border-white/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full h-11 rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-white/20"
                         />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-white/40 hover:text-white" disabled={!isLive}>
+                                <Settings className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -187,16 +277,6 @@ export default function StreamingHome() {
 
               {/* Right: Actions */}
               <div className="flex items-center gap-4">
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`rounded-full w-10 h-10 ${isEditingProfile ? 'text-cyan-400 bg-cyan-400/10' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                    onClick={() => setIsEditingProfile(!isEditingProfile)}
-                    title={isEditingProfile ? "Save Profile" : "Edit Profile"}
-                >
-                    {isEditingProfile ? <Save className="w-5 h-5" /> : <Pencil className="w-4 h-4" />}
-                </Button>
-                
                 <div className="text-right hidden sm:block">
                     <div className="text-xs text-white/40 uppercase font-bold">Total Views</div>
                     <div className="text-lg font-mono font-bold text-white">42.5K</div>
@@ -234,10 +314,10 @@ export default function StreamingHome() {
             </AnimatePresence>
 
             {/* Sponsors */}
-            <SponsorsSection isEditing={isEditingProfile} />
+            <SponsorsSection />
 
             {/* Products */}
-            <ProductsGrid isEditing={isEditingProfile} />
+            <ProductsGrid />
 
             {/* Seasonal Pass (New Skill Tree UI) */}
             <div className="w-full mt-12 mb-20">

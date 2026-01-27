@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, X, Image as ImageIcon, Video, Link as LinkIcon, Upload } from 'lucide-react';
+import { Plus, X, Image as ImageIcon, Video, Link as LinkIcon, Upload, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-export default function SponsorsSection({ isEditing }) {
+export default function SponsorsSection() {
+  const [isEditing, setIsEditing] = useState(false);
   const [sponsors, setSponsors] = useState([
     {
       id: 1,
@@ -38,10 +39,18 @@ export default function SponsorsSection({ isEditing }) {
   return (
     <div className="w-full mt-8">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-          Partners & Sponsors
-          {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
-        </h3>
+        <div className="flex items-center gap-3">
+            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            Partners & Sponsors
+            {isEditing && <span className="text-sm font-normal text-white/40">(Edit Mode)</span>}
+            </h3>
+            <button 
+                onClick={() => setIsEditing(!isEditing)}
+                className={`p-2 rounded-full transition-all ${isEditing ? 'bg-white text-black' : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'}`}
+            >
+                <Settings className="w-4 h-4" />
+            </button>
+        </div>
         {isEditing && (
             <Button variant="outline" size="sm" className="bg-white/5 border-white/10" onClick={() => setSponsors([...sponsors, { id: Date.now(), name: '', description: '', media: [], tier: 'Bronze' }])}>
                 <Plus className="w-4 h-4 mr-2" /> Add Sponsor
