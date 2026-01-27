@@ -71,6 +71,23 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
     setGalleryItems(prev => prev.filter(item => item.id !== id));
   };
 
+  const galleryScrollRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const el = galleryScrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [activeTab]);
+
   // Calculate the 14 days to show, starting from the Monday of the current base date's week
   const startDate = startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }); // Monday start
   const scheduleDays = Array.from({ length: 14 }).map((_, i) => addDays(startDate, i));
@@ -361,30 +378,38 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
                                 )}
                             </div>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {/* Horizontal Scroll Container */}
+                            <div 
+                                ref={galleryScrollRef}
+                                className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide px-2 items-center"
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                            >
                                 {galleryItems.map((item) => (
-                                    <div key={item.id} className="aspect-video bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
-                                        {item.type === 'video' ? (
-                                            <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                        ) : (
-                                            <img src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                        )}
-                                        
-                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity gap-2">
-                                            <span className="text-white font-bold text-sm">View</span>
-                                            
-                                            {isEditingProfile && allowEditing && (
-                                                <button 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        removeGalleryItem(item.id);
-                                                    }}
-                                                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
+                                    <div key={item.id} className="flex-shrink-0 w-64 aspect-video bg-white/5 rounded-xl border border-white/10 overflow-visible hover:border-white/20 transition-all cursor-pointer group relative">
+                                        <div className="w-full h-full overflow-hidden rounded-xl relative">
+                                            {item.type === 'video' ? (
+                                                <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                            ) : (
+                                                <img src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                             )}
+                                            
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                                <span className="text-white font-bold text-sm">View</span>
+                                            </div>
                                         </div>
+                                        
+                                        {/* Delete Button - Top Right "Sitting on the line" */}
+                                        {isEditingProfile && allowEditing && (
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    removeGalleryItem(item.id);
+                                                }}
+                                                className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[#0f1419] border border-white/20 text-red-400 hover:bg-red-500/10 hover:border-red-500 hover:text-red-500 flex items-center justify-center transition-all z-20 shadow-lg"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
 
@@ -392,22 +417,21 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
                                 {isEditingProfile && allowEditing && (
                                     <div 
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-video bg-white/5 rounded-xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all cursor-pointer flex flex-col items-center justify-center group"
+                                        className="flex-shrink-0 w-64 aspect-video bg-white/5 rounded-xl border-2 border-dashed border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all cursor-pointer flex flex-col items-center justify-center group relative overflow-visible"
                                     >
                                         {isUploading ? (
-                                            <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                                            <div className="w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
                                         ) : (
-                                            <>
-                                                <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-cyan-500/20 flex items-center justify-center mb-2 transition-colors">
-                                                    <Plus className="w-5 h-5 text-white/60 group-hover:text-cyan-400" />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="w-12 h-12 rounded-full bg-white/10 group-hover:bg-cyan-500/20 flex items-center justify-center transition-colors">
+                                                    <Plus className="w-6 h-6 text-white/60 group-hover:text-cyan-400" />
                                                 </div>
-                                                <span className="text-xs font-bold text-white/40 group-hover:text-cyan-400 transition-colors">Add Media</span>
-                                            </>
+                                            </div>
                                         )}
                                     </div>
                                 )}
                             </div>
-                            <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
+                            <p className="text-center text-white/30 text-xs mt-2">Scroll to view more • Double-click content to collapse</p>
                         </div>
                     )}
                     
