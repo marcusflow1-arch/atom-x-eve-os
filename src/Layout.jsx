@@ -856,17 +856,7 @@ function LayoutContent({ children, currentPageName }) {
                             Forum
                           </button>
 
-                          {/* Live */}
-                          <button
-                            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=live')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              new URLSearchParams(location.search).get('panel') === 'live'
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Live
-                          </button>
+
 
                           {/* Settings */}
                           <button
