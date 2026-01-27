@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SponsorsSection from './profile/SponsorsSection';
 import ProductsGrid from './profile/ProductsGrid';
+import ViewerSeasonalPass from './ViewerSeasonalPass';
 import { Pencil, Save } from 'lucide-react';
 
 export default function StreamerRightPane({ streamer }) {
@@ -91,7 +92,8 @@ export default function StreamerRightPane({ streamer }) {
             </div>
             <div className="flex flex-col">
               <h2 className="text-lg font-bold text-white tracking-wide">{name}</h2>
-              <span className="text-xs text-white/50 font-medium uppercase tracking-wider">Follow</span>
+              <span className="text-xs text-white/50 font-medium uppercase tracking-wider">Personality</span>
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest mt-0.5">Competitive • Strategic</span>
             </div>
           </div>
 
@@ -110,6 +112,18 @@ export default function StreamerRightPane({ streamer }) {
                   className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'cards' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
                 >
                   Cards
+                </button>
+                <button 
+                  onClick={() => setActiveTab(activeTab === 'gallery' ? null : 'gallery')}
+                  className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'gallery' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
+                >
+                  Gallery
+                </button>
+                <button 
+                  onClick={() => setActiveTab(activeTab === 'games' ? null : 'games')}
+                  className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === 'games' ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
+                >
+                  Games
                 </button>
              </div>
           </div>
@@ -225,7 +239,40 @@ export default function StreamerRightPane({ streamer }) {
                         </div>
                         <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
                     </div>
-                    )}
+                    ) : activeTab === 'gallery' ? (
+                        <div className="w-full select-none pt-4">
+                            <h3 className="text-white font-bold text-lg mb-6">Gallery</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {Array.from({ length: 8 }).map((_, i) => (
+                                    <div key={i} className="aspect-video bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
+                                        <img src={`https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <span className="text-white font-bold text-sm">View Image</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
+                        </div>
+                    ) : activeTab === 'games' ? (
+                        <div className="w-full select-none pt-4">
+                            <h3 className="text-white font-bold text-lg mb-6">Games Played</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {['Valorant', 'Apex Legends', 'League of Legends', 'Overwatch 2', 'Minecraft', 'Destiny 2', 'Elden Ring', 'Cyberpunk 2077'].map((game, i) => (
+                                    <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center gap-3 hover:bg-white/10 transition-colors cursor-pointer">
+                                        <div className="w-12 h-12 rounded-lg bg-black/40 overflow-hidden">
+                                            <img src={`https://source.unsplash.com/random/100x100?game,${game}&sig=${i}`} className="w-full h-full object-cover" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-bold text-white">{game}</div>
+                                            <div className="text-xs text-white/40">FPS • Action</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-center text-white/30 text-xs mt-6">Double-click content to collapse</p>
+                        </div>
+                    ) : null}
                 </motion.div>
             )}
         </AnimatePresence>
@@ -235,6 +282,12 @@ export default function StreamerRightPane({ streamer }) {
 
         {/* Products & Events Grid */}
         <ProductsGrid isEditing={isEditingProfile} />
+
+        {/* Seasonal Pass Section */}
+        <div className="w-full mt-12 mb-20">
+            <h3 className="text-xl font-bold text-white mb-6">Allure Streaming Seasonal Pass</h3>
+            <ViewerSeasonalPass streamerId="current" />
+        </div>
 
       </div>
     </div>
