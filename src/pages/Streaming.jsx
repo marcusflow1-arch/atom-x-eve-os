@@ -1,4 +1,5 @@
 import React from 'react';
+import StreamingGamesLive from '../components/streaming/StreamingGamesLive';
 
 export default function Streaming() {
   return (
