@@ -280,16 +280,17 @@ export default function BlankTransition() {
       {/* Left Rail: Games list */}
       <div className="fixed left-0 top-20 bottom-0 w-[12%] min-w-[140px] z-[26] overflow-y-auto relative">
         <div className="py-2 flex flex-col items-stretch gap-1 select-none px-2">
-          {/* Back button */}
-          <div
-            className="h-12 w-full flex items-center justify-center text-white/80 text-xl cursor-pointer hover:text-white hover:bg-white/5 rounded-lg transition-all"
-            onClick={() => navigate(createPageUrl('GenreMastery'))}
-            title="Back to Skill Tree"
-          >
-            <ArrowLeft className="w-5 h-5" />
+          {/* Back button with horizontal line below */}
+          <div className="flex flex-col items-center">
+            <div
+              className="h-12 w-full flex items-center justify-center text-white/80 text-xl cursor-pointer hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              onClick={() => navigate(createPageUrl('GenreMastery'))}
+              title="Back to Skill Tree"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </div>
+            <div className="w-full h-px bg-white/20 my-2" />
           </div>
-          
-          <div className="h-px bg-white/10 my-2" />
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
