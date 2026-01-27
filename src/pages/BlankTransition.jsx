@@ -220,6 +220,7 @@ export default function BlankTransition() {
   const currentGenre = GENRES.find(g => g.id === genreId) || GENRES[0];
   
   const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
 
   // Fetch games from database
   const { data: allGames = [], isLoading } = useQuery({
