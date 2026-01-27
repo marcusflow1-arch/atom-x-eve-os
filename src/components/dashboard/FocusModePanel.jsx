@@ -1694,6 +1694,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [isLive, setIsLive] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
+  const [showStreamSettings, setShowStreamSettings] = useState(false);
+  const [settingsMaximized, setSettingsMaximized] = useState(false);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1789,13 +1791,17 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   <div className="h-[400px] w-full flex gap-4">
                     <div className="h-full w-[70%]">
                       <StreamPlayerBox 
-                        isLive={isLive} 
-                        onToggleLive={() => setIsLive(!isLive)}
-                        isPlaying={isPlaying}
-                        onTogglePlay={() => setIsPlaying(!isPlaying)}
-                        volume={volume}
-                        onVolumeChange={setVolume}
-                      />
+                                                isLive={isLive} 
+                                                onToggleLive={() => setIsLive(!isLive)}
+                                                isPlaying={isPlaying}
+                                                onTogglePlay={() => setIsPlaying(!isPlaying)}
+                                                volume={volume}
+                                                onVolumeChange={setVolume}
+                                                settingsOpen={showStreamSettings}
+                                                onCloseSettings={() => setShowStreamSettings(false)}
+                                                isSettingsMaximized={settingsMaximized}
+                                                onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                                              />
                     </div>
                     <div className="h-full w-[30%]">
                       <StreamChatBox isLive={isLive} />

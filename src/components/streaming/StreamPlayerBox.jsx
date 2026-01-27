@@ -1,8 +1,8 @@
 import React from 'react';
-import { Play, Pause, MessageSquare, WifiOff, Volume2, Settings, Maximize } from 'lucide-react';
+import { Play, Pause, MessageSquare, WifiOff, Volume2, Settings, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange }) {
+export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTogglePlay, volume, onVolumeChange, settingsOpen, onCloseSettings, isSettingsMaximized, onToggleSettingsMaximize }) {
   return (
     <div 
         className="flex-[3] rounded-3xl overflow-hidden min-h-[400px] relative group border border-white/10 shadow-2xl"
