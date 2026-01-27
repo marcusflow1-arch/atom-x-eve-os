@@ -592,6 +592,24 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             </div>
 
+            {/* Settings & Calendar Row - Above Quick Actions */}
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-xs font-medium">Settings</span>
+              </button>
+              <button
+                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=calendar')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white"
+              >
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs font-medium">Calendar</span>
+              </button>
+            </div>
+
             {/* Quick Action Boxes - Below Game Banner */}
             <div className="grid grid-cols-4 gap-2">
               <QuickActionBox 
