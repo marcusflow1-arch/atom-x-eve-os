@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Globe, Rocket, Crown, Swords, Crosshair, Map, Ghost, Monitor, ArrowLeft, Trophy, Star, Zap, Target, ScrollText, Check } from 'lucide-react';
+import { Globe, Rocket, Crown, Swords, Crosshair, Map, Ghost, Monitor, ArrowLeft, Trophy, Star, Zap, Target, ScrollText, Check, X } from 'lucide-react';
 import MiniLunaNav from '../components/nav/MiniLunaNav';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import ShinyCard from '@/components/shared/ShinyCard';
-import AchievementDetailOverlay from '@/components/achievements/AchievementDetailOverlay';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', icon: Globe, color: 'from-purple-500 to-indigo-600', matchGenres: ['mmo', 'mmorpg'] },
