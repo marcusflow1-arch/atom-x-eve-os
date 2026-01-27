@@ -17,6 +17,8 @@ import LunaCardScroll from '../profile/LunaCardScroll';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
+import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
+import StreamChatBox from '@/components/streaming/StreamChatBox';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1322,12 +1324,12 @@ function GameBanner({ game, onChangeBanner }) {
 }
 
 // Quick Access Icons Row
-function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate }) {
+function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate, onLiveClick }) {
   return (
     <div className="h-full flex gap-6">
       {/* Left Column: Quick Actions */}
       <div className="flex-1 min-w-0">
-        <QuickActionsBar navigate={navigate} />
+        <QuickActionsBar navigate={navigate} onLiveClick={onLiveClick} />
       </div>
       
       {/* Right Column: System Status & Calendar Hub */}
@@ -1392,9 +1394,11 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
 }
 
 // New QuickActionsBar Component
-function QuickActionsBar({ navigate }) {
+function QuickActionsBar({ navigate, onLiveClick }) {
   const quickActions = [
     { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
+    { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
+    { id: 'settings', label: 'Settings', icon: Settings, color: 'from-slate-500/20 to-gray-500/20', borderColor: 'border-slate-500/30', onClick: () => console.log('Settings clicked') },
     { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
     { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
     { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
@@ -1680,12 +1684,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [activeGenre, setActiveGenre] = useState('Action');
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
   const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
-  
 
+  // Live Dropdown State
+  const [showLiveDropdown, setShowLiveDropdown] = useState(false);
+  const [isLive, setIsLive] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [volume, setVolume] = useState(80);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
@@ -1755,12 +1763,38 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - Quick Access Icons */}
-      <div className="w-full">
+      <div className="w-full relative z-50">
         <QuickAccessRow 
           onOpenCalendar={onOpenCalendar}
           onDateTimeClick={handleDateTimeClick}
           navigate={navigate}
+          onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)}
         />
+        
+        {/* Live Dropdown Overlay */}
+        <AnimatePresence>
+          {showLiveDropdown && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute top-full left-0 right-0 mt-4 z-50"
+            >
+              <div className="flex gap-4 h-[400px]">
+                <StreamPlayerBox 
+                    isLive={isLive} 
+                    onToggleLive={() => setIsLive(!isLive)}
+                    isPlaying={isPlaying}
+                    onTogglePlay={() => setIsPlaying(!isPlaying)}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                />
+                <StreamChatBox isLive={isLive} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Banner Section - Moved Down */}
