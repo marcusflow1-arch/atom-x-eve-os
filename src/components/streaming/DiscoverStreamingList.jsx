@@ -103,7 +103,7 @@ export default function DiscoverStreamingList() {
         <StreamerRightPane streamer={mockStreamers[selected]} />
       </div>
 
-      {/* Local styles for hidden scrollbar */*/
+      {/* Local styles for hidden scrollbar */}
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
