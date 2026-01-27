@@ -719,10 +719,6 @@ export default function BlankTransition() {
           <AchievementDetailOverlay
             achievement={selectedAchievement}
             onClose={() => setSelectedAchievement(null)}
-            onTrack={() => {}}
-            isTracked={false}
-            onShare={() => {}}
-            onChallenge={() => {}}
           />
         )}
       </AnimatePresence>
