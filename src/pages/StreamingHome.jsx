@@ -610,6 +610,24 @@ export default function StreamingHome() {
                                 <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
                                     <div className="text-xs font-bold text-white truncate">Item {i+1}</div>
                                 </div>
+                                {isEditingProfile && (
+                                    <>
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button 
+                                                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 flex items-center justify-center transition-all pointer-events-auto"
+                                                onClick={(e) => { e.stopPropagation(); /* Mock edit action */ }}
+                                            >
+                                                <Plus className="w-4 h-4 text-white" />
+                                            </button>
+                                        </div>
+                                        <button 
+                                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 hover:bg-red-500/80 hover:text-white text-white/60 flex items-center justify-center transition-colors pointer-events-auto opacity-0 group-hover:opacity-100"
+                                            onClick={(e) => { e.stopPropagation(); /* Mock delete action */ }}
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </>
+                                )}
                                 </div>
                             ))}
                             </div>
@@ -649,19 +667,22 @@ export default function StreamingHome() {
                                             <img src={img.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                                 {isEditingProfile ? (
-                                                    <div className="flex gap-2">
-                                                        <Button 
-                                                            variant="destructive" 
-                                                            size="icon" 
-                                                            className="rounded-full h-8 w-8"
+                                                    <>
+                                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                            <button 
+                                                                onClick={handleGalleryUpload}
+                                                                className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 flex items-center justify-center transition-all pointer-events-auto"
+                                                            >
+                                                                <Plus className="w-5 h-5 text-white" />
+                                                            </button>
+                                                        </div>
+                                                        <button 
                                                             onClick={(e) => { e.stopPropagation(); handleRemoveGalleryImage(img.id); }}
+                                                            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-red-500/80 hover:text-white text-white/60 flex items-center justify-center transition-colors pointer-events-auto"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button variant="secondary" size="icon" className="rounded-full h-8 w-8" onClick={handleGalleryUpload}>
-                                                            <Pencil className="w-4 h-4" />
-                                                        </Button>
-                                                    </div>
+                                                        </button>
+                                                    </>
                                                 ) : (
                                                     <span className="text-white font-bold text-sm">View Image</span>
                                                 )}
