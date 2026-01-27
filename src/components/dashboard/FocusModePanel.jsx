@@ -1771,26 +1771,33 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)}
         />
         
-        {/* Live Dropdown Overlay */}
+        {/* Live Dropdown (In-Flow) */}
         <AnimatePresence>
           {showLiveDropdown && (
             <motion.div
-              initial={{ opacity: 0, y: -20, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -20, height: 0 }}
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 24 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute top-full left-0 right-0 mt-4 z-50"
+              className="w-full overflow-hidden"
             >
-              <div className="flex gap-4 h-[400px]">
-                <StreamPlayerBox 
-                    isLive={isLive} 
-                    onToggleLive={() => setIsLive(!isLive)}
-                    isPlaying={isPlaying}
-                    onTogglePlay={() => setIsPlaying(!isPlaying)}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                />
-                <StreamChatBox isLive={isLive} />
+              <div className="flex gap-6 h-[400px]">
+                {/* Streaming Box - Aligns with Quick Actions (Friends to Leaderboard) */}
+                <div className="flex-1 min-w-0">
+                  <StreamPlayerBox 
+                      isLive={isLive} 
+                      onToggleLive={() => setIsLive(!isLive)}
+                      isPlaying={isPlaying}
+                      onTogglePlay={() => setIsPlaying(!isPlaying)}
+                      volume={volume}
+                      onVolumeChange={setVolume}
+                  />
+                </div>
+                
+                {/* Chat Box - Aligns with Calendar */}
+                <div className="w-[280px] flex-shrink-0">
+                  <StreamChatBox isLive={isLive} />
+                </div>
               </div>
             </motion.div>
           )}
