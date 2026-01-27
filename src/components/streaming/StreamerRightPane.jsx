@@ -32,7 +32,7 @@ export default function StreamerRightPane({ streamer }) {
   return (
     <div className="w-full">
       {/* Top row: Stream video + Live chat */}
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-col lg:flex-row">
         {/* Stream box (bigger) */}
         <div className="flex-[3] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
           <div className="h-[520px] w-full relative flex items-center justify-center">
@@ -83,12 +83,15 @@ export default function StreamerRightPane({ streamer }) {
           
           {/* Left: Avatar + Identity */}
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/10">
-              {streamer?.avatar ? (
-                <img src={streamer.avatar} alt={name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-white/10" />
-              )}
+            <div className="relative group">
+                <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/10">
+                {streamer?.avatar ? (
+                    <img src={streamer.avatar} alt={name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full bg-white/10" />
+                )}
+                </div>
+                {/* Simplified Edit Mode for Viewer component - likely read only but keeping consistent prop just in case */}
             </div>
             <div className="flex flex-col">
               <h2 className="text-lg font-bold text-white tracking-wide">{name}</h2>
