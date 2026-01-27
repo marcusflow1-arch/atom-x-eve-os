@@ -12,6 +12,77 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         }}
     >
+        {settingsOpen && (
+          <div className={isSettingsMaximized ? 'fixed inset-0 z-[200] flex flex-col' : 'absolute inset-0 z-30 flex flex-col'}>
+            <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-b border-white/10">
+              <div className="text-white font-bold">Stream Settings</div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onToggleSettingsMaximize}
+                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                  title={isSettingsMaximized ? 'Restore' : 'Maximize'}
+                >
+                  {isSettingsMaximized ? <Minimize className="w-4 h-4 text-white" /> : <Maximize className="w-4 h-4 text-white" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto bg-black/50 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
+                  <h4 className="text-white font-semibold mb-3 text-sm">General</h4>
+                  <div className="space-y-3 text-sm text-white/80">
+                    <label className="flex items-center justify-between">
+                      <span>Auto record</span>
+                      <input type="checkbox" defaultChecked className="accent-cyan-400" />
+                    </label>
+                    <label className="flex items-center justify-between">
+                      <span>Show chat overlay</span>
+                      <input type="checkbox" className="accent-cyan-400" />
+                    </label>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
+                  <h4 className="text-white font-semibold mb-3 text-sm">Video</h4>
+                  <div className="space-y-3 text-sm text-white/80">
+                    <label className="flex items-center justify-between gap-3">
+                      <span>Resolution</span>
+                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
+                        <option>1080p</option>
+                        <option>720p</option>
+                        <option>480p</option>
+                      </select>
+                    </label>
+                    <label className="flex items-center justify-between gap-3">
+                      <span>Bitrate</span>
+                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 p-4 bg-white/5">
+                  <h4 className="text-white font-semibold mb-3 text-sm">Audio</h4>
+                  <div className="space-y-3 text-sm text-white/80">
+                    <label className="flex items-center justify-between">
+                      <span>Mic Enabled</span>
+                      <input type="checkbox" defaultChecked className="accent-cyan-400" />
+                    </label>
+                    <label className="flex items-center justify-between gap-3">
+                      <span>Audio Bitrate</span>
+                      <select className="bg-black/40 border border-white/10 rounded-md px-2 py-1 text-white/90">
+                        <option>High</option>
+                        <option>Medium</option>
+                        <option>Low</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {isLive ? (
             <div className="w-full h-full relative">
                  {/* Mock Live Stream Content removed */}
