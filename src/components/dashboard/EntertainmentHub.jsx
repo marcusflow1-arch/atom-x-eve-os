@@ -287,8 +287,86 @@ export default function EntertainmentHub() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="w-full h-full"
-            />
+              className="w-full h-full overflow-y-auto p-6 space-y-8"
+            >
+              {/* Header: Title + Search */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-white text-2xl font-bold tracking-wide">Entertainment</h2>
+                <div className="w-full sm:w-80 relative">
+                  <input
+                    type="text"
+                    placeholder="Search shows, movies, apps..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-400/40"
+                  />
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      activeCategory === cat
+                        ? 'bg-white/15 text-white border-white/20'
+                        : 'bg-white/5 text-white/70 border-white/10 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Connected Services Grid */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Connected Services</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-3">
+                  {STREAMING_APPS.map((app) => (
+                    <button
+                      key={app.id}
+                      onClick={() => handleAppSelect(app)}
+                      className="group rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-3 flex flex-col items-center gap-2"
+                      title={`Open ${app.name}`}
+                    >
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg border border-white/10"
+                           style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                        <app.icon className="w-5 h-5" style={{ color: app.color }} />
+                      </div>
+                      <span className="text-[11px] text-white/70 group-hover:text-white truncate w-full text-center">{app.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Continue Watching */}
+              {AGGREGATED_CONTENT.some(i => i.progress) && (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Continue Watching</h3>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {AGGREGATED_CONTENT.filter(i => i.progress).map((item) => (
+                      <ContentCard key={item.id} item={item} onClick={handleAppSelect} showProgress />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* Trending Now */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Trending Now</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {AGGREGATED_CONTENT.slice(0, 12).map((item) => (
+                    <ContentCard key={item.id} item={item} onClick={handleAppSelect} />
+                  ))}
+                </div>
+              </section>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
