@@ -151,7 +151,7 @@ export default function GameStreamersView({ game, onClose }) {
               />
               <div>
                 <h1 className="text-2xl font-black text-white">{game.title}</h1>
-                <p className="text-white/40 text-sm">{game.viewers} watching • {allStreamers.length} streamers live</p>
+                <p className="text-white/40 text-sm">{(game.viewers || allStreamers.reduce((sum, s) => sum + (s.viewers || 0), 0)).toLocaleString()} watching • {allStreamers.length} streamers live</p>
               </div>
             </div>
           </div>
