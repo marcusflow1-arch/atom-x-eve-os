@@ -57,36 +57,36 @@ const CardRecordView = ({ card }) => (
     {/* Left: Card Visual - Sticky positioning to stay in view while scrolling */}
     <div className="w-[240px] flex-shrink-0 flex flex-col gap-4 sticky top-0 self-start">
       <div className="relative group perspective-1000">
-         <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-xl overflow-hidden relative z-10">
-            {/* Card Art Placeholder */}
-            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${card?.image || 'https://images.unsplash.com/photo-1627856014759-2a5713c54d65?q=80&w=1000&auto=format&fit=crop'}')` }}>
+         {!card?.image ? (
+           <ShinyCard className="w-full aspect-[2/3] rounded-xl border border-white/10 bg-white/5 flex items-center justify-center relative z-10">
+             <div className="text-white/30 text-5xl">?</div>
+           </ShinyCard>
+         ) : (
+           <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-xl overflow-hidden relative z-10">
+             {/* Card Art */}
+             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${card.image}')` }}>
                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-            </div>
-            
-            {/* Card Content Overlay */}
-            <div className="absolute inset-0 p-4 flex flex-col justify-between">
+             </div>
+             {/* Overlay Stats */}
+             <div className="absolute inset-0 p-4 flex flex-col justify-between">
                <div className="flex justify-between items-start">
-                  <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90">
-                     Lv. {card?.level || 1}
-                  </Badge>
-                  <div className="flex gap-0.5 bg-black/40 p-1 rounded-full backdrop-blur-md">
-                     {Array.from({ length: 5 }).map((_, i) => (
-                       <Star key={i} className={`w-3 h-3 ${i < (card?.stars || 1) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                     ))}
-                  </div>
+                 <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90">Lv. {card?.level || 1}</Badge>
+                 <div className="flex gap-0.5 bg-black/40 p-1 rounded-full backdrop-blur-md">
+                   {Array.from({ length: 5 }).map((_, i) => (
+                     <Star key={i} className={`w-3 h-3 ${i < (card?.stars || 1) ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
+                   ))}
+                 </div>
                </div>
-
                <div>
-                  <h2 className="text-white font-black text-xl leading-none mb-1 drop-shadow-lg font-heading">
-                     {card?.title || 'Unknown Card'}
-                  </h2>
-                  <div className="flex items-center gap-2 mb-2">
-                     <Badge className="bg-orange-500 text-white border-none text-[10px] py-0 h-4">{card?.rarity || 'Legendary'}</Badge>
-                     <span className="text-white/70 text-xs font-medium">{card?.series || 'Collection'}</span>
-                  </div>
+                 <h2 className="text-white font-black text-xl leading-none mb-1 drop-shadow-lg font-heading">{card?.title || 'Unknown Card'}</h2>
+                 <div className="flex items-center gap-2 mb-2">
+                   <Badge className="bg-orange-500 text-white border-none text-[10px] py-0 h-4">{card?.rarity || 'Legendary'}</Badge>
+                   <span className="text-white/70 text-xs font-medium">{card?.series || 'Collection'}</span>
+                 </div>
                </div>
-            </div>
-         </ShinyCard>
+             </div>
+           </ShinyCard>
+         )}
          {/* Background Glow */}
          <div className="absolute inset-0 bg-orange-500/20 blur-3xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       </div>
