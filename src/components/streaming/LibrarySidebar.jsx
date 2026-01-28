@@ -297,14 +297,6 @@ export default function LibrarySidebar() {
           onMoreInfo={handleMoreInfo}
         />
       </motion.div>
-      <QuickInfoOverlay
-        open={overlayOpen}
-        item={selectedItem}
-        onClose={closeOverlay}
-        onPlay={handlePlay}
-        onStream={handleStream}
-        onMoreInfo={handleMoreInfo}
-      />
     </>
   );
 }
