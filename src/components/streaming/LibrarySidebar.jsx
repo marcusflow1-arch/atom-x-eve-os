@@ -32,13 +32,10 @@ export default function LibrarySidebar() {
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
   const panel = new URLSearchParams(location.search).get('panel');
-  const isDiscover = pathname.includes('/discover');
-  const isHome = pathname.includes('/lunatemplate') || pathname.includes('/home');
-  const isStreaming = pathname.includes('/streaming');
+  const isAura = pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
-  const mode = (isDiscover || isHome || isStreaming) ? 'recentStreaming' : 'library';
-  const shouldShow = !(isEntertainment || isLibraryPage);
+  const shouldShow = !(isAura || isEntertainment || isLibraryPage);
 
   if (!shouldShow) return null;
 
@@ -91,9 +88,9 @@ export default function LibrarySidebar() {
             </div>
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">
-                    {mode === 'recentStreaming' ? 'Recently Watched' : 'My Library'}
+                    {activeSub === 'aura' ? 'Recently Watched' : 'My Library'}
                 </h2>
-                <p className="text-xs text-white/40 font-medium">{mode === 'recentStreaming' ? 'Games & Streamers' : 'All Games & Recently Played'}</p>
+                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : 'All Games & Recently Played'}</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
@@ -128,7 +125,7 @@ export default function LibrarySidebar() {
                 </button>
               </div>
             </div>
-            {mode === 'recentStreaming' ? (
+            {activeSub === 'aura' ? (
               <>
                 {/* Recently Watched Games */}
                 <section>
@@ -179,86 +176,33 @@ export default function LibrarySidebar() {
               </>
             ) : (
               <>
-                {activeSub === 'aura' ? (
-                  <>
-                    {/* Recently Watched Games */}
-                    <section>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Games</h3>
-                        <span className="ml-auto text-[10px] text-white/40">{recentGames.length} items</span>
+                {/* Library Games Only */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
+                    <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {libraryGames.map((game, i) => (
+                      <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
+                        <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.title || game.name}</h4>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {recentGames.map((game, i) => (
-                          <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
-                            <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-2">
-                              <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.name}</h4>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    {/* Recently Watched Streamers */}
-                    <section>
-                      <div className="flex items-center gap-2 mt-6 mb-3">
-                        <User className="w-4 h-4 text-pink-400" />
-                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Streamers</h3>
-                        <span className="ml-auto text-[10px] text-white/40">{recentChannels.length} channels</span>
-                      </div>
-                      <div className="space-y-3">
-                        {recentChannels.map((ch, idx) => (
-                          <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition">
-                            <div className="relative">
-                              <img src={ch.avatar} alt={ch.name} className="w-10 h-10 rounded-lg object-cover" />
-                              {ch.isLive && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm font-semibold truncate">{ch.name}</p>
-                              <p className="text-white/50 text-xs truncate">{ch.game}</p>
-                            </div>
-                            <div className="text-white/60 text-xs font-mono flex items-center gap-1">
-                              <span className="text-red-500">●</span>
-                              {ch.viewers}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  </>
-                ) : (
-                  <>
-                    {/* Library Games Only */}
-                    <section>
-                      <div className="flex items-center gap-2 mb-4">
-                        <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                        <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {libraryGames.map((game, i) => (
-                          <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
-                            <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 p-2">
-                              <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.title || game.name}</h4>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  </>
-                )
+                    ))}
+                  </div>
+                </section>
               </>
-            )}
+            )
         </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-white/5 bg-black/20">
             <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold text-white/60 hover:text-white transition-all flex items-center justify-center gap-2">
-                <Play className="w-3 h-3" /> {mode === 'recentStreaming' ? 'Open Stream History' : 'View Full History'}
+                <Play className="w-3 h-3" /> {activeSub === 'aura' ? 'Open Stream History' : 'View Full History'}
             </button>
         </div>
       </motion.div>
