@@ -17,6 +17,7 @@ import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
+import MysteryCardDetail from '../components/streaming/MysteryCardDetail';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
 import ReviewInsights from '@/components/reviews/ReviewInsights';
@@ -663,9 +664,13 @@ function AIAchievementsView({ onClosePage }) {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Card on far left, Path Box with Skill Trees on right */}
+          {/* RIGHT COLUMN: Card detail inline when selected; otherwise default view */}
           <div className="flex-1 flex gap-6 h-full overflow-hidden">
-            {selectedGame && tradingCards.length > 0 ? (
+            {selectedCard ? (
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <MysteryCardDetail card={selectedCard} onBack={() => setSelectedCard(null)} />
+              </div>
+            ) : selectedGame && tradingCards.length > 0 ? (
               <>
                 {/* FAR LEFT: Card Display */}
                 <div className="w-[220px] flex-shrink-0 flex flex-col">
@@ -867,15 +872,6 @@ function AIAchievementsView({ onClosePage }) {
         )}
       </AnimatePresence>
 
-      {/* Card Enhancement Overlay */}
-      <AnimatePresence>
-        {selectedCard && !skillTreeMode && (
-          <CardEnhancementOverlay
-            card={selectedCard}
-            onClose={() => setSelectedCard(null)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Skill Tree Overlay */}
       <AnimatePresence>

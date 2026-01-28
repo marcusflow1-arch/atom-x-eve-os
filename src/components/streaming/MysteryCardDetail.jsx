@@ -801,7 +801,7 @@ export default function MysteryCardDetail({ card, onBack }) {
       </div>
 
       {/* Main Content Area (Full Width/Height) */}
-      <div className="flex-1 min-h-0 bg-slate-900/40 rounded-2xl border border-white/10 relative overflow-y-auto custom-scrollbar shadow-inner">
+      <div className="flex-1 min-h-0 relative overflow-y-auto custom-scrollbar">
           <AnimatePresence mode="wait">
             {viewMode === 'overview' && (
               <motion.div 
