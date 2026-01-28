@@ -57,15 +57,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     <AnimatePresence>
       {open && (
         <>
-          {/* Right-side region overlay (from right edge to sidebar width) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed top-0 bottom-0 right-0 left-[320px] sm:left-[384px] z-[80]"
-            onClick={onClose}
-            style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))' }}
-          />
+
 
           {/* Slide-in panel */}
           <motion.div
@@ -73,7 +65,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className="fixed top-0 right-0 bottom-0 z-[90] w-full sm:w-[520px] md:w-[560px] border-l border-white/10"
+            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10"
             style={{
               background: 'rgba(20,24,34,0.85)',
               backdropFilter: 'blur(18px) saturate(160%)',
