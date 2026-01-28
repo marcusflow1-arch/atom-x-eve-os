@@ -100,7 +100,7 @@ export default function LibrarySidebar() {
               <div className="flex items-center gap-2 mb-4">
                 <Gamepad2 className="w-4 h-4 text-cyan-400" />
                 <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                <span className="ml-auto text-[10px] text-white/40">{mockLibrary.totalCount} total</span>
+                <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {libraryGames.map((game, i) => (
