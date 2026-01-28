@@ -168,6 +168,18 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     <p>Open the entertainment app or read more about features.</p>
                   )}
                 </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}`)}>
+                    <ShoppingBag className="w-4 h-4" /> Store
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}`)}>
+                    <MessageSquare className="w-4 h-4" /> Community
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}&topic=support`)}>
+                    <LifeBuoy className="w-4 h-4" /> Support
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="dlc" className="space-y-4">
