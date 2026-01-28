@@ -352,10 +352,3 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     </AnimatePresence>
   );
 }
-            </Tabs>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
