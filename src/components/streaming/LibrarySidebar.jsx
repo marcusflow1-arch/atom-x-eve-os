@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Gamepad2, User, Search, Play, ChevronRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,16 @@ export default function LibrarySidebar() {
     "Valorant Crosshairs",
     "Minecraft Mods"
   ];
+
+  const location = useLocation();
+  const pathname = location.pathname.toLowerCase();
+  const panel = new URLSearchParams(location.search).get('panel');
+  const isAura = pathname.includes('/streaming');
+  const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
+  const isLibraryPage = pathname.includes('/library');
+  const shouldShow = !(isAura || isEntertainment || isLibraryPage);
+
+  if (!shouldShow) return null;
 
   return (
     <>
@@ -78,7 +89,7 @@ export default function LibrarySidebar() {
                 <h2 className="text-xl font-bold text-white tracking-wide">
                     My Library
                 </h2>
-                <p className="text-xs text-white/40 font-medium">Your History & Favorites</p>
+                <p className="text-xs text-white/40 font-medium">All Games & Recently Played</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}

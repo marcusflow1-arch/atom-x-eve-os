@@ -35,7 +35,6 @@ import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
-import LibrarySidebar from '../components/streaming/LibrarySidebar';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
@@ -1178,7 +1177,6 @@ export default function LunaTemplate() {
 
 
 
-      <LibrarySidebar />
       {/* 3D Model Viewer - Fixed floating element in top-left */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&

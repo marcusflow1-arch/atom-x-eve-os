@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
+import LibrarySidebar from './components/streaming/LibrarySidebar';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
@@ -396,6 +397,9 @@ function LayoutContent({ children, currentPageName }) {
       {/* Global Style */}
       {/* Global Styles - Extracted to reduce inline violations */}
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+
+      {/* Global Library Sidebar trigger (hidden on Aura, Entertainment, Library) */}
+      <LibrarySidebar />
 
 
 
