@@ -184,7 +184,7 @@ export default function LibrarySidebar() {
                     {recentGames.map((game, i) => (
                       <div
                         key={`rg_${i}`}
-                        onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image })}
+                        onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image, context: 'aura' })}
                         className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
                       >
                         <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -24,6 +24,27 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [selectedMysteryCard, setSelectedMysteryCard] = React.useState(null);
   const { addToCart } = useCart();
   const navigate = useNavigate();
+
+  // Aura streaming subpage view state
+  const [activeStreamerIndex, setActiveStreamerIndex] = React.useState(0);
+  const [streamers, setStreamers] = React.useState([]);
+  const [chatMessages] = React.useState([
+    { user: 'System', text: 'Welcome to the live chat.' },
+    { user: 'Mod', text: 'Be respectful and have fun!' }
+  ]);
+  const isAuraStreamingView = item?.context === 'aura' && item?.type === 'game';
+
+  React.useEffect(() => {
+    if (!open || !isAuraStreamingView) return;
+    // Mock streamers for this game
+    const mocks = [
+      { id: 's1', name: 'NeonNinja', avatar: 'https://source.unsplash.com/random/80x80?face,streamer1', video: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', schedule: ['Mon 7pm', 'Wed 9pm'], is_live: true, viewers: '12.4k' },
+      { id: 's2', name: 'CyberQueen', avatar: 'https://source.unsplash.com/random/80x80?face,streamer2', video: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', schedule: ['Tue 6pm', 'Thu 8pm'], is_live: true, viewers: '8.2k' },
+      { id: 's3', name: 'TechRunner', avatar: 'https://source.unsplash.com/random/80x80?face,streamer3', video: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', schedule: ['Fri 5pm', 'Sun 3pm'], is_live: true, viewers: '5.9k' }
+    ];
+    setStreamers(mocks);
+    setActiveStreamerIndex(0);
+  }, [open, isAuraStreamingView, item?.title]);
 
   const getDlcPrice = (dlc) => {
     if (!dlc) return 0;
