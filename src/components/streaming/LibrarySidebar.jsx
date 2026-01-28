@@ -61,8 +61,9 @@ export default function LibrarySidebar() {
 
   const handlePlay = async () => {
     if (!selectedItem) return;
-    await playItem({ type: selectedItem.type, title: selectedItem.title || selectedItem.name, id: selectedItem.id || null });
-    // Keep overlay open; user can close after launching
+    const res = await playItem({ type: selectedItem.type, title: selectedItem.title || selectedItem.name, id: selectedItem.id || null });
+    const launchUrl = res?.data?.launch_url || res?.launch_url;
+    if (launchUrl) window.location.assign(launchUrl);
   };
   const handleStream = () => {
     // Placeholder: could navigate to Streaming page with params

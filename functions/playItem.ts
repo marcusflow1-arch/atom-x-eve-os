@@ -15,15 +15,6 @@ Deno.serve(async (req) => {
     const sessionId = crypto.randomUUID();
     const launchedAt = new Date().toISOString();
 
-    // Optionally record a lightweight user event (no strict schema assumed)
-    try {
-      await base44.asServiceRole.analytics.track?.({
-        eventName: 'play_item_invoked',
-        properties: { type, has_id: !!id }
-      });
-    } catch (_) {
-      // ignore analytics failures
-    }
 
     return Response.json({
       status: 'ready',
