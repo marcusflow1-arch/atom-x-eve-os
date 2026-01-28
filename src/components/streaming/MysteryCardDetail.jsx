@@ -1,212 +1,441 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Hammer, Layers, Sparkles, TrendingUp, Zap, Shield, Crown, Star, ArrowUp } from 'lucide-react';
+import { Hammer, Layers, Sparkles, TrendingUp, Zap, Shield, Crown, Star, ArrowUp, Info, Activity, Box } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import ShinyCard from '@/components/shared/ShinyCard';
 
-// Simplified mock data for the detailed view
+// Mock Data
 const MOCK_CARD_STATS = {
-  attack: 150,
-  defense: 120,
-  magic: 95,
-  speed: 110,
-  power: 475
+  attack: 115,
+  defense: 92,
+  magic: 100,
+  power: 337
 };
 
-// Mini version of Blacksmith UI
-const MiniBlacksmith = ({ card }) => {
-  return (
-    <div className="space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar">
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-        <h4 className="text-orange-400 font-bold flex items-center gap-2 mb-3">
-          <Hammer className="w-4 h-4" /> Forge Upgrade
-        </h4>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-white/60">Level</span>
-            <span className="text-white font-mono">15 <span className="text-green-400">→ 16</span></span>
-          </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full w-[75%] bg-gradient-to-r from-orange-500 to-amber-500" />
-          </div>
-          <Button size="sm" className="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-200 border-orange-500/50">
-            Upgrade (500 G)
-          </Button>
+// Overview / Card Record UI (Screenshot 1)
+const CardRecordView = ({ card }) => (
+  <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar">
+    <div className="space-y-2">
+      <h3 className="text-white text-lg font-bold flex items-center gap-2">
+        <Info className="w-5 h-5 text-cyan-400" /> Card Record
+      </h3>
+      <p className="text-white/50 text-xs">Detailed information about this card</p>
+    </div>
+
+    <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-4">
+      <div>
+        <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Description</h4>
+        <p className="text-white/80 text-sm italic">"A collectible trading card from Destiny 2: Renegades."</p>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-8 pt-2">
+        <div>
+          <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Series</h4>
+          <p className="text-white font-semibold">Destiny 2: Renegades</p>
+        </div>
+        <div>
+          <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-1">Rarity</h4>
+          <Badge className="bg-blue-600 hover:bg-blue-700 text-white border-none">Rare</Badge>
         </div>
       </div>
+    </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {['Attack', 'Defense', 'Magic', 'Speed'].map(stat => (
-          <div key={stat} className="p-3 rounded-lg bg-black/30 border border-white/5">
-            <p className="text-xs text-white/40 uppercase mb-1">{stat}</p>
-            <p className="text-lg font-bold text-white">{MOCK_CARD_STATS[stat.toLowerCase()]}</p>
-          </div>
-        ))}
+    <div className="space-y-3">
+      <h4 className="text-white/40 text-[10px] uppercase tracking-wider">Stats</h4>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
+          <span className="text-white/40 text-[10px] uppercase block mb-1">Strength</span>
+          <span className="text-2xl font-bold text-white">3</span>
+        </div>
+        <div className="bg-black/30 p-3 rounded-lg border border-white/5">
+          <span className="text-white/40 text-[10px] uppercase block mb-1">Magic</span>
+          <span className="text-2xl font-bold text-white">8</span>
+        </div>
+      </div>
+    </div>
+
+    <div className="p-4 rounded-xl bg-slate-900/50 border border-white/10 space-y-3">
+      <h4 className="text-white/40 text-[10px] uppercase tracking-wider mb-2">Card Details</h4>
+      <div className="flex justify-between text-xs">
+        <span className="text-white/50">Card ID</span>
+        <span className="text-white/80 font-mono">card-b93b3ba6092520948af/1004-1</span>
+      </div>
+      <div className="flex justify-between text-xs">
+        <span className="text-white/50">Type</span>
+        <span className="text-white/80">Trading Card</span>
+      </div>
+      <div className="flex justify-between text-xs">
+        <span className="text-white/50">Collection</span>
+        <span className="text-white/80">Destiny 2: Renegades</span>
+      </div>
+    </div>
+  </div>
+);
+
+// Blacksmith UI (Screenshot 3)
+const BlacksmithView = ({ card }) => {
+  const [activeTab, setActiveTab] = useState('levelup');
+
+  return (
+    <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+         <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center border border-orange-500/30">
+               <Hammer className="w-5 h-5 text-orange-400" />
+            </div>
+            <div>
+               <h3 className="text-white font-bold text-lg">Blacksmith</h3>
+               <p className="text-white/50 text-xs">Forge your card's true potential</p>
+            </div>
+         </div>
+         <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 gap-1">
+               <span className="w-2 h-2 rounded-full bg-yellow-500" /> 25,000
+            </Badge>
+            <Badge variant="outline" className="bg-white/5 text-white/70 border-white/10">45</Badge>
+         </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/10 overflow-x-auto">
+         {['Level Up', 'Enhance', 'Combine', 'Ascend', 'Trade'].map((tab) => (
+            <button
+               key={tab}
+               onClick={() => setActiveTab(tab.toLowerCase().replace(' ', ''))}
+               className={`flex-1 min-w-[80px] py-2 px-3 rounded-md text-xs font-medium transition-all ${
+                  activeTab === tab.toLowerCase().replace(' ', '')
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20'
+                  : 'text-white/40 hover:text-white hover:bg-white/5'
+               }`}
+            >
+               {tab}
+            </button>
+         ))}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 space-y-6">
+         <div>
+            <div className="flex justify-between items-end mb-2">
+               <h4 className="text-white font-bold text-base">Level Up</h4>
+               <span className="text-white/40 text-xs">Max 10</span>
+            </div>
+            <p className="text-white/50 text-xs mb-4">Increase your card's level to boost all base stats.</p>
+            
+            <div className="space-y-1 mb-6">
+               <div className="flex justify-between text-xs text-white/70">
+                  <span>Level 1</span>
+                  <span>Level 2</span>
+               </div>
+               <div className="h-2 bg-black/50 rounded-full overflow-hidden border border-white/5">
+                  <div className="h-full w-[15%] bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-6">
+               <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                  <span className="text-white/40 text-[10px] uppercase">Attack</span>
+                  <div className="text-white font-bold text-lg">115</div>
+                  <div className="text-green-400 text-xs">+15</div>
+               </div>
+               <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                  <span className="text-white/40 text-[10px] uppercase">Defense</span>
+                  <div className="text-white font-bold text-lg">92</div>
+                  <div className="text-green-400 text-xs">+12</div>
+               </div>
+               <div className="bg-black/40 p-3 rounded-xl border border-white/5">
+                  <span className="text-white/40 text-[10px] uppercase">Magic</span>
+                  <div className="text-white font-bold text-lg">100</div>
+                  <div className="text-green-400 text-xs">+10</div>
+               </div>
+            </div>
+
+            <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-6 rounded-xl shadow-[0_4px_20px_rgba(249,115,22,0.3)]">
+               <ArrowUp className="w-4 h-4 mr-2" /> Level Up (100 G)
+            </Button>
+         </div>
+      </div>
+
+      {/* Materials */}
+      <div className="space-y-3">
+         <h4 className="text-white/60 text-xs font-bold uppercase flex items-center gap-2">
+            <Box className="w-3 h-3" /> Required Materials
+         </h4>
+         <div className="space-y-2">
+            {[
+               { name: 'Precision Shard', count: 45, icon: '🎯', color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/20' },
+               { name: 'Combat Core', count: 28, icon: '⚔️', color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
+               { name: 'Ascension Core', count: 8, icon: '👑', color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' }
+            ].map((mat) => (
+               <div key={mat.name} className={`flex items-center justify-between p-3 rounded-xl border ${mat.border} ${mat.bg}`}>
+                  <div className="flex items-center gap-3">
+                     <span className="text-lg">{mat.icon}</span>
+                     <span className={`text-sm font-medium ${mat.color}`}>{mat.name}</span>
+                  </div>
+                  <span className="text-white/60 text-xs font-mono">x{mat.count}</span>
+               </div>
+            ))}
+         </div>
       </div>
     </div>
   );
 };
 
-// Mini version of Skill Tree UI
-const MiniSkillTree = ({ card }) => {
-  return (
-    <div className="space-y-4 h-full overflow-y-auto pr-2 custom-scrollbar">
-      <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-        <h4 className="text-purple-400 font-bold flex items-center gap-2 mb-3">
-          <Layers className="w-4 h-4" /> Skill Progression
-        </h4>
-        <div className="flex gap-2 mb-4">
-          {['Power', 'Neutral', 'AI'].map(path => (
-            <div key={path} className="flex-1 p-2 rounded bg-white/5 text-center border border-white/5">
-              <div className="text-[10px] text-white/40 uppercase">{path}</div>
-              <div className={`w-2 h-2 rounded-full mx-auto mt-1 ${
-                path === 'Power' ? 'bg-purple-500' : path === 'Neutral' ? 'bg-yellow-500' : 'bg-cyan-500'
-              }`} />
-            </div>
-          ))}
-        </div>
-        
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="flex items-center gap-3 p-2 rounded bg-black/20 border border-white/5">
-              <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white/40" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-white font-medium">Ability Node {i}</p>
-                <p className="text-[10px] text-white/40">Locked • Requires Lv. {i * 10}</p>
-              </div>
-              <Button size="icon" className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/10">
-                <ArrowUp className="w-3 h-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      </div>
+// Skill Tree UI (Screenshot 4)
+const SkillTreeView = ({ card }) => (
+  <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar">
+    <div className="flex items-center justify-between">
+       <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+             <Layers className="w-5 h-5 text-purple-400" />
+          </div>
+          <div>
+             <h3 className="text-white font-bold text-lg">Skill Tree</h3>
+             <p className="text-white/50 text-xs">Unlock abilities and passives</p>
+          </div>
+       </div>
+       <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 gap-1">
+          <Zap className="w-3 h-3" /> 2000 SP
+       </Badge>
     </div>
-  );
-};
+
+    <div className="grid grid-cols-3 gap-4 h-[500px]">
+       {/* Power Path */}
+       <div className="flex flex-col gap-4 relative">
+          <div className="text-center mb-2">
+             <h4 className="text-purple-400 font-bold text-sm">Power Path</h4>
+             <p className="text-white/30 text-[10px]">Raw strength & combat</p>
+          </div>
+          
+          <div className="flex-1 rounded-2xl bg-purple-900/10 border border-purple-500/20 p-4 relative overflow-hidden flex flex-col items-center gap-8">
+             <div className="absolute top-0 bottom-0 w-px bg-purple-500/20 z-0" />
+             
+             {/* Root Node */}
+             <div className="w-12 h-12 rounded-xl bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.5)] z-10 flex items-center justify-center border border-white/20">
+                <Zap className="w-6 h-6 text-white" />
+             </div>
+
+             {/* Branches */}
+             <div className="grid grid-cols-2 gap-x-8 gap-y-8 w-full z-10">
+                {[1, 2, 3, 4].map((i) => (
+                   <div key={i} className="flex flex-col items-center gap-1 group cursor-pointer">
+                      <div className="w-10 h-10 rounded-lg bg-black/60 border border-purple-500/30 flex items-center justify-center group-hover:border-purple-500 group-hover:bg-purple-500/20 transition-all">
+                         <div className="w-4 h-4 rounded bg-purple-500/20" />
+                      </div>
+                      <span className="text-[9px] text-purple-300 font-mono">100 SP</span>
+                   </div>
+                ))}
+             </div>
+          </div>
+       </div>
+
+       {/* Neutral Path */}
+       <div className="flex flex-col gap-4 relative">
+          <div className="text-center mb-2">
+             <h4 className="text-yellow-400 font-bold text-sm">Neutral Path</h4>
+             <p className="text-white/30 text-[10px]">Balance & utility</p>
+          </div>
+          
+          <div className="flex-1 rounded-2xl bg-yellow-900/10 border border-yellow-500/20 p-4 relative overflow-hidden flex flex-col items-center gap-8">
+             <div className="absolute top-0 bottom-0 w-px bg-yellow-500/20 z-0" />
+             
+             <div className="w-12 h-12 rounded-xl bg-black/60 border border-yellow-500/50 z-10 flex items-center justify-center">
+                <Shield className="w-6 h-6 text-yellow-500" />
+             </div>
+
+             <div className="grid grid-cols-2 gap-x-8 gap-y-8 w-full z-10">
+                {[1, 2, 3, 4].map((i) => (
+                   <div key={i} className="flex flex-col items-center gap-1 opacity-50">
+                      <div className="w-10 h-10 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center">
+                         <div className="w-4 h-4 rounded bg-white/10" />
+                      </div>
+                      <span className="text-[9px] text-white/30 font-mono">LOCKED</span>
+                   </div>
+                ))}
+             </div>
+          </div>
+       </div>
+
+       {/* AI Adaptation Path */}
+       <div className="flex flex-col gap-4 relative">
+          <div className="text-center mb-2">
+             <h4 className="text-cyan-400 font-bold text-sm">AI Path</h4>
+             <p className="text-white/30 text-[10px]">Adaptation & behavior</p>
+          </div>
+          
+          <div className="flex-1 rounded-2xl bg-cyan-900/10 border border-cyan-500/20 p-4 relative overflow-hidden flex flex-col items-center gap-8">
+             <div className="absolute top-0 bottom-0 w-px bg-cyan-500/20 z-0" />
+             
+             <div className="w-12 h-12 rounded-xl bg-black/60 border border-cyan-500/50 z-10 flex items-center justify-center">
+                <Activity className="w-6 h-6 text-cyan-500" />
+             </div>
+
+             <div className="grid grid-cols-2 gap-x-8 gap-y-8 w-full z-10">
+                {[1, 2, 3, 4].map((i) => (
+                   <div key={i} className="flex flex-col items-center gap-1 opacity-50">
+                      <div className="w-10 h-10 rounded-lg bg-black/60 border border-white/10 flex items-center justify-center">
+                         <div className="w-4 h-4 rounded bg-white/10" />
+                      </div>
+                      <span className="text-[9px] text-white/30 font-mono">LOCKED</span>
+                   </div>
+                ))}
+             </div>
+          </div>
+       </div>
+    </div>
+  </div>
+);
 
 export default function MysteryCardDetail({ card, onBack }) {
   const [viewMode, setViewMode] = useState('overview'); // overview, blacksmith, skilltree
 
   return (
     <div className="h-full flex flex-col">
-      {/* Top Bar with Toggles */}
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-white/50 hover:text-white -ml-2">
-          ← Back
-        </Button>
-        <div className="flex gap-2 bg-black/20 p-1 rounded-lg">
-          <button
-            onClick={() => setViewMode('blacksmith')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
-              viewMode === 'blacksmith' ? 'bg-orange-500/20 text-orange-300' : 'text-white/40 hover:text-white/60'
-            }`}
-          >
-            <Hammer className="w-3 h-3" /> Forge
-          </button>
-          <div className="w-px bg-white/10 my-1" />
-          <button
-            onClick={() => setViewMode('skilltree')}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${
-              viewMode === 'skilltree' ? 'bg-purple-500/20 text-purple-300' : 'text-white/40 hover:text-white/60'
-            }`}
-          >
-            <Layers className="w-3 h-3" /> Skills
-          </button>
-        </div>
-      </div>
+      <div className="flex-1 flex gap-8 overflow-hidden">
+        {/* Left Side: Card & Controls */}
+        <div className="w-[340px] flex-shrink-0 flex flex-col gap-6 pt-2">
+          
+          {/* Top Controls (Above Card) */}
+          <div className="flex items-center gap-2">
+            <button
+               onClick={() => setViewMode('overview')}
+               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                  viewMode === 'overview' 
+                  ? 'bg-slate-700 text-white border-slate-600 shadow-lg' 
+                  : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+               }`}
+            >
+               <Info className="w-3.5 h-3.5" /> Record
+            </button>
+            <button
+               onClick={() => setViewMode('blacksmith')}
+               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                  viewMode === 'blacksmith' 
+                  ? 'bg-orange-900/80 text-orange-100 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
+                  : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+               }`}
+            >
+               <Hammer className="w-3.5 h-3.5" /> Forge
+            </button>
+            <button
+               onClick={() => setViewMode('skilltree')}
+               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                  viewMode === 'skilltree' 
+                  ? 'bg-purple-900/80 text-purple-100 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
+                  : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
+               }`}
+            >
+               <Layers className="w-3.5 h-3.5" /> Skills
+            </button>
+          </div>
 
-      <div className="flex-1 flex gap-6 overflow-hidden">
-        {/* Left Side: The Card */}
-        <div className="w-1/2 flex flex-col items-center justify-center">
-          <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl">
-            {/* If we had a real image, we'd show it. For mystery, maybe we reveal it? 
-                User said "It will bring up the car's UI... You see the card on the left hand side" 
-                I'll assume it's a specific "Mystery Card" revealed or just the blank one if it's still blank. 
-                But usually clicking reveals info. I'll show a placeholder revealed design. */}
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 to-slate-900 p-4 flex flex-col">
-              <div className="flex justify-between items-start">
-                <Badge variant="outline" className="bg-black/40 border-white/10">Evolved</Badge>
-                <div className="flex gap-0.5">
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+          {/* Power Header */}
+          <div className="flex flex-col items-center">
+             <div className="flex items-center gap-2 relative">
+                <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">Total Power</span>
+                <div className="text-4xl font-black text-white tracking-tight flex items-center">
+                   <Zap className="w-6 h-6 text-yellow-400 mr-1 fill-yellow-400" />
+                   {MOCK_CARD_STATS.power}
                 </div>
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <Crown className="w-16 h-16 text-white/20" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-white font-bold text-lg leading-tight">Ancient Artifact</h3>
-                <p className="text-white/50 text-xs">Legendary Item</p>
-              </div>
-            </div>
-          </ShinyCard>
+                {/* Rarity Badge positioned relative to the number */}
+                <Badge className="bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] px-1.5 py-0.5 text-[10px] h-5 absolute -right-12 top-1/2 -translate-y-1/2">
+                   Rare
+                </Badge>
+             </div>
+          </div>
+
+          {/* The Card */}
+          <div className="relative group perspective-1000">
+             <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-2xl overflow-hidden relative z-10">
+                {/* Card Art Placeholder */}
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1627856014759-2a5713c54d65?q=80&w=1000&auto=format&fit=crop')` }}>
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                </div>
+                
+                {/* Card Content Overlay */}
+                <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                   <div className="flex justify-between items-start">
+                      <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90">
+                         Lv. 1
+                      </Badge>
+                      <div className="flex gap-0.5 bg-black/40 p-1 rounded-full backdrop-blur-md">
+                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      </div>
+                   </div>
+
+                   <div>
+                      <h2 className="text-white font-black text-2xl leading-none mb-1 drop-shadow-lg font-heading">
+                         RENEGADES
+                      </h2>
+                      <div className="flex items-center gap-2 mb-2">
+                         <Badge className="bg-orange-500 text-white border-none text-[10px] py-0 h-4">Legendary</Badge>
+                         <span className="text-white/70 text-xs font-medium">Destiny 2</span>
+                      </div>
+                   </div>
+                </div>
+             </ShinyCard>
+
+             {/* Background Glow */}
+             <div className="absolute inset-0 bg-orange-500/20 blur-3xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+          </div>
+
+          {/* Perks Section (Below Card) */}
+          <div className="space-y-3">
+             <h4 className="text-white/40 text-xs font-bold uppercase tracking-widest text-center">Active Perks</h4>
+             <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3].map((i) => (
+                   <div key={i} className="aspect-square rounded-xl bg-white/5 border border-white/10 flex flex-col items-center justify-center gap-1 hover:bg-white/10 transition-colors cursor-help group relative">
+                      <div className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+                         <Sparkles className="w-4 h-4 text-white/60 group-hover:text-yellow-400 transition-colors" />
+                      </div>
+                      <span className="text-[9px] text-white/40 font-mono">LOCKED</span>
+                   </div>
+                ))}
+             </div>
+          </div>
         </div>
 
-        {/* Right Side: Dynamic UI */}
-        <div className="w-1/2 flex flex-col min-h-0">
+        {/* Right Side: Dynamic UI Content */}
+        <div className="flex-1 flex flex-col min-h-0 bg-black/20 rounded-2xl border border-white/5 p-1">
           <AnimatePresence mode="wait">
             {viewMode === 'overview' && (
               <motion.div 
                 key="overview"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-4"
+                exit={{ opacity: 0, x: -20 }}
+                className="h-full p-4"
               >
-                <div>
-                  <h3 className="text-xl font-bold text-white">General Info</h3>
-                  <p className="text-white/50 text-xs">ID: #8392-AX-99</p>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex justify-between p-3 rounded bg-white/5">
-                    <span className="text-white/60 text-sm">Power Rating</span>
-                    <span className="text-white font-bold">4,250</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded bg-white/5">
-                    <span className="text-white/60 text-sm">Rarity</span>
-                    <span className="text-orange-400 font-bold">Legendary</span>
-                  </div>
-                  <div className="flex justify-between p-3 rounded bg-white/5">
-                    <span className="text-white/60 text-sm">Owner</span>
-                    <span className="text-white font-bold">PlayerOne</span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20">
-                  <p className="text-blue-300 text-xs leading-relaxed">
-                    This ancient artifact hums with unknown energy. Unlock its potential through the Forge.
-                  </p>
-                </div>
+                <CardRecordView card={card} />
               </motion.div>
             )}
 
             {viewMode === 'blacksmith' && (
               <motion.div 
                 key="blacksmith"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="h-full"
+                exit={{ opacity: 0, x: -20 }}
+                className="h-full p-4"
               >
-                <MiniBlacksmith card={card} />
+                <BlacksmithView card={card} />
               </motion.div>
             )}
 
             {viewMode === 'skilltree' && (
               <motion.div 
                 key="skilltree"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="h-full"
+                exit={{ opacity: 0, x: -20 }}
+                className="h-full p-4"
               >
-                <MiniSkillTree card={card} />
+                <SkillTreeView card={card} />
               </motion.div>
             )}
           </AnimatePresence>
