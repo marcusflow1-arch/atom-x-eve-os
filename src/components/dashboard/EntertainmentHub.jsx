@@ -142,6 +142,17 @@ export default function EntertainmentHub() {
 
   const CATEGORIES = ['All', 'Movies', 'TV Shows', 'Live TV', 'Sports', 'News'];
 
+  // Precompute most watched by rating (desc)
+  const mostWatched = React.useMemo(() => {
+    try {
+      return [...AGGREGATED_CONTENT]
+        .sort((a, b) => parseFloat(b.rating || '0') - parseFloat(a.rating || '0'))
+        .slice(0, 12);
+    } catch {
+      return AGGREGATED_CONTENT.slice(0, 12);
+    }
+  }, []);
+
   return (
     <div 
       className="w-full h-full relative overflow-hidden font-sans"
@@ -291,7 +302,7 @@ export default function EntertainmentHub() {
             >
               {/* Header: Title + Search */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h2 className="text-white text-2xl font-bold tracking-wide">Entertainment</h2>
+                <h2 className="text-white text-2xl font-bold tracking-wide">Entertainment Guide</h2>
                 <div className="w-full sm:w-80 relative">
                   <input
                     type="text"
@@ -318,34 +329,12 @@ export default function EntertainmentHub() {
                 ))}
               </div>
 
-              {/* Connected Services Grid */}
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Connected Services</h3>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 gap-3">
-                  {STREAMING_APPS.map((app) => (
-                    <button
-                      key={app.id}
-                      onClick={() => handleAppSelect(app)}
-                      className="group rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-3 flex flex-col items-center gap-2"
-                      title={`Open ${app.name}`}
-                    >
-                      <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg border border-white/10"
-                           style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
-                        <app.icon className="w-5 h-5" style={{ color: app.color }} />
-                      </div>
-                      <span className="text-[11px] text-white/70 group-hover:text-white truncate w-full text-center">{app.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </section>
 
               {/* Continue Watching */}
               {AGGREGATED_CONTENT.some(i => i.progress) && (
                 <section>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Continue Watching</h3>
+                    <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Jump Back In</h3>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     {AGGREGATED_CONTENT.filter(i => i.progress).map((item) => (
@@ -355,10 +344,22 @@ export default function EntertainmentHub() {
                 </section>
               )}
 
-              {/* Trending Now */}
+              {/* Most Watched Right Now */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Trending Now</h3>
+                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Most Watched Right Now</h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {mostWatched.map((item) => (
+                    <ContentCard key={`mw_${item.id}`} item={item} onClick={handleAppSelect} />
+                  ))}
+                </div>
+              </section>
+
+              {/* Trending Across Services */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Trending Across Services</h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                   {AGGREGATED_CONTENT.slice(0, 12).map((item) => (
