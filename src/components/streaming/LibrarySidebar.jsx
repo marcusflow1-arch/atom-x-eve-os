@@ -67,14 +67,6 @@ export default function LibrarySidebar() {
   };
   const closeOverlay = () => setOverlayOpen(false);
 
-  // Close right-side overlay whenever the left pull-out tab closes
-  useEffect(() => {
-    if (!isOpen) {
-      setOverlayOpen(false);
-      setSelectedItem(null);
-    }
-  }, [isOpen]);
-
 
     const handlePlay = async () => {
     if (!selectedItem) return;
