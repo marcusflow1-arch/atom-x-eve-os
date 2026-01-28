@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, Settings, User } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, Settings, User, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -35,6 +35,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   ]);
   const isAuraStreamingView = item?.context === 'aura' && item?.type === 'game';
   const isStreamerProfileView = item?.type === 'stream';
+  const isAppView = item?.type === 'app';
+  const appUrlMap = { twitch: 'https://www.twitch.tv', spotify: 'https://open.spotify.com', youtube: 'https://www.youtube.com', netflix: 'https://www.netflix.com', hulu: 'https://www.hulu.com', 'disney+': 'https://www.disneyplus.com' };
+  const resolvedAppUrl = (item?.url && typeof item.url === 'string') ? item.url : appUrlMap[(item?.title || '').toLowerCase()];
 
   React.useEffect(() => {
     if (!open || !isAuraStreamingView) return;
@@ -251,10 +254,32 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     ))}
                   </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                {/* Hero media */}
+                </div>
+                ) : isAppView ? (
+                <div className="h-full w-full flex flex-col">
+                 <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                       <span className="text-white/70 text-xs">{(item?.title || 'App').charAt(0)}</span>
+                     </div>
+                     <h4 className="text-white font-semibold text-sm truncate">{item?.title}</h4>
+                   </div>
+                   {resolvedAppUrl && (
+                     <a href={resolvedAppUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-300 hover:text-cyan-200 flex items-center gap-1">
+                       Open <ExternalLink className="w-3 h-3" />
+                     </a>
+                   )}
+                 </div>
+                 <iframe
+                   src={resolvedAppUrl || 'about:blank'}
+                   className="w-full flex-1 border-0"
+                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                   title={item?.title || 'App'}
+                 />
+                </div>
+                ) : (
+                <>
+                 {/* Hero media */}
                 <div className="relative h-44 sm:h-52 border-b border-white/10 overflow-hidden">
                   {item?.image ? (
                     <img src={item.image} alt="preview" className="w-full h-full object-cover" />

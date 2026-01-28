@@ -35,13 +35,13 @@ export default function LibrarySidebar() {
   ];
 
   const entertainmentApps = [
-    { name: "YouTube", category: "Video", image: "https://source.unsplash.com/random/200x200?youtube,logo" },
-    { name: "Twitch", category: "Live", image: "https://source.unsplash.com/random/200x200?twitch,logo" },
-    { name: "Spotify", category: "Music", image: "https://source.unsplash.com/random/200x200?spotify,logo" },
-    { name: "Netflix", category: "Video", image: "https://source.unsplash.com/random/200x200?netflix,logo" },
-    { name: "Hulu", category: "Video", image: "https://source.unsplash.com/random/200x200?hulu,logo" },
-    { name: "Disney+", category: "Video", image: "https://source.unsplash.com/random/200x200?disney,logo" },
-  ];
+            { name: "YouTube", category: "Video", url: "https://www.youtube.com", image: "https://source.unsplash.com/random/200x200?youtube,logo" },
+            { name: "Twitch", category: "Live", url: "https://www.twitch.tv", image: "https://source.unsplash.com/random/200x200?twitch,logo" },
+            { name: "Spotify", category: "Music", url: "https://open.spotify.com", image: "https://source.unsplash.com/random/200x200?spotify,logo" },
+            { name: "Netflix", category: "Video", url: "https://www.netflix.com", image: "https://source.unsplash.com/random/200x200?netflix,logo" },
+            { name: "Hulu", category: "Video", url: "https://www.hulu.com", image: "https://source.unsplash.com/random/200x200?hulu,logo" },
+            { name: "Disney+", category: "Video", url: "https://www.disneyplus.com", image: "https://source.unsplash.com/random/200x200?disney,logo" },
+          ];
 
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
@@ -277,7 +277,7 @@ export default function LibrarySidebar() {
                     {entertainmentApps.map((app, i) => (
                       <div
                         key={`ent_${i}`}
-                        onClick={() => openOverlay({ type: 'app', title: app.name, image: app.image, subtitle: app.category })}
+                        onClick={() => openOverlay({ type: 'app', title: app.name, image: app.image, subtitle: app.category, url: app.url })}
                         className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
                         <img src={app.image} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
