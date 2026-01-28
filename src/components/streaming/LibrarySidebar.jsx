@@ -47,7 +47,7 @@ export default function LibrarySidebar() {
           animate={{ x: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           onClick={() => setIsOpen(true)}
-          className="fixed left-6 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+          className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
       >
           <Library className="w-5 h-5" />
       </motion.button>
@@ -61,7 +61,7 @@ export default function LibrarySidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65]"
           />
         )}
       </AnimatePresence>
@@ -72,7 +72,7 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 rounded-r-3xl border-r border-white/10 z-50 overflow-hidden flex flex-col"
+        className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 rounded-r-3xl border-r border-white/10 z-[70] overflow-hidden flex flex-col"
         style={{ 
           background: 'rgba(12, 16, 24, 0.88)',
           backdropFilter: 'blur(30px) saturate(150%)',
