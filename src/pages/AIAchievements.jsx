@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   Trophy, Search, Filter, ChevronRight,
-  Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
+  Check, X, ArrowLeft, Gamepad2, Sparkles, Zap, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
   MessageSquare, Users, Star, TrendingUp, BookOpen, Swords, Crown, Target, Settings, Calendar
 } from 'lucide-react';
