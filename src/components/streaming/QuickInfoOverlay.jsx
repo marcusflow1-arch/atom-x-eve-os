@@ -48,10 +48,10 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     const res = await base44.entities.Post.filter({ type: 'game_discussion', game_title: item.title }, '-created_date', 5);
     setPosts(res?.data || res || []);
   };
-  if (!open) return null;
   React.useEffect(() => {
     if (open) setActiveTab('overview');
   }, [open]);
+  if (!open) return null;
 
   return (
     <AnimatePresence>
