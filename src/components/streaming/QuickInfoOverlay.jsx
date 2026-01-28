@@ -102,7 +102,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 flex flex-col"
+            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10"
             style={{
               background: 'rgba(20,24,34,0.85)',
               backdropFilter: 'blur(18px) saturate(160%)',
@@ -112,7 +112,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 p-4 border-b border-white/10 flex-none">
+            <div className="flex items-center gap-3 p-4 border-b border-white/10">
               <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center">
                 {item?.image ? (
                   <img src={item.image} alt={item?.title || 'Item'} className="w-full h-full object-cover" />
@@ -133,7 +133,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             </div>
 
             {/* Hero media */}
-            <div className="relative h-44 sm:h-52 border-b border-white/10 overflow-hidden flex-none">
+            <div className="relative h-44 sm:h-52 border-b border-white/10 overflow-hidden">
               {item?.image ? (
                 <img src={item.image} alt="preview" className="w-full h-full object-cover" />
               ) : (
@@ -154,7 +154,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             </div>
 
             {/* Quick actions & info tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4 flex-1 flex flex-col min-h-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
               <TabsList className="bg-white/5 border border-white/10">
                 <TabsTrigger value="overview">Dashboard</TabsTrigger>
                 <TabsTrigger value="dlc">DLC</TabsTrigger>
@@ -277,7 +277,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
 
 
-              <TabsContent value="achievements" className="flex-1 flex flex-col min-h-0">
+              <TabsContent value="achievements" className="h-[400px]">
                 <AnimatePresence mode="wait">
                   {!selectedMysteryCard ? (
                     <motion.div
@@ -285,7 +285,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 overflow-y-auto pr-2 custom-scrollbar flex-1"
+                      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
                     >
                       {/* Blank Mystery Cards - Smaller Grid */}
                       {Array.from({ length: 8 }).map((_, i) => (
@@ -304,7 +304,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex-1 h-full"
+                      className="h-full"
                     >
                       <MysteryCardDetail 
                         card={{ id: selectedMysteryCard }} 
