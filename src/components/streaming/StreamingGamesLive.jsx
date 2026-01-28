@@ -129,6 +129,7 @@ export default function StreamingGamesLive() {
   }, [enrichedGames, activeTab, activeGenre, search]);
 
   return (
+    <>
     <div className="h-full w-full pt-20 pb-10 px-6 text-white">
       {/* Page Title + Subnav */}
       <div className="max-w-[1920px] mx-auto">
@@ -288,5 +289,5 @@ export default function StreamingGamesLive() {
         <GameStreamersView game={selectedGame} onClose={() => setSelectedGame(null)} />
       )}
     </AnimatePresence>
-  );
+  </>);
 }
