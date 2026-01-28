@@ -51,9 +51,15 @@ const AppView = ({ app }) => {
       exit={{ opacity: 0 }}
       className="w-full h-full flex flex-col relative bg-[#050505]"
     >
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-black/40">
+        <div className="text-white/80 text-sm font-semibold">{app.name}</div>
+        <a href={app.url} target="_blank" rel="noopener noreferrer" className="text-xs text-cyan-300 hover:text-cyan-200 underline-offset-2 hover:underline">
+          {app.url}
+        </a>
+      </div>
       <iframe 
         src={app.url}
-        className="w-full h-full border-0"
+        className="w-full flex-1 border-0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
         sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
