@@ -5,7 +5,7 @@ import { addDays, format, isToday, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight, Gamepad2, X } from 'lucide-react';
 import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
 import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
-import ViewerSeasonPass from '@/components/streaming/ViewerSeasonPass';
+import ViewerSeasonPass from '@/components/streaming/profile/ViewerSeasonPass';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 
