@@ -123,7 +123,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10"
+            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 overflow-y-auto custom-scrollbar"
             style={{
               background: 'rgba(20,24,34,0.85)',
               backdropFilter: 'blur(18px) saturate(160%)',
