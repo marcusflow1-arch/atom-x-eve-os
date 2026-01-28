@@ -286,6 +286,16 @@ export default function LibrarySidebar() {
                 <Play className="w-3 h-3" /> {activeSub === 'aura' ? 'Open Stream History' : 'View Full History'}
             </button>
         </div>
+
+        {/* Quick Info Overlay */}
+        <QuickInfoOverlay
+          open={overlayOpen}
+          item={selectedItem}
+          onClose={closeOverlay}
+          onPlay={handlePlay}
+          onStream={handleStream}
+          onMoreInfo={handleMoreInfo}
+        />
       </motion.div>
     </>
   );
