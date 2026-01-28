@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     ArrowLeft, Map as MapIcon, Wheat, Brain, Users, MessageSquare, Mic, 
     Settings, Shield, Sword, Target, ChevronRight, Hash,
-    Plus, Video, Headphones, UserPlus, Send, X
+    Plus, Video, Headphones, UserPlus, Send, X, FileText
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -21,6 +21,7 @@ import FarmingZone from '@/components/clan/zones/FarmingZone';
 import ExplorationZone from '@/components/clan/zones/ExplorationZone';
 import StrategyZone from '@/components/clan/zones/StrategyZone';
 import ZoneChatPanel from '@/components/clan/shared/ZoneChatPanel';
+import ClanFormsZone from '@/components/clan/forms/ClanFormsZone';
 
 const ZONES = [
     { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
@@ -28,6 +29,7 @@ const ZONES = [
     { id: 'strategy', label: 'Strategy', icon: Brain, desc: 'Planning & Tactics Board' },
     { id: 'party', label: 'Party Formation', icon: Users, desc: 'LFG & Squad Management' },
     { id: 'chat', label: 'Game Chat', icon: MessageSquare, desc: 'General Comms' },
+    { id: 'forms', label: 'Clan Forms', icon: FileText, desc: 'Cross-clan coordination & topics' },
     { id: 'voice', label: 'Voice Rooms', icon: Mic, desc: 'Tactical Audio Channels' },
 ];
 
@@ -355,6 +357,12 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                     {visitedZones.strategy && (
                         <div className="h-full w-full" style={{ display: activeZone === 'strategy' ? 'block' : 'none' }}>
                             <StrategyZone game={game} clan={clan} />
+                        </div>
+                    )}
+
+                    {visitedZones.forms && (
+                        <div className="h-full w-full" style={{ display: activeZone === 'forms' ? 'block' : 'none' }}>
+                            <ClanFormsZone game={game} clan={clan} user={user} />
                         </div>
                     )}
 
