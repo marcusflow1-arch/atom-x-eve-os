@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Gamepad2, User, Search, Play, ChevronRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import QuickInfoOverlay from './QuickInfoOverlay';
+import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
 import { playItem } from '@/functions/playItem';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 
@@ -288,14 +288,7 @@ export default function LibrarySidebar() {
         </div>
 
         {/* Quick Info Overlay */}
-        <QuickInfoOverlay
-          open={overlayOpen}
-          item={selectedItem}
-          onClose={closeOverlay}
-          onPlay={handlePlay}
-          onStream={handleStream}
-          onMoreInfo={handleMoreInfo}
-        />
+
       </motion.div>
     </>
   );
