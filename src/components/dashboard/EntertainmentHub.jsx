@@ -21,6 +21,7 @@ const STREAMING_APPS = [
   { id: 'pluto', name: 'Pluto TV', color: '#FFFFFF', icon: Tv, url: 'https://pluto.tv', description: 'Drop in. It\'s free.' },
   { id: 'crunchyroll', name: 'Crunchyroll', color: '#F47521', icon: Zap, url: 'https://www.crunchyroll.com', description: 'The world\'s largest anime collection.' },
   { id: 'youtube_tv', name: 'YouTube TV', color: '#FF0000', icon: Tv, url: 'https://tv.youtube.com', description: 'Live TV from 100+ channels.' },
+  { id: 'spotify', name: 'Spotify', color: '#1DB954', icon: Play, url: 'https://open.spotify.com', description: 'Music for everyone.' },
   { id: 'twitch', name: 'Twitch', color: '#9146FF', icon: Gamepad2, url: 'https://www.twitch.tv', description: 'Live streaming for gamers.' },
   { id: 'sling', name: 'Sling TV', color: '#10069F', icon: Tv, url: 'https://www.sling.com', description: 'Live TV Streaming Service.' },
   { id: 'espn', name: 'ESPN+', color: '#CC0000', icon: Trophy, url: 'https://plus.espn.com', description: 'Live sports and original shows.' },
