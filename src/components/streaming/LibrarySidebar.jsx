@@ -7,6 +7,7 @@ import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSub, setActiveSub] = useState('library');
 
   // Mock Data
   const recentChannels = [
@@ -109,6 +110,24 @@ export default function LibrarySidebar() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+            {/* Sub-pages (Library | Aurora) */}
+            <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setActiveSub('library')}
+                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='library' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
+                >
+                  Library
+                </button>
+                <div className="h-4 w-px bg-white/20" />
+                <button
+                  onClick={() => setActiveSub('aura')}
+                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='aura' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
+                >
+                  Aurora
+                </button>
+              </div>
+            </div>
             {mode === 'recentStreaming' ? (
               <>
                 {/* Recently Watched Games */}
@@ -160,25 +179,78 @@ export default function LibrarySidebar() {
               </>
             ) : (
               <>
-                {/* Library Games Only */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                    <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {libraryGames.map((game, i) => (
-                      <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
-                        <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.title || game.name}</h4>
-                        </div>
+                {activeSub === 'aura' ? (
+                  <>
+                    {/* Recently Watched Games */}
+                    <section>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Games</h3>
+                        <span className="ml-auto text-[10px] text-white/40">{recentGames.length} items</span>
                       </div>
-                    ))}
-                  </div>
-                </section>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {recentGames.map((game, i) => (
+                          <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
+                            <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-2">
+                              <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.name}</h4>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* Recently Watched Streamers */}
+                    <section>
+                      <div className="flex items-center gap-2 mt-6 mb-3">
+                        <User className="w-4 h-4 text-pink-400" />
+                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Streamers</h3>
+                        <span className="ml-auto text-[10px] text-white/40">{recentChannels.length} channels</span>
+                      </div>
+                      <div className="space-y-3">
+                        {recentChannels.map((ch, idx) => (
+                          <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition">
+                            <div className="relative">
+                              <img src={ch.avatar} alt={ch.name} className="w-10 h-10 rounded-lg object-cover" />
+                              {ch.isLive && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-semibold truncate">{ch.name}</p>
+                              <p className="text-white/50 text-xs truncate">{ch.game}</p>
+                            </div>
+                            <div className="text-white/60 text-xs font-mono flex items-center gap-1">
+                              <span className="text-red-500">●</span>
+                              {ch.viewers}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </>
+                ) : (
+                  <>
+                    {/* Library Games Only */}
+                    <section>
+                      <div className="flex items-center gap-2 mb-4">
+                        <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
+                        <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {libraryGames.map((game, i) => (
+                          <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
+                            <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 p-2">
+                              <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.title || game.name}</h4>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </>
+                )
               </>
             )}
         </div>
