@@ -293,7 +293,7 @@ const BlacksmithView = ({ card }) => {
   };
 
   return (
-    <div className="h-full flex flex-col p-6 overflow-hidden">
+    <div className="flex flex-col p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
          <div className="flex items-center gap-4">
@@ -315,7 +315,7 @@ const BlacksmithView = ({ card }) => {
          </div>
       </div>
 
-      <div className="flex-1 flex gap-6 min-h-0 overflow-hidden">
+      <div className="flex-1 flex gap-6">
           {/* LEFT: Card Visual */}
           <div className="w-[280px] flex-shrink-0 flex flex-col items-center justify-start pt-4">
              <div
@@ -801,7 +801,7 @@ export default function MysteryCardDetail({ card, onBack }) {
       </div>
 
       {/* Main Content Area (Full Width/Height) */}
-      <div className="flex-1 relative custom-scrollbar">
+      <div className="flex-1 relative overflow-y-auto custom-scrollbar max-h-[calc(100vh-140px)]">
           <AnimatePresence mode="wait">
             {viewMode === 'overview' && (
               <motion.div 
