@@ -224,7 +224,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 {/* Other people streaming this game */}
                 <div>
                   <h4 className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2">Other Live Channels</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
                     {streamers.filter((_, i) => i !== activeStreamerIndex).map((s) => (
                       <button key={s.id} onClick={() => setActiveStreamerIndex(streamers.findIndex((x) => x.id === s.id))} className="group rounded-lg overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
                         <div className="aspect-video bg-black/60" />
