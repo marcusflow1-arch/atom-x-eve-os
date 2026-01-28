@@ -64,12 +64,8 @@ export default function LibrarySidebar() {
   };
   const closeOverlay = () => setOverlayOpen(false);
 
-  // Close contextual panel when the left navigator closes or when leaving Library subpage
-  React.useEffect(() => {
-    if (!isOpen || activeSub !== 'library') setOverlayOpen(false);
-  }, [isOpen, activeSub]);
 
-  const handlePlay = async () => {
+    const handlePlay = async () => {
     if (!selectedItem) return;
     const res = await playItem({ type: selectedItem.type, title: selectedItem.title || selectedItem.name, id: selectedItem.id || null });
     const launchUrl = res?.data?.launch_url || res?.launch_url;
