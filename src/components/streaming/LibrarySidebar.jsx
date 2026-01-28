@@ -238,17 +238,27 @@ export default function LibrarySidebar() {
                     <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
                     <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     {libraryGames.map((game, i) => (
                       <div
                         key={`lib_${game.id || 'x'}_${i}`}
                         onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
-                        className="group relative aspect-[2/3] rounded-2xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_18px_rgba(6,182,212,0.25)] transition"
+                        className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
                       >
-                        <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <h4 className="text-white font-bold text-sm leading-snug line-clamp-2">{game.title || game.name}</h4>
+                        {/* Small Icon */}
+                        <div className="flex-shrink-0 text-white/40 group-hover:text-cyan-400 transition-colors">
+                          <Gamepad2 className="w-4 h-4" />
+                        </div>
+
+                        {/* Picture of the game */}
+                        <div className="relative w-12 h-16 flex-shrink-0 rounded-md overflow-hidden bg-black/50">
+                          <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover" />
+                        </div>
+
+                        {/* Text to the right */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-white font-medium text-sm truncate group-hover:text-cyan-100 transition-colors">{game.title || game.name}</h4>
+                          <p className="text-white/40 text-xs truncate">Ready to play</p>
                         </div>
                       </div>
                     ))}
