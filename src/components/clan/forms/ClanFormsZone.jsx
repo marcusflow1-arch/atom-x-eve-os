@@ -34,6 +34,17 @@ export default function ClanFormsZone({ game, clan, user }) {
     }
   });
 
+  // Track joined channel to allow graceful leave on unmount
+  const joinedChannelRef = React.useRef(null);
+  React.useEffect(() => {
+    return () => {
+      const ch = joinedChannelRef.current;
+      if (ch?.id) {
+        base44.functions.invoke('leaveClanFormChannel', { channel_id: ch.id }).catch(() => {});
+      }
+    };
+  }, []);
+
   // Topics for selected channel
   const { data: topics = [] } = useQuery({
     queryKey: ['clanFormTopics', selectedChannel?.id],
@@ -44,6 +55,14 @@ export default function ClanFormsZone({ game, clan, user }) {
     },
     enabled: !!selectedChannel?.id,
   });
+
+  // Auto-select General when topics change and none selected
+  React.useEffect(() => {
+    if (!selectedTopic && topics.length) {
+      const general = topics.find(t => (t.title || '').toLowerCase() === 'general');
+      if (general) setSelectedTopic(general);
+    }
+  }, [topics, selectedTopic]);
 
   // Messages for selected topic
   const { data: messages = [] } = useQuery({
@@ -74,14 +93,18 @@ export default function ClanFormsZone({ game, clan, user }) {
 
   const createChannel = async () => {
     if (!channelName.trim()) return;
-    await base44.entities.ClanFormChannel.create({
+    const { data } = await base44.functions.invoke('joinClanFormChannel', {
       game_id: game.id,
-      name: channelName.trim(),
-      description: channelDesc.trim(),
-      created_by_clan_id: clan.id,
-      participating_clan_ids: [clan.id],
-      is_open: true,
+      clan_id: clan.id,
+      desired_name: channelName.trim()
     });
+    const ch = data?.channel;
+    if (ch) {
+      joinedChannelRef.current = ch;
+      setSelectedChannel(ch);
+      const general = (data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general');
+      setSelectedTopic(general || null);
+    }
     setChannelName('');
     setChannelDesc('');
     setNewChannelOpen(false);
@@ -138,13 +161,23 @@ export default function ClanFormsZone({ game, clan, user }) {
         <ScrollArea className="h-[calc(100%-52px)] pr-2">
           <div className="space-y-2">
             {channels.map((ch) => (
-              <button key={ch.id} onClick={() => { setSelectedChannel(ch); setSelectedTopic(null); }} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedChannel?.id === ch.id ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
+              <button key={ch.id} onClick={async () => { 
+                // Join with autoscaling, ensure defaults
+                const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: ch.id });
+                const joined = data?.channel || ch; 
+                joinedChannelRef.current = joined;
+                setSelectedChannel(joined); 
+                // Prefer General automatically
+                const tps = data?.topics || [];
+                const general = tps.find(t => (t.title || '').toLowerCase() === 'general');
+                setSelectedTopic(general || null);
+              }} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedChannel?.id === ch.id ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-semibold text-white">{ch.name}</p>
                     <p className="text-xs text-white/50 line-clamp-1">{ch.description || '—'}</p>
                   </div>
-                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(ch.participating_clan_ids || []).length} clans</Badge>
+                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(ch.active_member_ids || []).length}/{ch.capacity || 50}</Badge>
                 </div>
               </button>
             ))}
@@ -193,6 +226,7 @@ export default function ClanFormsZone({ game, clan, user }) {
           <p className="text-sm font-semibold text-white/80 truncate">{selectedTopic ? selectedTopic.title : 'Select a topic'}</p>
         </div>
         <div className="flex-1 overflow-hidden">
+          {/* Chat window lives at the far right per spec */}
           <ScrollArea className="h-full p-4">
             <div className="space-y-3">
               {messages.map((m) => (
@@ -206,7 +240,7 @@ export default function ClanFormsZone({ game, clan, user }) {
                 </div>
               ))}
               {selectedTopic && messages.length === 0 && <p className="text-xs text-white/40">No messages yet. Be the first to say hi!</p>}
-              {!selectedTopic && <p className="text-xs text-white/40">Choose a topic on the left to view conversation.</p>}
+              {!selectedTopic && <p className="text-xs text-white/40">Select a topic to start chatting.</p>}
             </div>
           </ScrollArea>
         </div>
