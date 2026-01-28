@@ -49,6 +49,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     setPosts(res?.data || res || []);
   };
   if (!open) return null;
+  React.useEffect(() => {
+    if (open) setActiveTab('overview');
+  }, [open]);
 
   return (
     <AnimatePresence>
