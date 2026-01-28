@@ -289,6 +289,33 @@ export default function LibrarySidebar() {
                     ))}
                   </div>
                 </section>
+
+                <section className="mt-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Other Streaming Services</h3>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => openOverlay({ type: 'app', title: 'Anime Kai', url: 'https://animekai.to/home' })}
+                      className="text-sm text-cyan-300 hover:text-cyan-200 text-left"
+                    >
+                      Anime Kai
+                    </button>
+                    <button
+                      onClick={() => openOverlay({ type: 'app', title: 'Watch Cartoons Online', url: 'https://www.wcostream.tv/' })}
+                      className="text-sm text-cyan-300 hover:text-cyan-200 text-left"
+                    >
+                      Watch Cartoons Online
+                    </button>
+                    <button
+                      onClick={() => openOverlay({ type: 'app', title: 'Watch 32' })}
+                      title="Awaiting link"
+                      className="text-sm text-white/60 hover:text-white/80 text-left"
+                    >
+                      Watch 32
+                    </button>
+                  </div>
+                </section>
               </>
             )}
         </div>
