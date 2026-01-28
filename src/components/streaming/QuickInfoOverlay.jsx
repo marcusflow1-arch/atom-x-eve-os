@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -143,9 +143,18 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   <div className="w-6 h-6 rounded bg-white/20" />
                 )}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex items-center gap-2">
                 <h3 className="text-white font-semibold truncate">{item?.title || 'Selected Item'}</h3>
                 {item?.subtitle && <p className="text-white/60 text-xs truncate">{item.subtitle}</p>}
+                {isStreamerProfileView && (
+                  <button
+                    onClick={() => navigate(createPageUrl('StreamingHome') + `?streamer=${encodeURIComponent(item?.title || '')}`)}
+                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/80 hover:text-white transition"
+                    title="Open Profile"
+                  >
+                    <User className="w-4 h-4" />
+                  </button>
+                )}
               </div>
               <button
                 onClick={onClose}

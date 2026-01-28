@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { addDays, format, isToday, startOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight, Gamepad2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Gamepad2, X } from 'lucide-react';
 import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
 import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
 import ViewerSeasonPass from '@/components/streaming/profile/ViewerSeasonPass';
@@ -15,7 +15,7 @@ export default function StreamerProfilePanel({ streamer }) {
   const tagline = streamer?.tagline || 'COMPETITIVE • STRATEGIC';
 
   const [isLive, setIsLive] = useState(false);
-  const [activeTab, setActiveTab] = useState('schedule');
+  const [activeTab, setActiveTab] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
 
   const startDate = useMemo(() => startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }), [scheduleBaseDate]);
@@ -29,6 +29,22 @@ export default function StreamerProfilePanel({ streamer }) {
       <div className="flex gap-4 flex-col lg:flex-row h-[420px]">
         <StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={!false} onTogglePlay={() => {}} volume={70} onVolumeChange={() => {}} />
         <StreamChatBox isLive={isLive} />
+      </div>
+
+      {/* Toggle Sections (below streaming box) */}
+      <div
+        className="w-full mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 flex items-center justify-between cursor-pointer select-none"
+        onClick={() => !activeTab && setActiveTab('schedule')}
+        title="Click to open sections"
+      >
+        <div className="flex items-center gap-3 text-sm">
+          <span className="font-semibold">Sections</span>
+          <span className="text-white/50">Schedule</span>
+          <span className="text-white/50">Cards</span>
+          <span className="text-white/50">Gallery</span>
+          <span className="text-white/50">Games</span>
+        </div>
+        <ChevronDown className={`w-4 h-4 ${activeTab ? 'rotate-180' : ''} transition-transform`} />
       </div>
 
       {/* Info Bar */}
@@ -52,18 +68,7 @@ export default function StreamerProfilePanel({ streamer }) {
           </div>
         </div>
 
-        {/* Center: Nav */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8 text-sm font-medium">
-          {['schedule','cards','gallery','games'].map(id => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`pb-1 px-1 transition-colors border-b-2 ${activeTab === id ? 'text-white border-white' : 'text-white/50 border-transparent hover:text-white'}`}
-            >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
-            </button>
-          ))}
-        </div>
+        {/* Center: Nav removed per UX change (dropdown below stream) */}
 
         {/* Right: Views */}
         <div className="text-right hidden sm:block">
@@ -76,7 +81,7 @@ export default function StreamerProfilePanel({ streamer }) {
 
       {/* Tabs Content */}
       {activeTab === 'schedule' && (
-        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10" onDoubleClick={() => setActiveTab(null)}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-white font-bold text-lg flex items-center gap-2">
               Streaming Schedule <span className="text-white/40 text-sm font-normal ml-2">{dateRangeString}</span>
@@ -114,7 +119,7 @@ export default function StreamerProfilePanel({ streamer }) {
       )}
 
       {activeTab === 'cards' && (
-        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10" onDoubleClick={() => setActiveTab(null)}>
           <div className="flex items-center justify-between mb-6 px-2">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-white">Stream Collection</h3>
@@ -139,7 +144,7 @@ export default function StreamerProfilePanel({ streamer }) {
       )}
 
       {activeTab === 'gallery' && (
-        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10" onDoubleClick={() => setActiveTab(null)}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-white font-bold text-lg flex items-center gap-2">Gallery</h3>
             <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
@@ -155,7 +160,7 @@ export default function StreamerProfilePanel({ streamer }) {
       )}
 
       {activeTab === 'games' && (
-        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10">
+        <div className="w-full select-none pt-4 bg-white/5 rounded-2xl p-6 border border-white/10" onDoubleClick={() => setActiveTab(null)}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-white font-bold text-lg flex items-center gap-2"><Gamepad2 className="w-4 h-4 text-cyan-400" /> Games Played</h3>
             <Button variant="ghost" size="sm" onClick={() => setActiveTab(null)}><X className="w-4 h-4" /></Button>
