@@ -381,7 +381,7 @@ const PvEView = ({ onBack }) => {
   );
 };
 
-const TournamentsView = () => (
+const TournamentsView = ({ onBack }) => (
   <div className="w-full h-full p-12 overflow-y-auto">
     <div className="max-w-5xl mx-auto">
       <div className="flex justify-between items-end mb-12">
