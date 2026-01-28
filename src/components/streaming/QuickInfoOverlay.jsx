@@ -59,6 +59,16 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
         <>
 
 
+          {/* Dim background to the right of LibrarySidebar */}
+          <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed top-0 bottom-0 right-0 left-[320px] sm:left-[384px] z-[80]"
+          onClick={onClose}
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          />
+
           {/* Slide-in panel */}
           <motion.div
             initial={{ x: '100%' }}
