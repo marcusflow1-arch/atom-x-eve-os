@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DLCList, { DLC_DATA } from '@/components/game/DLCList';
 import { useCart } from '@/components/CartContext';
@@ -15,6 +16,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [posts, setPosts] = React.useState([]);
   const [replyToId, setReplyToId] = React.useState(null);
   const [replyText, setReplyText] = React.useState('');
+  const [achievements, setAchievements] = React.useState([]);
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
@@ -33,6 +35,14 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
       setPosts(res?.data || res || []);
     })();
   }, [open, item?.title]);
+
+        React.useEffect(() => {
+          if (!open || !item?.title) return;
+          (async () => {
+            const res = await base44.entities.Achievement.filter({ game: item.title }, '-rarity', 8);
+            setAchievements(res?.data || res || []);
+          })();
+        }, [open, item?.title]);
 
   const handleAddToCart = () => {
     if (!selectedDLC) return;
@@ -130,7 +140,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
               <TabsList className="bg-white/5 border border-white/10">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="updates">Updates</TabsTrigger>
                 <TabsTrigger value="dlc">DLC</TabsTrigger>
+                <TabsTrigger value="achievements">Achievements</TabsTrigger>
                 <TabsTrigger value="discussions">Discussions</TabsTrigger>
               </TabsList>
 
@@ -172,6 +184,60 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="updates" className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-white/70 text-xs">Recent updates for {item?.title}</p>
+                </div>
+                <div className="space-y-2">
+                  {(() => {
+                    const keywords = ['update','patch','hotfix','notes'];
+                    const updatePosts = posts.filter(p => {
+                      const t = (p.title || '').toLowerCase();
+                      const c = (p.content || '').toLowerCase();
+                      return keywords.some(k => t.includes(k) || c.includes(k));
+                    });
+                    if (updatePosts.length === 0) {
+                      return <p className="text-white/50 text-sm">No recent updates found.</p>;
+                    }
+                    return updatePosts.map(up => (
+                      <div key={up.id} className="p-3 border border-white/10 rounded-xl bg-white/5">
+                        <p className="text-white text-sm font-semibold line-clamp-1">{up.title}</p>
+                        {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
+                        <div className="mt-2 flex items-center gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}>Open</Button>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="achievements" className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-white/70 text-xs">Top achievements for {item?.title}</p>
+                  <Button variant="outline" onClick={() => navigate(createPageUrl('Achievements') + `?game=${encodeURIComponent(item?.title || '')}`)}>
+                    <Trophy className="w-4 h-4" /> View All
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {achievements.length === 0 && (
+                    <p className="text-white/50 text-sm col-span-full">No achievements found.</p>
+                  )}
+                  {achievements.map(a => (
+                    <div key={a.id} className="p-3 rounded-xl border border-white/10 bg-white/5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{a.icon || '🏆'}</span>
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-semibold truncate">{a.title}</p>
+                          {a.rarity && <p className="text-white/50 text-xs truncate">{a.rarity}</p>}
+                        </div>
+                      </div>
+                      {a.description && <p className="text-white/60 text-xs mt-2 line-clamp-2">{a.description}</p>}
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
 
               <TabsContent value="discussions" className="space-y-3">
