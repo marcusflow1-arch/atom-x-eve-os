@@ -15,6 +15,8 @@ const normalizedGames = gamesList.map(game => ({
     lootBoxes: game.lootBoxes || []
 }));
 
+export const libraryGames = normalizedGames;
+
 export const mockLibrary = {
     games: normalizedGames.slice(0, 12), // Get first 12 games for the library
     totalCount: normalizedGames.length

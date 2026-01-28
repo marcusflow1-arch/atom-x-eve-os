@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Gamepad2, User, Search, Play, ChevronRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { mockLibrary } from '../dashboard/gamehub/mockLibraryData';
+import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -103,7 +103,7 @@ export default function LibrarySidebar() {
                 <span className="ml-auto text-[10px] text-white/40">{mockLibrary.totalCount} total</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {mockLibrary.games.map((game, i) => (
+                {libraryGames.map((game, i) => (
                   <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
                     <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
