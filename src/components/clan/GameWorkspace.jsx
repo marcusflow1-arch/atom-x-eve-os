@@ -22,6 +22,7 @@ import ExplorationZone from '@/components/clan/zones/ExplorationZone';
 import StrategyZone from '@/components/clan/zones/StrategyZone';
 import ZoneChatPanel from '@/components/clan/shared/ZoneChatPanel';
 import ClanFormsZone from '@/components/clan/forms/ClanFormsZone';
+import InviteModal from '@/components/clan/modals/InviteModal';
 
 const ZONES = [
     { id: 'exploration', label: 'Exploration', icon: MapIcon, desc: 'Maps, Waypoints & Intel' },
@@ -36,6 +37,7 @@ const ZONES = [
 export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMainChat, quickSwitchLabel, onQuickSwitch }) {
     const { user, updatePresenceContext } = useAuth();
     const [activeZone, setActiveZone] = useState(initialZone || 'chat');
+    const [showInvite, setShowInvite] = useState(false);
     
     // Visited zones state for lazy loading
     const [visitedZones, setVisitedZones] = useState({ [initialZone || 'chat']: true });
@@ -326,10 +328,23 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                         >
                             <Mic className="w-4 h-4" /> Join Voice
                         </Button>
-                        <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2">
+                        <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/10 gap-2" onClick={() => setShowInvite(true)}>
                             <UserPlus className="w-4 h-4" /> Invite
                         </Button>
                     </div>
+                </div>
+
+                {/* Contextual Guidance */}
+                <div className="px-6 py-2 text-xs text-white/60 border-b border-white/10 bg-black/20">
+                    {activeZone === 'voice' && (
+                        <span>You’re in Voice: join a room to coordinate faster; the side chat keeps notes during the call.</span>
+                    )}
+                    {activeZone === 'chat' && (
+                        <span>Game Chat: use this for quick text updates and links. For cross-clan coordination, open Clan Forms.</span>
+                    )}
+                    {activeZone === 'forms' && (
+                        <span>Clan Forms: create topics (General, Farming, Grinding, LFG) to collaborate with other clans.</span>
+                    )}
                 </div>
 
                 {/* Zone Content */}
@@ -401,6 +416,9 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                     )}
                 </div>
             </div>
+
+            {/* Invite Modal */}
+            <InviteModal open={showInvite} onClose={() => setShowInvite(false)} game={game} />
         </div>
     );
 }

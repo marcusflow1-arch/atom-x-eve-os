@@ -139,9 +139,9 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   return (
-    <div className="h-full w-full grid grid-cols-12">
+    <div className="h-full w-full grid grid-cols-12" role="region" aria-label="Clan Forms">
       {/* Channels */}
-      <div className="col-span-3 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4">
+      <div className="col-span-3 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4" aria-label="Channels list">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setNewChannelOpen((v) => !v)}>
@@ -187,7 +187,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Topics */}
-      <div className="col-span-4 border-r border-white/10 bg-black/10 p-4">
+      <div className="col-span-4 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
           <Button size="sm" variant="outline" className="gap-2" disabled={!selectedChannel} onClick={() => setNewTopicOpen((v) => !v)}>
@@ -221,7 +221,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Messages */}
-      <div className="col-span-5 flex flex-col">
+      <div className="col-span-5 flex flex-col" aria-label="Messages chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <p className="text-sm font-semibold text-white/80 truncate">{selectedTopic ? selectedTopic.title : 'Select a topic'}</p>
         </div>
