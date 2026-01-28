@@ -3,11 +3,16 @@ import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Library, Gamepad2, User, Search, Play, ChevronRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import QuickInfoOverlay from './QuickInfoOverlay';
+import { playItem } from '@/functions/playItem';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSub, setActiveSub] = useState('library');
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Mock Data
   const recentChannels = [
@@ -47,6 +52,25 @@ export default function LibrarySidebar() {
   const shouldShow = !(isAura || isEntertainment || isLibraryPage);
 
   if (!shouldShow) return null;
+
+  const openOverlay = (item) => {
+    setSelectedItem(item);
+    setOverlayOpen(true);
+  };
+  const closeOverlay = () => setOverlayOpen(false);
+
+  const handlePlay = async () => {
+    if (!selectedItem) return;
+    await playItem({ type: selectedItem.type, title: selectedItem.title || selectedItem.name, id: selectedItem.id || null });
+    // Keep overlay open; user can close after launching
+  };
+  const handleStream = () => {
+    // Placeholder: could navigate to Streaming page with params
+    window.dispatchEvent(new Event('openAppDrawer')); // reuse existing drawer as demo action
+  };
+  const handleMoreInfo = () => {
+    // Placeholder for navigating to details page
+  };
 
   return (
     <>
@@ -152,7 +176,11 @@ export default function LibrarySidebar() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {recentGames.map((game, i) => (
-                      <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
+                      <div
+                        key={i}
+                        onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image })}
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
+                      >
                         <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-2">
@@ -172,7 +200,11 @@ export default function LibrarySidebar() {
                   </div>
                   <div className="space-y-3">
                     {recentChannels.map((ch, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition">
+                      <div
+                        key={idx}
+                        onClick={() => openOverlay({ type: 'stream', title: ch.name, image: ch.avatar, subtitle: ch.game })}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition"
+                      >
                         <div className="relative">
                           <img src={ch.avatar} alt={ch.name} className="w-10 h-10 rounded-lg object-cover" />
                           {ch.isLive && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
@@ -202,7 +234,11 @@ export default function LibrarySidebar() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {libraryGames.map((game, i) => (
-                      <div key={game.id || i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition">
+                      <div
+                        key={game.id || i}
+                        onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
+                      >
                         <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-2">
