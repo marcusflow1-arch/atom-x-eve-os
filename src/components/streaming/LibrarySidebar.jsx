@@ -196,7 +196,7 @@ export default function LibrarySidebar() {
                   </div>
                 </section>
               </>
-            )
+            )}
         </div>
 
         {/* Footer */}
