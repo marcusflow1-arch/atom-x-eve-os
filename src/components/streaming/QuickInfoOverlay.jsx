@@ -165,7 +165,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       <p className="text-white/60 text-xs">{item?.title || 'Game'} add-on</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-white font-bold">${'{'}getDlcPrice(selectedDLC).toFixed(2){'}'}</span>
+                      <span className="text-white font-bold">$ {getDlcPrice(selectedDLC).toFixed(2)}</span>
                       <Button onClick={handleAddToCart}>Add to Cart</Button>
                     </div>
                   </div>
