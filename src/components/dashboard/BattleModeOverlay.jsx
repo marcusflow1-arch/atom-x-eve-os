@@ -504,8 +504,8 @@ export default function BattleModeOverlay({ onClose }) {
     switch (activeView) {
       case 'pvp': return <PvPView onBack={() => setActiveView('menu')} />;
       case 'pve': return <PvEView onBack={() => setActiveView('menu')} />;
-      case 'tournaments': return <TournamentsView />;
-      case 'world': return <WorldEventsView />;
+      case 'tournaments': return <TournamentsView onBack={() => setActiveView('menu')} />;
+      case 'world': return <WorldEventsView onBack={() => setActiveView('menu')} />;
       default: return (
         <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
           {/* Main Menu Content */}
