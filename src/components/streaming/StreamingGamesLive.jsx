@@ -5,6 +5,7 @@ import { Search, Flame, Users as UsersIcon, Clock3, Sparkles, LayoutGrid, Gamepa
 import { Badge } from "@/components/ui/badge";
 import StreamPlayerBox from "@/components/streaming/StreamPlayerBox";
 import { Button } from "@/components/ui/button";
+import GameStreamersView from "@/components/streaming/GameStreamersView";
 
 // Small utility to format large numbers
 const formatNumber = (n) => {
@@ -33,6 +34,7 @@ export default function StreamingGamesLive() {
   const [volume, setVolume] = useState(70);
   const [showPlayerSettings, setShowPlayerSettings] = useState(false);
   const [isSettingsMaximized, setIsSettingsMaximized] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
 
   // Fetch games and streams
   useEffect(() => {
@@ -238,6 +240,7 @@ export default function StreamingGamesLive() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: Math.min(idx * 0.03, 0.4) }}
+                      onClick={() => setSelectedGame({ ...g, image: g.cover_image || g.image, viewers: g._live_viewers || 0 })}
                       className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
                     >
                       {/* Cover */}
@@ -279,5 +282,11 @@ export default function StreamingGamesLive() {
         </div>
       </div>
     </div>
+
+    <AnimatePresence>
+      {selectedGame && (
+        <GameStreamersView game={selectedGame} onClose={() => setSelectedGame(null)} />
+      )}
+    </AnimatePresence>
   );
 }

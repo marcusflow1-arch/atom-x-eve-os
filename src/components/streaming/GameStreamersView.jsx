@@ -145,9 +145,9 @@ export default function GameStreamersView({ game, onClose }) {
             </button>
             <div className="flex items-center gap-3">
               <img 
-                src={game.image} 
-                alt={game.title}
-                className="w-12 h-12 rounded-lg border border-white/20"
+              src={game.cover_image || game.image} 
+              alt={game.title}
+              className="w-12 h-12 rounded-lg border border-white/20"
               />
               <div>
                 <h1 className="text-2xl font-black text-white">{game.title}</h1>
