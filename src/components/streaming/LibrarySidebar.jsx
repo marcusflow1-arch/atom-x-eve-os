@@ -29,6 +29,15 @@ export default function LibrarySidebar() {
     "Minecraft Mods"
   ];
 
+  const entertainmentApps = [
+    { name: "YouTube", category: "Video", image: "https://source.unsplash.com/random/200x200?youtube,logo" },
+    { name: "Twitch", category: "Live", image: "https://source.unsplash.com/random/200x200?twitch,logo" },
+    { name: "Spotify", category: "Music", image: "https://source.unsplash.com/random/200x200?spotify,logo" },
+    { name: "Netflix", category: "Video", image: "https://source.unsplash.com/random/200x200?netflix,logo" },
+    { name: "Hulu", category: "Video", image: "https://source.unsplash.com/random/200x200?hulu,logo" },
+    { name: "Disney+", category: "Video", image: "https://source.unsplash.com/random/200x200?disney,logo" },
+  ];
+
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
   const panel = new URLSearchParams(location.search).get('panel');
@@ -88,9 +97,9 @@ export default function LibrarySidebar() {
             </div>
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">
-                    {activeSub === 'aura' ? 'Recently Watched' : 'My Library'}
+                    {activeSub === 'aura' ? 'Recently Watched' : (activeSub === 'entertainment' ? 'Entertainment' : 'My Library')}
                 </h2>
-                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : 'All Games & Recently Played'}</p>
+                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : (activeSub === 'entertainment' ? 'Apps & Channels' : 'All Games & Recently Played')}</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
@@ -123,9 +132,16 @@ export default function LibrarySidebar() {
                 >
                   Aurora
                 </button>
+                <div className="h-4 w-px bg-white/20" />
+                <button
+                  onClick={() => setActiveSub('entertainment')}
+                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='entertainment' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
+                >
+                  Entertainment
+                </button>
               </div>
             </div>
-            {activeSub === 'aura' ? (
+            {activeSub === 'aura' && (
               <>
                 {/* Recently Watched Games */}
                 <section>
@@ -174,7 +190,8 @@ export default function LibrarySidebar() {
                   </div>
                 </section>
               </>
-            ) : (
+            )}
+            {activeSub === 'library' && (
               <>
                 {/* Library Games Only */}
                 <section>
@@ -190,6 +207,30 @@ export default function LibrarySidebar() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-2">
                           <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.title || game.name}</h4>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
+            {activeSub === 'entertainment' && (
+              <>
+                {/* Entertainment Apps */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Play className="w-4 h-4 text-emerald-400" />
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Entertainment Apps</h3>
+                    <span className="ml-auto text-[10px] text-white/40">{entertainmentApps.length} apps</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {entertainmentApps.map((app, i) => (
+                      <div key={i} className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
+                        <img src={app.image} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
+                          <h4 className="text-white font-bold text-xs leading-snug line-clamp-1">{app.name}</h4>
+                          <Badge className="bg-white/10 text-white/70 border-white/20">{app.category}</Badge>
                         </div>
                       </div>
                     ))}
