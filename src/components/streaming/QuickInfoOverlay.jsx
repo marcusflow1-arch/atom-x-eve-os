@@ -139,7 +139,6 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
               <div className="absolute bottom-3 left-4 flex gap-2">
                 <Button onClick={onPlay} className="bg-emerald-600 hover:bg-emerald-700">
                   <Play className="w-4 h-4" /> Play
