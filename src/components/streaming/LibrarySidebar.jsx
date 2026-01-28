@@ -261,7 +261,10 @@ export default function LibrarySidebar() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {entertainmentApps.map((app, i) => (
-                      <div key={i} className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
+                      <div
+                        key={i}
+                        onClick={() => openOverlay({ type: 'app', title: app.name, image: app.image, subtitle: app.category })}
+                        className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
                         <img src={app.image} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
