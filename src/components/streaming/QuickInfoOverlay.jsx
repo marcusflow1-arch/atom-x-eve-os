@@ -155,69 +155,66 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
             {isAuraStreamingView ? (
               <div className="p-4 space-y-5 h-full overflow-y-auto custom-scrollbar">
-                {/* Live carousel with left/right arrows */}
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex gap-4">
-                    {/* Video on far left */}
-                    <div className="relative flex-1 min-w-0">
-                      <button
-                        aria-label="Previous streamer"
-                        onClick={() => setActiveStreamerIndex((i) => (i - 1 + streamers.length) % Math.max(streamers.length, 1))}
-                        className="absolute left-[-12px] top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <button
-                        aria-label="Next streamer"
-                        onClick={() => setActiveStreamerIndex((i) => (i + 1) % Math.max(streamers.length, 1))}
-                        className="absolute right-[-12px] top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
+                {/* Top layout: feature and chat */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div className="md:col-span-3 relative rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/60 overflow-hidden">
+                    <div className="absolute top-3 left-3">
+                      <span className="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-red-500/15 text-red-300 text-[11px] font-semibold border border-red-500/30">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> GO LIVE
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center h-[220px] sm:h-[260px] md:h-[280px] lg:h-[300px]">
+                      <p className="text-white/50 text-sm">No featured content available</p>
+                    </div>
+                  </div>
 
-                      <div className="rounded-lg overflow-hidden border border-white/10 bg-black/50">
-                        {streamers.length > 0 ? (
-                          <video key={streamers[activeStreamerIndex]?.id} src={streamers[activeStreamerIndex]?.video} controls autoPlay muted className="w-full aspect-video object-cover bg-black" />
-                        ) : (
-                          <div className="w-full aspect-video bg-black/60 flex items-center justify-center text-white/30">Live preview</div>
-                        )}
-                        {/* Chat inside the streaming box */}
-                        <div className="h-40 border-t border-white/10 bg-black/30 p-3 overflow-y-auto">
-                          {chatMessages.map((m, idx) => (
-                            <div key={idx} className="text-xs text-white/80"><span className="text-white/60 mr-1">{m.user}:</span>{m.text}</div>
-                          ))}
-                        </div>
+                  <div className="md:col-span-2 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/80 to-slate-800/60 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                      <div className="flex items-center gap-2 text-white">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-white/10">🗨️</span>
+                        <span className="text-[13px] font-semibold">Stream Chat</span>
+                      </div>
+                      <span className="text-[11px] text-white/50 uppercase tracking-wider">Offline</span>
+                    </div>
+                    <div className="flex items-center justify-center h-[180px] sm:h-[220px] md:h-[240px] lg:h-[260px]">
+                      <p className="text-white/40 text-sm">Chat is offline</p>
+                    </div>
+                    <div className="px-3 py-3 border-t border-white/10 bg-black/20">
+                      <div className="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3 py-2 opacity-60">
+                        <input disabled placeholder="Chat is disabled when offline" className="flex-1 bg-transparent text-xs text-white/60 placeholder:text-white/40 outline-none" />
+                        <button className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/60" aria-label="Chat settings">
+                          <Settings className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    {/* Streamer info on right */}
-                    <div className="w-72 flex-shrink-0">
-                      <div className="p-4 rounded-lg border border-white/10 bg-white/5">
-                        {streamers.length > 0 ? (
-                          <div className="flex items-center gap-3">
-                            <img src={streamers[activeStreamerIndex]?.avatar} alt={streamers[activeStreamerIndex]?.name} className="w-12 h-12 rounded-full object-cover" />
-                            <div className="min-w-0">
-                              <p className="text-white font-semibold truncate">{streamers[activeStreamerIndex]?.name}</p>
-                              <p className="text-[11px] text-white/60">Live • {streamers[activeStreamerIndex]?.viewers} viewers</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-white/60 text-sm">No live channels found.</p>
-                        )}
-
-                        {/* Schedule */}
-                        {streamers.length > 0 && (
-                          <div className="mt-4">
-                            <h5 className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2">Stream Schedule</h5>
-                            <ul className="space-y-1">
-                              {streamers[activeStreamerIndex]?.schedule?.map((s) => (
-                                <li key={s} className="text-white/80 text-sm">{s}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
+                {/* Channel footer */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-white/10 flex items-center justify-center">
+                      {streamers.length > 0 ? (
+                        <img src={streamers[activeStreamerIndex]?.avatar} alt={streamers[activeStreamerIndex]?.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white/60 text-sm">MF</span>
+                      )}
                     </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold truncate">{streamers[activeStreamerIndex]?.name || 'marcus flowers'}</p>
+                      <p className="text-[11px] text-cyan-300 uppercase tracking-wider">Competitive • Strategic</p>
+                    </div>
+                  </div>
+
+                  <div className="hidden md:flex items-center gap-4 text-white/70">
+                    {['Schedule','Cards','Gallery','Games'].map((t) => (
+                      <button key={t} className="px-3 py-1.5 rounded-full text-xs hover:text-white hover:bg-white/10 border border-white/10">{t}</button>
+                    ))}
+                  </div>
+
+                  <div className="ml-auto text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-white/40">Total Views</p>
+                    <p className="text-white font-bold">{streamers[activeStreamerIndex]?.viewers || '42.5k'}</p>
                   </div>
                 </div>
 
