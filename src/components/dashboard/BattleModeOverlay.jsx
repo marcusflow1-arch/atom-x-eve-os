@@ -441,7 +441,7 @@ const TournamentsView = ({ onBack }) => (
   </div>
 );
 
-const WorldEventsView = () => (
+const WorldEventsView = ({ onBack }) => (
   <div className="w-full h-full p-12 overflow-y-auto">
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-16">
