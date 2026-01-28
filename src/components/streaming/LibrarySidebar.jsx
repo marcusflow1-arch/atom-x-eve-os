@@ -51,10 +51,7 @@ export default function LibrarySidebar() {
   const isLibraryPage = pathname.includes('/library');
   const shouldShow = !(isAura || isEntertainment || isLibraryPage);
 
-  // Close contextual panel when the left navigator closes or when leaving Library subpage
-  React.useEffect(() => {
-    if (!isOpen || activeSub !== 'library') setOverlayOpen(false);
-  }, [isOpen, activeSub]);
+
 
   if (!shouldShow) return null;
 
