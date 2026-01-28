@@ -154,7 +154,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             </div>
 
             {isAuraStreamingView ? (
-              <div className="p-4 space-y-5">
+              <div className="p-4 space-y-5 h-full overflow-y-auto custom-scrollbar">
                 {/* Live carousel with left/right arrows */}
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <div className="flex gap-4">
