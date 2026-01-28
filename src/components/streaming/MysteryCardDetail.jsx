@@ -346,47 +346,52 @@ const BlacksmithView = ({ card }) => {
                  />
                )}
 
-               <EvolvedCardVisual 
-                 card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }}
-                 showTierBadge={true}
-               >
-                 <motion.div
-                   className="w-full h-full relative overflow-hidden rounded-xl border border-white/10 bg-slate-900"
-                   style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+               {!card?.image ? (
+                 <ShinyCard className="w-full h-full rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center">
+                   <div className="text-white/30 text-5xl">?</div>
+                 </ShinyCard>
+               ) : (
+                 <EvolvedCardVisual 
+                   card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension }}
+                   showTierBadge={true}
                  >
-                   <img src={card?.image || "https://images.unsplash.com/photo-1627856014759-2a5713c54d65?q=80&w=1000&auto=format&fit=crop"} alt="" className="w-full h-full object-cover" />
-                   
                    <motion.div
-                     className="absolute inset-0 pointer-events-none mix-blend-overlay"
-                     style={{ background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`) }}
-                   />
+                     className="w-full h-full relative overflow-hidden rounded-xl border border-white/10 bg-slate-900"
+                     style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+                   >
+                     <img src={card?.image} alt="" className="w-full h-full object-cover" />
 
-                   {/* Overlay Stats */}
-                   <div className="absolute top-4 left-3 right-3 flex items-center justify-between">
-                     <Badge className="bg-black/60 backdrop-blur-md border-white/20 text-white font-bold">Lv. {cardLevel}</Badge>
-                     <div className="flex gap-0.5">
-                       {Array.from({ length: 5 }).map((_, i) => (
-                         <Star key={i} className={`w-3 h-3 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                       ))}
+                     <motion.div
+                       className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                       style={{ background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`) }}
+                     />
+
+                     <div className="absolute top-4 left-3 right-3 flex items-center justify-between">
+                       <Badge className="bg-black/60 backdrop-blur-md border-white/20 text-white font-bold">Lv. {cardLevel}</Badge>
+                       <div className="flex gap-0.5">
+                         {Array.from({ length: 5 }).map((_, i) => (
+                           <Star key={i} className={`w-3 h-3 ${i < cardStars ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
+                         ))}
+                       </div>
                      </div>
-                   </div>
 
-                   {cardAscension > 0 && (
-                     <div className="absolute top-12 left-3">
-                       <Badge className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-md border-purple-400/50 text-white">
-                         <Crown className="w-3 h-3 mr-1" /> A{cardAscension}
+                     {cardAscension > 0 && (
+                       <div className="absolute top-12 left-3">
+                         <Badge className="bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-md border-purple-400/50 text-white">
+                           <Crown className="w-3 h-3 mr-1" /> A{cardAscension}
+                         </Badge>
+                       </div>
+                     )}
+
+                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
+                       <h3 className="text-white font-bold text-lg truncate">{card?.title || 'Card Name'}</h3>
+                       <Badge className={`bg-gradient-to-r ${getRarityColor(card?.rarity)} border-0 text-white text-[10px] mt-1`}>
+                         {card?.rarity || "Common"}
                        </Badge>
                      </div>
-                   )}
-
-                   <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/80 to-transparent">
-                     <h3 className="text-white font-bold text-lg truncate">{card?.title || 'Card Name'}</h3>
-                     <Badge className={`bg-gradient-to-r ${getRarityColor(card?.rarity)} border-0 text-white text-[10px] mt-1`}>
-                       {card?.rarity || "Common"}
-                     </Badge>
-                   </div>
-                 </motion.div>
-               </EvolvedCardVisual>
+                   </motion.div>
+                 </EvolvedCardVisual>
+               )}
              </div>
 
              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-6 text-center">
