@@ -53,9 +53,9 @@ const generateDuplicates = (card) => {
 
 // Overview / Card Record UI
 const CardRecordView = ({ card }) => (
-  <div className="h-full flex gap-6 p-6">
-    {/* Left: Card Visual */}
-    <div className="w-[240px] flex-shrink-0 flex flex-col gap-4">
+  <div className="flex gap-6 p-6">
+    {/* Left: Card Visual - Sticky positioning to stay in view while scrolling */}
+    <div className="w-[240px] flex-shrink-0 flex flex-col gap-4 sticky top-0 self-start">
       <div className="relative group perspective-1000">
          <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-xl overflow-hidden relative z-10">
             {/* Card Art Placeholder */}
@@ -107,7 +107,7 @@ const CardRecordView = ({ card }) => (
     </div>
 
     {/* Right: Info */}
-    <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+    <div className="flex-1 space-y-6 pb-8">
       <div className="space-y-2">
         <h3 className="text-white text-2xl font-bold flex items-center gap-3">
           <Info className="w-6 h-6 text-cyan-400" /> Card Record
@@ -801,7 +801,7 @@ export default function MysteryCardDetail({ card, onBack }) {
       </div>
 
       {/* Main Content Area (Full Width/Height) */}
-      <div className="flex-1 min-h-0 bg-slate-900/40 rounded-2xl border border-white/10 relative overflow-hidden shadow-inner">
+      <div className="flex-1 min-h-0 bg-slate-900/40 rounded-2xl border border-white/10 relative overflow-y-auto custom-scrollbar shadow-inner">
           <AnimatePresence mode="wait">
             {viewMode === 'overview' && (
               <motion.div 
@@ -809,7 +809,7 @@ export default function MysteryCardDetail({ card, onBack }) {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="h-full"
+                className="min-h-full"
               >
                 <CardRecordView card={card} />
               </motion.div>
