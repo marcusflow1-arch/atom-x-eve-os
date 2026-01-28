@@ -81,7 +81,7 @@ export default function LibrarySidebar() {
           initial={{ x: 0 }}
           animate={{ x: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          onClick={() => { setIsOpen(true); setOverlayOpen(true); }}
+          onClick={() => setIsOpen(true)}
           className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
       >
           <Library className="w-5 h-5" />
@@ -95,7 +95,7 @@ export default function LibrarySidebar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => { setIsOpen(false); setOverlayOpen(false); } }
+            onClick={() => setIsOpen(false)}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65]"
           />
         )}
@@ -127,7 +127,7 @@ export default function LibrarySidebar() {
                 <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : (activeSub === 'entertainment' ? 'Apps & Channels' : 'All Games & Recently Played')}</p>
             </div>
             <button 
-                onClick={() => { setIsOpen(false); setOverlayOpen(false); } }
+                onClick={() => setIsOpen(false)}
                 className="ml-auto w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors"
                 style={{
                     background: 'rgba(255, 255, 255, 0.1)',
