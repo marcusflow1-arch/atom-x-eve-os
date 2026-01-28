@@ -51,7 +51,13 @@ export default function LibrarySidebar() {
   const isLibraryPage = pathname.includes('/library');
   const shouldShow = !(isAura || isEntertainment || isLibraryPage);
 
-
+  // Close right-side overlay whenever the left pull-out tab closes
+  useEffect(() => {
+    if (!isOpen) {
+      setOverlayOpen(false);
+      setSelectedItem(null);
+    }
+  }, [isOpen]);
 
   if (!shouldShow) return null;
 
