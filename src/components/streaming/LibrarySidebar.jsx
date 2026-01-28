@@ -14,7 +14,6 @@ export default function LibrarySidebar() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [overlayActive, setOverlayActive] = useState(false);
-  const [overlayActive, setOverlayActive] = useState(false);
 
   useEffect(() => {
     const onOpen = () => setOverlayActive(true);
