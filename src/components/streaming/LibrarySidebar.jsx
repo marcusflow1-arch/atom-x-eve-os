@@ -178,7 +178,7 @@ export default function LibrarySidebar() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {recentGames.map((game, i) => (
                       <div
-                        key={`rg_${i}`
+                        key={`rg_${i}`}
                         onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image })}
                         className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
                       >
@@ -202,7 +202,7 @@ export default function LibrarySidebar() {
                   <div className="space-y-3">
                     {recentChannels.map((ch, idx) => (
                       <div
-                        key={`rc_${idx}`
+                        key={`rc_${idx}`}
                         onClick={() => openOverlay({ type: 'stream', title: ch.name, image: ch.avatar, subtitle: ch.game })}
                         className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition"
                       >
@@ -236,7 +236,7 @@ export default function LibrarySidebar() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {libraryGames.map((game, i) => (
                       <div
-                        key={`lib_${game.id || 'x'}_${i}`
+                        key={`lib_${game.id || 'x'}_${i}`}
                         onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
                         className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
                       >
@@ -263,7 +263,7 @@ export default function LibrarySidebar() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {entertainmentApps.map((app, i) => (
                       <div
-                        key={`ent_${i}`
+                        key={`ent_${i}`}
                         onClick={() => openOverlay({ type: 'app', title: app.name, image: app.image, subtitle: app.category })}
                         className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
                         <img src={app.image} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
