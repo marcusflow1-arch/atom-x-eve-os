@@ -21,6 +21,7 @@ import OwnedGameOverlay from '../components/library/OwnedGameOverlay';
 import GameAchievementsOverlay from '../components/library/GameAchievementsOverlay';
 import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
+import EmbeddedGameStreamersList from '@/components/streaming/EmbeddedGameStreamersList';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
@@ -1576,10 +1577,16 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                           />
                         )}
 
-                        {['streamers', 'guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
+                        {activeDetailTab === 'streamers' && (
+                          <motion.div key="streamers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                            <EmbeddedGameStreamersList game={selectedGame} />
+                          </motion.div>
+                        )}
+
+                        {['guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
                           <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
-                             <Bot className="w-12 h-12 mb-4 opacity-50" />
-                             <p>Content for {activeDetailTab.replace('_', ' ')} coming soon.</p>
+                            <Bot className="w-12 h-12 mb-4 opacity-50" />
+                            <p>Content for {activeDetailTab.replace('_', ' ')} coming soon.</p>
                           </motion.div>
                         )}
                       </AnimatePresence>
