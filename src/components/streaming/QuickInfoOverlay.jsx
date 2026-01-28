@@ -156,45 +156,105 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             {/* Quick actions & info tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
               <TabsList className="bg-white/5 border border-white/10">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="updates">Updates</TabsTrigger>
+                <TabsTrigger value="overview">Dashboard</TabsTrigger>
                 <TabsTrigger value="dlc">DLC</TabsTrigger>
                 <TabsTrigger value="achievements">Achievements</TabsTrigger>
                 <TabsTrigger value="discussions">Discussions</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl p-3 border border-white/10 bg-white/5">
-                    <p className="text-white/50 text-xs">Type</p>
-                    <p className="text-white font-medium capitalize">{item?.type || 'item'}</p>
+              <TabsContent value="overview" className="space-y-6">
+                {/* Dashboard Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-900/10 border border-emerald-500/20 space-y-2">
+                    <div className="flex items-center gap-1.5 text-emerald-400">
+                      <Trophy className="w-3.5 h-3.5" />
+                      <h4 className="font-bold text-[10px] uppercase tracking-wider">Progress</h4>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[10px] text-white/60 mb-1">
+                        <span>Achievements</span>
+                        <span>12 / 50</span>
+                      </div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full w-[24%] bg-emerald-500 rounded-full" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="rounded-xl p-3 border border-white/10 bg-white/5">
-                    <p className="text-white/50 text-xs">Status</p>
-                    <p className="text-white font-medium">Ready</p>
+
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-900/10 border border-blue-500/20 space-y-2">
+                    <div className="flex items-center gap-1.5 text-blue-400">
+                      <Play className="w-3.5 h-3.5" />
+                      <h4 className="font-bold text-[10px] uppercase tracking-wider">Playtime</h4>
+                    </div>
+                    <p className="text-lg font-bold text-white">24h 15m</p>
                   </div>
-                </div>
-                <div className="rounded-xl p-3 border border-white/10 bg-white/5 text-sm text-white/80">
-                  {item?.type === 'game' && (
-                    <p>Launch the game instantly or view more details before you jump in.</p>
-                  )}
-                  {item?.type === 'stream' && (
-                    <p>Start watching the live channel or open the stream page for chat.</p>
-                  )}
-                  {item?.type === 'app' && (
-                    <p>Open the entertainment app or read more about features.</p>
-                  )}
+
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-900/10 border border-purple-500/20 space-y-2">
+                    <div className="flex items-center gap-1.5 text-purple-400">
+                      <Radio className="w-3.5 h-3.5" />
+                      <h4 className="font-bold text-[10px] uppercase tracking-wider">Status</h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                       <span className="text-xs font-medium text-white">Online</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}`)}>
-                    <ShoppingBag className="w-4 h-4" /> Store
+                {/* Latest Updates Section */}
+                <div>
+                   <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                        <Newspaper className="w-4 h-4 text-pink-400" /> Latest Updates
+                      </h4>
+                   </div>
+                   
+                   <div className="grid gap-3">
+                    {(() => {
+                      const keywords = ['update','patch','hotfix','notes'];
+                      const updatePosts = posts.filter(p => {
+                        const t = (p.title || '').toLowerCase();
+                        const c = (p.content || '').toLowerCase();
+                        return keywords.some(k => t.includes(k) || c.includes(k));
+                      });
+                      
+                      if (updatePosts.length === 0) {
+                        return (
+                            <div className="p-4 rounded-xl border border-white/5 bg-white/5 text-center">
+                                <p className="text-white/40 text-sm">No recent updates found.</p>
+                            </div>
+                        );
+                      }
+                      
+                      return updatePosts.slice(0, 2).map(up => (
+                        <div key={up.id} className="p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}>
+                          <div className="flex justify-between items-start">
+                             <p className="text-white text-sm font-bold line-clamp-1">{up.title}</p>
+                             <span className="text-[10px] text-white/40">{new Date(up.created_date || Date.now()).toLocaleDateString()}</span>
+                          </div>
+                          {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
+                          <div className="mt-2 flex gap-2">
+                            <Badge variant="outline" className="text-[10px] border-pink-500/30 text-pink-300">Patch Notes</Badge>
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                   </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-3 gap-2">
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}`)}>
+                    <ShoppingBag className="w-5 h-5 mb-1 opacity-70" /> 
+                    <span className="text-xs">Store</span>
                   </Button>
-                  <Button variant="outline" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}`)}>
-                    <MessageSquare className="w-4 h-4" /> Community
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}`)}>
+                    <MessageSquare className="w-5 h-5 mb-1 opacity-70" /> 
+                    <span className="text-xs">Community</span>
                   </Button>
-                  <Button variant="outline" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}&topic=support`)}>
-                    <LifeBuoy className="w-4 h-4" /> Support
+                  <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}&topic=support`)}>
+                    <LifeBuoy className="w-5 h-5 mb-1 opacity-70" /> 
+                    <span className="text-xs">Support</span>
                   </Button>
                 </div>
               </TabsContent>
@@ -215,33 +275,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 )}
               </TabsContent>
 
-              <TabsContent value="updates" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-white/70 text-xs">Recent updates for {item?.title}</p>
-                </div>
-                <div className="space-y-2">
-                  {(() => {
-                    const keywords = ['update','patch','hotfix','notes'];
-                    const updatePosts = posts.filter(p => {
-                      const t = (p.title || '').toLowerCase();
-                      const c = (p.content || '').toLowerCase();
-                      return keywords.some(k => t.includes(k) || c.includes(k));
-                    });
-                    if (updatePosts.length === 0) {
-                      return <p className="text-white/50 text-sm">No recent updates found.</p>;
-                    }
-                    return updatePosts.map(up => (
-                      <div key={up.id} className="p-3 border border-white/10 rounded-xl bg-white/5">
-                        <p className="text-white text-sm font-semibold line-clamp-1">{up.title}</p>
-                        {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
-                        <div className="mt-2 flex items-center gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}>Open</Button>
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </TabsContent>
+
 
               <TabsContent value="achievements" className="h-[400px]">
                 <AnimatePresence mode="wait">
