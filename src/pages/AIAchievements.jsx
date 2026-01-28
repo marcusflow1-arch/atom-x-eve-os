@@ -462,7 +462,7 @@ function AIAchievementsView({ onClosePage }) {
   }, [blacksmithCard, skillTreeCard, selectedCard, selectedAchievement, onClosePage, navigate]);
 
   return (
-    <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+    <div className="min-h-screen w-full text-slate-200 relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       
       {/* Ambient Glow */}
       <div className="absolute inset-0 z-0">
@@ -471,7 +471,7 @@ function AIAchievementsView({ onClosePage }) {
         <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-24">
+      <div className="relative z-10 flex flex-col p-6 md:p-8 pt-24">
         
         {/* Main Layout: 2 Columns */}
         <div className="flex gap-6 flex-1 overflow-hidden">
@@ -665,7 +665,7 @@ function AIAchievementsView({ onClosePage }) {
           </div>
 
           {/* RIGHT COLUMN: Card detail inline when selected; otherwise default view */}
-          <div className="flex-1 flex gap-6 h-full overflow-hidden">
+          <div className="flex-1 flex gap-6 overflow-visible">
             {selectedCard ? (
               <div className="flex-1 min-h-0 overflow-hidden">
                 <MysteryCardDetail card={selectedCard} onBack={() => setSelectedCard(null)} />

@@ -422,7 +422,7 @@ const BlacksmithView = ({ card }) => {
              </div>
 
              {/* Content Area */}
-             <div className="flex-1 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-6 overflow-y-auto custom-scrollbar relative">
+             <div className="flex-1 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-6 relative">
                 <AnimatePresence mode="wait">
                   {/* LEVEL UP SYSTEM */}
                   {activeSystem === 'level' && (
@@ -564,7 +564,7 @@ const BlacksmithView = ({ card }) => {
           </div>
 
           {/* RIGHT: Stats & Materials (The requested "Right Hand Side") */}
-          <div className="w-[260px] flex-shrink-0 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="w-[260px] flex-shrink-0 flex flex-col gap-4 pr-2 custom-scrollbar">
              <MarketValueDisplay card={{ ...card, level: cardLevel, stars: cardStars, ascension: cardAscension, enhanced_stats: enhancedStats }} />
 
              <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
@@ -742,7 +742,7 @@ export default function MysteryCardDetail({ card, onBack }) {
   const [viewMode, setViewMode] = useState('overview'); // overview, blacksmith, skilltree
 
   return (
-    <div className="h-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-4">
       {/* Top Header Bar */}
       <div className="flex items-center justify-between shrink-0 bg-black/20 p-2 rounded-xl border border-white/5">
          <div className="flex items-center gap-4 pl-2">
@@ -801,7 +801,7 @@ export default function MysteryCardDetail({ card, onBack }) {
       </div>
 
       {/* Main Content Area (Full Width/Height) */}
-      <div className="flex-1 min-h-0 relative overflow-y-auto custom-scrollbar">
+      <div className="flex-1 relative custom-scrollbar">
           <AnimatePresence mode="wait">
             {viewMode === 'overview' && (
               <motion.div 
