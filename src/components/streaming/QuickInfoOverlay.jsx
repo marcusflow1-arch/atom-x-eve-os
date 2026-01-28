@@ -285,16 +285,16 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="grid grid-cols-2 sm:grid-cols-3 gap-4"
+                      className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
                     >
-                      {/* Blank Mystery Cards */}
-                      {Array.from({ length: 6 }).map((_, i) => (
+                      {/* Blank Mystery Cards - Smaller Grid */}
+                      {Array.from({ length: 8 }).map((_, i) => (
                         <ShinyCard 
                           key={i} 
                           onClick={() => setSelectedMysteryCard(i)}
-                          className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg"
+                          className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg hover:scale-95"
                         >
-                          <div className="text-white/20 text-4xl font-light">?</div>
+                          <div className="text-white/20 text-2xl font-light">?</div>
                         </ShinyCard>
                       ))}
                     </motion.div>

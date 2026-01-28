@@ -295,53 +295,56 @@ export default function MysteryCardDetail({ card, onBack }) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 flex gap-8 overflow-hidden">
-        {/* Left Side: Card & Controls */}
-        <div className="w-[340px] flex-shrink-0 flex flex-col gap-6 pt-2">
+        {/* Left Side: Card & Controls - Reduced Size (50%) */}
+        <div className="w-[200px] flex-shrink-0 flex flex-col gap-4 pt-2">
           
-          {/* Top Controls (Above Card) */}
-          <div className="flex items-center gap-2">
+          {/* Top Controls (Above Card) - Compact */}
+          <div className="flex items-center gap-1">
             <button
                onClick={() => setViewMode('overview')}
-               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+               className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold transition-all border flex items-center justify-center gap-1 ${
                   viewMode === 'overview' 
                   ? 'bg-slate-700 text-white border-slate-600 shadow-lg' 
                   : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
                }`}
+               title="Record"
             >
-               <Info className="w-3.5 h-3.5" /> Record
+               <Info className="w-3 h-3" />
             </button>
             <button
                onClick={() => setViewMode('blacksmith')}
-               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+               className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold transition-all border flex items-center justify-center gap-1 ${
                   viewMode === 'blacksmith' 
                   ? 'bg-orange-900/80 text-orange-100 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
                   : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
                }`}
+               title="Forge"
             >
-               <Hammer className="w-3.5 h-3.5" /> Forge
+               <Hammer className="w-3 h-3" />
             </button>
             <button
                onClick={() => setViewMode('skilltree')}
-               className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+               className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold transition-all border flex items-center justify-center gap-1 ${
                   viewMode === 'skilltree' 
                   ? 'bg-purple-900/80 text-purple-100 border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.15)]' 
                   : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10'
                }`}
+               title="Skills"
             >
-               <Layers className="w-3.5 h-3.5" /> Skills
+               <Layers className="w-3 h-3" />
             </button>
           </div>
 
-          {/* Power Header */}
+          {/* Power Header - Scaled Down */}
           <div className="flex flex-col items-center">
-             <div className="flex items-center gap-2 relative">
-                <span className="text-white/40 text-[10px] uppercase font-bold tracking-widest absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">Total Power</span>
-                <div className="text-4xl font-black text-white tracking-tight flex items-center">
-                   <Zap className="w-6 h-6 text-yellow-400 mr-1 fill-yellow-400" />
+             <div className="flex items-center gap-1.5 relative">
+                <span className="text-white/40 text-[9px] uppercase font-bold tracking-widest absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap">Total Power</span>
+                <div className="text-2xl font-black text-white tracking-tight flex items-center">
+                   <Zap className="w-4 h-4 text-yellow-400 mr-1 fill-yellow-400" />
                    {MOCK_CARD_STATS.power}
                 </div>
                 {/* Rarity Badge positioned relative to the number */}
-                <Badge className="bg-blue-600 text-white border border-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.4)] px-1.5 py-0.5 text-[10px] h-5 absolute -right-12 top-1/2 -translate-y-1/2">
+                <Badge className="bg-blue-600 text-white border border-blue-400 shadow-[0_0_5px_rgba(37,99,235,0.4)] px-1 py-0 text-[8px] h-3.5 absolute -right-8 top-1/2 -translate-y-1/2">
                    Rare
                 </Badge>
              </div>
@@ -349,39 +352,39 @@ export default function MysteryCardDetail({ card, onBack }) {
 
           {/* The Card */}
           <div className="relative group perspective-1000">
-             <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-2xl rounded-2xl overflow-hidden relative z-10">
+             <ShinyCard className="w-full aspect-[2/3] border border-white/10 bg-slate-900 shadow-xl rounded-xl overflow-hidden relative z-10">
                 {/* Card Art Placeholder */}
                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1627856014759-2a5713c54d65?q=80&w=1000&auto=format&fit=crop')` }}>
                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                 </div>
                 
                 {/* Card Content Overlay */}
-                <div className="absolute inset-0 p-5 flex flex-col justify-between">
+                <div className="absolute inset-0 p-3 flex flex-col justify-between">
                    <div className="flex justify-between items-start">
-                      <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90">
+                      <Badge variant="outline" className="bg-black/60 backdrop-blur-md border-white/20 text-white/90 text-[9px] h-4 px-1.5">
                          Lv. 1
                       </Badge>
-                      <div className="flex gap-0.5 bg-black/40 p-1 rounded-full backdrop-blur-md">
-                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                         <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                      <div className="flex gap-0.5 bg-black/40 p-0.5 rounded-full backdrop-blur-md">
+                         <Star className="w-2 h-2 text-yellow-400 fill-yellow-400" />
+                         <Star className="w-2 h-2 text-yellow-400 fill-yellow-400" />
+                         <Star className="w-2 h-2 text-yellow-400 fill-yellow-400" />
                       </div>
                    </div>
 
                    <div>
-                      <h2 className="text-white font-black text-2xl leading-none mb-1 drop-shadow-lg font-heading">
+                      <h2 className="text-white font-black text-lg leading-none mb-0.5 drop-shadow-lg font-heading">
                          RENEGADES
                       </h2>
-                      <div className="flex items-center gap-2 mb-2">
-                         <Badge className="bg-orange-500 text-white border-none text-[10px] py-0 h-4">Legendary</Badge>
-                         <span className="text-white/70 text-xs font-medium">Destiny 2</span>
+                      <div className="flex items-center gap-1 mb-1">
+                         <Badge className="bg-orange-500 text-white border-none text-[8px] py-0 h-3 px-1">Legendary</Badge>
+                         <span className="text-white/70 text-[9px] font-medium">Destiny 2</span>
                       </div>
                    </div>
                 </div>
              </ShinyCard>
 
              {/* Background Glow */}
-             <div className="absolute inset-0 bg-orange-500/20 blur-3xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+             <div className="absolute inset-0 bg-orange-500/20 blur-2xl -z-10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </div>
 
           {/* Perks Section (Below Card) */}
