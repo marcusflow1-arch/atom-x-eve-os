@@ -9,6 +9,9 @@ import { useCart } from '@/components/CartContext';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ShinyCard from '@/components/shared/ShinyCard';
+import CreatePostForm from '@/components/community/CreatePostForm';
+import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
   const [activeTab, setActiveTab] = React.useState('overview');
@@ -17,6 +20,8 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [replyToId, setReplyToId] = React.useState(null);
   const [replyText, setReplyText] = React.useState('');
   const [achievements, setAchievements] = React.useState([]);
+  const [showCreatePost, setShowCreatePost] = React.useState(false);
+  const [selectedMysteryCard, setSelectedMysteryCard] = React.useState(null);
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
@@ -58,9 +63,21 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     const res = await base44.entities.Post.filter({ type: 'game_discussion', game_title: item.title }, '-created_date', 5);
     setPosts(res?.data || res || []);
   };
+
+  const handleCreatePost = async (data) => {
+    await base44.entities.Post.create(data);
+    setShowCreatePost(false);
+    const res = await base44.entities.Post.filter({ type: 'game_discussion', game_title: item.title }, '-created_date', 5);
+    setPosts(res?.data || res || []);
+  };
+
   React.useEffect(() => {
-    if (open) setActiveTab('overview');
+    if (open) {
+      setActiveTab('overview');
+      setSelectedMysteryCard(null); // Reset mystery card selection on open
+    }
   }, [open]);
+  
   if (!open) return null;
 
   return (
@@ -226,61 +243,92 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </div>
               </TabsContent>
 
-              <TabsContent value="achievements" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-white/70 text-xs">Top achievements for {item?.title}</p>
-                  <Button variant="outline" onClick={() => navigate(createPageUrl('Achievements') + `?game=${encodeURIComponent(item?.title || '')}`)}>
-                    <Trophy className="w-4 h-4" /> View All
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {achievements.length === 0 && (
-                    <p className="text-white/50 text-sm col-span-full">No achievements found.</p>
+              <TabsContent value="achievements" className="h-[400px]">
+                <AnimatePresence mode="wait">
+                  {!selectedMysteryCard ? (
+                    <motion.div
+                      key="grid"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="grid grid-cols-2 sm:grid-cols-3 gap-4"
+                    >
+                      {/* Blank Mystery Cards */}
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <ShinyCard 
+                          key={i} 
+                          onClick={() => setSelectedMysteryCard(i)}
+                          className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg"
+                        >
+                          <div className="text-white/20 text-4xl font-light">?</div>
+                        </ShinyCard>
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="detail"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="h-full"
+                    >
+                      <MysteryCardDetail 
+                        card={{ id: selectedMysteryCard }} 
+                        onBack={() => setSelectedMysteryCard(null)} 
+                      />
+                    </motion.div>
                   )}
-                  {achievements.map(a => (
-                    <div key={a.id} className="p-3 rounded-xl border border-white/10 bg-white/5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{a.icon || '🏆'}</span>
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-semibold truncate">{a.title}</p>
-                          {a.rarity && <p className="text-white/50 text-xs truncate">{a.rarity}</p>}
-                        </div>
-                      </div>
-                      {a.description && <p className="text-white/60 text-xs mt-2 line-clamp-2">{a.description}</p>}
-                    </div>
-                  ))}
-                </div>
+                </AnimatePresence>
               </TabsContent>
 
               <TabsContent value="discussions" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-white/70 text-xs">Top threads for {item?.title}</p>
-                  <Button variant="outline" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}`)}>Open Forum</Button>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-white text-sm font-bold">Community Forum</h4>
+                    <p className="text-white/50 text-xs">Recent discussions for {item?.title}</p>
+                  </div>
+                  <Button size="sm" onClick={() => setShowCreatePost(true)} className="gap-2">
+                    <MessageSquare className="w-4 h-4" /> Create Post
+                  </Button>
                 </div>
-                <div className="space-y-2">
+                
+                {/* Embedded Forum Topics */}
+                <div className="space-y-3 pr-2 overflow-y-auto max-h-[350px] custom-scrollbar">
                   {posts.length === 0 && (
-                    <p className="text-white/50 text-sm">No recent threads found.</p>
+                    <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
+                      <p className="text-white/50 text-sm">No discussions yet.</p>
+                      <Button variant="link" onClick={() => setShowCreatePost(true)} className="text-cyan-400">Start a topic</Button>
+                    </div>
                   )}
                   {posts.map((p) => (
-                    <div key={p.id} className="p-3 border border-white/10 rounded-xl bg-white/5">
-                      <p className="text-white text-sm font-semibold line-clamp-1">{p.title}</p>
-                      {p.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{p.content}</p>}
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button size="sm" variant="secondary" onClick={() => setReplyToId(replyToId === p.id ? null : p.id)}>Reply</Button>
-                        <Button size="sm" variant="ghost" onClick={() => navigate(createPageUrl('Community') + `?post=${p.id}`)}>Open</Button>
+                    <div key={p.id} className="p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                      <div className="flex justify-between items-start mb-2">
+                        <h5 className="text-white text-sm font-bold line-clamp-1">{p.title}</h5>
+                        <Badge variant="outline" className="text-[10px] h-5 border-white/10 bg-black/20 text-white/60">{p.community || 'General'}</Badge>
                       </div>
+                      {p.content && <p className="text-white/70 text-xs line-clamp-2 mb-3">{p.content}</p>}
+                      
+                      <div className="flex items-center gap-3 border-t border-white/5 pt-3">
+                        <Button size="sm" variant="ghost" className="h-7 text-xs px-2 text-white/50 hover:text-white" onClick={() => setReplyToId(replyToId === p.id ? null : p.id)}>
+                          Reply
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 text-xs px-2 text-white/50 hover:text-white" onClick={() => navigate(createPageUrl('Community') + `?post=${p.id}`)}>
+                          View Thread
+                        </Button>
+                      </div>
+
                       {replyToId === p.id && (
-                        <div className="mt-2">
+                        <div className="mt-3 pl-3 border-l-2 border-white/10">
                           <textarea
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
-                            placeholder="Write a quick reply..."
-                            className="w-full p-2 rounded-lg bg-black/30 border border-white/10 text-white text-sm"
-                            rows={3}
+                            placeholder="Write a reply..."
+                            className="w-full p-2 rounded-lg bg-black/30 border border-white/10 text-white text-xs mb-2"
+                            rows={2}
                           />
-                          <div className="mt-2 flex justify-end gap-2">
-                            <Button size="sm" variant="outline" onClick={() => { setReplyToId(null); setReplyText(''); }}>Cancel</Button>
-                            <Button size="sm" onClick={() => handleReplySubmit(p.id)}>Post Reply</Button>
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setReplyToId(null); setReplyText(''); }}>Cancel</Button>
+                            <Button size="sm" className="h-7 text-xs bg-cyan-600 hover:bg-cyan-700" onClick={() => handleReplySubmit(p.id)}>Post</Button>
                           </div>
                         </div>
                       )}
@@ -288,6 +336,22 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   ))}
                 </div>
               </TabsContent>
+            </Tabs>
+          </motion.div>
+
+          {/* Create Post Modal (if needed) */}
+          {showCreatePost && (
+            <CreatePostForm 
+              initialGameTitle={item?.title}
+              onCancel={() => setShowCreatePost(false)}
+              onSubmit={handleCreatePost}
+            />
+          )}
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
             </Tabs>
           </motion.div>
         </>
