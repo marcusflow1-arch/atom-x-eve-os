@@ -17,6 +17,7 @@ export default function StreamerProfilePanel({ streamer }) {
   const [isLive, setIsLive] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = useState(new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const startDate = useMemo(() => startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }), [scheduleBaseDate]);
   const scheduleDays = useMemo(() => Array.from({ length: 14 }).map((_, i) => addDays(startDate, i)), [startDate]);
@@ -34,7 +35,8 @@ export default function StreamerProfilePanel({ streamer }) {
       {/* Toggle Sections (below streaming box) */}
       <div
         className="w-full mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 flex items-center justify-between cursor-pointer select-none"
-        onClick={() => !activeTab && setActiveTab('schedule')}
+        onClick={() => { if (!activeTab) setMenuOpen((v) => !v); }}
+        onDoubleClick={() => { setActiveTab(null); setMenuOpen(false); }}
         title="Click to open sections"
       >
         <div className="flex items-center gap-3 text-sm">
@@ -44,8 +46,23 @@ export default function StreamerProfilePanel({ streamer }) {
           <span className="text-white/50">Gallery</span>
           <span className="text-white/50">Games</span>
         </div>
-        <ChevronDown className={`w-4 h-4 ${activeTab ? 'rotate-180' : ''} transition-transform`} />
+        <ChevronDown className={`w-4 h-4 ${(menuOpen && !activeTab) ? 'rotate-180' : ''} transition-transform`} />
       </div>
+
+      {/* Dropdown options */}
+      {menuOpen && !activeTab && (
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
+          {['schedule','cards','gallery','games'].map((id) => (
+            <button
+              key={id}
+              onClick={() => { setActiveTab(id); setMenuOpen(false); }}
+              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/80 text-sm"
+            >
+              {id.charAt(0).toUpperCase() + id.slice(1)}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Info Bar */}
       <div className="w-full px-2 py-4 flex flex-col md:flex-row items-center justify-between gap-6 relative">
