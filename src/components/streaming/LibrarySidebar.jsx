@@ -13,6 +13,19 @@ export default function LibrarySidebar() {
   const [activeSub, setActiveSub] = useState('library');
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [overlayActive, setOverlayActive] = useState(false);
+  const [overlayActive, setOverlayActive] = useState(false);
+
+  useEffect(() => {
+    const onOpen = () => setOverlayActive(true);
+    const onClose = () => setOverlayActive(false);
+    window.addEventListener('battleOverlay:open', onOpen);
+    window.addEventListener('battleOverlay:close', onClose);
+    return () => {
+      window.removeEventListener('battleOverlay:open', onOpen);
+      window.removeEventListener('battleOverlay:close', onClose);
+    };
+  }, []);
 
   // Mock Data
   const recentChannels = [
@@ -49,7 +62,7 @@ export default function LibrarySidebar() {
   const isAura = pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
-  const shouldShow = !(isAura || isEntertainment || isLibraryPage);
+  const shouldShow = !(isAura || isEntertainment || isLibraryPage || overlayActive);
 
   // Close right-side overlay whenever the left pull-out tab closes
   useEffect(() => {
@@ -85,7 +98,7 @@ export default function LibrarySidebar() {
   return (
     <>
       {/* Trigger Button (Fixed on left) */}
-      {!isOpen && (
+      {!isOpen && !overlayActive && (
       <motion.button
           initial={{ x: 0 }}
           animate={{ x: 0 }}

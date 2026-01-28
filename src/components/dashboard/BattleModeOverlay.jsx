@@ -500,6 +500,11 @@ const WorldEventsView = ({ onBack }) => (
 export default function BattleModeOverlay({ onClose }) {
   const [activeView, setActiveView] = useState('menu'); // menu, pvp, pve, tournaments, world
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('battleOverlay:open'));
+    return () => window.dispatchEvent(new CustomEvent('battleOverlay:close'));
+  }, []);
+
   const renderContent = () => {
     switch (activeView) {
       case 'pvp': return <PvPView onBack={() => setActiveView('menu')} />;
@@ -558,7 +563,8 @@ export default function BattleModeOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050505]"
+      id="battle-overlay-root"
+      className="fixed left-0 right-0 bottom-0 top-16 z-[90] flex items-center justify-center overflow-hidden bg-[#050505]"
     >
       {/* Sleek Background Gradient */}
       <div 
