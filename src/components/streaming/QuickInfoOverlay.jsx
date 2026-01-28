@@ -12,6 +12,7 @@ import { createPageUrl } from '@/utils';
 import ShinyCard from '@/components/shared/ShinyCard';
 import CreatePostForm from '@/components/community/CreatePostForm';
 import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
+import StreamerProfilePanel from '@/components/streaming/profile/StreamerProfilePanel';
 
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
   const [activeTab, setActiveTab] = React.useState('overview');
@@ -33,6 +34,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     { user: 'Mod', text: 'Be respectful and have fun!' }
   ]);
   const isAuraStreamingView = item?.context === 'aura' && item?.type === 'game';
+  const isStreamerProfileView = item?.type === 'stream';
 
   React.useEffect(() => {
     if (!open || !isAuraStreamingView) return;
@@ -153,7 +155,11 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               </button>
             </div>
 
-            {isAuraStreamingView ? (
+            {isStreamerProfileView ? (
+              <div className="p-4 h-full overflow-y-auto custom-scrollbar">
+                <StreamerProfilePanel streamer={{ name: item?.title, avatar: item?.image, tagline: 'COMPETITIVE • STRATEGIC' }} />
+              </div>
+            ) : isAuraStreamingView ? (
               <div className="p-4 space-y-5 h-full overflow-y-auto custom-scrollbar">
                 {/* Top layout: feature and chat */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
