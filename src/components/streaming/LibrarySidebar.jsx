@@ -71,6 +71,14 @@ export default function LibrarySidebar() {
     }
   }, [isOpen]);
 
+  // Close overlay when switching between Library/Aurora/Entertainment
+  useEffect(() => {
+    if (overlayOpen) {
+      setOverlayOpen(false);
+      setSelectedItem(null);
+    }
+  }, [activeSub]);
+
   if (!shouldShow) return null;
 
   const openOverlay = (item) => {

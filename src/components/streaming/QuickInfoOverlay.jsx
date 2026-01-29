@@ -38,6 +38,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const isAppView = item?.type === 'app';
   const appUrlMap = { twitch: 'https://www.twitch.tv', spotify: 'https://open.spotify.com', youtube: 'https://www.youtube.com', netflix: 'https://www.netflix.com', hulu: 'https://www.hulu.com', 'disney+': 'https://www.disneyplus.com' };
   const resolvedAppUrl = (item?.url && typeof item.url === 'string') ? item.url : appUrlMap[(item?.title || '').toLowerCase()];
+  const itemKey = item?.id || item?.title || 'unknown';
 
   React.useEffect(() => {
     if (!open || !isAuraStreamingView) return;
@@ -167,7 +168,11 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               </button>
             </div>
 
-            {isStreamerProfileView ? (
+            {/* Fade container for item changes */}
+            <AnimatePresence mode="wait">
+              <motion.div key={itemKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+
+             {isStreamerProfileView ? (
               <div className="p-4 h-full overflow-y-auto custom-scrollbar">
                 <StreamerProfilePanel streamer={{ name: item?.title, avatar: item?.image, tagline: 'COMPETITIVE • STRATEGIC' }} />
               </div>
@@ -540,6 +545,8 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </Tabs>
               </>
             )}
+          </motion.div>
+          </AnimatePresence>
           </motion.div>
 
           {/* Create Post Modal (if needed) */}
