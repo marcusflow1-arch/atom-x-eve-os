@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { CreditCard, Lock, User, Truck, Check, MapPin, ChevronRight, ShoppingCart } from 'lucide-react';
+import { CreditCard, Lock, User, Truck, Check, MapPin, ChevronRight, ChevronLeft, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../components/auth/AuthContext';
 import { useCart } from '../components/CartContext';
 import { base44 } from '@/api/base44Client';
