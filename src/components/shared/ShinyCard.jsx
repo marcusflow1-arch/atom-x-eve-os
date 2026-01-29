@@ -34,7 +34,7 @@ export default function ShinyCard({ children, onClick, className = "" }) {
       style={{ 
         rotateX, 
         rotateY,
-        scale: 1.15,
+        scale: 0.575,
         transformStyle: "preserve-3d",
       }}
       className={`relative rounded-xl overflow-hidden cursor-pointer group ${className}`}
