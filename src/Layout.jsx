@@ -775,7 +775,7 @@ function LayoutContent({ children, currentPageName }) {
                           </button>
 
                           <a
-                            href="https://discord.gg/VJQQNxAa"
+                            href="https://discord.gg/awFvGxC5"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-[#5865F2]/20 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/30 hover:text-white flex items-center gap-2"
@@ -906,7 +906,7 @@ function LayoutContent({ children, currentPageName }) {
 
                           {/* Discord */}
                           <a
-                            href="https://discord.gg/VJQQNxAa"
+                            href="https://discord.gg/awFvGxC5"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-[#5865F2]/20 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/30 hover:text-white flex items-center gap-2"
