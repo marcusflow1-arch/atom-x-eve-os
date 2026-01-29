@@ -40,6 +40,45 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const resolvedAppUrl = (item?.url && typeof item.url === 'string') ? item.url : appUrlMap[(item?.title || '').toLowerCase()];
   const itemKey = item?.id || item?.title || 'unknown';
 
+  // Helpers: record recents and navigate to Aura profile
+  const recordRecentStreamer = async (s) => {
+    if (!s || !s.name) return;
+    const entry = { id: s.id || s.name, name: s.name, avatar: s.avatar || null, updated_at: new Date().toISOString() };
+    const authed = await base44.auth.isAuthenticated();
+    if (authed) {
+      const me = await base44.auth.me();
+      const prev = (me.recent_streamers || []).filter((e) => e.id !== entry.id);
+      const updated = [entry, ...prev].slice(0, 15);
+      await base44.auth.updateMe({ recent_streamers: updated });
+    } else {
+      const prev = JSON.parse(localStorage.getItem('recent_streamers') || '[]').filter((e) => e.id !== entry.id);
+      const updated = [entry, ...prev].slice(0, 15);
+      localStorage.setItem('recent_streamers', JSON.stringify(updated));
+    }
+  };
+
+  const recordRecentGame = async (title) => {
+    if (!title) return;
+    const entry = { id: title, title, updated_at: new Date().toISOString() };
+    const authed = await base44.auth.isAuthenticated();
+    if (authed) {
+      const me = await base44.auth.me();
+      const prev = (me.recent_games || []).filter((e) => e.id !== entry.id);
+      const updated = [entry, ...prev].slice(0, 20);
+      await base44.auth.updateMe({ recent_games: updated });
+    } else {
+      const prev = JSON.parse(localStorage.getItem('recent_games') || '[]').filter((e) => e.id !== entry.id);
+      const updated = [entry, ...prev].slice(0, 20);
+      localStorage.setItem('recent_games', JSON.stringify(updated));
+    }
+  };
+
+  const openStreamerProfile = async (name) => {
+    if (!name) return;
+    await recordRecentStreamer({ name, id: name });
+    navigate(createPageUrl('StreamingHome') + `?streamer=${encodeURIComponent(name)}`);
+  };
+
   React.useEffect(() => {
     if (!open || !isAuraStreamingView) return;
     // Mock streamers for this game
@@ -50,6 +89,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
     ];
     setStreamers(mocks);
     setActiveStreamerIndex(0);
+    if (item?.title) { recordRecentGame(item.title); }
   }, [open, isAuraStreamingView, item?.title]);
 
   const getDlcPrice = (dlc) => {
@@ -75,6 +115,14 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             setAchievements(res?.data || res || []);
           })();
         }, [open, item?.title]);
+
+  // Track recently viewed streamer when opening a streamer profile view
+  React.useEffect(() => {
+    if (!open) return;
+    if (isStreamerProfileView && (item?.title)) {
+      recordRecentStreamer({ id: item?.id || item?.title, name: item?.title, avatar: item?.image });
+    }
+  }, [open, isStreamerProfileView, item?.title]);
 
   const handleAddToCart = () => {
     if (!selectedDLC) return;
@@ -150,9 +198,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               <div className="min-w-0 flex items-center gap-2">
                 <h3 className="text-white font-semibold truncate">{item?.title || 'Selected Item'}</h3>
                 {item?.subtitle && <p className="text-white/60 text-xs truncate">{item.subtitle}</p>}
-                {isStreamerProfileView && (
+                {(isStreamerProfileView || (isAuraStreamingView && streamers[activeStreamerIndex])) && (
                   <button
-                    onClick={() => navigate(createPageUrl('StreamingHome') + `?streamer=${encodeURIComponent(item?.title || '')}`)}
+                    onClick={() => openStreamerProfile(isStreamerProfileView ? (item?.title || '') : (streamers[activeStreamerIndex]?.name || ''))}
                     className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 flex items-center justify-center text-white/80 hover:text-white transition"
                     title="Open Profile"
                   >
@@ -246,7 +294,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   <h4 className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2">Other Live Channels</h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
                     {streamers.filter((_, i) => i !== activeStreamerIndex).map((s) => (
-                      <button key={s.id} onClick={() => setActiveStreamerIndex(streamers.findIndex((x) => x.id === s.id))} className="group rounded-lg overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
+                      <button key={s.id} onClick={() => { setActiveStreamerIndex(streamers.findIndex((x) => x.id === s.id)); recordRecentStreamer(s); }} className="group rounded-lg overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
                         <div className="aspect-video bg-black/60" />
                         <div className="p-2 flex items-center gap-2">
                           <img src={s.avatar} alt={s.name} className="w-6 h-6 rounded-full object-cover" />
