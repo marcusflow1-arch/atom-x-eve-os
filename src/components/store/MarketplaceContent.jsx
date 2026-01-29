@@ -887,7 +887,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-3">
                         {filteredItems.map(item => {
                           const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
                           return (
@@ -898,10 +898,10 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                               animate={{ opacity: 1, scale: 1 }}
                               whileHover={{ y: -5, scale: 1.02 }}
                               onClick={() => setSelectedItem(item)}
-                              className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
+                              className="cursor-pointer group bg-black/20 hover:bg-white/5 p-2 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
                             >
                               {/* Image Container */}
-                              <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
+                              <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-2 relative border border-white/5 group-hover:border-white/10 transition-colors">
                                 <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
                                 
