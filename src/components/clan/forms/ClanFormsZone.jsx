@@ -72,15 +72,25 @@ export default function ClanFormsZone({ game, clan, user }) {
     return () => { mounted = false; };
   }, [game.id, clan.id]);
 
-   // Topics for selected channel
-  const { data: topics = [] } = useQuery({
-    queryKey: ['clanFormTopics', selectedChannel?.id],
+   // Topics for default channels
+  const { data: topicsGeneral = [] } = useQuery({
+    queryKey: ['clanFormTopics', generalChannel?.id],
     queryFn: async () => {
-      if (!selectedChannel?.id) return [];
-      const res = await base44.entities.ClanFormTopic.filter({ channel_id: selectedChannel.id }, '-updated_date', 100);
+      if (!generalChannel?.id) return [];
+      const res = await base44.entities.ClanFormTopic.filter({ channel_id: generalChannel.id }, '-updated_date', 100);
       return res || [];
     },
-    enabled: !!selectedChannel?.id,
+    enabled: !!generalChannel?.id,
+  });
+
+  const { data: topicsLeader = [] } = useQuery({
+    queryKey: ['clanFormTopics', leaderChannel?.id],
+    queryFn: async () => {
+      if (!leaderChannel?.id) return [];
+      const res = await base44.entities.ClanFormTopic.filter({ channel_id: leaderChannel.id }, '-updated_date', 100);
+      return res || [];
+    },
+    enabled: !!leaderChannel?.id,
   });
 
   // Build combined topics and selected topics per channel
@@ -105,15 +115,26 @@ export default function ClanFormsZone({ game, clan, user }) {
     }
   }, [topicTitles, selectedTopicTitle]);
 
-  // Messages for selected topic
-  const { data: messages = [] } = useQuery({
-    queryKey: ['clanFormMessages', selectedTopic?.id],
+  // Messages for both chats
+  const { data: messagesGeneral = [] } = useQuery({
+    queryKey: ['clanFormMessages', selectedTopicGeneral?.id],
     queryFn: async () => {
-      if (!selectedTopic?.id) return [];
-      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopic.id }, 'created_date', 200);
+      if (!selectedTopicGeneral?.id) return [];
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id }, 'created_date', 200);
       return res || [];
     },
-    enabled: !!selectedTopic?.id,
+    enabled: !!selectedTopicGeneral?.id,
+    initialData: [],
+  });
+
+  const { data: messagesLeader = [] } = useQuery({
+    queryKey: ['clanFormMessages', selectedTopicLeader?.id],
+    queryFn: async () => {
+      if (!selectedTopicLeader?.id) return [];
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id }, 'created_date', 200);
+      return res || [];
+    },
+    enabled: !!selectedTopicLeader?.id,
     initialData: [],
   });
 
@@ -154,17 +175,17 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   const createTopic = async () => {
-    if (!(generalChannel?.id || selectedChannel?.id) || !topicTitle.trim()) return;
+    if (!generalChannel?.id || !topicTitle.trim()) return;
     const topic = await base44.entities.ClanFormTopic.create({
-      channel_id: (generalChannel?.id || selectedChannel?.id),
+      channel_id: generalChannel.id,
       title: topicTitle.trim(),
       created_by_user_id: user?.id,
       status: 'open'
     });
     setTopicTitle('');
     setNewTopicOpen(false);
-    setSelectedTopic(topic);
-    qc.invalidateQueries({ queryKey: ['clanFormTopics', selectedChannel.id] });
+    setSelectedTopicTitle(topic.title);
+    qc.invalidateQueries({ queryKey: ['clanFormTopics', generalChannel.id] });
   };
 
   const sendMessageTo = async (topicId, content) => {
@@ -181,8 +202,8 @@ export default function ClanFormsZone({ game, clan, user }) {
 
   return (
     <div className="h-full w-full grid grid-cols-12" role="region" aria-label="Clan Forms">
-      {/* Channels */}
-      <div className="col-span-3 col-start-6 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4" aria-label="Channels list">
+      {/* Left Chat - Clan Form */}
+      <div className="col-span-4 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col" aria-label="Clan Form chat">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="p-2 h-7 w-7" onClick={() => setNewChannelOpen((v) => !v)} title="Add channel">
@@ -194,53 +215,48 @@ export default function ClanFormsZone({ game, clan, user }) {
             <FolderPlus className="w-4 h-4" /> New
           </Button>
         </div>
-        {newChannelOpen && (
-          <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
-            <Input placeholder="Channel name" value={channelName} onChange={(e) => setChannelName(e.target.value)} />
-            <Textarea placeholder="Description (optional)" value={channelDesc} onChange={(e) => setChannelDesc(e.target.value)} className="min-h-[60px]" />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="outline" onClick={() => setNewChannelOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={createChannel}>Create</Button>
-            </div>
-          </div>
-        )}
-        <ScrollArea className="h-[calc(100%-52px)] pr-2">
-          <div className="space-y-2">
-            {channels.map((ch) => (
-              <button key={ch.id} onClick={async () => { 
-                // Join with autoscaling, ensure defaults
-                const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: ch.id, desired_capacity: 100 });
-                const joined = data?.channel || ch; 
-                joinedChannelRef.current = joined;
-                setSelectedChannel(joined); 
-                // Prefer General automatically
-                const tps = data?.topics || [];
-                const general = tps.find(t => (t.title || '').toLowerCase() === 'general');
-                setSelectedTopic(general || null);
-              }} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedChannel?.id === ch.id ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{ch.name}</p>
-                    <p className="text-xs text-white/50 line-clamp-1">{ch.description || '—'}</p>
+        {/* Messages list */}
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full p-4">
+            <div className="space-y-3">
+              {selectedTopicGeneral && messagesGeneral.map((m) => (
+                <div key={m.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="text-xs text-white/50 mb-1 flex items-center gap-2">
+                    <strong className="text-white/80">{m.username || m.user_id}</strong>
+                    <span className="text-white/30">·</span>
+                    <span>{new Date(m.created_date).toLocaleString()}</span>
                   </div>
-                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(ch.active_member_ids || []).length}/100</Badge>
+                  <p className="text-sm text-white/90 whitespace-pre-wrap">{m.content}</p>
                 </div>
-              </button>
-            ))}
-            {channels.length === 0 && <p className="text-xs text-white/40">No channels yet. Create the first one.</p>}
-          </div>
-        </ScrollArea>
+              ))}
+              {selectedTopicGeneral && messagesGeneral.length === 0 && <p className="text-xs text-white/40">No messages yet.</p>}
+              {!selectedTopicGeneral && <p className="text-xs text-white/40">Select a topic to start chatting.</p>}
+            </div>
+          </ScrollArea>
+        </div>
+        {/* Composer */}
+        <div className="h-16 border-t border-white/10 bg-black/30 px-4 flex items-center gap-2">
+          <Input
+            placeholder={selectedTopicGeneral ? 'Write a message…' : 'Select a topic to start messaging'}
+            value={messageGeneral}
+            onChange={(e) => setMessageGeneral(e.target.value)}
+            disabled={!selectedTopicGeneral}
+          />
+          <Button onClick={async () => { await sendMessageTo(selectedTopicGeneral?.id, messageGeneral); setMessageGeneral(''); }} disabled={!selectedTopicGeneral || !messageGeneral.trim()} className="gap-2">
+            <Send className="w-4 h-4" /> Send
+          </Button>
+        </div>
       </div>
 
-      {/* Topics */}
-      <div className="col-span-4 col-start-9 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
+      {/* Topics (Center) */}
+      <div className="col-span-4 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
-          <Button size="sm" variant="outline" className="gap-2" disabled={!selectedChannel} onClick={() => setNewTopicOpen((v) => !v)}>
+          <Button size="sm" variant="outline" className="gap-2" disabled={!generalChannel} onClick={() => setNewTopicOpen((v) => !v)}>
             <MessageSquarePlus className="w-4 h-4" /> New
           </Button>
         </div>
-        {newTopicOpen && selectedChannel && (
+        {newTopicOpen && generalChannel && (
           <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
             <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
             <div className="flex gap-2 justify-end">
@@ -251,53 +267,32 @@ export default function ClanFormsZone({ game, clan, user }) {
         )}
         <ScrollArea className="h-[calc(100%-52px)] pr-2">
           <div className="space-y-2">
-            {topics.map((t) => (
-              <button key={t.id} onClick={() => setSelectedTopic(t)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopic?.id === t.id ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
+            {topicTitles.map((title) => (
+              <button key={title} onClick={() => setSelectedTopicTitle(title)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopicTitle === title ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white truncate">{t.title}</p>
-                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{t.status || 'open'}</Badge>
+                  <p className="text-sm font-semibold text-white truncate">{title}</p>
                 </div>
-                <p className="text-[10px] text-white/40 mt-1">Last updated {new Date(t.updated_date || t.created_date).toLocaleString()}</p>
+                <p className="text-[10px] text-white/40 mt-1">Select to discuss this topic in both chats</p>
               </button>
             ))}
-            {selectedChannel && topics.length === 0 && <p className="text-xs text-white/40">No topics in this channel yet.</p>}
-            {!selectedChannel && <p className="text-xs text-white/40">Select a channel to view topics.</p>}
+            {topicTitles.length === 0 && <p className="text-xs text-white/40">No topics yet. Create the first one.</p>}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Messages */}
-      <div className="col-span-5 col-start-1 flex flex-col" aria-label="Messages chat window">
+      {/* Right Chat - Clan Leader Chat */}
+      <div className="col-span-4 flex flex-col" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
-          <p className="text-sm font-semibold text-white/80 truncate">{selectedTopic ? selectedTopic.title : 'Select a topic'}</p>
-          <div className="flex items-center gap-2">
-            <Select value={selectedChannel?.id || ''} onValueChange={async (val) => {
-              const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: val, desired_capacity: 100 });
-              const ch = data?.channel;
-              if (ch) {
-                joinedChannelRef.current = ch;
-                setSelectedChannel(ch);
-                const general = (data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general');
-                setSelectedTopic(general || null);
-              }
-            }}>
-              <SelectTrigger className="h-8 w-44 bg-white/5 border-white/10 text-white">
-                <SelectValue placeholder="Select channel" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900/95 text-white border-white/10">
-                {channels.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>#{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(selectedChannel?.active_member_ids || []).length}/100</Badge>
+          <div>
+            <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
+            <p className="text-[11px] text-white/50">Topic: {selectedTopicTitle || 'Select a topic'}</p>
           </div>
+          <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">Leaders Only</Badge>
         </div>
         <div className="flex-1 overflow-hidden">
-          {/* Chat window lives at the far right per spec */}
           <ScrollArea className="h-full p-4">
             <div className="space-y-3">
-              {messages.map((m) => (
+              {selectedTopicLeader && messagesLeader.map((m) => (
                 <div key={m.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
                   <div className="text-xs text-white/50 mb-1 flex items-center gap-2">
                     <strong className="text-white/80">{m.username || m.user_id}</strong>
@@ -307,20 +302,19 @@ export default function ClanFormsZone({ game, clan, user }) {
                   <p className="text-sm text-white/90 whitespace-pre-wrap">{m.content}</p>
                 </div>
               ))}
-              {selectedTopic && messages.length === 0 && <p className="text-xs text-white/40">No messages yet. Be the first to say hi!</p>}
-              {!selectedTopic && <p className="text-xs text-white/40">Select a topic to start chatting.</p>}
+              {selectedTopicLeader && messagesLeader.length === 0 && <p className="text-xs text-white/40">No messages yet.</p>}
+              {!selectedTopicLeader && <p className="text-xs text-white/40">Select a topic to start chatting.</p>}
             </div>
           </ScrollArea>
         </div>
-        {/* Composer */}
         <div className="h-16 border-t border-white/10 bg-black/30 px-4 flex items-center gap-2">
           <Input
-            placeholder={selectedTopic ? 'Write a message…' : 'Select a topic to start messaging'}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            disabled={!selectedTopic}
+            placeholder={selectedTopicLeader ? 'Write a message…' : 'Select a topic to start messaging'}
+            value={messageLeader}
+            onChange={(e) => setMessageLeader(e.target.value)}
+            disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin')}
           />
-          <Button onClick={sendMessage} disabled={!selectedTopic || !message.trim()} className="gap-2">
+          <Button onClick={async () => { await sendMessageTo(selectedTopicLeader?.id, messageLeader); setMessageLeader(''); }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
