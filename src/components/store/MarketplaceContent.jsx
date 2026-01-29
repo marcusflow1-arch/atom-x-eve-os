@@ -78,7 +78,7 @@ const ListItemCard = ({ item, onClick }) => {
   return (
     <div 
       onClick={() => onClick(item)} 
-      className="flex gap-8 p-6 cursor-pointer border-b border-white/10 items-center group/item hover:bg-white/[0.02] transition-colors relative overflow-hidden"
+      className="flex gap-6 p-4 cursor-pointer border-b border-white/10 items-center group/item hover:bg-white/[0.02] transition-colors relative overflow-hidden"
     >
       {/* Shiny Card */}
       <div className="w-[160px] flex-shrink-0 relative">
