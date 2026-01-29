@@ -773,7 +773,7 @@ export default function DeveloperLimitedEdition() {
                       onClick={() => handleCardClick(card)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`flex-shrink-0 w-16 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
+                      className={`flex-shrink-0 w-12 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
                         isSelected 
                           ? `${rarity.border} ring-2 ring-white/20` 
                           : 'border-white/10 opacity-60 hover:opacity-100'
