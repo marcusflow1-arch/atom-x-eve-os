@@ -34,11 +34,11 @@ export default function ShinyCard({ children, onClick, className = "" }) {
       style={{ 
         rotateX, 
         rotateY,
-        scale: 1,
+        scale: 0.75,
         transformStyle: "preserve-3d",
       }}
-      className={`relative rounded-xl overflow-hidden cursor-pointer group ${className}`}
-    >
+      className={`relative rounded-xl overflow-hidden cursor-pointer group m-1 ${className}`}
+      >
       {children}
 
       {/* Shine Effect Overlay */}
