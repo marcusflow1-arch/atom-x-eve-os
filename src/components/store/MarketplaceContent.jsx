@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ShinyCard from '@/components/shared/ShinyCard';
 import DeveloperLimitedEdition from './DeveloperLimitedEdition';
 
