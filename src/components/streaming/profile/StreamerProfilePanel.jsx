@@ -28,7 +28,7 @@ export default function StreamerProfilePanel({ streamer }) {
     <div className="w-full min-w-0 flex flex-col gap-8">
       {/* Top: Player + Chat */}
       <div className="flex gap-4 h-[340px] md:h-[380px] lg:h-[420px]">
-        <div className="basis-[75%] h-full">
+        <div className="basis-[85%] min-w-0 h-full">
           <StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={!false} onTogglePlay={() => {}} volume={70} onVolumeChange={() => {}} />
         </div>
         <div className="basis-[25%] h-full">
