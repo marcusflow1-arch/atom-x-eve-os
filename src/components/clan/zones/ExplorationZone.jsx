@@ -2,8 +2,24 @@ import React from 'react';
 import { Map as MapIcon, Flag, Navigation, MapPin } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ZoneChatPanel from '@/components/clan/shared/ZoneChatPanel';
+import ReconUpload from '@/components/clan/exploration/ReconUpload';
+import ReconCard from '@/components/clan/exploration/ReconCard';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function ExplorationZone({ game, clan }) {
+    const queryClient = useQueryClient();
+    const clanId = clan?.id;
+    const gameId = game?.id;
+    const { data: intel = [], isLoading } = useQuery({
+        queryKey: ['explorationIntel', clanId, gameId],
+        queryFn: async () => {
+            const res = await base44.entities.ExplorationIntel.filter({ clan_id: clanId, game_id: gameId }, '-created_date', 50);
+            return res?.data || res || [];
+        },
+        enabled: !!clanId && !!gameId,
+    });
+    const refresh = () => queryClient.invalidateQueries({ queryKey: ['explorationIntel', clanId, gameId] });
     return (
         <div className="h-full flex">
             {/* Content */}
@@ -42,6 +58,26 @@ export default function ExplorationZone({ game, clan }) {
                             </div>
                         </div>
                     ))}
+                </div>
+
+                {/* Recon Upload + List */}
+                <div className="w-full max-w-4xl mt-8">
+                    <ReconUpload clanId={clanId} gameId={gameId} onCreated={refresh} />
+
+                    <div className="mt-6">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-bold">Recent Recon</h4>
+                            {isLoading && <span className="text-white/40 text-sm">Loading…</span>}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {intel.map((i) => (
+                                <ReconCard key={i.id} intel={i} />
+                            ))}
+                            {intel.length === 0 && !isLoading && (
+                                <div className="col-span-full text-center text-white/40 py-8 border border-white/10 rounded-xl">No recon uploaded yet.</div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
