@@ -81,7 +81,7 @@ const ListItemCard = ({ item, onClick }) => {
       className="flex gap-6 p-4 cursor-pointer border-b border-white/10 items-center group/item hover:bg-white/[0.02] transition-colors relative overflow-hidden"
     >
       {/* Shiny Card */}
-      <div className="w-[160px] flex-shrink-0 relative">
+      <div className="w-[100px] flex-shrink-0 relative">
         <ShinyCard>
           <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -158,6 +158,72 @@ const ListItemCard = ({ item, onClick }) => {
           <Star className="w-3 h-3 text-orange-400 fill-current" />
           <span className="text-white text-xs">{item.seller.rating}</span>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Section Row with search + voice and horizontal scroll
+const SectionRow = ({ title, items, mode = 'buy', onItemClick }) => {
+  const [query, setQuery] = React.useState('');
+  const [isListening, setIsListening] = React.useState(false);
+  const recognitionRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const rec = new SpeechRecognition();
+      rec.continuous = false;
+      rec.interimResults = false;
+      rec.lang = 'en-US';
+      rec.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        setQuery(text);
+        setIsListening(false);
+      };
+      rec.onerror = () => setIsListening(false);
+      rec.onend = () => setIsListening(false);
+      recognitionRef.current = rec;
+    }
+  }, []);
+
+  const toggleVoice = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setIsListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(i => i.name.toLowerCase().includes(q) || (i.game || '').toLowerCase().includes(q));
+  }, [items, query]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-white font-bold tracking-wide">{title}</h3>
+        <div className="relative">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search this section..."
+            className="bg-white/5 border border-white/10 rounded-full pl-3 pr-8 py-1.5 text-xs text-white placeholder:text-white/30 w-56 focus:outline-none focus:border-white/30"
+          />
+          <button onClick={toggleVoice} className="absolute right-2 top-1/2 -translate-y-1/2">
+            <Mic className={`w-4 h-4 ${isListening ? 'text-cyan-400' : 'text-white/40 hover:text-white/80'}`} />
+          </button>
+        </div>
+      </div>
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1" onWheel={(e)=>{e.currentTarget.scrollLeft += e.deltaY;}}>
+        {filtered.slice(0, 100).map(item => (
+          <HorizontalInfoCard key={`${title}_${item.id}`} item={item} mode={mode === 'auction' ? 'auction' : 'buy'} onClick={onItemClick} />
+        ))}
       </div>
     </div>
   );
@@ -544,6 +610,15 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
     });
   }, [searchTerm, filters, sortBy, browseMode]);
 
+  const auctionItems = React.useMemo(() => [...filteredItems].slice(0, 20), [filteredItems]);
+  const buyNowItems = React.useMemo(() => [...filteredItems].slice(0, 20), [filteredItems]);
+  const highDemandItems = React.useMemo(() => [...filteredItems].sort((a,b)=> (b.views||0)-(a.views||0)).slice(0, 20), [filteredItems]);
+  const recommendedItems = React.useMemo(() => {
+    if (filteredItems.length === 0) return [];
+    const primaryGame = filteredItems[0].game;
+    return filteredItems.filter(i => i.game === primaryGame).slice(0, 20);
+  }, [filteredItems]);
+
   const handleGenreSelect = (genreItem) => {
     if (genreItem.id === 'all_cards') {
       setBrowseMode('cards');
@@ -753,6 +828,14 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
               </div>
 
 
+            </div>
+
+            {/* New Sections */}
+            <div className="space-y-8">
+              <SectionRow title="Auction" items={auctionItems} mode="auction" onItemClick={setSelectedItem} />
+              <SectionRow title="Buy Now" items={buyNowItems} mode="buy" onItemClick={setSelectedItem} />
+              <SectionRow title="High Demand" items={highDemandItems} mode="buy" onItemClick={setSelectedItem} />
+              <SectionRow title="Recommended" items={recommendedItems} mode="buy" onItemClick={setSelectedItem} />
             </div>
 
             {/* Results */}
