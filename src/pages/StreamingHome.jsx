@@ -148,10 +148,10 @@ export default function StreamingHome() {
       <div className="mx-auto max-w-none w-full flex flex-col gap-8">
         
         {/* Top Section: Video & Chat */}
-        <div className="grid grid-cols-12 gap-4 h-[520px] md:h-[680px]">
+        <div className="grid grid-cols-12 gap-4 h-[420px] md:h-[480px] lg:h-[520px]">
             {/* Stream Box (Reusable) - 50% larger and spans left + center */}
             <div className="col-span-12 lg:col-span-9 xl:col-span-10">
-              <div className="h-full scale-[1.5] origin-top-left">
+              <div className="h-full">
                 <StreamPlayerBox 
                   isLive={isLive} 
                   onToggleLive={toggleLiveStatus}
@@ -164,7 +164,7 @@ export default function StreamingHome() {
             </div>
 
             {/* Chat Box (Reusable) - moved to far right */}
-            <div className="col-span-12 lg:col-span-3 xl:col-span-2 order-first lg:order-none">
+            <div className="col-span-12 lg:col-span-3 xl:col-span-2 order-first lg:order-none h-full">
               <StreamChatBox isLive={isLive} />
             </div>
         </div>
