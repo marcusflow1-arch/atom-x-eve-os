@@ -1565,10 +1565,10 @@ export default function LunaTemplate() {
                   animate={{ opacity: 1, height: 'auto', mb: 24 }}
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full flex gap-6 overflow-hidden"
+                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px]"
                 >
                   {/* Streamy Box */}
-                  <div className="flex-[2] aspect-video bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
+                  <div className="basis-[75%] h-full bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
                     <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-full h-full bg-slate-900 flex items-center justify-center">
                             <span className="text-white/40">Stream Offline</span>
@@ -1585,7 +1585,7 @@ export default function LunaTemplate() {
                   </div>
 
                   {/* Chat Box */}
-                  <div className="flex-1 bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden h-auto min-h-[300px]">
+                  <div className="basis-[25%] h-full bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden">
                     <div className="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
                         <span className="text-white font-bold text-sm">Stream Chat</span>
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
