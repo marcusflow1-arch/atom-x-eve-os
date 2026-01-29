@@ -457,7 +457,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
+                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
                         >
                           {Array.from({ length: 8 }).map((_, i) => (
                             <ShinyCard 
