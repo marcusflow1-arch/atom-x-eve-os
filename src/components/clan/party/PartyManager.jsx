@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
 import { base44 } from '@/api/base44Client';
 import { 
@@ -127,6 +126,7 @@ export default function PartyManager({ clanId, gameId }) {
     };
 
     return (
+        <>
         <div className="h-full flex flex-col">
             <div className="p-6 border-b border-white/5 flex justify-between items-center">
                 <div>
@@ -356,5 +356,6 @@ export default function PartyManager({ clanId, gameId }) {
             </div>
           </DialogContent>
         </Dialog>
+      </>
     );
 }
