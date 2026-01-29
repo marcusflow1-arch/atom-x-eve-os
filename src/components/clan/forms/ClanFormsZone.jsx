@@ -28,9 +28,9 @@ export default function ClanFormsZone({ game, clan, user }) {
 
   // Channels for this game (cross-clan)
   const { data: channels = [] } = useQuery({
-    queryKey: ['clanFormChannels', game.id],
+    queryKey: ['clanFormChannels', game.id, clan.id],
     queryFn: async () => {
-      const res = await base44.entities.ClanFormChannel.filter({ game_id: game.id });
+      const res = await base44.entities.ClanFormChannel.filter({ game_id: game.id, clan_id: clan.id });
       return res || [];
     }
   });
@@ -143,7 +143,7 @@ export default function ClanFormsZone({ game, clan, user }) {
   return (
     <div className="h-full w-full grid grid-cols-12" role="region" aria-label="Clan Forms">
       {/* Channels */}
-      <div className="col-span-3 order-1 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4" aria-label="Channels list">
+      <div className="col-span-3 col-start-6 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4" aria-label="Channels list">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Button size="sm" variant="outline" className="p-2 h-7 w-7" onClick={() => setNewChannelOpen((v) => !v)} title="Add channel">
@@ -194,7 +194,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Topics */}
-      <div className="col-span-4 order-3 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
+      <div className="col-span-4 col-start-9 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
           <Button size="sm" variant="outline" className="gap-2" disabled={!selectedChannel} onClick={() => setNewTopicOpen((v) => !v)}>
@@ -228,7 +228,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Messages */}
-      <div className="col-span-5 order-2 flex flex-col" aria-label="Messages chat window">
+      <div className="col-span-5 col-start-1 flex flex-col" aria-label="Messages chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <p className="text-sm font-semibold text-white/80 truncate">{selectedTopic ? selectedTopic.title : 'Select a topic'}</p>
           <div className="flex items-center gap-2">
