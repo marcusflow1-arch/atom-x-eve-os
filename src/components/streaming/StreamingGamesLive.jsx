@@ -131,7 +131,7 @@ export default function StreamingGamesLive() {
 
   return (
     <>
-    <div className="h-full w-full pt-12 md:pt-16 pb-10 px-6 text-white">
+    <div className="h-full w-full pt-16 pb-10 px-6 text-white">
       {/* Page Title + Subnav */}
       <div className="max-w-[1920px] mx-auto">
         <div className="flex items-center justify-between mb-6">
@@ -191,8 +191,8 @@ export default function StreamingGamesLive() {
               </div>
             </div>
             {/* Aura Streaming Box with Go Live */}
-            <div className="relative mb-6">
-              <div className="flex gap-4 h-[420px] md:h-[500px] flex-nowrap">
+            <div className="relative mb-6 sticky top-16 z-10">
+              <div className="flex gap-4 h-[360px] md:h-[420px] lg:h-[460px] flex-nowrap">
                 <div className="basis-[85%] min-w-0 h-full">
                   <StreamPlayerBox
                     isLive={isLive}
