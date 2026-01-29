@@ -756,116 +756,18 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
             </div>
 
             {/* Results */}
-            <div className="mb-8">
-              
-              {/* Results Container - no inner scroll, full content visible and aligned with left rail */}
-              <div className="pr-2 p-1 overflow-visible pt-2">
-                {browseMode === 'games' ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
-                    {availableGamesList.map(game => (
-                      <motion.div 
-                        key={game.title} 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ y: -5, scale: 1.02 }}
-                        onClick={() => handleGameSelect(game.title)}
-                        className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
-                      >
-                        {/* Game Image */}
-                        <div className="aspect-[4/3] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
-                          <img src={game.image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=600&fit=crop"} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                          
-                          <div className="absolute top-2 left-2">
-                            <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-[10px]">{game.genre}</Badge>
-                          </div>
-                        </div>
+            <div className="mb-8 space-y-12">
+              {/* Auction Section */}
+              <SectionRow title="Auction" items={filteredItems} layout="list" withSearch />
 
-                        <div className="text-center">
-                          <h3 className="text-white font-bold text-lg mb-1 group-hover:text-cyan-400 transition-colors">{game.title}</h3>
-                          <p className="text-white/40 text-xs">{game.itemCount} Items Available</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                    {availableGamesList.length === 0 && (
-                      <div className="col-span-full text-center py-16">
-                        <Gamepad2 className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/50">No games found in this genre</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    {/* Items Grid/List View */}
-                    {viewMode === 'list' ? (
-                      <div className="space-y-2 p-2">
-                        {filteredItems.map(item => (
-                          <ListItemCard key={item.id} item={item} onClick={setSelectedItem} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 p-4">
-                        {filteredItems.map(item => {
-                          const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
-                          return (
-                            <motion.div 
-                              key={item.id} 
-                              layout
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              whileHover={{ y: -5, scale: 1.02 }}
-                              onClick={() => setSelectedItem(item)}
-                              className="cursor-pointer group bg-black/20 hover:bg-white/5 p-3 rounded-2xl border border-white/5 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 transition-all relative overflow-hidden flex flex-col"
-                            >
-                              {/* Image Container */}
-                              <div className="aspect-[4/5] bg-slate-900 rounded-xl overflow-hidden mb-3 relative border border-white/5 group-hover:border-white/10 transition-colors">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                                
-                                {/* Top Badges */}
-                                <div className="absolute top-2 left-2 flex gap-1">
-                                  {item.isNew && (
-                                    <Badge className="bg-cyan-500 text-black font-bold text-[10px] px-1.5 shadow-lg backdrop-blur-md">NEW</Badge>
-                                  )}
-                                </div>
+              {/* Buy Now Section */}
+              <SectionRow title="Buy Now" items={filteredItems.filter(i => i.category !== 'Crafting Materials')} layout="grid" withSearch />
 
-                                {/* Bottom Info inside Image */}
-                                <div className="absolute bottom-2 left-2 right-2 flex justify-between items-end">
-                                   <Badge className={`${rarity.bg} ${rarity.text} text-[10px] border-none px-1.5 backdrop-blur-md shadow-lg`}>{item.rarity}</Badge>
-                                </div>
-                              </div>
+              {/* High Demand */}
+              <SectionRow title="High Demand" items={[...filteredItems].sort((a,b)=> (b.views||0)-(a.views||0)).slice(0,100)} layout="grid" withSearch />
 
-                              {/* Content */}
-                              <div className="flex-1 flex flex-col">
-                                <h3 className="text-white font-bold text-sm line-clamp-2 mb-1 group-hover:text-cyan-400 transition-colors leading-snug">{item.name}</h3>
-                                <p className="text-white/40 text-xs mb-2">{item.game}</p>
-                                
-                                <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2">
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] text-white/40 uppercase">Price</span>
-                                    <span className="text-white font-bold text-sm">{(item.price || 0).toLocaleString()} <span className="text-cyan-400 text-xs">AGP</span></span>
-                                  </div>
-                                  <div className="flex items-center gap-1 bg-white/5 px-1.5 py-0.5 rounded">
-                                    <Star className="w-3 h-3 text-orange-400 fill-current" />
-                                    <span className="text-white text-xs font-medium">{item.seller.rating}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {filteredItems.length === 0 && (
-                      <div className="text-center py-16">
-                        <Package className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/50">No items found matching your criteria</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              {/* Recommended */}
+              <SectionRow title="Recommended" items={[...filteredItems].slice(0,100)} layout="grid" withSearch />
             </div>
           </div>
           </div>
