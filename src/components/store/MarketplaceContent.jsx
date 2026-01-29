@@ -108,7 +108,7 @@ const rarityStyles = {
 };
 
 // List Item Card with Branding and Badges
-const ListItemCard = ({ item, onClick }) => {
+const ListItemCard = ({ item, onClick, showInfoSelector = false }) => {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
   const discountPercent = hasDiscount ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
