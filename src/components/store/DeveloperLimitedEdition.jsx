@@ -647,8 +647,8 @@ export default function DeveloperLimitedEdition() {
             Limited Edition Cards
           </h4>
 
-          {/* Card Display - reduced 50% height */}
-          <div className="flex-1 flex items-center justify-center relative mb-4 scale-90 md:scale-75">
+          {/* Card Display - NO BOX */}
+          <div className="flex-1 flex items-center justify-center relative mb-4">
             {selectedCard && (
               <>
                 <LargeCardDisplay card={selectedCard} />
@@ -757,7 +757,7 @@ export default function DeveloperLimitedEdition() {
               </div>
             )}
             
-            {/* Select Card Header (rarity tiles reduced 50%) */}
+            {/* Select Card Header */}
             <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
               <Info className="w-3 h-3 text-purple-400" />
               Select Card
@@ -773,7 +773,7 @@ export default function DeveloperLimitedEdition() {
                       onClick={() => handleCardClick(card)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`flex-shrink-0 w-12 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
+                      className={`flex-shrink-0 w-16 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
                         isSelected 
                           ? `${rarity.border} ring-2 ring-white/20` 
                           : 'border-white/10 opacity-60 hover:opacity-100'
@@ -830,7 +830,7 @@ export default function DeveloperLimitedEdition() {
                     <div className="flex flex-col items-center min-h-full pb-10">
                       
                       {/* Tree Container */}
-                      <div className="relative w-[220px] h-[220px] mb-6 mt-2 flex-shrink-0">
+                      <div className="relative w-[300px] h-[300px] mb-8 mt-4 flex-shrink-0">
                         {/* Render Connections */}
                         {POWER_TREE_NODES.map(node => {
                           if (!node.parent) return null;
