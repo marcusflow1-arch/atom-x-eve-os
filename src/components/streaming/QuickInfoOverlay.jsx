@@ -309,100 +309,127 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   </TabsList>
 
                   {/* Original content below remains unchanged */}
-                  <TabsContent value="overview" className="space-y-6">
-                    {/* Dashboard Stats */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-900/10 border border-emerald-500/20 space-y-2">
-                        <div className="flex items-center gap-1.5 text-emerald-400">
-                          <Trophy className="w-3.5 h-3.5" />
-                          <h4 className="font-bold text-[10px] uppercase tracking-wider">Progress</h4>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-[10px] text-white/60 mb-1">
-                            <span>Achievements</span>
-                            <span>12 / 50</span>
+                  <TabsContent value="overview" className="space-y-4">
+                    <div className="grid grid-cols-12 gap-4">
+                      {/* Main Feed */}
+                      <div className="col-span-12 lg:col-span-8">
+                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                              <Newspaper className="w-4 h-4 text-cyan-300" /> Main Feed
+                            </h4>
+                            <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={onPlay}>
+                              <Play className="w-4 h-4" /> Play
+                            </Button>
                           </div>
-                          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full w-[24%] bg-emerald-500 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-900/10 border border-blue-500/20 space-y-2">
-                        <div className="flex items-center gap-1.5 text-blue-400">
-                          <Play className="w-3.5 h-3.5" />
-                          <h4 className="font-bold text-[10px] uppercase tracking-wider">Playtime</h4>
-                        </div>
-                        <p className="text-lg font-bold text-white">24h 15m</p>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-900/10 border border-purple-500/20 space-y-2">
-                        <div className="flex items-center gap-1.5 text-purple-400">
-                          <Radio className="w-3.5 h-3.5" />
-                          <h4 className="font-bold text-[10px] uppercase tracking-wider">Status</h4>
-                        </div>
-                        <div className="flex items-center gap-2">
-                           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                           <span className="text-xs font-medium text-white">Online</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Latest Updates Section */}
-                    <div>
-                       <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                            <Newspaper className="w-4 h-4 text-pink-400" /> Latest Updates
-                          </h4>
-                       </div>
-                       
-                       <div className="grid gap-3">
-                        {(() => {
-                          const keywords = ['update','patch','hotfix','notes'];
-                          const updatePosts = posts.filter(p => {
-                            const t = (p.title || '').toLowerCase();
-                            const c = (p.content || '').toLowerCase();
-                            return keywords.some(k => t.includes(k) || c.includes(k));
-                          });
-                          
-                          if (updatePosts.length === 0) {
-                            return (
-                                <div className="p-4 rounded-xl border border-white/5 bg-white/5 text-center">
-                                    <p className="text-white/40 text-sm">No recent updates found.</p>
+                          <div className="grid gap-3">
+                            {(posts && posts.length > 0) ? (
+                              posts.slice(0, 3).map(up => (
+                                <div
+                                  key={up.id}
+                                  className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                                  onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}
+                                >
+                                  <div className="flex justify-between items-start">
+                                    <p className="text-white text-sm font-bold line-clamp-1">{up.title}</p>
+                                    <span className="text-[10px] text-white/40">{new Date(up.created_date || Date.now()).toLocaleDateString()}</span>
+                                  </div>
+                                  {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
                                 </div>
-                            );
-                          }
-                          
-                          return updatePosts.slice(0, 2).map(up => (
-                            <div key={up.id} className="p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer" onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}>
-                              <div className="flex justify-between items-start">
-                                 <p className="text-white text-sm font-bold line-clamp-1">{up.title}</p>
-                                 <span className="text-[10px] text-white/40">{new Date(up.created_date || Date.now()).toLocaleDateString()}</span>
+                              ))
+                            ) : (
+                              <div className="p-4 rounded-xl border border-white/10 bg-white/5 text-center">
+                                <p className="text-white/40 text-sm">No recent updates found.</p>
                               </div>
-                              {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
-                              <div className="mt-2 flex gap-2">
-                                <Badge variant="outline" className="text-[10px] border-pink-500/30 text-pink-300">Patch Notes</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column */}
+                      <div className="col-span-12 lg:col-span-4 space-y-4">
+                        {/* Achievement Radial */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                              <Trophy className="w-4 h-4 text-cyan-300" /> Ability Unlocks
+                            </h4>
+                            <span className="text-xs text-white/60">{achievements?.length || 0} found</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div
+                              className="w-28 h-28 rounded-full grid place-items-center"
+                              style={{
+                                background: `conic-gradient(#22d3ee ${(Math.min(100, Math.round(((achievements?.length || 0)/50)*100)) * 3.6)}deg, rgba(255,255,255,0.08) 0deg)`
+                              }}
+                            >
+                              <div className="w-24 h-24 rounded-full bg-black/40 border border-white/10 grid place-items-center">
+                                <span className="text-white font-bold text-lg">
+                                  {Math.min(100, Math.round(((achievements?.length || 0)/50)*100))}%
+                                </span>
                               </div>
                             </div>
-                          ));
-                        })()}
-                       </div>
-                    </div>
+                            <div className="min-w-0">
+                              <p className="text-white/80 text-sm mb-1">Achievement Hunt</p>
+                              <p className="text-white text-sm font-semibold">Track your ability unlocks</p>
+                              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/60">
+                                <span>Unlocked: <b className="text-white">{Math.round(((achievements?.length || 0)/50)*50)}</b></span>
+                                <span>Total: <b className="text-white">50</b></span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
-                    {/* Quick Actions */}
-                    <div className="grid grid-cols-3 gap-2">
-                      <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}`)}>
-                        <ShoppingBag className="w-5 h-5 mb-1 opacity-70" /> 
-                        <span className="text-xs">Store</span>
-                      </Button>
-                      <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}`)}>
-                        <MessageSquare className="w-5 h-5 mb-1 opacity-70" /> 
-                        <span className="text-xs">Community</span>
-                      </Button>
-                      <Button variant="outline" className="h-auto py-3 flex-col gap-1 bg-white/5 border-white/10 hover:bg-white/10" onClick={() => navigate(createPageUrl('Community') + `?subview=game&game_title=${encodeURIComponent(item?.title || '')}&topic=support`)}>
-                        <LifeBuoy className="w-5 h-5 mb-1 opacity-70" /> 
-                        <span className="text-xs">Support</span>
-                      </Button>
+                        {/* DLC Expansion Modules */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-bold text-sm">Expansion Modules</h4>
+                            <Button variant="outline" size="sm" className="h-7 text-xs border-yellow-400/40 text-yellow-300 hover:bg-yellow-400/10"
+                              onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}&tab=dlc`)}
+                            >
+                              <ShoppingBag className="w-3.5 h-3.5" /> Store
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            {(DLC_DATA || []).slice(0, 3).map((dlc) => (
+                              <div key={dlc.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between hover:border-yellow-400/40 transition-colors">
+                                <div className="min-w-0">
+                                  <p className="text-white text-sm font-semibold truncate">{dlc.name}</p>
+                                  <p className="text-white/50 text-xs truncate">{item?.title || 'Game'} add-on</p>
+                                </div>
+                                <Button size="sm" className="h-8 text-xs bg-white/10 hover:bg-white/20 border border-yellow-400/40 text-yellow-300"
+                                  onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}&dlc=${encodeURIComponent(dlc.id)}`)}
+                                >
+                                  Buy
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Social Node */}
+                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
+                              <MessageSquare className="w-4 h-4 text-cyan-300" /> Hot Topics
+                            </h4>
+                            <Button size="sm" className="h-7 text-xs bg-white/10 border border-white/20 hover:bg-white/20" onClick={() => setShowCreatePost(true)}>
+                              Create Post
+                            </Button>
+                          </div>
+                          <div className="space-y-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
+                            {(posts || []).slice(0, 5).map((p) => (
+                              <button key={p.id} onClick={() => navigate(createPageUrl('Community') + `?post=${p.id}`)} className="w-full text-left px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                                <p className="text-white text-xs font-semibold truncate">{p.title || 'Untitled'}</p>
+                                {p.content && <p className="text-white/50 text-[11px] truncate">{p.content}</p>}
+                              </button>
+                            ))}
+                            {(!posts || posts.length === 0) && (
+                              <div className="text-center py-6 text-white/40 text-sm">No discussions yet.</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </TabsContent>
 
