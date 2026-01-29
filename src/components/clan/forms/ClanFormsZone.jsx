@@ -215,11 +215,12 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   return (
-    <div className="h-full w-full grid grid-cols-12" role="region" aria-label="Clan Forms">
+    <div className="h-full w-full grid grid-cols-12 min-h-0" role="region" aria-label="Clan Forms">
       {/* Left Chat - Clan Form */}
       <div className="col-span-3 col-start-1 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col" aria-label="Clan Form chat">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-white mr-2">Clan Chat</p>
             <Select onValueChange={async (val) => {
               const desired_name = `channel-${val}`;
               const { data } = await base44.functions.invoke('joinClanFormChannel', {
@@ -443,7 +444,7 @@ export default function ClanFormsZone({ game, clan, user }) {
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
         </div>
-        <ScrollArea className="h-40 pr-2">
+        <ScrollArea className="h-28 pr-2">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {topicTitles.map((title) => (
               <button key={title} onClick={() => setSelectedTopicTitle(title)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopicTitle === title ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
