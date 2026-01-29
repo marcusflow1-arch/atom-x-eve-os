@@ -206,9 +206,32 @@ export default function ClanFormsZone({ game, clan, user }) {
       <div className="col-span-4 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col" aria-label="Clan Form chat">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="p-2 h-7 w-7" onClick={() => setNewChannelOpen((v) => !v)} title="Add channel">
-              <Plus className="w-4 h-4" />
-            </Button>
+            <Select onValueChange={async (val) => {
+              const desired_name = `channel-${val}`;
+              const { data } = await base44.functions.invoke('joinClanFormChannel', {
+                game_id: game.id,
+                clan_id: clan.id,
+                desired_name,
+                desired_capacity: 100
+              });
+              const ch = data?.channel;
+              if (ch) {
+                joinedChannelRef.current = ch;
+                setSelectedChannel(ch);
+                const general = (data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general');
+                setSelectedTopic(general || null);
+                qc.invalidateQueries({ queryKey: ['clanFormChannels', game.id, clan.id] });
+              }
+            }}>
+              <SelectTrigger className="h-8 w-36 bg-white/5 border-white/10 text-white" title="Quick switch channel">
+                <SelectValue placeholder="Channel 1-10" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <SelectItem key={n} value={String(n)}>{`Channel ${n}`}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
           </div>
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setNewChannelOpen((v) => !v)}>
