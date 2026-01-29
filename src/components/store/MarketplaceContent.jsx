@@ -720,36 +720,36 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 })}
               </div>
 
-              {/* Rarity Scroller (Horizontal) */}
-              <div 
-                className="flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide px-2"
-                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
-              >
-                {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r) => {
-                  const style = rarityStyles[r];
-                  const isActive = filters.rarities.includes(r);
-                  return (
-                    <motion.button
-                      key={r}
-                      onClick={() => setFilters(prev => ({
-                        ...prev,
-                        rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r]
-                      }))}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                        flex items-center gap-2 py-2 transition-all duration-300 whitespace-nowrap
-                        ${isActive 
-                          ? `${style.text} scale-105` 
-                          : 'text-white/60 hover:text-white'
-                        }
-                      `}
-                    >
-                      <span className={`text-sm uppercase tracking-wide ${isActive ? 'font-black' : 'font-medium'}`}>{r}</span>
-                    </motion.button>
-                  );
-                })}
-              </div>
+              {/* Rarity Scroller (Horizontal) - cards reduced 50% */}
+               <div 
+                 className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide px-2"
+                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+               >
+                 {['Mythic', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common'].map((r) => {
+                   const style = rarityStyles[r];
+                   const isActive = filters.rarities.includes(r);
+                   return (
+                     <motion.button
+                       key={r}
+                       onClick={() => setFilters(prev => ({
+                         ...prev,
+                         rarities: prev.rarities.includes(r) ? prev.rarities.filter(x => x !== r) : [r]
+                       }))}
+                       whileHover={{ scale: 1.03 }}
+                       whileTap={{ scale: 0.97 }}
+                       className={`
+                         flex items-center gap-1.5 py-1 transition-all duration-300 whitespace-nowrap
+                         ${isActive 
+                           ? `${style.text} scale-100` 
+                           : 'text-white/60 hover:text-white'
+                         }
+                       `}
+                     >
+                       <span className={`text-xs uppercase tracking-wide ${isActive ? 'font-black' : 'font-medium'}`}>{r}</span>
+                     </motion.button>
+                   );
+                 })}
+               </div>
 
 
             </div>
