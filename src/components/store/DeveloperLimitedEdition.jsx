@@ -830,7 +830,7 @@ export default function DeveloperLimitedEdition() {
                     <div className="flex flex-col items-center min-h-full pb-10">
                       
                       {/* Tree Container */}
-                      <div className="relative w-[300px] h-[300px] mb-8 mt-4 flex-shrink-0">
+                      <div className="relative w-[220px] h-[220px] mb-6 mt-2 flex-shrink-0">
                         {/* Render Connections */}
                         {POWER_TREE_NODES.map(node => {
                           if (!node.parent) return null;
