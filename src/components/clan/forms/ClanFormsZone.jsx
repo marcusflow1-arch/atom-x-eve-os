@@ -377,7 +377,6 @@ export default function ClanFormsZone({ game, clan, user }) {
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
-            <p className="text-[11px] text-white/50">Topic: {selectedTopicTitle || 'Select a topic'}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
