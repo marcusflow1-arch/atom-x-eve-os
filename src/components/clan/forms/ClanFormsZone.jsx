@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Send, FolderPlus, MessageSquarePlus } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ClanFormsZone({ game, clan, user }) {
   const qc = useQueryClient();
@@ -96,7 +97,8 @@ export default function ClanFormsZone({ game, clan, user }) {
     const { data } = await base44.functions.invoke('joinClanFormChannel', {
       game_id: game.id,
       clan_id: clan.id,
-      desired_name: channelName.trim()
+      desired_name: channelName.trim(),
+      desired_capacity: 100
     });
     const ch = data?.channel;
     if (ch) {
@@ -143,7 +145,12 @@ export default function ClanFormsZone({ game, clan, user }) {
       {/* Channels */}
       <div className="col-span-3 border-r border-white/10 bg-black/20 backdrop-blur-sm p-4" aria-label="Channels list">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="p-2 h-7 w-7" onClick={() => setNewChannelOpen((v) => !v)} title="Add channel">
+              <Plus className="w-4 h-4" />
+            </Button>
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
+          </div>
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setNewChannelOpen((v) => !v)}>
             <FolderPlus className="w-4 h-4" /> New
           </Button>
@@ -163,7 +170,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             {channels.map((ch) => (
               <button key={ch.id} onClick={async () => { 
                 // Join with autoscaling, ensure defaults
-                const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: ch.id });
+                const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: ch.id, desired_capacity: 100 });
                 const joined = data?.channel || ch; 
                 joinedChannelRef.current = joined;
                 setSelectedChannel(joined); 
@@ -177,7 +184,7 @@ export default function ClanFormsZone({ game, clan, user }) {
                     <p className="text-sm font-semibold text-white">{ch.name}</p>
                     <p className="text-xs text-white/50 line-clamp-1">{ch.description || '—'}</p>
                   </div>
-                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(ch.active_member_ids || []).length}/{ch.capacity || 50}</Badge>
+                  <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(ch.active_member_ids || []).length}/100</Badge>
                 </div>
               </button>
             ))}
@@ -224,6 +231,28 @@ export default function ClanFormsZone({ game, clan, user }) {
       <div className="col-span-5 flex flex-col" aria-label="Messages chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <p className="text-sm font-semibold text-white/80 truncate">{selectedTopic ? selectedTopic.title : 'Select a topic'}</p>
+          <div className="flex items-center gap-2">
+            <Select value={selectedChannel?.id || ''} onValueChange={async (val) => {
+              const { data } = await base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, channel_id: val, desired_capacity: 100 });
+              const ch = data?.channel;
+              if (ch) {
+                joinedChannelRef.current = ch;
+                setSelectedChannel(ch);
+                const general = (data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general');
+                setSelectedTopic(general || null);
+              }
+            }}>
+              <SelectTrigger className="h-8 w-44 bg-white/5 border-white/10 text-white">
+                <SelectValue placeholder="Select channel" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                {channels.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>#{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">{(selectedChannel?.active_member_ids || []).length}/100</Badge>
+          </div>
         </div>
         <div className="flex-1 overflow-hidden">
           {/* Chat window lives at the far right per spec */}
