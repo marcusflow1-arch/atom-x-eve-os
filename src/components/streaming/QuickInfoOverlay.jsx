@@ -129,7 +129,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 overflow-y-auto custom-scrollbar"
+            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 flex flex-col overflow-hidden"
             style={{
               background: 'rgba(20,24,34,0.85)',
               backdropFilter: 'blur(18px) saturate(160%)',
@@ -170,7 +170,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
             {/* Fade container for item changes */}
             <AnimatePresence mode="wait">
-              <motion.div key={itemKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              <motion.div key={itemKey} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1 overflow-y-auto custom-scrollbar">
 
              {isStreamerProfileView ? (
               <div className="p-4 h-full overflow-y-auto custom-scrollbar">
@@ -261,7 +261,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </div>
                 </div>
                 ) : isAppView ? (
-                <div className="h-full w-full flex flex-col">
+                <div className="w-full h-full min-h-0 flex flex-col">
                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40">
                    <div className="flex items-center gap-2">
                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
@@ -277,7 +277,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                  </div>
                  <iframe
                    src={resolvedAppUrl || 'about:blank'}
-                   className="w-full flex-1 border-0"
+                   className="w-full h-full flex-1 min-h-0 border-0"
                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                    title={item?.title || 'App'}
                  />
