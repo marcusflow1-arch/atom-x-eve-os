@@ -13,6 +13,11 @@ export default function ClanFormsZone({ game, clan, user }) {
   const qc = useQueryClient();
   const [selectedChannel, setSelectedChannel] = React.useState(null);
   const [selectedTopic, setSelectedTopic] = React.useState(null);
+  const [generalChannel, setGeneralChannel] = React.useState(null);
+  const [leaderChannel, setLeaderChannel] = React.useState(null);
+  const [selectedTopicTitle, setSelectedTopicTitle] = React.useState('');
+  const [messageGeneral, setMessageGeneral] = React.useState('');
+  const [messageLeader, setMessageLeader] = React.useState('');
 
   // New channel state
   const [newChannelOpen, setNewChannelOpen] = React.useState(false);
@@ -46,7 +51,28 @@ export default function ClanFormsZone({ game, clan, user }) {
     };
   }, []);
 
-  // Topics for selected channel
+  // Ensure default channels exist and join them
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const [genRes, leadRes] = await Promise.all([
+        base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, desired_name: 'clan-form', desired_capacity: 100 }),
+        base44.functions.invoke('joinClanFormChannel', { game_id: game.id, clan_id: clan.id, desired_name: 'clan-leader', desired_capacity: 100 })
+      ]);
+      if (!mounted) return;
+      const gen = genRes?.data?.channel;
+      const leader = leadRes?.data?.channel;
+      if (gen) setGeneralChannel(gen);
+      if (leader) setLeaderChannel(leader);
+      const defaultTitle =
+        (genRes?.data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general')?.title ||
+        (leadRes?.data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general')?.title || '';
+      setSelectedTopicTitle(defaultTitle);
+    })();
+    return () => { mounted = false; };
+  }, [game.id, clan.id]);
+
+   // Topics for selected channel
   const { data: topics = [] } = useQuery({
     queryKey: ['clanFormTopics', selectedChannel?.id],
     queryFn: async () => {
@@ -57,13 +83,27 @@ export default function ClanFormsZone({ game, clan, user }) {
     enabled: !!selectedChannel?.id,
   });
 
-  // Auto-select General when topics change and none selected
+  // Build combined topics and selected topics per channel
+  const topicTitles = React.useMemo(() => {
+    const set = new Set();
+    (topicsGeneral || []).forEach(t => t?.title && set.add(t.title));
+    (topicsLeader || []).forEach(t => t?.title && set.add(t.title));
+    return Array.from(set);
+  }, [topicsGeneral, topicsLeader]);
+
+  const selectedTopicGeneral = React.useMemo(() => {
+    return (topicsGeneral || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitle || '').toLowerCase()) || null;
+  }, [topicsGeneral, selectedTopicTitle]);
+
+  const selectedTopicLeader = React.useMemo(() => {
+    return (topicsLeader || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitle || '').toLowerCase()) || null;
+  }, [topicsLeader, selectedTopicTitle]);
+
   React.useEffect(() => {
-    if (!selectedTopic && topics.length) {
-      const general = topics.find(t => (t.title || '').toLowerCase() === 'general');
-      if (general) setSelectedTopic(general);
+    if (!selectedTopicTitle && topicTitles.length) {
+      setSelectedTopicTitle(topicTitles[0]);
     }
-  }, [topics, selectedTopic]);
+  }, [topicTitles, selectedTopicTitle]);
 
   // Messages for selected topic
   const { data: messages = [] } = useQuery({
@@ -114,9 +154,9 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   const createTopic = async () => {
-    if (!selectedChannel?.id || !topicTitle.trim()) return;
+    if (!(generalChannel?.id || selectedChannel?.id) || !topicTitle.trim()) return;
     const topic = await base44.entities.ClanFormTopic.create({
-      channel_id: selectedChannel.id,
+      channel_id: (generalChannel?.id || selectedChannel?.id),
       title: topicTitle.trim(),
       created_by_user_id: user?.id,
       status: 'open'
@@ -127,17 +167,16 @@ export default function ClanFormsZone({ game, clan, user }) {
     qc.invalidateQueries({ queryKey: ['clanFormTopics', selectedChannel.id] });
   };
 
-  const sendMessage = async () => {
-    if (!selectedTopic?.id || !message.trim()) return;
+  const sendMessageTo = async (topicId, content) => {
+    if (!topicId || !content?.trim()) return;
     await base44.entities.ClanFormMessage.create({
-      topic_id: selectedTopic.id,
+      topic_id: topicId,
       user_id: user?.id,
       clan_id: clan?.id,
       username: user?.full_name || user?.email?.split('@')[0] || 'User',
-      content: message.trim(),
+      content: content.trim(),
     });
-    setMessage('');
-    qc.invalidateQueries({ queryKey: ['clanFormMessages', selectedTopic.id] });
+    qc.invalidateQueries({ queryKey: ['clanFormMessages', topicId] });
   };
 
   return (
