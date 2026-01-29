@@ -214,9 +214,9 @@ export default function ClanFormsZone({ game, clan, user }) {
   return (
     <div className="h-full w-full grid grid-cols-12" role="region" aria-label="Clan Forms">
       {/* Left Chat - Clan Form */}
-      <div className="col-span-4 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col" aria-label="Clan Form chat">
+      <div className="col-span-6 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col" aria-label="Clan Form chat">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Select onValueChange={async (val) => {
               const desired_name = `channel-${val}`;
               const { data } = await base44.functions.invoke('joinClanFormChannel', {
@@ -244,6 +244,20 @@ export default function ClanFormsZone({ game, clan, user }) {
               </SelectContent>
             </Select>
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
+            {/* Topic select (affects both chats) */}
+            <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
+              <SelectTrigger className="h-8 w-48 bg-white/5 border-white/10 text-white" title="Select topic">
+                <SelectValue placeholder="Select topic" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
+                {topicTitles.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+                {topicTitles.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-white/40">No topics yet</div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
           <Button size="sm" variant="outline" className="gap-2" onClick={() => setNewChannelOpen((v) => !v)}>
             <FolderPlus className="w-4 h-4" /> New
@@ -283,7 +297,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Topics (Center) */}
-      <div className="col-span-4 border-r border-white/10 bg-black/10 p-4" aria-label="Topics list">
+      <div className="hidden" aria-label="Topics list">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
           <Button size="sm" variant="outline" className="gap-2" disabled={!generalChannel} onClick={() => setNewTopicOpen((v) => !v)}>
@@ -339,13 +353,31 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Right Chat - Clan Leader Chat */}
-      <div className="col-span-4 flex flex-col" aria-label="Clan Leader chat window">
+      <div className="col-span-6 flex flex-col" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
             <p className="text-[11px] text-white/50">Topic: {selectedTopicTitle || 'Select a topic'}</p>
           </div>
-          <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">Leaders Only</Badge>
+          <div className="flex items-center gap-2">
+            <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
+              <SelectTrigger className="h-8 w-48 bg-white/5 border-white/10 text-white" title="Select topic">
+                <SelectValue placeholder="Select topic" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
+                {topicTitles.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+                {topicTitles.length === 0 && (
+                  <div className="px-3 py-2 text-xs text-white/40">No topics yet</div>
+                )}
+              </SelectContent>
+            </Select>
+            {(clan?.leaderId === user?.id || user?.role === 'admin') && (
+              <Button size="sm" variant="outline" onClick={() => setNewTopicOpen((v) => !v)}>New Topic</Button>
+            )}
+            <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">Leaders Only</Badge>
+          </div>
         </div>
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full p-4">
@@ -376,6 +408,35 @@ export default function ClanFormsZone({ game, clan, user }) {
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
+      </div>
+
+      {/* Bottom Topics (shared) */}
+      <div className="col-span-12 border-t border-white/10 bg-black/10 p-4" aria-label="Topics">
+        {newTopicOpen && generalChannel && (
+          <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
+            <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="outline" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={createTopic}>Create</Button>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
+        </div>
+        <ScrollArea className="h-40 pr-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {topicTitles.map((title) => (
+              <button key={title} onClick={() => setSelectedTopicTitle(title)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopicTitle === title ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-white truncate">{title}</p>
+                </div>
+                <p className="text-[10px] text-white/40 mt-1">Tap to select for both chats</p>
+              </button>
+            ))}
+            {topicTitles.length === 0 && <p className="text-xs text-white/40">No topics yet. Create the first one.</p>}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
