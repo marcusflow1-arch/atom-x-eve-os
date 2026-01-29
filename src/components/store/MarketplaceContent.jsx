@@ -9,6 +9,7 @@ import {
   Crosshair, Trophy, Monitor, Car, Skull, Music, LayoutGrid, Mic
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '../auth/AuthContext';
