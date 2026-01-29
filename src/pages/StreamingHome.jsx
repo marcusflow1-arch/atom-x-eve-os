@@ -145,7 +145,7 @@ export default function StreamingHome() {
 
   return (
     <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl flex flex-col gap-8">
+      <div className="mx-auto max-w-none w-full flex flex-col gap-8">
         
         {/* Top Section: Video & Chat */}
         <div className="flex gap-4 flex-col lg:flex-row h-[520px]">
