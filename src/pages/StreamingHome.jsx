@@ -149,18 +149,24 @@ export default function StreamingHome() {
         
         {/* Top Section: Video & Chat */}
         <div className="grid grid-cols-12 gap-4 h-[520px] md:h-[680px]">
-            {/* Stream Box (Reusable) */}
-            <StreamPlayerBox 
-                isLive={isLive} 
-                onToggleLive={toggleLiveStatus}
-                isPlaying={isPlaying}
-                onTogglePlay={() => setIsPlaying(!isPlaying)}
-                volume={volume}
-                onVolumeChange={setVolume}
-            />
+            {/* Stream Box (Reusable) - 50% larger and spans left + center */}
+            <div className="col-span-12 lg:col-span-9 xl:col-span-10">
+              <div className="h-full scale-[1.5] origin-top-left">
+                <StreamPlayerBox 
+                  isLive={isLive} 
+                  onToggleLive={toggleLiveStatus}
+                  isPlaying={isPlaying}
+                  onTogglePlay={() => setIsPlaying(!isPlaying)}
+                  volume={volume}
+                  onVolumeChange={setVolume}
+                />
+              </div>
+            </div>
 
-            {/* Chat Box (Reusable) */}
-            <StreamChatBox isLive={isLive} />
+            {/* Chat Box (Reusable) - moved to far right */}
+            <div className="col-span-12 lg:col-span-3 xl:col-span-2 order-first lg:order-none">
+              <StreamChatBox isLive={isLive} />
+            </div>
         </div>
 
         {/* Profile Info & Content (Duplicated layout from StreamerRightPane) */}
