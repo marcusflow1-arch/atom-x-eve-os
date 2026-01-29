@@ -31,7 +31,7 @@ export default function StreamerProfilePanel({ streamer }) {
         <div className="basis-[85%] min-w-0 h-full">
           <StreamPlayerBox isLive={isLive} onToggleLive={() => setIsLive(!isLive)} isPlaying={!false} onTogglePlay={() => {}} volume={70} onVolumeChange={() => {}} />
         </div>
-        <div className="basis-[25%] h-full">
+        <div className="basis-[15%] h-full">
           <StreamChatBox isLive={isLive} />
         </div>
       </div>
