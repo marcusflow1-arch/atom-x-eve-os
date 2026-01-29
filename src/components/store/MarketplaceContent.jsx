@@ -470,6 +470,55 @@ const ItemDetailModal = ({ item, isOpen, onClose, onAddToCart, onBuyNow }) => {
   );
 };
 
+function SectionRow({ title, items, layout='grid', withSearch=false }) {
+  const scrollRef = useRef(null);
+  const [q, setQ] = useState('');
+  const { isListening, toggleListening } = useVoiceInput((text)=> setQ(text));
+  const list = useMemo(()=> items.filter(i => !q || i.name.toLowerCase().includes(q.toLowerCase())), [items, q]);
+  const invisibleScrollbar = 'scrollbar-hide';
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-bold text-white">{title}</h3>
+        {withSearch && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+            <input
+              value={q}
+              onChange={(e)=> setQ(e.target.value)}
+              placeholder={`Search ${title.toLowerCase()}...`}
+              className="bg-white/5 border border-white/10 rounded-full pl-9 pr-9 py-1.5 text-xs text-white w-56 focus:outline-none focus:border-white/20 focus:bg-white/10"
+            />
+            <button onClick={toggleListening} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+              <Mic className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Row container with invisible scrollbar */}
+      {layout === 'list' ? (
+        <div ref={scrollRef} className={`divide-y divide-white/10 ${invisibleScrollbar} overflow-y-auto max-h-[560px]`}
+             onWheel={(e)=>{ if(e.shiftKey) e.currentTarget.scrollLeft += e.deltaY; }}>
+          {list.slice(0,100).map(item => (
+            <ListItemCard key={`${title}-${item.id}`} item={item} onClick={()=>{}} />
+          ))}
+        </div>
+      ) : (
+        <div ref={scrollRef} className={`grid grid-cols-3 md:grid-cols-4 xl:grid-cols-4 gap-4 ${invisibleScrollbar} overflow-x-auto`}
+             onWheel={(e)=>{ e.currentTarget.scrollLeft += e.deltaY; }}>
+          {list.slice(0,100).map(item => (
+            <motion.div key={`${title}-${item.id}`} whileHover={{ y: -4 }} className="min-w-[180px]">
+              <ListItemCard item={item} onClick={()=>{}} />
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearchChange }) {
   const { user } = useAuth();
   const { addToCart, getCartCount } = useCart();
