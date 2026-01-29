@@ -22,6 +22,43 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import ShinyCard from '@/components/shared/ShinyCard';
 import DeveloperLimitedEdition from './DeveloperLimitedEdition';
 
+// Simple voice input hook for section searches
+function useVoiceInput(onResult) {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        onResult(text);
+        setIsListening(false);
+      };
+      recognitionRef.current.onerror = () => setIsListening(false);
+      recognitionRef.current.onend = () => setIsListening(false);
+    }
+  }, [onResult]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+
+  return { isListening, toggleListening };
+}
+
 // Enhanced Mock Data with genre and item type
 const MARKETPLACE_ITEMS = [
   { id: 'c1', name: 'Phoenix Familiar - Legendary Fire Companion', price: 45000, originalPrice: 52000, rarity: 'Legendary', game: 'Mage Wars Online', genre: 'RPG', category: 'Companions', itemType: 'Companions', subcategory: 'Mythical', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop', seller: { name: 'PetMaster', rating: 4.9, sales: 1250 }, views: 3421, description: 'A blazing phoenix companion that automatically revives you once per battle. Includes flame aura effect.', stats: { Power: 85, Loyalty: 95 }, reviews: 234, prime: true, sponsored: true, playstyle: 'PvE', developer: { name: 'Arcane Studios', logo: 'A' }, isNew: false, previewUrl: 'https://cdn.coverr.co/videos/coverr-fire-burning-in-slow-motion-5358/1080p.mp4' },
