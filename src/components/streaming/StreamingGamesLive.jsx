@@ -182,6 +182,13 @@ export default function StreamingGamesLive() {
 
           {/* RIGHT: Content */}
           <div className="flex-1 min-w-0">
+            {/* Section Label */}
+            <div className="flex items-center justify-center mb-3">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+                <Sparkles className="w-4 h-4 text-cyan-300" />
+                <span className="text-xs font-bold uppercase tracking-wider">Epic Moments</span>
+              </div>
+            </div>
             {/* Aura Streaming Box with Go Live */}
             <div className="relative mb-6">
               <StreamPlayerBox

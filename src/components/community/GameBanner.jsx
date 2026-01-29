@@ -11,10 +11,10 @@ export default function GameBanner({ imageUrl, children }) {
         <img
           src={src}
           alt="Game banner"
-          className="w-full h-full object-cover scale-110 blur-sm opacity-70"
+          className="w-full h-full object-cover scale-105 blur-[2px] opacity-80"
         />
         {/* Extra gradient to keep content readable */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
       </div>
 
       {/* Foreground glass panel for controls */}
