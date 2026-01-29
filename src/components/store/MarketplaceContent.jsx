@@ -19,6 +19,7 @@ import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ShinyCard from '@/components/shared/ShinyCard';
 import DeveloperLimitedEdition from './DeveloperLimitedEdition';
+import HorizontalInfoCard from './HorizontalInfoCard';
 
 // Enhanced Mock Data with genre and item type
 const MARKETPLACE_ITEMS = [
