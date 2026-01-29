@@ -647,8 +647,8 @@ export default function DeveloperLimitedEdition() {
             Limited Edition Cards
           </h4>
 
-          {/* Card Display - NO BOX */}
-          <div className="flex-1 flex items-center justify-center relative mb-4">
+          {/* Card Display - reduced 50% height */}
+          <div className="flex-1 flex items-center justify-center relative mb-4 scale-90 md:scale-75">
             {selectedCard && (
               <>
                 <LargeCardDisplay card={selectedCard} />
