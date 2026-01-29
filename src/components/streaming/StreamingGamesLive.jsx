@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import StreamPlayerBox from "@/components/streaming/StreamPlayerBox";
 import { Button } from "@/components/ui/button";
 import GameStreamersView from "@/components/streaming/GameStreamersView";
+import StreamChatBox from "@/components/streaming/StreamChatBox";
 
 // Small utility to format large numbers
 const formatNumber = (n) => {
@@ -191,18 +192,25 @@ export default function StreamingGamesLive() {
             </div>
             {/* Aura Streaming Box with Go Live */}
             <div className="relative mb-6">
-              <StreamPlayerBox
-                isLive={isLive}
-                onToggleLive={() => setIsLive((v) => !v)}
-                isPlaying={isPlaying}
-                onTogglePlay={() => setIsPlaying((p) => !p)}
-                volume={volume}
-                onVolumeChange={setVolume}
-                settingsOpen={showPlayerSettings}
-                onCloseSettings={() => setShowPlayerSettings(false)}
-                isSettingsMaximized={isSettingsMaximized}
-                onToggleSettingsMaximize={() => setIsSettingsMaximized((m) => !m)}
-              />
+              <div className="flex gap-4 h-[540px]">
+                <div className="basis-[85%] min-w-0 h-full">
+                  <StreamPlayerBox
+                    isLive={isLive}
+                    onToggleLive={() => setIsLive((v) => !v)}
+                    isPlaying={isPlaying}
+                    onTogglePlay={() => setIsPlaying((p) => !p)}
+                    volume={volume}
+                    onVolumeChange={setVolume}
+                    settingsOpen={showPlayerSettings}
+                    onCloseSettings={() => setShowPlayerSettings(false)}
+                    isSettingsMaximized={isSettingsMaximized}
+                    onToggleSettingsMaximize={() => setIsSettingsMaximized((m) => !m)}
+                  />
+                </div>
+                <div className="basis-[15%] min-w-0 h-full">
+                  <StreamChatBox isLive={isLive} />
+                </div>
+              </div>
               <button
                 onClick={() => setShowPlayerSettings((s) => !s)}
                 className="absolute left-3 top-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/90 backdrop-blur-md hover:bg-black/60 transition"
