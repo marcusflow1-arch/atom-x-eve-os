@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useEntitySubscription } from '@/components/clan/shared/useEntitySubscription';
 import { base44 } from '@/api/base44Client';
 import { 
     Users, Plus, Target, Mic, Shield, 
-    Crown, UserPlus, LogIn, ChevronRight
+    Crown, UserPlus, LogIn, ChevronRight, PhoneCall, Rocket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,9 +17,14 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { base44 as sdk } from '@/api/base44Client';
 
 export default function PartyManager({ clanId, gameId }) {
     const { user, updatePresenceContext } = useAuth();
+    const navigate = useNavigate();
+    const [launchPrompt, setLaunchPrompt] = useState(null);
+    const [voiceDialog, setVoiceDialog] = useState({ open: false, partyId: null, name: '' });
     const [activePartyId, setActivePartyId] = useState(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -66,6 +72,18 @@ export default function PartyManager({ clanId, gameId }) {
     });
 
     useEntitySubscription('Party', ['clanParties', clanId, gameId]);
+
+    // Listen for launch prompts targeted to current user
+    useEffect(() => {
+        const unsub = base44.entities.PartyEvent.subscribe((e) => {
+            try {
+                if (e.type === 'create' && e.data?.type === 'launch' && e.data?.target_user_id === user?.id && e.data?.party_id) {
+                    setLaunchPrompt({ id: e.id, game_id: e.data.game_id, party_id: e.data.party_id });
+                }
+            } catch {}
+        });
+        return () => { try { unsub(); } catch {} };
+    }, [user?.id]);
 
     const handleCreateParty = async () => {
         if (!newParty.goal.trim()) return;
@@ -281,13 +299,25 @@ export default function PartyManager({ clanId, gameId }) {
                                         <UserPlus className="w-4 h-4" />
                                     </Button>
                                     <Button 
-                                        size="sm" 
-                                        onClick={() => handleJoin(party.id)}
-                                        disabled={(party.members?.length || 0) >= party.maxSize}
-                                        className="h-8 bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                                       size="sm" 
+                                       onClick={() => handleJoin(party.id)}
+                                       disabled={(party.members?.length || 0) >= party.maxSize}
+                                       className="h-8 bg-white/10 hover:bg-white/20 text-white border border-white/10"
                                     >
-                                        Join Squad
+                                       Join Squad
                                     </Button>
+                                    {party.leaderId === user?.id && (
+                                     <>
+                                       <Button size="sm" onClick={async () => {
+                                         await base44.functions.invoke('partyLaunchGame', { partyId: party.id, gameId });
+                                       }} disabled={(party.members?.length || 0) < (party.maxSize || 0)} className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white border border-white/10">
+                                         <Rocket className="w-4 h-4 mr-1" /> Launch Game
+                                       </Button>
+                                       <Button size="sm" variant="outline" onClick={() => setVoiceDialog({ open: true, partyId: party.id, name: `party-${party.id}` })} className="h-8">
+                                         <PhoneCall className="w-4 h-4 mr-1" /> Voice
+                                       </Button>
+                                     </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -295,5 +325,36 @@ export default function PartyManager({ clanId, gameId }) {
                 </div>
             </ScrollArea>
         </div>
+
+        {/* Launch Prompt Modal */}
+        <Dialog open={!!launchPrompt} onOpenChange={(o) => { if (!o) setLaunchPrompt(null); }}>
+          <DialogContent className="bg-[#12141a] border-white/10 text-white">
+            <DialogHeader>
+              <DialogTitle>Squad Launch Request</DialogTitle>
+            </DialogHeader>
+            <p className="text-white/70 text-sm">Your squad leader wants to launch the game. Ready to start?</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={async () => { if (launchPrompt) { await base44.entities.PartyEvent.update(launchPrompt.id, { status: 'dismissed' }); setLaunchPrompt(null);} }}>Not Now</Button>
+              <Button onClick={async () => { if (launchPrompt) { await base44.entities.PartyEvent.update(launchPrompt.id, { status: 'acknowledged' }); setLaunchPrompt(null); navigate('/' + 'Library'); } }} className="bg-emerald-600 hover:bg-emerald-700">Launch</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Voice Room Dialog */}
+        <Dialog open={voiceDialog.open} onOpenChange={(o) => setVoiceDialog(v => ({ ...v, open: o }))}>
+          <DialogContent className="bg-[#12141a] border-white/10 text-white">
+            <DialogHeader>
+              <DialogTitle>Join Voice Room</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Label className="text-white/80">Room Name</Label>
+              <Input value={voiceDialog.name} onChange={(e) => setVoiceDialog(v => ({ ...v, name: e.target.value }))} className="bg-white/5 border-white/10 text-white" />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setVoiceDialog({ open: false, partyId: null, name: '' })}>Cancel</Button>
+                <Button onClick={async () => { await base44.functions.invoke('joinVoiceRoom', { room_name: voiceDialog.name, party_id: voiceDialog.partyId, clan_id: clanId, game_id: gameId }); setVoiceDialog({ open: false, partyId: null, name: '' }); }} className="bg-blue-600 hover:bg-blue-500">Join</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
     );
 }

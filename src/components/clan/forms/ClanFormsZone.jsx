@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Send, FolderPlus, MessageSquarePlus } from 'lucide-react';
+import StrategyUpload from '@/components/clan/strategy/StrategyUpload';
+import StrategyCard from '@/components/clan/strategy/StrategyCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ClanFormsZone({ game, clan, user }) {
@@ -91,6 +93,15 @@ export default function ClanFormsZone({ game, clan, user }) {
       return res || [];
     },
     enabled: !!leaderChannel?.id,
+  });
+
+  // Strategies for this clan/game
+  const { data: strategies = [], refetch: refetchStrategies } = useQuery({
+    queryKey: ['strategies', game.id, clan.id],
+    queryFn: async () => {
+      const res = await base44.entities.Strategy.filter({ game_id: game.id, clan_id: clan.id }, '-created_date', 100);
+      return res?.data || res || [];
+    }
   });
 
   // Build combined topics and selected topics per channel
@@ -301,6 +312,30 @@ export default function ClanFormsZone({ game, clan, user }) {
             {topicTitles.length === 0 && <p className="text-xs text-white/40">No topics yet. Create the first one.</p>}
           </div>
         </ScrollArea>
+      </div>
+
+      {/* Strategies Board */}
+      <div className="col-span-4 flex flex-col" aria-label="Strategies board">
+        <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
+          <div>
+            <p className="text-sm font-semibold text-white">Strategies</p>
+            <p className="text-[11px] text-white/50">Share boss guides and achievement tips</p>
+          </div>
+        </div>
+        <div className="p-4 space-y-4 overflow-auto">
+          <StrategyUpload 
+            clanId={clan.id} 
+            gameId={game.id} 
+            canSetVisibility={clan?.leaderId === user?.id || user?.role === 'admin'}
+            onCreated={() => refetchStrategies()}
+          />
+          <div className="grid grid-cols-1 gap-4">
+            {strategies.map((s) => (
+              <StrategyCard key={s.id} s={s} />
+            ))}
+            {strategies.length === 0 && <div className="text-white/40 text-sm text-center py-6 border border-white/10 rounded-xl">No strategies yet. Be the first!</div>}
+          </div>
+        </div>
       </div>
 
       {/* Right Chat - Clan Leader Chat */}
