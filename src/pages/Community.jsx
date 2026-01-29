@@ -463,6 +463,7 @@ export default function CommunityPage() {
                                             </Select>
                                         </div>
                                     </div>
+                                </GameBanner>
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 pb-20">
