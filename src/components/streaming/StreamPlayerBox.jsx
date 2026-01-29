@@ -56,7 +56,7 @@ export default function StreamPlayerBox({ isLive, onToggleLive, isPlaying, onTog
   }, []);
   return (
     <div 
-        className="h-full rounded-3xl overflow-hidden min-h-[400px] relative group border border-white/10 shadow-2xl"
+        className="h-full rounded-3xl overflow-hidden min-h-[360px] relative group border border-white/10 shadow-2xl"
         style={{
             background: 'rgba(255, 255, 255, 0.03)',
             backdropFilter: 'blur(20px) saturate(180%)',
