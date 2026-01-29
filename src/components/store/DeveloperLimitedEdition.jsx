@@ -757,7 +757,7 @@ export default function DeveloperLimitedEdition() {
               </div>
             )}
             
-            {/* Select Card Header */}
+            {/* Select Card Header (rarity tiles reduced 50%) */}
             <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
               <Info className="w-3 h-3 text-purple-400" />
               Select Card
