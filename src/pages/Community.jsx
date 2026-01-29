@@ -20,6 +20,7 @@ import { base44 } from '@/api/base44Client';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import HotTopicsSidebar from '../components/community/HotTopicsSidebar';
+import GameBanner from '../components/community/GameBanner';
 
 // Mock Genres configuration matching Store/Marketplace
 const GENRE_CONFIG = [
