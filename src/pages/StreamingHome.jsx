@@ -148,7 +148,7 @@ export default function StreamingHome() {
       <div className="mx-auto max-w-none w-full flex flex-col gap-8">
         
         {/* Top Section: Video & Chat */}
-        <div className="flex gap-4 flex-col lg:flex-row h-[520px]">
+        <div className="grid grid-cols-12 gap-4 h-[520px] md:h-[680px]">
             {/* Stream Box (Reusable) */}
             <StreamPlayerBox 
                 isLive={isLive} 
