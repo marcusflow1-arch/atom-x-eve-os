@@ -221,6 +221,7 @@ export default function ClanFormsZone({ game, clan, user }) {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-white mr-2">Clan Chat</p>
+            <p className="text-sm font-semibold text-white mr-2">Clan Chat</p>
             <Select onValueChange={async (val) => {
               const desired_name = `channel-${val}`;
               const { data } = await base44.functions.invoke('joinClanFormChannel', {
@@ -251,7 +252,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             {/* Topic select (affects both chats) */}
             <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
               <SelectTrigger className="h-8 w-48 bg-white/5 border-white/10 text-white" title="Select topic">
-                <SelectValue placeholder="Select topic" />
+                <SelectValue placeholder="General" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
                 {topicTitles.map((t) => (
@@ -382,7 +383,7 @@ export default function ClanFormsZone({ game, clan, user }) {
           <div className="flex items-center gap-2">
             <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
               <SelectTrigger className="h-8 w-48 bg-white/5 border-white/10 text-white" title="Select topic">
-                <SelectValue placeholder="Select topic" />
+                <SelectValue placeholder="General" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
                 {topicTitles.map((t) => (
