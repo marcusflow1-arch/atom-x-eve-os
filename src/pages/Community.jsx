@@ -410,7 +410,8 @@ export default function CommunityPage() {
                                 
                                 {/* Controls Toolbar: Back, Search, New Post, Sort */}
                                 <div className="mb-6">
-                                    <div className="flex items-center gap-4 border-b border-white/5 pb-4">
+                                <GameBanner imageUrl={activeGame?.banner_image || activeGame?.cover_image}>
+                                    <div className="flex items-center gap-4">
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
