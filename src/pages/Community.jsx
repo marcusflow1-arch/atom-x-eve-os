@@ -408,9 +408,9 @@ export default function CommunityPage() {
                             {/* Center: Feed (7/12) */}
                             <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden pt-[7.75rem]">
                                 
-                                {/* Controls Toolbar: Back, Search, New Post, Sort */
-                                <GameBanner imageUrl={activeGame?.banner_image || activeGame?.cover_image}>}
+                                {/* Controls Toolbar: Back, Search, New Post, Sort */}
                                 <div className="mb-6">
+                                <GameBanner imageUrl={activeGame?.banner_image || activeGame?.cover_image}>
                                 <GameBanner imageUrl={activeGame?.banner_image || activeGame?.cover_image}>
                                     <div className="flex items-center gap-4">
                                         <Button 
