@@ -131,6 +131,7 @@ export default function Model3DManager() {
   const [uploading, setUploading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
   const [featuredBgUrl, setFeaturedBgUrl] = useState(null);
+  const [customBackgrounds, setCustomBackgrounds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [newModel, setNewModel] = useState({
     name: '',
@@ -266,6 +267,7 @@ export default function Model3DManager() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFeaturedBgUrl(file_url);
+      setCustomBackgrounds((prev) => [file_url, ...prev.filter((u) => u !== file_url)]);
       e.target.value = '';
     } catch (err) {
       console.error('Background upload failed', err);
@@ -510,11 +512,28 @@ export default function Model3DManager() {
                 </div>
 
                 {/* Featured Game Background (optional) */}
-                {games && games.length > 0 && (
+                {(games && games.length > 0) || (customBackgrounds && customBackgrounds.length > 0) ? (
                   <div className="mb-4">
                     <label className="text-slate-400 text-sm block mb-2">Featured Game Background</label>
                     <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                      {games.slice(0, 12).map((g) => {
+                      {/* Uploaded backgrounds first */}
+                      {customBackgrounds.map((img, idx) => {
+                        const active = featuredBgUrl === img;
+                        return (
+                          <button
+                            key={`custom-${idx}`}
+                            onClick={() => setFeaturedBgUrl(active ? null : img)}
+                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
+                            title="Uploaded Background"
+                          >
+                            <img src={img} alt="Uploaded Background" className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">Uploaded</span>
+                          </button>
+                        );
+                      })}
+
+                      {/* Game images */}
+                      {games?.slice(0, 12).map((g) => {
                         const img = g.banner_image || g.cover_image || g.cover;
                         if (!img) return null;
                         const active = featuredBgUrl === img;
@@ -532,7 +551,7 @@ export default function Model3DManager() {
                       })}
                     </div>
                   </div>
-                )}
+                ) : null}
 
                 {/* 3D Preview */}
                 {(['glb','gltf','fbx'].includes(selectedModel.file_type)) && (
