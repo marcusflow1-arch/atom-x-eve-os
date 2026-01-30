@@ -9,10 +9,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 // 3D Model Viewer Component using Three.js directly
-function Model3DViewer({ modelUrl }) {
+function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,19 +42,35 @@ function Model3DViewer({ modelUrl }) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    const loader = new GLTFLoader();
+    const manager = new THREE.LoadingManager();
+    if (bundleManifest && typeof bundleManifest === 'object') {
+      manager.setURLModifier((url) => {
+        try {
+          const u = new URL(url, window.location.href);
+          const pathname = decodeURIComponent(u.pathname).replace(/^\//, '');
+          const filename = pathname.split('/').pop();
+          if (bundleManifest[pathname]) return bundleManifest[pathname];
+          if (filename && bundleManifest[filename]) return bundleManifest[filename];
+        } catch {}
+        return (bundleManifest && bundleManifest[url]) || url;
+      });
+    }
+
+    const ext = (fileType || (modelUrl.split('.').pop() || '')).toLowerCase();
+    const useFBX = ext === 'fbx';
+    const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
     loader.load(
       modelUrl,
-      (gltf) => {
-        const model = gltf.scene;
-        const box = new THREE.Box3().setFromObject(model);
+      (asset) => {
+        const obj = asset?.scene || asset;
+        const box = new THREE.Box3().setFromObject(obj);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
         const scale = 2 / maxDim;
-        model.scale.multiplyScalar(scale);
-        model.position.sub(center.multiplyScalar(scale));
-        scene.add(model);
+        obj.scale.multiplyScalar(scale);
+        obj.position.sub(center.multiplyScalar(scale));
+        scene.add(obj);
         setLoading(false);
       },
       undefined,
@@ -131,7 +148,7 @@ export default function Model3DManager() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validExtensions = ['.glb', '.gltf', '.zip'];
+    const validExtensions = ['.glb', '.gltf', '.fbx', '.zip'];
     const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
     
     if (!validExtensions.includes(fileExtension)) {
@@ -219,7 +236,7 @@ export default function Model3DManager() {
         <label className="relative cursor-pointer">
           <input
             type="file"
-            accept=".glb,.gltf,.zip"
+            accept=".glb,.gltf,.fbx,.zip"
             onChange={handleFileUpload}
             className="hidden"
             disabled={uploading}
@@ -238,13 +255,30 @@ export default function Model3DManager() {
               ) : (
                 <>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload 3D Model (.glb, .gltf, .zip)
+                  Upload 3D Model (.glb, .gltf, .fbx, .zip)
                 </>
               )}
             </span>
           </Button>
-        </label>
-      </div>
+          </label>
+
+          <div className="mt-3">
+            <label className="relative cursor-pointer">
+              <input
+                type="file"
+                onChange={handleFolderUpload}
+                className="hidden"
+                webkitdirectory=""
+                multiple
+                disabled={uploading}
+              />
+              <Button disabled={uploading} variant="outline" className="w-full md:w-auto">
+                <Upload className="w-4 h-4 mr-2" /> Upload Model Folder (GLTF/FBX + textures)
+              </Button>
+            </label>
+            <p className="text-xs text-slate-400 mt-2">Select a folder containing the model file and its textures. We'll upload everything and link resources automatically.</p>
+          </div>
+          </div>
 
       {/* Search */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
@@ -367,9 +401,13 @@ export default function Model3DManager() {
                 </div>
 
                 {/* 3D Preview */}
-                {(selectedModel.file_type === 'glb' || selectedModel.file_type === 'gltf') && (
+                {(['glb','gltf','fbx'].includes(selectedModel.file_type)) && (
                   <div className="mb-6">
-                    <Model3DViewer modelUrl={selectedModel.file_url} />
+                    <Model3DViewer 
+                      modelUrl={selectedModel.file_url} 
+                      fileType={selectedModel.file_type}
+                      bundleManifest={selectedModel.bundle_manifest}
+                    />
                   </div>
                 )}
 
