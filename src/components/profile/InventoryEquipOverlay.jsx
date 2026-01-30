@@ -23,7 +23,13 @@ export default function InventoryEquipOverlay() {
     return () => window.removeEventListener("openInventoryPanel", handler);
   }, []);
 
-  const handleEquip = (item) => {
+   // Global flag to suppress other inventory UIs while this overlay is open
+   useEffect(() => {
+     try { window.__inventoryOverlayOpen = open; } catch {}
+     return () => { try { window.__inventoryOverlayOpen = false; } catch {} };
+   }, [open]);
+
+   const handleEquip = (item) => {
     // Broadcast equip event so grid/loadout systems can react
     window.dispatchEvent(
       new CustomEvent("equipItem", { detail: { slotId, item } })

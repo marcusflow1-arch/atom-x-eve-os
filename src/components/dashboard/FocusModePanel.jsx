@@ -1818,7 +1818,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
               onStatsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown((v) => !v); }}
             />
 
-            {!showStatsDropdown && (
+            {showStatsDropdown && (
               <div className="mt-3">
                 <LibraryBannerSection 
                   games={ownedGames}
@@ -1888,8 +1888,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         </div>
       </div>
 
-      {/* Banner Section shows here only when Stats is open */}
-      {showStatsDropdown && (
+      {/* Banner Section - Mid (default) */}
+      {!showStatsDropdown && (
         <div className="w-full mt-4 mb-4">
           <LibraryBannerSection 
              games={ownedGames}

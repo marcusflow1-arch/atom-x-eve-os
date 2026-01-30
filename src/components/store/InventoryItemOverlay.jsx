@@ -17,6 +17,9 @@ const rarityStyles = {
 export default function InventoryItemOverlay({ item, onClose, onSale, onTrade, onBid }) {
   if (!item) return null;
 
+  // Suppress when InventoryEquipOverlay is active to avoid double overlays (two X buttons)
+  if (typeof window !== 'undefined' && window.__inventoryOverlayOpen) return null;
+
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
 
   return (
