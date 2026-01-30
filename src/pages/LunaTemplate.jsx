@@ -1002,6 +1002,7 @@ export default function LunaTemplate() {
   const { activeSkills, triggerSkill } = useSkills();
   const [showSettings, setShowSettings] = useState(false);
   const [showLive, setShowLive] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
@@ -1618,6 +1619,24 @@ export default function LunaTemplate() {
               )}
             </AnimatePresence>
 
+            {/* STATS SECTION (Dropdown) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full overflow-hidden"
+                  style={{ paddingLeft: '280px' }}
+                >
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
+                    <AvatarProgressionBox />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* TOP SECTION: Game Banner + Memories (directly under header tabs) */}
             <div className="flex gap-6 mb-6">
               {/* Large Hero Tile - Game Banner (Sumi-e Style) with Video */}
@@ -1660,6 +1679,15 @@ export default function LunaTemplate() {
 
             {/* QUICK ACCESS BOXES - Under the Game Banner line */}
             <div className="flex gap-4 mb-6">
+              {/* Stats */}
+              <ConsoleTile
+                onClick={() => setShowStats((v) => !v)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
+              </ConsoleTile>
+
               {/* Skill Tree */}
               <ConsoleTile
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
