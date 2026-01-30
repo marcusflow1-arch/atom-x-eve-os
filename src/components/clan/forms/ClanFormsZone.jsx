@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Minus, Send, FolderPlus, MessageSquarePlus } from 'lucide-react';
+import { Plus, Minus, Send, FolderPlus, MessageSquarePlus, ChevronDown } from 'lucide-react';
 import StrategyUpload from '@/components/clan/strategy/StrategyUpload';
 import StrategyCard from '@/components/clan/strategy/StrategyCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -217,8 +217,8 @@ export default function ClanFormsZone({ game, clan, user }) {
   return (
     <div className="h-full w-full grid grid-cols-12 min-h-0" role="region" aria-label="Clan Forms">
       {/* Left Chat - Clan Form */}
-      <div className="col-span-4 col-start-1 flex flex-col min-h-0 rounded-xl border border-white/10 bg-black/20 backdrop-blur-sm overflow-hidden" aria-label="Clan Form chat">
-        <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
+      <div className="col-span-4 col-start-1 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col min-h-0" aria-label="Clan Form chat">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-white mr-2">Clan Chat</p>
             <Select onValueChange={async (val) => {
@@ -373,9 +373,9 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Right Chat - Clan Leader Chat */}
-      <div className="col-span-4 col-start-5 flex flex-col min-h-0 rounded-xl border border-white/10 bg-black/20 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
+      <div className="col-span-4 col-start-5 flex flex-col min-h-0" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
-          <div className="flex items-center gap-2">
+          <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
           </div>
           <div className="flex items-center gap-3">
