@@ -37,6 +37,13 @@ export default function StreamingGamesLive() {
   const [isSettingsMaximized, setIsSettingsMaximized] = useState(false);
   const [selectedGame, setSelectedGame] = useState(null);
 
+  // Epic Moments demo clips
+  const epicClips = [
+    { src: 'https://cdn.coverr.co/videos/coverr-an-extreme-snowboarder-3663/1080p.mp4', title: 'Snowboard 360°', game: 'Action', duration: '0:12' },
+    { src: 'https://cdn.coverr.co/videos/coverr-fps-gameplay-5587/1080p.mp4', title: 'Clutch 1v3', game: 'Shooter', duration: '0:09' },
+    { src: 'https://cdn.coverr.co/videos/coverr-sci-fi-space-8940/1080p.mp4', title: 'Boss Finish', game: 'Sci‑Fi', duration: '0:14' }
+  ];
+
   // Fetch games and streams
   useEffect(() => {
     let mounted = true;
@@ -192,32 +199,39 @@ export default function StreamingGamesLive() {
             </div>
             {/* Aura Streaming Box with Go Live */}
             <div className="relative mb-6">
-              <div className="flex gap-4 h-[320px] md:h-[360px] lg:h-[400px] flex-nowrap">
-                <div className="basis-[85%] min-w-0 h-full">
-                  <StreamPlayerBox
-                    isLive={isLive}
-                    onToggleLive={() => setIsLive((v) => !v)}
-                    isPlaying={isPlaying}
-                    onTogglePlay={() => setIsPlaying((p) => !p)}
-                    volume={volume}
-                    onVolumeChange={setVolume}
-                    settingsOpen={showPlayerSettings}
-                    onCloseSettings={() => setShowPlayerSettings(false)}
-                    isSettingsMaximized={isSettingsMaximized}
-                    onToggleSettingsMaximize={() => setIsSettingsMaximized((m) => !m)}
+              <div className="space-y-4">
+                {/* Intro Video */}
+                <div className="aspect-video w-full rounded-2xl overflow-hidden relative">
+                  <video
+                    className="w-full h-full object-cover"
+                    src="https://cdn.coverr.co/videos/coverr-gamer-playing-on-keyboard-4972/1080p.mp4"
+                    poster="https://images.unsplash.com/photo-1603484477859-abe6a73f936d?w=1200"
+                    controls
+                    playsInline
                   />
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                    <h3 className="text-white font-bold text-lg">Hi, I’m Marcus — Epic Moments</h3>
+                    <p className="text-white/70 text-sm">A quick intro and a showcase of community highlights.</p>
+                  </div>
                 </div>
-                <div className="basis-[15%] min-w-0 h-full">
-                  <StreamChatBox isLive={isLive} />
+
+                {/* Clips Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {epicClips.map((clip, idx) => (
+                    <motion.div key={idx} className="group relative rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                      <video className="w-full h-40 object-cover" src={clip.src} muted autoPlay loop playsInline />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge className="bg-black/50 border-white/10 text-white/70 text-[10px]">{clip.game}</Badge>
+                          <Badge variant="outline" className="border-white/10 text-white/50 text-[10px]">{clip.duration}</Badge>
+                        </div>
+                        <p className="text-white font-semibold text-sm line-clamp-1">{clip.title}</p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-              <button
-                onClick={() => setShowPlayerSettings((s) => !s)}
-                className="absolute left-3 top-3 z-10 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 border border-white/10 text-white/90 backdrop-blur-md hover:bg-black/60 transition"
-              >
-                <Radio className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-xs font-bold uppercase tracking-wider">Go Live</span>
-              </button>
             </div>
             {/* Tabs */}
             <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-hide">
