@@ -201,7 +201,7 @@ export default function StreamingGamesLive() {
             <div className="relative mb-6">
               <div className="space-y-4">
                 {/* Intro Video */}
-                <div className="aspect-video w-full rounded-2xl overflow-hidden relative">
+                <div className="w-full h-[160px] md:h-[180px] lg:h-[200px] rounded-2xl overflow-hidden relative sticky top-20 z-20">
                   <video
                     className="w-full h-full object-cover"
                     src="https://cdn.coverr.co/videos/coverr-gamer-playing-on-keyboard-4972/1080p.mp4"
