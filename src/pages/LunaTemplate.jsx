@@ -1564,6 +1564,8 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
+{!showAvatarProgression && (
+            <>
             {/* LIVE STREAM SECTION (Condition Rendered) */}
             <AnimatePresence>
               {showLive && (
@@ -1724,6 +1726,16 @@ export default function LunaTemplate() {
                 </div>
               </div>
             </div>
+            </>
+            )}
+
+            {showAvatarProgression && (
+              <div className="pt-4 pr-8" style={{ paddingLeft: '280px' }}>
+                <div className="max-w-5xl mx-auto">
+                  <AvatarProgressionBox />
+                </div>
+              </div>
+            )}
 
             {/* Time Display - Bottom Left */}
             <div className="absolute bottom-6 left-12 z-30">
