@@ -16,13 +16,19 @@ export default function AIAttributesBox() {
   });
 
   const stats = progression?.stats || {};
+  const topGenres = Array.isArray(progression?.genres)
+    ? progression.genres.slice().sort((a, b) => (b.level ?? 1) - (a.level ?? 1)).slice(0, 2)
+    : [];
 
   const rows = [
+    { label: 'Global Level', value: progression?.global_level },
+    { label: 'Global XP', value: progression?.global_xp },
+    { label: 'Available Points', value: progression?.available_stat_points },
+    { label: 'HP', value: stats.hp },
     { label: 'Strength', value: stats.strength },
-    { label: 'Intelligence', value: stats.intelligence, alt: 'Wisdom' },
+    { label: 'Intelligence', value: stats.intelligence },
     { label: 'Willpower', value: stats.will },
     { label: 'Tenacity', value: stats.tenacity },
-    { label: 'HP', value: stats.hp },
   ];
 
   return (
@@ -37,11 +43,25 @@ export default function AIAttributesBox() {
       <div className="divide-y divide-white/5">
         {rows.map((r) => (
           <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
-            <span className="text-white/70 text-sm">{r.alt && r.value ? `${r.alt}` : r.label}</span>
+            <span className="text-white/70 text-sm">{r.label}</span>
             <span className="text-white font-semibold text-sm">{r.value ?? '—'}</span>
           </div>
         ))}
       </div>
+
+      {topGenres.length > 0 && (
+        <div className="px-4 py-3 border-t border-white/10">
+          <div className="text-[10px] font-semibold tracking-widest text-white/40 uppercase mb-2">Top Genres</div>
+          <div className="space-y-1">
+            {topGenres.map((g) => (
+              <div key={g.name} className="flex items-center justify-between">
+                <span className="text-white/70 text-sm">{g.name}</span>
+                <span className="text-white font-semibold text-sm">Lv {g.level ?? 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

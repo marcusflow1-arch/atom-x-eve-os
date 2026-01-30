@@ -3,11 +3,15 @@ import React from 'react';
 function SectionHeader({ children }) {
   return (
     <div className="mb-2">
-      <div className="text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</div>
-      <div className="relative w-48 h-4 mt-1">
-        <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
-        <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/20"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/20 bg-black/60"></div>
+      <div className="relative h-6 flex items-center justify-center">
+        {/* Long line */}
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/10" />
+        {/* Short line (text sits on this) */}
+        <div className="absolute top-1/2 -translate-y-1/2 w-24 h-px bg-white/30" />
+        {/* Center circle going through lines */}
+        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/30 bg-black/50" />
+        {/* Label */}
+        <span className="relative px-2 text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</span>
       </div>
     </div>
   );
