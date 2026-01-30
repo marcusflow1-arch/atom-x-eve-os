@@ -310,22 +310,7 @@ function LayoutContent({ children, currentPageName }) {
     };
   }, []);
 
-  useEffect(() => {
-          const onKeyDown = (e) => {
-            const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
-            const isTyping = ['input','textarea','select'].includes(tag) || (e.target && e.target.isContentEditable);
-            if (isTyping) return;
-            if ((e.key || '').toLowerCase() === 'i') {
-              if (location.pathname.toLowerCase().includes('/lunatemplate')) {
-                navigate(createPageUrl('AvatarProgression'));
-              }
-            }
-          };
-          window.addEventListener('keydown', onKeyDown);
-          return () => window.removeEventListener('keydown', onKeyDown);
-        }, [location.pathname, navigate]);
-
-        const navGroups = NAV_GROUPS;
+  const navGroups = NAV_GROUPS;
   const allNavItems = ALL_NAV_ITEMS;
 
   // Legacy route handling: always use LunaTemplate as the dashboard home

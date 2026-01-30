@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Minus, Sparkles, ChevronRight } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const GENRES = ["RPG","FPS","Strategy","Action","MMO","Puzzle","Simulation","Sports"];
 const BASE_XP = 100;
@@ -14,12 +14,11 @@ function xpToNextLevel(level) {
   return Math.round(BASE_XP * Math.pow(level || 1, XP_EXPONENT));
 }
 
-export default function AvatarProgression() {
+export default function AvatarProgressionBox() {
   const [user, setUser] = useState(null);
   const [record, setRecord] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Ensure genres exist in record
   const ensureGenres = (rec) => {
     if (!rec.genres || !Array.isArray(rec.genres)) {
       rec.genres = GENRES.map((g) => ({ name: g, level: 1, xp: 0 }));
@@ -88,20 +87,17 @@ export default function AvatarProgression() {
     if (!g) return;
     g.xp = (g.xp || 0) + amount;
 
-    // Global XP contribution
     next.global_xp = (next.global_xp || 0) + amount * GENRE_TO_GLOBAL_RATIO;
 
-    // Level up loop for genre
     let awarded = 0;
     while (g.xp >= xpToNextLevel(g.level || 1)) {
       g.xp -= xpToNextLevel(g.level || 1);
       g.level = (g.level || 1) + 1;
       awarded += 1;
-      if ((g.level % 5) === 0) awarded += 1; // bonus every 5 levels
+      if ((g.level % 5) === 0) awarded += 1;
     }
     next.available_stat_points = (next.available_stat_points || 0) + awarded;
 
-    // Check global level ups
     levelGlobalIfNeeded(next);
 
     await saveRecord(next);
@@ -109,7 +105,7 @@ export default function AvatarProgression() {
 
   if (!user || !record) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white/70">Loading avatar progression...</div>
+      <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-white/70">Loading avatar progression...</div>
     );
   }
 
@@ -151,63 +147,55 @@ export default function AvatarProgression() {
   };
 
   return (
-    <div className="min-h-screen p-6" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">AI Avatar Progression</h1>
-            <p className="text-white/60 text-sm">Track genre levels, allocate stat points, and grow your avatar.</p>
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white">AI Avatar Progression</h2>
+          <p className="text-white/60 text-sm">Genre levels, stat points, and growth.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge className="bg-emerald-600 text-white border-none">Global Lv. {record.global_level || 1}</Badge>
+          <div className="w-56">
+            <Progress value={globalPct} className="h-2" />
+            <div className="text-[11px] text-white/60 mt-1">{Math.round(record.global_xp || 0)} / {globalThreshold} XP</div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge className="bg-emerald-600 text-white border-none">Global Lv. {record.global_level || 1}</Badge>
-            <div className="w-56">
-              <Progress value={globalPct} className="h-2" />
-              <div className="text-[11px] text-white/60 mt-1">{Math.round(record.global_xp || 0)} / {globalThreshold} XP</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1 space-y-3">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-semibold">Core Stats</h3>
+              <Badge className="bg-purple-600 text-white border-none">Points: {record.available_stat_points || 0}</Badge>
             </div>
+            <div className="space-y-2">
+              <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} />
+              <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} />
+              <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} />
+              <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} />
+              <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} />
+            </div>
+            {saving && <div className="text-xs text-white/50 mt-3">Saving...</div>}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left: Stats */}
-          <div className="md:col-span-1 space-y-3">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-semibold">Core Stats</h3>
-                <Badge className="bg-purple-600 text-white border-none">Points: {record.available_stat_points || 0}</Badge>
-              </div>
-              <div className="space-y-2">
-                <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} />
-                <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} />
-                <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} />
-                <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} />
-                <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} />
-              </div>
-              {saving && <div className="text-xs text-white/50 mt-3">Saving...</div>}
+        <div className="md:col-span-2 space-y-3">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-semibold">Genre Levels</h3>
+              <span className="text-white/50 text-xs">30% of genre XP adds to global</span>
             </div>
-          </div>
-
-          {/* Right: Genres */}
-          <div className="md:col-span-2 space-y-3">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-semibold">Genre Levels</h3>
-                <span className="text-white/50 text-xs">30% of genre XP contributes to global level</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {record.genres
-                  .slice()
-                  .sort((a,b) => GENRES.indexOf(a.name) - GENRES.indexOf(b.name))
-                  .map((g) => (
-                    <GenreRow key={g.name} g={g} />
-                  ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {record.genres
+                .slice()
+                .sort((a,b) => GENRES.indexOf(a.name) - GENRES.indexOf(b.name))
+                .map((g) => (
+                  <GenreRow key={g.name} g={g} />
+                ))}
             </div>
           </div>
         </div>
-
-        <div className="text-white/40 text-xs">Tip: On the Luna dashboard, press the I key to open this panel.</div>
       </div>
     </div>
   );
