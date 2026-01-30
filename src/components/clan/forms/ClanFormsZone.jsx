@@ -375,7 +375,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       {/* Right Chat - Clan Leader Chat */}
       <div className="col-span-4 col-start-5 flex flex-col min-h-0 rounded-xl border border-white/10 bg-black/20 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
-          <div>
+          <div className="flex items-center gap-2">
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
           </div>
           <div className="flex items-center gap-3">
