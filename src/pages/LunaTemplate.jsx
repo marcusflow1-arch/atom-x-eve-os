@@ -1164,6 +1164,19 @@ export default function LunaTemplate() {
     }
   };
 
+  // Open InventoryPanel from other components (e.g., StatsDropdown InventoryGrid)
+  useEffect(() => {
+    const handler = (e) => {
+      const slotId = e?.detail?.slotId;
+      if (slotId) {
+        setClickedSlot(slotId);
+        setShowInventory(true);
+      }
+    };
+    window.addEventListener('openInventoryPanel', handler);
+    return () => window.removeEventListener('openInventoryPanel', handler);
+  }, []);
+
   if (mode === 'user') {
     return (
       <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
