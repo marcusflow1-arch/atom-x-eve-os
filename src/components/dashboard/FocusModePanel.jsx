@@ -19,6 +19,7 @@ import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
+import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1707,6 +1708,18 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
   const [showStatsDropdown, setShowStatsDropdown] = useState(false);
+
+  // Toggle Stats dropdown with 'O' key (and close Live)
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key && e.key.toLowerCase() === 'o') {
+        setShowLiveDropdown(false);
+        setShowStatsDropdown((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
   const [settingsMaximized, setSettingsMaximized] = useState(false);
 
   const handleGameSelect = (game) => {
@@ -1796,7 +1809,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                   className="w-full overflow-hidden"
                 >
-                  <div className="w-full h-[220px] rounded-2xl border border-white/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }} />
+                  <div className="w-full rounded-2xl border border-white/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
+                    <div className="p-4">
+                      <AvatarProgressionBox />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
