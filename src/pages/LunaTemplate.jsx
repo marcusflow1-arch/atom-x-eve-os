@@ -1255,10 +1255,10 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed left-0 w-[220px] z-[35] pointer-events-auto"
+          className="fixed left-0 w-[260px] z-[35] pointer-events-auto"
           style={{
-            top: '120px',
-            height: '380px',
+            top: '150px',
+            bottom: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
