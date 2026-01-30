@@ -23,6 +23,7 @@ import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsDropdown from '@/components/dashboard/StatsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
+import BannerEnvironmentScene from '@/components/3d/BannerEnvironmentScene';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1697,7 +1698,7 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
                   return (
                     <div
                       key={`env-${m.id}`}
-                      onClick={() => { if (img && onBackgroundChange) onBackgroundChange(img); setShowBannerPicker(false); }}
+                      onClick={() => { onEnvironmentSelect && onEnvironmentSelect(m); if (onBackgroundChange) onBackgroundChange(null); setShowBannerPicker(false); }}}]}
                       className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all bg-white/5"
                       title={m.name || 'Environment'}
                     >
