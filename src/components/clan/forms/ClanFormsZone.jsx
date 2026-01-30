@@ -30,14 +30,16 @@ export default function ClanFormsZone({ game, clan, user }) {
   const [channelType, setChannelType] = React.useState('chat');
 
   // New topic state
-  const [newTopicOpen, setNewTopicOpen] = React.useState(false);
-  const [topicTitle, setTopicTitle] = React.useState('');
+          const [newTopicOpen, setNewTopicOpen] = React.useState(false);
+          const [topicScope, setTopicScope] = React.useState('clan');
+          const [topicTitle, setTopicTitle] = React.useState('');
 
   // Message composer
   const [message, setMessage] = React.useState('');
 
   // Strategies panel mode: 'list' or 'create'
-  const [strategiesMode, setStrategiesMode] = React.useState('list');
+          const [strategiesMode, setStrategiesMode] = React.useState('list');
+          const isLeaderUser = (clan?.leaderId === user?.id) || (user?.role === 'admin');
 
   // Channels for this game (cross-clan)
   const { data: channels = [] } = useQuery({
@@ -200,19 +202,79 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   const createTopic = async () => {
-    if (!generalChannel?.id || !topicTitle.trim()) return;
-    const topic = await base44.entities.ClanFormTopic.create({
-      channel_id: generalChannel.id,
-      game_id: game.id,
-      title: topicTitle.trim(),
-      created_by_user_id: user?.id,
-      status: 'open'
-    });
-    setTopicTitle('');
-    setNewTopicOpen(false);
-    setSelectedTopicTitle(topic.title);
-    qc.invalidateQueries({ queryKey: ['clanFormTopics', generalChannel.id] });
-  };
+            if (!topicTitle.trim()) return;
+            const title = topicTitle.trim();
+            const creations = [];
+            if (topicScope === 'leaders') {
+              if (isLeaderUser && leaderChannel?.id) {
+                creations.push(base44.entities.ClanFormTopic.create({
+                  channel_id: leaderChannel.id,
+                  game_id: game.id,
+                  title,
+                  created_by_user_id: user?.id,
+                  status: 'open',
+                  visibility_scope: 'leaders'
+                }));
+              } else {
+                // Fallback for non-leaders
+                if (generalChannel?.id) {
+                  creations.push(base44.entities.ClanFormTopic.create({
+                    channel_id: generalChannel.id,
+                    game_id: game.id,
+                    title,
+                    created_by_user_id: user?.id,
+                    status: 'open',
+                    visibility_scope: 'clan'
+                  }));
+                }
+              }
+            } else if (topicScope === 'both') {
+              if (isLeaderUser) {
+                if (generalChannel?.id) creations.push(base44.entities.ClanFormTopic.create({
+                  channel_id: generalChannel.id,
+                  game_id: game.id,
+                  title,
+                  created_by_user_id: user?.id,
+                  status: 'open',
+                  visibility_scope: 'both'
+                }));
+                if (leaderChannel?.id) creations.push(base44.entities.ClanFormTopic.create({
+                  channel_id: leaderChannel.id,
+                  game_id: game.id,
+                  title,
+                  created_by_user_id: user?.id,
+                  status: 'open',
+                  visibility_scope: 'both'
+                }));
+              } else {
+                if (generalChannel?.id) creations.push(base44.entities.ClanFormTopic.create({
+                  channel_id: generalChannel.id,
+                  game_id: game.id,
+                  title,
+                  created_by_user_id: user?.id,
+                  status: 'open',
+                  visibility_scope: 'clan'
+                }));
+              }
+            } else {
+              if (generalChannel?.id) creations.push(base44.entities.ClanFormTopic.create({
+                channel_id: generalChannel.id,
+                game_id: game.id,
+                title,
+                created_by_user_id: user?.id,
+                status: 'open',
+                visibility_scope: 'clan'
+              }));
+            }
+
+            await Promise.all(creations);
+            setTopicTitle('');
+            setTopicScope('clan');
+            setNewTopicOpen(false);
+            setSelectedTopicTitle(title);
+            if (generalChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', generalChannel.id] });
+            if (leaderChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', leaderChannel.id] });
+          };
 
   const sendMessageTo = async (topicId, content) => {
     if (!topicId || !content?.trim()) return;
@@ -352,14 +414,26 @@ export default function ClanFormsZone({ game, clan, user }) {
           </Button>
         </div>
         {newTopicOpen && generalChannel && (
-          <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
-            <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="outline" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={createTopic}>Create</Button>
-            </div>
-          </div>
-        )}
+                        <div className=\"mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3\">
+                          <Input placeholder=\"Topic title\" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
+                          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-3\">
+                            <Select value={topicScope} onValueChange={(v) => setTopicScope(v)} disabled={!isLeaderUser}>
+                              <SelectTrigger className=\"h-9\">
+                                <SelectValue placeholder=\"Visibility\" />
+                              </SelectTrigger>
+                              <SelectContent className=\"bg-slate-900/95 text-white border-white/10\">
+                                <SelectItem value=\"clan\">Clan Chat</SelectItem>
+                                <SelectItem value=\"leaders\">Leader/Officers</SelectItem>
+                                <SelectItem value=\"both\">Both Chats</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className=\"flex gap-2 justify-end\">
+                            <Button size=\"sm\" variant=\"outline\" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
+                            <Button size=\"sm\" onClick={createTopic}>Create</Button>
+                          </div>
+                        </div>
+                      )}
         <ScrollArea className="h-[calc(100%-52px)] pr-2">
           <div className="space-y-2">
             {topicTitles.map((title) => (
@@ -475,14 +549,26 @@ export default function ClanFormsZone({ game, clan, user }) {
       {/* Bottom Topics (shared) */}
       <div className="col-span-12 row-start-2 border-t border-white/10 bg-black/10 p-4" aria-label="Topics">
         {newTopicOpen && generalChannel && (
-          <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
-            <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="outline" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={createTopic}>Create</Button>
-            </div>
-          </div>
-        )}
+                        <div className=\"mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3\">
+                          <Input placeholder=\"Topic title\" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
+                          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-3\">
+                            <Select value={topicScope} onValueChange={(v) => setTopicScope(v)} disabled={!isLeaderUser}>
+                              <SelectTrigger className=\"h-9\">
+                                <SelectValue placeholder=\"Visibility\" />
+                              </SelectTrigger>
+                              <SelectContent className=\"bg-slate-900/95 text-white border-white/10\">
+                                <SelectItem value=\"clan\">Clan Chat</SelectItem>
+                                <SelectItem value=\"leaders\">Leader/Officers</SelectItem>
+                                <SelectItem value=\"both\">Both Chats</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className=\"flex gap-2 justify-end\">
+                            <Button size=\"sm\" variant=\"outline\" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
+                            <Button size=\"sm\" onClick={createTopic}>Create</Button>
+                          </div>
+                        </div>
+                      )}
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Topics</h4>
         </div>
