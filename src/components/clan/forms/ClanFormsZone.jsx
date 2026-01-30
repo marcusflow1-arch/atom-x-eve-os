@@ -25,6 +25,9 @@ export default function ClanFormsZone({ game, clan, user }) {
   const [newChannelOpen, setNewChannelOpen] = React.useState(false);
   const [channelName, setChannelName] = React.useState('');
   const [channelDesc, setChannelDesc] = React.useState('');
+  const [channelPassword, setChannelPassword] = React.useState('');
+  const [channelScope, setChannelScope] = React.useState('all_clans');
+  const [channelType, setChannelType] = React.useState('chat');
 
   // New topic state
   const [newTopicOpen, setNewTopicOpen] = React.useState(false);
@@ -169,12 +172,17 @@ export default function ClanFormsZone({ game, clan, user }) {
 
   const createChannel = async () => {
     if (!channelName.trim()) return;
-    const { data } = await base44.functions.invoke('joinClanFormChannel', {
+    const { data, status } = await base44.functions.invoke('joinClanFormChannel', {
       game_id: game.id,
       clan_id: clan.id,
       desired_name: channelName.trim(),
-      desired_capacity: 100
+      desired_capacity: 100,
+      create_new_channel: true,
+      access_scope: channelScope,
+      join_password: channelPassword,
+      channel_type: channelType
     });
+    if (status && status >= 400) return;
     const ch = data?.channel;
     if (ch) {
       joinedChannelRef.current = ch;
@@ -184,6 +192,9 @@ export default function ClanFormsZone({ game, clan, user }) {
     }
     setChannelName('');
     setChannelDesc('');
+    setChannelPassword('');
+    setChannelScope('all_clans');
+    setChannelType('chat');
     setNewChannelOpen(false);
     qc.invalidateQueries({ queryKey: ['clanFormChannels', game.id] });
   };
@@ -269,6 +280,36 @@ export default function ClanFormsZone({ game, clan, user }) {
             <FolderPlus className="w-4 h-4" /> New
           </Button>
         </div>
+        {newChannelOpen && (
+          <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3">
+            <Input placeholder="Channel name" value={channelName} onChange={(e) => setChannelName(e.target.value)} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Input type="password" placeholder="Password (optional)" value={channelPassword} onChange={(e) => setChannelPassword(e.target.value)} />
+              <Select value={channelScope} onValueChange={(v) => setChannelScope(v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Access" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                  <SelectItem value="all_clans">All clans can join</SelectItem>
+                  <SelectItem value="clan_only">Only my clan</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={channelType} onValueChange={(v) => setChannelType(v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                  <SelectItem value="chat">Chat channel</SelectItem>
+                  <SelectItem value="party">Party channel</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => setNewChannelOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={createChannel} disabled={!channelName.trim()}>Create</Button>
+            </div>
+          </div>
+        )}
         {/* Messages list */}
         <div className="flex-1 overflow-hidden">
           <ScrollArea className="h-full p-4">
