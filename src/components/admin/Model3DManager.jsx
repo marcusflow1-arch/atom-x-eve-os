@@ -140,7 +140,6 @@ export default function Model3DManager() {
   });
   const folderInputRef = useRef(null);
   const envInputRef = useRef(null);
-  const folderInputRef = useRef(null);
 
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['models3d'],
@@ -205,62 +204,6 @@ export default function Model3DManager() {
   };
 
   // Folder upload: upload all files and build a manifest so referenced textures/buffers resolve
-  const handleFolderUpload = async (e) => {
-    const fileList = Array.from(e.target.files || []);
-    if (!fileList.length) return;
-
-    const entry = fileList.find(f => /\.gltf$/i.test(f.name)) ||
-                  fileList.find(f => /\.glb$/i.test(f.name)) ||
-                  fileList.find(f => /\.fbx$/i.test(f.name));
-    if (!entry) {
-      alert('Selected folder must contain a .gltf, .glb, or .fbx entry file');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const uploads = await Promise.all(fileList.map(async (f) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
-        const original_path = (f.webkitRelativePath || f.name);
-        return { original_path, file_url, file_size: f.size, mime_type: f.type, name: f.name };
-      }));
-
-      const bundle_manifest = uploads.reduce((acc, u) => {
-        acc[u.original_path] = u.file_url;
-        acc[u.name] = u.file_url;
-        return acc;
-      }, {});
-
-      const entryUpload = uploads.find(u => u.name === entry.name) || uploads[0];
-      const license = uploads.find(u => /license|licence|readme/i.test(u.name));
-      const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
-
-      await createMutation.mutateAsync({
-        name: newModel.name || entry.name,
-        description: newModel.description,
-        file_url: entryUpload.file_url,
-        file_type: entryExt,
-        category: newModel.category || 'uncategorized',
-        tags: newModel.tags,
-        file_size: entry.size,
-        is_public: false,
-        is_bundle: true,
-        entry_file: entry.webkitRelativePath || entry.name,
-        bundle_manifest,
-        files: uploads.map(({ original_path, file_url, file_size, mime_type }) => ({ original_path, file_url, file_size, mime_type })),
-        license_url: license?.file_url || null
-      });
-
-      setNewModel({ name: '', description: '', category: '', tags: [] });
-    } catch (error) {
-      console.error('Folder upload failed:', error);
-      alert('Folder upload failed. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // Upload a full folder and build a manifest for textures/buffers
   const handleFolderUpload = async (e) => {
     const fileList = Array.from(e.target.files || []);
     if (!fileList.length) return;
