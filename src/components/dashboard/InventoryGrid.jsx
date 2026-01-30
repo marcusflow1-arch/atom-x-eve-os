@@ -26,7 +26,7 @@ function SectionHeader({ children }) {
 function Squares({ count = 6, size = 'md', onSlotClick }) {
   const cls = size === 'lg' ? 'w-[60px] h-[60px]' : size === 'sm' ? 'w-[44px] h-[44px]' : 'w-[60px] h-[60px]';
   return (
-    <div className="flex gap-3 flex-wrap">
+    <div className="flex gap-3 flex-wrap justify-center">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
@@ -41,7 +41,7 @@ function Squares({ count = 6, size = 'md', onSlotClick }) {
 function Circles({ count = 5, size = 'md', onSlotClick }) {
   const cls = size === 'lg' ? 'w-[60px] h-[60px]' : size === 'sm' ? 'w-[44px] h-[44px]' : 'w-[60px] h-[60px]';
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 justify-center">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
