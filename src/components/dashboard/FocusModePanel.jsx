@@ -1917,19 +1917,19 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       {/* Bottom Section - Grid layout */}
 
       {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
-      {showStatsDropdown && statsActiveTab === 'inventory' && (
-        <div className="absolute left-3 bottom-4 z-30">
-          <div className="p-2 rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
-            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/50">Skills</div>
+      {showStatsDropdown && (
+        <div className="absolute left-4 bottom-6 z-30">
+          <div className="p-2 rounded-lg border border-black/50 bg-black/60 backdrop-blur-md">
+            <div className="mb-1 text-[10px] uppercase tracking-[0.25em] text-white/60">Skills</div>
             <div className="flex gap-1 mb-2">
               {[1,2,3,4,5].map(n => (
-                <div key={n} className="w-6 h-6 rounded-md border border-white/15 bg-white/5 text-[10px] text-white/70 flex items-center justify-center">{n}</div>
+                <div key={n} className="w-[24px] h-[24px] rounded-md border border-black/50 bg-black/70 text-[10px] text-white/70 flex items-center justify-center">{n}</div>
               ))}
             </div>
-            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/50">AI Passives</div>
+            <div className="mb-1 text-[10px] uppercase tracking-[0.25em] text-white/60">AI Passives</div>
             <div className="flex gap-1">
               {Array.from({length:4}).map((_,i)=> (
-                <div key={i} className="w-7 h-7 rounded-md border border-white/15 bg-white/5" />
+                <div key={i} className="w-[28px] h-[28px] rounded-md border border-black/50 bg-black/70" />
               ))}
             </div>
           </div>
