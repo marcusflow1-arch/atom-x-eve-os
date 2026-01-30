@@ -378,15 +378,21 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
     while (propsRootRef.current.children.length) propsRootRef.current.remove(propsRootRef.current.children[0]);
 
     const onBoardLoaded = (obj) => {
-      // Scale to a readable width and place in front of the avatar/camera
+      // Scale to a readable width and place 2m in front of the camera, facing it
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3());
       const width = size.x || Math.max(size.y, size.z) || 1;
       const targetWidth = 3; // ~3 meters wide
       const s = targetWidth / width;
       obj.scale.setScalar(s);
-      obj.position.set(0, 1.2, -2);
-      obj.rotation.y = Math.PI; // face the default camera
+
+      const cam = cameraRef.current;
+      const target = controlsRef.current?.target || new THREE.Vector3();
+      const dir = new THREE.Vector3().subVectors(target, cam.position).normalize();
+      const pos = cam.position.clone().add(dir.multiplyScalar(2));
+      obj.position.copy(pos);
+      obj.lookAt(cam.position);
+
       obj.traverse((n) => { if (n.isMesh) { n.renderOrder = 10; } });
       propsRootRef.current.add(obj);
     };
