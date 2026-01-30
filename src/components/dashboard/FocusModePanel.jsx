@@ -23,7 +23,6 @@ import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsDropdown from '@/components/dashboard/StatsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
-import BannerEnvironmentScene from '@/components/3d/BannerEnvironmentScene';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1183,51 +1182,6 @@ function Large3DCard({ card, isActive }) {
 
 // Game Banner Component - Editable banner display
 function GameBanner({ game, onChangeBanner }) {
-  const folderRef = React.useRef(null);
-
-  const handleBannerFolderUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-
-    // Find main entry model
-    const entry = files.find(f => /\.gltf$/i.test(f.name)) || files.find(f => /\.glb$/i.test(f.name)) || files.find(f => /\.fbx$/i.test(f.name));
-    if (!entry) { alert('Folder must include a .gltf, .glb, or .fbx file'); e.target.value=''; return; }
-
-    try {
-      const uploads = await Promise.all(files.map(async (f) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
-        return { original_path: f.webkitRelativePath || f.name, file_url, file_size: f.size, mime_type: f.type, name: f.name };
-      }));
-
-      const bundle_manifest = uploads.reduce((acc, u) => { acc[u.original_path] = u.file_url; acc[u.name] = u.file_url; return acc; }, {});
-      const entryUpload = uploads.find(u => u.name === entry.name) || uploads[0];
-      const license = uploads.find(u => /license|licence|readme/i.test(u.name));
-      const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
-
-      await base44.entities.Model3D.create({
-        name: entry.name,
-        description: 'Uploaded from Game Banner',
-        file_url: entryUpload.file_url,
-        file_type: entryExt,
-        category: 'environment',
-        tags: ['banner-upload'],
-        file_size: entry.size,
-        is_public: false,
-        is_bundle: true,
-        entry_file: entry.webkitRelativePath || entry.name,
-        bundle_manifest,
-        files: uploads.map(({ original_path, file_url, file_size, mime_type }) => ({ original_path, file_url, file_size, mime_type })),
-        license_url: license?.file_url || null
-      });
-
-      alert('Environment folder uploaded successfully');
-    } catch (err) {
-      console.error('Upload failed', err);
-      alert('Upload failed');
-    } finally {
-      e.target.value = '';
-    }
-  };
   const [isHovered, setIsHovered] = useState(false);
   
   // Default banner if no game selected
@@ -1266,32 +1220,6 @@ function GameBanner({ game, onChangeBanner }) {
         )}
       </div>
       
-      {/* Action buttons (Plus to upload folder, X to clear) */}
-      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
-        <button
-          onClick={(e) => { e.stopPropagation(); folderRef.current?.click(); }}
-          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center"
-          title="Upload 3D folder (model + textures)"
-        >
-          <Plus className="w-4 h-4 text-white" />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onChangeBanner?.(); }}
-          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center"
-          title="Close"
-        >
-          <X className="w-4 h-4 text-white" />
-        </button>
-        <input
-          ref={folderRef}
-          type="file"
-          onChange={handleBannerFolderUpload}
-          className="hidden"
-          webkitdirectory=""
-          multiple
-        />
-      </div>
-
       {/* Change Banner Indicator */}
       <AnimatePresence>
         {isHovered && (
@@ -1441,7 +1369,7 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
-export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentSelect }) {
+export function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   useEffect(() => {
     if (selectedBannerGame && onBackgroundChange) {
@@ -1453,8 +1381,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
   const scrollRef = useRef(null);
-  const envFolderRef = useRef(null);
-  const [environmentModels, setEnvironmentModels] = useState([]);
 
   useEffect(() => {
     const fetchBackgrounds = async () => {
@@ -1495,33 +1421,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
     fetchBackgrounds();
   }, []);
 
-  // Fetch 3D environment models for banner picker
-  useEffect(() => {
-    (async () => {
-      try {
-        const all = await base44.entities.Model3D.list();
-        const envs = (all || []).filter(m => {
-          const name = (m.name || '').toLowerCase();
-          const isEnv = (m.category || '').toLowerCase() === 'environment';
-          const isTagged = Array.isArray(m.tags) && m.tags.includes('banner-upload');
-          const isRoom = name.includes('room 1') || name.includes('room');
-          return isEnv || isTagged || isRoom;
-        });
-        // Put "Room 1" first if present
-        envs.sort((a,b)=>{
-          const an = (a.name||'').toLowerCase();
-          const bn = (b.name||'').toLowerCase();
-          const ar = an.includes('room 1') ? 0 : an.includes('room') ? 1 : 2;
-          const br = bn.includes('room 1') ? 0 : bn.includes('room') ? 1 : 2;
-          return ar - br;
-        });
-        setEnvironmentModels(envs);
-      } catch (e) {
-        console.error('Failed to load environment models', e);
-      }
-    })();
-  }, []);
-
   // Sample games for banner picker
   const bannerGames = games?.slice(0, 8) || [
     { id: 1, title: 'Cyberpunk 2088', cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', genre: 'RPG' },
@@ -1542,52 +1441,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
     if (onBackgroundChange) {
       onBackgroundChange(null);
     }
-  };
-
-  // Upload environment folder (GLTF/GLB/FBX + textures)
-  const handleEnvFolderUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const entry = files.find(f => /\.gltf$/i.test(f.name)) || files.find(f => /\.glb$/i.test(f.name)) || files.find(f => /\.fbx$/i.test(f.name));
-    if (!entry) { alert('Folder must include a .gltf, .glb, or .fbx file'); e.target.value=''; return; }
-    try {
-      const uploads = await Promise.all(files.map(async (f) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
-        return { original_path: f.webkitRelativePath || f.name, file_url, file_size: f.size, mime_type: f.type, name: f.name };
-      }));
-      const bundle_manifest = uploads.reduce((acc, u) => { acc[u.original_path] = u.file_url; acc[u.name] = u.file_url; return acc; }, {});
-      const entryUpload = uploads.find(u => u.name === entry.name) || uploads[0];
-      const license = uploads.find(u => /license|licence|readme/i.test(u.name));
-      const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
-      const created = await base44.entities.Model3D.create({
-        name: entry.name,
-        description: 'Uploaded from Banner Picker',
-        file_url: entryUpload.file_url,
-        file_type: entryExt,
-        category: 'environment',
-        tags: ['banner-upload'],
-        file_size: entry.size,
-        is_public: false,
-        is_bundle: true,
-        entry_file: entry.webkitRelativePath || entry.name,
-        bundle_manifest,
-        files: uploads.map(({ original_path, file_url, file_size, mime_type }) => ({ original_path, file_url, file_size, mime_type })),
-        license_url: license?.file_url || null
-      });
-      setEnvironmentModels(prev => [created, ...prev]);
-      alert('Environment uploaded. It will now appear in the list.');
-    } catch (err) {
-      console.error('Upload failed', err);
-      alert('Upload failed');
-    } finally {
-      e.target.value = '';
-    }
-  };
-
-  const getModelPreviewImage = (m) => {
-    if (m?.thumbnail_url) return m.thumbnail_url;
-    const imgFile = m?.files?.find(f => (f?.mime_type || '').startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(f?.original_path || ''));
-    return imgFile?.file_url || null;
   };
 
   return (
@@ -1651,30 +1504,13 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold text-lg">Select Featured Game</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => envFolderRef.current?.click()}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                    title="Upload 3D Environment (folder)"
-                  >
-                    <Plus className="w-4 h-4 text-white/70" />
-                  </button>
-                  <button 
-                    onClick={() => setShowBannerPicker(false)}
-                    className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4 text-white/60" />
-                  </button>
-                </div>
+                <button 
+                  onClick={() => setShowBannerPicker(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
               </div>
-              <input
-                ref={envFolderRef}
-                type="file"
-                onChange={handleEnvFolderUpload}
-                className="hidden"
-                webkitdirectory=""
-                multiple
-              />
               
               <div className="grid grid-cols-2 gap-3">
                 {bannerGames.map((game) => (
@@ -1691,32 +1527,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentS
                     </div>
                   </div>
                 ))}
-
-                {/* 3D Environments */}
-                {environmentModels.map((m) => {
-                  const img = getModelPreviewImage(m);
-                  return (
-                    <div
-                      key={`env-${m.id}`}
-                      onClick={() => { onEnvironmentSelect && onEnvironmentSelect(m); if (onBackgroundChange) onBackgroundChange(null); setShowBannerPicker(false); }}
-                      className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all bg-white/5"
-                      title={m.name || 'Environment'}
-                    >
-                      {img ? (
-                        <img src={img} alt={m.name || 'Environment'} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <div className="text-white/50 text-xs font-semibold">{m.name || 'Environment'}</div>
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                      <div className="absolute bottom-2 left-2">
-                        <p className="text-white font-bold text-xs truncate">{m.name || 'Environment'}</p>
-                        <p className="text-white/50 text-[10px]">3D Environment</p>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </motion.div>
           </motion.div>
@@ -1829,7 +1639,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Live Dropdown State
   const [showLiveDropdown, setShowLiveDropdown] = useState(false);
   const [isLive, setIsLive] = useState(true);
-  const [activeEnvironment, setActiveEnvironment] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
@@ -1952,14 +1761,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             </AnimatePresence>
 
             <div className="mt-1">
-              {/* Render 3D environment in background when selected */}
-              {activeEnvironment && (
-                <BannerEnvironmentScene model={activeEnvironment} />
-              )}
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
-                onEnvironmentSelect={setActiveEnvironment}
               />
             </div>
 

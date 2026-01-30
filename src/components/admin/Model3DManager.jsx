@@ -13,7 +13,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 // 3D Model Viewer Component using Three.js directly
-function Model3DViewer({ modelUrl, fileType, bundleManifest, backgroundUrl }) {
+function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,29 +22,14 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest, backgroundUrl }) {
     if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
-    if (!backgroundUrl) { scene.background = new THREE.Color(0x0f172a); }
+    scene.background = new THREE.Color(0x0f172a);
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 2, 5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     containerRef.current.appendChild(renderer.domElement);
-
-    // Apply optional background image via CSS for proper cover/contain sizing
-    const el = containerRef.current;
-    if (backgroundUrl) {
-      renderer.setClearAlpha(0);
-      if (el) {
-        el.style.backgroundImage = `url(${backgroundUrl})`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
-        el.style.backgroundRepeat = 'no-repeat';
-      }
-    } else {
-      renderer.setClearColor(0x0f172a, 1);
-      if (el) el.style.backgroundImage = '';
-    }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
@@ -107,7 +92,7 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest, backgroundUrl }) {
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelUrl, backgroundUrl]);
+  }, [modelUrl]);
 
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-lg overflow-hidden">
@@ -130,8 +115,6 @@ export default function Model3DManager() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
-  const [featuredBgUrl, setFeaturedBgUrl] = useState(null);
-  const [customBackgrounds, setCustomBackgrounds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [newModel, setNewModel] = useState({
     name: '',
@@ -139,17 +122,10 @@ export default function Model3DManager() {
     category: '',
     tags: []
   });
-  const folderInputRef = useRef(null);
-  const envInputRef = useRef(null);
 
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['models3d'],
     queryFn: () => base44.entities.Model3D.list('-created_date'),
-  });
-
-  const { data: games = [] } = useQuery({
-    queryKey: ['games-mini'],
-    queryFn: () => base44.entities.Game.list('-created_date', 24),
   });
 
   const createMutation = useMutation({
@@ -260,21 +236,6 @@ export default function Model3DManager() {
     }
   };
 
-  // Upload a custom background image for the viewer
-  const handleEnvironmentFileChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setFeaturedBgUrl(file_url);
-      setCustomBackgrounds((prev) => [file_url, ...prev.filter((u) => u !== file_url)]);
-      e.target.value = '';
-    } catch (err) {
-      console.error('Background upload failed', err);
-      alert('Background upload failed.');
-    }
-  };
-
   const filteredModels = models.filter(model => 
     searchQuery === '' || 
     model.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -285,14 +246,6 @@ export default function Model3DManager() {
     if (!bytes) return 'Unknown';
     const mb = bytes / (1024 * 1024);
     return `${mb.toFixed(2)} MB`;
-  };
-
-  // 3D Environments from Model3D (category 'environment' or tag 'banner-upload')
-  const environmentModels = (models || []).filter(m => (m.category || '').toLowerCase() === 'environment' || (Array.isArray(m.tags) && m.tags.includes('banner-upload')));
-  const getModelPreviewImage = (m) => {
-    if (m?.thumbnail_url) return m.thumbnail_url;
-    const imgFile = m?.files?.find(f => (f?.mime_type || '').startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(f?.original_path || ''));
-    return imgFile?.file_url || null;
   };
 
   return (
@@ -368,7 +321,6 @@ export default function Model3DManager() {
           <div className="mt-3">
             <label className="relative cursor-pointer">
               <input
-                ref={folderInputRef}
                 type="file"
                 onChange={handleFolderUpload}
                 className="hidden"
@@ -376,7 +328,7 @@ export default function Model3DManager() {
                 multiple
                 disabled={uploading}
               />
-              <Button disabled={uploading} onClick={() => folderInputRef.current?.click()} variant="outline" className="w-full md:w-auto">
+              <Button disabled={uploading} variant="outline" className="w-full md:w-auto">
                 <Upload className="w-4 h-4 mr-2" /> Upload Model Folder (GLTF/FBX + textures)
               </Button>
             </label>
@@ -497,87 +449,12 @@ export default function Model3DManager() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => envInputRef.current?.click()}
-                      title="Add environment background"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <input
-                      ref={envInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleEnvironmentFileChange}
-                      className="hidden"
-                    />
-                    <Button
-                      size="sm"
-                      variant="ghost"
                       onClick={() => setSelectedModel(null)}
                     >
                       Close
                     </Button>
                   </div>
                 </div>
-
-                {/* Featured Game Background (optional) */}
-                {(games && games.length > 0) || (customBackgrounds && customBackgrounds.length > 0) ? (
-                  <div className="mb-4">
-                    <label className="text-slate-400 text-sm block mb-2">Featured Game Background</label>
-                    <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                      {/* Uploaded backgrounds first */}
-                      {customBackgrounds.map((img, idx) => {
-                        const active = featuredBgUrl === img;
-                        return (
-                          <button
-                            key={`custom-${idx}`}
-                            onClick={() => setFeaturedBgUrl(active ? null : img)}
-                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
-                            title="Uploaded Background"
-                          >
-                            <img src={img} alt="Uploaded Background" className="w-full h-full object-cover" />
-                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">Uploaded</span>
-                          </button>
-                        );
-                      })}
-
-                      {/* 3D Environments from Model3D */}
-                      {environmentModels.map((m) => {
-                        const img = getModelPreviewImage(m);
-                        if (!img) return null;
-                        const active = featuredBgUrl === img;
-                        return (
-                          <button
-                            key={`env-${m.id}`}
-                            onClick={() => setFeaturedBgUrl(active ? null : img)}
-                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
-                            title={m.name || 'Environment'}
-                          >
-                            <img src={img} alt={m.name || 'Environment'} className="w-full h-full object-cover" />
-                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{m.name || 'Environment'}</span>
-                          </button>
-                        );
-                      })}
-
-                      {/* Game images */}
-                      {games?.slice(0, 12).map((g) => {
-                        const img = g.banner_image || g.cover_image || g.cover;
-                        if (!img) return null;
-                        const active = featuredBgUrl === img;
-                        return (
-                          <button
-                            key={g.id}
-                            onClick={() => setFeaturedBgUrl(active ? null : img)}
-                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
-                            title={g.title}
-                          >
-                            <img src={img} alt={g.title} className="w-full h-full object-cover" />
-                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{g.title}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
 
                 {/* 3D Preview */}
                 {(['glb','gltf','fbx'].includes(selectedModel.file_type)) && (
@@ -586,7 +463,6 @@ export default function Model3DManager() {
                       modelUrl={selectedModel.file_url} 
                       fileType={selectedModel.file_type}
                       bundleManifest={selectedModel.bundle_manifest}
-                      backgroundUrl={featuredBgUrl}
                     />
                   </div>
                 )}
