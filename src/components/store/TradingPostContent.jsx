@@ -419,6 +419,9 @@ export default function TradingPostContent() {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
+  const [sellerAction, setSellerAction] = useState({ open: false, offer: null });
+  const [offerPrice, setOfferPrice] = useState('');
+  const [ultimatumText, setUltimatumText] = useState("I know you want cash, but I can offer a trade instead. Here's my proposal:");
 
   // Fetch trade offers from backend
   const { data: globalOffers } = useQuery({
@@ -1173,7 +1176,12 @@ export default function TradingPostContent() {
 
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-white font-bold">{offer.seller.name}</span>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setSellerAction({ open: true, offer }); }}
+                                        className="text-white font-bold underline decoration-white/30 hover:decoration-cyan-400"
+                                      >
+                                        {offer.seller.name}
+                                      </button>
                                       <div className="flex items-center gap-1 bg-yellow-500/10 px-1.5 py-0.5 rounded">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
                                         <span className="text-yellow-200 text-xs font-bold">{offer.seller.rating}</span>
