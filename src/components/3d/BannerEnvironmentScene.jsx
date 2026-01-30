@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export default function BannerEnvironmentScene({ model }) {
@@ -46,47 +47,92 @@ export default function BannerEnvironmentScene({ model }) {
 
     // URL rewriter for textures from bundle_manifest or relative to file_url base
     const manager = new THREE.LoadingManager();
-    manager.setURLModifier((url) => {
-      // If URL already absolute, return as-is
-      if (/^https?:\/\//i.test(url)) return url;
-      // Try manifest mapping
+    manager.setURLModifier((rawUrl) => {
       const manifest = model?.bundle_manifest || {};
-      if (manifest[url]) return manifest[url];
-      // Also try original_path keys that end with this url
-      const key = Object.keys(manifest).find(k => k.endsWith(url));
-      if (key) return manifest[key];
-      // Fallback: resolve relative to the GLTF file base path
       try {
+        // Normalize incoming url (strip query/hash, decode, normalize slashes)
+        let url = rawUrl.split('?')[0].split('#')[0];
+        url = decodeURIComponent(url).replace(/^\.\/?/, '').replace(/\\/g, '/');
+        // Absolute -> return as-is
+        if (/^https?:\/\//i.test(url)) return url;
+        // Direct hit
+        if (manifest[url]) return manifest[url];
+        // Case-insensitive, suffix match across manifest keys
+        const lower = url.toLowerCase();
+        const key = Object.keys(manifest).find(k => k.replace(/\\/g, '/').toLowerCase().endsWith(lower));
+        if (key) return manifest[key];
+        // Fallback to base of model file
         const base = model.file_url.substring(0, model.file_url.lastIndexOf('/'));
         return `${base}/${url}`;
-      } catch { return url; }
+      } catch {
+        return rawUrl;
+      }
     });
 
-    // Load GLTF/GLB environment
-    const loader = new GLTFLoader(manager);
+    // Load environment (GLTF/GLB/FBX)
     let envRoot = new THREE.Group();
     scene.add(envRoot);
 
-    loader.load(
-      model.file_url,
-      (gltf) => {
-        envRoot.add(gltf.scene);
-        // Frame the scene
-        const box = new THREE.Box3().setFromObject(gltf.scene);
+    const fileExt = (model.file_type || model.file_url.split('.').pop().split('?')[0] || '').toLowerCase();
+    const basePath = model.file_url.substring(0, model.file_url.lastIndexOf('/')) + '/';
+
+    const loadGLTF = () => {
+      const gltfLoader = new GLTFLoader(manager);
+      if (gltfLoader.setResourcePath) gltfLoader.setResourcePath(basePath);
+      if (gltfLoader.setCrossOrigin) gltfLoader.setCrossOrigin('anonymous');
+      gltfLoader.load(
+        model.file_url,
+        (gltf) => {
+          const root = gltf.scene || gltf.scenes?.[0];
+          if (root) envRoot.add(root);
+          frameAndPlace(root || envRoot);
+        },
+        undefined,
+        (err) => console.error('Environment GLTF load error', err)
+      );
+    };
+
+    const loadFBX = () => {
+      const fbxLoader = new FBXLoader(manager);
+      fbxLoader.load(
+        model.file_url,
+        (fbx) => {
+          envRoot.add(fbx);
+          frameAndPlace(fbx);
+        },
+        undefined,
+        (err) => console.error('Environment FBX load error', err)
+      );
+    };
+
+    const frameAndPlace = (object3d) => {
+      try {
+        // Frame camera to object
+        const box = new THREE.Box3().setFromObject(object3d);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
         const fov = camera.fov * (Math.PI / 180);
         let cameraZ = Math.abs(maxDim / (2 * Math.tan(fov / 2)));
-        cameraZ *= 1.2; // padding
+        cameraZ *= 1.2;
         camera.position.set(center.x + 0.01, Math.max(1.7, center.y + size.y * 0.15), center.z + cameraZ);
         camera.lookAt(center);
-      },
-      undefined,
-      (err) => {
-        console.error('Environment load error', err);
+
+        // Drop Y-Bot to nearest floor beneath center
+        const raycaster = new THREE.Raycaster(new THREE.Vector3(center.x, center.y + size.y * 2, center.z), new THREE.Vector3(0, -1, 0));
+        const intersects = raycaster.intersectObjects(envRoot.children, true);
+        if (intersects && intersects.length > 0) {
+          const p = intersects[0].point;
+          ybot.position.set(p.x, p.y + 0.03, p.z);
+        } else {
+          ybot.position.set(center.x, center.y, center.z);
+        }
+      } catch (e) {
+        console.warn('Frame/place failed', e);
       }
-    );
+    };
+
+    if (fileExt === 'fbx') loadFBX(); else loadGLTF();
 
     // Add a simple Y-Bot (capsule + head) and place on floor near center
     const ybot = new THREE.Group();
@@ -95,7 +141,6 @@ export default function BannerEnvironmentScene({ model }) {
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), new THREE.MeshStandardMaterial({ color: 0x111111 }));
     head.position.y = 1.9;
     ybot.add(body); ybot.add(head);
-    // Start at origin; later after env loads, try to drop to floor visually
     ybot.position.set(0, 0, 0);
     scene.add(ybot);
 
