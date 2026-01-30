@@ -55,6 +55,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
+import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
@@ -1028,6 +1029,7 @@ export default function LunaTemplate() {
   const [modelUrl, setModelUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showAvatarProgression, setShowAvatarProgression] = useState(false);
 
   const { mode } = useDashboardMode();
 
@@ -1113,10 +1115,15 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'i' || e.key === 'I') {
+      const key = (e.key || '').toLowerCase();
+      if (key === 'i') {
         setUiVisible((v) => !v);
       }
-      if (e.key === 'Escape') {
+      if (key === 'o') {
+        setShowAvatarProgression((v) => !v);
+      }
+      if (key === 'escape') {
+        if (showAvatarProgression) setShowAvatarProgression(false);
         if (showForumOverlay) setShowForumOverlay(false);
         const params = new URLSearchParams(window.location.search);
         if (params.get('panel')) {
@@ -1126,7 +1133,7 @@ export default function LunaTemplate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay]);
+  }, [showForumOverlay, showAvatarProgression, navigate]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -2008,6 +2015,39 @@ export default function LunaTemplate() {
             </AnimatePresence>
           </motion.div>
         ) : null}
+      </AnimatePresence>
+
+      {/* Avatar Progression Overlay (O key) */}
+      <AnimatePresence>
+        {showAvatarProgression && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowAvatarProgression(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-y-auto p-8">
+                <AvatarProgressionBox />
+              </div>
+              <button
+                onClick={() => setShowAvatarProgression(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        )}
       </AnimatePresence>
 
       {/* Settings Overlay */}
