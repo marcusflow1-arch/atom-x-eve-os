@@ -430,23 +430,23 @@ export default function ClanFormsZone({ game, clan, user }) {
           </Button>
         </div>
         {newTopicOpen && generalChannel && (
-                        <div className=\"mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3\">
-                          <Input placeholder=\"Topic title\" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
-                          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-3\">
+                        <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3">
+                          <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <Select value={topicScope} onValueChange={(v) => setTopicScope(v)} disabled={!isLeaderUser}>
-                              <SelectTrigger className=\"h-9\">
-                                <SelectValue placeholder=\"Visibility\" />
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Visibility" />
                               </SelectTrigger>
-                              <SelectContent className=\"bg-slate-900/95 text-white border-white/10\">
-                                <SelectItem value=\"clan\">Clan Chat</SelectItem>
-                                <SelectItem value=\"leaders\">Leader/Officers</SelectItem>
-                                <SelectItem value=\"both\">Both Chats</SelectItem>
+                              <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                                <SelectItem value="clan">Clan Chat</SelectItem>
+                                <SelectItem value="leaders">Leader/Officers</SelectItem>
+                                <SelectItem value="both">Both Chats</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className=\"flex gap-2 justify-end\">
-                            <Button size=\"sm\" variant=\"outline\" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
-                            <Button size=\"sm\" onClick={createTopic}>Create</Button>
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
+                            <Button size="sm" onClick={createTopic}>Create</Button>
                           </div>
                         </div>
                       )}
@@ -565,23 +565,23 @@ export default function ClanFormsZone({ game, clan, user }) {
       {/* Bottom Topics (shared) */}
       <div className="col-span-12 row-start-2 border-t border-white/10 bg-black/10 p-4" aria-label="Topics">
         {newTopicOpen && generalChannel && (
-                        <div className=\"mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3\">
-                          <Input placeholder=\"Topic title\" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
-                          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-3\">
+                        <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3">
+                          <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <Select value={topicScope} onValueChange={(v) => setTopicScope(v)} disabled={!isLeaderUser}>
-                              <SelectTrigger className=\"h-9\">
-                                <SelectValue placeholder=\"Visibility\" />
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Visibility" />
                               </SelectTrigger>
-                              <SelectContent className=\"bg-slate-900/95 text-white border-white/10\">
-                                <SelectItem value=\"clan\">Clan Chat</SelectItem>
-                                <SelectItem value=\"leaders\">Leader/Officers</SelectItem>
-                                <SelectItem value=\"both\">Both Chats</SelectItem>
+                              <SelectContent className="bg-slate-900/95 text-white border-white/10">
+                                <SelectItem value="clan">Clan Chat</SelectItem>
+                                <SelectItem value="leaders">Leader/Officers</SelectItem>
+                                <SelectItem value="both">Both Chats</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className=\"flex gap-2 justify-end\">
-                            <Button size=\"sm\" variant=\"outline\" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
-                            <Button size=\"sm\" onClick={createTopic}>Create</Button>
+                          <div className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" onClick={() => setNewTopicOpen(false)}>Cancel</Button>
+                            <Button size="sm" onClick={createTopic}>Create</Button>
                           </div>
                         </div>
                       )}
