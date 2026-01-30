@@ -1171,7 +1171,7 @@ export default function LunaTemplate() {
       const slotId = e?.detail?.slotId;
       if (slotId) {
         setClickedSlot(slotId);
-        setShowInventory(true);
+        
       }
     };
     window.addEventListener('openInventoryPanel', handler);
@@ -1984,7 +1984,7 @@ export default function LunaTemplate() {
                       />
                     </motion.div> :
 
-                    showInventory ?
+                    false ?
                       <motion.div
                         key="inventory"
                         initial={{ opacity: 0, x: -100 }}
