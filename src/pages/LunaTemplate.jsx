@@ -1121,7 +1121,8 @@ export default function LunaTemplate() {
         setUiVisible((v) => !v);
       }
       if (key === 'o') {
-        setShowAvatarProgression((v) => !v);
+        setShowStats((v) => !v);
+        setShowAvatarProgression(false);
       }
       if (key === 'escape') {
         if (showAvatarProgression) setShowAvatarProgression(false);
