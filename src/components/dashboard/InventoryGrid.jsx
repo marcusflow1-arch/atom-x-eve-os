@@ -70,7 +70,7 @@ export default function InventoryGrid() {
         {/* Top right: Genre */}
         <div className="col-span-12 sm:col-span-4">
           <SectionHeader>Genre</SectionHeader>
-          <Squares count={4} onSlotClick={(i) => openOverlay('Genre', i)} />
+          <Squares count={4} onSlotClick={(i) => openPanel('genre', i)} />
         </div>
 
         {/* Aspects - bottom left */}
@@ -88,7 +88,7 @@ export default function InventoryGrid() {
         {/* Bottom right: Genre */}
         <div className="col-span-12 sm:col-span-4">
           <SectionHeader>Genre</SectionHeader>
-          <Squares count={4} onSlotClick={(i) => openOverlay('Genre', i)} />
+          <Squares count={4} onSlotClick={(i) => openPanel('genre', i)} />
         </div>
       </div>
     </div>

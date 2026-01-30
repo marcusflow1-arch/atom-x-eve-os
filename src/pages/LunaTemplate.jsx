@@ -2456,7 +2456,7 @@ export default function LunaTemplate() {
 
       {/* Skills & AI Passives - Bottom Left */}
       {uiVisible && !showInventory && !showConsoleMode && !showAchievements &&
-        <div className="fixed bottom-8 left-8 z-30 flex flex-col items-center gap-4 pointer-events-auto">
+        <div className="fixed z-40 flex flex-col items-center gap-4 pointer-events-auto" style={{ bottom: '24px', left: '130px', transform: 'translateX(-50%)' }}>
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
             <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Skills</h2>
