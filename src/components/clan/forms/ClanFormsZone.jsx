@@ -611,7 +611,7 @@ export default function ClanFormsZone({ game, clan, user }) {
         <ScrollArea className="h-28 pr-2">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {topicTitles.map((title) => (
-              <button key={title} onClick={() => setSelectedTopicTitle(title)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopicTitle === title ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
+              <button key={title} onClick={() => setSelectedTopicTitleGeneral(title)} className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTopicTitleGeneral === title ? 'bg-white/10 border-white/20' : 'bg-white/5 hover:bg-white/10 border-white/10'}`}>
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-white truncate">{title}</p>
                 </div>
