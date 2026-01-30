@@ -333,7 +333,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Strategies Board */}
-      <div className="col-span-4 col-start-9 flex flex-col min-h-0" aria-label="Strategies board">
+      <div className="col-span-4 col-start-9 flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Strategies board">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Strategies</p>
@@ -351,7 +351,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             )}
           </div>
         </div>
-        <div className="p-4 space-y-4 overflow-auto">
+        <div className="flex-1 p-4 space-y-4 overflow-auto">
           {strategiesMode === "create" ? (
             <div className="space-y-4">
               <StrategyUpload 
@@ -373,7 +373,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Right Chat - Clan Leader Chat */}
-      <div className="col-span-4 col-start-5 flex flex-col min-h-0" aria-label="Clan Leader chat window">
+      <div className="col-span-4 col-start-5 flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
