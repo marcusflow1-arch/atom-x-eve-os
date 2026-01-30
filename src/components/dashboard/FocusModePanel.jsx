@@ -1409,6 +1409,11 @@ function QuickActionsBar({ navigate, onLiveClick }) {
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
+      <div
+        key="stats-placeholder"
+        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/15 transition-all flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', width: '85px', height: '75px' }}
+      />
       {quickActions.map((action) => {
         const Icon = action.icon;
         return (
