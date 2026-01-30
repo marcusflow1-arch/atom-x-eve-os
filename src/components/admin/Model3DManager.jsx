@@ -287,9 +287,13 @@ export default function Model3DManager() {
     return `${mb.toFixed(2)} MB`;
   };
 
-  // Special background option from a 3D Model named "Room 1"
-  const room1Model = models.find(m => (m.name || '').toLowerCase().includes('room 1'));
-  const room1BgImg = room1Model?.thumbnail_url || null;
+  // 3D Environments from Model3D (category 'environment' or tag 'banner-upload')
+  const environmentModels = (models || []).filter(m => (m.category || '').toLowerCase() === 'environment' || (Array.isArray(m.tags) && m.tags.includes('banner-upload')));
+  const getModelPreviewImage = (m) => {
+    if (m?.thumbnail_url) return m.thumbnail_url;
+    const imgFile = m?.files?.find(f => (f?.mime_type || '').startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(f?.original_path || ''));
+    return imgFile?.file_url || null;
+  };
 
   return (
     <div className="space-y-6">
@@ -536,18 +540,23 @@ export default function Model3DManager() {
                         );
                       })}
 
-                      {/* Room 1 from 3D Models */}
-                      {room1BgImg && (
-                        <button
-                          key="room1-bg"
-                          onClick={() => setFeaturedBgUrl(featuredBgUrl === room1BgImg ? null : room1BgImg)}
-                          className={`relative w-24 h-14 rounded overflow-hidden border ${featuredBgUrl === room1BgImg ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
-                          title={room1Model?.name || 'Room 1'}
-                        >
-                          <img src={room1BgImg} alt={room1Model?.name || 'Room 1'} className="w-full h-full object-cover" />
-                          <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{room1Model?.name || 'Room 1'}</span>
-                        </button>
-                      )}
+                      {/* 3D Environments from Model3D */}
+                      {environmentModels.map((m) => {
+                        const img = getModelPreviewImage(m);
+                        if (!img) return null;
+                        const active = featuredBgUrl === img;
+                        return (
+                          <button
+                            key={`env-${m.id}`}
+                            onClick={() => setFeaturedBgUrl(active ? null : img)}
+                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
+                            title={m.name || 'Environment'}
+                          >
+                            <img src={img} alt={m.name || 'Environment'} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{m.name || 'Environment'}</span>
+                          </button>
+                        );
+                      })}
 
                       {/* Game images */}
                       {games?.slice(0, 12).map((g) => {
