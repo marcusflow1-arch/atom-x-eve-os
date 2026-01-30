@@ -1651,47 +1651,64 @@ export default function LunaTemplate() {
               )}
             </AnimatePresence>
 
-            {/* TOP SECTION: Game Banner + Memories (directly under header tabs) */}
-            <div className="flex gap-6 mb-6">
-              {/* Large Hero Tile - Game Banner (Sumi-e Style) with Video */}
-              <LegendaryTile
-                onClick={() => navigate(createPageUrl('Store'))}
-                className="flex-[2] h-48 relative overflow-hidden"
-              >
-                <video
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
-                <div className="absolute bottom-4 left-6 z-10">
-                  <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
+            {/* TOP SECTION: Aspects / Artifacts / Genre */}
+            <div className="flex gap-12 mb-6 items-start">
+              {/* Aspects */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
                 </div>
-              </LegendaryTile>
-
-              {/* Memories Section */}
-              <ConsoleTile className="flex-1 h-48 p-5 flex flex-col">
-                <h3 className="text-[#CCCCCC] text-sm font-semibold uppercase tracking-wider mb-3" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Memories</h3>
-                <div className="flex-1 grid grid-cols-4 gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <div 
-                      key={i}
-                      className="aspect-square rounded-lg bg-white/5 border border-white/10 hover:border-white/30 transition-colors cursor-pointer flex items-center justify-center"
-                    >
-                      <Sparkles className="w-4 h-4 text-white/20" />
+                <div className="flex gap-3">
+                  {[1,2,3].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     </div>
                   ))}
                 </div>
-              </ConsoleTile>
+              </div>
+
+              {/* Artifacts */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
+                <div className="relative w-52 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2,3,4,5].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Genre */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Divider Line under Game Banner */}
             <div className="h-px bg-white/10 mb-6" />
 
-            {/* QUICK ACCESS BOXES - Under the Game Banner line */}
+            {/* QUICK ACCESS BOXES */}
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
@@ -1738,6 +1755,25 @@ export default function LunaTemplate() {
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
               </ConsoleTile>
             </div>
+
+            {/* Game Banner now below Quick Access */}
+            <LegendaryTile
+              onClick={() => navigate(createPageUrl('Store'))}
+              className="w-full h-48 mb-6 relative overflow-hidden"
+            >
+              <video
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
+              <div className="absolute bottom-4 left-6 z-10">
+                <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
+              </div>
+            </LegendaryTile>
 
             {/* Main Grid: Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
@@ -2455,8 +2491,8 @@ export default function LunaTemplate() {
       }
 
       {/* Skills & AI Passives - Bottom Left */}
-      {uiVisible && !showInventory && !showConsoleMode && !showAchievements &&
-        <div className="fixed z-40 flex flex-col items-center gap-4 pointer-events-auto" style={{ bottom: '24px', left: '130px', transform: 'translateX(-50%)' }}>
+      {!showInventory && !showAchievements && (
+        <div className="fixed bottom-8 left-8 z-40 flex flex-col items-center gap-4 pointer-events-auto">
           {/* Skills */}
           <div className="flex flex-col items-center gap-2">
             <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Skills</h2>
