@@ -1499,7 +1499,21 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
     (async () => {
       try {
         const all = await base44.entities.Model3D.list();
-        const envs = (all || []).filter(m => (m.category || '').toLowerCase() === 'environment' || (Array.isArray(m.tags) && m.tags.includes('banner-upload')));
+        const envs = (all || []).filter(m => {
+          const name = (m.name || '').toLowerCase();
+          const isEnv = (m.category || '').toLowerCase() === 'environment';
+          const isTagged = Array.isArray(m.tags) && m.tags.includes('banner-upload');
+          const isRoom = name.includes('room 1') || name.includes('room');
+          return isEnv || isTagged || isRoom;
+        });
+        // Put "Room 1" first if present
+        envs.sort((a,b)=>{
+          const an = (a.name||'').toLowerCase();
+          const bn = (b.name||'').toLowerCase();
+          const ar = an.includes('room 1') ? 0 : an.includes('room') ? 1 : 2;
+          const br = bn.includes('room 1') ? 0 : bn.includes('room') ? 1 : 2;
+          return ar - br;
+        });
         setEnvironmentModels(envs);
       } catch (e) {
         console.error('Failed to load environment models', e);
@@ -1680,15 +1694,20 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
                 {/* 3D Environments */}
                 {environmentModels.map((m) => {
                   const img = getModelPreviewImage(m);
-                  if (!img) return null;
                   return (
                     <div
                       key={`env-${m.id}`}
-                      onClick={() => { onBackgroundChange && onBackgroundChange(img); setShowBannerPicker(false); }}
-                      className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all"
+                      onClick={() => { if (img && onBackgroundChange) onBackgroundChange(img); setShowBannerPicker(false); }}
+                      className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all bg-white/5"
                       title={m.name || 'Environment'}
                     >
-                      <img src={img} alt={m.name || 'Environment'} className="w-full h-full object-cover" />
+                      {img ? (
+                        <img src={img} alt={m.name || 'Environment'} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="text-white/50 text-xs font-semibold">{m.name || 'Environment'}</div>
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                       <div className="absolute bottom-2 left-2">
                         <p className="text-white font-bold text-xs truncate">{m.name || 'Environment'}</p>
