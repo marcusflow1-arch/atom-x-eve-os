@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, environmentAsset, weaponModel, triggerAnimation, backgroundUrl }) {
+function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, environmentAsset, whiteboardAsset, weaponModel, triggerAnimation, backgroundUrl }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -76,6 +76,8 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
   const currentBaseActionRef = useRef(null);
   const envRootRef = useRef(null);
   const avatarRootRef = useRef(null);
+  const propsRootRef = useRef(null);
+  const whiteboardRef = useRef(null);
   const envLoadedRef = useRef(false);
   const mixerRef = useRef(null);
   const cameraRef = useRef(null);
@@ -85,6 +87,7 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
   // Slot aliases (optional external API)
   const avatarUrl = avatarAsset || modelUrl;
   const envUrl = environmentAsset || environmentUrl;
+  const whiteboardUrl = whiteboardAsset || null;
 
   // Animation helpers available across effects
   const setBaseAction = (name, once = false) => {
@@ -235,8 +238,11 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
     envRootRef.current.name = 'EnvironmentRoot';
     avatarRootRef.current = new THREE.Group();
     avatarRootRef.current.name = 'AvatarRoot';
+    propsRootRef.current = new THREE.Group();
+    propsRootRef.current.name = 'PropsRoot';
     scene.add(envRootRef.current);
     scene.add(avatarRootRef.current);
+    scene.add(propsRootRef.current);
 
     const handleCanvasClick = () => {
       controlsActive.current = !controlsActive.current;
@@ -364,6 +370,36 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
       loader.load(envUrl, (gltf) => onEnvLoaded(gltf.scene), undefined, (e) => console.error('Env GLTF load error', e));
     }
   }, [envUrl]);
+
+  // LOAD WHITEBOARD when whiteboardUrl changes
+  useEffect(() => {
+    if (!whiteboardUrl || !sceneRef.current || !propsRootRef.current) return;
+    // Clear previous whiteboard
+    while (propsRootRef.current.children.length) propsRootRef.current.remove(propsRootRef.current.children[0]);
+
+    const onBoardLoaded = (obj) => {
+      // Scale to a readable width and place in front of the avatar/camera
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const width = size.x || Math.max(size.y, size.z) || 1;
+      const targetWidth = 3; // ~3 meters wide
+      const s = targetWidth / width;
+      obj.scale.setScalar(s);
+      obj.position.set(0, 1.2, -2);
+      obj.rotation.y = Math.PI; // face the default camera
+      obj.traverse((n) => { if (n.isMesh) { n.renderOrder = 10; } });
+      propsRootRef.current.add(obj);
+    };
+
+    const ext = whiteboardUrl.split('.').pop().toLowerCase();
+    if (ext === 'fbx') {
+      const loader = new FBXLoader();
+      loader.load(whiteboardUrl, onBoardLoaded, undefined, (e) => console.error('Whiteboard FBX load error', e));
+    } else {
+      const loader = new GLTFLoader();
+      loader.load(whiteboardUrl, (gltf) => onBoardLoaded(gltf.scene), undefined, (e) => console.error('Whiteboard GLTF load error', e));
+    }
+  }, [whiteboardUrl]);
 
   // LOAD AVATAR when avatarUrl or animations change
   useEffect(() => {
@@ -972,6 +1008,7 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
   const [environmentUrl, setEnvironmentUrl] = useState(null);
+  const [whiteboardUrl, setWhiteboardUrl] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1028,6 +1065,25 @@ export default function LunaTemplate() {
       }
     };
     loadEnv();
+  }, []);
+
+  // Load Whiteboard asset
+  useEffect(() => {
+    const loadWhiteboard = async () => {
+      try {
+        let boards = await base44.entities.Model3D.filter({ name: 'Whiteboard' });
+        if (!boards || boards.length === 0) boards = await base44.entities.Model3D.filter({ name: 'whiteboard' });
+        if (!boards || boards.length === 0) {
+          const list = await base44.entities.Model3D.list('-updated_date', 50);
+          const wb = list.find((m) => (m.name || '').toLowerCase().includes('whiteboard'));
+          if (wb) boards = [wb];
+        }
+        if (boards && boards.length > 0) setWhiteboardUrl(boards[0].file_url);
+      } catch (e) {
+        console.error('Failed to load whiteboard model:', e);
+      }
+    };
+    loadWhiteboard();
   }, []);
 
   useEffect(() => {
@@ -1195,7 +1251,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} environmentUrl={environmentUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} environmentUrl={environmentUrl} whiteboardAsset={whiteboardUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
         </div>
       }
 
