@@ -21,6 +21,7 @@ import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsDropdown from '@/components/dashboard/StatsDropdown';
+import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1611,7 +1612,7 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
 }
 
 // Date & Time Tile Component
-const DateTimeTile = ({ onClick }) => {
+const DateTimeTile = ({ onClick, onCalendarClick }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -1639,6 +1640,14 @@ const DateTimeTile = ({ onClick }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
       
       <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
+        {/* Calendar icon button in the corner */}
+        <button
+          onClick={(e) => { e.stopPropagation(); onCalendarClick?.(); }}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
+          title="Add to Calendar"
+        >
+          <CalendarIcon className="w-4 h-4 text-white/80" />
+        </button>
         <div className="text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">
           {timeString}
         </div>
@@ -1709,13 +1718,20 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
   const [showStatsDropdown, setShowStatsDropdown] = useState(false);
+  const [statsActiveTab, setStatsActiveTab] = useState('ai'); // 'ai' | 'inventory'
 
-  // Toggle Stats dropdown with 'O' key (and close Live)
+  // Toggle Stats dropdown with 'O' (AI) and 'I' (Inventory) keys
   useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key && e.key.toLowerCase() === 'o') {
+      const key = e.key?.toLowerCase();
+      if (key === 'o') {
         setShowLiveDropdown(false);
+        setStatsActiveTab('ai');
         setShowStatsDropdown((v) => !v);
+      } else if (key === 'i') {
+        setShowLiveDropdown(false);
+        setStatsActiveTab('inventory');
+        setShowStatsDropdown(true);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -1854,12 +1870,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           </div>
           
           {/* Right Column: System Status + Calendar */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
-             <DateTimeTile onClick={handleDateTimeClick} />
-             <AddToCalendarButton 
-               onClick={onOpenCalendar} 
-               clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
-             />
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2">
+             <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar} />
+             {/* AI Attribute Box to the right side */}
+             <div className="mt-1">
+               <AIAttributesBox />
+             </div>
           </div>
         </div>
       </div>

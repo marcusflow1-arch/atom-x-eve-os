@@ -1,8 +1,14 @@
 import React from 'react';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
+import InventoryGrid from '@/components/dashboard/InventoryGrid';
 
-export default function StatsDropdown() {
-  const [activeTab, setActiveTab] = React.useState('ai'); // 'ai' | 'inventory'
+export default function StatsDropdown({ activeTab: controlledTab, onTabChange }) {
+  const [internalTab, setInternalTab] = React.useState('ai'); // 'ai' | 'inventory'
+  const activeTab = controlledTab ?? internalTab;
+  const setActiveTab = (val) => {
+    if (onTabChange) onTabChange(val);
+    setInternalTab(val);
+  };
 
   const TabButton = ({ id, label }) => (
     <button
@@ -33,7 +39,9 @@ export default function StatsDropdown() {
           </div>
         )}
         {activeTab === 'inventory' && (
-          <div className="mt-2 min-h-[300px]" />
+          <div className="mt-2">
+            <InventoryGrid />
+          </div>
         )}
       </div>
     </div>
