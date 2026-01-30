@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, triggerAnimation, backgroundUrl }) {
+function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, environmentAsset, weaponModel, triggerAnimation, backgroundUrl }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -81,6 +81,10 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const animationLockedRef = useRef(false);
+
+  // Slot aliases (optional external API)
+  const avatarUrl = avatarAsset || modelUrl;
+  const envUrl = environmentAsset || environmentUrl;
 
   // Animation helpers available across effects
   const setBaseAction = (name, once = false) => {
@@ -326,14 +330,14 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
     };
   }, []);
 
-  // LOAD ENVIRONMENT when environmentUrl changes
+  // LOAD ENVIRONMENT when envUrl changes
   useEffect(() => {
-    if (!environmentUrl || !sceneRef.current || !envRootRef.current) return;
+    if (!envUrl || !sceneRef.current || !envRootRef.current) return;
     // Clear previous env
     while (envRootRef.current.children.length) envRootRef.current.remove(envRootRef.current.children[0]);
     envLoadedRef.current = false;
 
-    const ext = environmentUrl.split('.').pop().toLowerCase();
+    const ext = envUrl.split('.').pop().toLowerCase();
     const onEnvLoaded = (envObj) => {
       // Normalize scale to target size and drop to ground
       const box = new THREE.Box3().setFromObject(envObj);
@@ -354,21 +358,21 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
 
     if (ext === 'fbx') {
       const loader = new FBXLoader();
-      loader.load(environmentUrl, onEnvLoaded, undefined, (e) => console.error('Env FBX load error', e));
+      loader.load(envUrl, onEnvLoaded, undefined, (e) => console.error('Env FBX load error', e));
     } else {
       const loader = new GLTFLoader();
-      loader.load(environmentUrl, (gltf) => onEnvLoaded(gltf.scene), undefined, (e) => console.error('Env GLTF load error', e));
+      loader.load(envUrl, (gltf) => onEnvLoaded(gltf.scene), undefined, (e) => console.error('Env GLTF load error', e));
     }
-  }, [environmentUrl]);
+  }, [envUrl]);
 
-  // LOAD AVATAR when modelUrl or animations change
+  // LOAD AVATAR when avatarUrl or animations change
   useEffect(() => {
-    if (!modelUrl || !sceneRef.current || !avatarRootRef.current) return;
-    if (environmentUrl && !envLoadedRef.current) return; // wait for env if provided
+    if (!avatarUrl || !sceneRef.current || !avatarRootRef.current) return;
+    if (envUrl && !envLoadedRef.current) return; // wait for env if provided
 
     while (avatarRootRef.current.children.length) avatarRootRef.current.remove(avatarRootRef.current.children[0]);
 
-    const extension = modelUrl.split('.').pop().toLowerCase();
+    const extension = avatarUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
 
     const processAvatar = (model, anims=[]) => {
@@ -436,7 +440,7 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
     if (isFBX) {
       const loader = new FBXLoader();
       loader.load(
-        modelUrl,
+        avatarUrl,
         (fbx) => {
           const allClips = [...(fbx.animations || [])];
           let loadedCount = 0;
@@ -459,9 +463,9 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
       );
     } else {
       const loader = new GLTFLoader();
-      loader.load(modelUrl, (gltf) => processAvatar(gltf.scene, gltf.animations || []));
+      loader.load(avatarUrl, (gltf) => processAvatar(gltf.scene, gltf.animations || []));
     }
-  }, [modelUrl, weaponModel, animations, environmentUrl]);
+  }, [avatarUrl, weaponModel, animations, envUrl]);
 
 
 
