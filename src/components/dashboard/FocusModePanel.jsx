@@ -22,6 +22,7 @@ import StreamChatBox from '@/components/streaming/StreamChatBox';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsDropdown from '@/components/dashboard/StatsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
+import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1913,6 +1914,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           />
         )}
       </AnimatePresence>
+
+      {/* Inventory Equip Overlay - opens when any inventory slot is clicked */}
+      <InventoryEquipOverlay />
 
       {/* Bottom Section - Grid layout */}
 
