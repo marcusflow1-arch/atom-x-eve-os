@@ -18,7 +18,8 @@ export default function ClanFormsZone({ game, clan, user }) {
   const [selectedTopic, setSelectedTopic] = React.useState(null);
   const [generalChannel, setGeneralChannel] = React.useState(null);
   const [leaderChannel, setLeaderChannel] = React.useState(null);
-  const [selectedTopicTitle, setSelectedTopicTitle] = React.useState('');
+  const [selectedTopicTitleGeneral, setSelectedTopicTitleGeneral] = React.useState('');
+  const [selectedTopicTitleLeader, setSelectedTopicTitleLeader] = React.useState('');
   const [messageGeneral, setMessageGeneral] = React.useState('');
   const [messageLeader, setMessageLeader] = React.useState('');
 
@@ -75,10 +76,12 @@ export default function ClanFormsZone({ game, clan, user }) {
       const leader = leadRes?.data?.channel;
       if (gen) setGeneralChannel(gen);
       if (leader) setLeaderChannel(leader);
-      const defaultTitle =
-        (genRes?.data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general')?.title ||
+      const defaultGeneralTitle =
+        (genRes?.data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general')?.title || '';
+      const defaultLeaderTitle =
         (leadRes?.data?.topics || []).find(t => (t.title || '').toLowerCase() === 'general')?.title || '';
-      setSelectedTopicTitle(defaultTitle);
+      if (defaultGeneralTitle) setSelectedTopicTitleGeneral(defaultGeneralTitle);
+      if (defaultLeaderTitle) setSelectedTopicTitleLeader(defaultLeaderTitle);
     })();
     return () => { mounted = false; };
   }, [game.id, clan.id]);
@@ -125,18 +128,24 @@ export default function ClanFormsZone({ game, clan, user }) {
   const topicTitlesLeader = React.useMemo(() => (topicsLeader || []).map(t => t.title), [topicsLeader]);
 
   const selectedTopicGeneral = React.useMemo(() => {
-    return (topicsGeneral || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitle || '').toLowerCase()) || null;
-  }, [topicsGeneral, selectedTopicTitle]);
+    return (topicsGeneral || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitleGeneral || '').toLowerCase()) || null;
+  }, [topicsGeneral, selectedTopicTitleGeneral]);
 
   const selectedTopicLeader = React.useMemo(() => {
-    return (topicsLeader || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitle || '').toLowerCase()) || null;
-  }, [topicsLeader, selectedTopicTitle]);
+    return (topicsLeader || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitleLeader || '').toLowerCase()) || null;
+  }, [topicsLeader, selectedTopicTitleLeader]);
 
   React.useEffect(() => {
-    if (!selectedTopicTitle && topicTitles.length) {
-      setSelectedTopicTitle(topicTitles[0]);
+    if (!selectedTopicTitleGeneral && topicTitlesGeneral.length) {
+      setSelectedTopicTitleGeneral(topicTitlesGeneral[0]);
     }
-  }, [topicTitles, selectedTopicTitle]);
+  }, [topicTitlesGeneral, selectedTopicTitleGeneral]);
+
+  React.useEffect(() => {
+    if (!selectedTopicTitleLeader && topicTitlesLeader.length) {
+      setSelectedTopicTitleLeader(topicTitlesLeader[0]);
+    }
+  }, [topicTitlesLeader, selectedTopicTitleLeader]);
 
   // Messages for both chats
   const { data: messagesGeneral = [] } = useQuery({
@@ -275,7 +284,18 @@ export default function ClanFormsZone({ game, clan, user }) {
             setTopicTitle('');
             setTopicScope('clan');
             setNewTopicOpen(false);
-            setSelectedTopicTitle(title);
+            if (topicScope === 'leaders') {
+              setSelectedTopicTitleLeader(title);
+            } else if (topicScope === 'both') {
+              if (isLeaderUser) {
+                setSelectedTopicTitleGeneral(title);
+                setSelectedTopicTitleLeader(title);
+              } else {
+                setSelectedTopicTitleGeneral(title);
+              }
+            } else {
+              setSelectedTopicTitleGeneral(title);
+            }
             if (generalChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', generalChannel.id] });
             if (leaderChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', leaderChannel.id] });
           };
@@ -328,7 +348,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             </Select>
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
             {/* Topic select (Clan Chat only topics) */}
-            <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
+            <Select value={selectedTopicTitleGeneral || ''} onValueChange={(val) => setSelectedTopicTitleGeneral(val)}>
               <SelectTrigger className="h-7 w-auto bg-transparent border-0 px-1 text-white/80 hover:text-white min-w-0" title="Select topic">
                 <SelectValue placeholder="General" />
               </SelectTrigger>
@@ -512,7 +532,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
           </div>
           <div className="flex items-center gap-3">
-            <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
+            <Select value={selectedTopicTitleLeader || ''} onValueChange={(val) => setSelectedTopicTitleLeader(val)}>
               <SelectTrigger className="h-7 w-auto bg-transparent border-0 px-1 text-white/80 hover:text-white min-w-0" title="Select topic">
                 <SelectValue placeholder="General" />
               </SelectTrigger>
