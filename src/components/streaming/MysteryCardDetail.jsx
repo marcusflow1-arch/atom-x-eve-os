@@ -427,7 +427,7 @@ const BlacksmithView = ({ card }) => {
              </div>
 
              {/* Content Area */}
-             <div className="flex-1">
+             <div className="flex-1 p-6 relative">
                 <AnimatePresence mode="wait">
                   {/* LEVEL UP SYSTEM */}
                   {activeSystem === 'level' && (
