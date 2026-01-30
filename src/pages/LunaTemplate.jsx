@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl }) {
+function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, triggerAnimation, backgroundUrl }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -74,6 +74,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const [weaponAttached, setWeaponAttached] = React.useState(false);
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
+  const envRootRef = useRef(null);
+  const avatarRootRef = useRef(null);
+  const envLoadedRef = useRef(false);
+  const mixerRef = useRef(null);
+  const cameraRef = useRef(null);
+  const controlsRef = useRef(null);
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
@@ -110,15 +116,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     fetchAnimations();
   }, []);
 
+  // INIT SCENE ONCE
   useEffect(() => {
-    if (!containerRef.current || !modelUrl) return;
+    if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.2, 3.5);
+    camera.position.set(0, 1.2, 6);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
@@ -126,13 +134,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
-
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(5, 8, 5);
     scene.add(directionalLight);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -142,423 +148,96 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enableRotate = false;
     controls.enablePan = false;
     controls.minDistance = 2;
-    controls.maxDistance = 10;
+    controls.maxDistance = 20;
     controls.enabled = true;
+    controlsRef.current = controls;
+
+    // Scene roots
+    envRootRef.current = new THREE.Group();
+    envRootRef.current.name = 'EnvironmentRoot';
+    avatarRootRef.current = new THREE.Group();
+    avatarRootRef.current.name = 'AvatarRoot';
+    scene.add(envRootRef.current);
+    scene.add(avatarRootRef.current);
 
     const handleCanvasClick = () => {
       controlsActive.current = !controlsActive.current;
       setIsActive(controlsActive.current);
-      if (controlsActive.current) {
-        renderer.domElement.style.cursor = 'none';
-      } else {
-        renderer.domElement.style.cursor = 'pointer';
-      }
+      renderer.domElement.style.cursor = controlsActive.current ? 'none' : 'pointer';
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
     renderer.domElement.style.cursor = 'pointer';
 
-    let mixer = null;
     const clock = new THREE.Clock();
-
-    const extension = modelUrl.split('.').pop().toLowerCase();
-    const isFBX = extension === 'fbx';
-
-    const processModel = (model, animations) => {
-      modelRef.current = model;
-
-      let rightHandBone = null;
-      model.traverse((node) => {
-        if (node.isBone) {
-          const name = node.name.toLowerCase();
-          if (name.includes("righthand") || name.includes("hand_r") || name.includes("mixamorig_righthand")) {
-            rightHandBone = node;
-          }
-        }
-
-        if (node.isMesh || node.isSkinnedMesh) {
-          node.frustumCulled = false;
-
-          if (node.geometry) {
-            try {
-              node.geometry.computeBoundingBox();
-              node.geometry.computeBoundingSphere();
-            } catch (e) {
-              console.warn('Failed to compute bounds for', node.name, e);
-            }
-          }
-
-          if (node.material) {
-            const applySide = (mat) => {
-              mat.side = THREE.DoubleSide;
-              mat.needsUpdate = true;
-            };
-
-            if (Array.isArray(node.material)) {
-              node.material.forEach(applySide);
-            } else {
-              applySide(node.material);
-            }
-          }
-
-          if (node.isSkinnedMesh) {
-            node.skeleton && node.skeleton.pose && node.skeleton.pose();
-            node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
-          }
-        }
-      });
-
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 2 / maxDim;
-      model.scale.multiplyScalar(scale);
-      model.position.sub(center.multiplyScalar(scale));
-      scene.add(model);
-
-      if (weaponModel && rightHandBone) {
-        const weaponLoader = new FBXLoader();
-        weaponLoader.load(
-          weaponModel,
-          (weaponFbx) => {
-            weaponRef.current = weaponFbx;
-            weaponFbx.scale.multiplyScalar(0.01);
-            rightHandBone.add(weaponFbx);
-            weaponFbx.position.set(0, 0.1, 0);
-            weaponFbx.rotation.set(Math.PI / 2, 0, 0);
-            weaponFbx.visible = false;
-            setWeaponAttached(true);
-          },
-          undefined,
-          (err) => console.error('Error loading weapon:', err)
-        );
-      }
-
-      mixer = new THREE.AnimationMixer(model);
-
-      if (animations && animations.length > 0) {
-        animations.forEach((clip) => {
-          const action = mixer.clipAction(clip);
-          const name = clip.name.toLowerCase();
-
-          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-          else if (name.includes('walk')) actionsRef.current.walk = action;
-          else if (name.includes('run')) actionsRef.current.run = action;
-          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
-          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
-          else if (name.includes('kick')) actionsRef.current.kick = action;
-          else if (name.includes('dance')) actionsRef.current.dance = action;
-          else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
-        });
-
-        const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
-        if (idleAction) {
-          idleAction.play();
-        }
-      }
-    };
-
-    if (isFBX) {
-      const loader = new FBXLoader();
-      loader.load(
-        modelUrl,
-        (fbx) => {
-          fbx.traverse((node) => {
-            if (node.isMesh || node.isSkinnedMesh) {
-              node.frustumCulled = false;
-              if (node.material) {
-                const applySide = (mat) => {
-                  mat.side = THREE.DoubleSide;
-                  mat.needsUpdate = true;
-                };
-                if (Array.isArray(node.material)) {
-                  node.material.forEach(applySide);
-                } else {
-                  applySide(node.material);
-                }
-              }
-            }
-          });
-
-          const allClips = [...(fbx.animations || [])];
-          let loadedCount = 0;
-
-          animations.forEach((anim) => {
-            loader.load(
-              anim.file_url,
-              (animFbx) => {
-                if (animFbx.animations && animFbx.animations.length > 0) {
-                  animFbx.animations.forEach((clip) => {
-                    if (anim.animation_type === 'idle') clip.name = 'idle';
-                    else if (anim.animation_type === 'run') clip.name = 'run';
-                    else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    allClips.push(clip);
-                  });
-                }
-                loadedCount++;
-
-                if (loadedCount === animations.length) {
-                  processModel(fbx, allClips);
-                }
-              },
-              undefined,
-              (err) => console.error(`Error loading animation ${anim.name}:`, err)
-            );
-          });
-
-          if (animations.length === 0) {
-            processModel(fbx, allClips);
-          }
-        },
-        undefined,
-        (err) => console.error('Error loading FBX model:', err)
-      );
-    } else {
-      const loader = new GLTFLoader();
-      loader.load(
-        modelUrl,
-        (gltf) => {
-          const model = gltf.scene;
-          model.traverse((node) => {
-            if (node.isMesh || node.isSkinnedMesh) {
-              node.frustumCulled = false;
-
-              if (node.geometry) {
-                try {
-                  node.geometry.computeBoundingBox();
-                  node.geometry.computeBoundingSphere();
-                } catch (e) {
-                  console.warn('Failed to compute bounds for', node.name, e);
-                }
-              }
-
-              if (node.material) {
-                const applySide = (mat) => {
-                  mat.side = THREE.DoubleSide;
-                  mat.needsUpdate = true;
-                };
-
-                if (Array.isArray(node.material)) {
-                  node.material.forEach(applySide);
-                } else {
-                  applySide(node.material);
-                }
-              }
-
-              if (node.isSkinnedMesh) {
-                node.skeleton && node.skeleton.pose && node.skeleton.pose();
-                node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
-              }
-            }
-          });
-          processModel(model, gltf.animations);
-        },
-        undefined,
-        (err) => console.error('Error loading GLTF model:', err)
-      );
-    }
-
-    const handleKeyDown = (e) => {
-      if (!controlsActive.current) return;
-
-      const key = e.key.toLowerCase();
-      keysPressed.current[key] = true;
-
-      if (key === ' ') {
-        e.preventDefault();
-      }
-    };
-
-    const handleKeyUp = (e) => {
-      if (!controlsActive.current) return;
-      keysPressed.current[e.key.toLowerCase()] = false;
-    };
-
-    const animationLocked = { current: false };
-
-    const setBaseAction = (name, once = false) => {
-      if (animationLocked.current && !once) return;
-      if (currentBaseActionRef.current === name && !once) return;
-
-      const action = actionsRef.current[name];
-      if (!action) return;
-
-      currentBaseActionRef.current = name;
-
-      Object.values(actionsRef.current).forEach((a) => {
-        if (a !== action) {
-          a.fadeOut(0.2);
-        }
-      });
-
-      if (!action.isRunning() || once) {
-        action.reset();
-        action.fadeIn(0.2);
-        action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat);
-        action.clampWhenFinished = once;
-        action.play();
-
-        if (once) {
-          animationLocked.current = true;
-          mixer.addEventListener('finished', function onFinish(e) {
-            if (e.action === action) {
-              animationLocked.current = false;
-              mixer.removeEventListener('finished', onFinish);
-            }
-          });
-        }
-      }
-    };
-
-    const resolveIdle = () => {
-      const state = useLunaStore.getState();
-      const weapon = state.equipment.weapon;
-      if (weapon && state.animationBindings?.weapon_idle?.[weapon]) {
-        return state.animationBindings.weapon_idle[weapon];
-      }
-      return 'idle';
-    };
-
-    const handleAttack = () => {
-      const state = useLunaStore.getState();
-      if (!state.actions.attack) return;
-
-      const weapon = state.equipment.weapon;
-      if (!weapon) return;
-
-      const anim = state.animationBindings?.weapon_attack?.[weapon];
-      if (!anim || !actionsRef.current[anim]) return;
-
-      setBaseAction(anim, true);
-      state.clearActions();
-    };
-
-    const handleSkill = () => {
-      const state = useLunaStore.getState();
-      const skill = state.actions.skill;
-      if (!skill) return;
-
-      if (state.isOnCooldown(skill)) return;
-
-      const anim = state.animationBindings?.skills?.[skill];
-      if (!anim || !actionsRef.current[anim]) return;
-
-      setBaseAction(anim, true);
-      state.setCooldown(skill, Date.now() + 3000);
-      state.clearActions();
-    };
-
-    const updateWeaponVisual = () => {
-      if (!weaponRef.current) return;
-      const state = useLunaStore.getState();
-      const equipped = state.equipment.weapon === "sword_of_the_abyss";
-      weaponRef.current.visible = equipped;
-    };
-
-    const mixAction = (name, fadeDuration, weight) => {
-      const action = actionsRef.current[name];
-      if (!action) return;
-
-      action.setEffectiveWeight(weight);
-      if (!action.isRunning()) {
-        action.reset();
-        action.fadeIn(fadeDuration);
-        action.play();
-      }
-    };
-
     let animationFrameId;
 
-    function animate() {
+    const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      if (mixerRef.current) mixerRef.current.update(delta);
 
-      updateWeaponVisual();
-
-      const storeState = useLunaStore.getState();
-      if (storeState.equippedWeapon !== currentWeaponRef.current) {
-        currentWeaponRef.current = storeState.equippedWeapon;
-      }
-
+      // Update movement and camera follow
       if (modelRef.current && controlsActive.current) {
         const moveSpeed = 0.04;
-        let direction = new THREE.Vector3();
-
-        if (keysPressed.current['w']) direction.z -= 1;
-        if (keysPressed.current['s']) direction.z += 1;
-        if (keysPressed.current['a']) direction.x -= 1;
-        if (keysPressed.current['d']) direction.x += 1;
-
-        const dirLength = direction.length();
-        const isMoving = dirLength > 0.01;
+        const direction = new THREE.Vector3(
+          (keysPressed.current['d'] ? 1 : 0) - (keysPressed.current['a'] ? 1 : 0),
+          0,
+          (keysPressed.current['s'] ? 1 : 0) - (keysPressed.current['w'] ? 1 : 0)
+        );
+        const isMoving = direction.lengthSq() > 0.0001;
         const grounded = !isJumpingRef.current && modelRef.current.position.y <= 0;
-
         if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
           velocityRef.current.y = 0.15;
         }
-
         if (isJumpingRef.current || modelRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
           modelRef.current.position.y += velocityRef.current.y;
-
           if (modelRef.current.position.y <= 0) {
             modelRef.current.position.y = 0;
             isJumpingRef.current = false;
             velocityRef.current.y = 0;
           }
         }
-
         if (grounded) {
-          const currentState = useLunaStore.getState();
-          if (currentState.actions.skill) {
+          const state = useLunaStore.getState();
+          if (state.actions.skill) {
             handleSkill();
-          }
-          else if (currentState.actions.attack) {
+          } else if (state.actions.attack) {
             handleAttack();
-          }
-          else if (isMoving) {
+          } else if (isMoving) {
             direction.normalize();
             modelRef.current.position.x += direction.x * moveSpeed;
             modelRef.current.position.z += direction.z * moveSpeed;
-            const angle = Math.atan2(direction.x, direction.z);
+            const angle = Math.atan2(direction.x, -direction.z);
             modelRef.current.rotation.y = angle;
-            if (!animationLocked.current) {
-              setBaseAction('run');
-            }
+            setBaseAction('run');
           } else {
-            if (!animationLocked.current) {
-              setBaseAction(resolveIdle());
-            }
+            setBaseAction(resolveIdle());
           }
         } else {
-          if (!animationLocked.current) {
-            setBaseAction('jump');
-          }
+          setBaseAction('jump');
         }
-
-        const offset = new THREE.Vector3(0, 1.5, 5);
-        camera.position.x = modelRef.current.position.x + offset.x;
-        camera.position.y = modelRef.current.position.y + offset.y;
-        camera.position.z = modelRef.current.position.z + offset.z;
+        const offset = new THREE.Vector3(0, 1.6, 6);
+        camera.position.copy(modelRef.current.position).add(offset);
         controls.target.copy(modelRef.current.position);
         controls.update();
-      } else if (modelRef.current && !controlsActive.current) {
-        const currentState = useLunaStore.getState();
-        if (currentState.actions.skill) {
-          handleSkill();
-        } else if (currentState.actions.attack) {
-          handleAttack();
-        } else if (!animationLocked.current) {
-          setBaseAction(resolveIdle());
-        }
       }
 
       renderer.render(scene, camera);
-    }
+    };
     animate();
 
+    const handleKeyDown = (e) => {
+      if (!controlsActive.current) return;
+      const key = e.key.toLowerCase();
+      keysPressed.current[key] = true;
+      if (key === ' ') e.preventDefault();
+    };
+    const handleKeyUp = (e) => {
+      if (!controlsActive.current) return;
+      keysPressed.current[e.key.toLowerCase()] = false;
+    };
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
@@ -572,7 +251,144 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         containerRef.current.removeChild(renderer.domElement);
       }
     };
-  }, [modelUrl, weaponModel, animations]);
+  }, []);
+
+  // LOAD ENVIRONMENT when environmentUrl changes
+  useEffect(() => {
+    if (!environmentUrl || !sceneRef.current || !envRootRef.current) return;
+    // Clear previous env
+    while (envRootRef.current.children.length) envRootRef.current.remove(envRootRef.current.children[0]);
+    envLoadedRef.current = false;
+
+    const ext = environmentUrl.split('.').pop().toLowerCase();
+    const onEnvLoaded = (envObj) => {
+      // Normalize scale to target size and drop to ground
+      const box = new THREE.Box3().setFromObject(envObj);
+      const size = box.getSize(new THREE.Vector3());
+      const min = box.min.clone();
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const target = 10; // target world size
+      const s = target / maxDim;
+      envObj.scale.setScalar(s);
+      // recalc and drop to ground
+      const box2 = new THREE.Box3().setFromObject(envObj);
+      const min2 = box2.min;
+      envObj.position.y -= min2.y;
+
+      envRootRef.current.add(envObj);
+      envLoadedRef.current = true;
+    };
+
+    if (ext === 'fbx') {
+      const loader = new FBXLoader();
+      loader.load(environmentUrl, onEnvLoaded, undefined, (e) => console.error('Env FBX load error', e));
+    } else {
+      const loader = new GLTFLoader();
+      loader.load(environmentUrl, (gltf) => onEnvLoaded(gltf.scene), undefined, (e) => console.error('Env GLTF load error', e));
+    }
+  }, [environmentUrl]);
+
+  // LOAD AVATAR when modelUrl or animations change
+  useEffect(() => {
+    if (!modelUrl || !sceneRef.current || !avatarRootRef.current) return;
+    if (environmentUrl && !envLoadedRef.current) return; // wait for env if provided
+
+    while (avatarRootRef.current.children.length) avatarRootRef.current.remove(avatarRootRef.current.children[0]);
+
+    const extension = modelUrl.split('.').pop().toLowerCase();
+    const isFBX = extension === 'fbx';
+
+    const processAvatar = (model, anims=[]) => {
+      modelRef.current = model;
+
+      let rightHandBone = null;
+      model.traverse((node) => {
+        if (node.isBone) {
+          const n = node.name.toLowerCase();
+          if (n.includes('righthand') || n.includes('hand_r') || n.includes('mixamorig_righthand')) rightHandBone = node;
+        }
+        if (node.isMesh || node.isSkinnedMesh) {
+          node.frustumCulled = false;
+          if (node.material) {
+            const applySide = (mat) => { mat.side = THREE.DoubleSide; mat.needsUpdate = true; };
+            if (Array.isArray(node.material)) node.material.forEach(applySide); else applySide(node.material);
+          }
+        }
+      });
+
+      // Scale to human height ~1.8m and place on ground
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const min = box.min.clone();
+      const targetHeight = 1.8;
+      const h = size.y || 1;
+      const s = targetHeight / h;
+      model.scale.multiplyScalar(s);
+      model.position.y -= min.y * s; // feet to ground
+
+      avatarRootRef.current.add(model);
+
+      if (weaponModel && rightHandBone) {
+        const weaponLoader = new FBXLoader();
+        weaponLoader.load(weaponModel, (weaponFbx) => {
+          weaponRef.current = weaponFbx;
+          weaponFbx.scale.multiplyScalar(0.01);
+          rightHandBone.add(weaponFbx);
+          weaponFbx.position.set(0, 0.1, 0);
+          weaponFbx.rotation.set(Math.PI / 2, 0, 0);
+          weaponFbx.visible = false;
+          setWeaponAttached(true);
+        });
+      }
+
+      mixerRef.current = new THREE.AnimationMixer(model);
+      if (anims && anims.length > 0) {
+        anims.forEach((clip) => {
+          const action = mixerRef.current.clipAction(clip);
+          const name = clip.name.toLowerCase();
+          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
+          else if (name.includes('walk')) actionsRef.current.walk = action;
+          else if (name.includes('run')) actionsRef.current.run = action;
+          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          else if (name.includes('kick')) actionsRef.current.kick = action;
+          else if (name.includes('dance')) actionsRef.current.dance = action;
+          else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
+        });
+        const idleAction = actionsRef.current.idle || mixerRef.current.clipAction(anims[0]);
+        idleAction && idleAction.play();
+      }
+    };
+
+    if (isFBX) {
+      const loader = new FBXLoader();
+      loader.load(
+        modelUrl,
+        (fbx) => {
+          const allClips = [...(fbx.animations || [])];
+          let loadedCount = 0;
+          animations.forEach((anim) => {
+            loader.load(anim.file_url, (animFbx) => {
+              if (animFbx.animations && animFbx.animations.length) {
+                animFbx.animations.forEach((clip) => {
+                  if (anim.animation_type === 'idle') clip.name = 'idle';
+                  else if (anim.animation_type === 'run') clip.name = 'run';
+                  else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                  allClips.push(clip);
+                });
+              }
+              loadedCount++;
+              if (loadedCount === animations.length) processAvatar(fbx, allClips);
+            });
+          });
+          if (animations.length === 0) processAvatar(fbx, allClips);
+        }
+      );
+    } else {
+      const loader = new GLTFLoader();
+      loader.load(modelUrl, (gltf) => processAvatar(gltf.scene, gltf.animations || []));
+    }
+  }, [modelUrl, weaponModel, animations, environmentUrl]);
 
 
 
@@ -1078,6 +894,7 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
+  const [environmentUrl, setEnvironmentUrl] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1264,7 +1081,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} environmentUrl={environmentUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
         </div>
       }
 
