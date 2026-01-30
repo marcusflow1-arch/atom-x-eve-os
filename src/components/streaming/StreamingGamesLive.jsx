@@ -151,7 +151,7 @@ export default function StreamingGamesLive() {
 
         <div className="flex gap-8">
           {/* LEFT: Genres */}
-          <div className="w-[260px] hidden lg:block flex-shrink-0">
+          <div className="w-[260px] hidden lg:block flex-shrink-0 sticky top-20 self-start">
             <div className="mb-4">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
@@ -164,7 +164,7 @@ export default function StreamingGamesLive() {
               </div>
             </div>
 
-            <div className="space-y-2 pr-1 custom-scrollbar max-h-[70vh] overflow-y-auto">
+            <div className="space-y-2 pr-1 custom-scrollbar overflow-y-auto max-h-[calc(100vh-6rem)]">
               {genres.map((g) => (
                 <button
                   key={g}
