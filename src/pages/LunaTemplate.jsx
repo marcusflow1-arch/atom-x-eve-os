@@ -75,6 +75,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
 
+  // Local background layers for crossfade (no remounts)
+  const [bgA, setBgA] = React.useState(null);
+  const [bgB, setBgB] = React.useState(null);
+  const [activeBg, setActiveBg] = React.useState('A');
+
+  useEffect(() => {
+    if (!backgroundUrl) return;
+    if (activeBg === 'A') {
+      setBgB(backgroundUrl);
+      requestAnimationFrame(() => setActiveBg('B'));
+    } else {
+      setBgA(backgroundUrl);
+      requestAnimationFrame(() => setActiveBg('A'));
+    }
+  }, [backgroundUrl, activeBg]);
+
   // Zustand store state
   const equipment = useLunaStore((state) => state.equipment);
   const actions = useLunaStore((state) => state.actions);
@@ -110,15 +126,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
-    if (backgroundUrl) {
-      const texLoader = new THREE.TextureLoader();
-      texLoader.load(backgroundUrl, (tex) => {
-        if (tex && tex.colorSpace !== undefined) {
-          tex.colorSpace = THREE.SRGBColorSpace;
-        }
-        scene.background = tex;
-      });
-    }
+
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
@@ -566,21 +574,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
   }, [modelUrl, weaponModel, animations]);
 
-  useEffect(() => {
-    const scene = sceneRef.current;
-    if (!scene) return;
-    if (!backgroundUrl) {
-      scene.background = null;
-      return;
-    }
-    const loader = new THREE.TextureLoader();
-    loader.load(backgroundUrl, (tex) => {
-      if (tex && tex.colorSpace !== undefined) {
-        tex.colorSpace = THREE.SRGBColorSpace;
-      }
-      scene.background = tex;
-    });
-  }, [backgroundUrl]);
+
 
   useEffect(() => {
     if (triggerAnimation && actionsRef.current[triggerAnimation]) {
@@ -592,7 +586,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
   }, [triggerAnimation]);
 
-  return <div ref={containerRef} className="w-full h-full" style={{ backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />;
+  return (
+    <div className="w-full h-full relative">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: bgA ? `url(${bgA})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: activeBg === 'A' ? 1 : 0,
+          transition: 'opacity 400ms ease'
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: bgB ? `url(${bgB})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          opacity: activeBg === 'B' ? 1 : 0,
+          transition: 'opacity 400ms ease'
+        }}
+      />
+      <div ref={containerRef} className="absolute inset-0" />
+    </div>
+  );
 }
 
 // Orbital Menu Items
