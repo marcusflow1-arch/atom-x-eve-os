@@ -215,9 +215,9 @@ export default function ClanFormsZone({ game, clan, user }) {
   };
 
   return (
-    <div className="h-full w-full grid grid-cols-12 min-h-0" role="region" aria-label="Clan Forms">
+    <div className="h-full w-full grid grid-cols-12 grid-rows-[1fr_auto] min-h-0" role="region" aria-label="Clan Forms">
       {/* Left Chat - Clan Form */}
-      <div className="col-span-4 col-start-1 border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col min-h-0" aria-label="Clan Form chat">
+      <div className="col-span-4 col-start-1 row-start-1 h-full border-r border-white/10 bg-black/20 backdrop-blur-sm flex flex-col min-h-0" aria-label="Clan Form chat">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-white mr-2">Clan Chat</p>
@@ -333,7 +333,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Strategies Board */}
-      <div className="col-span-4 col-start-9 flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Strategies board">
+      <div className="col-span-4 col-start-9 row-start-1 h-full flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Strategies board">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Strategies</p>
@@ -373,7 +373,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Right Chat - Clan Leader Chat */}
-      <div className="col-span-4 col-start-5 flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
+      <div className="col-span-4 col-start-5 row-start-1 h-full flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
@@ -430,7 +430,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       </div>
 
       {/* Bottom Topics (shared) */}
-      <div className="col-span-12 border-t border-white/10 bg-black/10 p-4" aria-label="Topics">
+      <div className="col-span-12 row-start-2 border-t border-white/10 bg-black/10 p-4" aria-label="Topics">
         {newTopicOpen && generalChannel && (
           <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-2">
             <Input placeholder="Topic title" value={topicTitle} onChange={(e) => setTopicTitle(e.target.value)} />
