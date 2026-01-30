@@ -1394,7 +1394,7 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
 }
 
 // New QuickActionsBar Component
-function QuickActionsBar({ navigate, onLiveClick }) {
+function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
   const quickActions = [
     { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
     { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
@@ -1409,11 +1409,17 @@ function QuickActionsBar({ navigate, onLiveClick }) {
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
-      <div
-        key="stats-placeholder"
+      <motion.button
+        key="stats-tile"
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onStatsClick}
         className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/15 transition-all flex-shrink-0"
         style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', width: '85px', height: '75px' }}
-      />
+      >
+        <TrendingUp className="w-5 h-5 text-white/80" />
+        <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">Stats</span>
+      </motion.button>
       {quickActions.map((action) => {
         const Icon = action.icon;
         return (
@@ -1700,6 +1706,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
+  const [showStatsDropdown, setShowStatsDropdown] = useState(false);
   const [settingsMaximized, setSettingsMaximized] = useState(false);
 
   const handleGameSelect = (game) => {
@@ -1777,7 +1784,22 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             <QuickActionsBar 
               navigate={navigate} 
               onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)} 
+              onStatsClick={() => setShowStatsDropdown((v) => !v)}
             />
+
+            <AnimatePresence>
+              {showStatsDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-full overflow-hidden"
+                >
+                  <div className="w-full h-[220px] rounded-2xl border border-white/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence>
               {showLiveDropdown && (
