@@ -1803,7 +1803,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Removed internal calendar logic in favor of global IntelligentCalendarOverlay
 
   return (
-    <div className="h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="relative h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - Quick Access Icons & Live Streaming */}
@@ -1917,6 +1917,26 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
       </AnimatePresence>
 
       {/* Bottom Section - Grid layout */}
+
+      {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
+      {showStatsDropdown && statsActiveTab === 'inventory' && (
+        <div className="absolute left-3 bottom-4 z-30">
+          <div className="p-2 rounded-lg border border-white/10 bg-white/5 backdrop-blur-md">
+            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/50">Skills</div>
+            <div className="flex gap-1 mb-2">
+              {[1,2,3,4,5].map(n => (
+                <div key={n} className="w-6 h-6 rounded-md border border-white/15 bg-white/5 text-[10px] text-white/70 flex items-center justify-center">{n}</div>
+              ))}
+            </div>
+            <div className="mb-1 text-[10px] uppercase tracking-widest text-white/50">AI Passives</div>
+            <div className="flex gap-1">
+              {Array.from({length:4}).map((_,i)=> (
+                <div key={i} className="w-7 h-7 rounded-md border border-white/15 bg-white/5" />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
