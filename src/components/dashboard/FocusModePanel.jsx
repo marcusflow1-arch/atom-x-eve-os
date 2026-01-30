@@ -1836,14 +1836,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
               )}
             </AnimatePresence>
 
-            {showStatsDropdown && (
-              <div className="mt-3">
-                <LibraryBannerSection 
-                  games={ownedGames}
-                  onBackgroundChange={onBackgroundChange}
-                />
-              </div>
-            )}
+            <div className="mt-1">
+              <LibraryBannerSection 
+                games={ownedGames}
+                onBackgroundChange={onBackgroundChange}
+              />
+            </div>
 
             <AnimatePresence>
               {showLiveDropdown && (
@@ -1890,15 +1888,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
         </div>
       </div>
 
-      {/* Banner Section - Mid (default) */}
-      {!showStatsDropdown && (
-        <div className="w-full mt-4 mb-4">
-          <LibraryBannerSection 
-             games={ownedGames}
-             onBackgroundChange={onBackgroundChange}
-          />
-        </div>
-      )}
 
 
 
