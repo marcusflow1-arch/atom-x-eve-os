@@ -431,41 +431,30 @@ const BlacksmithView = ({ card }) => {
                 <AnimatePresence mode="wait">
                   {/* LEVEL UP SYSTEM */}
                   {activeSystem === 'level' && (
-                    <motion.div key="level" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
-                      <div className="flex justify-between items-end mb-6">
-                         <div>
-                             <h4 className="text-white font-bold text-xl">Level Up</h4>
-                             <p className="text-white/50 text-sm">Boost base stats.</p>
-                         </div>
-                         <div className="text-right">
-                             <span className="text-white/40 text-xs block">Current</span>
-                             <span className="text-white font-bold text-xl">{cardLevel} <span className="text-white/40 text-sm">/ {maxLevel}</span></span>
-                         </div>
-                      </div>
-                      
-                      <div className="h-4 bg-black/50 rounded-full overflow-hidden border border-white/5 mb-8">
-                        <motion.div className="h-full bg-gradient-to-r from-orange-500 to-amber-500" initial={{ width: 0 }} animate={{ width: `${(cardLevel / maxLevel) * 100}%` }} />
+                    <motion.div key="level" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/60 text-xs">Level</span>
+                        <span className="text-white font-semibold">{cardLevel} / {maxLevel}</span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mb-8">
+                      <Progress value={(cardLevel / maxLevel) * 100} className="h-2" />
+
+                      <div className="grid grid-cols-3 gap-3">
                         {Object.entries(baseStats).filter(([k]) => k !== 'power').map(([stat, value]) => (
-                          <div key={stat} className="bg-black/40 p-4 rounded-xl border border-white/5">
-                            <span className="text-white/40 text-xs uppercase font-bold tracking-wider">{stat}</span>
-                            <div className="text-white font-black text-2xl mt-1">{value}</div>
-                            {canLevelUp && <div className="text-green-400 text-xs font-bold mt-1 flex items-center"><ArrowUp className="w-3 h-3 mr-1"/> +{stat === 'attack' ? 15 : 10}</div>}
+                          <div key={stat} className="text-sm">
+                            <div className="text-white/50 capitalize">{stat}</div>
+                            <div className="text-white font-bold">{value}</div>
                           </div>
                         ))}
                       </div>
 
-                      <div className="mt-auto">
-                        <Button
-                          onClick={handleLevelUp}
-                          disabled={!canLevelUp || isUpgrading}
-                          className={`w-full h-14 text-lg font-bold rounded-xl ${canLevelUp ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-white/10 text-white/30'}`}
-                        >
-                          {isUpgrading ? <Sparkles className="w-6 h-6 animate-spin" /> : cardLevel >= maxLevel ? 'Ascend to Continue' : `Level Up (${levelCost.toLocaleString()} 🪙)`}
-                        </Button>
-                      </div>
+                      <Button
+                        onClick={handleLevelUp}
+                        disabled={!canLevelUp || isUpgrading}
+                        className={`${canLevelUp ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-white/10 text-white/30'} w-full`}
+                      >
+                        {cardLevel >= maxLevel ? 'Ascend to Continue' : `Level Up (${levelCost.toLocaleString()} 🪙)`}
+                      </Button>
                     </motion.div>
                   )}
 
