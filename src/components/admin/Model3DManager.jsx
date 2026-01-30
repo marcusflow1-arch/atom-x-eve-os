@@ -122,6 +122,7 @@ export default function Model3DManager() {
     category: '',
     tags: []
   });
+  const folderInputRef = useRef(null);
 
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['models3d'],
@@ -321,6 +322,7 @@ export default function Model3DManager() {
           <div className="mt-3">
             <label className="relative cursor-pointer">
               <input
+                ref={folderInputRef}
                 type="file"
                 onChange={handleFolderUpload}
                 className="hidden"
@@ -328,7 +330,7 @@ export default function Model3DManager() {
                 multiple
                 disabled={uploading}
               />
-              <Button disabled={uploading} variant="outline" className="w-full md:w-auto">
+              <Button disabled={uploading} onClick={() => folderInputRef.current?.click()} variant="outline" className="w-full md:w-auto">
                 <Upload className="w-4 h-4 mr-2" /> Upload Model Folder (GLTF/FBX + textures)
               </Button>
             </label>
