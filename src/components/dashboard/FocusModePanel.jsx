@@ -1182,6 +1182,51 @@ function Large3DCard({ card, isActive }) {
 
 // Game Banner Component - Editable banner display
 function GameBanner({ game, onChangeBanner }) {
+  const folderRef = React.useRef(null);
+
+  const handleBannerFolderUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Find main entry model
+    const entry = files.find(f => /\.gltf$/i.test(f.name)) || files.find(f => /\.glb$/i.test(f.name)) || files.find(f => /\.fbx$/i.test(f.name));
+    if (!entry) { alert('Folder must include a .gltf, .glb, or .fbx file'); e.target.value=''; return; }
+
+    try {
+      const uploads = await Promise.all(files.map(async (f) => {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
+        return { original_path: f.webkitRelativePath || f.name, file_url, file_size: f.size, mime_type: f.type, name: f.name };
+      }));
+
+      const bundle_manifest = uploads.reduce((acc, u) => { acc[u.original_path] = u.file_url; acc[u.name] = u.file_url; return acc; }, {});
+      const entryUpload = uploads.find(u => u.name === entry.name) || uploads[0];
+      const license = uploads.find(u => /license|licence|readme/i.test(u.name));
+      const entryExt = (entry.name.split('.').pop() || '').toLowerCase();
+
+      await base44.entities.Model3D.create({
+        name: entry.name,
+        description: 'Uploaded from Game Banner',
+        file_url: entryUpload.file_url,
+        file_type: entryExt,
+        category: 'environment',
+        tags: ['banner-upload'],
+        file_size: entry.size,
+        is_public: false,
+        is_bundle: true,
+        entry_file: entry.webkitRelativePath || entry.name,
+        bundle_manifest,
+        files: uploads.map(({ original_path, file_url, file_size, mime_type }) => ({ original_path, file_url, file_size, mime_type })),
+        license_url: license?.file_url || null
+      });
+
+      alert('Environment folder uploaded successfully');
+    } catch (err) {
+      console.error('Upload failed', err);
+      alert('Upload failed');
+    } finally {
+      e.target.value = '';
+    }
+  };
   const [isHovered, setIsHovered] = useState(false);
   
   // Default banner if no game selected
@@ -1220,6 +1265,32 @@ function GameBanner({ game, onChangeBanner }) {
         )}
       </div>
       
+      {/* Action buttons (Plus to upload folder, X to clear) */}
+      <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+        <button
+          onClick={(e) => { e.stopPropagation(); folderRef.current?.click(); }}
+          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center"
+          title="Upload 3D folder (model + textures)"
+        >
+          <Plus className="w-4 h-4 text-white" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onChangeBanner?.(); }}
+          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center"
+          title="Close"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
+        <input
+          ref={folderRef}
+          type="file"
+          onChange={handleBannerFolderUpload}
+          className="hidden"
+          webkitdirectory=""
+          multiple
+        />
+      </div>
+
       {/* Change Banner Indicator */}
       <AnimatePresence>
         {isHovered && (
