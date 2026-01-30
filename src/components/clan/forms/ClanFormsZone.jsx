@@ -121,6 +121,9 @@ export default function ClanFormsZone({ game, clan, user }) {
     return Array.from(set);
   }, [topicsGeneral, topicsLeader]);
 
+  const topicTitlesGeneral = React.useMemo(() => (topicsGeneral || []).map(t => t.title), [topicsGeneral]);
+  const topicTitlesLeader = React.useMemo(() => (topicsLeader || []).map(t => t.title), [topicsLeader]);
+
   const selectedTopicGeneral = React.useMemo(() => {
     return (topicsGeneral || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitle || '').toLowerCase()) || null;
   }, [topicsGeneral, selectedTopicTitle]);
