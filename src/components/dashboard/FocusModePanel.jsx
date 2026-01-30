@@ -20,6 +20,7 @@ import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
+import StatsDropdown from '@/components/dashboard/StatsDropdown';
 
 import { useQuery } from '@tanstack/react-query';
 
