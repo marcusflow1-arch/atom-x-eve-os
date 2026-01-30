@@ -447,7 +447,7 @@ const BlacksmithView = ({ card }) => {
                         <motion.div className="h-full bg-gradient-to-r from-orange-500 to-amber-500" initial={{ width: 0 }} animate={{ width: `${(cardLevel / maxLevel) * 100}%` }} />
                       </div>
 
-                      <div className="grid grid-cols-3 gap-4 mb-8">
+                      <div className="grid grid-cols-3 gap-4 mb-2">
                         {Object.entries(baseStats).filter(([k]) => k !== 'power').map(([stat, value]) => (
                           <div key={stat} className="bg-black/40 p-4 rounded-xl border border-white/5">
                             <span className="text-white/40 text-xs uppercase font-bold tracking-wider">{stat}</span>
@@ -457,7 +457,7 @@ const BlacksmithView = ({ card }) => {
                         ))}
                       </div>
 
-                      <div className="mt-4">
+                      <div className="mt-2">
                         <Button
                           onClick={handleLevelUp}
                           disabled={!canLevelUp || isUpgrading}
