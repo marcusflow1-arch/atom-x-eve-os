@@ -1812,7 +1812,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                 >
                   <div className="w-full rounded-2xl border border-white/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
                     <div className="p-4">
-                      <AvatarProgressionBox />
+                      <StatsDropdown />
                     </div>
                   </div>
                 </motion.div>
