@@ -80,6 +80,80 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
   const mixerRef = useRef(null);
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
+  const animationLockedRef = useRef(false);
+
+  // Animation helpers available across effects
+  const setBaseAction = (name, once = false) => {
+    if (animationLockedRef.current && !once) return;
+    if (currentBaseActionRef.current === name && !once) return;
+
+    const action = actionsRef.current[name];
+    if (!action) return;
+
+    currentBaseActionRef.current = name;
+
+    Object.values(actionsRef.current).forEach((a) => {
+      if (a && a !== action) a.fadeOut(0.2);
+    });
+
+    if (!action.isRunning() || once) {
+      action.reset();
+      action.fadeIn(0.2);
+      action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat);
+      action.clampWhenFinished = once;
+      action.play();
+
+      if (once && mixerRef.current) {
+        animationLockedRef.current = true;
+        const onFinish = (e) => {
+          if (e.action === action) {
+            animationLockedRef.current = false;
+            mixerRef.current && mixerRef.current.removeEventListener('finished', onFinish);
+          }
+        };
+        mixerRef.current.addEventListener('finished', onFinish);
+      }
+    }
+  };
+
+  const resolveIdle = () => {
+    const state = useLunaStore.getState();
+    const weapon = state.equipment.weapon;
+    if (weapon && state.animationBindings?.weapon_idle?.[weapon]) {
+      return state.animationBindings.weapon_idle[weapon];
+    }
+    return 'idle';
+  };
+
+  const handleAttack = () => {
+    const state = useLunaStore.getState();
+    if (!state.actions.attack) return;
+
+    const weapon = state.equipment.weapon;
+    if (!weapon) return;
+
+    const anim = state.animationBindings?.weapon_attack?.[weapon];
+    if (!anim || !actionsRef.current[anim]) return;
+
+    setBaseAction(anim, true);
+    state.clearActions();
+  };
+
+  const handleSkill = () => {
+    const state = useLunaStore.getState();
+    const skill = state.actions.skill;
+    if (!skill) return;
+
+    if (state.isOnCooldown && state.isOnCooldown(skill)) return;
+
+    const anim = state.animationBindings?.skills?.[skill];
+    if (!anim || !actionsRef.current[anim]) return;
+
+    setBaseAction(anim, true);
+    state.setCooldown && state.setCooldown(skill, Date.now() + 3000);
+    state.clearActions();
+  };
+
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
