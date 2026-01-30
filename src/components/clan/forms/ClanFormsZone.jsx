@@ -327,16 +327,16 @@ export default function ClanFormsZone({ game, clan, user }) {
               </SelectContent>
             </Select>
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/50">Channels</h4>
-            {/* Topic select (affects both chats) */}
+            {/* Topic select (Clan Chat only topics) */}
             <Select value={selectedTopicTitle || ''} onValueChange={(val) => setSelectedTopicTitle(val)}>
               <SelectTrigger className="h-7 w-auto bg-transparent border-0 px-1 text-white/80 hover:text-white min-w-0" title="Select topic">
                 <SelectValue placeholder="General" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
-                {topicTitles.map((t) => (
+                {topicTitlesGeneral.map((t) => (
                   <SelectItem key={t} value={t}>{t}</SelectItem>
                 ))}
-                {topicTitles.length === 0 && (
+                {topicTitlesGeneral.length === 0 && (
                   <div className="px-3 py-2 text-xs text-white/40">No topics yet</div>
                 )}
               </SelectContent>
