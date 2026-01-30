@@ -287,6 +287,10 @@ export default function Model3DManager() {
     return `${mb.toFixed(2)} MB`;
   };
 
+  // Special background option from a 3D Model named "Room 1"
+  const room1Model = models.find(m => (m.name || '').toLowerCase().includes('room 1'));
+  const room1BgImg = room1Model?.thumbnail_url || null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -531,6 +535,19 @@ export default function Model3DManager() {
                           </button>
                         );
                       })}
+
+                      {/* Room 1 from 3D Models */}
+                      {room1BgImg && (
+                        <button
+                          key="room1-bg"
+                          onClick={() => setFeaturedBgUrl(featuredBgUrl === room1BgImg ? null : room1BgImg)}
+                          className={`relative w-24 h-14 rounded overflow-hidden border ${featuredBgUrl === room1BgImg ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
+                          title={room1Model?.name || 'Room 1'}
+                        >
+                          <img src={room1BgImg} alt={room1Model?.name || 'Room 1'} className="w-full h-full object-cover" />
+                          <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{room1Model?.name || 'Room 1'}</span>
+                        </button>
+                      )}
 
                       {/* Game images */}
                       {games?.slice(0, 12).map((g) => {
