@@ -2587,7 +2587,7 @@ export default function LunaTemplate() {
             </div>
           </div>
         </div>
-      }
+      )}
 
       {/* User Profile Overlay */}
       <UserProfileOverlay
