@@ -145,8 +145,8 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
-    controls.enableRotate = false;
-    controls.enablePan = false;
+    controls.enableRotate = true;
+    controls.enablePan = true;
     controls.minDistance = 2;
     controls.maxDistance = 20;
     controls.enabled = true;
@@ -218,8 +218,7 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, weaponModel, trigg
         } else {
           setBaseAction('jump');
         }
-        const offset = new THREE.Vector3(0, 1.6, 6);
-        camera.position.copy(modelRef.current.position).add(offset);
+        // Keep camera user-controlled; follow avatar by targeting it
         controls.target.copy(modelRef.current.position);
         controls.update();
       }
@@ -914,6 +913,20 @@ export default function LunaTemplate() {
       }
     };
     fetchModelAndAnimations();
+  }, []);
+
+  // Load latest environment model (GLTF/GLB)
+  useEffect(() => {
+    const loadEnv = async () => {
+      try {
+        const models = await base44.entities.Model3D.list('-created_date');
+        const env = models.find(m => ['gltf','glb','fbx'].includes((m.file_type||'').toLowerCase()));
+        if (env) setEnvironmentUrl(env.file_url);
+      } catch (e) {
+        console.error('Failed to load environment model:', e);
+      }
+    };
+    loadEnv();
   }, []);
 
   useEffect(() => {
