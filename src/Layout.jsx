@@ -545,7 +545,7 @@ function LayoutContent({ children, currentPageName }) {
                   })}
 
                   {/* Admin Link - Only in Editor/Preview (not in published app) */}
-                  {(window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview')) && (
+                  {((window.location.hostname === 'localhost' || window.location.hostname.includes('preview')) || (isAuthenticated && user?.role === 'admin')) && (
                     <>
                       <div className="my-2 border-t border-white/10" />
                       <Link
@@ -764,9 +764,9 @@ function LayoutContent({ children, currentPageName }) {
 
                           {/* Streaming (Renamed to Aura) */}
                           <button
-                            onClick={() => navigate(createPageUrl('Streaming'))}
+                            onClick={() => navigate(createPageUrl('Aura'))}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/streaming')
+                              location.pathname.toLowerCase().includes('/aura')
                                 ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                                 : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
@@ -894,9 +894,9 @@ function LayoutContent({ children, currentPageName }) {
 
                           {/* Streaming (Renamed to Aura) */}
                           <button
-                            onClick={() => navigate(createPageUrl('Streaming'))}
+                            onClick={() => navigate(createPageUrl('Aura'))}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/streaming')
+                              location.pathname.toLowerCase().includes('/aura')
                                 ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
                                 : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                             }`}
