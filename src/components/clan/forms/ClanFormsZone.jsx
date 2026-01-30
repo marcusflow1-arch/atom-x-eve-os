@@ -82,7 +82,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     queryKey: ['clanFormTopics', generalChannel?.id],
     queryFn: async () => {
       if (!generalChannel?.id) return [];
-      const res = await base44.entities.ClanFormTopic.filter({ channel_id: generalChannel.id }, '-updated_date', 100);
+      const res = await base44.entities.ClanFormTopic.filter({ channel_id: generalChannel.id, game_id: game.id }, '-updated_date', 100);
       return res || [];
     },
     enabled: !!generalChannel?.id,
@@ -92,7 +92,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     queryKey: ['clanFormTopics', leaderChannel?.id],
     queryFn: async () => {
       if (!leaderChannel?.id) return [];
-      const res = await base44.entities.ClanFormTopic.filter({ channel_id: leaderChannel.id }, '-updated_date', 100);
+      const res = await base44.entities.ClanFormTopic.filter({ channel_id: leaderChannel.id, game_id: game.id }, '-updated_date', 100);
       return res || [];
     },
     enabled: !!leaderChannel?.id,
@@ -134,7 +134,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     queryKey: ['clanFormMessages', selectedTopicGeneral?.id],
     queryFn: async () => {
       if (!selectedTopicGeneral?.id) return [];
-      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id }, 'created_date', 200);
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
     enabled: !!selectedTopicGeneral?.id,
@@ -145,7 +145,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     queryKey: ['clanFormMessages', selectedTopicLeader?.id],
     queryFn: async () => {
       if (!selectedTopicLeader?.id) return [];
-      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id }, 'created_date', 200);
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
     enabled: !!selectedTopicLeader?.id,
@@ -192,6 +192,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     if (!generalChannel?.id || !topicTitle.trim()) return;
     const topic = await base44.entities.ClanFormTopic.create({
       channel_id: generalChannel.id,
+      game_id: game.id,
       title: topicTitle.trim(),
       created_by_user_id: user?.id,
       status: 'open'
@@ -206,6 +207,7 @@ export default function ClanFormsZone({ game, clan, user }) {
     if (!topicId || !content?.trim()) return;
     await base44.entities.ClanFormMessage.create({
       topic_id: topicId,
+      game_id: game.id,
       user_id: user?.id,
       clan_id: clan?.id,
       username: user?.full_name || user?.email?.split('@')[0] || 'User',
