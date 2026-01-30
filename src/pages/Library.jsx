@@ -1567,7 +1567,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                         {activeDetailTab === 'discussion' && (
                           <GameDiscussionSection 
                             game={selectedGame} 
-                            onNavigateToForum={() => navigate(createPageUrl('Community') + `?game=${encodeURIComponent(selectedGame.title)}`)}
+                            onNavigateToForum={() => navigate(createPageUrl('Community'), { state: { selectedGame, section: 'general_discussion' } })}
                           />
                         )}
                         

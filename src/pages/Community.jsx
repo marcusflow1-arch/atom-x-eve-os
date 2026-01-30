@@ -66,6 +66,9 @@ export default function CommunityPage() {
         if (location.state?.selectedGame) {
             setActiveGame(location.state.selectedGame);
         }
+        if (location.state?.section) {
+            setActiveSection(location.state.section);
+        }
     }, [location.state]);
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -134,6 +137,18 @@ export default function CommunityPage() {
         };
         fetchGames();
     }, []);
+
+    // Support deep links via URL params (?game=Title&section=general_discussion)
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const gameTitle = params.get('game');
+        const sectionParam = params.get('section');
+        if (sectionParam) setActiveSection(sectionParam);
+        if (gameTitle && allGames.length && !activeGame) {
+            const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
+            if (match) setActiveGame(match);
+        }
+    }, [location.search, allGames, activeGame]);
 
     // Apply filters to games
     useEffect(() => {
