@@ -161,6 +161,31 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
     state.clearActions();
   };
 
+  // Camera framing helper
+  const cameraFramedRef = useRef(false);
+  const frameToObject = (obj, padding = 1.2) => {
+    if (!obj || !cameraRef.current || !controlsRef.current) return;
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxSize = Math.max(size.x, size.y, size.z) || 1;
+    const fov = (camera.fov * Math.PI) / 180;
+    const fitHeightDistance = maxSize / (2 * Math.tan(fov / 2));
+    const fitWidthDistance = fitHeightDistance / (camera.aspect || 1);
+    const distance = padding * Math.max(fitHeightDistance, fitWidthDistance);
+
+    camera.position.copy(center.clone().add(new THREE.Vector3(0, maxSize * 0.25, distance)));
+    camera.near = Math.max(distance / 100, 0.01);
+    camera.far = Math.max(distance * 100, 1000);
+    camera.updateProjectionMatrix();
+
+    controls.target.copy(center);
+    controls.update();
+    cameraFramedRef.current = true;
+  };
+
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
@@ -211,6 +236,7 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
@@ -336,6 +362,21 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
     };
   }, []);
 
+  // Keep renderer sized correctly
+  useEffect(() => {
+    const handleResize = () => {
+      if (!rendererRef.current || !cameraRef.current || !containerRef.current) return;
+      const w = containerRef.current.clientWidth;
+      const h = containerRef.current.clientHeight || 1;
+      rendererRef.current.setSize(w, h);
+      cameraRef.current.aspect = w / h;
+      cameraRef.current.updateProjectionMatrix();
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // LOAD ENVIRONMENT when envUrl changes
   useEffect(() => {
     if (!envUrl || !sceneRef.current || !envRootRef.current) return;
@@ -360,6 +401,7 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
 
       envRootRef.current.add(envObj);
       envLoadedRef.current = true;
+      frameToObject(envRootRef.current, 1.25);
     };
 
     if (ext === 'fbx') {
@@ -476,8 +518,11 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
         });
         const idleAction = actionsRef.current.idle || mixerRef.current.clipAction(anims[0]);
         idleAction && idleAction.play();
-      }
-    };
+        }
+        if (!cameraFramedRef.current) {
+        frameToObject(avatarRootRef.current, 1.3);
+        }
+        };
 
     if (isFBX) {
       const loader = new FBXLoader();
@@ -531,7 +576,9 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           opacity: activeBg === 'A' ? 1 : 0,
-          transition: 'opacity 400ms ease'
+          transition: 'opacity 400ms ease',
+          pointerEvents: 'none',
+          zIndex: 0
         }}
       />
       <div
@@ -542,10 +589,12 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           opacity: activeBg === 'B' ? 1 : 0,
-          transition: 'opacity 400ms ease'
+          transition: 'opacity 400ms ease',
+          pointerEvents: 'none',
+          zIndex: 0
         }}
       />
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0 z-10" />
     </div>
   );
 }
