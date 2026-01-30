@@ -15,6 +15,21 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
     });
   }, [items]);
 
+  const [leftQuery, setLeftQuery] = React.useState('');
+  const [rightQuery, setRightQuery] = React.useState('');
+
+  const filteredAbilities = React.useMemo(() => {
+    const q = leftQuery.trim().toLowerCase();
+    if (!q) return abilities;
+    return abilities.filter(i => (i.name || '').toLowerCase().includes(q) || (i.game || '').toLowerCase().includes(q));
+  }, [abilities, leftQuery]);
+
+  const filteredEquipment = React.useMemo(() => {
+    const q = rightQuery.trim().toLowerCase();
+    if (!q) return equipment;
+    return equipment.filter(i => (i.name || '').toLowerCase().includes(q) || (i.game || '').toLowerCase().includes(q));
+  }, [equipment, rightQuery]);
+
   return (
     <div className="relative h-full w-full">
       {/* Center divider line */}
@@ -24,8 +39,16 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
       <div className="grid grid-cols-1 md:grid-cols-2 h-full gap-6">
         {/* Abilities */}
         <div className="h-full overflow-auto pr-3">
+          <div className="mb-2 flex items-center justify-between">
+            <input
+              value={leftQuery}
+              onChange={(e) => setLeftQuery(e.target.value)}
+              placeholder="Search abilities..."
+              className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-white/30"
+            />
+          </div>
           <div className="space-y-2">
-            {abilities.map((item) => (
+            {filteredAbilities.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onSelectItem && onSelectItem(item)}
@@ -41,7 +64,7 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
                 </div>
               </button>
             ))}
-            {abilities.length === 0 && (
+            {filteredAbilities.length === 0 && (
               <div className="text-white/40 text-sm">No abilities to display.</div>
             )}
           </div>
@@ -49,8 +72,16 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
 
         {/* Equipment */}
         <div className="h-full overflow-auto pl-3">
+          <div className="mb-2 flex items-center justify-between">
+            <input
+              value={rightQuery}
+              onChange={(e) => setRightQuery(e.target.value)}
+              placeholder="Search equipment..."
+              className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:border-white/30"
+            />
+          </div>
           <div className="space-y-2">
-            {equipment.map((item) => (
+            {filteredEquipment.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onSelectItem && onSelectItem(item)}
@@ -66,7 +97,7 @@ export default function VirtualizedTradeGrid({ items, onSelectItem }) {
                 </div>
               </button>
             ))}
-            {equipment.length === 0 && (
+            {filteredEquipment.length === 0 && (
               <div className="text-white/40 text-sm">No equipment to display.</div>
             )}
           </div>
