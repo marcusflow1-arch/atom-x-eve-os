@@ -1,10 +1,14 @@
 import React from 'react';
 
-function SectionLabel({ children }) {
+function SectionHeader({ children }) {
   return (
-    <div className="flex items-center gap-2 mt-2 mb-2">
-      <span className="text-[10px] uppercase tracking-[0.2em] text-white/50">{children}</span>
-      <div className="flex-1 h-px bg-white/10" />
+    <div className="mb-2">
+      <div className="text-[10px] uppercase tracking-[0.25em] text-white/60">{children}</div>
+      <div className="flex items-center gap-2 mt-1">
+        <span className="w-2 h-2 rounded-full border border-white/30" />
+        <span className="w-6 h-px bg-white/30" />
+        <span className="w-24 h-px bg-white/10" />
+      </div>
     </div>
   );
 }
@@ -14,7 +18,7 @@ function Squares({ count = 6, size = 'md' }) {
   return (
     <div className="flex gap-2 flex-wrap">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`${cls} rounded-md border border-white/15 bg-white/5`} />
+        <div key={i} className={`${cls} rounded-md border border-black/50 bg-black/60`} />
       ))}
     </div>
   );
@@ -25,7 +29,7 @@ function Circles({ count = 5, size = 'md' }) {
   return (
     <div className="flex gap-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`${cls} rounded-full border border-white/15 bg-white/5`} />
+        <div key={i} className={`${cls} rounded-full border border-black/50 bg-black/60`} />
       ))}
     </div>
   );
@@ -38,7 +42,7 @@ export default function InventoryGrid() {
       <div className="grid grid-cols-12 gap-6">
         {/* Left column: Armor */}
         <div className="col-span-12 sm:col-span-4">
-          <SectionLabel>Armor</SectionLabel>
+          <SectionHeader>Armor</SectionHeader>
           <div className="grid grid-cols-3 gap-3">
             {Array.from({ length: 9 }).map((_, i) => (
               <div key={i} className="w-full aspect-square rounded-md border border-white/15 bg-white/5" />
@@ -47,32 +51,32 @@ export default function InventoryGrid() {
         </div>
 
         {/* Top center: Weapons */}
-        <div className="col-span-12 sm:col-span-5">
-          <SectionLabel>Weapons</SectionLabel>
+        <div className="col-span-12 sm:col-span-4">
+          <SectionHeader>Weapons</SectionHeader>
           <Squares count={5} size="lg" />
         </div>
 
         {/* Top right: Genre */}
-        <div className="col-span-12 sm:col-span-3">
-          <SectionLabel>Genre</SectionLabel>
+        <div className="col-span-12 sm:col-span-4">
+          <SectionHeader>Genre</SectionHeader>
           <Squares count={4} />
         </div>
 
-        {/* Aspects row */}
-        <div className="col-span-12">
-          <SectionLabel>Aspects</SectionLabel>
+        {/* Aspects - bottom left */}
+        <div className="col-span-12 sm:col-span-4">
+          <SectionHeader>Aspects</SectionHeader>
           <Circles count={5} />
         </div>
 
-        {/* Artifacts row */}
-        <div className="col-span-12">
-          <SectionLabel>Artifacts</SectionLabel>
+        {/* Artifacts - bottom middle */}
+        <div className="col-span-12 sm:col-span-4">
+          <SectionHeader>Artifacts</SectionHeader>
           <Squares count={6} />
         </div>
 
         {/* Bottom right: Genre */}
-        <div className="col-span-12 sm:col-span-4 sm:col-start-9">
-          <SectionLabel>Genre</SectionLabel>
+        <div className="col-span-12 sm:col-span-4">
+          <SectionHeader>Genre</SectionHeader>
           <Squares count={4} />
         </div>
       </div>

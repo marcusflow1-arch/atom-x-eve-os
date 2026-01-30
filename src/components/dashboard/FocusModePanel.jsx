@@ -1826,11 +1826,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                   className="w-full overflow-hidden"
                 >
-                  <div className="w-full rounded-2xl border border-white/10" style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
-                    <div className="p-4">
-                      <StatsDropdown />
+                  <div className="w-full">
+                      <StatsDropdown activeTab={statsActiveTab} onTabChange={setStatsActiveTab} />
                     </div>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
