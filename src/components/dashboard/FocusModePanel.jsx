@@ -880,11 +880,12 @@ function CardDetailOverlay({ card, onClose }) {
       {/* Modal Container - Translucent glass box */}
       <motion.div
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
+        animate={{ scale: 1.35, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={(e) => e.stopPropagation()}
         className={`relative w-full max-w-3xl rounded-2xl overflow-hidden border-2 ${style?.border || 'border-white/20'}`}
+        style={{ transformOrigin: 'center' }}
         style={{
           background: 'linear-gradient(135deg, rgba(100, 120, 140, 0.15) 0%, rgba(80, 100, 120, 0.12) 100%)',
           backdropFilter: 'blur(35px) saturate(150%)',
