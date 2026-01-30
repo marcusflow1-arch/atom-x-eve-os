@@ -7,16 +7,16 @@ function SectionHeader({ children }) {
       <div className="flex flex-col items-center">
         {/* Book icon above */}
         <Book className="w-4 h-4 text-white/50 mb-1" />
-        {/* Lines + circle with label on short line */}
-        <div className="relative h-6 w-full flex items-center justify-center">
-          {/* Long line */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/10" />
-          {/* Short line (text sits on this) */}
-          <div className="absolute top-1/2 -translate-y-1/2 w-24 h-px bg-white/30" />
-          {/* Center circle going through lines */}
-          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/30 bg-black/50" />
-          {/* Label */}
-          <span className="relative px-2 text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</span>
+        {/* Label above the lines */}
+        <span className="mb-1 text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</span>
+        {/* Lines with circle between short (above) and long (below) */}
+        <div className="relative h-4 w-full flex items-center justify-center">
+          {/* Long line (bottom) */}
+          <div className="absolute bottom-0 inset-x-0 h-px bg-white/10" />
+          {/* Short line (just above long line) */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-px bg-white/30" />
+          {/* Circle between lines */}
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border border-white/30 bg-black/50" />
         </div>
       </div>
     </div>
