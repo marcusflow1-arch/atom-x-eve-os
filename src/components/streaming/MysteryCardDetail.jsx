@@ -427,7 +427,7 @@ const BlacksmithView = ({ card }) => {
              </div>
 
              {/* Content Area */}
-             <div className="flex-1 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/10 p-6 relative">
+             <div className="flex-1">
                 <AnimatePresence mode="wait">
                   {/* LEVEL UP SYSTEM */}
                   {activeSystem === 'level' && (
