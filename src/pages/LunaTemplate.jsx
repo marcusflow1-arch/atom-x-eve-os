@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl }) {
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -562,7 +562,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation }) {
     }
   }, [triggerAnimation]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return <div ref={containerRef} className="w-full h-full" style={{ backgroundImage: backgroundUrl ? `url(${backgroundUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }} />;
 }
 
 // Orbital Menu Items
@@ -1028,6 +1028,7 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
+  const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
@@ -1212,7 +1213,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
         </div>
       }
 
@@ -1259,8 +1260,9 @@ export default function LunaTemplate() {
             }}>
 
             <FocusModePanel
-              onOpenCalendar={() => setShowCalendar(true)}
-            />
+               onOpenCalendar={() => setShowCalendar(true)}
+               onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+             />
           </motion.div>
         }
       </AnimatePresence>
