@@ -1154,7 +1154,8 @@ export default function LunaTemplate() {
 
   const handleBoxClick = (slotId) => {
     setClickedSlot(slotId);
-    setShowInventory(true);
+    // Open the new centralized inventory overlay only
+    window.dispatchEvent(new CustomEvent('openInventoryPanel', { detail: { slotId } }));
   };
 
   const handleEquipItem = (item) => {
@@ -1534,26 +1535,6 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Back to Loadout X Button (Only visible when Inventory is open) */}
-      <AnimatePresence>
-        {showInventory &&
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => setShowInventory(false)}
-            className="fixed top-40 left-8 z-[70] w-11 h-11 rounded-full hover:bg-white/[0.1] flex items-center justify-center transition-all border border-white/12"
-            style={{
-              background: 'rgba(11, 11, 11, 0.85)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 4px 20px rgba(0, 0, 0, 0.4)'
-            }}>
-
-            <X className="w-5 h-5 text-[#EDEDED]" />
-          </motion.button>
-        }
-      </AnimatePresence>
 
 
       {/* Main Content Area - Switches based on Console Mode or Achievements */}
