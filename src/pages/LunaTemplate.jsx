@@ -982,8 +982,16 @@ export default function LunaTemplate() {
   useEffect(() => {
     const fetchModelAndAnimations = async () => {
       try {
-        const models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
-        if (models.length > 0) {
+        let models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
+        if (!models || models.length === 0) {
+          models = await base44.entities.ModelFBX.filter({ name: 'YBOT' });
+        }
+        if (!models || models.length === 0) {
+          const all = await base44.entities.ModelFBX.list('-updated_date', 20);
+          const y = all.find((m) => (m.name || '').toLowerCase().includes('y') && (m.name || '').toLowerCase().includes('bot'));
+          if (y) models = [y];
+        }
+        if (models && models.length > 0) {
           setModelUrl(models[0].file_url);
         }
       } catch (error) {
@@ -993,13 +1001,28 @@ export default function LunaTemplate() {
     fetchModelAndAnimations();
   }, []);
 
-  // Load latest environment model (GLTF/GLB)
+  // Load specific environment: Room 1 (fallbacks to any room > any 3D env)
   useEffect(() => {
     const loadEnv = async () => {
       try {
-        const models = await base44.entities.Model3D.list('-created_date');
-        const env = models.find(m => ['gltf','glb','fbx'].includes((m.file_type||'').toLowerCase()));
-        if (env) setEnvironmentUrl(env.file_url);
+        let rooms = await base44.entities.Model3D.filter({ name: 'Room 1' });
+        if (!rooms || rooms.length === 0) {
+          rooms = await base44.entities.Model3D.filter({ name: 'room 1' });
+        }
+        if (rooms && rooms.length > 0) {
+          setEnvironmentUrl(rooms[0].file_url);
+          return;
+        }
+        const models = await base44.entities.Model3D.list('-updated_date', 30);
+        const envRoom = models.find(
+          (m) => ['gltf', 'glb', 'fbx'].includes((m.file_type || '').toLowerCase()) && (m.name || '').toLowerCase().includes('room')
+        );
+        if (envRoom) {
+          setEnvironmentUrl(envRoom.file_url);
+          return;
+        }
+        const first = models.find((m) => ['gltf', 'glb', 'fbx'].includes((m.file_type || '').toLowerCase()));
+        if (first) setEnvironmentUrl(first.file_url);
       } catch (e) {
         console.error('Failed to load environment model:', e);
       }
