@@ -431,7 +431,7 @@ const BlacksmithView = ({ card }) => {
                 <AnimatePresence mode="wait">
                   {/* LEVEL UP SYSTEM */}
                   {activeSystem === 'level' && (
-                    <motion.div key="level" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
+                    <motion.div key="level" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col">
                       <div className="flex justify-between items-end mb-6">
                          <div>
                              <h4 className="text-white font-bold text-xl">Level Up</h4>
