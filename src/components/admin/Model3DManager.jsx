@@ -13,7 +13,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 // 3D Model Viewer Component using Three.js directly
-function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
+function Model3DViewer({ modelUrl, fileType, bundleManifest, backgroundUrl }) {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,14 +22,29 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
     if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f172a);
+    if (!backgroundUrl) { scene.background = new THREE.Color(0x0f172a); }
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 2, 5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     containerRef.current.appendChild(renderer.domElement);
+
+    // Apply optional background image via CSS for proper cover/contain sizing
+    const el = containerRef.current;
+    if (backgroundUrl) {
+      renderer.setClearAlpha(0);
+      if (el) {
+        el.style.backgroundImage = `url(${backgroundUrl})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.style.backgroundRepeat = 'no-repeat';
+      }
+    } else {
+      renderer.setClearColor(0x0f172a, 1);
+      if (el) el.style.backgroundImage = '';
+    }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
@@ -92,7 +107,7 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
       renderer.dispose();
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelUrl]);
+  }, [modelUrl, backgroundUrl]);
 
   return (
     <div className="relative w-full h-64 bg-slate-900 rounded-lg overflow-hidden">
@@ -115,6 +130,7 @@ export default function Model3DManager() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
+  const [featuredBgUrl, setFeaturedBgUrl] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newModel, setNewModel] = useState({
     name: '',
@@ -127,6 +143,11 @@ export default function Model3DManager() {
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['models3d'],
     queryFn: () => base44.entities.Model3D.list('-created_date'),
+  });
+
+  const { data: games = [] } = useQuery({
+    queryKey: ['games-mini'],
+    queryFn: () => base44.entities.Game.list('-created_date', 24),
   });
 
   const createMutation = useMutation({
@@ -458,6 +479,31 @@ export default function Model3DManager() {
                   </div>
                 </div>
 
+                {/* Featured Game Background (optional) */}
+                {games && games.length > 0 && (
+                  <div className="mb-4">
+                    <label className="text-slate-400 text-sm block mb-2">Featured Game Background</label>
+                    <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                      {games.slice(0, 12).map((g) => {
+                        const img = g.banner_image || g.cover_image || g.cover;
+                        if (!img) return null;
+                        const active = featuredBgUrl === img;
+                        return (
+                          <button
+                            key={g.id}
+                            onClick={() => setFeaturedBgUrl(active ? null : img)}
+                            className={`relative w-24 h-14 rounded overflow-hidden border ${active ? 'border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)]' : 'border-white/10'}`}
+                            title={g.title}
+                          >
+                            <img src={img} alt={g.title} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-[10px] text-white px-1 truncate">{g.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* 3D Preview */}
                 {(['glb','gltf','fbx'].includes(selectedModel.file_type)) && (
                   <div className="mb-6">
@@ -465,6 +511,7 @@ export default function Model3DManager() {
                       modelUrl={selectedModel.file_url} 
                       fileType={selectedModel.file_type}
                       bundleManifest={selectedModel.bundle_manifest}
+                      backgroundUrl={featuredBgUrl}
                     />
                   </div>
                 )}
