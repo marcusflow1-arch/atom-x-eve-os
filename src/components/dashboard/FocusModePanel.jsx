@@ -1818,14 +1818,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
               onStatsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown((v) => !v); }}
             />
 
-            {showStatsDropdown && (
-              <div className="mt-3">
-                <LibraryBannerSection 
-                  games={ownedGames}
-                  onBackgroundChange={onBackgroundChange}
-                />
-              </div>
-            )}
+
 
             <AnimatePresence>
               {showStatsDropdown && (
@@ -1842,6 +1835,15 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {showStatsDropdown && (
+              <div className="mt-3">
+                <LibraryBannerSection 
+                  games={ownedGames}
+                  onBackgroundChange={onBackgroundChange}
+                />
+              </div>
+            )}
 
             <AnimatePresence>
               {showLiveDropdown && (
