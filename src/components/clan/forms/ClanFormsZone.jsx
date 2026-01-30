@@ -517,10 +517,10 @@ export default function ClanFormsZone({ game, clan, user }) {
                 <SelectValue placeholder="General" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900/95 text-white border-white/10 max-h-72">
-                {topicTitles.map((t) => (
+                {topicTitlesLeader.map((t) => (
                   <SelectItem key={t} value={t}>{t}</SelectItem>
                 ))}
-                {topicTitles.length === 0 && (
+                {topicTitlesLeader.length === 0 && (
                   <div className="px-3 py-2 text-xs text-white/40">No topics yet</div>
                 )}
               </SelectContent>
