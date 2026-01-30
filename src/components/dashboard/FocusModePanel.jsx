@@ -1783,8 +1783,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative">
             <QuickActionsBar 
               navigate={navigate} 
-              onLiveClick={() => setShowLiveDropdown(!showLiveDropdown)} 
-              onStatsClick={() => setShowStatsDropdown((v) => !v)}
+              onLiveClick={() => { setShowStatsDropdown(false); setShowLiveDropdown((v) => !v); }} 
+              onStatsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown((v) => !v); }}
             />
 
             <AnimatePresence>
