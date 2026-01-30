@@ -457,7 +457,7 @@ const BlacksmithView = ({ card }) => {
                         ))}
                       </div>
 
-                      <div className="mt-auto">
+                      <div className="mt-4">
                         <Button
                           onClick={handleLevelUp}
                           disabled={!canLevelUp || isUpgrading}
