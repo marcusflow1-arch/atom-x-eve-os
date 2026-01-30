@@ -1,17 +1,23 @@
 import React from 'react';
+import { Book } from 'lucide-react';
 
 function SectionHeader({ children }) {
   return (
-    <div className="mb-2">
-      <div className="relative h-6 flex items-center justify-center">
-        {/* Long line */}
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/10" />
-        {/* Short line (text sits on this) */}
-        <div className="absolute top-1/2 -translate-y-1/2 w-24 h-px bg-white/30" />
-        {/* Center circle going through lines */}
-        <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/30 bg-black/50" />
-        {/* Label */}
-        <span className="relative px-2 text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</span>
+    <div className="mb-3">
+      <div className="flex flex-col items-center">
+        {/* Book icon above */}
+        <Book className="w-4 h-4 text-white/50 mb-1" />
+        {/* Lines + circle with label on short line */}
+        <div className="relative h-6 w-full flex items-center justify-center">
+          {/* Long line */}
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/10" />
+          {/* Short line (text sits on this) */}
+          <div className="absolute top-1/2 -translate-y-1/2 w-24 h-px bg-white/30" />
+          {/* Center circle going through lines */}
+          <div className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border border-white/30 bg-black/50" />
+          {/* Label */}
+          <span className="relative px-2 text-[10px] uppercase tracking-[0.35em] text-[#9A9A9A]">{children}</span>
+        </div>
       </div>
     </div>
   );
@@ -78,19 +84,19 @@ export default function InventoryGrid() {
         </div>
 
         {/* Aspects - bottom left */}
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 sm:col-span-4 mt-8 md:mt-12">
           <SectionHeader>Aspects</SectionHeader>
           <Circles count={3} onSlotClick={(i) => openPanel('aspects', i)} />
         </div>
 
         {/* Artifacts - bottom middle */}
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 sm:col-span-4 mt-8 md:mt-12">
           <SectionHeader>Artifacts</SectionHeader>
           <Squares count={5} onSlotClick={(i) => openPanel('artifacts', i)} />
         </div>
 
         {/* Bottom right: Genre */}
-        <div className="col-span-12 sm:col-span-4">
+        <div className="col-span-12 sm:col-span-4 mt-8 md:mt-12">
           <SectionHeader>Genre</SectionHeader>
           <Squares count={2} onSlotClick={(i) => openPanel('genre', i)} />
         </div>
