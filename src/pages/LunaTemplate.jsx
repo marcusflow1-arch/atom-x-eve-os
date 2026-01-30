@@ -67,6 +67,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
   const controlsActive = useRef(false);
+  const sceneRef = useRef(null);
+  const rendererRef = useRef(null);
   const [animations, setAnimations] = React.useState([]);
   const [isActive, setIsActive] = React.useState(false);
   const [weaponAttached, setWeaponAttached] = React.useState(false);
@@ -96,15 +98,27 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     if (!containerRef.current || !modelUrl) return;
 
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     scene.background = null;
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 1.2, 3.5);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    rendererRef.current = renderer;
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
+
+    if (backgroundUrl) {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.load(backgroundUrl, (tex) => {
+        if (tex && tex.colorSpace !== undefined) {
+          tex.colorSpace = THREE.SRGBColorSpace;
+        }
+        scene.background = tex;
+      });
+    }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
@@ -551,6 +565,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
     };
   }, [modelUrl, weaponModel, animations]);
+
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    if (!backgroundUrl) {
+      scene.background = null;
+      return;
+    }
+    const loader = new THREE.TextureLoader();
+    loader.load(backgroundUrl, (tex) => {
+      if (tex && tex.colorSpace !== undefined) {
+        tex.colorSpace = THREE.SRGBColorSpace;
+      }
+      scene.background = tex;
+    });
+  }, [backgroundUrl]);
 
   useEffect(() => {
     if (triggerAnimation && actionsRef.current[triggerAnimation]) {

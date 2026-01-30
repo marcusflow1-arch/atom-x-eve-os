@@ -1371,6 +1371,12 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
 export function LibraryBannerSection({ games, onBackgroundChange }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
+  useEffect(() => {
+    if (selectedBannerGame && onBackgroundChange) {
+      const url = selectedBannerGame.banner_image || selectedBannerGame.cover_image || selectedBannerGame.cover;
+      onBackgroundChange(url);
+    }
+  }, [selectedBannerGame, onBackgroundChange]);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
