@@ -27,7 +27,7 @@ export default function LunaStatsPanel() {
   );
 
   return (
-    <div className="w-80 flex flex-col gap-8">
+    <div className="w-full max-w-sm flex flex-col gap-8">
       
       {/* AI Attributes Section */}
       <div>

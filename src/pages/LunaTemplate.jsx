@@ -1938,7 +1938,11 @@ export default function LunaTemplate() {
                     </div>
                   </div>
 
-                  {/* AI News */}
+                  <div className="mt-6 w-full max-w-sm">
+                  <LunaStatsPanel />
+                </div>
+
+                {/* AI News */}
                   <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                     <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
                       <Radio className="w-5 h-5 text-green-400" />
@@ -2478,17 +2482,6 @@ export default function LunaTemplate() {
 
 
 
-      {/* AI Attributes Panel - Bottom Right */}
-      {uiVisible && !showConsoleMode && !showAchievements &&
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-8 right-8 z-30"
-          style={{ transform: 'scale(0.68) scaleX(0.7225)' }}
-        >
-          <LunaStatsPanel />
-        </motion.div>
-      }
 
       {/* Skills & AI Passives - Bottom Left */}
       {!showInventory && !showAchievements && (
