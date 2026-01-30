@@ -1484,6 +1484,45 @@ export default function TradingPostContent() {
         onPost={handleTradePost}
       />
 
+      {sellerAction.open && sellerAction.offer && (
+        <Dialog open={sellerAction.open} onOpenChange={(v) => setSellerAction({ open: v, offer: v ? sellerAction.offer : null })}>
+          <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-700 max-w-lg text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Interact with {sellerAction.offer.seller.name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="text-sm text-white/60">Choose an action for "{selectedListingGroup?.item?.name}"</div>
+
+              {sellerAction.offer.modes.includes('sale') && (
+                <Button className="w-full bg-green-600 hover:bg-green-500" onClick={() => { setSelectedOffer(sellerAction.offer); setSellerAction({ open: false, offer: null }); }}>
+                  Buy Now
+                </Button>
+              )}
+
+              <div className="bg-white/5 border border-white/10 p-3 rounded-lg">
+                <label className="text-xs text-white/50 block mb-1">Offer Price (AGP)</label>
+                <Input type="number" value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} className="bg-black/30 border-white/20" placeholder="Enter amount" />
+                <div className="mt-2 flex justify-end">
+                  <Button size="sm" className="bg-white/10 hover:bg-white/20" onClick={() => { console.log('Offer sent', offerPrice); setSellerAction({ open: false, offer: null }); }}>
+                    Send Offer
+                  </Button>
+                </div>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 p-3 rounded-lg">
+                <label className="text-xs text-white/50 block mb-1">Ultimatum</label>
+                <Textarea value={ultimatumText} onChange={(e) => setUltimatumText(e.target.value)} className="bg-black/30 border-white/20 min-h-[80px]" />
+                <div className="mt-2 flex justify-end">
+                  <Button size="sm" variant="outline" className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10" onClick={() => { console.log('Ultimatum sent', ultimatumText); setSellerAction({ open: false, offer: null }); }}>
+                    Send Ultimatum
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Inventory Item Overlay */}
       <AnimatePresence>
         {showInventoryOverlay && selectedInventoryItem && (
