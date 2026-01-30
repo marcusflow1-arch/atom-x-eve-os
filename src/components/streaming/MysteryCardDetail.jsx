@@ -826,7 +826,7 @@ export default function MysteryCardDetail({ card, onBack }) {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="h-full"
+                className="h-1/2 overflow-y-auto"
               >
                 <BlacksmithView card={card} />
               </motion.div>
@@ -838,7 +838,7 @@ export default function MysteryCardDetail({ card, onBack }) {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                className="h-full"
+                className="h-1/2 overflow-y-auto"
               >
                 <SkillTreeView card={card} />
               </motion.div>
