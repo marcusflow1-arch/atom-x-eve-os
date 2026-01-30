@@ -1440,7 +1440,7 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
-export function LibraryBannerSection({ games, onBackgroundChange }) {
+export function LibraryBannerSection({ games, onBackgroundChange, onEnvironmentSelect }) {
   const [selectedBannerGame, setSelectedBannerGame] = useState(null);
   useEffect(() => {
     if (selectedBannerGame && onBackgroundChange) {
@@ -1828,6 +1828,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Live Dropdown State
   const [showLiveDropdown, setShowLiveDropdown] = useState(false);
   const [isLive, setIsLive] = useState(true);
+  const [activeEnvironment, setActiveEnvironment] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
@@ -1950,9 +1951,14 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             </AnimatePresence>
 
             <div className="mt-1">
+              {/* Render 3D environment in background when selected */}
+              {activeEnvironment && (
+                <BannerEnvironmentScene model={activeEnvironment} />
+              )}
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
+                onEnvironmentSelect={setActiveEnvironment}
               />
             </div>
 
