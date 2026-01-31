@@ -298,6 +298,120 @@ function LayoutContent({ children, currentPageName }) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
 
+  const [navOrder, setNavOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nav_order');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return ['home', 'library', 'clan', 'forum', 'settings', 'entertainment', 'aura'];
+  });
+
+  const onNavDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(navOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    setNavOrder(items);
+    localStorage.setItem('nav_order', JSON.stringify(items));
+  };
+
+  const renderNavButton = (id) => {
+    const btnClass = (isActive) => `px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
+      isActive
+        ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+        : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+    }`;
+
+    switch (id) {
+      case 'home':
+        return (
+          <div className="relative inline-block">
+            <button
+              onClick={() => {
+                const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+                if (!isOnLunaPage) {
+                  navigate(createPageUrl('LunaTemplate'));
+                } else {
+                  navigate(createPageUrl('Store'));
+                }
+              }}
+              className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+            >
+              Home
+            </button>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
+            >
+              <span className="text-sm font-medium">Store</span>
+            </div>
+          </div>
+        );
+      case 'library':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl('Library'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/library'))}
+          >
+            Library
+          </button>
+        );
+      case 'clan':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/clan'))}
+          >
+            Clan
+          </button>
+        );
+      case 'forum':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/community'))}
+          >
+            Forum
+          </button>
+        );
+      case 'settings':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+            className={btnClass(new URLSearchParams(location.search).get('panel') === 'settings')}
+          >
+            Settings
+          </button>
+        );
+      case 'entertainment':
+        return (
+          <button
+            onClick={() => navigate(
+              (location.pathname.toLowerCase().includes('/lunatemplate') && new URLSearchParams(location.search).get('panel') === 'entertainment')
+                ? createPageUrl('LunaTemplate')
+                : createPageUrl('LunaTemplate') + '?panel=entertainment'
+            )}
+            className={btnClass(
+              location.pathname.toLowerCase().includes('/lunatemplate') && new URLSearchParams(location.search).get('panel') === 'entertainment'
+            )}
+          >
+            Entertainment
+          </button>
+        );
+      case 'aura':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl('Aura'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/aura'))}
+          >
+            Aura
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
+
   // Listen for global event to open the navigation drawer (triggered from pages)
   useEffect(() => {
     const openDrawer = () => setDrawerOpen(true);
