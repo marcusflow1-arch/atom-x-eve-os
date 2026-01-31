@@ -464,6 +464,8 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
           if (worldContainerRef.current) {
             worldContainerRef.current.add(world);
           }
+          envLoadedRef.current = true;
+          currentEnvKeyRef.current = modelUrl;
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
         },
         undefined,
