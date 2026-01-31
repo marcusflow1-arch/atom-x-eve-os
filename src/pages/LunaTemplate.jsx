@@ -88,12 +88,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
-  const [envUrl, setEnvUrl] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
   const [yBotScript, setYBotScript] = React.useState(null);
   const startedRef = useRef(false);
 
-  const envLoadedRef = useRef(false);
+  // Environment loading removed
+  const envLoadedRef = useRef(true); // Always true since we don't load env anymore
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
@@ -150,35 +149,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     fetchAnimations();
   }, []);
 
-  // Fetch environment ('Room 1') and admin Y-Bot script
+  // Fetch admin Y-Bot script (Environment fetching removed)
   useEffect(() => {
     (async () => {
       try {
-        const [envAssets, scripts] = await Promise.all([
-          base44.entities.Model3D.filter({ name: 'Room 1' }),
-          base44.entities.Model3DScript.list()
-        ]);
-        // Prefer ZIP/bundled GLTF, fallback to single GLTF/GLB
-        let picked = null;
-        for (const a of (envAssets || [])) {
-          const t = (a.file_type || '').toLowerCase();
-          if (a.is_bundle || t === 'zip') { picked = a; break; }
-          if (!picked && (t === 'gltf' || t === 'glb')) picked = a;
-        }
-        if (picked) {
-          const t = (picked.file_type || '').toLowerCase();
-          if (picked.is_bundle || t === 'zip') {
-            setEnvBundle({
-              entry: picked.entry_file,
-              manifest: picked.bundle_manifest || {},
-              files: picked.files || []
-            });
-            setEnvUrl(null);
-          } else {
-            setEnvBundle(null);
-            setEnvUrl(picked.file_url || null);
-          }
-        }
+        const scripts = await base44.entities.Model3DScript.list();
         const pick = (scripts || []).find(s => {
           const hay = (s.name || s.model || s.model_name || s.target || s.target_model || '').toLowerCase().replace(/[^a-z0-9]/g,'');
           return hay.includes('ybot');
@@ -289,109 +264,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const isFBX = modelUrl.toLowerCase().includes('.fbx');
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
-    // Load environment ('Room 1') first when actor is FBX
-    if (isFBX && (envUrl || envBundle) && (!envLoadedRef.current || currentEnvKeyRef.current !== (envUrl || envBundle?.entry))) {
-      // Support ZIP bundles via URL manifest mapping
-      let manager = null;
-      let entryUrl = null;
-      if (envBundle) {
-        manager = new THREE.LoadingManager();
-        manager.setURLModifier((url) => {
-          // Robust manifest lookup: try full URL, cleaned path, or just filename
-          const filename = url.split('/').pop().split('?')[0];
-          const clean = url.replace(/^\.\//, '').replace(/^\//, '');
-          const man = envBundle.manifest || {};
-          
-          return man[url] || 
-                 man[clean] || 
-                 man[filename] || 
-                 man[decodeURIComponent(url)] || 
-                 man[decodeURIComponent(filename)] || 
-                 url;
-        });
-        const man = envBundle.manifest || {};
-        const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
-        for (const k of tryKeys) { if (k && man[k]) { entryUrl = man[k]; break; } }
-        if (!entryUrl && (envBundle.files || []).length) {
-          const hit = envBundle.files.find(f => f.original_path === envBundle.entry);
-          if (hit) entryUrl = hit.file_url;
-        }
-      }
-      const envLoader = new GLTFLoader(manager || undefined);
-      const envFetchUrl = entryUrl ? `${entryUrl}${entryUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-      console.log('FETCHING ROOM 1 FROM:', envFetchUrl);
-      envTimeout = setTimeout(() => {
-        if (!envLoadedRef.current) {
-          console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
-          placeholderFloor = new THREE.Mesh(
-            new THREE.BoxGeometry(20, 0.2, 20),
-            new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: false })
-          );
-          placeholderFloor.position.set(0, -0.1, 0);
-          worldContainerRef.current?.add(placeholderFloor);
-        }
-      }, 2000);
-      envLoader.load(
-        envFetchUrl,
-        (envGltf) => {
-          const world = envGltf.scene;
-          world.scale.setScalar(1);
-          world.position.set(0, 0, 0);
-          
-          // Make Environment Translucent to blend with Dashboard
-          world.traverse((child) => {
-            if (child.isMesh) {
-              const materials = Array.isArray(child.material) ? child.material : [child.material];
-              materials.forEach((m) => {
-                if (m) {
-                  m.transparent = true;
-                  m.opacity = 0.15; // High translucency for "holographic" room feel
-                  m.depthWrite = false; // Allow background to show through cleanly
-                  m.side = THREE.DoubleSide;
-                  m.needsUpdate = true;
-                }
-              });
-            }
-          });
-
-          clearGroup(worldContainerRef.current);
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-          if (worldContainerRef.current) {
-            worldContainerRef.current.add(world);
-          }
-          envLoadedRef.current = true;
-          currentEnvKeyRef.current = envUrl || envBundle?.entry;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envFetchUrl} into Environment_Layer` });
-          if (envTimeout) clearTimeout(envTimeout);
-          if (placeholderFloor && worldContainerRef.current) {
-            worldContainerRef.current.remove(placeholderFloor);
-            placeholderFloor.geometry?.dispose?.();
-            placeholderFloor.material?.dispose?.();
-            placeholderFloor = null;
-          }
-          startRenderLoopIfReady();
-          if (envTimeout) clearTimeout(envTimeout);
-          if (placeholderFloor && worldContainerRef.current) {
-            worldContainerRef.current.remove(placeholderFloor);
-            placeholderFloor.geometry?.dispose?.();
-            placeholderFloor.material?.dispose?.();
-            placeholderFloor = null;
-          }
-        },
-        undefined,
-        (err) => {
-          console.error('Error loading ENV glTF:', err);
-          if (envTimeout) clearTimeout(envTimeout);
-          if (!envLoadedRef.current && !placeholderFloor) {
-            placeholderFloor = new THREE.Mesh(
-              new THREE.BoxGeometry(20, 0.2, 20),
-              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-            );
-            placeholderFloor.position.set(0, -0.1, 0);
-            worldContainerRef.current?.add(placeholderFloor);
-          }
-        }
-      );
+    // Environment loading block removed as per request to keep only Y-Bot.
+    // Ensure world container is cleared.
+    if (worldContainerRef.current) {
+      clearGroup(worldContainerRef.current);
     }
 
     const processModel = (model, animations) => {
@@ -606,77 +482,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       );
     } else {
       const loader = new GLTFLoader();
-
-      // Load environment if provided and not already loaded
-      if ((envUrl || envBundle) && (!envLoadedRef.current || currentEnvKeyRef.current !== (envUrl || envBundle?.entry))) {
-        let manager = null;
-        let entryUrl = null;
-        if (envBundle) {
-          manager = new THREE.LoadingManager();
-          manager.setURLModifier((url) => {
-            const filename = url.split('/').pop().split('?')[0];
-            const clean = url.replace(/^\.\//, '').replace(/^\//, '');
-            const man = envBundle.manifest || {};
-            return man[url] || 
-                   man[clean] || 
-                   man[filename] || 
-                   man[decodeURIComponent(url)] || 
-                   man[decodeURIComponent(filename)] || 
-                   url;
-          });
-          const man = envBundle.manifest || {};
-          const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
-          for (const k of tryKeys) { if (k && man[k]) { entryUrl = man[k]; break; } }
-          if (!entryUrl && (envBundle.files || []).length) {
-            const hit = envBundle.files.find(f => f.original_path === envBundle.entry);
-            if (hit) entryUrl = hit.file_url;
-          }
-        }
-        const envLoader = new GLTFLoader(manager || undefined);
-        const envEntryUrl = entryUrl ? `${entryUrl}${entryUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        console.log('FETCHING ROOM 1 FROM:', envEntryUrl);
-        envTimeout = setTimeout(() => {
-          if (!envLoadedRef.current) {
-            console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
-            placeholderFloor = new THREE.Mesh(
-              new THREE.BoxGeometry(20, 0.2, 20),
-              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-            );
-            placeholderFloor.position.set(0, -0.1, 0);
-            worldContainerRef.current?.add(placeholderFloor);
-          }
-        }, 2000);
-        envLoader.load(
-          envEntryUrl,
-          (envGltf) => {
-            const world = envGltf.scene;
-            world.scale.setScalar(1);
-            world.position.set(0, 0, 0);
-            clearGroup(worldContainerRef.current);
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-            if (worldContainerRef.current) {
-              worldContainerRef.current.add(world);
-            }
-            envLoadedRef.current = true;
-            currentEnvKeyRef.current = envUrl || envBundle?.entry;
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envEntryUrl} into Environment_Layer` });
-            startRenderLoopIfReady();
-          },
-          undefined,
-          (err) => {
-            console.error('Error loading ENV glTF:', err);
-            if (envTimeout) clearTimeout(envTimeout);
-            if (!envLoadedRef.current && !placeholderFloor) {
-              placeholderFloor = new THREE.Mesh(
-                new THREE.BoxGeometry(20, 0.2, 20),
-                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-              );
-              placeholderFloor.position.set(0, -0.1, 0);
-              worldContainerRef.current?.add(placeholderFloor);
-            }
-          }
-          );
-      }
 
       loader.load(
         modelUrl,
@@ -952,7 +757,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, envUrl, envBundle, yBotScript]);
+  }, [modelUrl, weaponModel, animations, yBotScript]);
 
 
 
