@@ -150,13 +150,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Read onboarding preference for path-based environment
     const preferredPath = (localStorage.getItem('atom_eve_preferred_path') || '').toLowerCase();
 
-    // Map preferred path to environment asset once
-    const envMapUrl = preferredPath === 'story'
-      ? 'story_world.glb'
-      : preferredPath === 'battle'
-        ? 'arena_world.glb'
-        : null;
-
     // Initialize persistent scene ONCE
     const scene = sceneRef.current || new THREE.Scene();
     sceneRef.current = scene;
@@ -203,6 +196,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (!scene.fog) {
         scene.fog = new THREE.FogExp2(0x0b0b0b, 0.02);
       }
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.name = 'Key_Light';
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
       directionalLight.name = 'Key_Light';
       directionalLight.position.set(5, 5, 5);
@@ -290,6 +287,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
 
     // Conditional Environment Loading based on onboarding preference
+    const envMapUrl = preferredPath === 'story'
+      ? 'story_world.glb'
+      : preferredPath === 'battle'
+        ? 'arena_world.glb'
+        : null;
     const processModel = (model, animations) => {
       modelRef.current = model;
 
@@ -700,7 +702,13 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
       }
 
       // Ensure camera reset once both env and actor are present
-      if (!cameraResetRef.current && envLoadedRef.current && actorContainerRef.current) {
+      if (
+        !cameraResetRef.current &&
+        envLoadedRef.current &&
+        actorContainerRef.current &&
+        actorContainerRef.current.children &&
+        actorContainerRef.current.children.length > 0
+      ) {
         const box = new THREE.Box3().setFromObject(actorContainerRef.current);
         const center = box.getCenter(new THREE.Vector3());
         controls.target.copy(center);
