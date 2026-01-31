@@ -83,6 +83,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
+  const cameraResetRef = useRef(false);
 
   function logChange(entry) {
     try {
@@ -258,27 +259,35 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const isFBX = extension === 'fbx';
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
+    // If actor is FBX, optionally load the environment first based on preference
+    if (isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+      const envLoader = new GLTFLoader();
+      envLoader.load(
+        envMapUrl,
+        (envGltf) => {
+          const world = envGltf.scene;
+          world.scale.setScalar(1);
+          world.position.set(0, 0, 0);
+          clearGroup(worldContainerRef.current);
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
+          if (worldContainerRef.current) {
+            worldContainerRef.current.add(world);
+          }
+          envLoadedRef.current = true;
+          currentEnvKeyRef.current = envMapUrl;
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
+        },
+        undefined,
+        (err) => console.error('Error loading ENV glTF:', err)
+      );
+    }
+
     // Conditional Environment Loading based on onboarding preference
     const envMapUrl = preferredPath === 'story'
       ? 'story_world.glb'
       : preferredPath === 'battle'
         ? 'arena_world.glb'
         : null;
-
-    // Camera reset helpers
-    const focusCameraOnActor = () => {
-      if (!actorContainerRef.current || !controlsRef.current || !cameraRef.current) return;
-      const box = new THREE.Box3().setFromObject(actorContainerRef.current);
-      const center = box.getCenter(new THREE.Vector3());
-      controlsRef.current.target.copy(center);
-      cameraRef.current.position.set(center.x, center.y + 2, center.z + 5);
-    };
-    const tryCameraReset = () => {
-      if (envLoadedRef.current && actorLoadedRef.current) {
-        focusCameraOnActor();
-        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'camera-reset', summary: 'Camera retargeted to Actor_Layer after both layers loaded' });
-      }
-    };
     const processModel = (model, animations) => {
       modelRef.current = model;
 
@@ -422,7 +431,6 @@ processModel(fbx, allClips);
 mixerRef.current = mixer;
           actorLoadedRef.current = true;
 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-          tryCameraReset();
                 }
               },
               undefined,
@@ -439,7 +447,6 @@ processModel(fbx, allClips);
 mixerRef.current = mixer;
           actorLoadedRef.current = true;
 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-          tryCameraReset();
           }
         },
         undefined,
@@ -465,7 +472,6 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
             envLoadedRef.current = true;
             currentEnvKeyRef.current = envMapUrl;
             logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
-            tryCameraReset();
           },
           undefined,
           (err) => console.error('Error loading ENV glTF:', err)
@@ -487,7 +493,6 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
           envLoadedRef.current = true;
           currentEnvKeyRef.current = modelUrl;
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
-          tryCameraReset();
         },
         undefined,
         (err) => console.error('Error loading GLTF model:', err)
@@ -692,6 +697,14 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
         }
       }
 
+      // Ensure camera reset once both env and actor are present
+      if (!cameraResetRef.current && envLoadedRef.current && actorContainerRef.current) {
+        const box = new THREE.Box3().setFromObject(actorContainerRef.current);
+        const center = box.getCenter(new THREE.Vector3());
+        controls.target.copy(center);
+        camera.position.set(center.x, center.y + 2, center.z + 5);
+        cameraResetRef.current = true;
+      }
       renderer.render(scene, camera);
     }
     animate();
