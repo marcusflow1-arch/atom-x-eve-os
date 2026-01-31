@@ -470,6 +470,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
 
             actorLoadedRef.current = true;
+            if (fbxTimeout) clearTimeout(fbxTimeout);
+            if (placeholderSphere && actorContainerRef.current) {
+              actorContainerRef.current.remove(placeholderSphere);
+              placeholderSphere.geometry?.dispose?.();
+              placeholderSphere.material?.dispose?.();
+              placeholderSphere = null;
+            }
             startRenderLoopIfReady();
             logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
           };
