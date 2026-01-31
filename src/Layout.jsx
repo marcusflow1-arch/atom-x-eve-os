@@ -917,108 +917,32 @@ function LayoutContent({ children, currentPageName }) {
 
                         {/* Sub-Page Links */}
                         <div className="flex items-center gap-2">
-                          {/* Home Button with layered effect like Store */}
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => {
-                                const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
-                                if (!isOnLunaPage) {
-                                  navigate(createPageUrl('LunaTemplate'));
-                                } else {
-                                  navigate(createPageUrl('Store'));
-                                }
-                              }}
-                              className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                            >
-                              Home
-                            </button>
-                            <div
-                              aria-hidden
-                              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
-                            >
-                              <span className="text-sm font-medium">Store</span>
-                            </div>
-                          </div>
-
-                          {/* Library */}
-                          <button
-                            onClick={() => navigate(createPageUrl('Library'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/library')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Library
-                          </button>
-
-                          {/* Clan */}
-                          <button
-                            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/clan') ? 'LunaTemplate' : 'Clan'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/clan')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Clan
-                          </button>
-
-                          {/* Forum */}
-                          <button
-                            onClick={() => navigate(createPageUrl(location.pathname.toLowerCase().includes('/community') ? 'LunaTemplate' : 'Community'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/community')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Forum
-                          </button>
-
-
-
-                          {/* Settings */}
-                          <button
-                            onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              new URLSearchParams(location.search).get('panel') === 'settings'
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Settings
-                          </button>
-
-{/* Aura button removed as requested */}
-
-                          {/* Entertainment */}
-                          <button
-                            onClick={() => navigate(
-                              (location.pathname.toLowerCase().includes('/lunatemplate') && new URLSearchParams(location.search).get('panel') === 'entertainment')
-                                ? createPageUrl('LunaTemplate')
-                                : createPageUrl('LunaTemplate') + '?panel=entertainment'
-                            )}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              (location.pathname.toLowerCase().includes('/lunatemplate') && new URLSearchParams(location.search).get('panel') === 'entertainment')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Entertainment
-                          </button>
-
-                          {/* Streaming (Renamed to Aura) */}
-                          <button
-                            onClick={() => navigate(createPageUrl('Aura'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/aura')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Aura
-                          </button>
+                          <DragDropContext onDragEnd={onNavDragEnd}>
+                            <Droppable droppableId="nav-items" direction="horizontal">
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className="flex items-center gap-2"
+                                >
+                                  {navOrder.map((id, index) => (
+                                    <Draggable key={id} draggableId={id} index={index}>
+                                      {(provided) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                        >
+                                          {renderNavButton(id)}
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          </DragDropContext>
 
                           {/* Discord */}
                           <a
