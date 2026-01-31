@@ -478,6 +478,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
            startRenderLoopIfReady();
 
+        }
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
