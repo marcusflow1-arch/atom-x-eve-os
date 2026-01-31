@@ -150,6 +150,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Read onboarding preference for path-based environment
     const preferredPath = (localStorage.getItem('atom_eve_preferred_path') || '').toLowerCase();
 
+    // Map preferred path to environment asset once
+    const envMapUrl = preferredPath === 'story'
+      ? 'story_world.glb'
+      : preferredPath === 'battle'
+        ? 'arena_world.glb'
+        : null;
+
     // Initialize persistent scene ONCE
     const scene = sceneRef.current || new THREE.Scene();
     sceneRef.current = scene;
@@ -283,11 +290,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
 
     // Conditional Environment Loading based on onboarding preference
-    const envMapUrl = preferredPath === 'story'
-      ? 'story_world.glb'
-      : preferredPath === 'battle'
-        ? 'arena_world.glb'
-        : null;
     const processModel = (model, animations) => {
       modelRef.current = model;
 
