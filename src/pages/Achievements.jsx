@@ -958,8 +958,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                           } else if (blacksmithMode) {
                             setBlacksmithCard(card);
                           } else {
-                          // Simple inline details only (no overlay)
-                        }
+                            setSelectedCard(card);
+                          }
                         }
                       }}
                       animate={{
@@ -1044,18 +1044,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                       <p className="text-lg text-white/70 line-clamp-3 max-w-xl drop-shadow-md">
                         {activeCard.description}
                       </p>
-                      <div className="mt-3 text-white/70 text-sm space-y-1">
-                        <div><span className="text-white/50">ID:</span> <span className="text-white">{activeCard.id}</span></div>
-                        {activeCard.stats && (
-                          <div className="flex flex-wrap gap-3">
-                            {Object.entries(activeCard.stats).map(([k,v]) => (
-                              <span key={k} className="px-2 py-1 rounded-lg bg-white/10 border border-white/15 text-xs">
-                                {k}: <span className="text-white">{String(v)}</span>
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
                     </motion.div>
                 }
                 </AnimatePresence>
@@ -1508,7 +1496,15 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         }
       </AnimatePresence>
 
-      {/* Card overlay disabled for simple inline details */}
+      {/* Card Enhancement Overlay */}
+      <AnimatePresence>
+        {selectedCard && !skillTreeMode &&
+        <CardEnhancementOverlay
+          card={selectedCard}
+          onClose={() => setSelectedCard(null)} />
+
+        }
+      </AnimatePresence>
 
       {/* Skill Tree Overlay */}
       <AnimatePresence>

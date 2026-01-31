@@ -89,7 +89,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
   const [envUrl, setEnvUrl] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
   const [yBotScript, setYBotScript] = React.useState(null);
   const startedRef = useRef(false);
 
@@ -158,27 +157,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           base44.entities.Model3D.filter({ name: 'Room 1' }),
           base44.entities.Model3DScript.list()
         ]);
-        // Prefer ZIP/bundled GLTF, fallback to single GLTF/GLB
-        let picked = null;
-        for (const a of (envAssets || [])) {
-          const t = (a.file_type || '').toLowerCase();
-          if (a.is_bundle || t === 'zip') { picked = a; break; }
-          if (!picked && (t === 'gltf' || t === 'glb')) picked = a;
-        }
-        if (picked) {
-          const t = (picked.file_type || '').toLowerCase();
-          if (picked.is_bundle || t === 'zip') {
-            setEnvBundle({
-              entry: picked.entry_file,
-              manifest: picked.bundle_manifest || {},
-              files: picked.files || []
-            });
-            setEnvUrl(null);
-          } else {
-            setEnvBundle(null);
-            setEnvUrl(picked.file_url || null);
-          }
-        }
+        const env = (envAssets || []).find(a => (a.file_type || '').toLowerCase() === 'glb' || (a.file_type || '').toLowerCase() === 'gltf');
+        setEnvUrl(env?.file_url || null);
         const pick = (scripts || []).find(s => {
           const hay = (s.name || s.model || s.model_name || s.target || s.target_model || '').toLowerCase().replace(/[^a-z0-9]/g,'');
           return hay.includes('ybot');
@@ -291,27 +271,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
     // Load environment ('Room 1') first when actor is FBX
-    if (isFBX && (envUrl || envBundle) && (!envLoadedRef.current || currentEnvKeyRef.current !== (envUrl || envBundle?.entry))) {
-      // Support ZIP bundles via URL manifest mapping
-      let manager = null;
-      let entryUrl = null;
-      if (envBundle) {
-        manager = new THREE.LoadingManager();
-        manager.setURLModifier((url) => {
-          const clean = url.replace(/^\.\//, '').replace(/^\//, '');
-          const man = envBundle.manifest || {};
-          return (man[url] || man[clean] || man[decodeURIComponent(url)] || man[decodeURIComponent(clean)] || url) + '';
-        });
-        const man = envBundle.manifest || {};
-        const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
-        for (const k of tryKeys) { if (k && man[k]) { entryUrl = man[k]; break; } }
-        if (!entryUrl && (envBundle.files || []).length) {
-          const hit = envBundle.files.find(f => f.original_path === envBundle.entry);
-          if (hit) entryUrl = hit.file_url;
-        }
-      }
-      const envLoader = new GLTFLoader(manager || undefined);
-      const envFetchUrl = entryUrl ? `${entryUrl}${entryUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    if (isFBX && envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
+      const envLoader = new GLTFLoader();
+      const envFetchUrl = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
       console.log('FETCHING ROOM 1 FROM:', envFetchUrl);
       envTimeout = setTimeout(() => {
         if (!envLoadedRef.current) {
@@ -336,8 +298,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             worldContainerRef.current.add(world);
           }
           envLoadedRef.current = true;
-          currentEnvKeyRef.current = envUrl || envBundle?.entry;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envFetchUrl} into Environment_Layer` });
+          currentEnvKeyRef.current = envUrl;
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envFetchUrl2} into Environment_Layer` });
           if (envTimeout) clearTimeout(envTimeout);
           if (placeholderFloor && worldContainerRef.current) {
             worldContainerRef.current.remove(placeholderFloor);
@@ -584,27 +546,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const loader = new GLTFLoader();
 
       // Load environment if provided and not already loaded
-      if ((envUrl || envBundle) && (!envLoadedRef.current || currentEnvKeyRef.current !== (envUrl || envBundle?.entry))) {
-        let manager = null;
-        let entryUrl = null;
-        if (envBundle) {
-          manager = new THREE.LoadingManager();
-          manager.setURLModifier((url) => {
-            const clean = url.replace(/^\.\//, '').replace(/^\//, '');
-            const man = envBundle.manifest || {};
-            return (man[url] || man[clean] || man[decodeURIComponent(url)] || man[decodeURIComponent(clean)] || url) + '';
-          });
-          const man = envBundle.manifest || {};
-          const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
-          for (const k of tryKeys) { if (k && man[k]) { entryUrl = man[k]; break; } }
-          if (!entryUrl && (envBundle.files || []).length) {
-            const hit = envBundle.files.find(f => f.original_path === envBundle.entry);
-            if (hit) entryUrl = hit.file_url;
-          }
-        }
-        const envLoader = new GLTFLoader(manager || undefined);
-        const envEntryUrl = entryUrl ? `${entryUrl}${entryUrl.includes('?') ? '&' : '?'}t=${Date.now()}` : `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        console.log('FETCHING ROOM 1 FROM:', envEntryUrl);
+      if (envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
+        const envLoader = new GLTFLoader();
+        const envFetchUrl2 = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        console.log('FETCHING ROOM 1 FROM:', envFetchUrl2);
         envTimeout = setTimeout(() => {
           if (!envLoadedRef.current) {
             console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
@@ -617,7 +562,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         }, 2000);
         envLoader.load(
-          envEntryUrl,
+          envFetchUrl,
           (envGltf) => {
             const world = envGltf.scene;
             world.scale.setScalar(1);
@@ -628,8 +573,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               worldContainerRef.current.add(world);
             }
             envLoadedRef.current = true;
-            currentEnvKeyRef.current = envUrl || envBundle?.entry;
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envEntryUrl} into Environment_Layer` });
+            currentEnvKeyRef.current = envUrl;
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
             startRenderLoopIfReady();
           },
           undefined,
@@ -896,7 +841,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, envUrl, envBundle, yBotScript]);
+  }, [modelUrl, weaponModel, animations, envUrl, yBotScript]);
 
 
 
@@ -1406,7 +1351,6 @@ export default function LunaTemplate() {
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
-  const [activeQuickPanel, setActiveQuickPanel] = useState(null);
 
   const { mode } = useDashboardMode();
 
@@ -1450,13 +1394,7 @@ export default function LunaTemplate() {
     }
     
     setShowAchievements(panel === 'achievements');
-    }, [location.search]);
-
-    // Sync quick panel with showStats toggle
-    useEffect(() => {
-    if (showStats) setActiveQuickPanel('stats');
-    else if (activeQuickPanel === 'stats') setActiveQuickPanel(null);
-    }, [showStats]);
+  }, [location.search]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1548,7 +1486,6 @@ export default function LunaTemplate() {
     if (clickedSlot && item) {
       equipItem(clickedSlot, item);
       setShowInventory(false);
-      setActiveQuickPanel(null);
     }
   };
 
@@ -1558,8 +1495,7 @@ export default function LunaTemplate() {
       const slotId = e?.detail?.slotId;
       if (slotId) {
         setClickedSlot(slotId);
-        setShowInventory(true);
-        setActiveQuickPanel('inventory');
+        
       }
     };
     window.addEventListener('openInventoryPanel', handler);
@@ -2004,35 +1940,19 @@ export default function LunaTemplate() {
               )}
             </AnimatePresence>
 
-            {/* STATS/INVENTORY CROSSFADE */}
-            <AnimatePresence mode="wait">
-              {activeQuickPanel === 'stats' && (
+            {/* STATS SECTION (Dropdown) */}
+            <AnimatePresence>
+              {showStats && (
                 <motion.div
-                  key="stats"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden"
                   style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
                     <AvatarProgressionBox />
-                  </div>
-                </motion.div>
-              )}
-              {activeQuickPanel === 'inventory' && (
-                <motion.div
-                  key="inventory"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="w-full overflow-hidden"
-                  style={{ paddingLeft: '440px' }}
-                >
-                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
-                    <InventoryPanel onEquip={handleEquipItem} targetSlot={clickedSlot} />
                   </div>
                 </motion.div>
               )}
@@ -2100,11 +2020,7 @@ export default function LunaTemplate() {
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
-                onClick={() => {
-                  setShowStats((v) => !v);
-                  setShowInventory(false);
-                  setActiveQuickPanel((p) => (p === 'stats' ? null : 'stats'));
-                }}
+                onClick={() => setShowStats((v) => !v)}
                 className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
               >
                 <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
