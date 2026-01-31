@@ -57,6 +57,7 @@ import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
+import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
@@ -83,6 +84,7 @@ import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
 import Leaderboard from './pages/Leaderboard';
 import Library from './pages/Library';
+import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OnboardingHome from './pages/OnboardingHome';
@@ -101,8 +103,6 @@ import Streaming from './pages/Streaming';
 import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Aura from './pages/Aura';
-import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -117,6 +117,7 @@ export const PAGES = {
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
+    "Aura": Aura,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
@@ -143,6 +144,7 @@ export const PAGES = {
     "Launcher": Launcher,
     "Leaderboard": Leaderboard,
     "Library": Library,
+    "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OnboardingHome": OnboardingHome,
@@ -161,8 +163,6 @@ export const PAGES = {
     "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Aura": Aura,
-    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {

@@ -80,6 +80,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
+  const envLoadedRef = useRef(false);
+  const actorLoadedRef = useRef(false);
+  const currentEnvKeyRef = useRef(null);
 
   function logChange(entry) {
     try {
