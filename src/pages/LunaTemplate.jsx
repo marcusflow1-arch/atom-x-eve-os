@@ -486,7 +486,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
         const envLoader = new GLTFLoader();
         envLoader.load(
-          envUrl,
+          envFetchUrl,
           (envGltf) => {
             const world = envGltf.scene;
             world.scale.setScalar(1);
