@@ -1406,6 +1406,7 @@ export default function LunaTemplate() {
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
+  const [activeQuickPanel, setActiveQuickPanel] = useState(null);
 
   const { mode } = useDashboardMode();
 
@@ -1449,7 +1450,13 @@ export default function LunaTemplate() {
     }
     
     setShowAchievements(panel === 'achievements');
-  }, [location.search]);
+    }, [location.search]);
+
+    // Sync quick panel with showStats toggle
+    useEffect(() => {
+    if (showStats) setActiveQuickPanel('stats');
+    else if (activeQuickPanel === 'stats') setActiveQuickPanel(null);
+    }, [showStats]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1541,6 +1548,7 @@ export default function LunaTemplate() {
     if (clickedSlot && item) {
       equipItem(clickedSlot, item);
       setShowInventory(false);
+      setActiveQuickPanel(null);
     }
   };
 
@@ -1550,7 +1558,8 @@ export default function LunaTemplate() {
       const slotId = e?.detail?.slotId;
       if (slotId) {
         setClickedSlot(slotId);
-        
+        setShowInventory(true);
+        setActiveQuickPanel('inventory');
       }
     };
     window.addEventListener('openInventoryPanel', handler);
@@ -1995,19 +2004,35 @@ export default function LunaTemplate() {
               )}
             </AnimatePresence>
 
-            {/* STATS SECTION (Dropdown) */}
-            <AnimatePresence>
-              {showStats && (
+            {/* STATS/INVENTORY CROSSFADE */}
+            <AnimatePresence mode="wait">
+              {activeQuickPanel === 'stats' && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0, mb: 0 }}
-                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
-                  exit={{ opacity: 0, height: 0, mb: 0 }}
-                  transition={{ duration: 0.3 }}
+                  key="stats"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
                   className="w-full overflow-hidden"
                   style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
                     <AvatarProgressionBox />
+                  </div>
+                </motion.div>
+              )}
+              {activeQuickPanel === 'inventory' && (
+                <motion.div
+                  key="inventory"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full overflow-hidden"
+                  style={{ paddingLeft: '440px' }}
+                >
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
+                    <InventoryPanel onEquip={handleEquipItem} targetSlot={clickedSlot} />
                   </div>
                 </motion.div>
               )}
@@ -2075,7 +2100,11 @@ export default function LunaTemplate() {
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
-                onClick={() => setShowStats((v) => !v)}
+                onClick={() => {
+                  setShowStats((v) => !v);
+                  setShowInventory(false);
+                  setActiveQuickPanel((p) => (p === 'stats' ? null : 'stats'));
+                }}
                 className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
               >
                 <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
