@@ -83,6 +83,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
+  const cameraResetRef = useRef(false);
 
   function logChange(entry) {
     try {
