@@ -273,8 +273,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Load environment ('Room 1') first when actor is FBX
     if (isFBX && envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
       const envLoader = new GLTFLoader();
+      const envFetchUrl = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      console.log('FETCHING ROOM 1 FROM:', envFetchUrl);
+      envTimeout = setTimeout(() => {
+        if (!envLoadedRef.current) {
+          console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
+          placeholderFloor = new THREE.Mesh(
+            new THREE.BoxGeometry(20, 0.2, 20),
+            new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: false })
+          );
+          placeholderFloor.position.set(0, -0.1, 0);
+          worldContainerRef.current?.add(placeholderFloor);
+        }
+      }, 2000);
       envLoader.load(
-        envUrl,
+        envFetchUrl,
         (envGltf) => {
           const world = envGltf.scene;
           world.scale.setScalar(1);
