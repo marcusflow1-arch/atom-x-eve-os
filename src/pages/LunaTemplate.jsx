@@ -1255,7 +1255,7 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed left-0 w-[260px] z-[35] pointer-events-auto"
+          className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
           style={{
             top: '150px',
             bottom: '0',
@@ -1303,7 +1303,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="fixed right-8 z-30 overflow-y-auto"
             style={{
-              left: '280px', /* Reduced offset for the 3D viewer sidebar */
+              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
               bottom: '32px',
               maxHeight: 'calc(100vh - 112px)',
@@ -1743,6 +1743,7 @@ export default function LunaTemplate() {
             <div className="h-px bg-white/10 mb-6" />
 
             {/* QUICK ACCESS BOXES */}
+            <div style={{ paddingLeft: '440px' }}>
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
@@ -1808,6 +1809,8 @@ export default function LunaTemplate() {
                 <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
               </div>
             </LegendaryTile>
+
+            </div>
 
             {/* Main Grid: Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
