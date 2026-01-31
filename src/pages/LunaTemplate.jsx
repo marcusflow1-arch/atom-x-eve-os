@@ -422,8 +422,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     if (isFBX) {
       const loader = new FBXLoader();
+      const actorFetchUrl = `${modelUrl}${modelUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+      console.log('FETCHING Y-BOT FROM:', actorFetchUrl);
+      fbxTimeout = setTimeout(() => {
+        if (!actorLoadedRef.current) {
+          console.warn('FBX did not load in 2s, rendering RED SPHERE placeholder');
+          placeholderSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 24, 24),
+            new THREE.MeshBasicMaterial({ color: 0xff0000 })
+          );
+          placeholderSphere.position.set(0, 0.5, 0);
+          actorContainerRef.current?.add(placeholderSphere);
+        }
+      }, 2000);
       loader.load(
-        modelUrl,
+        actorFetchUrl,
         (fbx) => {
           // Normalize materials and disable frustum culling
           fbx.traverse((node) => {
