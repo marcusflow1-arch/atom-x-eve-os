@@ -254,8 +254,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.domElement.style.cursor = 'pointer';
 
     let mixer = null;
-
-
+    let envTimeout = null, fbxTimeout = null;
+    let placeholderFloor = null, placeholderSphere = null;
 
     const clock = new THREE.Clock();
 
