@@ -66,21 +66,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     } catch {}
   };
   
-  const clearGroup = (group) => {
-    if (!group) return;
-    while (group.children.length) {
-      const child = group.children.pop();
-      if (child && child.traverse) {
-        child.traverse((n) => {
-          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
-          if (n.material) {
-            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
-            else if (n.material.dispose) n.material.dispose();
-          }
-        });
-      }
-    }
-  };
 
   const containerRef = useRef(null);
   const modelRef = useRef(null);
