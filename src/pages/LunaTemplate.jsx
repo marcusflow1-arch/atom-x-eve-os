@@ -640,10 +640,7 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       renderer.domElement.removeEventListener('click', handleCanvasClick);
-      renderer.dispose();
-      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
+      // Persistent renderer/scene: do not dispose or clear between model loads
     };
   }, [modelUrl, weaponModel, animations]);
 
