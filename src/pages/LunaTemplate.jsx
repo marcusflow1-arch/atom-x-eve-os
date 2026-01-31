@@ -80,6 +80,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
+
+  const logChange = (entry) => {
+    try {
+      window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
+    } catch {}
+  };
+
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
@@ -252,11 +259,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
     };
 
-    function logChange(entry) {
-      try {
-        window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
-      } catch {}
-    }
+
     const clock = new THREE.Clock();
 
     const extension = modelUrl.split('.').pop().toLowerCase();
