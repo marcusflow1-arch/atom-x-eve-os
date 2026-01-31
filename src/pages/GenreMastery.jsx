@@ -170,24 +170,54 @@ const generateProgressionLevels = (genreId, genreName) => {
   };
   
   for (let i = 1; i <= 20; i++) {
-    const rarity = i === 20 ? 'Godlike' : 
-                   i === 15 ? 'Mythical' :
-                   i === 10 ? 'Legendary' :
-                   i === 5 ? 'Epic' : 
-                   i % 2 === 0 ? 'Rare' : 'Common';
+    const isCardLevel = i === 1 || i % 5 === 0;
+    
+    let rarity = 'Common';
+    let rewardData = {};
+
+    if (isCardLevel) {
+      rarity = i === 20 ? 'Godlike' : 
+               i === 15 ? 'Mythical' :
+               i === 10 ? 'Legendary' :
+               i === 5 ? 'Epic' : 'Rare';
+      
+      rewardData = {
+        name: `${genreName} Mastery Card ${i}`,
+        type: 'Ability Card',
+        rarity: rarity,
+        image: getIcon(genreId, i),
+        description: `Exclusive Season 0 mastery card for reaching rank ${i} in ${genreName}.`
+      };
+    } else {
+      // Intermediary levels: Materials or Experience
+      const isMaterial = i % 2 === 0;
+      rarity = isMaterial ? 'Rare' : 'Common';
+      
+      if (isMaterial) {
+        rewardData = {
+          name: `${genreName} Essence`,
+          type: 'Material',
+          rarity: rarity,
+          image: `https://source.unsplash.com/random/500x500?gem,crystal,ore&sig=${i}`,
+          description: `Rare crafting material used for upgrading ${genreName} equipment.`
+        };
+      } else {
+        rewardData = {
+          name: 'Experience Bundle',
+          type: 'Experience',
+          rarity: rarity,
+          image: `https://source.unsplash.com/random/500x500?lightning,energy,spark&sig=${i}`,
+          description: `A bundle of ${i * 150} XP to boost your progression.`
+        };
+      }
+    }
     
     levels.push({
       level: i,
       isUnlocked: i <= 12, // Mock progress relative to max level 20
       season: 0,
-      cardReward: {
-        name: `${genreName} Mastery Reward ${i}`,
-        type: 'Ability Reward',
-        rarity: rarity,
-        // Using a different visual approach - intended to be a floating item
-        image: getIcon(genreId, i), 
-        description: `Exclusive Season 0 reward for reaching rank ${i} in ${genreName}.`
-      },
+      rewardType: isCardLevel ? 'card' : 'resource',
+      cardReward: rewardData, // Using same key for compatibility with existing components
       equipmentReward: {
         name: `Elite Gear Tier ${i}`,
         type: 'Equipment',
