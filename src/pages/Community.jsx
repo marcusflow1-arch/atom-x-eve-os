@@ -532,7 +532,7 @@ export default function CommunityPage() {
                                                     ))
                                                 ) : posts.length > 0 ? (
                                                     posts.map(post => (
-                                                        <div key={post.id} onClick={() => setSelectedPost(post)}>
+                                                        <div key={post.id} onClick={() => navigate(createPageUrl('PostDetail') + `?id=${post.id}`)}>
                                                             <PostCard post={post} onVote={handleVote} />
                                                         </div>
                                                     ))
