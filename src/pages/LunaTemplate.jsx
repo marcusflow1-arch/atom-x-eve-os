@@ -299,7 +299,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
           envLoadedRef.current = true;
           currentEnvKeyRef.current = envUrl;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envFetchUrl2} into Environment_Layer` });
+          if (envTimeout) clearTimeout(envTimeout);
+          if (placeholderFloor && worldContainerRef.current) {
+            worldContainerRef.current.remove(placeholderFloor);
+            placeholderFloor.geometry?.dispose?.();
+            placeholderFloor.material?.dispose?.();
+            placeholderFloor = null;
+          }
           startRenderLoopIfReady();
           if (envTimeout) clearTimeout(envTimeout);
           if (placeholderFloor && worldContainerRef.current) {
@@ -541,6 +548,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Load environment if provided and not already loaded
       if (envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
         const envLoader = new GLTFLoader();
+        const envFetchUrl2 = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
+        console.log('FETCHING ROOM 1 FROM:', envFetchUrl2);
+        envTimeout = setTimeout(() => {
+          if (!envLoadedRef.current) {
+            console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
+            placeholderFloor = new THREE.Mesh(
+              new THREE.BoxGeometry(20, 0.2, 20),
+              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            placeholderFloor.position.set(0, -0.1, 0);
+            worldContainerRef.current?.add(placeholderFloor);
+          }
+        }, 2000);
         envLoader.load(
           envFetchUrl,
           (envGltf) => {
@@ -558,8 +578,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             startRenderLoopIfReady();
           },
           undefined,
-          (err) => console.error('Error loading ENV glTF:', err)
-        );
+          (err) => {
+            console.error('Error loading ENV glTF:', err);
+            if (envTimeout) clearTimeout(envTimeout);
+            if (!envLoadedRef.current && !placeholderFloor) {
+              placeholderFloor = new THREE.Mesh(
+                new THREE.BoxGeometry(20, 0.2, 20),
+                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+              );
+              placeholderFloor.position.set(0, -0.1, 0);
+              worldContainerRef.current?.add(placeholderFloor);
+            }
+          }
+          );
       }
 
       loader.load(
