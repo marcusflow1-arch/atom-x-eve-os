@@ -146,6 +146,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
 
+    // Read onboarding preference for path-based environment
+    const preferredPath = (localStorage.getItem('atom_eve_preferred_path') || '').toLowerCase();
+
     // Initialize persistent scene ONCE
     const scene = sceneRef.current || new THREE.Scene();
     sceneRef.current = scene;
