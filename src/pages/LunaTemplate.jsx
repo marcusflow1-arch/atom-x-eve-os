@@ -90,12 +90,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const clockRef = useRef(new THREE.Clock());
   const [envUrl, setEnvUrl] = React.useState(null);
   const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
-  const [envBundle, setEnvBundle] = React.useState(null);
   const [yBotScript, setYBotScript] = React.useState(null);
   const startedRef = useRef(false);
 
