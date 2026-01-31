@@ -508,7 +508,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         },
         undefined,
-        (err) => console.error('Error loading FBX model:', err)
+        (err) => {
+          console.error('Error loading FBX model:', err);
+          if (fbxTimeout) clearTimeout(fbxTimeout);
+          if (!actorLoadedRef.current && !placeholderSphere) {
+            placeholderSphere = new THREE.Mesh(
+              new THREE.SphereGeometry(0.5, 24, 24),
+              new THREE.MeshBasicMaterial({ color: 0xff0000 })
+            );
+            placeholderSphere.position.set(0, 0.5, 0);
+            actorContainerRef.current?.add(placeholderSphere);
+          }
+        }
       );
     } else {
       const loader = new GLTFLoader();
