@@ -101,8 +101,8 @@ import Streaming from './pages/Streaming';
 import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import LunaTemplate from './pages/LunaTemplate';
 import Aura from './pages/Aura';
+import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -161,8 +161,8 @@ export const PAGES = {
     "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "LunaTemplate": LunaTemplate,
     "Aura": Aura,
+    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {

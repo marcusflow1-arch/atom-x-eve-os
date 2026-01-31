@@ -74,6 +74,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const [weaponAttached, setWeaponAttached] = React.useState(false);
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
+  const worldContainerRef = useRef(null);
+  const actorContainerRef = useRef(null);
+  const mixerRef = useRef(null);
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
@@ -117,6 +120,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     sceneRef.current = scene;
     scene.background = null;
 
+    // Create persistent containers
+    if (!worldContainerRef.current) {
+      const worldGroup = new THREE.Group();
+      worldGroup.name = 'WorldContainer';
+      worldContainerRef.current = worldGroup;
+      scene.add(worldGroup);
+    }
+    if (!actorContainerRef.current) {
+      const actorGroup = new THREE.Group();
+      actorGroup.name = 'ActorContainer';
+      actorGroup.position.y = 0.5; // Lift actor slightly above floor
+      actorContainerRef.current = actorGroup;
+      scene.add(actorGroup);
+    }
+
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 1.2, 3.5);
 
@@ -144,6 +162,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.minDistance = 2;
     controls.maxDistance = 10;
     controls.enabled = true;
+    if (actorContainerRef.current) {
+      controls.target.copy(actorContainerRef.current.position);
+    }
 
     const handleCanvasClick = () => {
       controlsActive.current = !controlsActive.current;
@@ -158,6 +179,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.domElement.style.cursor = 'pointer';
 
     let mixer = null;
+
+    // Utility: clear a container without clearing the whole scene
+    const clearGroup = (group) => {
+      if (!group) return;
+      while (group.children.length) {
+        const child = group.children.pop();
+        if (child && child.traverse) {
+          child.traverse((n) => {
+            if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+            if (n.material) {
+              if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+              else if (n.material.dispose) n.material.dispose();
+            }
+          });
+        }
+      }
+    };
     const clock = new THREE.Clock();
 
     const extension = modelUrl.split('.').pop().toLowerCase();
@@ -207,14 +245,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
       });
 
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const maxDim = Math.max(size.x, size.y, size.z);
-      const scale = 2 / maxDim;
-      model.scale.multiplyScalar(scale);
-      model.position.sub(center.multiplyScalar(scale));
-      scene.add(model);
+      try {
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        model.position.sub(center);
+      } catch {}
+      if (actorContainerRef.current) {
+        actorContainerRef.current.add(model);
+      }
 
       if (weaponModel && rightHandBone) {
         const weaponLoader = new FBXLoader();
@@ -298,7 +336,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 loadedCount++;
 
                 if (loadedCount === animations.length) {
-                  processModel(fbx, allClips);
+                  clearGroup(actorContainerRef.current);
+fbx.scale.setScalar(0.01);
+fbx.position.set(0, 0, 0);
+processModel(fbx, allClips);
+mixerRef.current = mixer;
                 }
               },
               undefined,
@@ -307,7 +349,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           });
 
           if (animations.length === 0) {
-            processModel(fbx, allClips);
+            clearGroup(actorContainerRef.current);
+fbx.scale.setScalar(0.01);
+fbx.position.set(0, 0, 0);
+processModel(fbx, allClips);
+mixerRef.current = mixer;
           }
         },
         undefined,
@@ -318,40 +364,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       loader.load(
         modelUrl,
         (gltf) => {
-          const model = gltf.scene;
-          model.traverse((node) => {
-            if (node.isMesh || node.isSkinnedMesh) {
-              node.frustumCulled = false;
-
-              if (node.geometry) {
-                try {
-                  node.geometry.computeBoundingBox();
-                  node.geometry.computeBoundingSphere();
-                } catch (e) {
-                  console.warn('Failed to compute bounds for', node.name, e);
-                }
-              }
-
-              if (node.material) {
-                const applySide = (mat) => {
-                  mat.side = THREE.DoubleSide;
-                  mat.needsUpdate = true;
-                };
-
-                if (Array.isArray(node.material)) {
-                  node.material.forEach(applySide);
-                } else {
-                  applySide(node.material);
-                }
-              }
-
-              if (node.isSkinnedMesh) {
-                node.skeleton && node.skeleton.pose && node.skeleton.pose();
-                node.bindMatrix && node.bindMatrix.identity && node.bindMatrix.identity();
-              }
-            }
-          });
-          processModel(model, gltf.animations);
+          const world = gltf.scene;
+          // Normalize map scale and reset position
+          world.scale.setScalar(1);
+          world.position.set(0, 0, 0);
+          clearGroup(worldContainerRef.current);
+          if (worldContainerRef.current) {
+            worldContainerRef.current.add(world);
+          }
         },
         undefined,
         (err) => console.error('Error loading GLTF model:', err)
@@ -481,7 +501,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         currentWeaponRef.current = storeState.equippedWeapon;
       }
 
-      if (modelRef.current && controlsActive.current) {
+      if (actorContainerRef.current && controlsActive.current) {
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
@@ -492,19 +512,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         const dirLength = direction.length();
         const isMoving = dirLength > 0.01;
-        const grounded = !isJumpingRef.current && modelRef.current.position.y <= 0;
+        const grounded = !isJumpingRef.current && actorContainerRef.current.position.y <= 0;
 
         if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
           velocityRef.current.y = 0.15;
         }
 
-        if (isJumpingRef.current || modelRef.current.position.y > 0) {
+        if (isJumpingRef.current || actorContainerRef.current.position.y > 0) {
           velocityRef.current.y -= 0.008;
-          modelRef.current.position.y += velocityRef.current.y;
+          actorContainerRef.current.position.y += velocityRef.current.y;
 
-          if (modelRef.current.position.y <= 0) {
-            modelRef.current.position.y = 0;
+          if (actorContainerRef.current.position.y <= 0) {
+            actorContainerRef.current.position.y = 0;
             isJumpingRef.current = false;
             velocityRef.current.y = 0;
           }
@@ -520,10 +540,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
           else if (isMoving) {
             direction.normalize();
-            modelRef.current.position.x += direction.x * moveSpeed;
-            modelRef.current.position.z += direction.z * moveSpeed;
+            actorContainerRef.current.position.x += direction.x * moveSpeed;
+            actorContainerRef.current.position.z += direction.z * moveSpeed;
             const angle = Math.atan2(direction.x, direction.z);
-            modelRef.current.rotation.y = angle;
+            actorContainerRef.current.rotation.y = angle;
             if (!animationLocked.current) {
               setBaseAction('run');
             }
@@ -539,12 +559,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         const offset = new THREE.Vector3(0, 1.5, 5);
-        camera.position.x = modelRef.current.position.x + offset.x;
-        camera.position.y = modelRef.current.position.y + offset.y;
-        camera.position.z = modelRef.current.position.z + offset.z;
-        controls.target.copy(modelRef.current.position);
+        camera.position.x = actorContainerRef.current.position.x + offset.x;
+        camera.position.y = actorContainerRef.current.position.y + offset.y;
+        camera.position.z = actorContainerRef.current.position.z + offset.z;
+        controls.target.copy(actorContainerRef.current.position);
         controls.update();
-      } else if (modelRef.current && !controlsActive.current) {
+      } else if (actorContainerRef.current && !controlsActive.current) {
         const currentState = useLunaStore.getState();
         if (currentState.actions.skill) {
           handleSkill();
