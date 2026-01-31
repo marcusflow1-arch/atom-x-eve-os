@@ -597,9 +597,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (envBundle) {
           manager = new THREE.LoadingManager();
           manager.setURLModifier((url) => {
+            const filename = url.split('/').pop().split('?')[0];
             const clean = url.replace(/^\.\//, '').replace(/^\//, '');
             const man = envBundle.manifest || {};
-            return (man[url] || man[clean] || man[decodeURIComponent(url)] || man[decodeURIComponent(clean)] || url) + '';
+            return man[url] || 
+                   man[clean] || 
+                   man[filename] || 
+                   man[decodeURIComponent(url)] || 
+                   man[decodeURIComponent(filename)] || 
+                   url;
           });
           const man = envBundle.manifest || {};
           const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
