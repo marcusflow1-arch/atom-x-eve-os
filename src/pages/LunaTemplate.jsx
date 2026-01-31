@@ -66,6 +66,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     } catch {}
   };
   
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
 
   const containerRef = useRef(null);
   const modelRef = useRef(null);
@@ -88,14 +103,41 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
-  const [envUrl, setEnvUrl] = React.useState(null);
-  const [yBotScript, setYBotScript] = React.useState(null);
-  const startedRef = useRef(false);
+
+  const logChange = (entry) => {
+    try {
+      window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
+    } catch {}
+  };
 
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
+
+  function logChange(entry) {
+    try {
+      window.dispatchEvent(
+        new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } })
+      );
+    } catch {}
+  }
+
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
@@ -132,30 +174,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     fetchAnimations();
   }, []);
 
-  // Fetch environment ('Room 1') and Y-Bot script from admin database
-  useEffect(() => {
-    (async () => {
-      try {
-        const [envAssets, scripts] = await Promise.all([
-          base44.entities.Model3D.filter({ name: 'Room 1' }),
-          base44.entities.Model3DScript.list()
-        ]);
-        const env = (envAssets || []).find(a => (a.file_type || '').toLowerCase() === 'glb' || (a.file_type || '').toLowerCase() === 'gltf');
-        setEnvUrl(env?.file_url || null);
-        const pick = (scripts || []).find(s => {
-          const hay = (s.name || s.model || s.model_name || s.target || s.target_model || '').toLowerCase().replace(/[^a-z0-9]/g,'');
-          return hay.includes('ybot');
-        });
-        setYBotScript(pick?.script || pick?.code || pick?.content || null);
-      } catch (e) {
-        console.error('Admin assets fetch failed', e);
-      }
-    })();
-  }, []);
-
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
 
+    // Read onboarding preference for path-based environment
+    const preferredPath = (localStorage.getItem('atom_eve_preferred_path') || '').toLowerCase();
 
     // Initialize persistent scene ONCE
     const scene = sceneRef.current || new THREE.Scene();
@@ -207,6 +230,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       directionalLight.name = 'Key_Light';
       directionalLight.position.set(5, 5, 5);
       scene.add(directionalLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.name = 'Key_Light';
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
     }
 
     const controls = controlsRef.current || new OrbitControls(camera, renderer.domElement);
@@ -238,26 +265,35 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     let mixer = null;
 
+    // Utility: clear a container without clearing the whole scene
+    const clearGroup = (group) => {
+      if (!group) return;
+      while (group.children.length) {
+        const child = group.children.pop();
+        if (child && child.traverse) {
+          child.traverse((n) => {
+            if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+            if (n.material) {
+              if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+              else if (n.material.dispose) n.material.dispose();
+            }
+          });
+        }
+      }
+    };
 
 
     const clock = new THREE.Clock();
-
-    const startRenderLoopIfReady = () => {
-      if (!startedRef.current && envLoadedRef.current && actorLoadedRef.current) {
-        startedRef.current = true;
-        animate();
-      }
-    };
 
     const extension = modelUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
-    // Load environment ('Room 1') first when actor is FBX
-    if (isFBX && envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
+    // If actor is FBX, optionally load the environment first based on preference
+    if (isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
       const envLoader = new GLTFLoader();
       envLoader.load(
-        envUrl,
+        envMapUrl,
         (envGltf) => {
           const world = envGltf.scene;
           world.scale.setScalar(1);
@@ -268,15 +304,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             worldContainerRef.current.add(world);
           }
           envLoadedRef.current = true;
-          currentEnvKeyRef.current = envUrl;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
-          startRenderLoopIfReady();
+          currentEnvKeyRef.current = envMapUrl;
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
         },
         undefined,
         (err) => console.error('Error loading ENV glTF:', err)
       );
     }
 
+    // Conditional Environment Loading based on onboarding preference
+    const envMapUrl = preferredPath === 'story'
+      ? 'story_world.glb'
+      : preferredPath === 'battle'
+        ? 'arena_world.glb'
+        : null;
     const processModel = (model, animations) => {
       modelRef.current = model;
 
@@ -413,25 +454,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
                 if (loadedCount === animations.length) {
                   clearGroup(actorContainerRef.current);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-                fbx.scale.setScalar(1);
-                fbx.position.set(0, 0, 0);
-                processModel(fbx, allClips);
-                // Ensure mixer binds to the freshly loaded fbx
-                if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
-                mixerRef.current = mixer;
-                // Inject Y-Bot admin script if available
-                if (yBotScript) {
-                try {
-                const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
-                const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
-                fn(ctx);
-                } catch(e) { console.error('Script execution failed', e); }
-                }
-                actorLoadedRef.current = true;
-          startRenderLoopIfReady();
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-                startRenderLoopIfReady();
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+fbx.scale.setScalar(1);
+fbx.position.set(0, 0, 0);
+processModel(fbx, allClips);
+mixerRef.current = mixer;
+          actorLoadedRef.current = true;
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
                 }
               },
               undefined,
@@ -440,27 +469,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           });
 
           if (animations.length === 0) {
-             clearGroup(actorContainerRef.current);
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-          fbx.scale.setScalar(1);
-          fbx.position.set(0, 0, 0);
-          processModel(fbx, allClips);
-          // Ensure mixer binds to the freshly loaded fbx
-          if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
-          mixerRef.current = mixer;
-          // Inject Y-Bot admin script if available
-          if (yBotScript) {
-          try {
-          const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
-          const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
-          fn(ctx);
-          } catch(e) { console.error('Script execution failed', e); }
+            clearGroup(actorContainerRef.current);
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+fbx.scale.setScalar(1);
+fbx.position.set(0, 0, 0);
+processModel(fbx, allClips);
+mixerRef.current = mixer;
+          actorLoadedRef.current = true;
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
           }
-           actorLoadedRef.current = true;
-          startRenderLoopIfReady();
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-           startRenderLoopIfReady();
-
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
@@ -468,11 +485,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     } else {
       const loader = new GLTFLoader();
 
-      // Load environment if provided and not already loaded
-      if (envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
+      // Load environment first if preference is set and not already loaded or changed
+      if (envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
         const envLoader = new GLTFLoader();
         envLoader.load(
-          envUrl,
+          envMapUrl,
           (envGltf) => {
             const world = envGltf.scene;
             world.scale.setScalar(1);
@@ -483,9 +500,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               worldContainerRef.current.add(world);
             }
             envLoadedRef.current = true;
-            currentEnvKeyRef.current = envUrl;
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
-            startRenderLoopIfReady();
+            currentEnvKeyRef.current = envMapUrl;
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
           },
           undefined,
           (err) => console.error('Error loading ENV glTF:', err)
@@ -627,8 +643,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
-      const m = mixerRef.current || mixer;
-      if (m) m.update(delta);
+      if (mixer) mixer.update(delta);
 
       updateWeaponVisual();
 
@@ -728,7 +743,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
       renderer.render(scene, camera);
     }
-    startRenderLoopIfReady();
+    animate();
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -1256,13 +1271,9 @@ export default function LunaTemplate() {
   useEffect(() => {
     const fetchModelAndAnimations = async () => {
       try {
-        const candidates = await Promise.all([
-          base44.entities.ModelFBX.filter({ name: 'Y-Bot' }),
-          base44.entities.ModelFBX.filter({ name: 'Y Bot' })
-        ]);
-        const found = (candidates[0] && candidates[0][0]) || (candidates[1] && candidates[1][0]);
-        if (found) {
-          setModelUrl(found.file_url);
+        const models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
+        if (models.length > 0) {
+          setModelUrl(models[0].file_url);
         }
       } catch (error) {
         console.error('Failed to load 3D model:', error);
