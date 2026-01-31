@@ -242,6 +242,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const clock = new THREE.Clock();
 
+    const startRenderLoopIfReady = () => {
+      if (!startedRef.current && envLoadedRef.current && actorLoadedRef.current) {
+        startedRef.current = true;
+        animate();
+      }
+    };
+
     const extension = modelUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
@@ -719,13 +726,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
       renderer.render(scene, camera);
     }
-    const startRenderLoopIfReady = () => {
-      if (!startedRef.current && envLoadedRef.current && actorLoadedRef.current) {
-        startedRef.current = true;
-        animate();
-      }
-    };
-
     startRenderLoopIfReady();
 
     window.addEventListener('keydown', handleKeyDown);
