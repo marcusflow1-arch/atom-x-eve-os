@@ -450,6 +450,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           });
 
           const allClips = [...(fbx.animations || [])];
+          // T-Pose Killswitch: ensure mixer restarts on fresh FBX
+          if (mixerRef.current) {
+            try { mixerRef.current.stopAllAction(); } catch {}
+          }
           let loadedCount = 0;
 
           const finalize = () => {
