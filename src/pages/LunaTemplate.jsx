@@ -428,6 +428,30 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
       );
     } else {
       const loader = new GLTFLoader();
+
+      // Load environment first if preference is set and not already loaded or changed
+      if (envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+        const envLoader = new GLTFLoader();
+        envLoader.load(
+          envMapUrl,
+          (envGltf) => {
+            const world = envGltf.scene;
+            world.scale.setScalar(1);
+            world.position.set(0, 0, 0);
+            clearGroup(worldContainerRef.current);
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
+            if (worldContainerRef.current) {
+              worldContainerRef.current.add(world);
+            }
+            envLoadedRef.current = true;
+            currentEnvKeyRef.current = envMapUrl;
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
+          },
+          undefined,
+          (err) => console.error('Error loading ENV glTF:', err)
+        );
+      }
+
       loader.load(
         modelUrl,
         (gltf) => {
