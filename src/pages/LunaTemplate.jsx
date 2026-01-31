@@ -1257,7 +1257,7 @@ export default function LunaTemplate() {
         <div
           className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
           style={{
-            top: '150px',
+            top: '88px', // stop just below the navigation bar
             bottom: '0',
             display: 'flex',
             alignItems: 'center',
