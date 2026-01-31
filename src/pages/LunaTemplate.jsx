@@ -246,6 +246,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const extension = modelUrl.split('.').pop().toLowerCase();
     const isFBX = extension === 'fbx';
+    logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
     const processModel = (model, animations) => {
       modelRef.current = model;
