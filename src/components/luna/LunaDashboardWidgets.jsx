@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useLayoutEdit } from '@/components/layout/LayoutEditContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Settings, Grid, Bot, Crown, Trophy, Target, Layers } from 'lucide-react';
+import { Play, Settings, Grid, Bot, Crown, Trophy, Target, Layers, GripHorizontal, Move } from 'lucide-react';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import { ConsoleTile, LegendaryTile, LeaderboardTile } from '@/components/dashboard/Tiles';
+import { useAuth } from '@/components/auth/AuthContext';
 
 const DEFAULT_LAYOUT = ['live_stream', 'stats_dropdown', 'top_attributes', 'quick_access', 'game_banner', 'main_grid'];
 
@@ -244,11 +245,21 @@ export default function LunaDashboardWidgets({
   setShowStats, equippedItems, handleBoxClick 
 }) {
   const { isEditing, loadLayout, updatePendingLayout } = useLayoutEdit();
+  const { user } = useAuth();
   const [layout, setLayout] = useState(DEFAULT_LAYOUT);
 
+  // Load layout when user is available or changes
   useEffect(() => {
-    loadLayout('luna_dashboard', DEFAULT_LAYOUT).then(setLayout);
-  }, []);
+    if (user) {
+      loadLayout('luna_dashboard', DEFAULT_LAYOUT).then((savedLayout) => {
+        if (savedLayout && savedLayout.length > 0) {
+          setLayout(savedLayout);
+        } else {
+          setLayout(DEFAULT_LAYOUT);
+        }
+      });
+    }
+  }, [user, loadLayout]);
 
   useEffect(() => {
     if (isEditing) {
@@ -287,21 +298,32 @@ export default function LunaDashboardWidgets({
                    <div
                      ref={provided.innerRef}
                      {...provided.draggableProps}
-                     {...provided.dragHandleProps}
-                     className={`relative transition-all duration-200 ${isEditing ? 'border border-dashed border-white/20 rounded-xl p-2 bg-white/5 hover:border-cyan-400/50 hover:bg-white/10 cursor-move' : ''}`}
+                     className={`relative transition-all duration-200 ${isEditing ? 'border-2 border-dashed border-cyan-500/30 rounded-xl p-4 bg-black/40 mb-4' : ''}`}
                      style={{
                         ...provided.draggableProps.style,
-                        opacity: snapshot.isDragging ? 0.8 : 1,
-                        zIndex: snapshot.isDragging ? 100 : 'auto'
+                        opacity: snapshot.isDragging ? 0.9 : 1,
+                        zIndex: snapshot.isDragging ? 100 : 'auto',
+                        transform: snapshot.isDragging ? provided.draggableProps.style.transform + ' scale(1.02)' : provided.draggableProps.style.transform
                      }}
                    >
-                     {/* Drag Handle Overlay */}
+                     {/* Distinct Drag Handle Bar */}
                      {isEditing && (
-                       <div className="absolute -top-3 -right-2 px-2 py-1 bg-cyan-900/80 rounded text-[10px] text-cyan-200 z-50 pointer-events-none border border-cyan-500/30 uppercase tracking-widest shadow-lg backdrop-blur-md">
-                         {id.replace('_', ' ')}
+                       <div 
+                         {...provided.dragHandleProps}
+                         className="flex items-center justify-between bg-cyan-900/40 border border-cyan-500/30 rounded-lg p-2 mb-4 cursor-grab active:cursor-grabbing hover:bg-cyan-900/60 transition-colors"
+                       >
+                         <div className="flex items-center gap-2">
+                           <Move className="w-4 h-4 text-cyan-400" />
+                           <span className="text-xs font-bold uppercase tracking-widest text-cyan-100">{id.replace(/_/g, ' ')}</span>
+                         </div>
+                         <GripHorizontal className="w-5 h-5 text-cyan-400/50" />
                        </div>
                      )}
-                     {renderWidget(id)}
+                     
+                     {/* Widget Content - Disabled interaction during edit to prevent accidental clicks */}
+                     <div className={isEditing ? 'pointer-events-none opacity-80 blur-[1px] select-none' : ''}>
+                       {renderWidget(id)}
+                     </div>
                    </div>
                  )}
                </Draggable>
