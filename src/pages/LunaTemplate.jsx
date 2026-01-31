@@ -97,6 +97,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
 
+  // Helper: safely clear a THREE.Group and dispose resources
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
+
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
   const [bgB, setBgB] = React.useState(null);
