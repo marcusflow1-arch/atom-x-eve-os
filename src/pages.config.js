@@ -57,6 +57,7 @@ import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
+import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
@@ -64,7 +65,6 @@ import BlankTransition from './pages/BlankTransition';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
-import ClanFormTopic from './pages/ClanFormTopic';
 import ClanHub from './pages/ClanHub';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
@@ -91,7 +91,6 @@ import OnboardingHome from './pages/OnboardingHome';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
-import PostDetail from './pages/PostDetail';
 import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
@@ -118,6 +117,7 @@ export const PAGES = {
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
+    "Aura": Aura,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
@@ -125,7 +125,6 @@ export const PAGES = {
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
-    "ClanFormTopic": ClanFormTopic,
     "ClanHub": ClanHub,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
@@ -152,7 +151,6 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
-    "PostDetail": PostDetail,
     "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
     "Store": Store,

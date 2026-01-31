@@ -485,10 +485,10 @@ export default function CommunityPage() {
                                     <AnimatePresence mode="wait">
                                         {selectedPost ? (
                                             <motion.div
-                                               initial={{ opacity: 0, x: 20 }}
-                                               animate={{ opacity: 1, x: 0 }}
-                                               exit={{ opacity: 0, x: -20 }}
-                                               className="bg-[#0f1419]/80 backdrop-blur-xl rounded-2xl border border-white/10 p-6 min-h-full"
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                className="bg-[#0f1419]/80 backdrop-blur-xl rounded-2xl border border-white/10 p-6 min-h-full"
                                             >
                                                 <Button 
                                                     variant="ghost" 
@@ -532,7 +532,7 @@ export default function CommunityPage() {
                                                     ))
                                                 ) : posts.length > 0 ? (
                                                     posts.map(post => (
-                                                        <div key={post.id} onClick={() => navigate(createPageUrl('PostDetail') + `?id=${post.id}`)}>
+                                                        <div key={post.id} onClick={() => setSelectedPost(post)}>
                                                             <PostCard post={post} onVote={handleVote} />
                                                         </div>
                                                     ))

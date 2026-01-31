@@ -11,7 +11,6 @@ import StrategyUpload from '@/components/clan/strategy/StrategyUpload';
 import StrategyCard from '@/components/clan/strategy/StrategyCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { createPageUrl } from '@/utils';
 
 export default function ClanFormsZone({ game, clan, user }) {
   const qc = useQueryClient();
@@ -378,11 +377,6 @@ export default function ClanFormsZone({ game, clan, user }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {selectedTopicGeneral?.id && (
-            <a href={createPageUrl('ClanFormTopic') + `?topic_id=${selectedTopicGeneral.id}`} className="ml-2 text-xs px-2 py-1 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10">
-              Open Topic
-            </a>
-          )}
         </div>
         {newChannelOpen && (
           <div className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 space-y-3">
@@ -555,11 +549,6 @@ export default function ClanFormsZone({ game, clan, user }) {
               <Button size="sm" variant="outline" onClick={() => setNewTopicOpen((v) => !v)}>New Topic</Button>
             )}
             <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">Leaders Only</Badge>
-            {selectedTopicLeader?.id && (
-              <a href={createPageUrl('ClanFormTopic') + `?topic_id=${selectedTopicLeader.id}`} className="ml-2 text-xs px-2 py-1 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10">
-                Open Topic
-              </a>
-            )}
           </div>
         </div>
         <div className="flex-1 overflow-hidden">
