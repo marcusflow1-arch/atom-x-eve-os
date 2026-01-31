@@ -301,6 +301,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           currentEnvKeyRef.current = envUrl;
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
           startRenderLoopIfReady();
+          if (envTimeout) clearTimeout(envTimeout);
+          if (placeholderFloor && worldContainerRef.current) {
+            worldContainerRef.current.remove(placeholderFloor);
+            placeholderFloor.geometry?.dispose?.();
+            placeholderFloor.material?.dispose?.();
+            placeholderFloor = null;
+          }
         },
         undefined,
         (err) => console.error('Error loading ENV glTF:', err)
