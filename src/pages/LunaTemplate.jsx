@@ -258,6 +258,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const isFBX = extension === 'fbx';
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
+    // Conditional Environment Loading based on onboarding preference
+    const envMapUrl = preferredPath === 'story'
+      ? 'story_world.glb'
+      : preferredPath === 'battle'
+        ? 'arena_world.glb'
+        : null;
     const processModel = (model, animations) => {
       modelRef.current = model;
 
