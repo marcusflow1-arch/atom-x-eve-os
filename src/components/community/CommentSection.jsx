@@ -46,6 +46,7 @@ const Comment = ({ comment, onVote, onReplyClick, replies = [] }) => (
 export default function CommentSection({ postId, comments, onAddComment, onVote, getReplies }) {
     const [newCommentText, setNewCommentText] = useState('');
     const [replyTo, setReplyTo] = useState(null);
+    const [replyTo, setReplyTo] = useState(null);
 
     const handleCommentSubmit = (e) => {
         e.preventDefault();
