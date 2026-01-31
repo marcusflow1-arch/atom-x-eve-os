@@ -9,8 +9,11 @@ export const useLayoutEdit = () => useContext(LayoutEditContext);
 
 export const LayoutEditProvider = ({ children }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentLayouts, setCurrentLayouts] = useState({});
   const { user } = useAuth();
+  
+  // State to track changes before saving
+  const [activePageId, setActivePageId] = useState(null);
+  const [pendingLayout, setPendingLayout] = useState(null);
 
   // Load layout for a specific page
   const loadLayout = async (pageId, defaultOrder) => {
@@ -29,37 +32,55 @@ export const LayoutEditProvider = ({ children }) => {
     return defaultOrder;
   };
 
-  const saveLayout = async (pageId, newOrder) => {
-    if (!user) return;
+  const saveCurrentLayout = async () => {
+    if (!user || !activePageId || !pendingLayout) return;
+    
     try {
       const records = await base44.entities.UserLayout.filter({ 
         user_id: user.id, 
-        page_id: pageId 
+        page_id: activePageId 
       });
       
       if (records.length > 0) {
         await base44.entities.UserLayout.update(records[0].id, {
-          layout_order: newOrder
+          layout_order: pendingLayout
         });
       } else {
         await base44.entities.UserLayout.create({
           user_id: user.id,
-          page_id: pageId,
-          layout_order: newOrder,
+          page_id: activePageId,
+          layout_order: pendingLayout,
           hidden_items: []
         });
       }
       toast.success('Layout saved!');
       setIsEditing(false);
+      // Optional: Refresh/invalidate queries if needed, but the local state usually updates
     } catch (error) {
       console.error("Failed to save layout", error);
       toast.error('Failed to save layout');
     }
   };
 
-  const toggleEditMode = () => setIsEditing(prev => !prev);
+  const updatePendingLayout = (pageId, newOrder) => {
+    setActivePageId(pageId);
+    setPendingLayout(newOrder);
+  };
+
+  const toggleEditMode = () => {
+    if (isEditing) {
+      // If turning off without saving, maybe reset? 
+      // For now, simple toggle. User should use Save/Cancel buttons.
+      setIsEditing(false);
+    } else {
+      setIsEditing(true);
+      toast('Edit Mode Enabled - Drag to reorder!', { icon: '✏️' });
+    }
+  };
+
   const cancelEdit = () => {
     setIsEditing(false);
+    setPendingLayout(null);
     toast('Edit cancelled', { icon: '↩️' });
   };
 
@@ -67,8 +88,9 @@ export const LayoutEditProvider = ({ children }) => {
     <LayoutEditContext.Provider value={{ 
       isEditing, 
       toggleEditMode, 
-      saveLayout, 
+      saveCurrentLayout, 
       loadLayout,
+      updatePendingLayout,
       cancelEdit 
     }}>
       {children}
