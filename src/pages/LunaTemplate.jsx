@@ -310,7 +310,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         },
         undefined,
-        (err) => console.error('Error loading ENV glTF:', err)
+        (err) => {
+          console.error('Error loading ENV glTF:', err);
+          if (envTimeout) clearTimeout(envTimeout);
+          if (!envLoadedRef.current && !placeholderFloor) {
+            placeholderFloor = new THREE.Mesh(
+              new THREE.BoxGeometry(20, 0.2, 20),
+              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+            );
+            placeholderFloor.position.set(0, -0.1, 0);
+            worldContainerRef.current?.add(placeholderFloor);
+          }
+        }
       );
     }
 
