@@ -345,10 +345,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
                 if (loadedCount === animations.length) {
                   clearGroup(actorContainerRef.current);
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared ActorContainer only' });
 fbx.scale.setScalar(0.01);
 fbx.position.set(0, 0, 0);
 processModel(fbx, allClips);
 mixerRef.current = mixer;
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into ActorContainer (scale=0.01)' });
                 }
               },
               undefined,
@@ -358,10 +360,12 @@ mixerRef.current = mixer;
 
           if (animations.length === 0) {
             clearGroup(actorContainerRef.current);
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared ActorContainer only' });
 fbx.scale.setScalar(0.01);
 fbx.position.set(0, 0, 0);
 processModel(fbx, allClips);
 mixerRef.current = mixer;
+logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into ActorContainer (scale=0.01)' });
           }
         },
         undefined,
