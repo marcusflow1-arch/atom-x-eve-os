@@ -59,6 +59,29 @@ import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl }) {
+
+  const logChange = (entry) => {
+    try {
+      window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
+    } catch {}
+  };
+  
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
+
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
