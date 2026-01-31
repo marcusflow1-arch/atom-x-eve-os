@@ -757,7 +757,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations]);
+  }, [modelUrl, weaponModel, animations, envUrl, yBotScript]);
 
 
 
