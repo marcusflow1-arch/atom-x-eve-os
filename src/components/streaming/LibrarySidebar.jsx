@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, X, Plus, Check } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
-import { useLayoutEdit } from '@/components/layout/LayoutEditContext';
 import { playItem } from '@/functions/playItem';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 
@@ -15,7 +14,6 @@ export default function LibrarySidebar() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [overlayActive, setOverlayActive] = useState(false);
-  const { isEditing, toggleEditMode, saveCurrentLayout, cancelEdit } = useLayoutEdit() || {};
 
   useEffect(() => {
     const onOpen = () => setOverlayActive(true);
@@ -108,62 +106,15 @@ export default function LibrarySidebar() {
     <>
       {/* Trigger Button (Fixed on left) */}
       {!isOpen && !overlayActive && (
-        <div className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 group">
-          
-          <AnimatePresence>
-            {isEditing && (
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                onClick={cancelEdit}
-                className="w-8 h-8 rounded-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 flex items-center justify-center text-red-200 backdrop-blur-md shadow-lg"
-                title="Cancel Edit"
-              >
-                <X className="w-4 h-4" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <motion.button
-              initial={{ x: 0 }}
-              animate={{ x: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              onClick={() => setIsOpen(true)}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg transition-all duration-300 ${isEditing ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-200 animate-pulse' : 'border-white/10 bg-white/5 text-white/90 hover:bg-white/10 hover:scale-105'}`}
-          >
-              <Library className="w-5 h-5" />
-          </motion.button>
-
-          <AnimatePresence>
-            {(
-               <motion.div
-                 initial={{ opacity: 0, y: -10 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: -10 }}
-                 className={`transition-opacity duration-200 ${isEditing ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-               >
-                 {isEditing ? (
-                    <button 
-                      onClick={saveCurrentLayout}
-                      className="w-8 h-8 rounded-full bg-green-500/20 hover:bg-green-500/40 border border-green-500/50 flex items-center justify-center text-green-200 backdrop-blur-md shadow-lg"
-                      title="Save Layout"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                 ) : (
-                    <button 
-                      onClick={toggleEditMode}
-                      className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white/60 hover:text-white backdrop-blur-md shadow-lg"
-                      title="Edit UI Layout"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                 )}
-               </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <motion.button
+          initial={{ x: 0 }}
+          animate={{ x: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          onClick={() => setIsOpen(true)}
+          className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+      >
+          <Library className="w-5 h-5" />
+      </motion.button>
       )}
 
       {/* Backdrop */}

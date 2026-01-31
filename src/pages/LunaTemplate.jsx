@@ -56,7 +56,6 @@ import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
-import LunaDashboardWidgets from '../components/luna/LunaDashboardWidgets';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl }) {
@@ -993,7 +992,197 @@ const ExpandedGenreView = ({ genre, onClose, onCardClick }) => {
 
 };
 
-// Tile components moved to @/components/dashboard/Tiles.js
+// Console Tile Component - Sumi-e Liquid Glass Style
+const ConsoleTile = ({ children, onClick, className = "", accentColor = null, hasImage = false, isLegendary = false }) => {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePos({ x, y });
+  };
+
+  return (
+    <motion.div
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
+      tabIndex={0}
+      animate={{
+        scale: isHovered || isFocused ? 1.02 : 1,
+        y: isHovered || isFocused ? -2 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`relative overflow-hidden group outline-none ${className}`}
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${isHovered || isFocused ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
+        borderRadius: '24px',
+        boxShadow: isHovered || isFocused
+          ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+          : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      {/* Inner Glass Volume Effect */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
+        style={{
+          background: isHovered || isFocused
+            ? 'rgba(255, 255, 255, 0.10)'
+            : 'transparent',
+          transition: 'background 0.3s ease'
+        }}
+      />
+
+      {/* Shine Effect - Silver Filament */}
+      <div
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
+        style={{
+          opacity: isHovered ? 0.6 : 0,
+          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+        }}
+      />
+
+      {/* Focus ring for keyboard navigation - Moonlight accent */}
+      {isFocused && (
+        <div className="absolute inset-0 rounded-[24px] border-2 pointer-events-none z-30" style={{ borderColor: '#A8C0FF' }} />
+      )}
+
+      {/* Content */}
+      {children}
+    </motion.div>
+  );
+};
+
+// Hero Tile - Sumi-e Liquid Glass (Monochromatic)
+const LegendaryTile = ({ children, onClick, className = "" }) => {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePos({ x, y });
+  };
+
+  return (
+    <motion.div
+      onClick={onClick}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      animate={{
+        scale: isHovered ? 1.02 : 1,
+        y: isHovered ? -4 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className={`relative overflow-hidden group cursor-pointer ${className}`}
+      style={{
+        background: 'rgba(255, 255, 255, 0.03)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        border: `1px solid ${isHovered ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)'}`,
+        borderRadius: '24px',
+        boxShadow: isHovered
+          ? '0 0 15px rgba(168, 192, 255, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.05)'
+          : 'inset 0 0 20px rgba(255, 255, 255, 0.05)'
+      }}
+    >
+      {/* Inner Glass Volume Effect */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0 rounded-[24px]"
+        style={{
+          background: isHovered ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+          transition: 'background 0.3s ease'
+        }}
+      />
+
+      {/* Shine Effect - Silver Filament */}
+      <div
+        className="absolute inset-0 pointer-events-none z-20 transition-opacity duration-300 rounded-[24px]"
+        style={{
+          opacity: isHovered ? 0.6 : 0,
+          background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 30}%, rgba(255,255,255,0.4) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 30}%)`
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10">
+        {children}
+      </div>
+    </motion.div>
+  );
+};
+
+// Leaderboard Tile Component with Real-Time Data
+const LeaderboardTile = () => {
+  const { data: users, isLoading } = useQuery({
+    queryKey: ['leaderboard-users'],
+    queryFn: () => base44.entities.User.list('-level', 10),
+    refetchInterval: 30000,
+  });
+
+  return (
+    <ConsoleTile className="w-64 overflow-hidden flex flex-col">
+      <div className="p-4 border-b border-white/10 relative">
+        <h3 className="text-[#FFFFFF] font-serif text-lg tracking-wide flex items-center gap-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+          <Trophy className="w-5 h-5 text-[#E0E5EC]" style={{ filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} />
+          LEADERBOARD
+        </h3>
+      </div>
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+          </div>
+        ) : users && users.length > 0 ? (
+          users.map((player, index) => (
+            <div
+              key={player.id}
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+            >
+              {player.avatar_url ? (
+                <img
+                  src={player.avatar_url}
+                  alt={player.username || player.full_name}
+                  className="w-8 h-8 rounded-lg object-cover grayscale"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/40 text-xs font-bold">
+                  {(player.username || player.full_name || '?').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#A0A0A0] text-xs font-sans">{index + 1}</span>
+                  <span className="text-[#CCCCCC] text-sm font-sans truncate" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                    {player.username || player.full_name || 'Unknown'}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[#E0E5EC] text-sm font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                {player.level || 0}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-8 text-white/30 text-sm">
+            No players yet
+          </div>
+        )}
+      </div>
+    </ConsoleTile>
+  );
+};
 
 // Mock Friends Data
 const mockFriends = [
@@ -1573,18 +1762,235 @@ export default function LunaTemplate() {
             exit={{ opacity: 0 }}
             className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
-            {!showAvatarProgression && (
-              <LunaDashboardWidgets 
-                showLive={showLive}
-                showStats={showStats}
-                showAvatarProgression={showAvatarProgression}
-                navigate={navigate}
-                createPageUrl={createPageUrl}
-                setShowStats={setShowStats}
-                setShowAvatarProgression={setShowAvatarProgression}
-                equippedItems={equippedItems}
-                handleBoxClick={handleBoxClick}
+{!showAvatarProgression && (
+            <>
+            {/* LIVE STREAM SECTION (Condition Rendered) */}
+            <AnimatePresence>
+              {showLive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px]"
+                >
+                  {/* Streamy Box */}
+                  <div className="basis-[75%] h-full bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                            <span className="text-white/40">Stream Offline</span>
+                        </div>
+                    </div>
+                    {/* Mock Controls */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-3">
+                            <button className="text-white hover:text-cyan-400"><Play className="w-5 h-5 fill-current" /></button>
+                            <span className="text-white text-sm">00:00 / 00:00</span>
+                        </div>
+                        <button className="text-white hover:text-cyan-400"><Settings className="w-5 h-5" /></button>
+                    </div>
+                  </div>
+
+                  {/* Chat Box */}
+                  <div className="basis-[25%] h-full bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden">
+                    <div className="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                        <span className="text-white font-bold text-sm">Stream Chat</span>
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    </div>
+                    <div className="flex-1 p-3 space-y-2 overflow-y-auto">
+                        <div className="text-xs text-white/60">Welcome to the chat!</div>
+                        <div className="flex gap-2">
+                            <span className="text-cyan-400 text-xs font-bold">Bot:</span>
+                            <span className="text-white text-xs">Stream starting soon...</span>
+                        </div>
+                    </div>
+                    <div className="p-3 border-t border-white/10 bg-white/5">
+                        <input 
+                            type="text" 
+                            placeholder="Send a message..." 
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* STATS SECTION (Dropdown) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full overflow-hidden"
+                  style={{ paddingLeft: '440px' }}
+                >
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
+                    <AvatarProgressionBox />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* TOP SECTION: Aspects / Artifacts / Genre */}
+            <div className="flex gap-12 mb-6 items-start">
+              {/* Aspects */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2,3].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Artifacts */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
+                <div className="relative w-52 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2,3,4,5].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Genre */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Divider Line under Game Banner */}
+            <div className="h-px bg-white/10 mb-6" />
+
+            {/* QUICK ACCESS BOXES */}
+            <div style={{ paddingLeft: '440px' }}>
+            <div className="flex gap-4 mb-6">
+              {/* Stats */}
+              <ConsoleTile
+                onClick={() => setShowStats((v) => !v)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
+              </ConsoleTile>
+
+              {/* Skill Tree */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
+              </ConsoleTile>
+
+              {/* Season Pass */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
+              </ConsoleTile>
+
+              {/* Achievements */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Achievements'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
+              </ConsoleTile>
+
+              {/* Leaderboard */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Leaderboard'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
+              </ConsoleTile>
+            </div>
+
+            {/* Game Banner now below Quick Access */}
+            <LegendaryTile
+              onClick={() => navigate(createPageUrl('Store'))}
+              className="w-full h-48 mb-6 relative overflow-hidden"
+            >
+              <video
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
+              <div className="absolute bottom-4 left-6 z-10">
+                <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
+              </div>
+            </LegendaryTile>
+
+            </div>
+
+            {/* Main Grid: Leaderboard + 2x2 Right */}
+            <div className="flex-1 flex gap-6 min-h-0">
+              {/* Leaderboard Tile - Left */}
+              <LeaderboardTile />
+
+              {/* Right Side - 2x2 Grid */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* App Shortcuts */}
+                <div className="flex gap-6 flex-1">
+                  {/* Settings */}
+                  <ConsoleTile
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
+                  >
+                    <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
+                  </ConsoleTile>
+
+                  {/* My Games & Apps */}
+                  <ConsoleTile
+                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
+                  >
+                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
+                  </ConsoleTile>
+                </div>
+              </div>
+            </div>
+            </>
             )}
 
             {showAvatarProgression && (

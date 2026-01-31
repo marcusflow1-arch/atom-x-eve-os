@@ -9,7 +9,6 @@ import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
-import { LayoutEditProvider } from './components/layout/LayoutEditContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import EnvStatus from './components/env/EnvStatus';
 import { Toaster } from 'react-hot-toast';
@@ -1054,13 +1053,11 @@ export default function Layout({ children, currentPageName }) {
     <ErrorBoundary>
       <AuthProvider>
         <DashboardModeProvider>
-          <LayoutEditProvider>
-            <CartProvider>
-              <Suspense fallback={<LoadingFallback />}>
-                <LayoutContent children={children} currentPageName={currentPageName} />
-              </Suspense>
-            </CartProvider>
-          </LayoutEditProvider>
+          <CartProvider>
+            <Suspense fallback={<LoadingFallback />}>
+              <LayoutContent children={children} currentPageName={currentPageName} />
+            </Suspense>
+          </CartProvider>
         </DashboardModeProvider>
       </AuthProvider>
     </ErrorBoundary>
