@@ -568,32 +568,6 @@ function TransparentModel3DViewer({ modelUrl, environmentUrl, avatarAsset, envir
 
   return (
     <div className="w-full h-full relative">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: bgA ? `url(${bgA})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: activeBg === 'A' ? 1 : 0,
-          transition: 'opacity 400ms ease',
-          pointerEvents: 'none',
-          zIndex: 0
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: bgB ? `url(${bgB})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: activeBg === 'B' ? 1 : 0,
-          transition: 'opacity 400ms ease',
-          pointerEvents: 'none',
-          zIndex: 0
-        }}
-      />
       <div ref={containerRef} className="absolute inset-0 z-10" />
     </div>
   );
