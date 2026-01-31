@@ -199,11 +199,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
     };
 
-    const logChange = (entry) => {
+    function logChange(entry) {
       try {
         window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
       } catch {}
-    };
+    }
     const clock = new THREE.Clock();
 
     const extension = modelUrl.split('.').pop().toLowerCase();
