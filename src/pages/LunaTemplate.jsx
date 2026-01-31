@@ -191,6 +191,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       scene.add(ambientLight);
     }
     if (!scene.getObjectByName('Key_Light')) {
+      // Optional sumi-e fog for ink-wash depth
+      if (!scene.fog) {
+        scene.fog = new THREE.FogExp2(0x0b0b0b, 0.02);
+      }
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
       directionalLight.name = 'Key_Light';
       directionalLight.position.set(5, 5, 5);
