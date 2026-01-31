@@ -254,8 +254,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.domElement.style.cursor = 'pointer';
 
     let mixer = null;
-    let envTimeout = null, fbxTimeout = null;
-    let placeholderFloor = null, placeholderSphere = null;
+
+
 
     const clock = new THREE.Clock();
 
@@ -273,21 +273,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Load environment ('Room 1') first when actor is FBX
     if (isFBX && envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
       const envLoader = new GLTFLoader();
-      const envFetchUrl = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-      console.log('FETCHING ROOM 1 FROM:', envFetchUrl);
-      envTimeout = setTimeout(() => {
-        if (!envLoadedRef.current) {
-          console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
-          placeholderFloor = new THREE.Mesh(
-            new THREE.BoxGeometry(20, 0.2, 20),
-            new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: false })
-          );
-          placeholderFloor.position.set(0, -0.1, 0);
-          worldContainerRef.current?.add(placeholderFloor);
-        }
-      }, 2000);
       envLoader.load(
-        envFetchUrl,
+        envUrl,
         (envGltf) => {
           const world = envGltf.scene;
           world.scale.setScalar(1);
@@ -299,36 +286,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
           envLoadedRef.current = true;
           currentEnvKeyRef.current = envUrl;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envFetchUrl2} into Environment_Layer` });
-          if (envTimeout) clearTimeout(envTimeout);
-          if (placeholderFloor && worldContainerRef.current) {
-            worldContainerRef.current.remove(placeholderFloor);
-            placeholderFloor.geometry?.dispose?.();
-            placeholderFloor.material?.dispose?.();
-            placeholderFloor = null;
-          }
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envUrl} into Environment_Layer` });
           startRenderLoopIfReady();
-          if (envTimeout) clearTimeout(envTimeout);
-          if (placeholderFloor && worldContainerRef.current) {
-            worldContainerRef.current.remove(placeholderFloor);
-            placeholderFloor.geometry?.dispose?.();
-            placeholderFloor.material?.dispose?.();
-            placeholderFloor = null;
-          }
         },
         undefined,
-        (err) => {
-          console.error('Error loading ENV glTF:', err);
-          if (envTimeout) clearTimeout(envTimeout);
-          if (!envLoadedRef.current && !placeholderFloor) {
-            placeholderFloor = new THREE.Mesh(
-              new THREE.BoxGeometry(20, 0.2, 20),
-              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-            );
-            placeholderFloor.position.set(0, -0.1, 0);
-            worldContainerRef.current?.add(placeholderFloor);
-          }
-        }
+        (err) => console.error('Error loading ENV glTF:', err)
       );
     }
 
@@ -429,21 +391,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     if (isFBX) {
       const loader = new FBXLoader();
-      const actorFetchUrl = `${modelUrl}${modelUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-      console.log('FETCHING Y-BOT FROM:', actorFetchUrl);
-      fbxTimeout = setTimeout(() => {
-        if (!actorLoadedRef.current) {
-          console.warn('FBX did not load in 2s, rendering RED SPHERE placeholder');
-          placeholderSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 24, 24),
-            new THREE.MeshBasicMaterial({ color: 0xff0000 })
-          );
-          placeholderSphere.position.set(0, 0.5, 0);
-          actorContainerRef.current?.add(placeholderSphere);
-        }
-      }, 2000);
       loader.load(
-        actorFetchUrl,
+        modelUrl,
         (fbx) => {
           // Normalize materials and disable frustum culling
           fbx.traverse((node) => {
@@ -457,10 +406,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           });
 
           const allClips = [...(fbx.animations || [])];
-          // T-Pose Killswitch: ensure mixer restarts on fresh FBX
-          if (mixerRef.current) {
-            try { mixerRef.current.stopAllAction(); } catch {}
-          }
           let loadedCount = 0;
 
           const finalize = () => {
@@ -471,15 +416,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             processModel(fbx, allClips);
             if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
             mixerRef.current = mixer;
-            // Ensure first clip plays to exit T-pose if no named idle
-            if (allClips.length > 0) {
-              try {
-                mixer.stopAllAction();
-                const a = mixer.clipAction(allClips[0]);
-                a.reset();
-                a.play();
-              } catch {}
-            }
 
             if (yBotScript) {
               try {
@@ -490,19 +426,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
 
             actorLoadedRef.current = true;
-            if (fbxTimeout) clearTimeout(fbxTimeout);
-            if (placeholderSphere && actorContainerRef.current) {
-              actorContainerRef.current.remove(placeholderSphere);
-              placeholderSphere.geometry?.dispose?.();
-              placeholderSphere.material?.dispose?.();
-              placeholderSphere = null;
-            }
             startRenderLoopIfReady();
             logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
           };
 
           if (animations && animations.length > 0) {
-            console.log('Loading extra FBX animations:', animations.map(a => a.name));
             animations.forEach((anim) => {
               loader.load(
                 anim.file_url,
@@ -529,18 +457,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         },
         undefined,
-        (err) => {
-          console.error('Error loading FBX model:', err);
-          if (fbxTimeout) clearTimeout(fbxTimeout);
-          if (!actorLoadedRef.current && !placeholderSphere) {
-            placeholderSphere = new THREE.Mesh(
-              new THREE.SphereGeometry(0.5, 24, 24),
-              new THREE.MeshBasicMaterial({ color: 0xff0000 })
-            );
-            placeholderSphere.position.set(0, 0.5, 0);
-            actorContainerRef.current?.add(placeholderSphere);
-          }
-        }
+        (err) => console.error('Error loading FBX model:', err)
       );
     } else {
       const loader = new GLTFLoader();
@@ -548,21 +465,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Load environment if provided and not already loaded
       if (envUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envUrl)) {
         const envLoader = new GLTFLoader();
-        const envFetchUrl2 = `${envUrl}${envUrl.includes('?') ? '&' : '?'}t=${Date.now()}`;
-        console.log('FETCHING ROOM 1 FROM:', envFetchUrl2);
-        envTimeout = setTimeout(() => {
-          if (!envLoadedRef.current) {
-            console.warn('ENV did not load in 2s, rendering GREEN FLOOR placeholder');
-            placeholderFloor = new THREE.Mesh(
-              new THREE.BoxGeometry(20, 0.2, 20),
-              new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-            );
-            placeholderFloor.position.set(0, -0.1, 0);
-            worldContainerRef.current?.add(placeholderFloor);
-          }
-        }, 2000);
         envLoader.load(
-          envFetchUrl,
+          envUrl,
           (envGltf) => {
             const world = envGltf.scene;
             world.scale.setScalar(1);
@@ -578,19 +482,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             startRenderLoopIfReady();
           },
           undefined,
-          (err) => {
-            console.error('Error loading ENV glTF:', err);
-            if (envTimeout) clearTimeout(envTimeout);
-            if (!envLoadedRef.current && !placeholderFloor) {
-              placeholderFloor = new THREE.Mesh(
-                new THREE.BoxGeometry(20, 0.2, 20),
-                new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-              );
-              placeholderFloor.position.set(0, -0.1, 0);
-              worldContainerRef.current?.add(placeholderFloor);
-            }
-          }
-          );
+          (err) => console.error('Error loading ENV glTF:', err)
+        );
       }
 
       loader.load(
