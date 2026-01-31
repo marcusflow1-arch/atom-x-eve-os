@@ -911,7 +911,7 @@ export default function GenreMastery({ onClose }) {
                         key={level.level}
                         levelData={level} 
                         isActive={level.level === 36} // Mock active state
-                        onClick={() => navigate(createPageUrl(`BlankTransition?genre=${selectedGenre.id}&level=${level.level}`))} 
+                        onClick={() => setViewingLevel(level)} 
                         />
                     ))}
                  </div>
