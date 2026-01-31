@@ -464,6 +464,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             processModel(fbx, allClips);
             if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
             mixerRef.current = mixer;
+            // Ensure first clip plays to exit T-pose if no named idle
+            if (allClips.length > 0) {
+              try {
+                mixer.stopAllAction();
+                const a = mixer.clipAction(allClips[0]);
+                a.reset();
+                a.play();
+              } catch {}
+            }
 
             if (yBotScript) {
               try {
