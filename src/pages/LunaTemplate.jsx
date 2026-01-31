@@ -1845,7 +1845,7 @@ export default function LunaTemplate() {
             )}
 
             {showAvatarProgression && (
-              <div className="pt-4 pr-8" style={{ paddingLeft: '280px' }}>
+              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
                 <div className="max-w-5xl mx-auto">
                   <AvatarProgressionBox />
                 </div>
@@ -2069,7 +2069,7 @@ export default function LunaTemplate() {
                         className="flex h-full relative">
 
                         {/* Left: 3D Viewer Spacing */}
-                        <div className="w-[260px] flex-shrink-0" />
+                        <div className="w-[420px] flex-shrink-0" />
 
 
 
