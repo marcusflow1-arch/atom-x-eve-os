@@ -394,19 +394,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       loader.load(
         modelUrl,
         (fbx) => {
+          // Normalize materials and disable frustum culling
           fbx.traverse((node) => {
             if (node.isMesh || node.isSkinnedMesh) {
               node.frustumCulled = false;
               if (node.material) {
-                const applySide = (mat) => {
-                  mat.side = THREE.DoubleSide;
-                  mat.needsUpdate = true;
-                };
-                if (Array.isArray(node.material)) {
-                  node.material.forEach(applySide);
-                } else {
-                  applySide(node.material);
-                }
+                const applySide = (mat) => { mat.side = THREE.DoubleSide; mat.needsUpdate = true; };
+                Array.isArray(node.material) ? node.material.forEach(applySide) : applySide(node.material);
               }
             }
           });
@@ -414,76 +408,57 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const allClips = [...(fbx.animations || [])];
           let loadedCount = 0;
 
-          animations.forEach((anim) => {
-            loader.load(
-              anim.file_url,
-              (animFbx) => {
-                if (animFbx.animations && animFbx.animations.length > 0) {
-                  animFbx.animations.forEach((clip) => {
-                    if (anim.animation_type === 'idle') clip.name = 'idle';
-                    else if (anim.animation_type === 'run') clip.name = 'run';
-                    else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    allClips.push(clip);
-                  });
-                }
-                loadedCount++;
+          const finalize = () => {
+            clearGroup(actorContainerRef.current);
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+            fbx.scale.setScalar(1);
+            fbx.position.set(0, 0, 0);
+            processModel(fbx, allClips);
+            if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
+            mixerRef.current = mixer;
 
-                if (loadedCount === animations.length) {
-                  clearGroup(actorContainerRef.current);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-                fbx.scale.setScalar(1);
-                fbx.position.set(0, 0, 0);
-                processModel(fbx, allClips);
-                // Ensure mixer binds to the freshly loaded fbx
-                if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
-                mixerRef.current = mixer;
-                // Inject Y-Bot admin script if available
-                if (yBotScript) {
-                try {
+            if (yBotScript) {
+              try {
                 const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
                 const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
                 fn(ctx);
-                } catch(e) { console.error('Script execution failed', e); }
-                }
-                actorLoadedRef.current = true;
-          startRenderLoopIfReady();
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-                startRenderLoopIfReady();
-                }
-              },
-              undefined,
-              (err) => console.error(`Error loading animation ${anim.name}:`, err)
-            );
-          });
+              } catch(e) { console.error('Script execution failed', e); }
+            }
 
-          if (animations.length === 0) {
-             clearGroup(actorContainerRef.current);
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-          fbx.scale.setScalar(1);
-          fbx.position.set(0, 0, 0);
-          processModel(fbx, allClips);
-          // Ensure mixer binds to the freshly loaded fbx
-          if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
-          mixerRef.current = mixer;
-          // Inject Y-Bot admin script if available
-          if (yBotScript) {
-          try {
-          const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
-          const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
-          fn(ctx);
-          } catch(e) { console.error('Script execution failed', e); }
+            actorLoadedRef.current = true;
+            startRenderLoopIfReady();
+            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+          };
+
+          if (animations && animations.length > 0) {
+            animations.forEach((anim) => {
+              loader.load(
+                anim.file_url,
+                (animFbx) => {
+                  if (animFbx.animations && animFbx.animations.length > 0) {
+                    animFbx.animations.forEach((clip) => {
+                      if (anim.animation_type === 'idle') clip.name = 'idle';
+                      else if (anim.animation_type === 'run') clip.name = 'run';
+                      else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                      allClips.push(clip);
+                    });
+                  }
+                  loadedCount++;
+                  if (loadedCount === animations.length) {
+                    finalize();
+                  }
+                },
+                undefined,
+                (err) => console.error(`Error loading animation ${anim.name}:`, err)
+              );
+            });
+          } else {
+            finalize();
           }
-           actorLoadedRef.current = true;
-          startRenderLoopIfReady();
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-           startRenderLoopIfReady();
-
-        }
-        }
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
-        );
+      );
     } else {
       const loader = new GLTFLoader();
 
