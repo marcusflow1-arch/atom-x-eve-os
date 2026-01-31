@@ -64,6 +64,7 @@ import BlankTransition from './pages/BlankTransition';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
+import ClanFormTopic from './pages/ClanFormTopic';
 import ClanHub from './pages/ClanHub';
 import Community from './pages/Community';
 import CrossGameFusion from './pages/CrossGameFusion';
@@ -90,6 +91,7 @@ import OnboardingHome from './pages/OnboardingHome';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
+import PostDetail from './pages/PostDetail';
 import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
@@ -102,8 +104,6 @@ import Streaming from './pages/Streaming';
 import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import PostDetail from './pages/PostDetail';
-import ClanFormTopic from './pages/ClanFormTopic';
 import __Layout from './Layout.jsx';
 
 
@@ -125,6 +125,7 @@ export const PAGES = {
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
+    "ClanFormTopic": ClanFormTopic,
     "ClanHub": ClanHub,
     "Community": Community,
     "CrossGameFusion": CrossGameFusion,
@@ -151,6 +152,7 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
+    "PostDetail": PostDetail,
     "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
     "Store": Store,
@@ -163,8 +165,6 @@ export const PAGES = {
     "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "PostDetail": PostDetail,
-    "ClanFormTopic": ClanFormTopic,
 }
 
 export const pagesConfig = {

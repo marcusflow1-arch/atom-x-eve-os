@@ -286,8 +286,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
     };
 
-    const extension = modelUrl.split('.').pop().toLowerCase();
-    const isFBX = extension === 'fbx';
+    const isFBX = modelUrl.toLowerCase().includes('.fbx');
     logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
 
     // Load environment ('Room 1') first when actor is FBX
@@ -298,9 +297,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (envBundle) {
         manager = new THREE.LoadingManager();
         manager.setURLModifier((url) => {
+          // Robust manifest lookup: try full URL, cleaned path, or just filename
+          const filename = url.split('/').pop().split('?')[0];
           const clean = url.replace(/^\.\//, '').replace(/^\//, '');
           const man = envBundle.manifest || {};
-          return (man[url] || man[clean] || man[decodeURIComponent(url)] || man[decodeURIComponent(clean)] || url) + '';
+          
+          return man[url] || 
+                 man[clean] || 
+                 man[filename] || 
+                 man[decodeURIComponent(url)] || 
+                 man[decodeURIComponent(filename)] || 
+                 url;
         });
         const man = envBundle.manifest || {};
         const tryKeys = [envBundle.entry, envBundle.entry?.replace(/^\.\//, ''), decodeURIComponent(envBundle.entry || '')];
