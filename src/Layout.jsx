@@ -14,6 +14,7 @@ import EnvStatus from './components/env/EnvStatus';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
