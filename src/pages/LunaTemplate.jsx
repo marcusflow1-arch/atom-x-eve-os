@@ -112,23 +112,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
 
-
-  const clearGroup = (group) => {
-    if (!group) return;
-    while (group.children.length) {
-      const child = group.children.pop();
-      if (child && child.traverse) {
-        child.traverse((n) => {
-          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
-          if (n.material) {
-            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
-            else if (n.material.dispose) n.material.dispose();
-          }
-        });
-      }
-    }
-  };
-
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
   const [bgB, setBgB] = React.useState(null);
@@ -236,9 +219,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         scene.fog = new THREE.FogExp2(0x0b0b0b, 0.02);
       }
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.name = 'Key_Light';
-      directionalLight.position.set(5, 5, 5);
-      scene.add(directionalLight);
       directionalLight.name = 'Key_Light';
       directionalLight.position.set(5, 5, 5);
       scene.add(directionalLight);
@@ -441,13 +421,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
                 if (loadedCount === animations.length) {
                   clearGroup(actorContainerRef.current);
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-fbx.scale.setScalar(1);
-fbx.position.set(0, 0, 0);
-processModel(fbx, allClips);
-mixerRef.current = mixer;
-          actorLoadedRef.current = true;
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                fbx.scale.setScalar(1);
+                fbx.position.set(0, 0, 0);
+                processModel(fbx, allClips);
+                // Ensure mixer binds to the freshly loaded fbx
+                if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
+                mixerRef.current = mixer;
+                // Inject Y-Bot admin script if available
+                if (yBotScript) {
+                try {
+                const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
+                const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
+                fn(ctx);
+                } catch(e) { console.error('Script execution failed', e); }
+                }
+                actorLoadedRef.current = true;
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                startRenderLoopIfReady();
                 }
               },
               undefined,
@@ -456,15 +447,26 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
           });
 
           if (animations.length === 0) {
-            clearGroup(actorContainerRef.current);
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-fbx.scale.setScalar(1);
-fbx.position.set(0, 0, 0);
-processModel(fbx, allClips);
-mixerRef.current = mixer;
-          actorLoadedRef.current = true;
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+             clearGroup(actorContainerRef.current);
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+          fbx.scale.setScalar(1);
+          fbx.position.set(0, 0, 0);
+          processModel(fbx, allClips);
+          // Ensure mixer binds to the freshly loaded fbx
+          if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
+          mixerRef.current = mixer;
+          // Inject Y-Bot admin script if available
+          if (yBotScript) {
+          try {
+          const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
+          const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
+          fn(ctx);
+          } catch(e) { console.error('Script execution failed', e); }
           }
+           actorLoadedRef.current = true;
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+           startRenderLoopIfReady();
+
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
