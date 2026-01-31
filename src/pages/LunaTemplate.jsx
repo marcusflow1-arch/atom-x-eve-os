@@ -337,6 +337,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const world = envGltf.scene;
           world.scale.setScalar(1);
           world.position.set(0, 0, 0);
+          
+          // Make Environment Translucent to blend with Dashboard
+          world.traverse((child) => {
+            if (child.isMesh) {
+              const materials = Array.isArray(child.material) ? child.material : [child.material];
+              materials.forEach((m) => {
+                if (m) {
+                  m.transparent = true;
+                  m.opacity = 0.15; // High translucency for "holographic" room feel
+                  m.depthWrite = false; // Allow background to show through cleanly
+                  m.side = THREE.DoubleSide;
+                  m.needsUpdate = true;
+                }
+              });
+            }
+          });
+
           clearGroup(worldContainerRef.current);
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
           if (worldContainerRef.current) {
@@ -688,6 +705,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
+      // Track Shift for walking
+      if (e.shiftKey) keysPressed.current['shift'] = true;
+
       if (key === ' ') {
         e.preventDefault();
       }
@@ -695,7 +715,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const handleKeyUp = (e) => {
       if (!controlsActive.current) return;
-      keysPressed.current[e.key.toLowerCase()] = false;
+      const key = e.key.toLowerCase();
+      keysPressed.current[key] = false;
+      if (key === 'shift' || !e.shiftKey) keysPressed.current['shift'] = false;
     };
 
     const animationLocked = { current: false };
@@ -807,25 +829,39 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
 
       if (actorContainerRef.current && controlsActive.current) {
-        const moveSpeed = 0.04;
-        let direction = new THREE.Vector3();
+        // Camera-Relative Movement
+        const isWalking = keysPressed.current['shift'];
+        const moveSpeed = isWalking ? 0.025 : 0.065; // Tuned for standard FBX scale (0.01 world scale)
+        const rotSpeed = 0.15; // Smooth rotation factor
 
-        if (keysPressed.current['w']) direction.z -= 1;
-        if (keysPressed.current['s']) direction.z += 1;
-        if (keysPressed.current['a']) direction.x -= 1;
-        if (keysPressed.current['d']) direction.x += 1;
+        let direction = new THREE.Vector3();
+        
+        // Get camera direction projected to XZ plane
+        const camForward = new THREE.Vector3();
+        const camRight = new THREE.Vector3();
+        camera.getWorldDirection(camForward);
+        camForward.y = 0;
+        camForward.normalize();
+        camRight.crossVectors(camForward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        if (keysPressed.current['w']) direction.add(camForward);
+        if (keysPressed.current['s']) direction.sub(camForward);
+        if (keysPressed.current['d']) direction.add(camRight);
+        if (keysPressed.current['a']) direction.sub(camRight);
 
         const dirLength = direction.length();
         const isMoving = dirLength > 0.01;
         const grounded = !isJumpingRef.current && actorContainerRef.current.position.y <= 0;
 
+        // Jump Physics
         if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
-          velocityRef.current.y = 0.15;
+          velocityRef.current.y = 0.18; // Slightly higher jump
         }
 
+        // Gravity
         if (isJumpingRef.current || actorContainerRef.current.position.y > 0) {
-          velocityRef.current.y -= 0.008;
+          velocityRef.current.y -= 0.009; // Gravity
           actorContainerRef.current.position.y += velocityRef.current.y;
 
           if (actorContainerRef.current.position.y <= 0) {
@@ -847,10 +883,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             direction.normalize();
             actorContainerRef.current.position.x += direction.x * moveSpeed;
             actorContainerRef.current.position.z += direction.z * moveSpeed;
-            const angle = Math.atan2(direction.x, direction.z);
-            actorContainerRef.current.rotation.y = angle;
+            
+            // Smooth Rotation
+            const targetRotation = Math.atan2(direction.x, direction.z);
+            const currentRotation = actorContainerRef.current.rotation.y;
+            let diff = targetRotation - currentRotation;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            actorContainerRef.current.rotation.y += diff * rotSpeed;
+
             if (!animationLocked.current) {
-              setBaseAction('run');
+              setBaseAction(isWalking ? 'walk' : 'run');
             }
           } else {
             if (!animationLocked.current) {
