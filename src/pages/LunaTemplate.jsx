@@ -429,6 +429,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 } catch(e) { console.error('Script execution failed', e); }
                 }
                 actorLoadedRef.current = true;
+          startRenderLoopIfReady();
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
                 startRenderLoopIfReady();
                 }
@@ -456,6 +457,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           } catch(e) { console.error('Script execution failed', e); }
           }
            actorLoadedRef.current = true;
+          startRenderLoopIfReady();
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
            startRenderLoopIfReady();
 
