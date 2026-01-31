@@ -420,7 +420,9 @@ fbx.scale.setScalar(1);
 fbx.position.set(0, 0, 0);
 processModel(fbx, allClips);
 mixerRef.current = mixer;
+          actorLoadedRef.current = true;
 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+          tryCameraReset();
                 }
               },
               undefined,
@@ -435,7 +437,9 @@ fbx.scale.setScalar(1);
 fbx.position.set(0, 0, 0);
 processModel(fbx, allClips);
 mixerRef.current = mixer;
+          actorLoadedRef.current = true;
 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+          tryCameraReset();
           }
         },
         undefined,
