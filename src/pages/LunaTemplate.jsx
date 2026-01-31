@@ -133,6 +133,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       actorGroup.position.y = 0.5; // Lift actor slightly above floor
       actorContainerRef.current = actorGroup;
       scene.add(actorGroup);
+      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'init-containers', summary: 'Created WorldContainer and ActorContainer; actor Y +0.5' });
     }
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
@@ -164,6 +165,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enabled = true;
     if (actorContainerRef.current) {
       controls.target.copy(actorContainerRef.current.position);
+      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to ActorContainer' });
     }
 
     const handleCanvasClick = () => {
@@ -195,6 +197,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           });
         }
       }
+    };
+
+    const logChange = (entry) => {
+      try {
+        window.dispatchEvent(new CustomEvent('base44-change-log', { detail: { time: Date.now(), ...entry } }));
+      } catch {}
     };
     const clock = new THREE.Clock();
 
@@ -369,9 +377,11 @@ mixerRef.current = mixer;
           world.scale.setScalar(1);
           world.position.set(0, 0, 0);
           clearGroup(worldContainerRef.current);
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared WorldContainer only' });
           if (worldContainerRef.current) {
             worldContainerRef.current.add(world);
           }
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF world into WorldContainer (scale=1, pos=0,0,0)' });
         },
         undefined,
         (err) => console.error('Error loading GLTF model:', err)
@@ -564,6 +574,7 @@ mixerRef.current = mixer;
         camera.position.z = actorContainerRef.current.position.z + offset.z;
         controls.target.copy(actorContainerRef.current.position);
         controls.update();
+        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-move', summary: 'ActorContainer moved via WASD' });
       } else if (actorContainerRef.current && !controlsActive.current) {
         const currentState = useLunaStore.getState();
         if (currentState.actions.skill) {

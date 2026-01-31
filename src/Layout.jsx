@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
+import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
 
 // Global styles (extracted for CSP compliance)
@@ -1025,6 +1026,7 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Dev Tools Panel */}
       <DevTools />
+      <ChangesConsole />
     </div>
   );
 }
