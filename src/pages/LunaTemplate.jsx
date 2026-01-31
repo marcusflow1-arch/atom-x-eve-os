@@ -97,23 +97,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
 
-  // Helper: safely clear a THREE.Group and dispose resources
-  const clearGroup = (group) => {
-    if (!group) return;
-    while (group.children.length) {
-      const child = group.children.pop();
-      if (child && child.traverse) {
-        child.traverse((n) => {
-          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
-          if (n.material) {
-            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
-            else if (n.material.dispose) n.material.dispose();
-          }
-        });
-      }
-    }
-  };
-
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
   const [bgB, setBgB] = React.useState(null);
@@ -149,7 +132,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     fetchAnimations();
   }, []);
 
-  // Fetch environment ('Room 1') and admin Y-Bot script
+  // Fetch environment ('Room 1') and Y-Bot script from admin database
   useEffect(() => {
     (async () => {
       try {
@@ -394,13 +377,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       loader.load(
         modelUrl,
         (fbx) => {
-          // Normalize materials and disable frustum culling
           fbx.traverse((node) => {
             if (node.isMesh || node.isSkinnedMesh) {
               node.frustumCulled = false;
               if (node.material) {
-                const applySide = (mat) => { mat.side = THREE.DoubleSide; mat.needsUpdate = true; };
-                Array.isArray(node.material) ? node.material.forEach(applySide) : applySide(node.material);
+                const applySide = (mat) => {
+                  mat.side = THREE.DoubleSide;
+                  mat.needsUpdate = true;
+                };
+                if (Array.isArray(node.material)) {
+                  node.material.forEach(applySide);
+                } else {
+                  applySide(node.material);
+                }
               }
             }
           });
@@ -408,53 +397,70 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const allClips = [...(fbx.animations || [])];
           let loadedCount = 0;
 
-          const finalize = () => {
-            clearGroup(actorContainerRef.current);
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-            fbx.scale.setScalar(1);
-            fbx.position.set(0, 0, 0);
-            processModel(fbx, allClips);
-            if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
-            mixerRef.current = mixer;
+          animations.forEach((anim) => {
+            loader.load(
+              anim.file_url,
+              (animFbx) => {
+                if (animFbx.animations && animFbx.animations.length > 0) {
+                  animFbx.animations.forEach((clip) => {
+                    if (anim.animation_type === 'idle') clip.name = 'idle';
+                    else if (anim.animation_type === 'run') clip.name = 'run';
+                    else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                    allClips.push(clip);
+                  });
+                }
+                loadedCount++;
 
-            if (yBotScript) {
-              try {
+                if (loadedCount === animations.length) {
+                  clearGroup(actorContainerRef.current);
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                fbx.scale.setScalar(1);
+                fbx.position.set(0, 0, 0);
+                processModel(fbx, allClips);
+                // Ensure mixer binds to the freshly loaded fbx
+                if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
+                mixerRef.current = mixer;
+                // Inject Y-Bot admin script if available
+                if (yBotScript) {
+                try {
                 const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
                 const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
                 fn(ctx);
-              } catch(e) { console.error('Script execution failed', e); }
-            }
+                } catch(e) { console.error('Script execution failed', e); }
+                }
+                actorLoadedRef.current = true;
+          startRenderLoopIfReady();
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                startRenderLoopIfReady();
+                }
+              },
+              undefined,
+              (err) => console.error(`Error loading animation ${anim.name}:`, err)
+            );
+          });
 
-            actorLoadedRef.current = true;
-            startRenderLoopIfReady();
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-          };
-
-          if (animations && animations.length > 0) {
-            animations.forEach((anim) => {
-              loader.load(
-                anim.file_url,
-                (animFbx) => {
-                  if (animFbx.animations && animFbx.animations.length > 0) {
-                    animFbx.animations.forEach((clip) => {
-                      if (anim.animation_type === 'idle') clip.name = 'idle';
-                      else if (anim.animation_type === 'run') clip.name = 'run';
-                      else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                      allClips.push(clip);
-                    });
-                  }
-                  loadedCount++;
-                  if (loadedCount === animations.length) {
-                    finalize();
-                  }
-                },
-                undefined,
-                (err) => console.error(`Error loading animation ${anim.name}:`, err)
-              );
-            });
-          } else {
-            finalize();
+          if (animations.length === 0) {
+             clearGroup(actorContainerRef.current);
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+          fbx.scale.setScalar(1);
+          fbx.position.set(0, 0, 0);
+          processModel(fbx, allClips);
+          // Ensure mixer binds to the freshly loaded fbx
+          if (!mixer) { mixer = new THREE.AnimationMixer(fbx); }
+          mixerRef.current = mixer;
+          // Inject Y-Bot admin script if available
+          if (yBotScript) {
+          try {
+          const ctx = { THREE, scene, actorContainer: actorContainerRef.current, fbx, model: fbx, mixer, clock, renderer, controls };
+          const fn = new Function('ctx', '"use strict"; const {THREE, scene, actorContainer, fbx, model, mixer, clock, renderer, controls} = ctx; try {\n' + yBotScript + '\n} catch(e){ console.error("Y-Bot script error", e);}');
+          fn(ctx);
+          } catch(e) { console.error('Script execution failed', e); }
           }
+           actorLoadedRef.current = true;
+          startRenderLoopIfReady();
+          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+           startRenderLoopIfReady();
+
         },
         undefined,
         (err) => console.error('Error loading FBX model:', err)
@@ -734,7 +740,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, envUrl, yBotScript]);
+  }, [modelUrl, weaponModel, animations]);
 
 
 
