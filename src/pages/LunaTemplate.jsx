@@ -1676,7 +1676,7 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden"
-                  style={{ paddingLeft: '280px' }}
+                  style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
                     <AvatarProgressionBox />
