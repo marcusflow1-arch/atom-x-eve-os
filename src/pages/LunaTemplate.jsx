@@ -143,24 +143,27 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
 
-    const scene = new THREE.Scene();
+    // Initialize persistent scene ONCE
+    const scene = sceneRef.current || new THREE.Scene();
     sceneRef.current = scene;
     scene.background = null;
 
-    // Create persistent containers
+    // Create permanent dual containers (non-destructive)
     if (!worldContainerRef.current) {
-      const worldGroup = new THREE.Group();
-      worldGroup.name = 'WorldContainer';
-      worldContainerRef.current = worldGroup;
-      scene.add(worldGroup);
+      const env = new THREE.Group();
+      env.name = 'Environment_Layer';
+      env.scale.setScalar(1.0);
+      worldContainerRef.current = env;
+      scene.add(env);
     }
     if (!actorContainerRef.current) {
-      const actorGroup = new THREE.Group();
-      actorGroup.name = 'ActorContainer';
-      actorGroup.position.y = 0.5; // Lift actor slightly above floor
-      actorContainerRef.current = actorGroup;
-      scene.add(actorGroup);
-      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'init-containers', summary: 'Created WorldContainer and ActorContainer; actor Y +0.5' });
+      const actor = new THREE.Group();
+      actor.name = 'Actor_Layer';
+      actor.position.y = 0.5; // Lift actor slightly above floor thickness
+      actor.scale.setScalar(0.01); // FBX centimeters to meters
+      actorContainerRef.current = actor;
+      scene.add(actor);
+      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'init-containers', summary: 'Created Environment_Layer (scale=1) and Actor_Layer (scale=0.01, y=+0.5)' });
     }
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
