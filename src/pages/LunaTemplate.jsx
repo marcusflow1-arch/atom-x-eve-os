@@ -97,6 +97,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
 
+  // Helper: safely clear a THREE.Group and dispose resources
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
+
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
   const [bgB, setBgB] = React.useState(null);
@@ -132,7 +149,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     fetchAnimations();
   }, []);
 
-  // Fetch environment ('Room 1') and Y-Bot script from admin database
+  // Fetch environment ('Room 1') and admin Y-Bot script
   useEffect(() => {
     (async () => {
       try {
@@ -430,7 +447,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 }
                 actorLoadedRef.current = true;
           startRenderLoopIfReady();
-          startRenderLoopIfReady();
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
                 startRenderLoopIfReady();
                 }
@@ -458,7 +474,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           } catch(e) { console.error('Script execution failed', e); }
           }
            actorLoadedRef.current = true;
-          startRenderLoopIfReady();
           startRenderLoopIfReady();
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
            startRenderLoopIfReady();
