@@ -90,6 +90,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const clockRef = useRef(new THREE.Clock());
   const [envUrl, setEnvUrl] = React.useState(null);
   const [envBundle, setEnvBundle] = React.useState(null);
+  const [envBundle, setEnvBundle] = React.useState(null);
   const [yBotScript, setYBotScript] = React.useState(null);
   const startedRef = useRef(false);
 
@@ -325,7 +326,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
       }, 2000);
       envLoader.load(
-        envFetchUrl,
+        envEntryUrl,
         (envGltf) => {
           const world = envGltf.scene;
           world.scale.setScalar(1);
@@ -896,7 +897,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, envUrl, yBotScript]);
+  }, [modelUrl, weaponModel, animations, envUrl, envBundle, yBotScript]);
 
 
 
