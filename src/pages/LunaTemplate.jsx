@@ -83,7 +83,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
-  const cameraResetRef = useRef(false);
 
   function logChange(entry) {
     try {
@@ -265,6 +264,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       : preferredPath === 'battle'
         ? 'arena_world.glb'
         : null;
+
+    // Camera reset helpers
+    const focusCameraOnActor = () => {
+      if (!actorContainerRef.current || !controlsRef.current || !cameraRef.current) return;
+      const box = new THREE.Box3().setFromObject(actorContainerRef.current);
+      const center = box.getCenter(new THREE.Vector3());
+      controlsRef.current.target.copy(center);
+      cameraRef.current.position.set(center.x, center.y + 2, center.z + 5);
+    };
+    const tryCameraReset = () => {
+      if (envLoadedRef.current && actorLoadedRef.current) {
+        focusCameraOnActor();
+        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'camera-reset', summary: 'Camera retargeted to Actor_Layer after both layers loaded' });
+      }
+    };
     const processModel = (model, animations) => {
       modelRef.current = model;
 
@@ -447,6 +461,7 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
             envLoadedRef.current = true;
             currentEnvKeyRef.current = envMapUrl;
             logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
+            tryCameraReset();
           },
           undefined,
           (err) => console.error('Error loading ENV glTF:', err)
@@ -468,6 +483,7 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
           envLoadedRef.current = true;
           currentEnvKeyRef.current = modelUrl;
           logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
+          tryCameraReset();
         },
         undefined,
         (err) => console.error('Error loading GLTF model:', err)
