@@ -200,10 +200,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       directionalLight.name = 'Key_Light';
       directionalLight.position.set(5, 5, 5);
       scene.add(directionalLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.name = 'Key_Light';
-      directionalLight.position.set(5, 5, 5);
-      scene.add(directionalLight);
     }
 
     const controls = controlsRef.current || new OrbitControls(camera, renderer.domElement);
