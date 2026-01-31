@@ -12,7 +12,6 @@ import StrategyCard from '@/components/clan/strategy/StrategyCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { createPageUrl } from '@/utils';
-import { createPageUrl } from '@/utils';
 
 export default function ClanFormsZone({ game, clan, user }) {
   const qc = useQueryClient();
