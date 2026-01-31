@@ -166,36 +166,44 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'init-containers', summary: 'Created Environment_Layer (scale=1) and Actor_Layer (scale=0.01, y=+0.5)' });
     }
 
-    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
+    const camera = cameraRef.current || new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 5000);
+    cameraRef.current = camera;
     camera.position.set(0, 1.2, 3.5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = rendererRef.current || new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
-    containerRef.current.appendChild(renderer.domElement);
+    if (!renderer.domElement.parentNode) {
+      containerRef.current.appendChild(renderer.domElement);
+    }
 
+    // Lighting only added once
+    if (!scene.getObjectByName('Ambient_Light')) {
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      ambientLight.name = 'Ambient_Light';
+      scene.add(ambientLight);
+    }
+    if (!scene.getObjectByName('Key_Light')) {
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.name = 'Key_Light';
+      directionalLight.position.set(5, 5, 5);
+      scene.add(directionalLight);
+    }
 
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = controlsRef.current || new OrbitControls(camera, renderer.domElement);
+    controlsRef.current = controls;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
     controls.enableRotate = false;
     controls.enablePan = false;
     controls.minDistance = 2;
-    controls.maxDistance = 10;
+    controls.maxDistance = 500;
     controls.enabled = true;
     if (actorContainerRef.current) {
       controls.target.copy(actorContainerRef.current.position);
-      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to ActorContainer' });
+      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to Actor_Layer' });
     }
 
     const handleCanvasClick = () => {
