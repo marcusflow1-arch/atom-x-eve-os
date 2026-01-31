@@ -495,6 +495,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           };
 
           if (animations && animations.length > 0) {
+            console.log('Loading extra FBX animations:', animations.map(a => a.name));
             animations.forEach((anim) => {
               loader.load(
                 anim.file_url,
