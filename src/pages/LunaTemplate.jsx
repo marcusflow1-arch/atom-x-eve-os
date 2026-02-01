@@ -1956,7 +1956,14 @@ export default function LunaTemplate() {
 
             {/* Game Banner now below Quick Access */}
             <LegendaryTile
-              onClick={() => navigate(createPageUrl('Store'))}
+              onClick={() => {
+                // Toggle background environment on click
+                if (bannerBackgroundUrl) {
+                  setBannerBackgroundUrl(null);
+                } else {
+                  setBannerBackgroundUrl('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&q=80');
+                }
+              }}
               className="w-full h-48 mb-6 relative overflow-hidden"
             >
               <video
