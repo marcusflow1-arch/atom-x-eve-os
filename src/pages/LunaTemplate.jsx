@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
 
   const logChange = (entry) => {
     try {
@@ -1093,7 +1093,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       </div>
 
       {/* 3D Canvas - Unmasked to pop out */}
-      <div ref={containerRef} className="absolute inset-0 z-10" />
+      <div 
+        ref={containerRef} 
+        className="absolute inset-0 z-10 transition-all duration-700 ease-in-out"
+        style={{
+          transform: isStatsOpen ? 'translateX(-25vw)' : 'none',
+          // Clip the top to respect the header line when stats are open, making it look like "part of the page"
+          clipPath: isStatsOpen ? 'inset(80px 0 0 0)' : 'inset(0 0 0 0)' 
+        }}
+      />
     </div>
   );
 }
@@ -1680,10 +1688,8 @@ export default function LunaTemplate() {
       if (key === 'i') {
         setUiVisible((v) => !v);
       }
-      if (key === 'o') {
-        setShowStats((v) => !v);
-        setShowAvatarProgression(false);
-      }
+      // 'o' key binding removed for stats as requested
+      // if (key === 'o') { setShowStats((v) => !v); }
       if (key === '0') {
         setHideUI((v) => !v);
       }
@@ -1768,20 +1774,24 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-0 pointer-events-auto transition-all duration-700 ease-in-out"
+          className="fixed inset-0 z-0 pointer-events-auto"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            // When stats are shown:
-            // 1. Shift container left to place bot on left side (next to side menu)
-            // 2. Keep opacity high (user said UI won't fade away, implying clarity)
-            transform: showStats ? 'translateX(-20vw)' : 'none', 
             width: '100vw',
             height: '100vh'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} activeScene={activeScene} />
+          <TransparentModel3DViewer 
+            modelUrl={modelUrl} 
+            weaponModel={weaponModelUrl} 
+            triggerAnimation={triggerAnimation} 
+            backgroundUrl={bannerBackgroundUrl} 
+            roomModelUrl={roomModelUrl} 
+            activeScene={activeScene}
+            isStatsOpen={showStats}
+          />
         </div>
       }
 
