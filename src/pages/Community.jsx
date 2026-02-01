@@ -63,6 +63,8 @@ export default function CommunityPage() {
     const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null); 
     const [sortBy, setSortBy] = useState('newest');
     const [hotFilter, setHotFilter] = useState('none');
+    const [rightPosts, setRightPosts] = useState([]);
+    const [loadingRight, setLoadingRight] = useState(false);
 
     // Sync activeGame when location state changes (e.g. from Clan navigation)
     useEffect(() => {
