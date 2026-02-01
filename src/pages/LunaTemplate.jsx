@@ -217,8 +217,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
-    controls.enableRotate = false;
-    controls.enablePan = false;
+    
+    // Enable Camera Control (Right-Click to Rotate)
+    controls.enableRotate = true;
+    controls.enablePan = true;
+    controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.ROTATE
+    };
+
     controls.minDistance = 2;
     controls.maxDistance = 500;
     controls.enabled = true;
