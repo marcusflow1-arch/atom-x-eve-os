@@ -408,22 +408,6 @@ export default function SceneEditor() {
         console.error("Selection Error:", e);
     }
   };
-        // Traverse up to find the root model container
-        let current = intersects[0].object;
-        while (current) {
-            if (current.userData.isEnvironment) {
-                setSelectedObjectId('environment');
-                return;
-            }
-            if (current.userData.id) {
-                setSelectedObjectId(current.userData.id);
-                return;
-            }
-            if (current === sceneRef.current) break;
-            current = current.parent;
-        }
-    }
-  };
 
   // Actions
   const handleAddObject = (model) => {
