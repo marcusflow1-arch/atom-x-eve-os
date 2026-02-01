@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, houseModelUrl }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, houseModelUrl, houseTextures = [] }) {
 
   const logChange = (entry) => {
     try {
@@ -320,25 +320,66 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     // Asset Injection: Load House FBX
     if (houseModelUrl && houseContainerRef.current) {
-      const loader = new FBXLoader();
+      // Use LoadingManager to remap texture requests to uploaded URLs
+      const manager = new THREE.LoadingManager();
+      manager.setURLModifier((url) => {
+          if (houseTextures && houseTextures.length > 0) {
+              // Extract filename from the requested url (e.g. "textures/wall.jpg" -> "wall.jpg")
+              const requestedName = url.split('/').pop().toLowerCase();
+              // Find matching uploaded texture
+              const match = houseTextures.find(texUrl => texUrl.toLowerCase().includes(requestedName));
+              if (match) {
+                  console.log(`Remapping texture: ${requestedName} -> ${match}`);
+                  return match;
+              }
+          }
+          return url;
+      });
+
+      const loader = new FBXLoader(manager);
       loader.load(
         houseModelUrl,
         (fbx) => {
           clearGroup(houseContainerRef.current);
-          // FBX models often need scaling. 
-          // If the container is already 0.01, we might not need to scale the model itself, 
-          // or we might need to adjust based on the specific asset.
-          // Resetting transforms to be safe.
           fbx.position.set(0, 0, 0);
           
+          // If textures are provided but not automatically mapped (e.g. embedded vs external confusion),
+          // we can try to manually apply the first texture to all meshes if there's only one texture.
+          // Or just trust the LoadingManager remap above.
+          
+          // Manual fallback: If we have textures but the model appears untextured (white/gray),
+          // one might want to force apply. For now, rely on remap.
+          
+          // Pre-load textures if we want to force them (Simple mode: 1 texture = all meshes)
+          if (houseTextures.length === 1) {
+             const texLoader = new THREE.TextureLoader();
+             const tex = texLoader.load(houseTextures[0]);
+             tex.colorSpace = THREE.SRGBColorSpace;
+             
+             fbx.traverse((child) => {
+               if (child.isMesh) {
+                   child.material = new THREE.MeshStandardMaterial({ 
+                       map: tex,
+                       side: THREE.DoubleSide
+                   });
+               }
+             });
+          }
+
           fbx.traverse((child) => {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
+              
+              // Ensure materials are double sided
               if (child.material) {
-                 const applySide = (mat) => { mat.side = THREE.DoubleSide; };
-                 if (Array.isArray(child.material)) child.material.forEach(applySide);
-                 else applySide(child.material);
+                 const processMat = (mat) => {
+                     mat.side = THREE.DoubleSide;
+                     // Ensure map encoding is correct if it exists
+                     if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+                 };
+                 if (Array.isArray(child.material)) child.material.forEach(processMat);
+                 else processMat(child.material);
               }
             }
           });
@@ -856,7 +897,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, roomModelUrl, houseModelUrl]);
+  }, [modelUrl, weaponModel, animations, roomModelUrl, houseModelUrl, houseTextures]);
 
 
 
@@ -1393,6 +1434,7 @@ export default function LunaTemplate() {
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
   const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   const [houseModelUrl, setHouseModelUrl] = useState(null);
+  const [houseTextures, setHouseTextures] = useState([]);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1433,6 +1475,7 @@ export default function LunaTemplate() {
            if (houseAsset?.file_url) {
                console.log('House Asset Found:', houseAsset.name);
                setHouseModelUrl(houseAsset.file_url);
+               setHouseTextures(houseAsset.textures || []);
            }
        } catch(e) {
            console.error("Failed to fetch House model:", e);
@@ -1608,7 +1651,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} houseModelUrl={houseModelUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} houseModelUrl={houseModelUrl} houseTextures={houseTextures} />
         </div>
       }
 
