@@ -361,13 +361,7 @@ export default function SceneEditor() {
   const handleCanvasClick = (event) => {
     if (!rendererRef.current || !cameraRef.current) return;
     
-    // 1. Priority: Check if clicking on Transform Gizmo
-    if (transformRef.current) {
-        // If dragging, definitely don't select
-        if (transformRef.current.dragging) return;
-        
-        // If hovering over gizmo axis, don't select (TransformControls handles the click)
-        // We can verify this by raycasting against the gizmo itself
+    try {
         const rect = rendererRef.current.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -375,30 +369,45 @@ export default function SceneEditor() {
         );
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, cameraRef.current);
-        
-        // The gizmo is a child of the TransformControls object (helper)
-        // transformRef.current itself is the control object group
-        const gizmoIntersects = raycaster.intersectObject(transformRef.current, true);
-        if (gizmoIntersects.length > 0) {
-            // Clicked on the gizmo - let it do its job, don't change selection
-            return;
+
+        // 1. Priority: Check if clicking on Transform Gizmo
+        if (transformRef.current && transformRef.current.isObject3D) {
+            // If dragging, definitely don't select
+            if (transformRef.current.dragging) return;
+            
+            // The gizmo is a child of the TransformControls object (helper)
+            const gizmoIntersects = raycaster.intersectObject(transformRef.current, true);
+            if (gizmoIntersects.length > 0) {
+                // Clicked on the gizmo - let it do its job, don't change selection
+                return;
+            }
         }
+
+        // 2. Normal Selection Logic
+        // Filter only valid Object3Ds to prevent "undefined reading 'test'" errors (raycaster checks layers)
+        const selectables = Object.values(sceneObjectsMap.current).filter(obj => obj && obj.isObject3D);
+        const intersects = raycaster.intersectObjects(selectables, true);
+
+        if (intersects.length > 0) {
+            // Traverse up to find the root model container
+            let current = intersects[0].object;
+            while (current) {
+                if (current.userData.isEnvironment) {
+                    setSelectedObjectId('environment');
+                    return;
+                }
+                if (current.userData.id) {
+                    setSelectedObjectId(current.userData.id);
+                    return;
+                }
+                if (current === sceneRef.current) break;
+                current = current.parent;
+            }
+        }
+    } catch (e) {
+        console.error("Selection Error:", e);
     }
-
-    // 2. Normal Selection Logic
-    const rect = rendererRef.current.domElement.getBoundingClientRect();
-    const mouse = new THREE.Vector2(
-        ((event.clientX - rect.left) / rect.width) * 2 - 1,
-        -((event.clientY - rect.top) / rect.height) * 2 + 1
-    );
-
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(mouse, cameraRef.current);
-
-    const selectables = Object.values(sceneObjectsMap.current);
-    const intersects = raycaster.intersectObjects(selectables, true);
-
-    if (intersects.length > 0) {
+  };
         // Traverse up to find the root model container
         let current = intersects[0].object;
         while (current) {
@@ -487,7 +496,8 @@ export default function SceneEditor() {
   // Keyboard Shortcuts for Tools
   useEffect(() => {
     const handleKeyDown = (e) => {
-        if (e.target.matches('input, textarea')) return;
+        if (e.target && e.target.matches && e.target.matches('input, textarea')) return;
+        if (!e.key) return;
         
         switch(e.key.toLowerCase()) {
             case 'w': setMode('translate'); break;
