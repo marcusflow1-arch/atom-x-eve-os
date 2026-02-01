@@ -70,6 +70,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const actorGroupRef = useRef(null);
   const mixerRef = useRef(null);
   const actionsRef = useRef({});
+  const activeActionRef = useRef(null);
   const roomMeshesRef = useRef([]);
   const keysPressed = useRef({});
   const raycasterRef = useRef(new THREE.Raycaster());
@@ -100,20 +101,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     scene.add(actorGroup);
     actorGroupRef.current = actorGroup;
 
-    // 3. Grid Helper (Visual Proof)
-    const grid = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+    // 3. Grid Helper (Visual Proof - semi-transparent)
+    const grid = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+    grid.position.y = 0.01; // Slightly above zero to avoid z-fighting with flat floors
+    grid.material.opacity = 0.3;
+    grid.material.transparent = true;
     scene.add(grid);
 
     // 4. Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dirLight.position.set(5, 10, 7);
+    dirLight.castShadow = true;
     scene.add(dirLight);
 
     // 5. Camera
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
-    camera.position.set(0, 2, 4);
+    camera.position.set(0, 3, 6);
     cameraRef.current = camera;
 
     // 6. Renderer
@@ -121,12 +126,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setClearColor(0x000000, 0); // Transparent
+    renderer.shadowMap.enabled = true;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // 7. Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
     controls.target.set(0, 1, 0);
     controlsRef.current = controls;
 
@@ -134,8 +141,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const handleKeyDown = (e) => { keysPressed.current[e.key.toLowerCase()] = true; };
     const handleKeyUp = (e) => { keysPressed.current[e.key.toLowerCase()] = false; };
     const handleClick = () => {
+      // Toggle controls on click, but ensure we don't trap mouse if user wants to click UI
       isControlsActive.current = !isControlsActive.current;
-      renderer.domElement.style.cursor = isControlsActive.current ? 'none' : 'pointer';
+      // Visual feedback
+      if (isControlsActive.current) {
+          renderer.domElement.style.cursor = 'none';
+          // Optional: pointer lock if needed, but simple WASD is often enough
+          // renderer.domElement.requestPointerLock(); 
+      } else {
+          renderer.domElement.style.cursor = 'pointer';
+          // document.exitPointerLock();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -170,7 +186,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     // Clear existing
     while (envGroupRef.current.children.length) {
-        envGroupRef.current.remove(envGroupRef.current.children[0]);
+        const child = envGroupRef.current.children[0];
+        envGroupRef.current.remove(child);
+        if (child.traverse) child.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
     }
 
     const loader = new GLTFLoader();
@@ -178,6 +196,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const model = gltf.scene;
       model.scale.setScalar(1.0);
       model.position.set(0, 0, 0);
+      model.traverse(child => {
+          if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              // Ensure double side for better visibility
+              if (child.material) child.material.side = THREE.DoubleSide;
+          }
+      });
       envGroupRef.current.add(model);
       
       // Cache meshes for raycasting
@@ -187,7 +213,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       });
       roomMeshesRef.current = meshes;
       console.log("Room loaded into Environment_Layer. Meshes:", meshes.length);
-    });
+    }, undefined, (e) => console.error("Error loading room:", e));
   }, [roomModelUrl]);
 
   // Asset Injection: White Bot (FBX) -> Actor_Layer
@@ -202,6 +228,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const loader = new FBXLoader();
     loader.load(modelUrl, (fbx) => {
       fbx.scale.setScalar(1.0); // Container handles the 0.01 scale
+      // Traverse to fix materials/shadows
+      fbx.traverse(child => {
+          if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+          }
+      });
+      
       actorGroupRef.current.add(fbx);
       
       // Setup Mixer
@@ -209,15 +243,57 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixerRef.current = mixer;
       actionsRef.current = {};
 
-      if (fbx.animations.length > 0) {
-          const idleAnim = fbx.animations[0];
-          const action = mixer.clipAction(idleAnim);
-          action.play();
-          actionsRef.current['idle'] = action;
-      }
-      // Load other animations as needed here if they were separate...
+      // Load external animations for full movement capability
+      const fetchAnimations = async () => {
+          try {
+              const animEntities = await base44.entities.AnimationFBX.list();
+              const animLoader = new FBXLoader();
+              
+              // Load animations
+              for (const animEntity of animEntities) {
+                  animLoader.load(animEntity.file_url, (animObj) => {
+                      if (animObj.animations.length > 0) {
+                          const clip = animObj.animations[0];
+                          let name = 'idle';
+                          
+                          // Map names
+                          if (animEntity.animation_type === 'run' || animEntity.name.toLowerCase().includes('run')) name = 'run';
+                          else if (animEntity.animation_type === 'walk' || animEntity.name.toLowerCase().includes('walk')) name = 'walk';
+                          else if (animEntity.name.toLowerCase().includes('jump')) name = 'jump';
+                          else name = animEntity.name.toLowerCase();
+                          
+                          clip.name = name;
+                          const action = mixer.clipAction(clip);
+                          actionsRef.current[name] = action;
+                          
+                          // If this is the first idle we found, play it
+                          if (name === 'idle' && !activeActionRef.current) {
+                              action.play();
+                              activeActionRef.current = action;
+                          }
+                      }
+                  });
+              }
+              
+              // If Y-Bot has built-in animations, use them too
+              if (fbx.animations.length > 0) {
+                  const clip = fbx.animations[0];
+                  if (!actionsRef.current['idle']) {
+                      const action = mixer.clipAction(clip);
+                      action.play();
+                      actionsRef.current['idle'] = action;
+                      activeActionRef.current = action;
+                  }
+              }
+          } catch (e) {
+              console.error("Error loading animations:", e);
+          }
+      };
+      
+      fetchAnimations();
+      
       console.log("Bot loaded into Actor_Layer.");
-    });
+    }, undefined, (e) => console.error("Error loading bot:", e));
   }, [modelUrl]);
 
   // Animation & Physics Loop
@@ -231,23 +307,42 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (mixerRef.current) mixerRef.current.update(delta);
 
       // 2. Actor Movement & Physics
-      if (actorGroupRef.current && isControlsActive.current) {
-        const moveSpeed = 3.0 * delta; // meters per second
-        const rotSpeed = 3.0 * delta; 
+      if (actorGroupRef.current) { // Always update physics even if controls inactive (gravity etc)
+        const moveSpeed = 4.5 * delta; // meters per second
+        const rotSpeed = 3.5 * delta; 
         
-        // Input
-        const forward = (keysPressed.current['w'] ? 1 : 0) - (keysPressed.current['s'] ? 1 : 0);
-        const turn = (keysPressed.current['a'] ? 1 : 0) - (keysPressed.current['d'] ? 1 : 0);
-
-        // Rotation
-        actorGroupRef.current.rotation.y += turn * rotSpeed;
-
-        // Move Vector (local Z)
-        const forwardVec = new THREE.Vector3(0, 0, forward * moveSpeed);
-        forwardVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), actorGroupRef.current.rotation.y);
+        let moving = false;
         
-        // Apply Horizontal Movement
-        actorGroupRef.current.position.add(forwardVec);
+        if (isControlsActive.current) {
+            // Input
+            const forward = (keysPressed.current['w'] ? 1 : 0) - (keysPressed.current['s'] ? 1 : 0);
+            const turn = (keysPressed.current['a'] ? 1 : 0) - (keysPressed.current['d'] ? 1 : 0);
+            
+            moving = forward !== 0 || turn !== 0;
+
+            // Rotation
+            actorGroupRef.current.rotation.y += turn * rotSpeed;
+
+            // Move Vector (local Z)
+            const forwardVec = new THREE.Vector3(0, 0, forward * moveSpeed);
+            forwardVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), actorGroupRef.current.rotation.y);
+            
+            // Apply Horizontal Movement
+            actorGroupRef.current.position.add(forwardVec);
+        }
+
+        // Animation State Machine
+        if (mixerRef.current) {
+            const targetAnim = moving ? 'run' : 'idle';
+            const targetAction = actionsRef.current[targetAnim];
+            const currentAction = activeActionRef.current;
+            
+            if (targetAction && targetAction !== currentAction) {
+                if (currentAction) currentAction.fadeOut(0.2);
+                targetAction.reset().fadeIn(0.2).play();
+                activeActionRef.current = targetAction;
+            }
+        }
 
         // 3. Stair-Climbing Logic (Raycasting)
         if (roomMeshesRef.current.length > 0) {
@@ -265,21 +360,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 const floorY = hit.point.y;
                 
                 // Snap Y to floor (simple collision)
-                // Add tiny offset to prevent z-fighting with floor
-                actorGroupRef.current.position.y = floorY; 
+                // Smooth transition for stairs (lerp)
+                // If the step is too high, treat as wall (simple check)
+                if (floorY - actorGroupRef.current.position.y < 0.5) {
+                    actorGroupRef.current.position.y = floorY;
+                }
+            } else {
+                // Gravity if no ground detected below
+                // Simple gravity for falling off edges
+                // actorGroupRef.current.position.y -= 9.8 * delta * delta; 
+                // For now, keep it simple, don't fall infinitely
             }
         }
 
         // 4. Camera Follow
-        if (cameraRef.current && controlsRef.current) {
+        if (cameraRef.current && controlsRef.current && isControlsActive.current) {
             const targetPos = actorGroupRef.current.position.clone();
             targetPos.y += 1.5; // Look at head height
             
             // Smoothly interpolate controls target
             controlsRef.current.target.lerp(targetPos, 0.1);
             
-            // Keep camera at fixed offset relative to target if desired, 
-            // or just let OrbitControls handle position but update target
+            // Optional: Chase cam logic
+            // const relativeOffset = new THREE.Vector3(0, 2, -4);
+            // relativeOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), actorGroupRef.current.rotation.y);
+            // const cameraTargetPos = actorGroupRef.current.position.clone().add(relativeOffset);
+            // cameraRef.current.position.lerp(cameraTargetPos, 0.05);
+            
             controlsRef.current.update();
         }
       }
@@ -294,7 +401,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     return () => cancelAnimationFrame(reqId);
   }, []);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return (
+    <div ref={containerRef} className="w-full h-full relative">
+        {!isControlsActive.current && (
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm pointer-events-none">
+                Click to Enable WASD Controls
+            </div>
+        )}
+    </div>
+  );
 }
 
 
