@@ -872,13 +872,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   return (
     <div className="w-full h-full relative group">
-      {/* Background Container with Blending Masks */}
+      {/* Background Container - Subtle Blending */}
       <div 
         className="absolute inset-0 pointer-events-none transition-all duration-700"
         style={{
-          // Mask to fade out the edges (Right, Top, Bottom)
-          maskImage: 'linear-gradient(to right, black 50%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
+          // Relaxed mask to allow full-screen visibility while keeping a subtle fade at the very edges if needed
+          // Removed the aggressive right-side fade to support full-page 3D
+          maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
         }}
       >
         <div
@@ -1387,20 +1388,25 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // STRICT ASSET MAPPING: Fetch Room 1 from Model3D
+  // STRICT ASSET MAPPING: Fetch Room 2 (or Room 1) from Model3D
   useEffect(() => {
     const fetchEnvironment = async () => {
         try {
             // Cross-Section Fetch: 3D Model Table (Model3D entity)
             const models = await base44.entities.Model3D.list();
+            
+            // Prioritize Room 2 as requested
+            const room2Asset = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
             const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
             
-            console.log('Environment Asset Found:', room1Asset);
+            const selectedAsset = room2Asset || room1Asset;
             
-            if (room1Asset?.file_url) {
-                setRoomModelUrl(room1Asset.file_url);
+            console.log('Environment Asset Found:', selectedAsset);
+            
+            if (selectedAsset?.file_url) {
+                setRoomModelUrl(selectedAsset.file_url);
             } else {
-                console.warn("Room 1 not found in Admin 3D Models, using fallback.");
+                console.warn("Room 1/2 not found in Admin 3D Models, using fallback.");
                 if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
@@ -1566,15 +1572,12 @@ export default function LunaTemplate() {
 
 
 
-      {/* 3D Model Viewer - Fixed floating element in top-left */}
+      {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {/* Changed condition to show if roomModelUrl exists, even if modelUrl (bot) is null */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
+          className="fixed inset-0 z-0 pointer-events-auto"
           style={{
-            top: '0',
-            bottom: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
