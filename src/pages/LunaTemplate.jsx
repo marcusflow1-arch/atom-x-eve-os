@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, houseModelUrl }) {
 
   const logChange = (entry) => {
     try {
@@ -100,6 +100,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const worldContainerRef = useRef(null);
   const roomContainerRef = useRef(null);
   const actorContainerRef = useRef(null);
+  const houseContainerRef = useRef(null);
   const roomMeshesRef = useRef([]);
   const mixerRef = useRef(null);
   const cameraRef = useRef(null);
@@ -193,6 +194,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       actor.scale.setScalar(0.01); // FBX Scale
       actorContainerRef.current = actor;
       scene.add(actor);
+    }
+
+    if (!houseContainerRef.current) {
+      const houseGroup = new THREE.Group();
+      houseGroup.name = 'House_Layer';
+      houseGroup.scale.setScalar(0.01); // FBX Scale assumption
+      houseContainerRef.current = houseGroup;
+      scene.add(houseGroup);
     }
 
     const camera = cameraRef.current || new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 5000);
@@ -308,6 +317,39 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       : preferredPath === 'battle'
         ? 'arena_world.glb'
         : null;
+
+    // Asset Injection: Load House FBX
+    if (houseModelUrl && houseContainerRef.current) {
+      const loader = new FBXLoader();
+      loader.load(
+        houseModelUrl,
+        (fbx) => {
+          clearGroup(houseContainerRef.current);
+          // FBX models often need scaling. 
+          // If the container is already 0.01, we might not need to scale the model itself, 
+          // or we might need to adjust based on the specific asset.
+          // Resetting transforms to be safe.
+          fbx.position.set(0, 0, 0);
+          
+          fbx.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              if (child.material) {
+                 const applySide = (mat) => { mat.side = THREE.DoubleSide; };
+                 if (Array.isArray(child.material)) child.material.forEach(applySide);
+                 else applySide(child.material);
+              }
+            }
+          });
+          
+          houseContainerRef.current.add(fbx);
+          console.log('House_Layer loaded:', houseModelUrl);
+        },
+        undefined,
+        (err) => console.error('Error loading House FBX:', err)
+      );
+    }
 
     // Asset Injection: Load Room 1 into Environment_Layer
     // This runs whenever roomModelUrl changes (added to dependency array)
@@ -814,7 +856,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, roomModelUrl]);
+  }, [modelUrl, weaponModel, animations, roomModelUrl, houseModelUrl]);
 
 
 
@@ -1350,6 +1392,7 @@ export default function LunaTemplate() {
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
   const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+  const [houseModelUrl, setHouseModelUrl] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1381,7 +1424,23 @@ export default function LunaTemplate() {
     
     // Default Y-Bot (FBX Model Section)
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-  }, []);
+
+    // Fetch House FBX
+    const fetchHouse = async () => {
+       try {
+           const fbxModels = await base44.entities.ModelFBX.list();
+           const houseAsset = fbxModels.find(m => m.name.toLowerCase().includes('house'));
+           if (houseAsset?.file_url) {
+               console.log('House Asset Found:', houseAsset.name);
+               setHouseModelUrl(houseAsset.file_url);
+           }
+       } catch(e) {
+           console.error("Failed to fetch House model:", e);
+       }
+    };
+    fetchHouse();
+
+    }, []);
 
   useEffect(() => {
     return () => {
@@ -1549,7 +1608,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} houseModelUrl={houseModelUrl} />
         </div>
       }
 
