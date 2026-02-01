@@ -319,23 +319,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
 
 
-    // Asset Injection: Load Room 1 into Environment_Layer
+    // Asset Injection: Load Room (Environment) into Environment_Layer
     if (roomModelUrl && worldContainerRef.current) {
-      console.log("Attempting to load Environment:", roomModelUrl);
+      console.log("Attempting to load Environment (Room):", roomModelUrl);
       const roomLoader = new GLTFLoader();
       roomLoader.load(
         roomModelUrl,
         (gltf) => {
           const room = gltf.scene;
-          // Scale Safety: Explicitly set to 1
+          // Scale Safety: Explicitly set to 1 to ensure Room 2 fits standard units
           room.scale.set(1, 1, 1); 
           room.position.set(0, 0, 0);
           
-          // Standardize materials
+          // Standardize materials for clean blending
           room.traverse((child) => {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
+              // Ensure double-sided rendering for room walls/ceilings to avoid culling issues
               if (child.material) {
                  if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
                  else child.material.side = THREE.DoubleSide;
@@ -343,20 +344,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           });
 
-          // Clear previous and add to Environment_Layer
+          // Clear previous environment and add the new Room
           clearGroup(worldContainerRef.current);
           worldContainerRef.current.add(room);
           
-          // Cache meshes for collision
+          // Cache meshes for collision detection
           const meshes = [];
           room.traverse((child) => {
             if (child.isMesh) meshes.push(child);
           });
           roomMeshesRef.current = meshes;
-          console.log('Environment_Layer successfully loaded from Admin:', roomModelUrl);
+          console.log('Environment_Layer successfully loaded Room from Admin:', roomModelUrl);
         },
         undefined,
-        (err) => console.error('Error loading Room 1 GLTF:', err)
+        (err) => console.error('Error loading Room GLTF:', err)
       );
     }
 
