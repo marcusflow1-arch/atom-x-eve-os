@@ -157,18 +157,30 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     sceneRef.current = scene;
     scene.background = null;
 
+    // STRICT VISIBILITY ENFORCEMENT: Lighting Override
+    if (!scene.getObjectByName('Visibility_Override_Light')) {
+        const pointLight = new THREE.PointLight(0xffffff, 2, 100);
+        pointLight.name = 'Visibility_Override_Light';
+        pointLight.position.set(0, 5, 0);
+        scene.add(pointLight);
+    }
+
     // SYSTEM REBOOT: PERSISTENT LAYERS
     if (!worldContainerRef.current) {
       // Use this as the main "Environment_Layer" for the room
       const env = new THREE.Group();
       env.name = 'Environment_Layer';
-      env.scale.setScalar(1.0);
+      // Scale Safety: Force 1
+      env.scale.set(1, 1, 1);
       worldContainerRef.current = env;
+      
+      // Force Layer Addition
       scene.add(env);
       
-      // Visual Proof: Grid Helper
-      const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-      gridHelper.position.y = 0.01;
+      // Fallback Grid: Visual Proof
+      const gridHelper = new THREE.GridHelper(100, 100, 0x444444, 0x222222);
+      gridHelper.name = 'Fallback_Grid';
+      gridHelper.position.y = -0.01;
       scene.add(gridHelper);
     }
     
@@ -300,7 +312,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         roomModelUrl,
         (gltf) => {
           const room = gltf.scene;
-          room.scale.setScalar(1.0); 
+          // Scale Safety
+          room.scale.set(1, 1, 1); 
           room.position.set(0, 0, 0);
           
           // Standardize materials
@@ -318,6 +331,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Clear previous and add to Environment_Layer
           clearGroup(worldContainerRef.current);
           worldContainerRef.current.add(room);
+          
+          // Auto-Center Camera on World
+          if (cameraRef.current && controlsRef.current) {
+              // Only look at world if we haven't already focused on the actor
+              // Or force it if requested for debugging visibility
+              // controlsRef.current.target.copy(worldContainerRef.current.position); 
+              // controlsRef.current.update();
+          }
           
           // Cache meshes for collision
           const meshes = [];
