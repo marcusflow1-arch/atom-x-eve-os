@@ -736,30 +736,44 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
   }, [triggerAnimation]);
 
   return (
-    <div className="w-full h-full relative">
-      <div
-        className="absolute inset-0"
+    <div className="w-full h-full relative group">
+      {/* Background Container with Blending Masks */}
+      <div 
+        className="absolute inset-0 pointer-events-none transition-all duration-700"
         style={{
-          backgroundImage: bgA ? `url(${bgA})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: activeBg === 'A' ? 1 : 0,
-          transition: 'opacity 400ms ease'
+          // Mask to fade out the edges (Right, Top, Bottom)
+          maskImage: 'linear-gradient(to right, black 50%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
         }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: bgB ? `url(${bgB})` : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          opacity: activeBg === 'B' ? 1 : 0,
-          transition: 'opacity 400ms ease'
-        }}
-      />
-      <div ref={containerRef} className="absolute inset-0" />
+      >
+        <div
+          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+          style={{
+            backgroundImage: bgA ? `url(${bgA})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: activeBg === 'A' ? 1 : 0,
+          }}
+        />
+        <div
+          className="absolute inset-0 transition-opacity duration-700 ease-in-out"
+          style={{
+            backgroundImage: bgB ? `url(${bgB})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: activeBg === 'B' ? 1 : 0,
+          }}
+        />
+        
+        {/* Gradient Overlays for Environmental Blending */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-[#080808]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-[#080808]/50" />
+      </div>
+
+      {/* 3D Canvas - Unmasked to pop out */}
+      <div ref={containerRef} className="absolute inset-0 z-10" />
     </div>
   );
 }
