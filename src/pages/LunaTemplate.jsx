@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl }) {
 
   const logChange = (entry) => {
     try {
@@ -98,7 +98,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentWeaponRef = useRef(null);
   const currentBaseActionRef = useRef(null);
   const worldContainerRef = useRef(null);
+  const roomContainerRef = useRef(null);
   const actorContainerRef = useRef(null);
+  const roomMeshesRef = useRef([]);
   const mixerRef = useRef(null);
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
@@ -162,6 +164,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       env.scale.setScalar(1.0);
       worldContainerRef.current = env;
       scene.add(env);
+    }
+    if (!roomContainerRef.current) {
+      const room = new THREE.Group();
+      room.name = 'Room_Layer';
+      room.scale.setScalar(1.0);
+      roomContainerRef.current = room;
+      scene.add(room);
     }
     if (!actorContainerRef.current) {
       const actor = new THREE.Group();
@@ -289,6 +298,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         clearGroup(worldContainerRef.current);
       }
       envLoadedRef.current = true; // Mark as "loaded" (empty state) to allow camera reset logic to proceed
+    }
+
+    // Load Room Model (Static Mesh)
+    if (roomModelUrl && roomContainerRef.current) {
+        const roomLoader = new GLTFLoader();
+        roomLoader.load(
+            roomModelUrl,
+            (gltf) => {
+                const room = gltf.scene;
+                room.scale.setScalar(3); // Scale up room slightly to match Y-Bot better if needed
+                room.position.set(0, -0.1, 0); // Slight offset
+                
+                clearGroup(roomContainerRef.current);
+                roomContainerRef.current.add(room);
+                
+                // Collect meshes for collision
+                const meshes = [];
+                room.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        meshes.push(child);
+                    }
+                });
+                roomMeshesRef.current = meshes;
+                console.log('Room loaded with meshes:', meshes.length);
+            },
+            undefined,
+            (err) => console.error('Error loading Room model:', err)
+        );
     }
     const processModel = (model, animations) => {
       modelRef.current = model;
@@ -611,6 +650,9 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
     };
 
     let animationFrameId;
+    // Raycaster for ground detection
+    const raycaster = new THREE.Raycaster();
+    const downVector = new THREE.Vector3(0, -1, 0);
 
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
@@ -635,22 +677,45 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
 
         const dirLength = direction.length();
         const isMoving = dirLength > 0.01;
-        const grounded = !isJumpingRef.current && actorContainerRef.current.position.y <= 0;
+
+        // --- Ground Detection Logic ---
+        let groundHeight = 0; // Default floor
+        let onGround = false;
+
+        // Raycast from character position (slightly up) downwards
+        if (roomMeshesRef.current.length > 0) {
+            const rayOrigin = actorContainerRef.current.position.clone();
+            rayOrigin.y += 1.0; // Start ray 1 meter up
+            raycaster.set(rayOrigin, downVector);
+            
+            const intersects = raycaster.intersectObjects(roomMeshesRef.current);
+            if (intersects.length > 0) {
+                // Find highest intersection that is below the ray origin
+                // intersects are sorted by distance, so first one is closest
+                groundHeight = intersects[0].point.y;
+            }
+        }
+
+        // Determine if grounded based on current Y vs detected groundHeight
+        // Small tolerance for "sticking" to ground
+        const grounded = !isJumpingRef.current && (actorContainerRef.current.position.y <= groundHeight + 0.1);
 
         if (keysPressed.current[' '] && grounded) {
           isJumpingRef.current = true;
           velocityRef.current.y = 0.15;
         }
 
-        if (isJumpingRef.current || actorContainerRef.current.position.y > 0) {
+        // Apply Gravity
+        if (isJumpingRef.current || actorContainerRef.current.position.y > groundHeight) {
           velocityRef.current.y -= 0.008;
           actorContainerRef.current.position.y += velocityRef.current.y;
+        }
 
-          if (actorContainerRef.current.position.y <= 0) {
-            actorContainerRef.current.position.y = 0;
+        // Ground Collision / Landing
+        if (actorContainerRef.current.position.y < groundHeight) {
+            actorContainerRef.current.position.y = groundHeight;
             isJumpingRef.current = false;
             velocityRef.current.y = 0;
-          }
         }
 
         if (grounded) {
@@ -1259,6 +1324,7 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [modelUrl, setModelUrl] = useState(null);
+  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/d13c1bf01_scene.gltf');
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1445,7 +1511,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} />
         </div>
       }
 
