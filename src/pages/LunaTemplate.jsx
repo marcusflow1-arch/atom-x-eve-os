@@ -1807,7 +1807,7 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="fixed right-8 z-30 overflow-y-auto"
+            className="fixed right-8 z-30 overflow-y-auto pointer-events-none"
             style={{
               left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
@@ -1816,10 +1816,12 @@ export default function LunaTemplate() {
               minHeight: '800px'
             }}>
 
-            <FocusModePanel
-               onOpenCalendar={() => setShowCalendar(true)}
-               onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
-             />
+            <div className="pointer-events-auto h-full">
+              <FocusModePanel
+                 onOpenCalendar={() => setShowCalendar(true)}
+                 onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+               />
+            </div>
           </motion.div>
         }
       </AnimatePresence>
