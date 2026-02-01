@@ -1567,7 +1567,8 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-  const [roomModelUrl, setRoomModelUrl] = useState(null);
+  // Optimistically set default room URL to reduce loading time
+  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
