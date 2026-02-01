@@ -285,13 +285,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to Actor_Layer' });
     }
 
-    const handleCanvasClick = () => {
-      controlsActive.current = !controlsActive.current;
-      setIsActive(controlsActive.current);
-      if (controlsActive.current) {
-        renderer.domElement.style.cursor = 'none';
+    const handleCanvasClick = (event) => {
+      // Raycast to check if clicking on Y-Bot
+      if (!actorContainerRef.current) return;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+      );
+
+      const raycasterSelect = new THREE.Raycaster();
+      raycasterSelect.setFromCamera(mouse, camera);
+
+      // Recursive intersection check on actor
+      const intersects = raycasterSelect.intersectObject(actorContainerRef.current, true);
+
+      if (intersects.length > 0) {
+        // Clicked on Y-Bot -> Activate Controls
+        controlsActive.current = true;
+        setIsActive(true);
+        renderer.domElement.style.cursor = 'crosshair'; // Visual feedback
+        // Optional: Highlight or effect
       } else {
-        renderer.domElement.style.cursor = 'pointer';
+        // Clicked elsewhere -> Optional: Deselect or just keep focus if appropriate
+        // For now, we allow clicking empty space to NOT toggle off immediately if dragging, 
+        // but let's keep it simple: Click Y-Bot to engage.
+        // If we want to deselect on background click:
+        // controlsActive.current = false;
+        // setIsActive(false);
+        // renderer.domElement.style.cursor = 'pointer';
       }
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
