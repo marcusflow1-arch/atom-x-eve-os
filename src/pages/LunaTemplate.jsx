@@ -208,6 +208,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     rendererRef.current = renderer;
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setClearColor(0x000000, 0);
+    
+    // Frustum Check: Set Encoding for Visibility
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    
     if (!renderer.domElement.parentNode) {
       containerRef.current.appendChild(renderer.domElement);
     }
@@ -1359,10 +1363,30 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // Ensure models are set on mount
+  // STRICT ASSET MAPPING: Fetch Room 1 from Model3D
   useEffect(() => {
+    const fetchEnvironment = async () => {
+        try {
+            // Cross-Section Fetch: 3D Model Table (Model3D entity)
+            const models = await base44.entities.Model3D.list();
+            const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+            
+            console.log('Environment Asset Found:', room1Asset);
+            
+            if (room1Asset?.file_url) {
+                setRoomModelUrl(room1Asset.file_url);
+            } else {
+                console.warn("Room 1 not found in Admin 3D Models, using fallback.");
+                if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+            }
+        } catch (e) {
+            console.error("Failed to connect to Admin 3D Model section:", e);
+        }
+    };
+    fetchEnvironment();
+    
+    // Default Y-Bot (FBX Model Section)
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-    if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   }, []);
 
   useEffect(() => {
