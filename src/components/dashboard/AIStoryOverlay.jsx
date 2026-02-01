@@ -194,32 +194,47 @@ export default function AIStoryOverlay({ onClose }) {
                   <ChevronLeft className="w-4 h-4" /> Back to Menu
                 </button>
 
-                <div className="flex-1 flex items-center overflow-x-auto scrollbar-hide mask-fade-horizontal pb-12">
-                  <div className="flex items-center gap-0 min-w-max px-12">
+                <div className="flex-1 flex items-center justify-start md:justify-center overflow-x-auto scrollbar-hide mask-fade-horizontal pb-12 pt-20">
+                  <div className="flex items-center min-w-max px-12">
                     {timelineEvents.map((event, i) => (
-                      <div key={event.id} className="relative flex items-center">
-                        {/* Connection Line */}
-                        {i < timelineEvents.length - 1 && (
-                          <div className={`w-32 h-[1px] ${event.active ? 'bg-white/60' : 'bg-white/20'}`} />
-                        )}
-                        
+                      <React.Fragment key={event.id}>
                         {/* Node */}
-                        <div className="relative group cursor-pointer">
-                          <div className={`w-4 h-4 rounded-full border border-white transition-all duration-500 ${event.active ? 'bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'bg-black/50 hover:bg-white/30'}`} />
+                        <div className="relative group flex flex-col items-center">
+                          {/* Chapter Label Above */}
+                          <div className={`absolute -top-16 md:-top-12 text-[10px] md:text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors duration-300 ${event.active ? 'text-white drop-shadow-md' : 'text-white/20'}`}>
+                            {event.label}
+                          </div>
+
+                          {/* Node Circle */}
+                          <div className="relative cursor-pointer z-10 p-2 -m-2">
+                            <div 
+                              className={`w-4 h-4 md:w-5 md:h-5 rounded-full border-2 transition-all duration-500 
+                                ${event.isCurrent ? 'bg-white border-white shadow-[0_0_25px_rgba(255,255,255,0.9)] scale-125 animate-pulse' : 
+                                  event.isCompleted ? 'bg-white/90 border-white/90 shadow-[0_0_15px_rgba(255,255,255,0.5)]' : 
+                                  'bg-black/40 border-white/20 hover:border-white/50'
+                                }`}
+                            />
+                          </div>
                           
-                          {/* Event Details Card */}
-                          <div className="absolute top-8 left-1/2 -translate-x-1/2 w-64 p-6 bg-black/20 backdrop-blur-md border border-white/10 text-center opacity-60 group-hover:opacity-100 transition-all duration-300 hover:scale-105 rounded-xl shadow-xl">
-                            <div className="text-xs text-white/50 uppercase tracking-widest mb-2">{event.date}</div>
-                            <h3 className="text-lg text-white font-medium tracking-wide mb-2">{event.title}</h3>
-                            <p className="text-xs text-white/70 leading-relaxed font-sans">{event.desc}</p>
+                          {/* Event Details Card (Hover) */}
+                          <div className="absolute top-10 left-1/2 -translate-x-1/2 w-64 p-4 bg-black/60 backdrop-blur-xl border border-white/10 text-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 rounded-xl shadow-2xl pointer-events-none z-50">
+                            <h3 className="text-sm text-white font-bold tracking-wide mb-1">{event.title}</h3>
+                            <p className="text-[10px] text-white/60 leading-relaxed font-sans">{event.desc}</p>
                           </div>
                         </div>
-                        
-                        {/* Connection Line (Right side) */}
+
+                        {/* Connection Line to Next */}
                         {i < timelineEvents.length - 1 && (
-                          <div className={`w-32 h-[1px] ${timelineEvents[i+1].active ? 'bg-white/60' : 'bg-white/20'}`} />
+                          <div className="w-16 md:w-32 h-[2px] relative bg-white/10">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: timelineEvents[i+1].active ? '100%' : '0%' }}
+                              className="absolute inset-0 bg-gradient-to-r from-white/80 to-white/40 shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                              transition={{ duration: 0.8, delay: 0.2 }}
+                            />
+                          </div>
                         )}
-                      </div>
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
