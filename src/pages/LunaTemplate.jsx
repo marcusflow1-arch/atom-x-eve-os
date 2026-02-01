@@ -147,7 +147,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   }, []);
 
   useEffect(() => {
-    if (!containerRef.current || !modelUrl) return;
+    if (!containerRef.current) return;
 
     // Read onboarding preference for path-based environment
     const preferredPath = (localStorage.getItem('atom_eve_preferred_path') || '').toLowerCase();
@@ -260,9 +260,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const clock = new THREE.Clock();
 
-    const extension = modelUrl.split('.').pop().toLowerCase();
-    const isFBX = extension === 'fbx';
-    logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
+    let isFBX = false;
+    if (modelUrl) {
+        const extension = modelUrl.split('.').pop().toLowerCase();
+        isFBX = extension === 'fbx';
+        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'asset-load', summary: isFBX ? 'Loading FBX into Actor_Layer' : 'Loading GLTF into Environment_Layer' });
+    }
 
     // Conditional Environment Loading based on onboarding preference
     const envMapUrl = preferredPath === 'story'
@@ -271,8 +274,54 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         ? 'arena_world.glb'
         : null;
 
+    // Load Room Model (Static Mesh) - Integrated into main flow to ensure container exists
+    // This is now the primary environment if no actor modelUrl is provided
+    if (roomModelUrl && roomContainerRef.current) {
+      const roomLoader = new GLTFLoader();
+      roomLoader.load(
+        roomModelUrl,
+        (gltf) => {
+          const room = gltf.scene;
+          room.scale.setScalar(1); 
+          room.position.set(0, 0, 0); 
+          
+          room.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              if (child.material) {
+                 if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
+                 else child.material.side = THREE.DoubleSide;
+              }
+            }
+          });
+
+          clearGroup(roomContainerRef.current);
+          roomContainerRef.current.add(room);
+          
+          const meshes = [];
+          room.traverse((child) => {
+            if (child.isMesh) meshes.push(child);
+          });
+          roomMeshesRef.current = meshes;
+          console.log('Room loaded successfully with meshes:', meshes.length);
+          
+          // If no actor, focus camera on room
+          if (!modelUrl && controlsRef.current) {
+             const box = new THREE.Box3().setFromObject(room);
+             const center = box.getCenter(new THREE.Vector3());
+             controlsRef.current.target.copy(center);
+             cameraRef.current.position.set(center.x, center.y + 2, center.z + 5);
+             controlsRef.current.update();
+          }
+        },
+        undefined,
+        (err) => console.error('Error loading Room model:', err)
+      );
+    }
+
     // If actor is FBX, optionally load the environment first based on preference
-    if (isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+    if (modelUrl && isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
       const envLoader = new GLTFLoader();
       envLoader.load(
         envMapUrl,
@@ -292,51 +341,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         undefined,
         (err) => console.error('Error loading ENV glTF:', err)
       );
-    } else if (isFBX && !envMapUrl) {
+    } else if (modelUrl && isFBX && !envMapUrl) {
       // If no env map is requested (or preference cleared), ensure environment layer is empty but marked loaded
       if (worldContainerRef.current) {
         clearGroup(worldContainerRef.current);
       }
       envLoadedRef.current = true; // Mark as "loaded" (empty state) to allow camera reset logic to proceed
-    }
-
-    // Load Room Model (Static Mesh) - Integrated into main flow to ensure container exists
-    if (roomModelUrl && roomContainerRef.current) {
-      const roomLoader = new GLTFLoader();
-      roomLoader.load(
-        roomModelUrl,
-        (gltf) => {
-          const room = gltf.scene;
-          // Scale room up if it's small relative to the 0.01 scaled actor, or keep 1 if it's already metric
-          // Assuming standard GLTF meters, keep 1.
-          room.scale.setScalar(1); 
-          room.position.set(0, 0, 0); 
-          
-          room.traverse((child) => {
-            if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              // Ensure double side rendering so we see it from inside
-              if (child.material) {
-                 if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
-                 else child.material.side = THREE.DoubleSide;
-              }
-            }
-          });
-
-          clearGroup(roomContainerRef.current);
-          roomContainerRef.current.add(room);
-          
-          const meshes = [];
-          room.traverse((child) => {
-            if (child.isMesh) meshes.push(child);
-          });
-          roomMeshesRef.current = meshes;
-          console.log('Room loaded successfully with meshes:', meshes.length);
-        },
-        undefined,
-        (err) => console.error('Error loading Room model:', err)
-      );
     }
 
 
@@ -435,120 +445,122 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
     };
 
-    if (isFBX) {
-      const loader = new FBXLoader();
-      loader.load(
-        modelUrl,
-        (fbx) => {
-          fbx.traverse((node) => {
-            if (node.isMesh || node.isSkinnedMesh) {
-              node.frustumCulled = false;
-              if (node.material) {
-                const applySide = (mat) => {
-                  mat.side = THREE.DoubleSide;
-                  mat.needsUpdate = true;
-                };
-                if (Array.isArray(node.material)) {
-                  node.material.forEach(applySide);
-                } else {
-                  applySide(node.material);
+    if (modelUrl) {
+        if (isFBX) {
+          const loader = new FBXLoader();
+          loader.load(
+            modelUrl,
+            (fbx) => {
+              fbx.traverse((node) => {
+                if (node.isMesh || node.isSkinnedMesh) {
+                  node.frustumCulled = false;
+                  if (node.material) {
+                    const applySide = (mat) => {
+                      mat.side = THREE.DoubleSide;
+                      mat.needsUpdate = true;
+                    };
+                    if (Array.isArray(node.material)) {
+                      node.material.forEach(applySide);
+                    } else {
+                      applySide(node.material);
+                    }
+                  }
                 }
+              });
+
+              const allClips = [...(fbx.animations || [])];
+              let loadedCount = 0;
+
+              animations.forEach((anim) => {
+                loader.load(
+                  anim.file_url,
+                  (animFbx) => {
+                    if (animFbx.animations && animFbx.animations.length > 0) {
+                      animFbx.animations.forEach((clip) => {
+                        if (anim.animation_type === 'idle') clip.name = 'idle';
+                        else if (anim.animation_type === 'run') clip.name = 'run';
+                        else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                        allClips.push(clip);
+                      });
+                    }
+                    loadedCount++;
+
+                    if (loadedCount === animations.length) {
+                      clearGroup(actorContainerRef.current);
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                      fbx.scale.setScalar(1);
+                      fbx.position.set(0, 0, 0);
+                      processModel(fbx, allClips);
+                      mixerRef.current = mixer;
+                      actorLoadedRef.current = true;
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                    }
+                  },
+                  undefined,
+                  (err) => console.error(`Error loading animation ${anim.name}:`, err)
+                );
+              });
+
+              if (animations.length === 0) {
+                clearGroup(actorContainerRef.current);
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                fbx.scale.setScalar(1);
+                fbx.position.set(0, 0, 0);
+                processModel(fbx, allClips);
+                mixerRef.current = mixer;
+                actorLoadedRef.current = true;
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
               }
-            }
-          });
+            },
+            undefined,
+            (err) => console.error('Error loading FBX model:', err)
+          );
+        } else {
+          const loader = new GLTFLoader();
 
-          const allClips = [...(fbx.animations || [])];
-          let loadedCount = 0;
-
-          animations.forEach((anim) => {
-            loader.load(
-              anim.file_url,
-              (animFbx) => {
-                if (animFbx.animations && animFbx.animations.length > 0) {
-                  animFbx.animations.forEach((clip) => {
-                    if (anim.animation_type === 'idle') clip.name = 'idle';
-                    else if (anim.animation_type === 'run') clip.name = 'run';
-                    else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
-                    allClips.push(clip);
-                  });
+          // Load environment first if preference is set and not already loaded or changed
+          if (envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+            const envLoader = new GLTFLoader();
+            envLoader.load(
+              envMapUrl,
+              (envGltf) => {
+                const world = envGltf.scene;
+                world.scale.setScalar(1);
+                world.position.set(0, 0, 0);
+                clearGroup(worldContainerRef.current);
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
+                if (worldContainerRef.current) {
+                  worldContainerRef.current.add(world);
                 }
-                loadedCount++;
-
-                if (loadedCount === animations.length) {
-                  clearGroup(actorContainerRef.current);
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-fbx.scale.setScalar(1);
-fbx.position.set(0, 0, 0);
-processModel(fbx, allClips);
-mixerRef.current = mixer;
-          actorLoadedRef.current = true;
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
-                }
+                envLoadedRef.current = true;
+                currentEnvKeyRef.current = envMapUrl;
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
               },
               undefined,
-              (err) => console.error(`Error loading animation ${anim.name}:`, err)
+              (err) => console.error('Error loading ENV glTF:', err)
             );
-          });
-
-          if (animations.length === 0) {
-            clearGroup(actorContainerRef.current);
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
-fbx.scale.setScalar(1);
-fbx.position.set(0, 0, 0);
-processModel(fbx, allClips);
-mixerRef.current = mixer;
-          actorLoadedRef.current = true;
-logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
           }
-        },
-        undefined,
-        (err) => console.error('Error loading FBX model:', err)
-      );
-    } else {
-      const loader = new GLTFLoader();
 
-      // Load environment first if preference is set and not already loaded or changed
-      if (envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
-        const envLoader = new GLTFLoader();
-        envLoader.load(
-          envMapUrl,
-          (envGltf) => {
-            const world = envGltf.scene;
-            world.scale.setScalar(1);
-            world.position.set(0, 0, 0);
-            clearGroup(worldContainerRef.current);
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-            if (worldContainerRef.current) {
-              worldContainerRef.current.add(world);
-            }
-            envLoadedRef.current = true;
-            currentEnvKeyRef.current = envMapUrl;
-            logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
-          },
-          undefined,
-          (err) => console.error('Error loading ENV glTF:', err)
-        );
-      }
-
-      loader.load(
-        modelUrl,
-        (gltf) => {
-          const world = gltf.scene;
-          // Normalize map scale and reset position
-          world.scale.setScalar(1);
-          world.position.set(0, 0, 0);
-          clearGroup(worldContainerRef.current);
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-          if (worldContainerRef.current) {
-            worldContainerRef.current.add(world);
-          }
-          envLoadedRef.current = true;
-          currentEnvKeyRef.current = modelUrl;
-          logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
-        },
-        undefined,
-        (err) => console.error('Error loading GLTF model:', err)
-      );
+          loader.load(
+            modelUrl,
+            (gltf) => {
+              const world = gltf.scene;
+              // Normalize map scale and reset position
+              world.scale.setScalar(1);
+              world.position.set(0, 0, 0);
+              clearGroup(worldContainerRef.current);
+              logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
+              if (worldContainerRef.current) {
+                worldContainerRef.current.add(world);
+              }
+              envLoadedRef.current = true;
+              currentEnvKeyRef.current = modelUrl;
+              logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
+            },
+            undefined,
+            (err) => console.error('Error loading GLTF model:', err)
+          );
+        }
     }
 
     const handleKeyDown = (e) => {
@@ -1345,18 +1357,10 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
+  // Removed fetching of Y Bot to focus on Room 1
   useEffect(() => {
-    const fetchModelAndAnimations = async () => {
-      try {
-        const models = await base44.entities.ModelFBX.filter({ name: 'Y Bot' });
-        if (models.length > 0) {
-          setModelUrl(models[0].file_url);
-        }
-      } catch (error) {
-        console.error('Failed to load 3D model:', error);
-      }
-    };
-    fetchModelAndAnimations();
+    // We intentionally do not set modelUrl here to prevent the bot from loading
+    // setModelUrl(null);
   }, []);
 
   useEffect(() => {
@@ -1513,7 +1517,8 @@ export default function LunaTemplate() {
 
       {/* 3D Model Viewer - Fixed floating element in top-left */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {modelUrl && !showConsoleMode && !showFriendsHub && !showAchievements &&
+      {/* Changed condition to show if roomModelUrl exists, even if modelUrl (bot) is null */}
+      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
           className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
           style={{
