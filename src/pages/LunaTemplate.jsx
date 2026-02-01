@@ -158,6 +158,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     sceneRef.current = scene;
     scene.background = null;
 
+    // CLEANUP: Remove any rogue grids
+    scene.traverse((child) => {
+        if (child.type === 'GridHelper' || child.name.toLowerCase().includes('grid')) {
+            child.visible = false;
+            // We can try to remove it, but traversing and removing is tricky. Hiding is safer.
+        }
+    });
+
     // STRICT VISIBILITY ENFORCEMENT: Lighting Override
     if (!scene.getObjectByName('Visibility_Override_Light')) {
         const pointLight = new THREE.PointLight(0xffffff, 2, 100);
@@ -196,6 +204,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const houseGroup = new THREE.Group();
       houseGroup.name = 'House_Layer';
       houseGroup.scale.setScalar(0.01); // FBX Scale assumption
+      // Position House in front of the actor (Actor at 0,0,0)
+      // Moving house back along -Z so actor stands "in front" (relative to camera at +Z)
+      // Adjust Y to ensure floor is at 0 level (assuming house origin is centered or bottom)
+      houseGroup.position.set(0, 0, -500); // 5m back (scaled 0.01 -> 500 units * 0.01 = 5m)
       houseContainerRef.current = houseGroup;
       scene.add(houseGroup);
     }
@@ -405,6 +417,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           });
           
+          // Re-center logic: Compute bounding box and center strictly
+          const box = new THREE.Box3().setFromObject(fbx);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          
+          // Move model so its bottom-center is at 0,0,0
+          fbx.position.x += (fbx.position.x - center.x);
+          fbx.position.y += (fbx.position.y - box.min.y); // Align bottom to floor
+          fbx.position.z += (fbx.position.z - center.z);
+          
           houseContainerRef.current.add(fbx);
           console.log('House_Layer loaded:', houseModelUrl);
         },
@@ -414,8 +436,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
 
     // Asset Injection: Load Room 1 into Environment_Layer
-    // This runs whenever roomModelUrl changes (added to dependency array)
-    if (roomModelUrl && worldContainerRef.current) {
+    // Only load if House is NOT present (House supersedes Room 1)
+    if (roomModelUrl && worldContainerRef.current && !houseModelUrl) {
       console.log("Attempting to load Environment:", roomModelUrl);
       const roomLoader = new GLTFLoader();
       roomLoader.load(
@@ -847,9 +869,26 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         if (collisionObjects.length > 0) {
             try {
-                const rayOrigin = actorContainerRef.current.position.clone();
-                rayOrigin.y += 2.0; // Start ray 2m up
-                raycaster.set(rayOrigin, downVector);
+                const currentPos = actorContainerRef.current.position.clone();
+                
+                // 1. WALL DETECTION (Horizontal Raycast)
+                const forwardVector = direction.clone().normalize();
+                if (forwardVector.length() > 0) {
+                    const wallRayOrigin = currentPos.clone();
+                    wallRayOrigin.y += 1.0; // Chest height
+                    raycaster.set(wallRayOrigin, forwardVector);
+                    const wallIntersects = raycaster.intersectObjects(collisionObjects, true);
+                    
+                    // If hitting a wall very close (e.g. < 0.5m), stop movement
+                    if (wallIntersects.length > 0 && wallIntersects[0].distance < 0.5) {
+                        isMoving = false; // Cancel movement
+                    }
+                }
+
+                // 2. GROUND DETECTION (Vertical Raycast)
+                const groundRayOrigin = currentPos.clone();
+                groundRayOrigin.y += 2.0; // Start ray 2m up
+                raycaster.set(groundRayOrigin, downVector);
 
                 // Intersect with all environment objects
                 const intersects = raycaster.intersectObjects(collisionObjects, true);
