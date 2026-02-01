@@ -1406,10 +1406,29 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
               thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200',
               type: 'victory',
               background: plasmaWater.video_url,
+              audio: plasmaWater.audio_url,
               game: 'Hero Theme',
               isVideo: true
             });
           }
+        }
+
+        // Add other backgrounds if they exist
+        if (backgrounds && backgrounds.data) {
+          backgrounds.data.forEach(bg => {
+            if (bg.title !== 'Plasma-Water' && bg.title !== 'Plasma Water') {
+               initialRefs.push({
+                id: bg.id,
+                title: bg.title,
+                thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', // Default thumb
+                type: 'victory',
+                background: bg.video_url,
+                audio: bg.audio_url,
+                game: 'Custom',
+                isVideo: true
+              });
+            }
+          });
         }
         
         setReferences(initialRefs);
@@ -1432,7 +1451,7 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
   const handleReferenceClick = (reference) => {
     setActiveReference(reference);
     if (onBackgroundChange) {
-      onBackgroundChange(reference.background);
+      onBackgroundChange({ url: reference.background, audio: reference.audio });
     }
   };
 

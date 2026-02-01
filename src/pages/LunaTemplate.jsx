@@ -1571,6 +1571,7 @@ export default function LunaTemplate() {
   const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
+  const [bannerAudioUrl, setBannerAudioUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
@@ -1766,6 +1767,22 @@ export default function LunaTemplate() {
 
 
 
+      {/* Background Audio Player */}
+      <audio 
+        ref={(el) => {
+          if (el) {
+            el.volume = 0.4;
+            if (bannerAudioUrl) {
+              el.play().catch(e => console.log("Audio play failed", e));
+            } else {
+              el.pause();
+            }
+          }
+        }}
+        src={bannerAudioUrl || ''} 
+        loop 
+      />
+
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
@@ -1838,7 +1855,15 @@ export default function LunaTemplate() {
             <div className="h-full">
               <FocusModePanel
                  onOpenCalendar={() => setShowCalendar(true)}
-                 onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+                 onBackgroundChange={(data) => {
+                   if (data && typeof data === 'object') {
+                     setBannerBackgroundUrl(data.url);
+                     setBannerAudioUrl(data.audio);
+                   } else {
+                     setBannerBackgroundUrl(data);
+                     setBannerAudioUrl(null);
+                   }
+                 }}
                  onToggleStats={() => setShowStats((v) => !v)}
                />
             </div>
