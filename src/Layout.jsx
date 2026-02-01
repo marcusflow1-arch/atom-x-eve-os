@@ -527,7 +527,7 @@ function LayoutContent({ children, currentPageName }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
               onClick={() => setDrawerOpen(false)}
             />
             <motion.div
@@ -535,7 +535,7 @@ function LayoutContent({ children, currentPageName }) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-80 z-50 flex flex-col rounded-r-3xl"
+              className="fixed top-0 left-0 bottom-0 w-80 z-[9999] flex flex-col rounded-r-3xl"
               style={{ 
                 background: 'rgba(100, 120, 140, 0.12)',
                 backdropFilter: 'blur(30px) saturate(150%)',
