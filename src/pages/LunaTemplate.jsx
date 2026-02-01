@@ -283,6 +283,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         undefined,
         (err) => console.error('Error loading ENV glTF:', err)
       );
+    } else if (isFBX && !envMapUrl) {
+      // If no env map is requested (or preference cleared), ensure environment layer is empty but marked loaded
+      if (worldContainerRef.current) {
+        clearGroup(worldContainerRef.current);
+      }
+      envLoadedRef.current = true; // Mark as "loaded" (empty state) to allow camera reset logic to proceed
     }
     const processModel = (model, animations) => {
       modelRef.current = model;
