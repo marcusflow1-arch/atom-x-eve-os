@@ -146,7 +146,7 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 rounded-r-3xl z-[70] overflow-hidden flex flex-col"
+        className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col"
         style={{ 
           background: 'rgba(10, 14, 20, 0.5)',
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -382,7 +382,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`fixed top-4 bottom-4 left-[22rem] sm:left-[26rem] z-[68] rounded-3xl shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[calc(400px+4rem)] xl:right-[calc(500px+4rem)]' : 'right-8'}`}
+                className={`fixed top-4 bottom-4 left-[22rem] sm:left-[26rem] z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[calc(400px+4rem)] xl:right-[calc(500px+4rem)]' : 'right-8'}`}
                 style={{
                   background: 'rgba(12, 16, 24, 0.6)',
                   backdropFilter: 'blur(40px) saturate(180%)',
@@ -445,7 +445,7 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-4 right-8 bottom-4 w-[400px] xl:w-[500px] z-[69] shadow-2xl rounded-3xl flex flex-col overflow-hidden"
+                className="fixed top-4 right-8 bottom-4 w-[400px] xl:w-[500px] z-[69] shadow-2xl flex flex-col overflow-hidden"
                 style={{
                   background: 'rgba(15, 20, 26, 0.65)',
                   backdropFilter: 'blur(40px) saturate(180%)',
