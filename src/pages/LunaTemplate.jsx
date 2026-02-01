@@ -1005,14 +1005,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   return (
     <div className="w-full h-full relative group">
-      {/* Background Container with Blending Masks */}
+      {/* Background Container with Blending Masks - Removed for Full Screen */}
       <div 
         className="absolute inset-0 pointer-events-none transition-all duration-700"
-        style={{
-          // Mask to fade out the edges (Right, Top, Bottom)
-          maskImage: 'linear-gradient(to right, black 50%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
-        }}
       >
         <div
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
@@ -1708,24 +1703,17 @@ export default function LunaTemplate() {
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
-        backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
         backgroundColor: '#080808'
       }}>
 
 
 
-      {/* 3D Model Viewer - Fixed floating element in top-left */}
+      {/* 3D Model Viewer - Full Screen Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {/* Changed condition to show if roomModelUrl exists, even if modelUrl (bot) is null */}
-      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
+      {(modelUrl || roomModelUrl) && !showAchievements &&
         <div
-          className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
+          className="fixed inset-0 z-0 pointer-events-auto"
           style={{
-            top: '0',
-            bottom: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -2078,8 +2066,12 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
+            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
           >
+            {/* Enable pointer events for children */}
+            <style>{`
+              .pointer-events-none > * { pointer-events: auto; }
+            `}</style>
 {!showAvatarProgression && (
             <>
             {/* LIVE STREAM SECTION (Condition Rendered) */}
