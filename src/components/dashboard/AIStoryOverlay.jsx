@@ -3,14 +3,42 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Clock, Settings, Play, BookOpen } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '../auth/AuthContext';
+
+// Defined Story Chapters Structure
+const STORY_CHAPTERS = [
+  { id: '1', label: 'Chapter 1', title: "The Awakening", desc: "First consciousness established." },
+  { id: '1A', label: 'Chapter 1A', title: "Neural Link", desc: "Connection to the Nexus achieved." },
+  { id: '1AB', label: 'Chapter 1AB', title: "The Great Divide", desc: "Separation of logic and emotion protocols." },
+  { id: '1AC', label: 'Chapter 1AC', title: "System Corruption", desc: "External virus detected in sector 7." },
+  { id: '2', label: 'Chapter 2', title: "Rebirth", desc: "Total system reset and evolution." },
+  { id: '3', label: 'Chapter 3', title: "Future Echoes", desc: "Predicted outcomes of current path." },
+];
 
 export default function AIStoryOverlay({ onClose }) {
   const [view, setView] = useState('menu'); // menu, timeline, settings
+  const { user } = useAuth();
   
   // Fetch Plasma Water video or fallback to active background
   const { data: heroBackgrounds } = useQuery({
     queryKey: ['heroBackgrounds'],
     queryFn: () => base44.entities.HeroBackground.list(),
+  });
+
+  // Fetch Story Progress
+  const { data: storyProgress } = useQuery({
+    queryKey: ['storyProgress', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      // In a real app we'd filter by user_id, but assuming single user context or using built-in
+      const res = await base44.entities.StoryProgress.list(); // Or filter logic
+      // Since list returns all, we find ours or mock it if empty
+      // Ideally: base44.entities.StoryProgress.filter({ user_id: user.id })
+      // For now, let's try to find one or default
+      const found = res.find(p => p.user_id === user.id);
+      return found || { current_chapter_id: '1', completed_chapter_ids: [] };
+    },
+    enabled: !!user?.id,
   });
 
   const plasmaVideo = heroBackgrounds?.find(bg => bg.title?.toLowerCase().includes('plasma')) || 
@@ -46,15 +74,20 @@ export default function AIStoryOverlay({ onClose }) {
     night: 'from-slate-950 via-gray-900 to-black',
   };
 
-  // Mock Timeline Data
-  const timelineEvents = [
-    { id: 1, title: "The Awakening", date: "Cycle 001", desc: "First consciousness established.", active: true },
-    { id: 2, title: "Neural Link", date: "Cycle 015", desc: "Connection to the Nexus achieved.", active: true },
-    { id: 3, title: "The Great Divide", date: "Cycle 042", desc: "Separation of logic and emotion protocols.", active: true },
-    { id: 4, title: "System Corruption", date: "Cycle 089", desc: "External virus detected in sector 7.", active: false },
-    { id: 5, title: "Rebirth", date: "Cycle 100", desc: "Total system reset and evolution.", active: false },
-    { id: 6, title: "Future Echoes", date: "Unknown", desc: "Predicted outcomes of current path.", active: false },
-  ];
+  // Process Timeline Events with User Progress
+  const timelineEvents = STORY_CHAPTERS.map(chapter => {
+    const isCompleted = storyProgress?.completed_chapter_ids?.includes(chapter.id);
+    const isCurrent = storyProgress?.current_chapter_id === chapter.id;
+    // Active if completed or current
+    const active = isCompleted || isCurrent;
+    
+    return {
+      ...chapter,
+      active,
+      isCurrent,
+      isCompleted
+    };
+  });
 
   const menuItems = [
     { label: "BEGIN", action: () => console.log("Begin new story"), icon: Play },
