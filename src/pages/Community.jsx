@@ -39,12 +39,14 @@ const GENRE_CONFIG = [
 ];
 
 const TOPIC_TYPES = [
-    { id: 'all', label: 'All Discussions', icon: MessageSquare },
-    { id: 'game_review', label: 'Game Reviews', icon: Star },
-    { id: 'game_discussion', label: 'Game Discussions', icon: Gamepad2 },
-    { id: 'achievement_discussion', label: 'Achievements', icon: Trophy },
-    { id: 'challenge', label: 'Challenges', icon: Target },
-    { id: 'general_discussion', label: 'General Chat', icon: Users },
+    { id: 'all', label: 'All', icon: Grid },
+    { id: 'discussion', label: 'Discussion', icon: MessageSquare },
+    { id: 'video', label: 'Video', icon: Video },
+    { id: 'screenshot', label: 'Screenshots', icon: Image },
+    { id: 'artwork', label: 'Artwork', icon: Palette },
+    { id: 'news', label: 'News', icon: Newspaper },
+    { id: 'guide', label: 'Guides', icon: Book },
+    { id: 'review', label: 'Review', icon: Star },
 ];
 
 export default function CommunityPage() {
