@@ -71,8 +71,15 @@ export default function LibrarySidebar() {
       setOverlayOpen(false);
       setSelectedItem(null);
       setIsExpandedLibrary(false);
+      setPreviewGame(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isExpandedLibrary) {
+        setPreviewGame(null);
+    }
+  }, [isExpandedLibrary]);
 
   // Close overlay when switching between Library/Aurora/Entertainment
   useEffect(() => {
