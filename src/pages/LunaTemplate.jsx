@@ -66,6 +66,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     } catch {}
   };
   
+  const clearGroup = (group) => {
+    if (!group) return;
+    while (group.children.length) {
+      const child = group.children.pop();
+      if (child && child.traverse) {
+        child.traverse((n) => {
+          if (n.geometry && n.geometry.dispose) n.geometry.dispose();
+          if (n.material) {
+            if (Array.isArray(n.material)) n.material.forEach((m) => m && m.dispose && m.dispose());
+            else if (n.material.dispose) n.material.dispose();
+          }
+        });
+      }
+    }
+  };
+
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -290,13 +306,41 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           roomMeshesRef.current = meshes;
           console.log('Room loaded successfully with meshes:', meshes.length);
           
-          // If no actor, focus camera on room
-          if (!modelUrl && controlsRef.current) {
+          // Robust Camera Centering Logic for Room Only
+          if (!modelUrl && controlsRef.current && cameraRef.current) {
              const box = new THREE.Box3().setFromObject(room);
-             const center = box.getCenter(new THREE.Vector3());
-             controlsRef.current.target.copy(center);
-             cameraRef.current.position.set(center.x, center.y + 2, center.z + 5);
-             controlsRef.current.update();
+             
+             // Ensure box is valid (handle cases where model might be offset)
+             if (!box.isEmpty()) {
+                 const size = box.getSize(new THREE.Vector3());
+                 const center = box.getCenter(new THREE.Vector3());
+                 
+                 // If size is very small, might be unscaled.
+                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                 const fov = cameraRef.current.fov * (Math.PI / 180);
+                 let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
+                 
+                 // Adjust zoom to fit comfortably
+                 cameraZ *= 1.5; 
+                 if (cameraZ < 2) cameraZ = 2; // Min distance
+                 
+                 // Position camera relative to center
+                 const direction = new THREE.Vector3(0, 0.5, 1).normalize();
+                 const position = center.clone().add(direction.multiplyScalar(cameraZ));
+
+                 cameraRef.current.position.copy(position);
+                 cameraRef.current.lookAt(center);
+                 controlsRef.current.target.copy(center);
+                 controlsRef.current.update();
+                 
+                 console.log("Room centered at:", center, "Camera at:", position);
+             } else {
+                 // Fallback if box is empty
+                 cameraRef.current.position.set(0, 2, 5);
+                 cameraRef.current.lookAt(0, 0, 0);
+                 controlsRef.current.target.set(0, 0, 0);
+                 controlsRef.current.update();
+             }
           }
         },
         undefined,
@@ -761,7 +805,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         controls.target.copy(actorContainerRef.current.position);
         controls.update();
         logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-move', summary: 'ActorContainer moved via WASD' });
-      } else if (actorContainerRef.current && !controlsActive.current) {
+      } else if (modelUrl && actorContainerRef.current && !controlsActive.current) {
+        // Animation logic only if modelUrl is present
         const currentState = useLunaStore.getState();
         if (currentState.actions.skill) {
           handleSkill();
@@ -1333,7 +1378,7 @@ export default function LunaTemplate() {
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
-  const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
+  const [modelUrl, setModelUrl] = useState(null);
   const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/d13c1bf01_scene.gltf');
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
@@ -1505,18 +1550,13 @@ export default function LunaTemplate() {
       {/* Changed condition to show if roomModelUrl exists, even if modelUrl (bot) is null */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed left-0 w-full h-full z-[1] pointer-events-auto"
+          className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
           style={{
-            // Expanded to full screen for testing, or keep constrained if desired. 
-            // User asked for visual proof, so making it prominent is good. 
-            // But keeping original layout for now to avoid breaking UI flow, just fixing internal logic.
-            // Actually, user said "Persistent Layers... Visual Proof", let's keep it in the container but ensure it renders.
-            // I'll keep the original container style but maybe remove "justify-center" if it interferes with canvas sizing.
             top: '0',
             bottom: '0',
-            // display: 'flex', 
-            // alignItems: 'center', 
-            // justifyContent: 'center' 
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}>
 
           <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} />
