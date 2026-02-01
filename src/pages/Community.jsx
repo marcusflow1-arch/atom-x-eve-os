@@ -457,6 +457,33 @@ export default function CommunityPage() {
                             {/* Center: Feed (7/12) */}
                             <div className="col-span-12 lg:col-span-7 flex flex-col h-full overflow-hidden pt-[7.75rem]">
                                 
+                                {/* Horizontal Topic Filter Bar - Above the Banner */}
+                                <div className="mb-4 w-full overflow-x-auto scrollbar-hide">
+                                    <div className="flex items-center justify-between min-w-max gap-2 px-1">
+                                        {TOPIC_TYPES.map((topic) => {
+                                            const Icon = topic.icon;
+                                            const isActive = activeSection === topic.id;
+                                            return (
+                                                <button
+                                                    key={topic.id}
+                                                    onClick={() => {
+                                                        setActiveSection(topic.id);
+                                                        setSelectedPost(null);
+                                                    }}
+                                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${
+                                                        isActive 
+                                                            ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]' 
+                                                            : 'bg-white/5 border-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                                                    }`}
+                                                >
+                                                    <Icon className="w-4 h-4" />
+                                                    <span className="font-medium text-xs uppercase tracking-wide">{topic.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
                                 {/* Controls Toolbar: Back, Search, New Post, Sort */}
                                 <div className="mb-6">
                                 <GameBanner imageUrl={getWallpaperFor(activeGame?.title) || activeGame?.banner_image || activeGame?.cover_image}>
