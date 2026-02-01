@@ -741,6 +741,16 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
     }
   }, [triggerAnimation]);
 
+  // Effect to ensure renderer is attached if container changes
+  useEffect(() => {
+    if (containerRef.current && rendererRef.current && !rendererRef.current.domElement.parentNode) {
+      containerRef.current.appendChild(rendererRef.current.domElement);
+    } else if (containerRef.current && rendererRef.current && rendererRef.current.domElement.parentNode !== containerRef.current) {
+        rendererRef.current.domElement.parentNode.removeChild(rendererRef.current.domElement);
+        containerRef.current.appendChild(rendererRef.current.domElement);
+    }
+  }); // Run on every render to catch ref changes
+
   return (
     <div className="w-full h-full relative group">
       {/* Background Container with Blending Masks */}
@@ -784,15 +794,7 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
   );
 }
 
-// Effect to ensure renderer is attached if container changes
-  useEffect(() => {
-    if (containerRef.current && rendererRef.current && !rendererRef.current.domElement.parentNode) {
-      containerRef.current.appendChild(rendererRef.current.domElement);
-    } else if (containerRef.current && rendererRef.current && rendererRef.current.domElement.parentNode !== containerRef.current) {
-        rendererRef.current.domElement.parentNode.removeChild(rendererRef.current.domElement);
-        containerRef.current.appendChild(rendererRef.current.domElement);
-    }
-  }); // Run on every render to catch ref changes
+
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
