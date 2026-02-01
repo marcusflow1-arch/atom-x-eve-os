@@ -300,6 +300,45 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       envLoadedRef.current = true; // Mark as "loaded" (empty state) to allow camera reset logic to proceed
     }
 
+    // Load Room Model (Static Mesh) - Integrated into main flow to ensure container exists
+    if (roomModelUrl && roomContainerRef.current) {
+      const roomLoader = new GLTFLoader();
+      roomLoader.load(
+        roomModelUrl,
+        (gltf) => {
+          const room = gltf.scene;
+          // Scale room up if it's small relative to the 0.01 scaled actor, or keep 1 if it's already metric
+          // Assuming standard GLTF meters, keep 1.
+          room.scale.setScalar(1); 
+          room.position.set(0, 0, 0); 
+          
+          room.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              // Ensure double side rendering so we see it from inside
+              if (child.material) {
+                 if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
+                 else child.material.side = THREE.DoubleSide;
+              }
+            }
+          });
+
+          clearGroup(roomContainerRef.current);
+          roomContainerRef.current.add(room);
+          
+          const meshes = [];
+          room.traverse((child) => {
+            if (child.isMesh) meshes.push(child);
+          });
+          roomMeshesRef.current = meshes;
+          console.log('Room loaded successfully with meshes:', meshes.length);
+        },
+        undefined,
+        (err) => console.error('Error loading Room model:', err)
+      );
+    }
+
 
     const processModel = (model, animations) => {
       modelRef.current = model;
@@ -778,54 +817,7 @@ logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summa
     }
   }, [triggerAnimation]);
 
-  // Load Room Model in a separate effect
-  useEffect(() => {
-    if (roomModelUrl && roomContainerRef.current) {
-      const roomLoader = new GLTFLoader();
-      roomLoader.load(
-        roomModelUrl,
-        (gltf) => {
-          const room = gltf.scene;
-          room.scale.setScalar(1); 
-          room.position.set(0, 0, 0); 
-          
-          room.traverse((child) => {
-            if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              if (child.material) child.material.side = THREE.DoubleSide;
-            }
-          });
 
-          // Ensure we don't duplicate if already loaded (or clear previous)
-          while (roomContainerRef.current.children.length) {
-             const child = roomContainerRef.current.children.pop();
-             // Dispose resources
-             if (child.traverse) {
-                child.traverse((n) => {
-                   if (n.geometry) n.geometry.dispose();
-                   if (n.material) {
-                      if (Array.isArray(n.material)) n.material.forEach(m => m.dispose());
-                      else n.material.dispose();
-                   }
-                });
-             }
-          }
-          
-          roomContainerRef.current.add(room);
-          
-          const meshes = [];
-          room.traverse((child) => {
-            if (child.isMesh) meshes.push(child);
-          });
-          roomMeshesRef.current = meshes;
-          // console.log('Room loaded:', roomModelUrl);
-        },
-        undefined,
-        (err) => console.error('Error loading Room model:', err)
-      );
-    }
-  }, [roomModelUrl]); // Runs whenever roomModelUrl changes
 
   // Effect to ensure renderer is attached if container changes
   useEffect(() => {
