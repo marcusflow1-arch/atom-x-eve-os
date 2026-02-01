@@ -1096,13 +1096,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       <div 
         ref={containerRef} 
         className="absolute inset-0 z-10 transition-all duration-700 ease-in-out"
-        style={{
-          transform: isStatsOpen ? 'translateX(-12vw)' : 'none',
-          // Use a smoother clip path transition and adjust inset to match header bottom exactly (usually 64px or 80px)
-          // Adding transition property explicitly for clip-path
-          transitionProperty: 'transform, clip-path',
-          clipPath: isStatsOpen ? 'inset(80px 0 0 0)' : 'inset(0 0 0 0)' 
-        }}
       />
     </div>
   );
