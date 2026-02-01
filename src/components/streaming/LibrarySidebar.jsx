@@ -365,6 +365,64 @@ export default function LibrarySidebar() {
 
       </motion.div>
 
+      {/* Expanded Library Grid Panel */}
+      <AnimatePresence>
+        {isExpandedLibrary && isOpen && (
+            <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed top-0 left-80 sm:left-96 bottom-0 z-[68] w-[calc(100vw-20rem)] sm:w-[calc(100vw-24rem)] max-w-[900px] bg-[#0c1018]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl overflow-y-auto p-8"
+                style={{
+                  boxShadow: '20px 0 50px rgba(0,0,0,0.5)',
+                }}
+            >
+                <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 py-4 -mt-4 border-b border-white/5">
+                    <div className="flex items-center gap-3">
+                        <Library className="w-6 h-6 text-cyan-400" />
+                        <div>
+                            <h2 className="text-2xl font-bold text-white">Full Library</h2>
+                            <p className="text-sm text-white/40">{libraryGames.length} titles</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => setIsExpandedLibrary(false)}
+                        className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {libraryGames.map((game, i) => (
+                        <motion.div
+                            key={`full_lib_${game.id || i}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.03 }}
+                            onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
+                            className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border border-white/10 cursor-pointer hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all duration-300"
+                        >
+                            <img 
+                                src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'} 
+                                alt={game.title} 
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                <h4 className="text-white font-bold text-sm leading-tight mb-1">{game.title || game.name}</h4>
+                                <div className="flex items-center gap-2">
+                                    <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px] px-1.5 h-5">Play</Badge>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
       <QuickInfoOverlay
         open={overlayOpen}
