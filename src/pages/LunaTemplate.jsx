@@ -279,8 +279,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Initial Camera Position (Better Angle)
     // Position camera behind and slightly above (assuming character at 0,0,0)
     // Z+ is typically "back" in Three.js standard coordinates if character faces Z-
-    // Adjusting for "kind of behind and not too close"
-    camera.position.set(0, 2.5, 4.5);
+    // Updated to match isometric-like view (higher and further)
+    camera.position.set(0, 5, 8);
 
     const renderer = rendererRef.current || new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
@@ -1098,7 +1098,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         className="absolute inset-0 z-10 transition-all duration-700 ease-in-out"
         style={{
           transform: isStatsOpen ? 'translateX(-25vw)' : 'none',
-          // Clip the top to respect the header line when stats are open, making it look like "part of the page"
+          // Use a smoother clip path transition and adjust inset to match header bottom exactly (usually 64px or 80px)
+          // Adding transition property explicitly for clip-path
+          transitionProperty: 'transform, clip-path',
           clipPath: isStatsOpen ? 'inset(80px 0 0 0)' : 'inset(0 0 0 0)' 
         }}
       />
@@ -1780,7 +1782,9 @@ export default function LunaTemplate() {
             alignItems: 'center',
             justifyContent: 'center',
             width: '100vw',
-            height: '100vh'
+            height: '100vh',
+            // Ensure background image container doesn't move, only this 3D view container is affected
+            // but the transform is inside TransparentModel3DViewer, so this wrapper stays put.
           }}>
 
           <TransparentModel3DViewer 
@@ -1841,6 +1845,7 @@ export default function LunaTemplate() {
               <FocusModePanel
                  onOpenCalendar={() => setShowCalendar(true)}
                  onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+                 onToggleStats={() => setShowStats((v) => !v)}
                />
             </div>
           </motion.div>

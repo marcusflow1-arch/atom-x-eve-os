@@ -1623,7 +1623,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1739,7 +1739,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
             <QuickActionsBar 
               navigate={navigate} 
               onLiveClick={() => { setShowStatsDropdown(false); setShowLiveDropdown((v) => !v); }} 
-              onStatsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown((v) => !v); }}
+              onStatsClick={() => { 
+                // Toggle global stats mode (3D shift + overlay)
+                if (onToggleStats) onToggleStats();
+                // Also toggle local dropdown if desired, or maybe disable it to avoid double-up?
+                // The user asked for "When I click on the button stat... white bot to appear on left"
+                // This corresponds to the global setShowStats in LunaTemplate.
+                // We'll prioritize the global handler.
+                // setShowLiveDropdown(false); 
+                // setShowStatsDropdown((v) => !v); 
+              }}
             />
 
 
