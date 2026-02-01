@@ -787,102 +787,118 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         currentWeaponRef.current = storeState.equippedWeapon;
       }
 
-      // MOVEMENT & COLLISION LOGIC
-      if (modelUrl && actorContainerRef.current && controlsActive.current) {
-        const moveSpeed = 0.04;
-        let direction = new THREE.Vector3();
+      // --- MOVEMENT & PHYSICS LOOP ---
+      if (modelUrl && actorContainerRef.current) {
+        
+        // 1. INPUT & MOVEMENT (Only if Active)
+        let isMoving = false;
+        let intendedMove = new THREE.Vector3();
+        const moveSpeed = 0.08; // Adjusted speed
 
-        if (keysPressed.current['w']) direction.z -= 1;
-        if (keysPressed.current['s']) direction.z += 1;
-        if (keysPressed.current['a']) direction.x -= 1;
-        if (keysPressed.current['d']) direction.x += 1;
+        if (controlsActive.current) {
+            const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+            fwd.y = 0;
+            fwd.normalize();
+            const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+            right.y = 0;
+            right.normalize();
 
-        const isMoving = direction.lengthSq() > 0.0001;
+            if (keysPressed.current['w']) intendedMove.add(fwd);
+            if (keysPressed.current['s']) intendedMove.sub(fwd);
+            if (keysPressed.current['a']) intendedMove.sub(right);
+            if (keysPressed.current['d']) intendedMove.add(right);
 
-        // Advanced Stair-Climbing & Floor Detection
-        // Use pre-calculated static collision meshes for better performance and accuracy
-        const collisionObjects = collisionMeshesRef.current.length > 0 ? collisionMeshesRef.current : (worldContainerRef.current ? worldContainerRef.current.children : []);
+            if (intendedMove.lengthSq() > 0.001) {
+                isMoving = true;
+                intendedMove.normalize();
+                
+                // Rotation: Face intended direction
+                const angle = Math.atan2(intendedMove.x, intendedMove.z);
+                const targetRot = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
+                actorContainerRef.current.quaternion.slerp(targetRot, 0.15); // Smooth rotation
+            }
+        }
+
+        // 2. COLLISION & GROUNDING (ALWAYS ACTIVE)
+        const collisionObjects = collisionMeshesRef.current.length > 0 
+            ? collisionMeshesRef.current 
+            : (worldContainerRef.current ? worldContainerRef.current.children : []);
 
         if (collisionObjects.length > 0) {
-            try {
-                const currentPos = actorContainerRef.current.position.clone();
-                
-                // 1. WALL DETECTION (Horizontal Raycast)
-                const forwardVector = direction.clone().normalize();
-                if (forwardVector.length() > 0) {
-                    const wallRayOrigin = currentPos.clone();
-                    wallRayOrigin.y += 0.5; // Lower wall check (Knee/Thigh height) to allow stepping up small obstacles
-                    raycaster.set(wallRayOrigin, forwardVector);
-                    // Use recursive false if using flat mesh list, true if using group children
-                    const wallIntersects = raycaster.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
-                    
-                    if (wallIntersects.length > 0 && wallIntersects[0].distance < 0.5) {
-                        isMoving = false; 
-                    }
+            const currentPos = actorContainerRef.current.position.clone();
+
+            // Wall Detection (Stop movement)
+            if (isMoving) {
+                const wallRayOrigin = currentPos.clone();
+                wallRayOrigin.y += 0.5; // Knee height
+                const wallRay = new THREE.Raycaster(wallRayOrigin, intendedMove, 0, 0.5);
+                const wallHits = wallRay.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
+                if (wallHits.length > 0) {
+                    isMoving = false; // Stop on wall hit
                 }
+            }
 
-                // 2. GROUND DETECTION (Vertical Raycast)
-                // Start significantly higher to ensure we catch the floor even if the bot is "inside" it initially
-                const groundRayOrigin = currentPos.clone();
-                groundRayOrigin.y += 5.0; // Start ray 5m up
-                raycaster.set(groundRayOrigin, new THREE.Vector3(0, -1, 0));
+            // Apply Move
+            if (isMoving) {
+                actorContainerRef.current.position.addScaledVector(intendedMove, moveSpeed);
+            }
 
-                const intersects = raycaster.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
+            // Ground Snapping (Gravity)
+            const groundRayOrigin = actorContainerRef.current.position.clone();
+            groundRayOrigin.y += 5.0; // Cast from above
+            const down = new THREE.Vector3(0, -1, 0);
+            
+            const groundRay = new THREE.Raycaster(groundRayOrigin, down);
+            const groundHits = groundRay.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
 
-                if (intersects.length > 0) {
-                    // Snap to the highest point found below the ray origin (which is essentially the floor surface)
-                    // This fixes the "inside the floor" issue by pulling the bot up to the surface
-                    const groundHeight = intersects[0].point.y;
-                    
-                    // Smooth stepping: Only snap if the height difference isn't insane (e.g. not teleporting to a roof 10m up)
-                    if (Math.abs(groundHeight - currentPos.y) < 3.0 || currentPos.y < groundHeight) {
-                         actorContainerRef.current.position.y = groundHeight;
-                    }
-                }
-            } catch (err) {
-                console.warn("Physics Raycast Error:", err);
+            if (groundHits.length > 0) {
+                const floorY = groundHits[0].point.y;
+                // Soft snap or hard snap
+                actorContainerRef.current.position.y = floorY;
+            }
+        } else {
+            // Fallback move if no collision mesh
+            if (isMoving) {
+                actorContainerRef.current.position.addScaledVector(intendedMove, moveSpeed);
             }
         }
 
-        if (isMoving) {
-            direction.normalize();
-            actorContainerRef.current.position.x += direction.x * moveSpeed;
-            actorContainerRef.current.position.z += direction.z * moveSpeed;
+        // 3. ANIMATION STATE
+        if (controlsActive.current) {
+            if (isMoving) {
+                if (!animationLocked.current) setBaseAction('run');
+            } else {
+                if (!animationLocked.current) setBaseAction(resolveIdle());
+            }
             
-            const angle = Math.atan2(direction.x, direction.z);
-            actorContainerRef.current.rotation.y = angle;
-            
-            if (!animationLocked.current) setBaseAction('run');
+            const currentState = useLunaStore.getState();
+            if (currentState.actions.skill) handleSkill();
+            else if (currentState.actions.attack) handleAttack();
         } else {
+            // Idle when not selected
             if (!animationLocked.current) setBaseAction(resolveIdle());
         }
-        
-        const currentState = useLunaStore.getState();
-        if (currentState.actions.skill) handleSkill();
-        else if (currentState.actions.attack) handleAttack();
 
-        // Camera Follow Logic (Preserves User Rotation)
+        // 4. CAMERA FOLLOW (Orbit Orbit)
         if (controlsRef.current) {
-            const currentPos = actorContainerRef.current.position;
+            const actorPos = actorContainerRef.current.position;
             
-            // Initialize tracking if needed
-            if (!controlsRef.current.lastTarget) {
-                controlsRef.current.lastTarget = currentPos.clone();
-            }
-
-            // Calculate movement delta since last frame
-            const delta = new THREE.Vector3().subVectors(currentPos, controlsRef.current.lastTarget);
+            // Sync target to actor
+            // Smooth follow logic: 
+            // We want the camera to maintain offset but move with actor.
+            // OrbitControls target IS the pivot point.
             
-            // Move camera by same amount to "follow" without resetting user's rotation angle
+            // If controlsActive, we let OrbitControls handle user input for rotation.
+            // We just update the target to the player's new position.
+            
+            // Calculate vector from old target to new position
+            if (!controlsRef.current.lastTarget) controlsRef.current.lastTarget = actorPos.clone();
+            const delta = new THREE.Vector3().subVectors(actorPos, controlsRef.current.lastTarget);
+            
             camera.position.add(delta);
-            
-            // Update OrbitControls target
-            controlsRef.current.target.copy(currentPos);
-            controlsRef.current.lastTarget.copy(currentPos);
+            controlsRef.current.target.copy(actorPos);
+            controlsRef.current.lastTarget.copy(actorPos);
         }
-
-      } else if (actorContainerRef.current) {
-         if (!animationLocked.current) setBaseAction(resolveIdle());
       }
 
       if (controlsRef.current) controlsRef.current.update();
