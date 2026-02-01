@@ -356,6 +356,42 @@ export default function SceneEditor() {
     }
   }, [mode, selectedObjectId]);
 
+  // Click Selection Logic
+  const handleCanvasClick = (event) => {
+    if (!rendererRef.current || !cameraRef.current) return;
+    
+    // Only select if NOT transforming (dragging gizmo)
+    if (transformRef.current && transformRef.current.dragging) return;
+
+    const rect = rendererRef.current.domElement.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, cameraRef.current);
+
+    const selectables = Object.values(sceneObjectsMap.current);
+    const intersects = raycaster.intersectObjects(selectables, true);
+
+    if (intersects.length > 0) {
+        // Traverse up to find the root model container
+        let current = intersects[0].object;
+        while (current) {
+            if (current.userData.isEnvironment) {
+                setSelectedObjectId('environment');
+                return;
+            }
+            if (current.userData.id) {
+                setSelectedObjectId(current.userData.id);
+                return;
+            }
+            if (current === sceneRef.current) break;
+            current = current.parent;
+        }
+    }
+  };
 
   // Actions
   const handleAddObject = (model) => {
@@ -563,7 +599,11 @@ export default function SceneEditor() {
         </div>
 
         {/* 3D Canvas Container */}
-        <div ref={containerRef} className="w-full h-full bg-slate-950" />
+        <div 
+            ref={containerRef} 
+            className="w-full h-full bg-slate-950" 
+            onClick={handleCanvasClick}
+        />
       </div>
 
       {/* Add Model Modal/Drawer */}
