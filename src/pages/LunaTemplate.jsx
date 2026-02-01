@@ -204,10 +204,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const houseGroup = new THREE.Group();
       houseGroup.name = 'House_Layer';
       houseGroup.scale.setScalar(0.01); // FBX Scale assumption
-      // Position House in front of the actor (Actor at 0,0,0)
-      // Moving house back along -Z so actor stands "in front" (relative to camera at +Z)
-      // Adjust Y to ensure floor is at 0 level (assuming house origin is centered or bottom)
-      houseGroup.position.set(0, 0, -500); // 5m back (scaled 0.01 -> 500 units * 0.01 = 5m)
+      // Position House exactly at origin with actor
+      houseGroup.position.set(0, 0, 0); 
       houseContainerRef.current = houseGroup;
       scene.add(houseGroup);
     }
@@ -328,6 +326,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     // Asset Injection: Load House FBX
     if (houseModelUrl && houseContainerRef.current) {
+      // Priority: If House exists, clear default environment/grid immediately
+      if (worldContainerRef.current) clearGroup(worldContainerRef.current);
+
       // Use LoadingManager to remap texture requests to uploaded URLs
       const manager = new THREE.LoadingManager();
       manager.setURLModifier((url) => {
