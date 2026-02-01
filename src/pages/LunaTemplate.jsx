@@ -178,12 +178,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Force Layer Addition
       scene.add(env);
       
-      // Fallback Grid: Visual Proof
-      const gridHelper = new THREE.GridHelper(100, 100, 0x444444, 0x222222);
-      gridHelper.name = 'Fallback_Grid';
-      gridHelper.position.y = -0.01;
-      scene.add(gridHelper);
-    }
+      // Grid removed per user request
+      }
     
     // Ensure room container is just an alias or sub-part if needed, but per prompt "Environment_Layer" is key.
     // We will use worldContainerRef as the Environment_Layer for Room 1.
@@ -350,20 +346,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Manual fallback: If we have textures but the model appears untextured (white/gray),
           // one might want to force apply. For now, rely on remap.
           
-          // Pre-load textures if we want to force them (Simple mode: 1 texture = all meshes)
-          if (houseTextures.length === 1) {
-             const texLoader = new THREE.TextureLoader();
-             const tex = texLoader.load(houseTextures[0]);
-             tex.colorSpace = THREE.SRGBColorSpace;
-             
-             fbx.traverse((child) => {
-               if (child.isMesh) {
-                   child.material = new THREE.MeshStandardMaterial({ 
-                       map: tex,
-                       side: THREE.DoubleSide
-                   });
-               }
-             });
+          // Advanced Texture Handling
+          // 1. Pre-load all available textures
+          const loadedTextures = {};
+          const texLoader = new THREE.TextureLoader();
+          
+          if (houseTextures && houseTextures.length > 0) {
+              houseTextures.forEach(url => {
+                  // Key by filename for easier matching
+                  const filename = url.split('/').pop().toLowerCase();
+                  const tex = texLoader.load(url);
+                  tex.colorSpace = THREE.SRGBColorSpace;
+                  tex.flipY = true; // FBX often needs flipY for textures
+                  loadedTextures[filename] = tex;
+                  
+                  // Also key by specific suffixes like "_diffuse", "_albedo", etc. if needed
+              });
           }
 
           fbx.traverse((child) => {
@@ -371,13 +369,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               child.castShadow = true;
               child.receiveShadow = true;
               
-              // Ensure materials are double sided
+              // Force Texture Application if material name matches or fallback to first texture
               if (child.material) {
                  const processMat = (mat) => {
                      mat.side = THREE.DoubleSide;
-                     // Ensure map encoding is correct if it exists
-                     if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+                     mat.transparent = true; // Allow alpha transparency
+                     mat.alphaTest = 0.5;   // Better cutout rendering
+                     
+                     // If material has no map, try to find a matching texture or use the first one
+                     if (!mat.map && houseTextures.length > 0) {
+                         // Simple heuristic: if we have a texture, use it. 
+                         // If multiple, try to match mesh name?
+                         // For now, if there is exactly one main texture (atlas), apply it.
+                         if (houseTextures.length === 1) {
+                             mat.map = loadedTextures[Object.keys(loadedTextures)[0]];
+                         } else {
+                             // Try to find texture with similar name to mesh
+                             const meshName = child.name.toLowerCase();
+                             const matchingTexKey = Object.keys(loadedTextures).find(k => k.includes(meshName) || meshName.includes(k.split('.')[0]));
+                             if (matchingTexKey) {
+                                 mat.map = loadedTextures[matchingTexKey];
+                             }
+                         }
+                     }
+
+                     if (mat.map) {
+                         mat.map.colorSpace = THREE.SRGBColorSpace;
+                         mat.needsUpdate = true;
+                     }
                  };
+
                  if (Array.isArray(child.material)) child.material.forEach(processMat);
                  else processMat(child.material);
               }
@@ -819,15 +840,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const isMoving = direction.lengthSq() > 0.0001;
 
         // Stair-Climbing Logic (Raycasting) - Safe Mode
-        if (worldContainerRef.current && worldContainerRef.current.children.length > 0) {
+        // Combine environment and house for collision
+        const collisionObjects = [];
+        if (worldContainerRef.current) collisionObjects.push(...worldContainerRef.current.children);
+        if (houseContainerRef.current) collisionObjects.push(...houseContainerRef.current.children);
+
+        if (collisionObjects.length > 0) {
             try {
                 const rayOrigin = actorContainerRef.current.position.clone();
                 rayOrigin.y += 2.0; // Start ray 2m up
                 raycaster.set(rayOrigin, downVector);
-                
-                // Intersect with Environment_Layer children
-                const intersects = raycaster.intersectObjects(worldContainerRef.current.children, true);
-                
+
+                // Intersect with all environment objects
+                const intersects = raycaster.intersectObjects(collisionObjects, true);
+
                 if (intersects.length > 0) {
                     // Adjust bot height to mesh surface
                     actorContainerRef.current.position.y = intersects[0].point.y;
