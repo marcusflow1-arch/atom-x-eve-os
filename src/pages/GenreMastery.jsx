@@ -635,8 +635,9 @@ export default function GenreMastery({ onClose }) {
           }}
         />
         
-        {/* Medium Light Blue Theme Tint */}
-        <div className="absolute inset-0 bg-[#38bdf8] mix-blend-overlay opacity-40" />
+        {/* Darker Blue Theme Tint */}
+        <div className="absolute inset-0 bg-[#172554] mix-blend-color opacity-80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0f172a] opacity-90" />
         
         {/* Subtle Paper Texture Overlay */}
         <div 
