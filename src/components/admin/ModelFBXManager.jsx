@@ -93,8 +93,10 @@ export default function ModelFBXManager() {
     description: '',
     category: '',
     is_rigged: false,
-    tags: ''
+    tags: '',
+    textures: []
   });
+  const [selectedTextures, setSelectedTextures] = useState([]);
 
   const { data: models = [], isLoading } = useQuery({
     queryKey: ['modelFBX'],
@@ -105,7 +107,8 @@ export default function ModelFBXManager() {
     mutationFn: (data) => base44.entities.ModelFBX.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['modelFBX'] });
-      setNewModel({ name: '', description: '', category: '', is_rigged: false, tags: '' });
+      setNewModel({ name: '', description: '', category: '', is_rigged: false, tags: '', textures: [] });
+      setSelectedTextures([]);
     },
   });
 
@@ -120,25 +123,53 @@ export default function ModelFBXManager() {
   });
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    // Handle both file input and folder input
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.name.endsWith('.fbx')) {
-      alert('Please upload an FBX file');
+    // Find FBX file
+    const fbxFile = files.find(f => f.name.toLowerCase().endsWith('.fbx'));
+    
+    if (!fbxFile) {
+      alert('Please upload an FBX file (or a folder containing one)');
       return;
     }
 
+    // Find texture files (images)
+    const textureFiles = files.filter(f => 
+      f !== fbxFile && 
+      (f.type.startsWith('image/') || /\.(png|jpg|jpeg|tga|bmp|tiff)$/i.test(f.name))
+    );
+    
+    // Also include manually selected textures if not using folder upload
+    const allTextures = [...textureFiles, ...selectedTextures];
+
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // 1. Upload FBX
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: fbxFile });
       
+      // 2. Upload Textures
+      const textureUrls = [];
+      if (allTextures.length > 0) {
+        console.log(`Uploading ${allTextures.length} textures...`);
+        // Upload concurrently
+        const uploadPromises = allTextures.map(file => base44.integrations.Core.UploadFile({ file }));
+        const results = await Promise.all(uploadPromises);
+        results.forEach(res => {
+            if (res.file_url) textureUrls.push(res.file_url);
+        });
+      }
+
+      // 3. Create Entity
       await createMutation.mutateAsync({
-        name: newModel.name || file.name.replace('.fbx', ''),
+        name: newModel.name || fbxFile.name.replace(/\.fbx$/i, ''),
         description: newModel.description,
         file_url: file_url,
         category: newModel.category,
         is_rigged: newModel.is_rigged,
-        tags: newModel.tags ? newModel.tags.split(',').map(t => t.trim()) : []
+        tags: newModel.tags ? newModel.tags.split(',').map(t => t.trim()) : [],
+        textures: textureUrls
       });
       
     } catch (error) {
@@ -147,6 +178,15 @@ export default function ModelFBXManager() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleTextureSelection = (e) => {
+      const files = Array.from(e.target.files || []);
+      setSelectedTextures(prev => [...prev, ...files]);
+  };
+
+  const removeSelectedTexture = (index) => {
+      setSelectedTextures(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleThumbnailUpload = async (modelId, e) => {
@@ -229,34 +269,95 @@ export default function ModelFBXManager() {
             />
           </div>
         </div>
-        <label className="relative cursor-pointer">
-          <input
-            type="file"
-            accept=".fbx"
-            onChange={handleFileUpload}
-            className="hidden"
-            disabled={uploading}
-          />
-          <Button 
-            disabled={uploading}
-            className="bg-cyan-600 hover:bg-cyan-700 w-full md:w-auto"
-            asChild
-          >
-            <span>
-              {uploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
+        
+        {/* Texture Selection Area */}
+        <div className="bg-slate-900/50 rounded-lg p-4 mb-4 border border-slate-700 border-dashed">
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-300">Textures / Materials</span>
+                <span className="text-xs text-slate-500">{selectedTextures.length} selected</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 mb-3">
+                {selectedTextures.map((file, i) => (
+                    <div key={i} className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded text-xs border border-slate-700">
+                        <span className="truncate max-w-[100px]">{file.name}</span>
+                        <button onClick={() => removeSelectedTexture(i)} className="text-slate-400 hover:text-red-400"><X className="w-3 h-3"/></button>
+                    </div>
+                ))}
+            </div>
+            
+            <div className="flex gap-2">
+                <label className="cursor-pointer">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleTextureSelection}
+                        className="hidden"
+                        disabled={uploading}
+                    />
+                    <div className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-md border border-slate-600 transition-colors flex items-center gap-2">
+                        <ImageIcon className="w-3 h-3" />
+                        Select Textures
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+            {/* Standard FBX Upload */}
+            <label className="relative cursor-pointer flex-1">
+              <input
+                type="file"
+                accept=".fbx"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <Button 
+                disabled={uploading}
+                className="bg-cyan-600 hover:bg-cyan-700 w-full"
+                asChild
+              >
+                <span>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload FBX File
+                    </>
+                  )}
+                </span>
+              </Button>
+            </label>
+            
+            {/* Folder Upload */}
+            <label className="relative cursor-pointer flex-1">
+              <input
+                type="file"
+                webkitdirectory=""
+                directory=""
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={uploading}
+              />
+              <Button 
+                disabled={uploading}
+                variant="outline"
+                className="w-full border-cyan-700 text-cyan-400 hover:bg-cyan-950"
+                asChild
+              >
+                <span>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload FBX Model
-                </>
-              )}
-            </span>
-          </Button>
-        </label>
+                  Upload Folder (FBX + Textures)
+                </span>
+              </Button>
+            </label>
+        </div>
       </div>
 
       {/* Models List */}
@@ -313,6 +414,15 @@ export default function ModelFBXManager() {
                   >
                     <Eye className="w-4 h-4 text-white" />
                   </button>
+                  
+                  {/* Texture Count Badge */}
+                  {model.textures && model.textures.length > 0 && (
+                      <div className="absolute bottom-2 right-2">
+                         <Badge className="bg-purple-600/80 backdrop-blur-sm text-[10px] h-5 px-1.5">
+                            {model.textures.length} Tex
+                         </Badge>
+                      </div>
+                  )}
 
                   {/* Rigged Badge */}
                   {model.is_rigged && (
