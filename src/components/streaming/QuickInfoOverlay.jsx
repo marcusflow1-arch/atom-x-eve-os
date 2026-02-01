@@ -177,12 +177,13 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 flex flex-col overflow-hidden"
+            className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] flex flex-col overflow-hidden"
             style={{
-              background: 'rgba(20,24,34,0.85)',
-              backdropFilter: 'blur(18px) saturate(160%)',
-              WebkitBackdropFilter: 'blur(18px) saturate(160%)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.45)'
+              background: 'rgba(20, 24, 34, 0.5)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
+              borderLeft: '1px solid rgba(165, 243, 252, 0.15)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
