@@ -262,7 +262,15 @@ export default function LibrarySidebar() {
                   <div className="flex items-center gap-2 mb-4">
                     <Gamepad2 className="w-4 h-4 text-cyan-400" />
                     <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                    <span className="ml-auto text-[10px] text-white/40">{libraryGames.length} total</span>
+                    <div className="ml-auto flex items-center gap-2">
+                        <span className="text-[10px] text-white/40">{libraryGames.length} total</span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setIsExpandedLibrary(!isExpandedLibrary); }}
+                          className={`p-1 rounded hover:bg-white/10 transition-colors ${isExpandedLibrary ? 'text-cyan-400 bg-white/10' : 'text-white/40'}`}
+                        >
+                            <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isExpandedLibrary ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     {libraryGames.map((game, i) => (
