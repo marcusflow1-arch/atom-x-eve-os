@@ -173,10 +173,10 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
           {/* Slide-in panel */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] border-l border-white/10 flex flex-col overflow-hidden"
             style={{
               background: 'rgba(20,24,34,0.85)',
