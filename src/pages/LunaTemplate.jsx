@@ -1768,33 +1768,22 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-0 pointer-events-auto transition-opacity duration-500"
+          className="fixed inset-0 z-0 pointer-events-auto transition-all duration-700 ease-in-out"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            opacity: showStats ? 0.3 : 1, // Fade out 3D environment a little bit when stats are shown
-            // Shift perspective if stats are open? Actually user asked to "fade out the 3D environment just a little bit"
-            // And "I want the white bot to appear on the left-hand side... facing me"
-            // We can try to shift the container or use CSS transform
-            transform: showStats ? 'translateX(-25%)' : 'none'
+            // When stats are shown:
+            // 1. Shift container left to place bot on left side (next to side menu)
+            // 2. Keep opacity high (user said UI won't fade away, implying clarity)
+            transform: showStats ? 'translateX(-20vw)' : 'none', 
+            width: '100vw',
+            height: '100vh'
           }}>
 
           <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} activeScene={activeScene} />
         </div>
       }
-
-      {/* Stats Mode - White Bot Presentation */}
-      <AnimatePresence>
-        {showStats && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-10 bg-black/80 pointer-events-none" // Background fade out
-          />
-        )}
-      </AnimatePresence>
 
       {/* Focus Mode Background Overlay - Removed to show custom background */}
 
