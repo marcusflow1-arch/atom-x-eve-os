@@ -110,6 +110,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const actorLoadedRef = useRef(false);
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
+  const collisionMeshesRef = useRef([]); // Dedicated collision storage
+
+  // Handle Window Resize for Full Page Coverage
+  useEffect(() => {
+    const handleResize = () => {
+      if (cameraRef.current && rendererRef.current && containerRef.current) {
+        const width = containerRef.current.clientWidth;
+        const height = containerRef.current.clientHeight;
+        cameraRef.current.aspect = width / height;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(width, height);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Local background layers for crossfade (no remounts)
   const [bgA, setBgA] = React.useState(null);
@@ -351,11 +367,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           clearGroup(worldContainerRef.current);
           worldContainerRef.current.add(room);
           
-          // Cache meshes for collision detection
+          // Cache meshes for collision detection (Static Mesh System)
           const meshes = [];
           room.traverse((child) => {
-            if (child.isMesh) meshes.push(child);
+            if (child.isMesh) {
+                // Ensure it's treated as a static mesh
+                child.matrixAutoUpdate = false; 
+                child.updateMatrix();
+                meshes.push(child);
+            }
           });
+          collisionMeshesRef.current = meshes; // Update persistent collision ref
           roomMeshesRef.current = meshes;
           console.log(`Environment_Layer successfully loaded Room (${isRoomFBX ? 'FBX' : 'GLTF'}) from Admin:`, roomModelUrl);
         },
@@ -397,13 +419,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const processModel = (model, animations) => {
       modelRef.current = model;
 
+      // Check for Rigging (Bones/SkinnedMesh)
+      let isRigged = false;
       let rightHandBone = null;
+      
       model.traverse((node) => {
         if (node.isBone) {
           const name = node.name.toLowerCase();
           if (name.includes("righthand") || name.includes("hand_r") || name.includes("mixamorig_righthand")) {
             rightHandBone = node;
           }
+        }
+        if (node.isSkinnedMesh) {
+            isRigged = true;
         }
 
         if (node.isMesh || node.isSkinnedMesh) {
@@ -748,10 +776,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         const isMoving = direction.lengthSq() > 0.0001;
 
-        // Stair-Climbing Logic (Raycasting) - Safe Mode
-        // Combine environment for collision
-        const collisionObjects = [];
-        if (worldContainerRef.current) collisionObjects.push(...worldContainerRef.current.children);
+        // Advanced Stair-Climbing & Floor Detection
+        // Use pre-calculated static collision meshes for better performance and accuracy
+        const collisionObjects = collisionMeshesRef.current.length > 0 ? collisionMeshesRef.current : (worldContainerRef.current ? worldContainerRef.current.children : []);
 
         if (collisionObjects.length > 0) {
             try {
@@ -761,35 +788,37 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 const forwardVector = direction.clone().normalize();
                 if (forwardVector.length() > 0) {
                     const wallRayOrigin = currentPos.clone();
-                    wallRayOrigin.y += 1.0; // Chest height
+                    wallRayOrigin.y += 0.5; // Lower wall check (Knee/Thigh height) to allow stepping up small obstacles
                     raycaster.set(wallRayOrigin, forwardVector);
-                    const wallIntersects = raycaster.intersectObjects(collisionObjects, true);
+                    // Use recursive false if using flat mesh list, true if using group children
+                    const wallIntersects = raycaster.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
                     
-                    // If hitting a wall very close (e.g. < 0.5m), stop movement
                     if (wallIntersects.length > 0 && wallIntersects[0].distance < 0.5) {
-                        isMoving = false; // Cancel movement
+                        isMoving = false; 
                     }
                 }
 
                 // 2. GROUND DETECTION (Vertical Raycast)
+                // Start significantly higher to ensure we catch the floor even if the bot is "inside" it initially
                 const groundRayOrigin = currentPos.clone();
-                groundRayOrigin.y += 2.0; // Start ray 2m up
-                raycaster.set(groundRayOrigin, downVector);
+                groundRayOrigin.y += 5.0; // Start ray 5m up
+                raycaster.set(groundRayOrigin, new THREE.Vector3(0, -1, 0));
 
-                // Intersect with all environment objects
-                const intersects = raycaster.intersectObjects(collisionObjects, true);
+                const intersects = raycaster.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
 
                 if (intersects.length > 0) {
-                    // Adjust bot height to mesh surface
-                    actorContainerRef.current.position.y = intersects[0].point.y;
+                    // Snap to the highest point found below the ray origin (which is essentially the floor surface)
+                    // This fixes the "inside the floor" issue by pulling the bot up to the surface
+                    const groundHeight = intersects[0].point.y;
+                    
+                    // Smooth stepping: Only snap if the height difference isn't insane (e.g. not teleporting to a roof 10m up)
+                    if (Math.abs(groundHeight - currentPos.y) < 3.0 || currentPos.y < groundHeight) {
+                         actorContainerRef.current.position.y = groundHeight;
+                    }
                 }
             } catch (err) {
-                // Prevent physics from crashing the animation loop (T-Pose protection)
                 console.warn("Physics Raycast Error:", err);
             }
-        } else if (controlsActive.current && Math.random() < 0.01) {
-             // Occasional warning if walking but no world detected
-             console.warn("Walking in void: Environment_Layer empty or missing.");
         }
 
         if (isMoving) {
