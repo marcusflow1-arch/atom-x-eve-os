@@ -310,13 +310,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         : null;
 
     // Asset Injection: Load Room 1 into Environment_Layer
+    // This runs whenever roomModelUrl changes (added to dependency array)
     if (roomModelUrl && worldContainerRef.current) {
+      console.log("Attempting to load Environment:", roomModelUrl);
       const roomLoader = new GLTFLoader();
       roomLoader.load(
         roomModelUrl,
         (gltf) => {
           const room = gltf.scene;
-          // Scale Safety
+          // Scale Safety: Explicitly set to 1
           room.scale.set(1, 1, 1); 
           room.position.set(0, 0, 0);
           
@@ -336,24 +338,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           clearGroup(worldContainerRef.current);
           worldContainerRef.current.add(room);
           
-          // Auto-Center Camera on World
-          if (cameraRef.current && controlsRef.current) {
-              // Only look at world if we haven't already focused on the actor
-              // Or force it if requested for debugging visibility
-              // controlsRef.current.target.copy(worldContainerRef.current.position); 
-              // controlsRef.current.update();
-          }
-          
           // Cache meshes for collision
           const meshes = [];
           room.traverse((child) => {
             if (child.isMesh) meshes.push(child);
           });
           roomMeshesRef.current = meshes;
-          console.log('Environment_Layer loaded:', roomModelUrl);
+          console.log('Environment_Layer successfully loaded from Admin:', roomModelUrl);
         },
         undefined,
-        (err) => console.error('Error loading Room 1:', err)
+        (err) => console.error('Error loading Room 1 GLTF:', err)
       );
     }
 
@@ -820,7 +814,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations]);
+  }, [modelUrl, weaponModel, animations, roomModelUrl]);
 
 
 
