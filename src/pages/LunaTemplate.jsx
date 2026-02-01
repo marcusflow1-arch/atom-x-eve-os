@@ -1788,7 +1788,7 @@ export default function LunaTemplate() {
 
 
       {/* Background Audio Player */}
-      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} shouldPlay={is3DActive} />
+      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} shouldPlay={true} />
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
