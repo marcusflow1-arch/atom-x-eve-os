@@ -62,7 +62,7 @@ export default function AnimationFBXManager() {
       
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${error.message || 'Unknown error'}.`);
     } finally {
       setUploading(false);
     }

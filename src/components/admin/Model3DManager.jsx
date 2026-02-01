@@ -174,7 +174,7 @@ export default function Model3DManager() {
       setNewModel({ name: '', description: '', category: '', tags: [] });
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      alert(`Upload failed: ${error.message || 'Unknown error'}. Check console for details.`);
     } finally {
       setUploading(false);
     }
@@ -233,7 +233,7 @@ export default function Model3DManager() {
       setNewModel({ name: '', description: '', category: '', tags: [] });
     } catch (error) {
       console.error('Folder upload failed:', error);
-      alert('Folder upload failed. Please try again.');
+      alert(`Folder upload failed: ${error.message || 'Unknown error'}. Try uploading fewer files at once.`);
     } finally {
       setUploading(false);
     }

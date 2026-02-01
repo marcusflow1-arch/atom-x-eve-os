@@ -292,7 +292,8 @@ export default function ModelFBXManager() {
       
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      // Show more detailed error message
+      alert(`Upload failed: ${error.message || 'Unknown error'}. If the file is very large (>100MB), it might exceed the platform's upload limit or timeout.`);
     } finally {
       setUploading(false);
     }

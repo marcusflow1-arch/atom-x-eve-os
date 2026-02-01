@@ -16,6 +16,13 @@ Deno.serve(async (req) => {
     if (fileType === 'zip') {
       // Fetch the ZIP file
       const zipResponse = await fetch(fileUrl);
+      
+      // Check content length if available
+      const contentLength = zipResponse.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 100 * 1024 * 1024) {
+          throw new Error('ZIP file too large for automatic processing (max 100MB). Please extract locally and upload individual files.');
+      }
+      
       const zipBuffer = await zipResponse.arrayBuffer();
       
       // Load and extract ZIP
