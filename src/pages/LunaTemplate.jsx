@@ -1758,7 +1758,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="fixed right-8 z-30 overflow-y-auto"
             style={{
-              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+              left: '32px', 
               top: '80px',
               bottom: '32px',
               maxHeight: 'calc(100vh - 112px)',
@@ -2135,7 +2135,6 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden"
-                  style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
                     <AvatarProgressionBox />
@@ -2202,7 +2201,7 @@ export default function LunaTemplate() {
             <div className="h-px bg-white/10 mb-6" />
 
             {/* QUICK ACCESS BOXES */}
-            <div style={{ paddingLeft: '440px' }}>
+            <div className="max-w-7xl mx-auto w-full">
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
@@ -2311,8 +2310,8 @@ export default function LunaTemplate() {
             )}
 
             {showAvatarProgression && (
-              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
-                <div className="max-w-5xl mx-auto">
+              <div className="pt-4 px-8 w-full flex justify-center">
+                <div className="max-w-5xl w-full">
                   <AvatarProgressionBox />
                 </div>
               </div>
