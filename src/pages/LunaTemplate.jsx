@@ -196,8 +196,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const actor = new THREE.Group();
       actor.name = 'Actor_Layer';
       actor.scale.setScalar(0.01); // FBX Scale
-      // Position actor slightly forward (Z+) to stand on the "pebbles" in front of the house
-      actor.position.set(0, 0, 1.5); 
+      // Position actor closer to the house door/dock area
+      actor.position.set(0, 0, 0.5); 
       actorContainerRef.current = actor;
       scene.add(actor);
     }
@@ -205,9 +205,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     if (!houseContainerRef.current) {
       const houseGroup = new THREE.Group();
       houseGroup.name = 'House_Layer';
-      houseGroup.scale.setScalar(0.01); // FBX Scale assumption
-      // Position House exactly at origin with actor
-      houseGroup.position.set(0, 0, 0); 
+      houseGroup.scale.setScalar(0.015); // Scale up house slightly (1.5x) for better proportion
+      // Position House slightly back and down so the "ground" aligns with bot's feet
+      houseGroup.position.set(0, -0.2, -1.5); 
       houseContainerRef.current = houseGroup;
       scene.add(houseGroup);
     }
@@ -431,6 +431,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const offsetZ = -center.z;
 
           fbx.position.set(offsetX, offsetY, offsetZ);
+          
+          // Slight rotation to face camera better if needed (optional, keeping straight for now)
+          // fbx.rotation.y = -Math.PI / 12;
           
           houseContainerRef.current.add(fbx);
 
