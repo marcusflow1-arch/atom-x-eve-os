@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, houseModelUrl, houseTextures = [] }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl }) {
 
   const logChange = (entry) => {
     try {
@@ -100,7 +100,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const worldContainerRef = useRef(null);
   const roomContainerRef = useRef(null);
   const actorContainerRef = useRef(null);
-  const houseContainerRef = useRef(null);
   const roomMeshesRef = useRef([]);
   const mixerRef = useRef(null);
   const cameraRef = useRef(null);
@@ -202,15 +201,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       scene.add(actor);
     }
 
-    if (!houseContainerRef.current) {
-      const houseGroup = new THREE.Group();
-      houseGroup.name = 'House_Layer';
-      houseGroup.scale.setScalar(0.015); // Scale up house slightly (1.5x) for better proportion
-      // Position House slightly back and down so the "ground" aligns with bot's feet
-      houseGroup.position.set(0, -0.2, -1.5); 
-      houseContainerRef.current = houseGroup;
-      scene.add(houseGroup);
-    }
+
 
     const camera = cameraRef.current || new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 5000);
     cameraRef.current = camera;
@@ -326,133 +317,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         ? 'arena_world.glb'
         : null;
 
-    // Asset Injection: Load House FBX
-    if (houseModelUrl && houseContainerRef.current) {
-      // Priority: If House exists, clear default environment/grid immediately
-      if (worldContainerRef.current) clearGroup(worldContainerRef.current);
 
-      // Use LoadingManager to remap texture requests to uploaded URLs
-      const manager = new THREE.LoadingManager();
-      manager.setURLModifier((url) => {
-          if (houseTextures && houseTextures.length > 0) {
-              // Extract filename from the requested url (e.g. "textures/wall.jpg" -> "wall.jpg")
-              const requestedName = url.split('/').pop().toLowerCase();
-              // Find matching uploaded texture
-              const match = houseTextures.find(texUrl => texUrl.toLowerCase().includes(requestedName));
-              if (match) {
-                  console.log(`Remapping texture: ${requestedName} -> ${match}`);
-                  return match;
-              }
-          }
-          return url;
-      });
-
-      const loader = new FBXLoader(manager);
-      loader.load(
-        houseModelUrl,
-        (fbx) => {
-          clearGroup(houseContainerRef.current);
-          fbx.position.set(0, 0, 0);
-          
-          // If textures are provided but not automatically mapped (e.g. embedded vs external confusion),
-          // we can try to manually apply the first texture to all meshes if there's only one texture.
-          // Or just trust the LoadingManager remap above.
-          
-          // Manual fallback: If we have textures but the model appears untextured (white/gray),
-          // one might want to force apply. For now, rely on remap.
-          
-          // Advanced Texture Handling
-          // 1. Pre-load all available textures
-          const loadedTextures = {};
-          const texLoader = new THREE.TextureLoader();
-          
-          if (houseTextures && houseTextures.length > 0) {
-              houseTextures.forEach(url => {
-                  // Key by filename for easier matching
-                  const filename = url.split('/').pop().toLowerCase();
-                  const tex = texLoader.load(url);
-                  tex.colorSpace = THREE.SRGBColorSpace;
-                  tex.flipY = true; // FBX often needs flipY for textures
-                  loadedTextures[filename] = tex;
-                  
-                  // Also key by specific suffixes like "_diffuse", "_albedo", etc. if needed
-              });
-          }
-
-          fbx.traverse((child) => {
-            if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              
-              // Force Texture Application if material name matches or fallback to first texture
-              if (child.material) {
-                 const processMat = (mat) => {
-                     mat.side = THREE.DoubleSide;
-                     mat.transparent = true; // Allow alpha transparency
-                     mat.alphaTest = 0.5;   // Better cutout rendering
-                     
-                     // If material has no map, try to find a matching texture or use the first one
-                     if (!mat.map && houseTextures.length > 0) {
-                         // Simple heuristic: if we have a texture, use it. 
-                         // If multiple, try to match mesh name?
-                         // For now, if there is exactly one main texture (atlas), apply it.
-                         if (houseTextures.length === 1) {
-                             mat.map = loadedTextures[Object.keys(loadedTextures)[0]];
-                         } else {
-                             // Try to find texture with similar name to mesh
-                             const meshName = child.name.toLowerCase();
-                             const matchingTexKey = Object.keys(loadedTextures).find(k => k.includes(meshName) || meshName.includes(k.split('.')[0]));
-                             if (matchingTexKey) {
-                                 mat.map = loadedTextures[matchingTexKey];
-                             }
-                         }
-                     }
-
-                     if (mat.map) {
-                         mat.map.colorSpace = THREE.SRGBColorSpace;
-                         mat.needsUpdate = true;
-                     }
-                 };
-
-                 if (Array.isArray(child.material)) child.material.forEach(processMat);
-                 else processMat(child.material);
-              }
-            }
-          });
-          
-          // Re-center logic: Compute bounding box and center strictly
-          const box = new THREE.Box3().setFromObject(fbx);
-          const center = box.getCenter(new THREE.Vector3());
-          
-          // Move model so its bottom-center is at 0,0,0
-          // This ensures the "island" base sits on the floor plane
-          const offsetX = -center.x;
-          const offsetY = -box.min.y;
-          const offsetZ = -center.z;
-
-          fbx.position.set(offsetX, offsetY, offsetZ);
-          
-          // Slight rotation to face camera better if needed (optional, keeping straight for now)
-          // fbx.rotation.y = -Math.PI / 12;
-          
-          houseContainerRef.current.add(fbx);
-
-          // Force clean up of any grids that might have snuck in via the model file or scene
-          scene.traverse((child) => {
-             if (child.isGridHelper || child.type === 'GridHelper' || child.name.includes('Grid')) {
-                 child.visible = false;
-             }
-          });
-          console.log('House_Layer loaded:', houseModelUrl);
-        },
-        undefined,
-        (err) => console.error('Error loading House FBX:', err)
-      );
-    }
 
     // Asset Injection: Load Room 1 into Environment_Layer
-    // Only load if House is NOT present (House supersedes Room 1)
-    if (roomModelUrl && worldContainerRef.current && !houseModelUrl) {
+    if (roomModelUrl && worldContainerRef.current) {
       console.log("Attempting to load Environment:", roomModelUrl);
       const roomLoader = new GLTFLoader();
       roomLoader.load(
@@ -877,10 +745,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const isMoving = direction.lengthSq() > 0.0001;
 
         // Stair-Climbing Logic (Raycasting) - Safe Mode
-        // Combine environment and house for collision
+        // Combine environment for collision
         const collisionObjects = [];
         if (worldContainerRef.current) collisionObjects.push(...worldContainerRef.current.children);
-        if (houseContainerRef.current) collisionObjects.push(...houseContainerRef.current.children);
 
         if (collisionObjects.length > 0) {
             try {
@@ -977,7 +844,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, roomModelUrl, houseModelUrl, houseTextures]);
+  }, [modelUrl, weaponModel, animations, roomModelUrl]);
 
 
 
@@ -1513,8 +1380,6 @@ export default function LunaTemplate() {
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
   const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
-  const [houseModelUrl, setHouseModelUrl] = useState(null);
-  const [houseTextures, setHouseTextures] = useState([]);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1546,22 +1411,6 @@ export default function LunaTemplate() {
     
     // Default Y-Bot (FBX Model Section)
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-
-    // Fetch House FBX
-    const fetchHouse = async () => {
-       try {
-           const fbxModels = await base44.entities.ModelFBX.list();
-           const houseAsset = fbxModels.find(m => m.name.toLowerCase().includes('house'));
-           if (houseAsset?.file_url) {
-               console.log('House Asset Found:', houseAsset.name);
-               setHouseModelUrl(houseAsset.file_url);
-               setHouseTextures(houseAsset.textures || []);
-           }
-       } catch(e) {
-           console.error("Failed to fetch House model:", e);
-       }
-    };
-    fetchHouse();
 
     }, []);
 
@@ -1731,7 +1580,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} houseModelUrl={houseModelUrl} houseTextures={houseTextures} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} />
         </div>
       }
 
