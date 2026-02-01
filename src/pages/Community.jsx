@@ -178,20 +178,18 @@ export default function CommunityPage() {
             let filter = {};
             let sort = '-created_date';
 
-            if (sortBy === 'popular' || hotFilter === 'hot' || hotFilter === 'trending') sort = '-score';
+            if (sortBy === 'popular') sort = '-score';
 
             if (activeGame) {
                 filter.game_title = activeGame.title;
-                // If we are in a game forum, 'all' means all posts for that game
-                // Otherwise filter by specific type (review, discussion, etc)
+                
+                // Map new topics to backend filters best effort
                 if (activeSection !== 'all') {
-                    filter.type = activeSection;
-                }
-                // Hot Topics mappings to community categories
-                if (hotFilter === 'to_know') {
-                    filter.community = 'guide';
-                } else if (hotFilter === 'tips') {
-                    filter.community = 'tips';
+                    if (activeSection === 'discussion') filter.type = 'game_discussion';
+                    else if (activeSection === 'review') filter.type = 'game_review';
+                    else if (activeSection === 'guide') filter.community = 'guide';
+                    else if (activeSection === 'news') filter.community = 'general'; // fallback
+                    // Video, Screenshot, Artwork handled by client-side filter or generic
                 }
             }
 
@@ -200,6 +198,11 @@ export default function CommunityPage() {
                 const fetchedPosts = await base44.entities.Post.filter(filter, sort, 50);
                 let filtered = fetchedPosts;
                 
+                // Client-side filtering for media types
+                if (activeSection === 'video' || activeSection === 'screenshot' || activeSection === 'artwork') {
+                    filtered = filtered.filter(p => p.image_url);
+                }
+
                 if (searchQuery) {
                     const lowerQ = searchQuery.toLowerCase();
                     filtered = filtered.filter(p => 
@@ -214,7 +217,33 @@ export default function CommunityPage() {
         } finally {
             setLoading(false);
         }
-    }, [activeSection, activeGame, sortBy, searchQuery, hotFilter]);
+    }, [activeSection, activeGame, sortBy, searchQuery]);
+
+    const fetchRightPosts = useCallback(async () => {
+        if (!activeGame) return;
+        setLoadingRight(true);
+        try {
+            let filter = { game_title: activeGame.title };
+            let sort = '-created_date';
+
+            if (hotFilter === 'hot' || hotFilter === 'trending') sort = '-score';
+            if (hotFilter === 'to_know') filter.community = 'guide';
+            if (hotFilter === 'tips') filter.community = 'tips';
+
+            const fetchedPosts = await base44.entities.Post.filter(filter, sort, 10);
+            setRightPosts(fetchedPosts);
+        } catch (e) {
+            console.error("Failed to fetch right posts", e);
+        } finally {
+            setLoadingRight(false);
+        }
+    }, [activeGame, hotFilter]);
+
+    useEffect(() => {
+        if (hotFilter !== 'none') {
+            fetchRightPosts();
+        }
+    }, [fetchRightPosts, hotFilter]);
 
     const fetchComments = useCallback(async (postId) => {
         if (!postId) return;
