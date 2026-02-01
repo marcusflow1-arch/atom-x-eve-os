@@ -381,9 +381,9 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-0 left-[21rem] sm:left-[25rem] bottom-0 z-[68] w-[calc(100vw-22rem)] sm:w-[calc(100vw-26rem)] max-w-[900px] bg-[#0c1018]/95 backdrop-blur-2xl rounded-l-3xl border-l border-white/10 shadow-2xl overflow-y-auto p-8"
+                className={`fixed top-4 bottom-4 left-[22rem] sm:left-[26rem] z-[68] bg-[#0c1018]/95 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[calc(400px+4rem)] xl:right-[calc(500px+4rem)]' : 'right-8'}`}
                 style={{
-                  boxShadow: '20px 0 50px rgba(0,0,0,0.5)',
+                  boxShadow: '0 0 50px rgba(0,0,0,0.5)',
                 }}
             >
                 <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 py-4 -mt-4 border-b border-white/5">
@@ -440,7 +440,7 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-4 right-4 bottom-4 w-[400px] xl:w-[500px] z-[69] bg-[#0f141a] border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden"
+                className="fixed top-4 right-8 bottom-4 w-[400px] xl:w-[500px] z-[69] bg-[#0f141a] border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden"
                 style={{ boxShadow: '-10px 0 40px rgba(0,0,0,0.5)' }}
             >
                 {/* Banner Header */}
