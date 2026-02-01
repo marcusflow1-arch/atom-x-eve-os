@@ -1816,7 +1816,7 @@ export default function LunaTemplate() {
               minHeight: '800px'
             }}>
 
-            <div className="pointer-events-auto h-full">
+            <div className="h-full">
               <FocusModePanel
                  onOpenCalendar={() => setShowCalendar(true)}
                  onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
@@ -2119,7 +2119,7 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
+            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
           >
 {!showAvatarProgression && (
             <>
@@ -2131,7 +2131,7 @@ export default function LunaTemplate() {
                   animate={{ opacity: 1, height: 'auto', mb: 24 }}
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px]"
+                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px] pointer-events-auto"
                 >
                   {/* Streamy Box */}
                   <div className="basis-[75%] h-full bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
@@ -2186,7 +2186,7 @@ export default function LunaTemplate() {
                   className="w-full overflow-hidden"
                   style={{ paddingLeft: '440px' }}
                 >
-                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
                     <AvatarProgressionBox />
                   </div>
                 </motion.div>
@@ -2194,7 +2194,7 @@ export default function LunaTemplate() {
             </AnimatePresence>
 
             {/* TOP SECTION: Aspects / Artifacts / Genre */}
-            <div className="flex gap-12 mb-6 items-start">
+            <div className="flex gap-12 mb-6 items-start pointer-events-auto">
               {/* Aspects */}
               <div className="flex flex-col items-center gap-4">
                 <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
@@ -2252,7 +2252,7 @@ export default function LunaTemplate() {
 
             {/* QUICK ACCESS BOXES */}
             <div style={{ paddingLeft: '440px' }}>
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-6 pointer-events-auto">
               {/* Stats */}
               <ConsoleTile
                 onClick={() => setShowStats((v) => !v)}
@@ -2309,7 +2309,7 @@ export default function LunaTemplate() {
                   setBannerBackgroundUrl('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&q=80');
                 }
               }}
-              className="w-full h-48 mb-6 relative overflow-hidden"
+              className="w-full h-48 mb-6 relative overflow-hidden pointer-events-auto"
             >
               <video
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
@@ -2330,7 +2330,7 @@ export default function LunaTemplate() {
             {/* Main Grid: Leaderboard + 2x2 Right */}
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Leaderboard Tile - Left */}
-              <LeaderboardTile />
+              <div className="pointer-events-auto"><LeaderboardTile /></div>
 
               {/* Right Side - 2x2 Grid */}
               <div className="flex-1 flex flex-col gap-6">
@@ -2339,7 +2339,7 @@ export default function LunaTemplate() {
                   {/* Settings */}
                   <ConsoleTile
                     onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
                   >
                     <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                     <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
@@ -2348,7 +2348,7 @@ export default function LunaTemplate() {
                   {/* My Games & Apps */}
                   <ConsoleTile
                     onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3"
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
                   >
                     <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                     <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
@@ -2361,14 +2361,14 @@ export default function LunaTemplate() {
 
             {showAvatarProgression && (
               <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
-                <div className="max-w-5xl mx-auto">
+                <div className="max-w-5xl mx-auto pointer-events-auto">
                   <AvatarProgressionBox />
                 </div>
               </div>
             )}
 
             {/* Time Display - Bottom Left */}
-            <div className="absolute bottom-6 left-12 z-30">
+            <div className="absolute bottom-6 left-12 z-30 pointer-events-auto">
               <span className="text-[#CCCCCC] text-lg font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                 {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </span>

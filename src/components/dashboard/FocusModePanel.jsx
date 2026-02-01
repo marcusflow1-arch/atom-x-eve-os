@@ -1330,7 +1330,7 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto w-full" style={{ scrollbarWidth: 'none' }}>
+    <div className="flex items-center gap-2 overflow-x-auto w-full pointer-events-auto" style={{ scrollbarWidth: 'none' }}>
       <motion.button
         key="stats-tile"
         whileHover={{ scale: 1.05, y: -2 }}
@@ -1728,7 +1728,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
   // Removed internal calendar logic in favor of global IntelligentCalendarOverlay
 
   return (
-    <div className="relative h-full flex flex-col items-center focus-panel-scroll overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="relative h-full flex flex-col items-center focus-panel-scroll overflow-y-auto pointer-events-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       <style>{`.focus-panel-scroll{scrollbar-width:none;-ms-overflow-style:none}.focus-panel-scroll::-webkit-scrollbar{display:none}`}</style>
 
       {/* Top Section - Quick Access Icons & Live Streaming */}
@@ -1751,7 +1751,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
                   exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden"
+                  className="w-full overflow-hidden pointer-events-auto"
                 >
                   <div className="w-full">
                       <StatsDropdown activeTab={statsActiveTab} onTabChange={setStatsActiveTab} />
@@ -1760,7 +1760,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
               )}
             </AnimatePresence>
 
-            <div className="mt-1">
+            <div className="mt-1 pointer-events-auto">
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
@@ -1774,7 +1774,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
                   animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
                   exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden"
+                  className="w-full overflow-hidden pointer-events-auto"
                 >
                   <div className="h-[400px] w-full flex gap-4">
                     <div className="h-full w-[70%]">
@@ -1802,7 +1802,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
           </div>
           
           {/* Right Column: System Status + Calendar */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2">
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
              <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar} />
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
@@ -1848,7 +1848,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar }) {
 
       {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
 
-      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0">
+      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0 pointer-events-auto">
         {/* Library Area - Flexible width */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <LibraryGamesSection 
