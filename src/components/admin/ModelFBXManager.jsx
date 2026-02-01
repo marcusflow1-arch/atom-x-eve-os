@@ -261,19 +261,22 @@ export default function ModelFBXManager() {
 
     setUploading(true);
     try {
-      // 1. Upload FBX
+      // 1. Upload FBX (Sequential to handle large files)
       const { file_url } = await base44.integrations.Core.UploadFile({ file: fbxFile });
       
-      // 2. Upload Textures
+      // 2. Upload Textures (Sequential for stability with large counts/sizes)
       const textureUrls = [];
       if (allTextures.length > 0) {
         console.log(`Uploading ${allTextures.length} textures...`);
-        // Upload concurrently
-        const uploadPromises = allTextures.map(file => base44.integrations.Core.UploadFile({ file }));
-        const results = await Promise.all(uploadPromises);
-        results.forEach(res => {
-            if (res.file_url) textureUrls.push(res.file_url);
-        });
+        // Sequential upload
+        for (const file of allTextures) {
+            try {
+                const { file_url: texUrl } = await base44.integrations.Core.UploadFile({ file });
+                if (texUrl) textureUrls.push(texUrl);
+            } catch (err) {
+                console.error(`Failed to upload texture ${file.name}:`, err);
+            }
+        }
       }
 
       // 3. Create Entity
