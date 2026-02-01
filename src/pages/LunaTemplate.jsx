@@ -196,6 +196,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       env.name = 'Environment_Layer';
       // Scale Safety: Force 1
       env.scale.set(1, 1, 1);
+      // Rotate 180 to face the user (Camera is at +Z)
+      env.rotation.y = Math.PI;
       worldContainerRef.current = env;
       
       // Force Layer Addition
@@ -211,8 +213,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const actor = new THREE.Group();
       actor.name = 'Actor_Layer';
       actor.scale.setScalar(0.01); // FBX Scale
-      // Position actor closer to the house door/dock area
-      actor.position.set(0, 0, 0.5); 
+      // Position actor near the edge (closer to camera)
+      actor.position.set(0, 0, 3.5); 
       actorContainerRef.current = actor;
       scene.add(actor);
     }
