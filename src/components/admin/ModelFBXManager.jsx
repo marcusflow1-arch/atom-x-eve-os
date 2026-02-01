@@ -20,63 +20,178 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
   React.useEffect(() => {
     if (!containerRef.current || !model?.file_url || !isOpen) return;
 
+    // Scene Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1f2e);
+    scene.background = new THREE.Color(0x111827); // Darker slate
+    
+    // Grid
+    const grid = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+    scene.add(grid);
 
-    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
-    camera.position.set(0, 1.5, 3);
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+    
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(2, 2, 4);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(600, 600);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    
+    // Cleanup existing canvas if any
+    if (containerRef.current.firstChild) {
+      containerRef.current.removeChild(containerRef.current.firstChild);
+    }
     containerRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 10, 7);
     scene.add(directionalLight);
+    
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    fillLight.position.set(-5, 2, -5);
+    scene.add(fillLight);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
-    const loader = new FBXLoader();
+    // Loading Manager with Texture Remapping
+    const manager = new THREE.LoadingManager();
+    const textures = model.textures || [];
+    
+    if (textures.length > 0) {
+      manager.setURLModifier((url) => {
+        // Extract filename
+        const requestedName = url.split('/').pop().toLowerCase();
+        // Find matching uploaded texture by name
+        const match = textures.find(texUrl => texUrl.toLowerCase().includes(requestedName));
+        if (match) {
+          console.log(`Preview: Remapping texture ${requestedName} -> ${match}`);
+          return match;
+        }
+        return url;
+      });
+    }
+
+    const loader = new FBXLoader(manager);
     loader.load(
       model.file_url,
       (fbx) => {
+        // Auto-Center and Scale
         const box = new THREE.Box3().setFromObject(fbx);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 2 / maxDim;
+        
+        // Scale to fit in ~3 units
+        const scale = 3 / (maxDim || 1);
         fbx.scale.multiplyScalar(scale);
-        fbx.position.sub(center.multiplyScalar(scale));
+        
+        // Re-center
+        const newBox = new THREE.Box3().setFromObject(fbx);
+        const newCenter = newBox.getCenter(new THREE.Vector3());
+        fbx.position.sub(newCenter);
+        
+        // Lift to sit on grid
+        fbx.position.y += (newBox.max.y - newBox.min.y) / 2;
+
+        // Texture Fallback Strategy
+        if (textures.length > 0) {
+           const texLoader = new THREE.TextureLoader();
+           // Pre-load first texture as a generic fallback
+           const fallbackTex = texLoader.load(textures[0]);
+           fallbackTex.colorSpace = THREE.SRGBColorSpace;
+           
+           fbx.traverse((child) => {
+             if (child.isMesh && child.material) {
+               const applyTex = (mat) => {
+                 mat.side = THREE.DoubleSide;
+                 // If no map found, apply the first available texture as fallback
+                 if (!mat.map) {
+                   mat.map = fallbackTex;
+                   mat.needsUpdate = true;
+                 } else {
+                   mat.map.colorSpace = THREE.SRGBColorSpace;
+                 }
+               };
+               if (Array.isArray(child.material)) child.material.forEach(applyTex);
+               else applyTex(child.material);
+             }
+           });
+        }
+
         scene.add(fbx);
+        
+        // Animation Support
+        if (fbx.animations && fbx.animations.length > 0) {
+           const mixer = new THREE.AnimationMixer(fbx);
+           const action = mixer.clipAction(fbx.animations[0]);
+           action.play();
+           
+           const clock = new THREE.Clock();
+           renderer.setAnimationLoop(() => {
+             const delta = clock.getDelta();
+             mixer.update(delta);
+             controls.update();
+             renderer.render(scene, camera);
+           });
+        } else {
+           renderer.setAnimationLoop(() => {
+             controls.update();
+             renderer.render(scene, camera);
+           });
+        }
       },
-      undefined,
+      (xhr) => {
+         console.log(`Loading FBX: ${(xhr.loaded / xhr.total * 100).toFixed(0)}%`);
+      },
       (err) => console.error('Error loading FBX:', err)
     );
 
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const newWidth = containerRef.current.clientWidth;
+      const newHeight = containerRef.current.clientHeight;
+      camera.aspect = newWidth / newHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newWidth, newHeight);
+    };
+    window.addEventListener('resize', handleResize);
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       renderer.dispose();
-      containerRef.current?.removeChild(renderer.domElement);
+      renderer.forceContextLoss();
+      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
     };
   }, [model, isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
-        <div className="flex flex-col gap-4">
-          <h3 className="text-xl font-bold text-white">{model?.name}</h3>
-          <div ref={containerRef} className="w-full h-[600px] bg-slate-950 rounded-lg" />
-          <Button onClick={onClose} className="w-full">Close Preview</Button>
+      <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl w-[90vw] h-[80vh] flex flex-col p-0 overflow-hidden">
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+           <div className="flex items-center gap-3">
+             <h3 className="text-lg font-bold text-white">{model?.name}</h3>
+             <Badge variant="outline" className="text-cyan-400 border-cyan-400/30">
+               {model?.file_url?.split('.').pop().toUpperCase()}
+             </Badge>
+           </div>
+           <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
+        </div>
+        
+        <div className="flex-1 relative bg-gradient-to-b from-slate-900 to-slate-950">
+           <div ref={containerRef} className="absolute inset-0" />
+           <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur px-3 py-1 rounded text-xs text-white/50 pointer-events-none">
+             Left Click: Rotate • Right Click: Pan • Scroll: Zoom
+           </div>
         </div>
       </DialogContent>
     </Dialog>
