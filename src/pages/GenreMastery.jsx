@@ -621,17 +621,50 @@ export default function GenreMastery({ onClose }) {
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
       </div>
-      {/* Background Ambience */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-black to-slate-900" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+      {/* Background Ambience - Sumi-e Theme */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Base dark background */}
+        <div className="absolute inset-0 bg-[#050505]" />
+        
+        {/* Ink Wash / Smoke Texture */}
+        <div 
+          className="absolute inset-0 opacity-40 bg-cover bg-center"
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1605806616949-1e87b487bc2a?q=80&w=2574&auto=format&fit=crop')",
+            filter: 'grayscale(100%) contrast(1.2)'
+          }}
+        />
+        
+        {/* Subtle Paper Texture Overlay */}
+        <div 
+          className="absolute inset-0 opacity-10 mix-blend-overlay bg-repeat"
+          style={{ 
+             backgroundImage: "url('https://www.transparenttextures.com/patterns/rice-paper-2.png')",
+             backgroundSize: '200px'
+          }} 
+        />
+
+        {/* Dynamic Ink Flow / Genre Color Accent */}
         {selectedGenre && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.15 }}
-            className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} blur-[150px]`}
-          />
+          <>
+            <motion.div 
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 0.4, scale: 1 }}
+              transition={{ duration: 2 }}
+              className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} mix-blend-soft-light`}
+            />
+            {/* Ink blot effect in corner */}
+            <motion.div
+               initial={{ opacity: 0, scale: 0.8 }}
+               animate={{ opacity: 0.3, scale: 1 }}
+               transition={{ duration: 3, ease: "easeOut" }}
+               className="absolute -top-1/4 -right-1/4 w-[80vw] h-[80vw] rounded-full blur-[100px] bg-gradient-to-b from-white/10 to-transparent mix-blend-overlay"
+            />
+          </>
         )}
+        
+        {/* Vignette for focus */}
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/90" />
       </div>
 
 
