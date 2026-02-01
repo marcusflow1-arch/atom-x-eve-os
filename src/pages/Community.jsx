@@ -449,9 +449,8 @@ export default function CommunityPage() {
                                   selected={hotFilter}
                                   onSelect={(id) => {
                                     setHotFilter(id);
-                                    setSelectedPost(null);
-                                    setActiveSection('all');
-                                    if (id === 'hot' || id === 'trending') setSortBy('popular');
+                                    // Removed logic that reset activeSection or selectedPost
+                                    // Now hotFilter purely drives the Right Sidebar
                                   }}
                                 />
                             </div>
