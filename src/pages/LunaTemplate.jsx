@@ -689,7 +689,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         currentWeaponRef.current = storeState.equippedWeapon;
       }
 
-      if (actorContainerRef.current && controlsActive.current) {
+      // Only follow actor if a character model is actually loaded
+      if (modelUrl && actorContainerRef.current && controlsActive.current) {
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
 
