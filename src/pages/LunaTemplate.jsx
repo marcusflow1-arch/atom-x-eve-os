@@ -1570,6 +1570,7 @@ export default function LunaTemplate() {
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
+  const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
 
   const { mode } = useDashboardMode();
 
@@ -1683,7 +1684,11 @@ export default function LunaTemplate() {
         setShowStats((v) => !v);
         setShowAvatarProgression(false);
       }
+      if (key === '0') {
+        setHideUI((v) => !v);
+      }
       if (key === 'escape') {
+        if (hideUI) setHideUI(false);
         if (showAvatarProgression) setShowAvatarProgression(false);
         if (showForumOverlay) setShowForumOverlay(false);
         const params = new URLSearchParams(window.location.search);
@@ -1763,16 +1768,33 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-0 pointer-events-auto"
+          className="fixed inset-0 z-0 pointer-events-auto transition-opacity duration-500"
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            opacity: showStats ? 0.3 : 1, // Fade out 3D environment a little bit when stats are shown
+            // Shift perspective if stats are open? Actually user asked to "fade out the 3D environment just a little bit"
+            // And "I want the white bot to appear on the left-hand side... facing me"
+            // We can try to shift the container or use CSS transform
+            transform: showStats ? 'translateX(-25%)' : 'none'
           }}>
 
           <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} activeScene={activeScene} />
         </div>
       }
+
+      {/* Stats Mode - White Bot Presentation */}
+      <AnimatePresence>
+        {showStats && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-10 bg-black/80 pointer-events-none" // Background fade out
+          />
+        )}
+      </AnimatePresence>
 
       {/* Focus Mode Background Overlay - Removed to show custom background */}
 
@@ -2183,7 +2205,7 @@ export default function LunaTemplate() {
                   animate={{ opacity: 1, height: 'auto', mb: 24 }}
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full overflow-hidden"
+                  className="w-full overflow-hidden relative z-20" // High Z to sit above fade
                   style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
@@ -2194,7 +2216,7 @@ export default function LunaTemplate() {
             </AnimatePresence>
 
             {/* TOP SECTION: Aspects / Artifacts / Genre */}
-            <div className="flex gap-12 mb-6 items-start pointer-events-auto">
+            <div className={`flex gap-12 mb-6 items-start pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Aspects */}
               <div className="flex flex-col items-center gap-4">
                 <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
@@ -2248,11 +2270,11 @@ export default function LunaTemplate() {
             </div>
 
             {/* Divider Line under Game Banner */}
-            <div className="h-px bg-white/10 mb-6" />
+            <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* QUICK ACCESS BOXES */}
             <div style={{ paddingLeft: '440px' }}>
-            <div className="flex gap-4 mb-6 pointer-events-auto">
+            <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
                 onClick={() => setShowStats((v) => !v)}
@@ -2309,7 +2331,7 @@ export default function LunaTemplate() {
                   setBannerBackgroundUrl('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&q=80');
                 }
               }}
-              className="w-full h-48 mb-6 relative overflow-hidden pointer-events-auto"
+              className={`w-full h-48 mb-6 relative overflow-hidden pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
             >
               <video
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
@@ -2328,7 +2350,7 @@ export default function LunaTemplate() {
             </div>
 
             {/* Main Grid: Leaderboard + 2x2 Right */}
-            <div className="flex-1 flex gap-6 min-h-0">
+            <div className={`flex-1 flex gap-6 min-h-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Leaderboard Tile - Left */}
               <div className="pointer-events-auto"><LeaderboardTile /></div>
 
@@ -3034,6 +3056,9 @@ export default function LunaTemplate() {
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
       {!showInventory && !showConsoleMode && !showAchievements && !activeSubTab && (
+        // SideAccessMenu stays visible even when hideUI is true, per user request:
+        // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
+        // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
         <SideAccessMenu />
       )}
 
