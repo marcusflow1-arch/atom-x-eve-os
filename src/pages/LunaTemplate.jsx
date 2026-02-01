@@ -157,29 +157,30 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     sceneRef.current = scene;
     scene.background = null;
 
-    // Create permanent dual containers (non-destructive)
+    // SYSTEM REBOOT: PERSISTENT LAYERS
     if (!worldContainerRef.current) {
+      // Use this as the main "Environment_Layer" for the room
       const env = new THREE.Group();
       env.name = 'Environment_Layer';
       env.scale.setScalar(1.0);
       worldContainerRef.current = env;
       scene.add(env);
+      
+      // Visual Proof: Grid Helper
+      const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+      gridHelper.position.y = 0.01;
+      scene.add(gridHelper);
     }
-    if (!roomContainerRef.current) {
-      const room = new THREE.Group();
-      room.name = 'Room_Layer';
-      room.scale.setScalar(1.0);
-      roomContainerRef.current = room;
-      scene.add(room);
-    }
+    
+    // Ensure room container is just an alias or sub-part if needed, but per prompt "Environment_Layer" is key.
+    // We will use worldContainerRef as the Environment_Layer for Room 1.
+    
     if (!actorContainerRef.current) {
       const actor = new THREE.Group();
       actor.name = 'Actor_Layer';
-      actor.position.y = 0.5; // Lift actor slightly above floor thickness
-      actor.scale.setScalar(0.01); // FBX centimeters to meters
+      actor.scale.setScalar(0.01); // FBX Scale
       actorContainerRef.current = actor;
       scene.add(actor);
-      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'init-containers', summary: 'Created Environment_Layer (scale=1) and Actor_Layer (scale=0.01, y=+0.5)' });
     }
 
     const camera = cameraRef.current || new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 5000);
@@ -274,17 +275,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         ? 'arena_world.glb'
         : null;
 
-    // Load Room Model (Static Mesh) - Integrated into main flow to ensure container exists
-    // This is now the primary environment if no actor modelUrl is provided
-    if (roomModelUrl && roomContainerRef.current) {
+    // Asset Injection: Load Room 1 into Environment_Layer
+    if (roomModelUrl && worldContainerRef.current) {
       const roomLoader = new GLTFLoader();
       roomLoader.load(
         roomModelUrl,
         (gltf) => {
           const room = gltf.scene;
-          room.scale.setScalar(1); 
-          room.position.set(0, 0, 0); 
+          room.scale.setScalar(1.0); 
+          room.position.set(0, 0, 0);
           
+          // Standardize materials
           room.traverse((child) => {
             if (child.isMesh) {
               child.castShadow = true;
@@ -296,55 +297,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           });
 
-          clearGroup(roomContainerRef.current);
-          roomContainerRef.current.add(room);
+          // Clear previous and add to Environment_Layer
+          clearGroup(worldContainerRef.current);
+          worldContainerRef.current.add(room);
           
+          // Cache meshes for collision
           const meshes = [];
           room.traverse((child) => {
             if (child.isMesh) meshes.push(child);
           });
           roomMeshesRef.current = meshes;
-          console.log('Room loaded successfully with meshes:', meshes.length);
-          
-          // Robust Camera Centering Logic for Room Only
-          if (!modelUrl && controlsRef.current && cameraRef.current) {
-             const box = new THREE.Box3().setFromObject(room);
-             
-             // Ensure box is valid (handle cases where model might be offset)
-             if (!box.isEmpty()) {
-                 const size = box.getSize(new THREE.Vector3());
-                 const center = box.getCenter(new THREE.Vector3());
-                 
-                 // If size is very small, might be unscaled.
-                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                 const fov = cameraRef.current.fov * (Math.PI / 180);
-                 let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
-                 
-                 // Adjust zoom to fit comfortably
-                 cameraZ *= 1.5; 
-                 if (cameraZ < 2) cameraZ = 2; // Min distance
-                 
-                 // Position camera relative to center
-                 const direction = new THREE.Vector3(0, 0.5, 1).normalize();
-                 const position = center.clone().add(direction.multiplyScalar(cameraZ));
-
-                 cameraRef.current.position.copy(position);
-                 cameraRef.current.lookAt(center);
-                 controlsRef.current.target.copy(center);
-                 controlsRef.current.update();
-                 
-                 console.log("Room centered at:", center, "Camera at:", position);
-             } else {
-                 // Fallback if box is empty
-                 cameraRef.current.position.set(0, 2, 5);
-                 cameraRef.current.lookAt(0, 0, 0);
-                 controlsRef.current.target.set(0, 0, 0);
-                 controlsRef.current.update();
-             }
-          }
+          console.log('Environment_Layer loaded:', roomModelUrl);
         },
         undefined,
-        (err) => console.error('Error loading Room model:', err)
+        (err) => console.error('Error loading Room 1:', err)
       );
     }
 
@@ -1378,8 +1344,9 @@ export default function LunaTemplate() {
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
-  const [modelUrl, setModelUrl] = useState(null);
-  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/d13c1bf01_scene.gltf');
+  // Hardcoded assets for System Reboot
+  const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
+  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1387,10 +1354,10 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // Removed fetching of Y Bot to focus on Room 1
+  // Ensure models are set on mount
   useEffect(() => {
-    // We intentionally do not set modelUrl here to prevent the bot from loading
-    // setModelUrl(null);
+    if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
+    if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
   }, []);
 
   useEffect(() => {
