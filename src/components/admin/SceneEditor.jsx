@@ -148,6 +148,7 @@ export default function SceneEditor() {
 
     // Transform Controls
     const transform = new TransformControls(camera, renderer.domElement);
+    transform.setSize(2.5); // Make handles larger/thicker for easier grabbing
     transform.addEventListener('dragging-changed', function (event) {
       orbit.enabled = !event.value;
     });
@@ -360,9 +361,31 @@ export default function SceneEditor() {
   const handleCanvasClick = (event) => {
     if (!rendererRef.current || !cameraRef.current) return;
     
-    // Only select if NOT transforming (dragging gizmo)
-    if (transformRef.current && transformRef.current.dragging) return;
+    // 1. Priority: Check if clicking on Transform Gizmo
+    if (transformRef.current) {
+        // If dragging, definitely don't select
+        if (transformRef.current.dragging) return;
+        
+        // If hovering over gizmo axis, don't select (TransformControls handles the click)
+        // We can verify this by raycasting against the gizmo itself
+        const rect = rendererRef.current.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+            ((event.clientX - rect.left) / rect.width) * 2 - 1,
+            -((event.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, cameraRef.current);
+        
+        // The gizmo is a child of the TransformControls object (helper)
+        // transformRef.current itself is the control object group
+        const gizmoIntersects = raycaster.intersectObject(transformRef.current, true);
+        if (gizmoIntersects.length > 0) {
+            // Clicked on the gizmo - let it do its job, don't change selection
+            return;
+        }
+    }
 
+    // 2. Normal Selection Logic
     const rect = rendererRef.current.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(
         ((event.clientX - rect.left) / rect.width) * 2 - 1,
