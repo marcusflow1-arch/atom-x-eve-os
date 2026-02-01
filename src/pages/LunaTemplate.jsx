@@ -57,7 +57,7 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
-// Transparent 3D Model Viewer - Dual Layer Reboot
+// Transparent 3D Model Viewer - Dual Layer Reboot (Restored Capabilities)
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl }) {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -74,21 +74,26 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const roomMeshesRef = useRef([]);
   const keysPressed = useRef({});
   const raycasterRef = useRef(new THREE.Raycaster());
+  const weaponRef = useRef(null);
   
   // Controls state
   const isJumpingRef = useRef(false);
   const velocityRef = useRef(new THREE.Vector3());
   const isControlsActive = useRef(false);
+  
+  // Restore Store Access
+  const equipment = useLunaStore((state) => state.equipment);
+  const storeActions = useLunaStore((state) => state.actions);
+  const clearActions = useLunaStore((state) => state.clearActions);
 
   // Initialize Scene, Renderer, Lights, Camera
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Groups (Persistent Layers)
+    // Groups
     const envGroup = new THREE.Group();
     envGroup.name = 'Environment_Layer';
     envGroup.scale.setScalar(1.0);
@@ -97,18 +102,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const actorGroup = new THREE.Group();
     actorGroup.name = 'Actor_Layer';
-    actorGroup.scale.setScalar(0.01); // FBX is usually cm, scaling to m
+    actorGroup.scale.setScalar(0.01); 
     scene.add(actorGroup);
     actorGroupRef.current = actorGroup;
 
-    // 3. Grid Helper (Visual Proof - semi-transparent)
+    // Grid (Visual Proof - semi-transparent)
     const grid = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
-    grid.position.y = 0.01; // Slightly above zero to avoid z-fighting with flat floors
+    grid.position.y = 0.01;
     grid.material.opacity = 0.3;
     grid.material.transparent = true;
     scene.add(grid);
 
-    // 4. Lights
+    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
@@ -116,41 +121,42 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // 5. Camera
+    // Camera
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 3, 6);
     cameraRef.current = camera;
 
-    // 6. Renderer
+    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0x000000, 0); // Transparent
+    renderer.setClearColor(0x000000, 0); 
     renderer.shadowMap.enabled = true;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 7. Controls
+    // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.target.set(0, 1, 0);
     controlsRef.current = controls;
 
-    // Key Listeners
-    const handleKeyDown = (e) => { keysPressed.current[e.key.toLowerCase()] = true; };
-    const handleKeyUp = (e) => { keysPressed.current[e.key.toLowerCase()] = false; };
+    // Input Handling
+    const handleKeyDown = (e) => { 
+        if (!isControlsActive.current) return;
+        keysPressed.current[e.key.toLowerCase()] = true; 
+    };
+    const handleKeyUp = (e) => { 
+        if (!isControlsActive.current) return;
+        keysPressed.current[e.key.toLowerCase()] = false; 
+    };
     const handleClick = () => {
-      // Toggle controls on click, but ensure we don't trap mouse if user wants to click UI
       isControlsActive.current = !isControlsActive.current;
-      // Visual feedback
       if (isControlsActive.current) {
           renderer.domElement.style.cursor = 'none';
-          // Optional: pointer lock if needed, but simple WASD is often enough
-          // renderer.domElement.requestPointerLock(); 
       } else {
           renderer.domElement.style.cursor = 'pointer';
-          // document.exitPointerLock();
       }
     };
 
@@ -158,7 +164,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     window.addEventListener('keyup', handleKeyUp);
     renderer.domElement.addEventListener('click', handleClick);
 
-    // Resize Handler
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current || !containerRef.current) return;
       const width = containerRef.current.clientWidth;
@@ -169,7 +174,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
@@ -180,15 +184,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
   }, []);
 
-  // Asset Injection: Room 1 (GLB) -> Environment_Layer
+  // Room Loading
   useEffect(() => {
     if (!roomModelUrl || !envGroupRef.current) return;
     
-    // Clear existing
     while (envGroupRef.current.children.length) {
         const child = envGroupRef.current.children[0];
         envGroupRef.current.remove(child);
-        if (child.traverse) child.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
     }
 
     const loader = new GLTFLoader();
@@ -200,73 +202,76 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
-              // Ensure double side for better visibility
               if (child.material) child.material.side = THREE.DoubleSide;
           }
       });
       envGroupRef.current.add(model);
       
-      // Cache meshes for raycasting
       const meshes = [];
       model.traverse(child => {
         if (child.isMesh) meshes.push(child);
       });
       roomMeshesRef.current = meshes;
-      console.log("Room loaded into Environment_Layer. Meshes:", meshes.length);
-    }, undefined, (e) => console.error("Error loading room:", e));
+    });
   }, [roomModelUrl]);
 
-  // Asset Injection: White Bot (FBX) -> Actor_Layer
+  // Bot Loading & Weapon Attachment
   useEffect(() => {
     if (!modelUrl || !actorGroupRef.current) return;
 
-    // Clear existing
     while (actorGroupRef.current.children.length) {
         actorGroupRef.current.remove(actorGroupRef.current.children[0]);
     }
 
     const loader = new FBXLoader();
     loader.load(modelUrl, (fbx) => {
-      fbx.scale.setScalar(1.0); // Container handles the 0.01 scale
-      // Traverse to fix materials/shadows
+      fbx.scale.setScalar(1.0); 
       fbx.traverse(child => {
           if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
           }
+          // Bone Attachment Logic
+          if (child.isBone && (child.name.toLowerCase().includes("righthand") || child.name.toLowerCase().includes("hand_r"))) {
+              if (weaponModel) {
+                  const wLoader = new FBXLoader();
+                  wLoader.load(weaponModel, (weapon) => {
+                      weapon.scale.setScalar(1.0); // Adjust scale relative to bot
+                      weapon.position.set(0, 0, 0); // Reset pos
+                      // weapon.rotation.set(Math.PI/2, 0, 0); // Adjust as needed
+                      child.add(weapon);
+                      weaponRef.current = weapon;
+                  });
+              }
+          }
       });
       
       actorGroupRef.current.add(fbx);
       
-      // Setup Mixer
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
       actionsRef.current = {};
 
-      // Load external animations for full movement capability
       const fetchAnimations = async () => {
           try {
               const animEntities = await base44.entities.AnimationFBX.list();
               const animLoader = new FBXLoader();
               
-              // Load animations
               for (const animEntity of animEntities) {
                   animLoader.load(animEntity.file_url, (animObj) => {
                       if (animObj.animations.length > 0) {
                           const clip = animObj.animations[0];
-                          let name = 'idle';
+                          let name = animEntity.name.toLowerCase();
+                          // Normalize names
+                          if (name.includes('run')) name = 'run';
+                          else if (name.includes('walk')) name = 'walk';
+                          else if (name.includes('jump')) name = 'jump';
+                          else if (name.includes('idle')) name = 'idle';
+                          else if (name.includes('attack')) name = 'attack';
                           
-                          // Map names
-                          if (animEntity.animation_type === 'run' || animEntity.name.toLowerCase().includes('run')) name = 'run';
-                          else if (animEntity.animation_type === 'walk' || animEntity.name.toLowerCase().includes('walk')) name = 'walk';
-                          else if (animEntity.name.toLowerCase().includes('jump')) name = 'jump';
-                          else name = animEntity.name.toLowerCase();
-                          
-                          clip.name = name;
                           const action = mixer.clipAction(clip);
                           actionsRef.current[name] = action;
                           
-                          // If this is the first idle we found, play it
                           if (name === 'idle' && !activeActionRef.current) {
                               action.play();
                               activeActionRef.current = action;
@@ -274,65 +279,84 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       }
                   });
               }
-              
-              // If Y-Bot has built-in animations, use them too
-              if (fbx.animations.length > 0) {
-                  const clip = fbx.animations[0];
-                  if (!actionsRef.current['idle']) {
-                      const action = mixer.clipAction(clip);
-                      action.play();
-                      actionsRef.current['idle'] = action;
-                      activeActionRef.current = action;
-                  }
+              // Fallback idle
+              if (fbx.animations.length > 0 && !actionsRef.current['idle']) {
+                  const action = mixer.clipAction(fbx.animations[0]);
+                  action.play();
+                  actionsRef.current['idle'] = action;
+                  activeActionRef.current = action;
               }
           } catch (e) {
               console.error("Error loading animations:", e);
           }
       };
-      
       fetchAnimations();
-      
-      console.log("Bot loaded into Actor_Layer.");
-    }, undefined, (e) => console.error("Error loading bot:", e));
-  }, [modelUrl]);
+    });
+  }, [modelUrl, weaponModel]);
 
-  // Animation & Physics Loop
+  // Main Loop
   useEffect(() => {
     const animate = () => {
       requestAnimationFrame(animate);
-      
       const delta = clockRef.current.getDelta();
-      
-      // 1. Animation Heartbeat
       if (mixerRef.current) mixerRef.current.update(delta);
 
-      // 2. Actor Movement & Physics
-      if (actorGroupRef.current) { // Always update physics even if controls inactive (gravity etc)
-        const moveSpeed = 4.5 * delta; // meters per second
-        const rotSpeed = 3.5 * delta; 
-        
+      if (actorGroupRef.current) {
+        const moveSpeed = 4.5 * delta;
+        const rotSpeed = 3.5 * delta;
         let moving = false;
         
+        // --- Movement Logic ---
         if (isControlsActive.current) {
-            // Input
             const forward = (keysPressed.current['w'] ? 1 : 0) - (keysPressed.current['s'] ? 1 : 0);
             const turn = (keysPressed.current['a'] ? 1 : 0) - (keysPressed.current['d'] ? 1 : 0);
-            
             moving = forward !== 0 || turn !== 0;
 
-            // Rotation
             actorGroupRef.current.rotation.y += turn * rotSpeed;
-
-            // Move Vector (local Z)
             const forwardVec = new THREE.Vector3(0, 0, forward * moveSpeed);
             forwardVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), actorGroupRef.current.rotation.y);
-            
-            // Apply Horizontal Movement
             actorGroupRef.current.position.add(forwardVec);
+            
+            // Jump Input
+            if (keysPressed.current[' '] && !isJumpingRef.current) {
+                velocityRef.current.y = 5.0; // Jump force
+                isJumpingRef.current = true;
+                
+                // Trigger jump animation if available
+                if (actionsRef.current['jump']) {
+                    const jumpAction = actionsRef.current['jump'];
+                    jumpAction.reset().setLoop(THREE.LoopOnce).play();
+                    // Don't switch activeActionRef permanently for one-shots
+                }
+            }
         }
 
-        // Animation State Machine
-        if (mixerRef.current) {
+        // --- Physics & Collision ---
+        // Gravity
+        velocityRef.current.y -= 9.8 * delta;
+        actorGroupRef.current.position.y += velocityRef.current.y * delta;
+
+        // Ground Check
+        let groundHeight = 0;
+        if (roomMeshesRef.current.length > 0) {
+            const rayOrigin = actorGroupRef.current.position.clone();
+            rayOrigin.y += 1.0; 
+            raycasterRef.current.set(rayOrigin, new THREE.Vector3(0, -1, 0));
+            const intersects = raycasterRef.current.intersectObjects(roomMeshesRef.current);
+            if (intersects.length > 0) {
+                groundHeight = intersects[0].point.y;
+            }
+        }
+
+        // Floor Collision
+        if (actorGroupRef.current.position.y <= groundHeight) {
+            actorGroupRef.current.position.y = groundHeight;
+            velocityRef.current.y = 0;
+            isJumpingRef.current = false;
+        }
+
+        // --- Animation State ---
+        if (mixerRef.current && !isJumpingRef.current) {
             const targetAnim = moving ? 'run' : 'idle';
             const targetAction = actionsRef.current[targetAnim];
             const currentAction = activeActionRef.current;
@@ -344,54 +368,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
         }
 
-        // 3. Stair-Climbing Logic (Raycasting)
-        if (roomMeshesRef.current.length > 0) {
-            // Raycast down from slightly above the actor
-            const rayOrigin = actorGroupRef.current.position.clone();
-            rayOrigin.y += 1.0; 
-            
-            raycasterRef.current.set(rayOrigin, new THREE.Vector3(0, -1, 0));
-            const intersects = raycasterRef.current.intersectObjects(roomMeshesRef.current);
-
-            if (intersects.length > 0) {
-                // Determine floor height
-                // The first hit is the highest surface below our ray origin
-                const hit = intersects[0];
-                const floorY = hit.point.y;
-                
-                // Snap Y to floor (simple collision)
-                // Smooth transition for stairs (lerp)
-                // If the step is too high, treat as wall (simple check)
-                if (floorY - actorGroupRef.current.position.y < 0.5) {
-                    actorGroupRef.current.position.y = floorY;
-                }
-            } else {
-                // Gravity if no ground detected below
-                // Simple gravity for falling off edges
-                // actorGroupRef.current.position.y -= 9.8 * delta * delta; 
-                // For now, keep it simple, don't fall infinitely
-            }
-        }
-
-        // 4. Camera Follow
+        // --- Camera Follow ---
         if (cameraRef.current && controlsRef.current && isControlsActive.current) {
             const targetPos = actorGroupRef.current.position.clone();
-            targetPos.y += 1.5; // Look at head height
-            
-            // Smoothly interpolate controls target
+            targetPos.y += 1.5;
             controlsRef.current.target.lerp(targetPos, 0.1);
-            
-            // Optional: Chase cam logic
-            // const relativeOffset = new THREE.Vector3(0, 2, -4);
-            // relativeOffset.applyAxisAngle(new THREE.Vector3(0, 1, 0), actorGroupRef.current.rotation.y);
-            // const cameraTargetPos = actorGroupRef.current.position.clone().add(relativeOffset);
-            // cameraRef.current.position.lerp(cameraTargetPos, 0.05);
-            
             controlsRef.current.update();
         }
       }
 
-      // Render
       if (rendererRef.current && sceneRef.current && cameraRef.current) {
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
@@ -404,7 +389,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   return (
     <div ref={containerRef} className="w-full h-full relative">
         {!isControlsActive.current && (
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm pointer-events-none">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-sm pointer-events-none backdrop-blur-md border border-white/10">
                 Click to Enable WASD Controls
             </div>
         )}
