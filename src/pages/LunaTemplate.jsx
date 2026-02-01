@@ -777,7 +777,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     actionsRef.current, 
                     controlsRef.current, 
                     clockRef.current,
-                    useLunaStore
+                    {
+                        getState: useLunaStore.getState,
+                        setState: useLunaStore.setState,
+                        subscribe: useLunaStore.subscribe
+                    }
                 );
                 scriptsExecutedRef.current.add(scriptKey);
             } catch (e) {
