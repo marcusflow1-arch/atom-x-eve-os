@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene }) {
 
   const logChange = (entry) => {
     try {
@@ -392,6 +392,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           clearGroup(worldContainerRef.current);
           worldContainerRef.current.add(room);
           
+          // Apply Scene Layout Transform (if exists)
+          if (activeScene && activeScene.environment_transform) {
+              const t = activeScene.environment_transform;
+              if (t.position) room.position.set(t.position.x, t.position.y, t.position.z);
+              if (t.rotation) room.rotation.set(t.rotation.x, t.rotation.y, t.rotation.z);
+              if (t.scale) room.scale.set(t.scale.x, t.scale.y, t.scale.z);
+          }
+
           // Cache meshes for collision detection (Static Mesh System)
           const meshes = [];
           room.traverse((child) => {
@@ -411,8 +419,54 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       );
     }
 
+    // Load Additional Scene Objects
+    if (activeScene && activeScene.objects) {
+        activeScene.objects.forEach(obj => {
+            if (obj.type === 'spawn_point') {
+                // Set Avatar Spawn Position
+                if (actorContainerRef.current) {
+                    const t = obj.transform;
+                    if (t.position) actorContainerRef.current.position.set(t.position.x, t.position.y, t.position.z);
+                    if (t.rotation) actorContainerRef.current.rotation.set(t.rotation.x, t.rotation.y, t.rotation.z);
+                    // We typically don't scale the player based on spawn point, but we could
+                }
+            } else if (obj.model_url) {
+                // Load static props
+                const ext = obj.model_url.split('.').pop().toLowerCase();
+                const loader = ext === 'fbx' ? new FBXLoader() : new GLTFLoader();
+                loader.load(obj.model_url, (asset) => {
+                    const model = asset.scene || asset;
+                    const t = obj.transform;
+                    if (t.position) model.position.set(t.position.x, t.position.y, t.position.z);
+                    if (t.rotation) model.rotation.set(t.rotation.x, t.rotation.y, t.rotation.z);
+                    if (t.scale) model.scale.set(t.scale.x, t.scale.y, t.scale.z);
+                    
+                    // Add to world so it participates in collision if needed, or just scene
+                    // Ideally add to worldContainerRef so it moves with the world if world moves? 
+                    // But worldContainerRef is cleared when env changes. 
+                    // Let's add to scene but keep track to clear later if needed.
+                    // For simplicity, add to worldContainerRef if it exists
+                    if (worldContainerRef.current) {
+                        worldContainerRef.current.add(model);
+                        // Add to collision meshes?
+                        model.traverse(child => {
+                            if (child.isMesh) {
+                                child.matrixAutoUpdate = false;
+                                child.updateMatrix();
+                                collisionMeshesRef.current.push(child);
+                            }
+                        });
+                    } else {
+                        scene.add(model);
+                    }
+                });
+            }
+        });
+    }
+
     // If actor is FBX, optionally load the environment first based on preference
-    if (modelUrl && isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+    // DISABLE legacy environment loading if activeScene is present to avoid conflict
+    if (!activeScene && modelUrl && isFBX && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
       const envLoader = new GLTFLoader();
       envLoader.load(
         envMapUrl,
@@ -616,7 +670,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const loader = new GLTFLoader();
 
           // Load environment first if preference is set and not already loaded or changed
-          if (envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
+          // DISABLE legacy env loading if activeScene is present
+          if (!activeScene && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
             const envLoader = new GLTFLoader();
             envLoader.load(
               envMapUrl,
@@ -1454,7 +1509,8 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+  const [roomModelUrl, setRoomModelUrl] = useState(null);
+  const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1462,40 +1518,39 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // STRICT ASSET MAPPING: Fetch Room 2 FBX (or fallback) from Model3D
+  // Fetch Active Scene Layout from Admin
   useEffect(() => {
-    const fetchEnvironment = async () => {
+    const fetchScene = async () => {
         try {
-            // Cross-Section Fetch: 3D Model Table (Model3D entity)
-            const models = await base44.entities.Model3D.list();
+            // 1. Try to find an ACTIVE SceneLayout
+            const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
             
-            // Prioritize Room 2 FBX as requested, then any Room 2
-            const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
-            const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
-            
-            // Fallbacks
-            const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-            
-            const selectedAsset = room2Fbx || room2Any || room1Asset;
-            
-            console.log('Environment Asset Found:', selectedAsset);
-            
-            if (selectedAsset?.file_url) {
-                setRoomModelUrl(selectedAsset.file_url);
+            if (layouts.length > 0) {
+                const layout = layouts[0];
+                console.log("Loading Active Scene:", layout.name);
+                setActiveScene(layout);
+                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
             } else {
-                console.warn("Room 2 (FBX) not found in Admin 3D Models, using fallback.");
-                if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+                // Fallback to legacy auto-fetch logic if no scene is active
+                console.warn("No active scene found, falling back to auto-discovery.");
+                const models = await base44.entities.Model3D.list();
+                const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
+                const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
+                const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+                const selectedAsset = room2Fbx || room2Any || room1Asset;
+                
+                if (selectedAsset?.file_url) setRoomModelUrl(selectedAsset.file_url);
+                else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
-            console.error("Failed to connect to Admin 3D Model section:", e);
+            console.error("Failed to load scene configuration:", e);
         }
     };
-    fetchEnvironment();
+    fetchScene();
     
-    // Default Y-Bot (FBX Model Section)
+    // Default Y-Bot
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-
-    }, []);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -1660,7 +1715,7 @@ export default function LunaTemplate() {
             justifyContent: 'center'
           }}>
 
-          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} />
+          <TransparentModel3DViewer modelUrl={modelUrl} weaponModel={weaponModelUrl} triggerAnimation={triggerAnimation} backgroundUrl={bannerBackgroundUrl} roomModelUrl={roomModelUrl} activeScene={activeScene} />
         </div>
       }
 

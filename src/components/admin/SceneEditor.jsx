@@ -297,24 +297,40 @@ export default function SceneEditor() {
         let obj3d = sceneObjectsMap.current[objConf.id];
         
         if (!obj3d) {
-            // Load new
-            const ext = objConf.model_url.split('.').pop().toLowerCase();
-            const loader = ext === 'fbx' ? new FBXLoader() : new GLTFLoader();
-            loader.load(objConf.model_url, (asset) => {
-                const model = asset.scene || asset;
+            // Check if it's a spawn point helper
+            if (objConf.type === 'spawn_point') {
+                const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1.8, 8);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true, transparent: true, opacity: 0.5 });
+                const model = new THREE.Mesh(geometry, material);
                 model.userData.id = objConf.id;
                 
-                model.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
+                model.position.set(objConf.transform.position.x, objConf.transform.position.y + 0.9, objConf.transform.position.z); // Adjust pivot
                 model.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
                 model.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
                 
                 scene.add(model);
                 sceneObjectsMap.current[objConf.id] = model;
+                if (selectedObjectId === objConf.id) transformRef.current.attach(model);
+            } else {
+                // Load regular model
+                const ext = objConf.model_url.split('.').pop().toLowerCase();
+                const loader = ext === 'fbx' ? new FBXLoader() : new GLTFLoader();
+                loader.load(objConf.model_url, (asset) => {
+                    const model = asset.scene || asset;
+                    model.userData.id = objConf.id;
+                    
+                    model.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
+                    model.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
+                    model.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
+                    
+                    scene.add(model);
+                    sceneObjectsMap.current[objConf.id] = model;
 
-                if (selectedObjectId === objConf.id) {
-                    transformRef.current.attach(model);
-                }
-            });
+                    if (selectedObjectId === objConf.id) {
+                        transformRef.current.attach(model);
+                    }
+                });
+            }
         } else {
             // Update transform
             obj3d.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
@@ -355,6 +371,20 @@ export default function SceneEditor() {
     setAddModelOpen(false);
   };
 
+  const handleAddSpawnPoint = () => {
+    const newId = crypto.randomUUID();
+    const newObj = {
+      id: newId,
+      model_id: 'spawn',
+      model_url: null, // No model, just a helper
+      name: 'Player Spawn',
+      type: 'spawn_point',
+      transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } }
+    };
+    setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
+    setSelectedObjectId(newId);
+  };
+
   const handleSetEnvironment = (model) => {
     setSceneConfig(prev => ({
         ...prev,
@@ -376,8 +406,13 @@ export default function SceneEditor() {
         environment_model_id: sceneConfig.environment.model_id,
         environment_url: sceneConfig.environment.url,
         environment_transform: sceneConfig.environment.transform,
-        objects: sceneConfig.objects
+        objects: sceneConfig.objects,
+        is_active: true // Auto-activate on save for now, as requested
     };
+    
+    // Deactivate others if this is new or update
+    // Ideally backend should handle "only one active", but for now we'll just set this one true
+    // A separate toggle could be added later.
     
     saveMutation.mutate(data);
   };
@@ -458,9 +493,12 @@ export default function SceneEditor() {
                 ))}
             </div>
 
-            <div className="p-4 border-t border-slate-800 bg-slate-900">
+            <div className="p-4 border-t border-slate-800 bg-slate-900 flex flex-col gap-2">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setAddModelOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" /> Add Object / Env
+                </Button>
+                <Button className="w-full bg-slate-700 hover:bg-slate-600" onClick={handleAddSpawnPoint}>
+                    <Move className="w-4 h-4 mr-2" /> Add Player Spawn
                 </Button>
             </div>
         </div>
