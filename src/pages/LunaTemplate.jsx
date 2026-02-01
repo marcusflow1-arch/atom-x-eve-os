@@ -196,6 +196,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const actor = new THREE.Group();
       actor.name = 'Actor_Layer';
       actor.scale.setScalar(0.01); // FBX Scale
+      // Position actor slightly forward (Z+) to stand on the "pebbles" in front of the house
+      actor.position.set(0, 0, 1.5); 
       actorContainerRef.current = actor;
       scene.add(actor);
     }
@@ -421,14 +423,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Re-center logic: Compute bounding box and center strictly
           const box = new THREE.Box3().setFromObject(fbx);
           const center = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
           
           // Move model so its bottom-center is at 0,0,0
-          fbx.position.x += (fbx.position.x - center.x);
-          fbx.position.y += (fbx.position.y - box.min.y); // Align bottom to floor
-          fbx.position.z += (fbx.position.z - center.z);
+          // This ensures the "island" base sits on the floor plane
+          const offsetX = -center.x;
+          const offsetY = -box.min.y;
+          const offsetZ = -center.z;
+
+          fbx.position.set(offsetX, offsetY, offsetZ);
           
           houseContainerRef.current.add(fbx);
+
+          // Force clean up of any grids that might have snuck in via the model file or scene
+          scene.traverse((child) => {
+             if (child.isGridHelper || child.type === 'GridHelper' || child.name.includes('Grid')) {
+                 child.visible = false;
+             }
+          });
           console.log('House_Layer loaded:', houseModelUrl);
         },
         undefined,
