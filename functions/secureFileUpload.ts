@@ -3,7 +3,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 const rateLimits = new Map();
 const RATE_LIMIT_WINDOW = 3600000; // 1 hour
 const MAX_UPLOADS_PER_HOUR = 50;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1GB
 
 function checkRateLimit(userId) {
   const now = Date.now();

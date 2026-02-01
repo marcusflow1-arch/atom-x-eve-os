@@ -195,11 +195,14 @@ export default function Model3DManager() {
 
     setUploading(true);
     try {
-      const uploads = await Promise.all(fileList.map(async (f) => {
+      // Process uploads sequentially to handle large files/folders reliably
+      const uploads = [];
+      for (const f of fileList) {
+        // Upload one by one to prevent network timeout/memory issues with large bundles
         const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
         const original_path = (f.webkitRelativePath || f.name);
-        return { original_path, file_url, file_size: f.size, mime_type: f.type, name: f.name };
-      }));
+        uploads.push({ original_path, file_url, file_size: f.size, mime_type: f.type, name: f.name });
+      }
 
       const bundle_manifest = uploads.reduce((acc, u) => {
         acc[u.original_path] = u.file_url;
