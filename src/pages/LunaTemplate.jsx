@@ -306,13 +306,41 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           roomMeshesRef.current = meshes;
           console.log('Room loaded successfully with meshes:', meshes.length);
           
-          // If no actor, focus camera on room
-          if (!modelUrl && controlsRef.current) {
+          // Robust Camera Centering Logic for Room Only
+          if (!modelUrl && controlsRef.current && cameraRef.current) {
              const box = new THREE.Box3().setFromObject(room);
-             const center = box.getCenter(new THREE.Vector3());
-             controlsRef.current.target.copy(center);
-             cameraRef.current.position.set(center.x, center.y + 2, center.z + 5);
-             controlsRef.current.update();
+             
+             // Ensure box is valid (handle cases where model might be offset)
+             if (!box.isEmpty()) {
+                 const size = box.getSize(new THREE.Vector3());
+                 const center = box.getCenter(new THREE.Vector3());
+                 
+                 // If size is very small, might be unscaled.
+                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                 const fov = cameraRef.current.fov * (Math.PI / 180);
+                 let cameraZ = Math.abs(maxDim / 2 * Math.tan(fov * 2));
+                 
+                 // Adjust zoom to fit comfortably
+                 cameraZ *= 1.5; 
+                 if (cameraZ < 2) cameraZ = 2; // Min distance
+                 
+                 // Position camera relative to center
+                 const direction = new THREE.Vector3(0, 0.5, 1).normalize();
+                 const position = center.clone().add(direction.multiplyScalar(cameraZ));
+
+                 cameraRef.current.position.copy(position);
+                 cameraRef.current.lookAt(center);
+                 controlsRef.current.target.copy(center);
+                 controlsRef.current.update();
+                 
+                 console.log("Room centered at:", center, "Camera at:", position);
+             } else {
+                 // Fallback if box is empty
+                 cameraRef.current.position.set(0, 2, 5);
+                 cameraRef.current.lookAt(0, 0, 0);
+                 controlsRef.current.target.set(0, 0, 0);
+                 controlsRef.current.update();
+             }
           }
         },
         undefined,
@@ -777,7 +805,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         controls.target.copy(actorContainerRef.current.position);
         controls.update();
         logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-move', summary: 'ActorContainer moved via WASD' });
-      } else if (actorContainerRef.current && !controlsActive.current) {
+      } else if (modelUrl && actorContainerRef.current && !controlsActive.current) {
+        // Animation logic only if modelUrl is present
         const currentState = useLunaStore.getState();
         if (currentState.actions.skill) {
           handleSkill();
