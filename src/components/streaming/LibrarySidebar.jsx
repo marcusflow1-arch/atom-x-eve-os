@@ -382,7 +382,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`fixed top-4 bottom-4 left-[22rem] sm:left-[26rem] z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[calc(400px+4rem)] xl:right-[calc(500px+4rem)]' : 'right-8'}`}
+                className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
                 style={{
                   background: 'rgba(12, 16, 24, 0.6)',
                   backdropFilter: 'blur(40px) saturate(180%)',
@@ -407,7 +407,7 @@ export default function LibrarySidebar() {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {libraryGames.map((game, i) => (
                         <motion.div
                             key={`full_lib_${game.id || i}`}
@@ -445,7 +445,7 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-4 right-8 bottom-4 w-[400px] xl:w-[500px] z-[69] shadow-2xl flex flex-col overflow-hidden"
+                className="fixed top-0 right-0 bottom-0 w-[400px] xl:w-[500px] z-[69] shadow-2xl flex flex-col overflow-hidden"
                 style={{
                   background: 'rgba(15, 20, 26, 0.65)',
                   backdropFilter: 'blur(40px) saturate(180%)',
