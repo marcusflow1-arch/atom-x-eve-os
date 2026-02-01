@@ -15,6 +15,7 @@ export default function LibrarySidebar() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [overlayActive, setOverlayActive] = useState(false);
   const [isExpandedLibrary, setIsExpandedLibrary] = useState(false);
+  const [previewGame, setPreviewGame] = useState(null);
 
   useEffect(() => {
     const onOpen = () => setOverlayActive(true);
