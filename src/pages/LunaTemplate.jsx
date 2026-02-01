@@ -1005,9 +1005,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   return (
     <div className="w-full h-full relative group">
-      {/* Background Container with Blending Masks - Removed for Full Screen */}
+      {/* Background Container with Blending Masks */}
       <div 
         className="absolute inset-0 pointer-events-none transition-all duration-700"
+        style={{
+          // Mask to fade out the edges (Right, Top, Bottom)
+          maskImage: 'linear-gradient(to right, black 50%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, black 50%, transparent 100%)',
+        }}
       >
         <div
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
@@ -1703,17 +1708,24 @@ export default function LunaTemplate() {
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
+        backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         backgroundColor: '#080808'
       }}>
 
 
 
-      {/* 3D Model Viewer - Full Screen Background */}
+      {/* 3D Model Viewer - Fixed floating element in top-left */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {(modelUrl || roomModelUrl) && !showAchievements &&
+      {/* Changed condition to show if roomModelUrl exists, even if modelUrl (bot) is null */}
+      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-0 pointer-events-auto"
+          className="fixed left-0 w-[420px] z-[35] pointer-events-auto"
           style={{
+            top: '0',
+            bottom: '0',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -1758,7 +1770,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="fixed right-8 z-30 overflow-y-auto"
             style={{
-              left: '32px', 
+              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
               bottom: '32px',
               maxHeight: 'calc(100vh - 112px)',
@@ -2066,12 +2078,8 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
+            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col"
           >
-            {/* Enable pointer events for children */}
-            <style>{`
-              .pointer-events-none > * { pointer-events: auto; }
-            `}</style>
 {!showAvatarProgression && (
             <>
             {/* LIVE STREAM SECTION (Condition Rendered) */}
@@ -2135,6 +2143,7 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden"
+                  style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8">
                     <AvatarProgressionBox />
@@ -2201,7 +2210,7 @@ export default function LunaTemplate() {
             <div className="h-px bg-white/10 mb-6" />
 
             {/* QUICK ACCESS BOXES */}
-            <div className="max-w-7xl mx-auto w-full">
+            <div style={{ paddingLeft: '440px' }}>
             <div className="flex gap-4 mb-6">
               {/* Stats */}
               <ConsoleTile
@@ -2310,8 +2319,8 @@ export default function LunaTemplate() {
             )}
 
             {showAvatarProgression && (
-              <div className="pt-4 px-8 w-full flex justify-center">
-                <div className="max-w-5xl w-full">
+              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
+                <div className="max-w-5xl mx-auto">
                   <AvatarProgressionBox />
                 </div>
               </div>
