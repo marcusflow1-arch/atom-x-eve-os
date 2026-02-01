@@ -11,7 +11,8 @@ import {
     Plus, ArrowLeft, Search, Mic, MessageSquare, 
     Gamepad2, Star, Trophy, Target, Users, 
     Grid, ChevronRight, Hash, Crosshair, 
-    Shield, Sparkles, Car, Skull, Monitor
+    Shield, Sparkles, Car, Skull, Monitor,
+    Video, Image, Palette, Newspaper, Book
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
