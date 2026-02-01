@@ -733,6 +733,59 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const animationLocked = { current: false };
 
+    // --- SCRIPT INJECTION SYSTEM ---
+    // Fetch and execute active Model3DScripts
+    const { data: scripts } = useQuery({ 
+        queryKey: ['modelScripts'], 
+        queryFn: () => base44.entities.Model3DScript.filter({ is_active: true }),
+        staleTime: 60000
+    });
+
+    const scriptsExecutedRef = useRef(new Set());
+
+    useEffect(() => {
+        if (!scripts || !actorContainerRef.current || !sceneRef.current) return;
+
+        scripts.forEach(script => {
+            // Prevent duplicate execution if script is meant to run once (init)
+            // For now, we assume scripts are "init" scripts that set up things or start loops
+            // If they need to run every frame, they should hook into ticker or use a custom event
+            // We'll run them once per actor load
+            
+            const scriptKey = `${script.id}-${modelUrl}`;
+            if (scriptsExecutedRef.current.has(scriptKey)) return;
+
+            // Simple Filter: If script has a specific model reference, check it
+            if (script.model_reference && script.model_reference.toLowerCase() !== 'general') {
+                // If the model name isn't available easily, we skip strict check or assume 'Y Bot' for now
+                // Ideally we'd match against model name/ID
+            }
+
+            try {
+                console.log(`Executing 3D Script: ${script.name}`);
+                const func = new Function(
+                    'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
+                    script.script_code
+                );
+                func(
+                    THREE, 
+                    sceneRef.current, 
+                    cameraRef.current, 
+                    rendererRef.current, 
+                    actorContainerRef.current, 
+                    mixerRef.current, 
+                    actionsRef.current, 
+                    controlsRef.current, 
+                    clockRef.current,
+                    useLunaStore
+                );
+                scriptsExecutedRef.current.add(scriptKey);
+            } catch (e) {
+                console.error(`Error running script ${script.name}:`, e);
+            }
+        });
+    }, [scripts, actorLoadedRef.current, modelUrl]); // Run when actor is reloaded
+
     const setBaseAction = (name, once = false) => {
       if (animationLocked.current && !once) return;
       if (currentBaseActionRef.current === name && !once) return;

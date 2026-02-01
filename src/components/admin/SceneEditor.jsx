@@ -376,7 +376,8 @@ export default function SceneEditor() {
   const handleAddSpawnPoint = (model) => {
     const newId = crypto.randomUUID();
     // Auto-scale check for Y-Bot or similar large FBX models
-    const isYBot = model.name.toLowerCase().includes('ybot') || model.name.toLowerCase().includes('y-bot');
+    const name = model.name.toLowerCase();
+    const isYBot = name.includes('ybot') || name.includes('y-bot') || name.includes('y bot') || name.includes('white bot');
     const defaultScale = isYBot ? 0.01 : 1;
 
     const newObj = {
