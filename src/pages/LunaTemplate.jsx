@@ -185,7 +185,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const camera = cameraRef.current || new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 5000);
     cameraRef.current = camera;
-    camera.position.set(0, 1.2, 3.5);
+    
+    // Initial Camera Position (Better Angle)
+    // Position camera behind and slightly above (assuming character at 0,0,0)
+    // Z+ is typically "back" in Three.js standard coordinates if character faces Z-
+    // Adjusting for "kind of behind and not too close"
+    camera.position.set(0, 2.5, 4.5);
 
     const renderer = rendererRef.current || new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
@@ -230,9 +235,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.minDistance = 2;
     controls.maxDistance = 500;
     controls.enabled = true;
+    
+    // Initialize tracking target
     if (actorContainerRef.current) {
-      controls.target.copy(actorContainerRef.current.position);
-      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to Actor_Layer' });
+        const target = actorContainerRef.current.position.clone();
+        controls.target.copy(target);
+        // Store initial target for tracking delta
+        controls.lastTarget = target.clone();
+        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'controls-target', summary: 'OrbitControls target set to Actor_Layer' });
     }
 
     const handleCanvasClick = () => {
@@ -738,9 +748,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (currentState.actions.skill) handleSkill();
         else if (currentState.actions.attack) handleAttack();
 
-        // Camera Follow (Lock Target)
+        // Camera Follow Logic (Preserves User Rotation)
         if (controlsRef.current) {
-            controlsRef.current.target.copy(actorContainerRef.current.position);
+            const currentPos = actorContainerRef.current.position;
+            
+            // Initialize tracking if needed
+            if (!controlsRef.current.lastTarget) {
+                controlsRef.current.lastTarget = currentPos.clone();
+            }
+
+            // Calculate movement delta since last frame
+            const delta = new THREE.Vector3().subVectors(currentPos, controlsRef.current.lastTarget);
+            
+            // Move camera by same amount to "follow" without resetting user's rotation angle
+            camera.position.add(delta);
+            
+            // Update OrbitControls target
+            controlsRef.current.target.copy(currentPos);
+            controlsRef.current.lastTarget.copy(currentPos);
         }
 
       } else if (actorContainerRef.current) {
