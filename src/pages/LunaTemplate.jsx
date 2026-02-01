@@ -58,27 +58,28 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
 // Helper for Audio
-function BackgroundAudioPlayer({ audioUrl }) {
+function BackgroundAudioPlayer({ audioUrl, shouldPlay }) {
   const audioRef = useRef(null);
 
   useEffect(() => {
     if (!audioRef.current) return;
     
-    if (audioUrl) {
-      audioRef.current.src = audioUrl;
+    if (audioUrl && shouldPlay) {
+      if (audioRef.current.src !== audioUrl) {
+        audioRef.current.src = audioUrl;
+      }
       audioRef.current.volume = 0.4;
       audioRef.current.play().catch(e => console.log("Audio play failed", e));
     } else {
       audioRef.current.pause();
-      audioRef.current.src = "";
     }
-  }, [audioUrl]);
+  }, [audioUrl, shouldPlay]);
 
   return <audio ref={audioRef} loop />;
 }
 
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, onActiveChange }) {
 
   const logChange = (entry) => {
     try {
@@ -379,16 +380,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Clicked on Y-Bot -> Activate Controls
         controlsActive.current = true;
         setIsActive(true);
-        renderer.domElement.style.cursor = 'crosshair'; // Visual feedback
-        // Optional: Highlight or effect
+        if (onActiveChange) onActiveChange(true);
+        renderer.domElement.style.cursor = 'crosshair'; 
       } else {
-        // Clicked elsewhere -> Optional: Deselect or just keep focus if appropriate
-        // For now, we allow clicking empty space to NOT toggle off immediately if dragging, 
-        // but let's keep it simple: Click Y-Bot to engage.
-        // If we want to deselect on background click:
-        // controlsActive.current = false;
-        // setIsActive(false);
-        // renderer.domElement.style.cursor = 'pointer';
+        // Clicked elsewhere -> Deactivate
+        controlsActive.current = false;
+        setIsActive(false);
+        if (onActiveChange) onActiveChange(false);
+        renderer.domElement.style.cursor = 'pointer';
       }
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
@@ -1596,6 +1595,7 @@ export default function LunaTemplate() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
+  const [is3DActive, setIs3DActive] = useState(false);
 
   const { mode } = useDashboardMode();
 
@@ -1788,7 +1788,7 @@ export default function LunaTemplate() {
 
 
       {/* Background Audio Player */}
-      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} />
+      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} shouldPlay={is3DActive} />
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
@@ -1813,6 +1813,7 @@ export default function LunaTemplate() {
             roomModelUrl={roomModelUrl} 
             activeScene={activeScene}
             isStatsOpen={showStats}
+            onActiveChange={setIs3DActive}
           />
         </div>
       }
