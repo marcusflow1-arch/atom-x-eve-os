@@ -737,19 +737,27 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         const isMoving = direction.lengthSq() > 0.0001;
 
-        // Stair-Climbing Logic (Raycasting)
-        if (worldContainerRef.current) {
-            const rayOrigin = actorContainerRef.current.position.clone();
-            rayOrigin.y += 2.0; // Start ray 2m up
-            raycaster.set(rayOrigin, downVector);
-            
-            // Intersect with Environment_Layer children
-            const intersects = raycaster.intersectObjects(worldContainerRef.current.children, true);
-            
-            if (intersects.length > 0) {
-                // Adjust bot height to mesh surface
-                actorContainerRef.current.position.y = intersects[0].point.y;
+        // Stair-Climbing Logic (Raycasting) - Safe Mode
+        if (worldContainerRef.current && worldContainerRef.current.children.length > 0) {
+            try {
+                const rayOrigin = actorContainerRef.current.position.clone();
+                rayOrigin.y += 2.0; // Start ray 2m up
+                raycaster.set(rayOrigin, downVector);
+                
+                // Intersect with Environment_Layer children
+                const intersects = raycaster.intersectObjects(worldContainerRef.current.children, true);
+                
+                if (intersects.length > 0) {
+                    // Adjust bot height to mesh surface
+                    actorContainerRef.current.position.y = intersects[0].point.y;
+                }
+            } catch (err) {
+                // Prevent physics from crashing the animation loop (T-Pose protection)
+                console.warn("Physics Raycast Error:", err);
             }
+        } else if (controlsActive.current && Math.random() < 0.01) {
+             // Occasional warning if walking but no world detected
+             console.warn("Walking in void: Environment_Layer empty or missing.");
         }
 
         if (isMoving) {
