@@ -42,6 +42,7 @@ export default function SceneEditor() {
   });
 
   const [addModelOpen, setAddModelOpen] = useState(false);
+  const [selectingMode, setSelectingMode] = useState('obj'); // 'obj', 'env', 'spawn'
 
   // Mutations
   const saveMutation = useMutation({
@@ -297,22 +298,23 @@ export default function SceneEditor() {
         let obj3d = sceneObjectsMap.current[objConf.id];
         
         if (!obj3d) {
-            // Check if it's a spawn point helper
-            if (objConf.type === 'spawn_point') {
+            // Check if it's a spawn point with a model or a helper
+            if (objConf.type === 'spawn_point' && !objConf.model_url) {
+                // Generic helper if no model selected
                 const geometry = new THREE.CylinderGeometry(0.5, 0.5, 1.8, 8);
                 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true, transparent: true, opacity: 0.5 });
                 const model = new THREE.Mesh(geometry, material);
                 model.userData.id = objConf.id;
                 
-                model.position.set(objConf.transform.position.x, objConf.transform.position.y + 0.9, objConf.transform.position.z); // Adjust pivot
+                model.position.set(objConf.transform.position.x, objConf.transform.position.y + 0.9, objConf.transform.position.z); 
                 model.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
                 model.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
                 
                 scene.add(model);
                 sceneObjectsMap.current[objConf.id] = model;
                 if (selectedObjectId === objConf.id) transformRef.current.attach(model);
-            } else {
-                // Load regular model
+            } else if (objConf.model_url) {
+                // Load actual model (for Object or Spawn Point with visual)
                 const ext = objConf.model_url.split('.').pop().toLowerCase();
                 const loader = ext === 'fbx' ? new FBXLoader() : new GLTFLoader();
                 loader.load(objConf.model_url, (asset) => {
@@ -371,18 +373,27 @@ export default function SceneEditor() {
     setAddModelOpen(false);
   };
 
-  const handleAddSpawnPoint = () => {
+  const handleAddSpawnPoint = (model) => {
     const newId = crypto.randomUUID();
+    // Auto-scale check for Y-Bot or similar large FBX models
+    const isYBot = model.name.toLowerCase().includes('ybot') || model.name.toLowerCase().includes('y-bot');
+    const defaultScale = isYBot ? 0.01 : 1;
+
     const newObj = {
       id: newId,
-      model_id: 'spawn',
-      model_url: null, // No model, just a helper
-      name: 'Player Spawn',
+      model_id: model.id,
+      model_url: model.file_url,
+      name: 'Player Spawn (' + model.name + ')',
       type: 'spawn_point',
-      transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } }
+      transform: { 
+          position: { x: 0, y: 0, z: 0 }, 
+          rotation: { x: 0, y: 0, z: 0 }, 
+          scale: { x: defaultScale, y: defaultScale, z: defaultScale } 
+      }
     };
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
     setSelectedObjectId(newId);
+    setAddModelOpen(false);
   };
 
   const handleSetEnvironment = (model) => {
@@ -494,11 +505,14 @@ export default function SceneEditor() {
             </div>
 
             <div className="p-4 border-t border-slate-800 bg-slate-900 flex flex-col gap-2">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setAddModelOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" /> Add Object / Env
+                <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { setSelectingMode('obj'); setAddModelOpen(true); }}>
+                    <Plus className="w-4 h-4 mr-2" /> Add Object
                 </Button>
-                <Button className="w-full bg-slate-700 hover:bg-slate-600" onClick={handleAddSpawnPoint}>
+                <Button className="w-full bg-slate-700 hover:bg-slate-600" onClick={() => { setSelectingMode('spawn'); setAddModelOpen(true); }}>
                     <Move className="w-4 h-4 mr-2" /> Add Player Spawn
+                </Button>
+                <Button className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700" onClick={() => { setSelectingMode('env'); setAddModelOpen(true); }}>
+                    <Box className="w-4 h-4 mr-2" /> Set Environment
                 </Button>
             </div>
         </div>
@@ -561,12 +575,21 @@ export default function SceneEditor() {
                                 <Badge variant="outline" className="text-[10px]">{model.file_type}</Badge>
                             </div>
                             <div className="flex gap-2 mt-2">
-                                <Button size="sm" className="flex-1 bg-slate-700 hover:bg-blue-600 h-8 text-xs" onClick={() => handleSetEnvironment(model)}>
-                                    Set Env
-                                </Button>
-                                <Button size="sm" className="flex-1 bg-slate-700 hover:bg-green-600 h-8 text-xs" onClick={() => handleAddObject(model)}>
-                                    Add Obj
-                                </Button>
+                                {selectingMode === 'env' && (
+                                    <Button size="sm" className="w-full bg-slate-700 hover:bg-blue-600 h-8 text-xs" onClick={() => handleSetEnvironment(model)}>
+                                        Set as Environment
+                                    </Button>
+                                )}
+                                {selectingMode === 'obj' && (
+                                    <Button size="sm" className="w-full bg-slate-700 hover:bg-green-600 h-8 text-xs" onClick={() => handleAddObject(model)}>
+                                        Add Object
+                                    </Button>
+                                )}
+                                {selectingMode === 'spawn' && (
+                                    <Button size="sm" className="w-full bg-slate-700 hover:bg-purple-600 h-8 text-xs" onClick={() => handleAddSpawnPoint(model)}>
+                                        Use as Spawn Model
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     ))}

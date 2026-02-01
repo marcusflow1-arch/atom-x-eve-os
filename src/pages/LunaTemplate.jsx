@@ -423,12 +423,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     if (activeScene && activeScene.objects) {
         activeScene.objects.forEach(obj => {
             if (obj.type === 'spawn_point') {
-                // Set Avatar Spawn Position
+                // Set Avatar Spawn Position & Scale
                 if (actorContainerRef.current) {
                     const t = obj.transform;
                     if (t.position) actorContainerRef.current.position.set(t.position.x, t.position.y, t.position.z);
                     if (t.rotation) actorContainerRef.current.rotation.set(t.rotation.x, t.rotation.y, t.rotation.z);
-                    // We typically don't scale the player based on spawn point, but we could
+                    if (t.scale) actorContainerRef.current.scale.set(t.scale.x, t.scale.y, t.scale.z);
                 }
             } else if (obj.model_url) {
                 // Load static props
