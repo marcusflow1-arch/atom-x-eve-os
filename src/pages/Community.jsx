@@ -617,41 +617,50 @@ export default function CommunityPage() {
                                 </div>
                             </div>
 
-                            {/* Right Column: Topics Filter (3/12) - Clean Minimal Style */}
+                            {/* Right Column: Community Posts / Hot Topics Results (3/12) */}
                             <div className="hidden lg:flex col-span-3 flex-col gap-6 pl-4 border-l border-white/5 pt-[7.75rem]">
                                 <h2 className="text-sm font-bold text-white/40 tracking-wide uppercase px-2">
-                                    Forum Topics
+                                    {hotFilter !== 'none' ? `${hotFilter.replace('_', ' ')}` : 'Community Activity'}
                                 </h2>
-                                <div className="flex flex-col gap-1">
-                                    {TOPIC_TYPES.map((topic) => (
-                                        <button
-                                            key={topic.id}
-                                            onClick={() => {
-                                                setActiveSection(topic.id);
-                                                setSelectedPost(null);
-                                            }}
-                                            className={`flex items-center gap-3 px-2 py-3 transition-all text-left group relative ${
-                                                activeSection === topic.id 
-                                                    ? 'text-cyan-400' 
-                                                    : 'text-white/60 hover:text-white'
-                                            }`}
-                                        >
-                                            <topic.icon className={`w-4 h-4 ${activeSection === topic.id ? 'text-cyan-400' : 'text-white/40 group-hover:text-white'}`} />
-                                            <span className="font-medium text-sm">{topic.label}</span>
-                                            
-                                            {/* Underline Effect */}
-                                            {activeSection === topic.id && (
-                                                <motion.div 
-                                                    layoutId="topicUnderline"
-                                                    className="absolute bottom-0 left-0 right-0 h-px bg-cyan-400"
-                                                />
-                                            )}
-                                        </button>
-                                    ))}
+                                
+                                <div className="flex flex-col gap-3 overflow-y-auto max-h-[calc(100vh-12rem)] custom-scrollbar pr-2">
+                                    {loadingRight ? (
+                                        [1, 2, 3].map(i => (
+                                            <div key={i} className="h-20 bg-white/5 rounded-lg animate-pulse" />
+                                        ))
+                                    ) : rightPosts.length > 0 ? (
+                                        rightPosts.map(post => (
+                                            <div 
+                                                key={post.id}
+                                                onClick={() => setSelectedPost(post)}
+                                                className="bg-white/5 hover:bg-white/10 p-3 rounded-lg cursor-pointer transition-colors border border-white/5 hover:border-white/10 group"
+                                            >
+                                                <h4 className="text-sm font-bold text-white mb-1 line-clamp-2 group-hover:text-cyan-400 transition-colors">
+                                                    {post.title}
+                                                </h4>
+                                                <div className="flex items-center gap-3 text-[10px] text-white/40">
+                                                    <span className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        {post.created_by?.split('@')[0] || 'User'}
+                                                    </span>
+                                                    {post.score > 0 && (
+                                                        <span className="flex items-center gap-1 text-green-400">
+                                                            <Trophy className="w-3 h-3" />
+                                                            {post.score}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-10 text-white/20 text-xs">
+                                            Select a topic from the left sidebar to view posts here.
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Activity / Stats - Minimal */}
-                                <div className="mt-4 px-2">
+                                {/* Activity / Stats - Minimal (Moved to bottom) */}
+                                <div className="mt-auto px-2">
                                     <h3 className="text-white font-bold mb-4 flex items-center gap-2">
                                         <Target className="w-4 h-4 text-purple-400" />
                                         Forum Activity
