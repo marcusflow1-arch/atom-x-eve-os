@@ -46,7 +46,7 @@ export default function IntroScreen({ onComplete }) {
             src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/e15ddf60a_Crafting_Premium_AI_Intro_Screen_Prompt.mp4"
             className="w-full h-full object-cover opacity-90"
             autoPlay 
-            muted
+            muted={false}
             playsInline
             onEnded={onComplete}
           />

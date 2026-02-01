@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight, Music } from 'lucide-react';
+import { Upload, Trash2, Play, Pause, Check, X, Film, Loader2, Gamepad2, RefreshCw, Plus, Search, Bot, Terminal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -24,8 +24,6 @@ export default function Admin() {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [selectedVideoFile, setSelectedVideoFile] = useState(null);
-  const [selectedAudioFile, setSelectedAudioFile] = useState(null);
   const [previewVideo, setPreviewVideo] = useState(null);
   const [populatingGames, setPopulatingGames] = useState(false);
   const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
@@ -116,37 +114,26 @@ export default function Admin() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminGames'] }),
   });
 
-  const handleUploadSubmit = async () => {
-    if (!selectedVideoFile && !selectedAudioFile) {
-      showError('Please select at least a video or audio file');
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('video/mp4')) {
+      showError('Please upload an MP4 file');
       return;
     }
 
     setUploading(true);
     try {
-      let video_url = '';
-      let audio_url = '';
-
-      if (selectedVideoFile) {
-        const res = await base44.integrations.Core.UploadFile({ file: selectedVideoFile });
-        video_url = res.file_url;
-      }
-
-      if (selectedAudioFile) {
-        const res = await base44.integrations.Core.UploadFile({ file: selectedAudioFile });
-        audio_url = res.file_url;
-      }
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
       await createMutation.mutateAsync({
-        title: newTitle || (selectedVideoFile ? selectedVideoFile.name.replace('.mp4', '') : selectedAudioFile.name.replace('.mp3', '')),
-        video_url: video_url || 'placeholder', // Fallback if only audio
-        audio_url: audio_url,
+        title: newTitle || file.name.replace('.mp4', ''),
+        video_url: file_url,
         is_active: true,
       });
       
       setNewTitle('');
-      setSelectedVideoFile(null);
-      setSelectedAudioFile(null);
       showSuccess('Background uploaded successfully!');
     } catch (error) {
       showError(error, 'Upload');
@@ -469,73 +456,41 @@ export default function Admin() {
           {/* Upload Section */}
           <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6">
             <h3 className="font-semibold mb-4">Upload New Background</h3>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               <Input
                 placeholder="Background title (optional)"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                className="bg-slate-900 border-slate-700"
+                className="bg-slate-900 border-slate-700 flex-1"
               />
-              
-              <div className="flex flex-wrap gap-4">
-                {/* Video Upload */}
-                <div className="flex-1">
-                  <label className="block text-sm text-slate-400 mb-2">Video (MP4)</label>
-                  <label className="relative cursor-pointer flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition-colors">
-                    <input
-                      type="file"
-                      accept="video/mp4"
-                      onChange={(e) => setSelectedVideoFile(e.target.files?.[0])}
-                      className="hidden"
-                      disabled={uploading}
-                    />
-                    <Film className="w-5 h-5 text-blue-400" />
-                    <span className="text-sm truncate flex-1">
-                      {selectedVideoFile ? selectedVideoFile.name : 'Select Video File'}
-                    </span>
-                    {selectedVideoFile && <Check className="w-4 h-4 text-green-500" />}
-                  </label>
-                </div>
-
-                {/* Audio Upload */}
-                <div className="flex-1">
-                  <label className="block text-sm text-slate-400 mb-2">Audio (MP3) - Optional</label>
-                  <label className="relative cursor-pointer flex items-center gap-2 p-3 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-800 transition-colors">
-                    <input
-                      type="file"
-                      accept="audio/mp3,audio/mpeg"
-                      onChange={(e) => setSelectedAudioFile(e.target.files?.[0])}
-                      className="hidden"
-                      disabled={uploading}
-                    />
-                    <Music className="w-5 h-5 text-purple-400" />
-                    <span className="text-sm truncate flex-1">
-                      {selectedAudioFile ? selectedAudioFile.name : 'Select Audio File'}
-                    </span>
-                    {selectedAudioFile && <Check className="w-4 h-4 text-green-500" />}
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
+              <label className="relative cursor-pointer">
+                <input
+                  type="file"
+                  accept="video/mp4"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
                 <Button 
-                  onClick={handleUploadSubmit}
-                  disabled={uploading || (!selectedVideoFile && !selectedAudioFile)}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={uploading}
+                  className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
+                  asChild
                 >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Background
-                    </>
-                  )}
+                  <span>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload MP4
+                      </>
+                    )}
+                  </span>
                 </Button>
-              </div>
+              </label>
             </div>
           </div>
 
@@ -579,15 +534,10 @@ export default function Admin() {
                       </div>
                       
                       {/* Status Badge */}
-                      <div className="absolute top-2 left-2 flex gap-2">
+                      <div className="absolute top-2 left-2">
                         <Badge className={bg.is_active ? 'bg-green-600' : 'bg-slate-600'}>
                           {bg.is_active ? 'Active' : 'Inactive'}
                         </Badge>
-                        {bg.audio_url && (
-                          <Badge className="bg-purple-600 flex items-center gap-1">
-                            <Music className="w-3 h-3" /> Audio
-                          </Badge>
-                        )}
                       </div>
                     </div>
 

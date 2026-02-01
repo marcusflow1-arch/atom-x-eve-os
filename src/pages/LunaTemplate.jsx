@@ -57,29 +57,8 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
-// Helper for Audio
-function BackgroundAudioPlayer({ audioUrl, shouldPlay }) {
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    
-    if (audioUrl && shouldPlay) {
-      if (audioRef.current.src !== audioUrl) {
-        audioRef.current.src = audioUrl;
-      }
-      audioRef.current.volume = 0.4;
-      audioRef.current.play().catch(e => console.log("Audio play failed", e));
-    } else {
-      audioRef.current.pause();
-    }
-  }, [audioUrl, shouldPlay]);
-
-  return <audio ref={audioRef} loop />;
-}
-
 // Transparent 3D Model Viewer with WASD Controls
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, onActiveChange }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
 
   const logChange = (entry) => {
     try {
@@ -380,14 +359,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Clicked on Y-Bot -> Activate Controls
         controlsActive.current = true;
         setIsActive(true);
-        if (onActiveChange) onActiveChange(true);
-        renderer.domElement.style.cursor = 'crosshair'; 
+        renderer.domElement.style.cursor = 'crosshair'; // Visual feedback
+        // Optional: Highlight or effect
       } else {
-        // Clicked elsewhere -> Deactivate
-        controlsActive.current = false;
-        setIsActive(false);
-        if (onActiveChange) onActiveChange(false);
-        renderer.domElement.style.cursor = 'pointer';
+        // Clicked elsewhere -> Optional: Deselect or just keep focus if appropriate
+        // For now, we allow clicking empty space to NOT toggle off immediately if dragging, 
+        // but let's keep it simple: Click Y-Bot to engage.
+        // If we want to deselect on background click:
+        // controlsActive.current = false;
+        // setIsActive(false);
+        // renderer.domElement.style.cursor = 'pointer';
       }
     };
     renderer.domElement.addEventListener('click', handleCanvasClick);
@@ -1586,16 +1567,13 @@ export default function LunaTemplate() {
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
-  // Optimistically set default room URL to reduce loading time
-  const [roomModelUrl, setRoomModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx');
+  const [roomModelUrl, setRoomModelUrl] = useState(null);
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
-  const [bannerAudioUrl, setBannerAudioUrl] = useState(null);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
-  const [is3DActive, setIs3DActive] = useState(false);
 
   const { mode } = useDashboardMode();
 
@@ -1787,9 +1765,6 @@ export default function LunaTemplate() {
 
 
 
-      {/* Background Audio Player */}
-      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} shouldPlay={true} />
-
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
@@ -1813,7 +1788,6 @@ export default function LunaTemplate() {
             roomModelUrl={roomModelUrl} 
             activeScene={activeScene}
             isStatsOpen={showStats}
-            onActiveChange={setIs3DActive}
           />
         </div>
       }
@@ -1863,15 +1837,7 @@ export default function LunaTemplate() {
             <div className="h-full">
               <FocusModePanel
                  onOpenCalendar={() => setShowCalendar(true)}
-                 onBackgroundChange={(data) => {
-                   if (data && typeof data === 'object') {
-                     setBannerBackgroundUrl(data.url);
-                     setBannerAudioUrl(data.audio);
-                   } else {
-                     setBannerBackgroundUrl(data);
-                     setBannerAudioUrl(null);
-                   }
-                 }}
+                 onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
                  onToggleStats={() => setShowStats((v) => !v)}
                />
             </div>
