@@ -322,11 +322,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Asset Injection: Load Room (Environment) into Environment_Layer
     if (roomModelUrl && worldContainerRef.current) {
       console.log("Attempting to load Environment (Room):", roomModelUrl);
-      const roomLoader = new GLTFLoader();
+      const isRoomFBX = roomModelUrl.toLowerCase().includes('.fbx');
+      const roomLoader = isRoomFBX ? new FBXLoader() : new GLTFLoader();
+      
       roomLoader.load(
         roomModelUrl,
-        (gltf) => {
-          const room = gltf.scene;
+        (loadedAsset) => {
+          const room = isRoomFBX ? loadedAsset : loadedAsset.scene;
+          
           // Scale Safety: Explicitly set to 1 to ensure Room 2 fits standard units
           room.scale.set(1, 1, 1); 
           room.position.set(0, 0, 0);
@@ -354,10 +357,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             if (child.isMesh) meshes.push(child);
           });
           roomMeshesRef.current = meshes;
-          console.log('Environment_Layer successfully loaded Room from Admin:', roomModelUrl);
+          console.log(`Environment_Layer successfully loaded Room (${isRoomFBX ? 'FBX' : 'GLTF'}) from Admin:`, roomModelUrl);
         },
         undefined,
-        (err) => console.error('Error loading Room GLTF:', err)
+        (err) => console.error('Error loading Room Model:', err)
       );
     }
 
@@ -1389,25 +1392,28 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // STRICT ASSET MAPPING: Fetch Room 2 (or Room 1) from Model3D
+  // STRICT ASSET MAPPING: Fetch Room 2 FBX (or fallback) from Model3D
   useEffect(() => {
     const fetchEnvironment = async () => {
         try {
             // Cross-Section Fetch: 3D Model Table (Model3D entity)
             const models = await base44.entities.Model3D.list();
             
-            // Prioritize Room 2 as requested
-            const room2Asset = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
+            // Prioritize Room 2 FBX as requested, then any Room 2
+            const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
+            const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
+            
+            // Fallbacks
             const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
             
-            const selectedAsset = room2Asset || room1Asset;
+            const selectedAsset = room2Fbx || room2Any || room1Asset;
             
             console.log('Environment Asset Found:', selectedAsset);
             
             if (selectedAsset?.file_url) {
                 setRoomModelUrl(selectedAsset.file_url);
             } else {
-                console.warn("Room 1/2 not found in Admin 3D Models, using fallback.");
+                console.warn("Room 2 (FBX) not found in Admin 3D Models, using fallback.");
                 if (!roomModelUrl) setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
