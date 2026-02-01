@@ -422,12 +422,29 @@ export default function SceneEditor() {
         is_active: true // Auto-activate on save for now, as requested
     };
     
-    // Deactivate others if this is new or update
-    // Ideally backend should handle "only one active", but for now we'll just set this one true
-    // A separate toggle could be added later.
-    
     saveMutation.mutate(data);
   };
+
+  // Keyboard Shortcuts for Tools
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+        if (e.target.matches('input, textarea')) return;
+        
+        switch(e.key.toLowerCase()) {
+            case 'w': setMode('translate'); break;
+            case 'e': setMode('rotate'); break;
+            case 'r': setMode('scale'); break;
+            case 'x': 
+                // Toggle local/world space if needed, or just stick to defaults
+                if (transformRef.current) {
+                    transformRef.current.setSpace(transformRef.current.space === 'local' ? 'world' : 'local');
+                }
+                break;
+        }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="flex h-[calc(100vh-100px)] gap-4">
