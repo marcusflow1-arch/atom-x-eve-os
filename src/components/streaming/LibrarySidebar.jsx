@@ -381,7 +381,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-0 left-80 sm:left-96 bottom-0 z-[68] w-[calc(100vw-20rem)] sm:w-[calc(100vw-24rem)] max-w-[900px] bg-[#0c1018]/95 backdrop-blur-2xl border-l border-white/10 shadow-2xl overflow-y-auto p-8"
+                className="fixed top-0 left-[21rem] sm:left-[25rem] bottom-0 z-[68] w-[calc(100vw-22rem)] sm:w-[calc(100vw-26rem)] max-w-[900px] bg-[#0c1018]/95 backdrop-blur-2xl rounded-l-3xl border-l border-white/10 shadow-2xl overflow-y-auto p-8"
                 style={{
                   boxShadow: '20px 0 50px rgba(0,0,0,0.5)',
                 }}
@@ -440,7 +440,7 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-0 right-0 bottom-0 w-[400px] xl:w-[500px] z-[69] bg-[#0f141a] border-l border-white/10 shadow-2xl flex flex-col overflow-y-auto"
+                className="fixed top-4 right-4 bottom-4 w-[400px] xl:w-[500px] z-[69] bg-[#0f141a] border border-white/10 shadow-2xl rounded-3xl flex flex-col overflow-hidden"
                 style={{ boxShadow: '-10px 0 40px rgba(0,0,0,0.5)' }}
             >
                 {/* Banner Header */}
