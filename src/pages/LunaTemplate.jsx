@@ -600,7 +600,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       try {
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
+        // Align feet to ground (keep X/Z centered, shift Y so min is at 0)
+        model.position.x -= center.x;
+        model.position.z -= center.z;
+        model.position.y -= box.min.y; 
       } catch {}
       if (actorContainerRef.current) {
         actorContainerRef.current.add(model);

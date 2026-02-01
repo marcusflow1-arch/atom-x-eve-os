@@ -255,6 +255,14 @@ export default function SceneEditor() {
                 model.position.set(envConfig.transform.position.x, envConfig.transform.position.y, envConfig.transform.position.z);
                 model.rotation.set(envConfig.transform.rotation.x, envConfig.transform.rotation.y, envConfig.transform.rotation.z);
                 model.scale.set(envConfig.transform.scale.x, envConfig.transform.scale.y, envConfig.transform.scale.z);
+
+                // Treat as static mesh (optimization + prevents some physics/rendering glitches)
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.matrixAutoUpdate = false;
+                        child.updateMatrix();
+                    }
+                });
                 
                 scene.add(model);
                 sceneObjectsMap.current['environment'] = model;
