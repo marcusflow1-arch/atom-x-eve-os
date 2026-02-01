@@ -57,6 +57,26 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 
+// Helper for Audio
+function BackgroundAudioPlayer({ audioUrl }) {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    
+    if (audioUrl) {
+      audioRef.current.src = audioUrl;
+      audioRef.current.volume = 0.4;
+      audioRef.current.play().catch(e => console.log("Audio play failed", e));
+    } else {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+  }, [audioUrl]);
+
+  return <audio ref={audioRef} loop />;
+}
+
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
 
@@ -1768,20 +1788,7 @@ export default function LunaTemplate() {
 
 
       {/* Background Audio Player */}
-      <audio 
-        ref={(el) => {
-          if (el) {
-            el.volume = 0.4;
-            if (bannerAudioUrl) {
-              el.play().catch(e => console.log("Audio play failed", e));
-            } else {
-              el.pause();
-            }
-          }
-        }}
-        src={bannerAudioUrl || ''} 
-        loop 
-      />
+      <BackgroundAudioPlayer audioUrl={bannerAudioUrl} />
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
