@@ -279,8 +279,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // Initial Camera Position (Better Angle)
     // Position camera behind and slightly above (assuming character at 0,0,0)
     // Z+ is typically "back" in Three.js standard coordinates if character faces Z-
-    // Updated to match isometric-like view (higher and further)
-    camera.position.set(0, 5, 8);
+    // Updated to match isometric-like view (higher and further) per user request
+    camera.position.set(0, 6, 12);
 
     const renderer = rendererRef.current || new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current = renderer;
@@ -1097,7 +1097,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         ref={containerRef} 
         className="absolute inset-0 z-10 transition-all duration-700 ease-in-out"
         style={{
-          transform: isStatsOpen ? 'translateX(-25vw)' : 'none',
+          transform: isStatsOpen ? 'translateX(-12vw)' : 'none',
           // Use a smoother clip path transition and adjust inset to match header bottom exactly (usually 64px or 80px)
           // Adding transition property explicitly for clip-path
           transitionProperty: 'transform, clip-path',
