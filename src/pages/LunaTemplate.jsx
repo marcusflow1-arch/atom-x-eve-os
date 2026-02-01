@@ -673,8 +673,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
+      
       const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      // Animation Heartbeat (Anti-T-Pose)
+      const activeMixer = mixerRef.current || mixer;
+      if (activeMixer) activeMixer.update(delta);
 
       updateWeaponVisual();
 
@@ -683,7 +686,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         currentWeaponRef.current = storeState.equippedWeapon;
       }
 
-      // Only follow actor if a character model is actually loaded
+      // MOVEMENT & COLLISION LOGIC
       if (modelUrl && actorContainerRef.current && controlsActive.current) {
         const moveSpeed = 0.04;
         let direction = new THREE.Vector3();
@@ -693,110 +696,50 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (keysPressed.current['a']) direction.x -= 1;
         if (keysPressed.current['d']) direction.x += 1;
 
-        const dirLength = direction.length();
-        const isMoving = dirLength > 0.01;
+        const isMoving = direction.lengthSq() > 0.0001;
 
-        // --- Ground Detection Logic ---
-        let groundHeight = 0; // Default floor
-        let onGround = false;
-
-        // Raycast from character position (slightly up) downwards
-        if (roomMeshesRef.current.length > 0) {
+        // Stair-Climbing Logic (Raycasting)
+        if (worldContainerRef.current) {
             const rayOrigin = actorContainerRef.current.position.clone();
-            rayOrigin.y += 1.0; // Start ray 1 meter up
+            rayOrigin.y += 2.0; // Start ray 2m up
             raycaster.set(rayOrigin, downVector);
             
-            const intersects = raycaster.intersectObjects(roomMeshesRef.current);
+            // Intersect with Environment_Layer children
+            const intersects = raycaster.intersectObjects(worldContainerRef.current.children, true);
+            
             if (intersects.length > 0) {
-                // Find highest intersection that is below the ray origin
-                // intersects are sorted by distance, so first one is closest
-                groundHeight = intersects[0].point.y;
+                // Adjust bot height to mesh surface
+                actorContainerRef.current.position.y = intersects[0].point.y;
             }
         }
 
-        // Determine if grounded based on current Y vs detected groundHeight
-        // Small tolerance for "sticking" to ground
-        const grounded = !isJumpingRef.current && (actorContainerRef.current.position.y <= groundHeight + 0.1);
-
-        if (keysPressed.current[' '] && grounded) {
-          isJumpingRef.current = true;
-          velocityRef.current.y = 0.15;
-        }
-
-        // Apply Gravity
-        if (isJumpingRef.current || actorContainerRef.current.position.y > groundHeight) {
-          velocityRef.current.y -= 0.008;
-          actorContainerRef.current.position.y += velocityRef.current.y;
-        }
-
-        // Ground Collision / Landing
-        if (actorContainerRef.current.position.y < groundHeight) {
-            actorContainerRef.current.position.y = groundHeight;
-            isJumpingRef.current = false;
-            velocityRef.current.y = 0;
-        }
-
-        if (grounded) {
-          const currentState = useLunaStore.getState();
-          if (currentState.actions.skill) {
-            handleSkill();
-          }
-          else if (currentState.actions.attack) {
-            handleAttack();
-          }
-          else if (isMoving) {
+        if (isMoving) {
             direction.normalize();
             actorContainerRef.current.position.x += direction.x * moveSpeed;
             actorContainerRef.current.position.z += direction.z * moveSpeed;
+            
             const angle = Math.atan2(direction.x, direction.z);
             actorContainerRef.current.rotation.y = angle;
-            if (!animationLocked.current) {
-              setBaseAction('run');
-            }
-          } else {
-            if (!animationLocked.current) {
-              setBaseAction(resolveIdle());
-            }
-          }
+            
+            if (!animationLocked.current) setBaseAction('run');
         } else {
-          if (!animationLocked.current) {
-            setBaseAction('jump');
-          }
+            if (!animationLocked.current) setBaseAction(resolveIdle());
         }
-
-        const offset = new THREE.Vector3(0, 1.5, 5);
-        camera.position.x = actorContainerRef.current.position.x + offset.x;
-        camera.position.y = actorContainerRef.current.position.y + offset.y;
-        camera.position.z = actorContainerRef.current.position.z + offset.z;
-        controls.target.copy(actorContainerRef.current.position);
-        controls.update();
-        logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-move', summary: 'ActorContainer moved via WASD' });
-      } else if (modelUrl && actorContainerRef.current && !controlsActive.current) {
-        // Animation logic only if modelUrl is present
+        
         const currentState = useLunaStore.getState();
-        if (currentState.actions.skill) {
-          handleSkill();
-        } else if (currentState.actions.attack) {
-          handleAttack();
-        } else if (!animationLocked.current) {
-          setBaseAction(resolveIdle());
+        if (currentState.actions.skill) handleSkill();
+        else if (currentState.actions.attack) handleAttack();
+
+        // Camera Follow (Lock Target)
+        if (controlsRef.current) {
+            controlsRef.current.target.copy(actorContainerRef.current.position);
         }
+
+      } else if (actorContainerRef.current) {
+         if (!animationLocked.current) setBaseAction(resolveIdle());
       }
 
-      // Ensure camera reset once both env and actor are present
-      if (
-        !cameraResetRef.current &&
-        envLoadedRef.current &&
-        actorContainerRef.current &&
-        actorContainerRef.current.children &&
-        actorContainerRef.current.children.length > 0
-      ) {
-        const box = new THREE.Box3().setFromObject(actorContainerRef.current);
-        const center = box.getCenter(new THREE.Vector3());
-        controls.target.copy(center);
-        camera.position.set(center.x, center.y + 2, center.z + 5);
-        cameraResetRef.current = true;
-      }
+      if (controlsRef.current) controlsRef.current.update();
       renderer.render(scene, camera);
     }
     animate();
