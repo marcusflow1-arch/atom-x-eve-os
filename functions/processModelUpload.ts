@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
       let modelFileName = null;
       
       for (const [filename, file] of Object.entries(zip.files)) {
-        if (!file.dir && (filename.endsWith('.glb') || filename.endsWith('.gltf'))) {
+        if (!file.dir && (filename.endsWith('.glb') || filename.endsWith('.gltf') || filename.endsWith('.fbx'))) {
           modelFile = file;
           modelFileName = filename;
           break;
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       
       if (!modelFile) {
         return Response.json({ 
-          error: 'No GLB or GLTF file found in ZIP' 
+          error: 'No GLB, GLTF, or FBX file found in ZIP' 
         }, { status: 400 });
       }
       
@@ -50,11 +50,17 @@ Deno.serve(async (req) => {
       const modelBlob = await modelFile.async('blob');
       const modelArrayBuffer = await modelBlob.arrayBuffer();
       
+      // Determine MIME type
+      let mimeType = 'application/octet-stream';
+      if (modelFileName.endsWith('.glb')) mimeType = 'model/gltf-binary';
+      else if (modelFileName.endsWith('.gltf')) mimeType = 'model/gltf+json';
+      else if (modelFileName.endsWith('.fbx')) mimeType = 'application/octet-stream';
+
       // Convert to File object for upload
       const modelFileObj = new File(
         [modelArrayBuffer], 
         modelFileName, 
-        { type: modelFileName.endsWith('.glb') ? 'model/gltf-binary' : 'model/gltf+json' }
+        { type: mimeType }
       );
       
       // Upload the extracted model

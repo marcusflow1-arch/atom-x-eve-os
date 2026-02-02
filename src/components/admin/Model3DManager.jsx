@@ -160,14 +160,44 @@ export default function Model3DManager() {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
+      let finalFileUrl = file_url;
+      let finalFileType = fileExtension.replace('.', '');
+      let finalFileSize = file.size;
+
+      // If ZIP, process it on backend to extract the model
+      if (fileExtension === '.zip') {
+        try {
+          const processRes = await base44.functions.invoke('processModelUpload', {
+            fileUrl: file_url,
+            fileName: file.name,
+            fileType: 'zip'
+          });
+          
+          if (processRes.data?.success && processRes.data?.modelUrl) {
+            finalFileUrl = processRes.data.modelUrl;
+            finalFileType = processRes.data.originalFileName.split('.').pop().toLowerCase();
+            // Note: We don't have the exact extracted size here easily without another call, 
+            // but we can keep the zip size or update if backend returns it. 
+            // For now, keeping original zip size is acceptable or we can just ignore.
+          } else {
+            throw new Error(processRes.data?.error || 'Failed to process ZIP file');
+          }
+        } catch (zipError) {
+          console.error('ZIP Processing failed:', zipError);
+          alert(`ZIP Processing failed: ${zipError.message}`);
+          setUploading(false);
+          return;
+        }
+      }
+
       await createMutation.mutateAsync({
         name: newModel.name || file.name,
         description: newModel.description,
-        file_url: file_url,
-        file_type: fileExtension.replace('.', ''),
+        file_url: finalFileUrl,
+        file_type: finalFileType,
         category: newModel.category || 'uncategorized',
         tags: newModel.tags,
-        file_size: file.size,
+        file_size: finalFileSize,
         is_public: false
       });
       
