@@ -210,7 +210,7 @@ export default function LibrarySidebar() {
                   onClick={() => setActiveSub('aura')}
                   className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='aura' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
                 >
-                  Aurora
+                  Aura
                 </button>
                 <div className="h-4 w-px bg-white/20" />
                 <button

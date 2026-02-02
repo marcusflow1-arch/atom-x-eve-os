@@ -93,6 +93,14 @@ export default function MiniLunaNav({ title }) {
             Leaderboard
           </button>
 
+          <button
+            onClick={() => navigate(createPageUrl('Aura'))}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/70 hover:bg-white/5 hover:text-white flex items-center gap-2"
+          >
+            <Radio className="w-4 h-4" />
+            Aura
+          </button>
+
 
           <a
             href="https://discord.gg/VJQQNxAa"

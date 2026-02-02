@@ -45,13 +45,13 @@ export default function BottomQuickBar() {
         <Item
           icon={Home}
           label="Home"
-          to={createPageUrl('StreamingHome')}
+          to={createPageUrl('Aura')}
           active={isHome}
         />
         <Item
           icon={Radio}
-          label="Streaming"
-          to={createPageUrl('Streaming')}
+          label="Aura"
+          to={createPageUrl('Aura')}
           active={isStreaming}
         />
       </div>
