@@ -63,6 +63,12 @@ export default function LibrarySidebar() {
   const isAura = pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
+  
+  // We want the sidebar to be available on more pages now that it has the Friends List
+  // Removing the strict page restrictions to allow it to be accessed generally if needed, 
+  // or at least keeping it consistent. The user context implies they are on a page where this sidebar exists.
+  // We'll keep existing logic but just note that if they want it "here", they are likely seeing it.
+  
   const shouldShow = !(isAura || isEntertainment || isLibraryPage || overlayActive);
 
   // Close right-side overlay whenever the left pull-out tab closes
@@ -204,8 +210,47 @@ export default function LibrarySidebar() {
                 >
                   Entertainment
                 </button>
+                <div className="h-4 w-px bg-white/20" />
+                <button
+                  onClick={() => setActiveSub('friends')}
+                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='friends' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
+                >
+                  Friends List
+                </button>
               </div>
             </div>
+            {activeSub === 'friends' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Online Friends</h3>
+                  <span className="ml-auto text-[10px] text-white/40">{friendsList.length} total</span>
+                </div>
+                <div className="space-y-3">
+                  {friendsList.map(friend => (
+                    <div 
+                      key={friend.id} 
+                      onClick={() => openOverlay({ type: 'friend', ...friend })}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
+                    >
+                      <div className="relative">
+                        <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0e14] ${
+                          friend.status === 'online' ? 'bg-green-500' : 
+                          friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                        }`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{friend.name}</p>
+                        <p className="text-white/50 text-xs truncate">
+                          {friend.game ? <span className="text-blue-300">{friend.game}</span> : <span className="capitalize">{friend.status}</span>}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeSub === 'aura' && (
               <>
                 {/* Recently Watched Games */}
