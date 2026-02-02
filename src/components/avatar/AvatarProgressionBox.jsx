@@ -3,7 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus } from "lucide-react";
+import { Plus, BarChart2, Backpack } from "lucide-react";
+import InventoryGrid from "../dashboard/InventoryGrid";
 
 const GENRES = ["RPG","FPS","Strategy","Action","MMO","Puzzle","Simulation","Sports"];
 const BASE_XP = 100;
@@ -18,6 +19,7 @@ export default function AvatarProgressionBox() {
   const [user, setUser] = useState(null);
   const [record, setRecord] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("stats");
 
   const ensureGenres = (rec) => {
     if (!rec.genres || !Array.isArray(rec.genres)) {
@@ -153,50 +155,86 @@ export default function AvatarProgressionBox() {
           <h2 className="text-xl font-bold text-white">AI Avatar Progression</h2>
           <p className="text-white/60 text-sm">Genre levels, stat points, and growth.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge className="bg-emerald-600 text-white border-none">Global Lv. {record.global_level || 1}</Badge>
-          <div className="w-56">
-            <Progress value={globalPct} className="h-2" />
-            <div className="text-[11px] text-white/60 mt-1">{Math.round(record.global_xp || 0)} / {globalThreshold} XP</div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+            <button
+              onClick={() => setActiveTab("stats")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                activeTab === "stats" 
+                  ? "bg-white/10 text-white shadow-sm" 
+                  : "text-white/50 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <BarChart2 className="w-4 h-4" />
+              Stats
+            </button>
+            <button
+              onClick={() => setActiveTab("inventory")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                activeTab === "inventory" 
+                  ? "bg-white/10 text-white shadow-sm" 
+                  : "text-white/50 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <Backpack className="w-4 h-4" />
+              Inventory
+            </button>
+          </div>
+
+          <div className="h-8 w-px bg-white/10" />
+
+          <div className="flex items-center gap-3">
+            <Badge className="bg-emerald-600 text-white border-none">Global Lv. {record.global_level || 1}</Badge>
+            <div className="w-56">
+              <Progress value={globalPct} className="h-2" />
+              <div className="text-[11px] text-white/60 mt-1">{Math.round(record.global_xp || 0)} / {globalThreshold} XP</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-3">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-semibold">Core Stats</h3>
-              <Badge className="bg-purple-600 text-white border-none">Points: {record.available_stat_points || 0}</Badge>
+      {activeTab === "stats" ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 space-y-3">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-semibold">Core Stats</h3>
+                <Badge className="bg-purple-600 text-white border-none">Points: {record.available_stat_points || 0}</Badge>
+              </div>
+              <div className="space-y-2">
+                <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} />
+                <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} />
+                <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} />
+                <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} />
+                <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} />
+              </div>
+              {saving && <div className="text-xs text-white/50 mt-3">Saving...</div>}
             </div>
-            <div className="space-y-2">
-              <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} />
-              <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} />
-              <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} />
-              <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} />
-              <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} />
-            </div>
-            {saving && <div className="text-xs text-white/50 mt-3">Saving...</div>}
           </div>
-        </div>
 
-        <div className="md:col-span-2 space-y-3">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-semibold">Genre Levels</h3>
-              <span className="text-white/50 text-xs">30% of genre XP adds to global</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {record.genres
-                .slice()
-                .sort((a,b) => GENRES.indexOf(a.name) - GENRES.indexOf(b.name))
-                .map((g) => (
-                  <GenreRow key={g.name} g={g} />
-                ))}
+          <div className="md:col-span-2 space-y-3">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-semibold">Genre Levels</h3>
+                <span className="text-white/50 text-xs">30% of genre XP adds to global</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {record.genres
+                  .slice()
+                  .sort((a,b) => GENRES.indexOf(a.name) - GENRES.indexOf(b.name))
+                  .map((g) => (
+                    <GenreRow key={g.name} g={g} />
+                  ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <InventoryGrid />
+        </div>
+      )}
     </div>
   );
 }
