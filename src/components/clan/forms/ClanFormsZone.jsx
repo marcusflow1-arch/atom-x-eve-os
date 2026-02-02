@@ -124,49 +124,61 @@ export default function ClanFormsZone({ game, clan, user }) {
     return Array.from(set);
   }, [topicsGeneral, topicsLeader]);
 
-  const topicTitlesGeneral = React.useMemo(() => (topicsGeneral || []).map(t => t.title), [topicsGeneral]);
-  const topicTitlesLeader = React.useMemo(() => (topicsLeader || []).map(t => t.title), [topicsLeader]);
+  const topicTitlesGeneral = React.useMemo(() => ['All', ...(topicsGeneral || []).map(t => t.title)], [topicsGeneral]);
+  const topicTitlesLeader = React.useMemo(() => ['All', ...(topicsLeader || []).map(t => t.title)], [topicsLeader]);
 
   const selectedTopicGeneral = React.useMemo(() => {
+    if (selectedTopicTitleGeneral === 'All') return null;
     return (topicsGeneral || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitleGeneral || '').toLowerCase()) || null;
   }, [topicsGeneral, selectedTopicTitleGeneral]);
 
   const selectedTopicLeader = React.useMemo(() => {
+    if (selectedTopicTitleLeader === 'All') return null;
     return (topicsLeader || []).find(t => (t.title || '').toLowerCase() === (selectedTopicTitleLeader || '').toLowerCase()) || null;
   }, [topicsLeader, selectedTopicTitleLeader]);
 
   React.useEffect(() => {
     if (!selectedTopicTitleGeneral && topicTitlesGeneral.length) {
-      setSelectedTopicTitleGeneral(topicTitlesGeneral[0]);
+      setSelectedTopicTitleGeneral(topicTitlesGeneral[0]); // Default to All or first topic
     }
   }, [topicTitlesGeneral, selectedTopicTitleGeneral]);
 
   React.useEffect(() => {
     if (!selectedTopicTitleLeader && topicTitlesLeader.length) {
-      setSelectedTopicTitleLeader(topicTitlesLeader[0]);
+      setSelectedTopicTitleLeader(topicTitlesLeader[0]); // Default to All or first topic
     }
   }, [topicTitlesLeader, selectedTopicTitleLeader]);
 
   // Messages for both chats
   const { data: messagesGeneral = [] } = useQuery({
-    queryKey: ['clanFormMessages', selectedTopicGeneral?.id],
+    queryKey: ['clanFormMessages', generalChannel?.id, selectedTopicTitleGeneral],
     queryFn: async () => {
+      if (selectedTopicTitleGeneral === 'All' && generalChannel?.id) {
+        // Fetch all messages for the channel
+        const res = await base44.entities.ClanFormMessage.filter({ channel_id: generalChannel.id, game_id: game.id }, 'created_date', 200);
+        return res || [];
+      }
       if (!selectedTopicGeneral?.id) return [];
       const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
-    enabled: !!selectedTopicGeneral?.id,
+    enabled: (selectedTopicTitleGeneral === 'All' && !!generalChannel?.id) || !!selectedTopicGeneral?.id,
     initialData: [],
   });
 
   const { data: messagesLeader = [] } = useQuery({
-    queryKey: ['clanFormMessages', selectedTopicLeader?.id],
+    queryKey: ['clanFormMessages', leaderChannel?.id, selectedTopicTitleLeader],
     queryFn: async () => {
+      if (selectedTopicTitleLeader === 'All' && leaderChannel?.id) {
+        // Fetch all messages for the channel
+        const res = await base44.entities.ClanFormMessage.filter({ channel_id: leaderChannel.id, game_id: game.id }, 'created_date', 200);
+        return res || [];
+      }
       if (!selectedTopicLeader?.id) return [];
       const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
-    enabled: !!selectedTopicLeader?.id,
+    enabled: (selectedTopicTitleLeader === 'All' && !!leaderChannel?.id) || !!selectedTopicLeader?.id,
     initialData: [],
   });
 
@@ -300,10 +312,21 @@ export default function ClanFormsZone({ game, clan, user }) {
             if (leaderChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', leaderChannel.id] });
           };
 
-  const sendMessageTo = async (topicId, content) => {
-    if (!topicId || !content?.trim()) return;
+  const sendMessageTo = async (topicId, channelId, content) => {
+    if ((!topicId && !channelId) || !content?.trim()) return;
+    
+    // If sending to "All" (no topicId), we might want to block or send to a default topic.
+    // Assuming for now we require a topicId to send.
+    if (!topicId) return;
+
+    // We need channel_id in the message for "All" filtering to work efficiently if using filter({channel_id})
+    // Fetch topic to get channel_id if not provided? Or pass it.
+    // Actually, ClanFormMessage schema doesn't strictly enforce channel_id but we used it in the query.
+    // Let's ensure we save channel_id.
+    
     await base44.entities.ClanFormMessage.create({
       topic_id: topicId,
+      channel_id: channelId, 
       game_id: game.id,
       user_id: user?.id,
       clan_id: clan?.id,
@@ -311,6 +334,7 @@ export default function ClanFormsZone({ game, clan, user }) {
       content: content.trim(),
     });
     qc.invalidateQueries({ queryKey: ['clanFormMessages', topicId] });
+    if (channelId) qc.invalidateQueries({ queryKey: ['clanFormMessages', channelId, 'All'] });
   };
 
   return (
@@ -435,7 +459,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             onChange={(e) => setMessageGeneral(e.target.value)}
             disabled={!selectedTopicGeneral}
           />
-          <Button onClick={async () => { await sendMessageTo(selectedTopicGeneral?.id, messageGeneral); setMessageGeneral(''); }} disabled={!selectedTopicGeneral || !messageGeneral.trim()} className="gap-2">
+          <Button onClick={async () => { await sendMessageTo(selectedTopicGeneral?.id, generalChannel?.id, messageGeneral); setMessageGeneral(''); }} disabled={!selectedTopicGeneral || !messageGeneral.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
@@ -576,7 +600,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             onChange={(e) => setMessageLeader(e.target.value)}
             disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin')}
           />
-          <Button onClick={async () => { await sendMessageTo(selectedTopicLeader?.id, messageLeader); setMessageLeader(''); }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
+          <Button onClick={async () => { await sendMessageTo(selectedTopicLeader?.id, leaderChannel?.id, messageLeader); setMessageLeader(''); }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
