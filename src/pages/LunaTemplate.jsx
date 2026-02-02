@@ -1710,7 +1710,11 @@ export default function LunaTemplate() {
     const onKey = (e) => {
       const key = (e.key || '').toLowerCase();
       if (key === 'i') {
-        setUiVisible((v) => !v);
+        if (clickedSlot) {
+          setClickedSlot(null);
+        } else {
+          setUiVisible((v) => !v);
+        }
       }
       // 'o' key binding removed for stats as requested
       // if (key === 'o') { setShowStats((v) => !v); }
@@ -2616,7 +2620,13 @@ export default function LunaTemplate() {
                           backdropFilter: 'blur(40px)',
                           WebkitBackdropFilter: 'blur(40px)'
                         }}>
-                        <div className="w-full h-full max-w-7xl">
+                        <div className="w-full h-full max-w-7xl relative">
+                          <button
+                            onClick={() => setClickedSlot(null)}
+                            className="absolute -top-4 -left-4 z-[70] w-10 h-10 rounded-full bg-black/40 hover:bg-red-500/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all group"
+                          >
+                            <X className="w-5 h-5 text-white/60 group-hover:text-white" />
+                          </button>
                           <InventoryPanel
                             onEquip={handleEquipItem}
                             targetSlot={clickedSlot}
