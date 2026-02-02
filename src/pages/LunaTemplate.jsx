@@ -2701,30 +2701,17 @@ export default function LunaTemplate() {
         {clickedSlot && (
           <motion.div
             key="inventory-panel"
-            initial={{ opacity: 0, x: -100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-8"
-            style={{
-              background: 'rgba(11, 11, 11, 0.95)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)'
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[60]"
           >
-            <div className="w-full h-full max-w-7xl relative">
-              <button
-                onClick={() => setClickedSlot(null)}
-                className="absolute -top-4 -left-4 z-[70] w-10 h-10 rounded-full bg-black/40 hover:bg-red-500/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all group"
-              >
-                <X className="w-5 h-5 text-white/60 group-hover:text-white" />
-              </button>
-              <InventoryPanel
-                onEquip={handleEquipItem}
-                targetSlot={clickedSlot}
-                onClose={() => setClickedSlot(null)}
-              />
-            </div>
+            <InventoryPanel
+              onEquip={handleEquipItem}
+              targetSlot={clickedSlot}
+              onClose={() => setClickedSlot(null)}
+            />
           </motion.div>
         )}
       </AnimatePresence>

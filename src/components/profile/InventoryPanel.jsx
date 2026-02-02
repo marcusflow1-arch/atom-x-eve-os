@@ -99,51 +99,66 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
     }, [processedInventory]);
 
     return (
-        <div className="h-[700px] w-full flex gap-6">
-            {/* Category Menu Box (Left Side) */}
-            <aside className="w-64 flex-shrink-0 h-full flex flex-col gap-4">
-                {/* Search Bar */}
-                <div className="px-3 pt-4">
-                    <div className="flex-1 relative">
-                        <div className="flex items-center gap-2 group relative">
-                            <input 
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-transparent border-none outline-none text-white text-sm py-1 border-b border-white/20 focus:border-white/50 transition-colors placeholder:text-transparent"
-                            />
-                            <Search className="w-4 h-4 text-white/50 absolute right-0 bottom-2 pointer-events-none" />
-                            <div className="absolute bottom-0 left-0 right-0 h-px bg-white/20 group-focus-within:bg-white/50 transition-colors pointer-events-none"></div>
-                        </div>
-                    </div>
-                </div>
+        <div className="w-full h-full flex items-center justify-center p-8 relative">
+            {/* Main Container - Liquid Glass */}
+            <div className="w-full h-full max-w-[1600px] flex gap-8 p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden"
+                style={{
+                    background: 'rgba(15, 23, 42, 0.6)', 
+                    backdropFilter: 'blur(40px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                }}
+            >
+                {/* Close Button - positioned absolutely within the glass container */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 left-6 z-50 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all group"
+                >
+                    <X className="w-5 h-5" />
+                </button>
 
-                <div className="flex-1 p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
-                    <div className="mb-6">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Grid className="w-4 h-4 text-cyan-500" />
+                {/* Sidebar (Left) */}
+                <aside className="w-72 flex-shrink-0 flex flex-col relative z-10 pt-12">
+                    {/* Search */}
+                    <div className="relative mb-8 px-2">
+                        <input 
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-transparent border-none outline-none text-white text-sm py-2 pr-8 border-b border-white/10 focus:border-white/30 transition-colors placeholder:text-transparent"
+                        />
+                        <Search className="absolute right-2 top-2 w-4 h-4 text-white/30" />
+                    </div>
+
+                    {/* Genres Menu */}
+                    <div className="flex-1 bg-black/20 rounded-2xl p-4 border border-white/5 flex flex-col overflow-hidden">
+                        <div className="flex items-center gap-2 mb-4 px-2">
+                            <Grid className="w-4 h-4 text-cyan-400" />
                             <h3 className="text-xs font-bold text-white uppercase tracking-wider">Game Genres</h3>
                         </div>
-                        <p className="text-[10px] text-slate-400">Select a category</p>
+                        <p className="text-[10px] text-slate-400 px-2 mb-4">Select a category</p>
+                        
+                        <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
+                            {genres.map((genre) => (
+                                <button 
+                                    key={genre}
+                                    onClick={() => { setSubTabGenre(genre); setSubTabGame(null); setSelectedInventoryItem(null); }}
+                                    className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-300 flex items-center justify-between group 
+                                        ${subTabGenre === genre 
+                                            ? 'bg-white/10 text-white font-medium shadow-[0_0_15px_rgba(255,255,255,0.1)]' 
+                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                >
+                                    {genre}
+                                    {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-400" />}
+                                </button>
+                            ))}
+                        </div>
                     </div>
-                    
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-2">
-                        {genres.map((genre) => (
-                            <button 
-                                key={genre}
-                                onClick={() => { setSubTabGenre(genre); setSubTabGame(null); setSelectedInventoryItem(null); }}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${subTabGenre === genre ? 'bg-cyan-900/20 text-cyan-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                            >
-                                {genre}
-                                {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-500" />}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </aside>
-            
-            {/* Content Area (Right Side) */}
-            <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar">
+                </aside>
+
+                {/* Main Content (Right) */}
+                <div className="flex-1 min-w-0 h-full overflow-y-auto custom-scrollbar relative z-10 pt-4">
                 {!subTabGenre ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-500">
                         <Gamepad2 className="w-16 h-16 mb-4 opacity-20" />
