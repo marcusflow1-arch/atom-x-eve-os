@@ -13,6 +13,7 @@ import ShinyCard from '@/components/shared/ShinyCard';
 import CreatePostForm from '@/components/community/CreatePostForm';
 import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 import StreamerProfilePanel from '@/components/streaming/profile/StreamerProfilePanel';
+import FriendsListContent from '../dashboard/FriendsListContent';
 
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
   const [activeTab, setActiveTab] = React.useState('overview');
@@ -154,6 +155,131 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   }, [open]);
   
   if (!open) return null;
+
+  // Render Friend Profile View if item type is friend
+  if (item?.type === 'friend') {
+    return (
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed top-0 bottom-0 right-0 left-[320px] sm:left-[384px] z-[80]"
+              onClick={onClose}
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] flex flex-col overflow-hidden"
+              style={{
+                background: 'rgba(20, 24, 34, 0.95)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
+                borderLeft: '1px solid rgba(165, 243, 252, 0.15)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+               <div className="absolute top-4 right-4 z-50">
+                 <button onClick={onClose} className="p-2 bg-black/20 hover:bg-black/40 rounded-full text-white/60 hover:text-white transition-colors">
+                   <X className="w-5 h-5" />
+                 </button>
+               </div>
+               
+               {/* We render FriendsListContent but modified to show THIS specific friend as if selected,
+                   or just build a custom profile view reusing components.
+                   Since FriendsListContent has a list on the left, it might be redundant.
+                   Let's render a focused profile view for this friend. 
+               */}
+               <div className="h-full flex flex-col">
+                  {/* Hero / Header */}
+                  <div className="h-64 relative flex-shrink-0">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40" />
+                      <img src="https://source.unsplash.com/random/1200x400?gaming,abstract" className="w-full h-full object-cover opacity-30 mix-blend-overlay" />
+                      <div className="absolute -bottom-12 left-12 flex items-end">
+                          <div className="relative">
+                              <div className="w-32 h-32 rounded-full p-1 bg-slate-900 ring-4 ring-slate-800">
+                                  <img src={item.avatar} className="w-full h-full rounded-full object-cover" />
+                              </div>
+                              <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-slate-900 ${
+                                  item.status === 'online' ? 'bg-green-500' : item.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                              }`} />
+                          </div>
+                      </div>
+                  </div>
+                  
+                  {/* Profile Body */}
+                  <div className="flex-1 p-12 pt-16 overflow-y-auto">
+                      <div className="flex justify-between items-start mb-8">
+                          <div>
+                              <h1 className="text-4xl font-bold text-white mb-2">{item.name}</h1>
+                              <div className="flex items-center gap-3 text-white/60">
+                                  <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-bold uppercase tracking-wider">Lvl 42</span>
+                                  <span>•</span>
+                                  <span>{item.game ? `Playing ${item.game}` : item.status}</span>
+                              </div>
+                          </div>
+                          <div className="flex gap-3">
+                              <Button className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
+                                  <MessageSquare className="w-4 h-4" /> Message
+                              </Button>
+                              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
+                                  <User className="w-4 h-4" /> Profile
+                              </Button>
+                          </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Stats Card */}
+                          <div className="md:col-span-2 p-6 rounded-2xl bg-white/5 border border-white/10">
+                              <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-6">Recent Activity</h3>
+                              <div className="space-y-4">
+                                  <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20">
+                                      <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                          <Gamepad2 className="w-6 h-6" />
+                                      </div>
+                                      <div>
+                                          <div className="text-white font-bold">Cyberpunk 2088</div>
+                                          <div className="text-white/40 text-xs">Played for 3h today</div>
+                                      </div>
+                                  </div>
+                                  <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20">
+                                      <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-400">
+                                          <Trophy className="w-6 h-6" />
+                                      </div>
+                                      <div>
+                                          <div className="text-white font-bold">Achievement Unlocked</div>
+                                          <div className="text-white/40 text-xs">Master of the Arena</div>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+
+                          {/* Badges / Info */}
+                          <div className="space-y-6">
+                              <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                  <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-4">Badges</h3>
+                                  <div className="flex flex-wrap gap-2">
+                                      {['Beta', 'VIP', 'Sniper', 'Leader'].map(b => (
+                                          <span key={b} className="px-3 py-1 rounded-lg bg-white/10 text-white/70 text-xs font-bold border border-white/5">{b}</span>
+                                      ))}
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>
