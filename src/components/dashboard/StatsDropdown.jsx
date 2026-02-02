@@ -24,15 +24,15 @@ export default function StatsDropdown({ activeTab: controlledTab, onTabChange })
   );
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-[#0a0e14]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
       {/* Tabs header */}
-      <div className="flex items-center gap-2 p-2">
+      <div className="flex items-center gap-2 p-2 bg-black/20 border-b border-white/10">
         <TabButton id="ai" label="AI Stats" />
         <TabButton id="inventory" label="Inventory" />
       </div>
 
       {/* Content */}
-      <div className="w-full">
+      <div className="w-full p-4">
         {activeTab === 'ai' && (
           <div className="mt-2">
             <AvatarProgressionBox />
