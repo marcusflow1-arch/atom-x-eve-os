@@ -21,6 +21,7 @@ import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsDropdown from '@/components/dashboard/StatsDropdown';
+import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 
@@ -1316,9 +1317,9 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
 }
 
 // New QuickActionsBar Component
-function QuickActionsBar({ navigate, onLiveClick, onStatsClick }) {
+function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }) {
   const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: () => navigate(createPageUrl('Friends')) },
+    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onFriendsClick },
     { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'from-slate-500/20 to-gray-500/20', borderColor: 'border-slate-500/30', onClick: () => console.log('Settings clicked') },
     { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
@@ -1643,6 +1644,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
   const [showStatsDropdown, setShowStatsDropdown] = useState(false);
+  const [showFriendsDropdown, setShowFriendsDropdown] = useState(false);
   const [statsActiveTab, setStatsActiveTab] = useState('ai'); // 'ai' | 'inventory'
 
   // Toggle Stats dropdown with 'O' (AI) and 'I' (Inventory) keys
@@ -1738,11 +1740,26 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative">
             <QuickActionsBar 
               navigate={navigate} 
-              onLiveClick={() => { setShowStatsDropdown(false); setShowLiveDropdown((v) => !v); }} 
-              onStatsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown((v) => !v); }}
+              onLiveClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }} 
+              onStatsClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowStatsDropdown((v) => !v); }}
+              onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
             />
 
-
+            <AnimatePresence>
+              {showFriendsDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                  className="w-full overflow-hidden pointer-events-auto"
+                >
+                  <div className="w-full">
+                      <FriendsDropdown />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence>
               {showStatsDropdown && (
