@@ -2603,7 +2603,7 @@ export default function LunaTemplate() {
                       />
                     </motion.div> :
 
-                    false ?
+                    clickedSlot ?
                       <motion.div
                         key="inventory"
                         initial={{ opacity: 0, x: -100 }}
@@ -2620,6 +2620,7 @@ export default function LunaTemplate() {
                           <InventoryPanel
                             onEquip={handleEquipItem}
                             targetSlot={clickedSlot}
+                            onClose={() => setClickedSlot(null)}
                           />
                         </div>
                       </motion.div> :

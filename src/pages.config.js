@@ -57,6 +57,7 @@ import Achievements from './pages/Achievements';
 import AdamXEve from './pages/AdamXEve';
 import Admin from './pages/Admin';
 import AdminUIBuilder from './pages/AdminUIBuilder';
+import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
@@ -102,7 +103,6 @@ import Streaming from './pages/Streaming';
 import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import Aura from './pages/Aura';
 import __Layout from './Layout.jsx';
 
 
@@ -117,6 +117,7 @@ export const PAGES = {
     "AdamXEve": AdamXEve,
     "Admin": Admin,
     "AdminUIBuilder": AdminUIBuilder,
+    "Aura": Aura,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
@@ -162,7 +163,6 @@ export const PAGES = {
     "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "Aura": Aura,
 }
 
 export const pagesConfig = {
