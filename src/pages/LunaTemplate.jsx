@@ -241,6 +241,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         scene.add(pointLight);
     }
 
+    // Add Hemisphere Light for global illumination (fixes black models)
+    if (!scene.getObjectByName('Hemi_Light')) {
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0); // High intensity
+        hemiLight.name = 'Hemi_Light';
+        hemiLight.position.set(0, 20, 0);
+        scene.add(hemiLight);
+    }
+
     // SYSTEM REBOOT: PERSISTENT LAYERS
     if (!worldContainerRef.current) {
       // Use this as the main "Environment_Layer" for the room
@@ -305,10 +313,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (!scene.fog) {
         scene.fog = new THREE.FogExp2(0x0b0b0b, 0.02);
       }
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
       directionalLight.name = 'Key_Light';
-      directionalLight.position.set(5, 5, 5);
+      directionalLight.position.set(5, 10, 7);
+      directionalLight.castShadow = true;
       scene.add(directionalLight);
+
+      // Add Fill Light from opposite side
+      const fillLight = new THREE.DirectionalLight(0xaaccff, 0.8);
+      fillLight.name = 'Fill_Light';
+      fillLight.position.set(-5, 5, -5);
+      scene.add(fillLight);
     }
 
     const controls = controlsRef.current || new OrbitControls(camera, renderer.domElement);
@@ -418,8 +433,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const isRoomFBX = roomModelUrl.toLowerCase().includes('.fbx');
       const roomLoader = isRoomFBX ? new FBXLoader() : new GLTFLoader();
       
+      // Set resource path to help loader find textures in the same directory
+      const resourcePath = roomModelUrl.substring(0, roomModelUrl.lastIndexOf('/') + 1);
+      roomLoader.setPath(resourcePath);
+
       roomLoader.load(
-        roomModelUrl,
+        roomModelUrl.substring(roomModelUrl.lastIndexOf('/') + 1), // Load just the filename, using setPath for base
         (loadedAsset) => {
           const room = isRoomFBX ? loadedAsset : loadedAsset.scene;
           
@@ -427,15 +446,25 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           room.scale.set(1, 1, 1); 
           room.position.set(0, 0, 0);
           
-          // Standardize materials for clean blending
+          // Standardize materials for clean blending and visibility
           room.traverse((child) => {
             if (child.isMesh) {
               child.castShadow = true;
               child.receiveShadow = true;
-              // Ensure double-sided rendering for room walls/ceilings to avoid culling issues
+              
+              // Helper to fix material properties
+              const fixMaterial = (mat) => {
+                mat.side = THREE.DoubleSide;
+                // If material is very dark or metallic without envMap, it appears black.
+                // Reduce metalness and ensure color isn't pitch black if map is missing.
+                if (mat.metalness > 0.8) mat.metalness = 0.2; 
+                if (mat.roughness < 0.2) mat.roughness = 0.8;
+                mat.needsUpdate = true;
+              };
+
               if (child.material) {
-                 if (Array.isArray(child.material)) child.material.forEach(m => m.side = THREE.DoubleSide);
-                 else child.material.side = THREE.DoubleSide;
+                 if (Array.isArray(child.material)) child.material.forEach(fixMaterial);
+                 else fixMaterial(child.material);
               }
             }
           });
