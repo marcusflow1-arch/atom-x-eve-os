@@ -488,13 +488,17 @@ export default function SceneEditor() {
   const handleSave = () => {
     if (!sceneName) return showError('Please name your scene');
     
+    // Determine is_active state: preserve if updating, default to false if creating
+    const currentLayout = layouts.find(l => l.id === selectedLayoutId);
+    const isActive = currentLayout ? currentLayout.is_active : false;
+
     const data = {
         name: sceneName,
         environment_model_id: sceneConfig.environment.model_id,
         environment_url: sceneConfig.environment.url,
         environment_transform: sceneConfig.environment.transform,
         objects: sceneConfig.objects,
-        is_active: true // Auto-activate on save for now, as requested
+        is_active: isActive
     };
     
     saveMutation.mutate(data);
