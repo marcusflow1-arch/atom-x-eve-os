@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Eye, Check, X, Layers, Layout } from 'lucide-react';
+import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Eye, Check, X, Layers, Layout, Globe, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +68,21 @@ export default function SceneEditor() {
       resetEditor();
       showSuccess('Scene deleted');
     }
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: async (id) => {
+      // Deactivate all others first
+      const activeScenes = layouts.filter(l => l.is_active && l.id !== id);
+      await Promise.all(activeScenes.map(l => base44.entities.SceneLayout.update(l.id, { is_active: false })));
+      // Activate current
+      return base44.entities.SceneLayout.update(id, { is_active: true });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sceneLayouts'] });
+      showSuccess('Scene activated and live on Dashboard');
+    },
+    onError: (err) => showError(err, 'Activate Scene')
   });
 
   const resetEditor = () => {
@@ -526,7 +541,12 @@ export default function SceneEditor() {
                 </SelectTrigger>
                 <SelectContent>
                     {layouts.map(l => (
-                        <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                        <SelectItem key={l.id} value={l.id}>
+                            <div className="flex items-center gap-2">
+                                {l.name}
+                                {l.is_active && <Badge className="bg-green-500/20 text-green-400 text-[10px] px-1 h-4 border-none">LIVE</Badge>}
+                            </div>
+                        </SelectItem>
                     ))}
                 </SelectContent>
             </Select>
@@ -612,11 +632,33 @@ export default function SceneEditor() {
             </Button>
         </div>
 
-        <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
             {selectedLayoutId && (
-                <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(selectedLayoutId)}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                </Button>
+                <>
+                    {layouts.find(l => l.id === selectedLayoutId)?.is_active ? (
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/50 h-9 px-3 flex items-center gap-2">
+                            <Radio className="w-4 h-4 animate-pulse" />
+                            Live on Dashboard
+                        </Badge>
+                    ) : (
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                            onClick={() => activateMutation.mutate(selectedLayoutId)}
+                            disabled={activateMutation.isPending}
+                        >
+                            <Globe className="w-4 h-4 mr-2" /> 
+                            {activateMutation.isPending ? 'Activating...' : 'Set Active'}
+                        </Button>
+                    )}
+                    
+                    <div className="w-px h-6 bg-slate-700 mx-1" />
+
+                    <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(selectedLayoutId)}>
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </Button>
+                </>
             )}
             <Button className="bg-green-600 hover:bg-green-700" size="sm" onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" /> Save Scene
