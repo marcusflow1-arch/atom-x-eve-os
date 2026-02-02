@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Tv, Brain, Swords, X, Play, Star, Clock } from 'lucide-react';
+import { Library, Tv, Brain, Swords, X, Play, Star, Clock, Users, Radio, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AIStoryOverlay from './AIStoryOverlay';
 import BattleModeOverlay from './BattleModeOverlay';
+import FriendsListContent from './FriendsListContent';
 
 const MENU_ITEMS = [
   { id: 'library', label: 'Library', icon: Library, color: 'cyan' },
   { id: 'entertainment', label: 'Entertainment', icon: Tv, color: 'purple' },
+  { id: 'friends-list', label: 'Friends List', icon: Users, color: 'blue' },
+  { id: 'aura', label: 'Aura', icon: Radio, color: 'pink' },
   { id: 'ai-story', label: 'AI Story', icon: Brain, color: 'emerald' },
   { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'orange' },
 ];
@@ -136,10 +139,35 @@ const ContentPanel = ({ activeItem, onClose }) => {
           </div>
         );
 
+      case 'aura':
+        return (
+          <div className="space-y-4">
+            <h3 className="text-white/90 font-semibold text-sm uppercase tracking-wider mb-4">Aura Streaming</h3>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/10 border border-pink-500/30">
+              <Radio className="w-8 h-8 text-pink-400 mb-3" />
+              <h4 className="text-white font-bold mb-1">Live Now</h4>
+              <p className="text-white/60 text-xs mb-3">Top streams and content</p>
+              <Link to={createPageUrl('Aura')} className="block w-full py-2 rounded-lg bg-pink-500/30 hover:bg-pink-500/50 text-pink-300 text-sm font-medium transition-all text-center">
+                Open Aura
+              </Link>
+            </div>
+          </div>
+        );
+
+      case 'friends-list':
+        return (
+          <div className="h-[500px] w-[600px] -ml-4 -mt-4">
+            <FriendsListContent />
+          </div>
+        );
+
       default:
         return null;
     }
   };
+
+  // If friends list is active, we need a wider container
+  const isWideMode = activeItem === 'friends-list';
 
   return (
     <motion.div
@@ -147,9 +175,11 @@ const ContentPanel = ({ activeItem, onClose }) => {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -20, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="w-64 h-full max-h-[70vh] overflow-y-auto custom-scrollbar p-4"
+      className={`${isWideMode ? 'w-[600px]' : 'w-64'} h-full max-h-[70vh] overflow-hidden rounded-r-xl custom-scrollbar p-4 bg-slate-900/90 border-r border-white/10 backdrop-blur-xl`}
     >
-      {renderContent()}
+      <div className="h-full overflow-y-auto">
+        {renderContent()}
+      </div>
     </motion.div>
   );
 };
@@ -222,21 +252,124 @@ export default function SideAccessMenu() {
 
   return (
     <>
-    {/* AI Story Full Screen Overlay */}
-    <AnimatePresence>
-      {showAIStory && (
-        <AIStoryOverlay onClose={() => setShowAIStory(false)} />
+      {/* Trigger Button - Floating on Left Edge */}
+      {!isExpanded && !activeItem && (
+        <motion.div
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Hit area */}
+          <div 
+            className="w-4 h-64 absolute left-0" 
+            onClick={handleAnchorClick}
+          />
+          
+          {/* Visible Bar */}
+          <motion.div
+            onClick={handleAnchorClick}
+            animate={{ 
+              width: isHovered ? 48 : 6,
+              height: isHovered ? 280 : 160,
+              opacity: isHovered ? 1 : 0.6
+            }}
+            className="bg-white/10 backdrop-blur-md rounded-r-xl border-y border-r border-white/20 cursor-pointer flex flex-col items-center justify-center gap-4 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.3)]"
+          >
+            {isHovered && MENU_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.id} className={`${getItemColor(item, true)} p-2 rounded-lg hover:bg-white/10`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+              );
+            })}
+            {!isHovered && <div className="w-1 h-12 bg-white/50 rounded-full" />}
+          </motion.div>
+        </motion.div>
       )}
-    </AnimatePresence>
 
-    {/* AI Battle Full Screen Overlay */}
-    <AnimatePresence>
-      {showAIBattle && (
-        <BattleModeOverlay onClose={() => setShowAIBattle(false)} />
-      )}
-    </AnimatePresence>
+      {/* Expanded Menu - Slide out */}
+      <AnimatePresence>
+        {(isExpanded || activeItem) && (
+          <div ref={menuRef} className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex h-[600px]">
+            {/* Menu List */}
+            <motion.div
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="w-64 h-full bg-black/80 backdrop-blur-xl border-y border-r border-white/10 rounded-r-2xl flex flex-col overflow-hidden shadow-2xl"
+            >
+              <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <h3 className="text-white font-bold text-lg tracking-wide">Quick Access</h3>
+                <button 
+                  onClick={() => { setIsExpanded(false); setActiveItem(null); }}
+                  className="p-1 rounded-full hover:bg-white/10 text-white/50 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto py-2">
+                {MENU_ITEMS.map((item) => {
+                  const isActive = activeItem === item.id;
+                  const Icon = item.icon;
+                  
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleItemClick(item.id)}
+                      className={`w-full flex items-center justify-between px-6 py-4 transition-all border-l-2 ${
+                        isActive 
+                          ? `bg-white/10 ${getItemColor(item, true)} border-${item.color}-400`
+                          : 'border-transparent text-white/60 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Icon className={`w-5 h-5 ${isActive ? getItemColor(item, true) : ''}`} />
+                        <span className="font-medium">{item.label}</span>
+                      </div>
+                      {isActive && <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
 
+            {/* Content Panel (Slides out next to menu) */}
+            <AnimatePresence mode="wait">
+              {activeItem && (
+                <motion.div
+                  key="content-panel"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full ml-4"
+                >
+                  <div className="h-full rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+                    <ContentPanel activeItem={activeItem} onClose={() => setActiveItem(null)} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </AnimatePresence>
 
+      {/* AI Story Full Screen Overlay */}
+      <AnimatePresence>
+        {showAIStory && (
+          <AIStoryOverlay onClose={() => setShowAIStory(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* AI Battle Full Screen Overlay */}
+      <AnimatePresence>
+        {showAIBattle && (
+          <BattleModeOverlay onClose={() => setShowAIBattle(false)} />
+        )}
+      </AnimatePresence>
     </>
   );
 }
