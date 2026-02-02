@@ -72,6 +72,7 @@ export default function Aura() {
             </button>
 
             <button
+              onClick={() => navigate(createPageUrl('Aura'))}
               className="px-4 py-2 rounded-full text-sm font-medium transition-all border bg-white/10 border-white/10 text-white shadow-sm"
             >
               Aura
