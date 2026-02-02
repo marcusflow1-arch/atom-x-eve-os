@@ -265,26 +265,7 @@ export default function SideAccessMenu() {
             onClick={handleAnchorClick}
           />
           
-          {/* Visible Bar */}
-          <motion.div
-            onClick={handleAnchorClick}
-            animate={{ 
-              width: isHovered ? 48 : 6,
-              height: isHovered ? 280 : 160,
-              opacity: isHovered ? 1 : 0.6
-            }}
-            className="bg-white/10 backdrop-blur-md rounded-r-xl border-y border-r border-white/20 cursor-pointer flex flex-col items-center justify-center gap-4 overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.3)]"
-          >
-            {isHovered && MENU_ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.id} className={`${getItemColor(item, true)} p-2 rounded-lg hover:bg-white/10`}>
-                  <Icon className="w-5 h-5" />
-                </div>
-              );
-            })}
-            {!isHovered && <div className="w-1 h-12 bg-white/50 rounded-full" />}
-          </motion.div>
+          {/* Visible Bar Removed */}
         </motion.div>
       )}
 
