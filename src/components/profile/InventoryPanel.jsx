@@ -420,5 +420,6 @@ export default function InventoryPanel({ inventory = [], capacity, profile, onCl
                 onClose={() => setShowTradeModal(false)}
             />
         </div>
+        </div>
     );
 }
