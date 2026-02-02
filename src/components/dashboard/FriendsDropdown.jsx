@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, MessageSquare, UserPlus, Gamepad2, 
   Swords, Repeat, Play, Crown, Shield, 
-  MoreHorizontal, Check, X, Bell
+  MoreHorizontal, Check, X, Bell, Search,
+  Circle, Activity
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 
 // Mock Data
 const MOCK_FRIENDS = [
@@ -17,190 +16,119 @@ const MOCK_FRIENDS = [
   { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', level: 25, role: 'Support' },
 ];
 
-const PARTY_MEMBERS = [
-  MOCK_FRIENDS[1], // CyberVixen is in party
-];
+const PARTY_MEMBERS = [MOCK_FRIENDS[1]];
 
 export default function FriendsDropdown() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('online'); // 'online' | 'party' | 'requests'
+  const [activeTab, setActiveTab] = useState('online'); 
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const onlineFriends = MOCK_FRIENDS.filter(f => f.status !== 'offline');
-  const offlineFriends = MOCK_FRIENDS.filter(f => f.status === 'offline');
-
-  const FriendItem = ({ friend, isPartyMember }) => (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`group relative p-3 rounded-xl border transition-all cursor-pointer ${
-        selectedFriend?.id === friend.id 
-          ? 'bg-white/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
-          : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
-      }`}
-      onClick={() => setSelectedFriend(selectedFriend?.id === friend.id ? null : friend)}
-    >
-      <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="relative">
-          <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10">
-            <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-          </div>
-          <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-slate-900 ${
-            friend.status === 'online' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' :
-            friend.status === 'playing' ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]' :
-            friend.status === 'idle' ? 'bg-yellow-500' :
-            'bg-slate-500'
-          }`} />
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <h4 className="text-white font-bold text-xs truncate">{friend.name}</h4>
-            <span className="text-[10px] font-mono text-white/40">Lvl {friend.level}</span>
-          </div>
-          <p className="text-[10px] text-white/50 truncate flex items-center gap-1.5">
-            {friend.game ? (
-              <>
-                <Gamepad2 className="w-3 h-3 text-cyan-400" />
-                <span className="text-cyan-300">{friend.game}</span>
-              </>
-            ) : (
-              <span className="capitalize">{friend.status}</span>
-            )}
-          </p>
-        </div>
-
-        {/* Quick Action Button (Hover) */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/80">
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Expanded Actions */}
-      <AnimatePresence>
-        {selectedFriend?.id === friend.id && (
-          <motion.div
-            initial={{ height: 0, opacity: 0, marginTop: 0 }}
-            animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
-            exit={{ height: 0, opacity: 0, marginTop: 0 }}
-            className="overflow-hidden"
-          >
-            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-white/5">
-              <ActionButton icon={MessageSquare} label="Message" color="blue" onClick={() => console.log('Message', friend.name)} />
-              <ActionButton icon={UserPlus} label="Invite" color="green" onClick={() => console.log('Invite', friend.name)} />
-              <ActionButton icon={Swords} label="Duel" color="red" onClick={() => console.log('Duel', friend.name)} />
-              <ActionButton icon={Repeat} label="Trade" color="amber" onClick={() => console.log('Trade', friend.name)} />
-            </div>
-            
-            {friend.game && (
-              <button className="w-full mt-2 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold border border-cyan-500/30 flex items-center justify-center gap-2 transition-all">
-                <Play className="w-3 h-3 fill-current" />
-                Join {friend.game}
-              </button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+  const filteredFriends = MOCK_FRIENDS.filter(f => 
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const ActionButton = ({ icon: Icon, label, color, onClick }) => (
-    <button 
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg bg-white/5 hover:bg-${color}-500/20 border border-white/5 hover:border-${color}-500/30 transition-all group`}
-    >
-      <Icon className={`w-4 h-4 text-white/60 group-hover:text-${color}-400 transition-colors`} />
-      <span className="text-[9px] text-white/40 group-hover:text-white transition-colors">{label}</span>
-    </button>
-  );
+  const onlineFriends = filteredFriends.filter(f => f.status !== 'offline');
+  const offlineFriends = filteredFriends.filter(f => f.status === 'offline');
 
   return (
-    <div className="w-full bg-[#0a0e14]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-      {/* Header Tabs */}
-      <div className="flex items-center p-2 gap-1 border-b border-white/10 bg-black/20">
-        <TabButton 
-          id="online" 
-          label="Friends" 
-          count={onlineFriends.length} 
-          active={activeTab === 'online'} 
-          onClick={setActiveTab} 
-          icon={Users}
-        />
-        <TabButton 
-          id="party" 
-          label="Party" 
-          count={PARTY_MEMBERS.length} 
-          active={activeTab === 'party'} 
-          onClick={setActiveTab} 
-          icon={Crown}
-        />
-        <TabButton 
-          id="requests" 
-          label="Requests" 
-          count={3} 
-          active={activeTab === 'requests'} 
-          onClick={setActiveTab} 
-          icon={Bell}
-        />
+    <div 
+      className="w-full rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+      style={{
+        background: 'rgba(10, 12, 16, 0.6)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      }}
+    >
+      {/* Header & Tabs */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+        <div className="flex gap-6">
+          <TabItem id="online" label="Friends" active={activeTab === 'online'} onClick={setActiveTab} count={MOCK_FRIENDS.length} />
+          <TabItem id="party" label="Party" active={activeTab === 'party'} onClick={setActiveTab} count={PARTY_MEMBERS.length} />
+          <TabItem id="requests" label="Requests" active={activeTab === 'requests'} onClick={setActiveTab} count={3} alert />
+        </div>
         
-        <div className="ml-auto flex items-center gap-1">
-          <button className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-            <UserPlus className="w-4 h-4" />
+        <div className="flex items-center gap-3">
+          <div className="relative group">
+            <Search className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-white/60 transition-colors" />
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-40 bg-black/20 border border-white/5 rounded-full pl-9 pr-3 py-1.5 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:bg-black/40 focus:border-white/10 transition-all"
+            />
+          </div>
+          <button className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center transition-colors">
+            <UserPlus className="w-4 h-4 text-white/60" />
           </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="p-3 max-h-[400px] overflow-y-auto custom-scrollbar">
+      {/* Content */}
+      <div className="p-4 min-h-[300px] max-h-[500px] overflow-y-auto custom-scrollbar">
         {activeTab === 'online' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Online Section */}
-            <div>
-              <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2 px-1">Online ({onlineFriends.length})</h3>
-              <div className="space-y-2">
-                {onlineFriends.map(f => <FriendItem key={f.id} friend={f} />)}
-              </div>
-            </div>
+            <FriendGroup title="Online" count={onlineFriends.length}>
+              {onlineFriends.map(f => (
+                <FriendRow 
+                  key={f.id} 
+                  friend={f} 
+                  selected={selectedFriend?.id === f.id}
+                  onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)}
+                />
+              ))}
+            </FriendGroup>
 
             {/* Offline Section */}
-            <div>
-              <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2 px-1">Offline ({offlineFriends.length})</h3>
-              <div className="space-y-2 opacity-60">
-                {offlineFriends.map(f => <FriendItem key={f.id} friend={f} />)}
-              </div>
-            </div>
+            {offlineFriends.length > 0 && (
+              <FriendGroup title="Offline" count={offlineFriends.length} className="opacity-60">
+                {offlineFriends.map(f => (
+                  <FriendRow 
+                    key={f.id} 
+                    friend={f} 
+                    selected={selectedFriend?.id === f.id}
+                    onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)}
+                  />
+                ))}
+              </FriendGroup>
+            )}
           </div>
         )}
 
         {activeTab === 'party' && (
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-              <Crown className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-              <h3 className="text-white font-bold text-sm">Your Party</h3>
-              <p className="text-white/40 text-xs">2 / 4 Slots Filled</p>
-              
-              <div className="flex justify-center gap-2 mt-3">
-                <button className="px-4 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold transition-colors">
-                  Find Match
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/5 border border-purple-500/20 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                  <Crown className="w-6 h-6 text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">Squad Alpha</h3>
+                  <p className="text-purple-300/60 text-xs">2 / 4 Members • Open</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-purple-500/20">
+                  Ready Up
                 </button>
-                <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors">
-                  Settings
+                <button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 transition-colors">
+                  <SettingsIcon />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              {PARTY_MEMBERS.map(f => <FriendItem key={f.id} friend={f} isPartyMember />)}
+            <div className="grid grid-cols-1 gap-2">
+              {PARTY_MEMBERS.map(f => (
+                <FriendRow key={f.id} friend={f} selected={selectedFriend?.id === f.id} onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)} />
+              ))}
               {/* Empty Slots */}
               {[1, 2].map(i => (
-                <div key={i} className="p-3 rounded-xl border border-white/5 bg-white/[0.02] border-dashed flex items-center justify-center gap-2 text-white/20 hover:text-white/40 hover:bg-white/5 transition-all cursor-pointer">
-                  <PlusCircle className="w-4 h-4" />
-                  <span className="text-xs font-medium">Invite Player</span>
+                <div key={i} className="h-16 rounded-xl border border-white/5 bg-white/[0.02] border-dashed flex items-center justify-center gap-3 text-white/20 hover:text-white/40 hover:bg-white/5 hover:border-white/10 transition-all cursor-pointer group">
+                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-medium tracking-wide">Invite Player</span>
                 </div>
               ))}
             </div>
@@ -209,25 +137,25 @@ export default function FriendsDropdown() {
 
         {activeTab === 'requests' && (
           <div className="space-y-2">
-             {[1, 2, 3].map(i => (
-               <div key={i} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between">
-                 <div className="flex items-center gap-3">
-                   <div className="w-8 h-8 rounded-full bg-slate-700" />
-                   <div>
-                     <p className="text-white text-xs font-bold">NewPlayer_{i}</p>
-                     <p className="text-white/40 text-[10px]">Wants to be friends</p>
-                   </div>
-                 </div>
-                 <div className="flex gap-2">
-                   <button className="p-1.5 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-white transition-colors">
-                     <Check className="w-4 h-4" />
-                   </button>
-                   <button className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors">
-                     <X className="w-4 h-4" />
-                   </button>
-                 </div>
-               </div>
-             ))}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between hover:bg-white/10 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10" />
+                  <div>
+                    <p className="text-white text-sm font-bold">NewPlayer_{i}</p>
+                    <p className="text-white/40 text-xs">Sent 2h ago</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 rounded-lg bg-white/5 hover:bg-green-500/20 text-white/40 hover:text-green-400 transition-colors">
+                    <Check className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -235,46 +163,143 @@ export default function FriendsDropdown() {
   );
 }
 
-const TabButton = ({ id, label, count, active, onClick, icon: Icon }) => (
-  <button
+// Sub-components
+
+const TabItem = ({ id, label, active, onClick, count, alert }) => (
+  <button 
     onClick={() => onClick(id)}
-    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all relative ${
-      active 
-        ? 'bg-white/10 text-white shadow-sm' 
-        : 'text-white/40 hover:text-white hover:bg-white/5'
-    }`}
+    className={`relative py-2 text-sm font-medium transition-colors ${active ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
   >
-    <Icon className={`w-3.5 h-3.5 ${active ? 'text-blue-400' : ''}`} />
     {label}
     {count > 0 && (
-      <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] ${
-        active ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/60'
-      }`}>
+      <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}>
         {count}
       </span>
     )}
+    {alert && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]" />}
     {active && (
       <motion.div 
-        layoutId="activeTabIndicator"
-        className="absolute bottom-0 left-2 right-2 h-0.5 bg-blue-400 rounded-full" 
+        layoutId="tab-line" 
+        className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_-2px_10px_rgba(34,211,238,0.5)]" 
       />
     )}
   </button>
 );
 
-const PlusCircle = ({ className }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
+const FriendGroup = ({ title, count, children, className = "" }) => (
+  <div className={className}>
+    <div className="flex items-center gap-3 mb-3 px-2">
+      <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest">{title}</h4>
+      <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+      <span className="text-[10px] text-white/20 font-mono">{count}</span>
+    </div>
+    <div className="space-y-1">
+      {children}
+    </div>
+  </div>
+);
+
+const FriendRow = ({ friend, selected, onSelect }) => (
+  <div className="relative">
+    <div 
+      onClick={onSelect}
+      className={`group flex items-center gap-4 p-3 rounded-xl border transition-all cursor-pointer ${
+        selected 
+          ? 'bg-white/10 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]' 
+          : 'bg-transparent border-transparent hover:bg-white/5'
+      }`}
+    >
+      {/* Avatar */}
+      <div className="relative flex-shrink-0">
+        <div className={`w-10 h-10 rounded-lg overflow-hidden ring-2 transition-all ${
+          selected ? 'ring-cyan-400/50' : 'ring-transparent group-hover:ring-white/10'
+        }`}>
+          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+        </div>
+        
+        {/* Status Dot */}
+        <div className="absolute -bottom-1 -right-1 p-0.5 bg-[#0a0c10] rounded-full">
+          <div className={`w-2.5 h-2.5 rounded-full border border-black/50 ${
+            friend.status === 'online' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' :
+            friend.status === 'playing' ? 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]' :
+            friend.status === 'idle' ? 'bg-amber-400' : 'bg-slate-600'
+          }`} />
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between">
+          <h4 className={`text-sm font-semibold truncate transition-colors ${selected ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+            {friend.name}
+          </h4>
+          <span className="text-[10px] font-mono text-white/20">Lv.{friend.level}</span>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-0.5">
+          {friend.game ? (
+            <>
+              <Gamepad2 className="w-3 h-3 text-cyan-400" />
+              <span className="text-xs text-cyan-100/60 truncate group-hover:text-cyan-100 transition-colors">
+                {friend.game}
+              </span>
+            </>
+          ) : (
+            <span className="text-xs text-white/30 capitalize">{friend.status}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Hover Action */}
+      <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ${selected ? 'opacity-100' : ''}`}>
+        <MoreHorizontal className="w-4 h-4 text-white/40" />
+      </div>
+    </div>
+
+    {/* Expanded Controls */}
+    <AnimatePresence>
+      {selected && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="overflow-hidden bg-black/20 rounded-b-xl mx-2 -mt-2 border-x border-b border-white/5"
+        >
+          <div className="p-3 pt-4 grid grid-cols-4 gap-2">
+            <QuickAction icon={MessageSquare} label="Chat" onClick={() => {}} />
+            <QuickAction icon={UserPlus} label="Invite" onClick={() => {}} />
+            <QuickAction icon={Swords} label="Duel" onClick={() => {}} />
+            <QuickAction icon={Repeat} label="Trade" onClick={() => {}} />
+          </div>
+          
+          {friend.game && (
+            <div className="px-3 pb-3">
+              <button className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/30 text-white/60 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all group">
+                <Play className="w-3 h-3 fill-current" />
+                Join Session
+              </button>
+            </div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+);
+
+const QuickAction = ({ icon: Icon, label, onClick }) => (
+  <button 
+    onClick={(e) => { e.stopPropagation(); onClick(); }}
+    className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-white/10 transition-colors group"
   >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 8v8" />
-    <path d="M8 12h8" />
+    <Icon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
+    <span className="text-[9px] font-medium text-white/30 group-hover:text-white/80 transition-colors">{label}</span>
+  </button>
+);
+
+const SettingsIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
