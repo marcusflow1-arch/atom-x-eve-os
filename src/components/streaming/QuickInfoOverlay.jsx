@@ -191,11 +191,6 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                  </button>
                </div>
                
-               {/* We render FriendsListContent but modified to show THIS specific friend as if selected,
-                   or just build a custom profile view reusing components.
-                   Since FriendsListContent has a list on the left, it might be redundant.
-                   Let's render a focused profile view for this friend. 
-               */}
                <div className="h-full flex flex-col">
                   {/* Hero / Header */}
                   <div className="h-64 relative flex-shrink-0">
