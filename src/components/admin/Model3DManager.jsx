@@ -113,6 +113,7 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
 
 export default function Model3DManager() {
   const queryClient = useQueryClient();
+  const folderInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -352,19 +353,25 @@ export default function Model3DManager() {
           </label>
 
           <div className="mt-3">
-            <label className="relative cursor-pointer">
-              <input
-                type="file"
-                onChange={handleFolderUpload}
-                className="hidden"
-                webkitdirectory=""
-                multiple
-                disabled={uploading}
-              />
-              <Button disabled={uploading} variant="outline" className="w-full md:w-auto">
-                <Upload className="w-4 h-4 mr-2" /> Upload Model Folder (GLTF/FBX + textures)
-              </Button>
-            </label>
+            <input
+              type="file"
+              ref={folderInputRef}
+              onChange={handleFolderUpload}
+              className="hidden"
+              webkitdirectory=""
+              directory=""
+              multiple
+              disabled={uploading}
+            />
+            <Button 
+              type="button"
+              disabled={uploading} 
+              variant="outline" 
+              className="w-full md:w-auto"
+              onClick={() => folderInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" /> Upload Model Folder (FBX/GLTF + textures)
+            </Button>
             <p className="text-xs text-slate-400 mt-2">Select a folder containing the model file and its textures. We'll upload everything and link resources automatically.</p>
           </div>
           </div>
