@@ -411,6 +411,7 @@ const clockRef = useRef(new THREE.Clock());
                       delete child.userData.defaultAvatar;
                       delete child.userData.behaviorGraph;
                       delete child.userData.aiController;
+                      delete child.userData.playerController;
                     });
                     
                     model.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
@@ -594,6 +595,7 @@ const clockRef = useRef(new THREE.Clock());
         delete child.userData.defaultAvatar;
         delete child.userData.behaviorGraph;
         delete child.userData.aiController;
+        delete child.userData.playerController;
       });
     }
 
