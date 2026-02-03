@@ -355,13 +355,9 @@ export default function SkillTreeSystem({ genre }) {
   };
 
   return (
-    <div className="w-full h-[700px] bg-slate-950 relative overflow-hidden rounded-xl border border-slate-800 shadow-2xl flex flex-col md:flex-row font-sans selection:bg-cyan-500/30">
+    <div className="w-full relative flex flex-col md:flex-row font-sans selection:bg-cyan-500/30">
       
-      {/* Background Texture & Grid */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme.bg} opacity-40 pointer-events-none`} />
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} 
-      />
+
 
       {/* --- TOP LEFT: HUD --- */}
       <div className="absolute top-6 left-6 z-40 flex flex-col gap-4 pointer-events-none">
@@ -398,7 +394,7 @@ export default function SkillTreeSystem({ genre }) {
       </div>
 
       {/* --- MAIN INTERACTIVE AREA --- */}
-      <div className="relative flex-1 h-full overflow-hidden cursor-grab active:cursor-grabbing">
+      <div className={cn("relative flex-1 w-full h-[clamp(420px,60vh,720px)] overflow-hidden cursor-grab active:cursor-grabbing", selectedNode ? "md:pr-96" : "")}>
         <ConnectionLines nodes={nodes} unlockedNodes={unlockedNodes} theme={theme} />
         
         {nodes.map(node => (
@@ -421,7 +417,7 @@ export default function SkillTreeSystem({ genre }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="absolute top-0 right-0 h-full w-full md:w-96 bg-slate-900/95 backdrop-blur-xl border-l border-white/10 z-50 p-8 flex flex-col shadow-2xl"
+            className="absolute top-0 right-0 h-full w-full md:w-96 bg-slate-900/90 backdrop-blur-xl border-l border-white/10 z-50 p-8 flex flex-col shadow-2xl"
           >
             {/* Header / Icon */}
             <div className="flex items-start justify-between mb-8">
