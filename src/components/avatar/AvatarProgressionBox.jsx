@@ -106,6 +106,10 @@ export default function AvatarProgressionBox() {
     await saveRecord(next);
   };
 
+  const handleBoxClick = (slotId) => {
+    window.dispatchEvent(new CustomEvent('openInventoryPanel', { detail: { slotId } }));
+  };
+
   const renderSlot = (slotId, shape = "rounded-xl") => {
     const equippedItem = equippedItems[slotId];
     return (
