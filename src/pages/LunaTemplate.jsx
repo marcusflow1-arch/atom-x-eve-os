@@ -111,6 +111,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
+  const npcInstancesRef = useRef({});
+  const instanceScriptsMapRef = useRef({});
 
   // Handle Window Resize for Full Page Coverage
   useEffect(() => {
@@ -502,6 +504,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     // Load Additional Scene Objects
     if (activeScene && activeScene.objects) {
+        // Reset per-instance script state for fresh load
+        npcInstancesRef.current = {};
         activeScene.objects.forEach(obj => {
             if (obj.type === 'spawn_point') {
                 // Set Avatar Spawn Position & Scale
@@ -521,15 +525,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     if (t.position) model.position.set(t.position.x, t.position.y, t.position.z);
                     if (t.rotation) model.rotation.set(t.rotation.x, t.rotation.y, t.rotation.z);
                     if (t.scale) model.scale.set(t.scale.x, t.scale.y, t.scale.z);
-                    
-                    // Add to world so it participates in collision if needed, or just scene
-                    // Ideally add to worldContainerRef so it moves with the world if world moves? 
-                    // But worldContainerRef is cleared when env changes. 
-                    // Let's add to scene but keep track to clear later if needed.
-                    // For simplicity, add to worldContainerRef if it exists
+
+                    // Attach to world (collision eligible) or scene
                     if (worldContainerRef.current) {
                         worldContainerRef.current.add(model);
-                        // Add to collision meshes?
                         model.traverse(child => {
                             if (child.isMesh) {
                                 child.matrixAutoUpdate = false;
@@ -539,6 +538,50 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                         });
                     } else {
                         scene.add(model);
+                    }
+
+                    // Register as instance and wire scripts
+                    const instanceId = obj.id;
+                    const instanceEntry = { object3d: model, updates: [], mixer: null };
+
+                    // Create a mixer if animations exist on the loaded asset
+                    if (asset.animations && asset.animations.length > 0) {
+                        try {
+                            instanceEntry.mixer = new THREE.AnimationMixer(model);
+                            const action = instanceEntry.mixer.clipAction(asset.animations[0]);
+                            action.play();
+                        } catch {}
+                    }
+
+                    npcInstancesRef.current[instanceId] = instanceEntry;
+
+                    const registerUpdate = (fn) => {
+                        if (typeof fn === 'function') {
+                            npcInstancesRef.current[instanceId].updates.push(fn);
+                        }
+                    };
+
+                    if (Array.isArray(obj.scripts) && obj.scripts.length > 0) {
+                        obj.scripts.forEach((binding) => {
+                            const script = instanceScriptsMapRef.current[binding.script_id];
+                            if (script && script.script_code) {
+                                try {
+                                    const fn = new Function(
+                                        'THREE','scene','camera','instance','registerUpdate','params','mixer',
+                                        script.script_code
+                                    );
+                                    fn(
+                                        THREE,
+                                        scene,
+                                        camera,
+                                        model,
+                                        registerUpdate,
+                                        binding.params || {},
+                                        npcInstancesRef.current[instanceId].mixer
+                                    );
+                                } catch (e) { console.error('Error running instance script', e); }
+                            }
+                        });
                     }
                 });
             }
@@ -920,6 +963,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Animation Heartbeat (Anti-T-Pose)
       const activeMixer = mixerRef.current || mixer;
       if (activeMixer) activeMixer.update(delta);
+      // Per-instance mixers and script updates
+      try {
+        Object.values(npcInstancesRef.current || {}).forEach((inst) => {
+          try {
+            if (inst.mixer) inst.mixer.update(delta);
+          } catch {}
+          if (Array.isArray(inst.updates)) {
+            inst.updates.forEach((fn) => { try { fn(delta); } catch {} });
+          }
+        });
+      } catch {}
 
       updateWeaponVisual();
 
@@ -1639,6 +1693,24 @@ export default function LunaTemplate() {
     // Default Y-Bot
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
   }, []);
+
+  // Load scripts bound to scene instances
+  useEffect(() => {
+    const loadScripts = async () => {
+      if (!activeScene?.objects) { instanceScriptsMapRef.current = {}; return; }
+      const ids = Array.from(new Set(activeScene.objects.flatMap(o => (o.scripts || []).map(s => s.script_id))));
+      if (ids.length === 0) { instanceScriptsMapRef.current = {}; return; }
+      try {
+        const all = await base44.entities.Model3DScript.list();
+        const map = {};
+        all.forEach(s => { if (ids.includes(s.id)) map[s.id] = s; });
+        instanceScriptsMapRef.current = map;
+      } catch (e) {
+        console.error('Failed to load instance scripts:', e);
+      }
+    };
+    loadScripts();
+  }, [activeScene]);
 
   useEffect(() => {
     return () => {
