@@ -114,6 +114,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
 
+  // Load scripts bound to scene instances (build map once per activeScene)
+  useEffect(() => {
+    const loadScripts = async () => {
+      if (!activeScene?.objects) { instanceScriptsMapRef.current = {}; return; }
+      const ids = Array.from(new Set(activeScene.objects.flatMap(o => (o.scripts || []).map(s => s.script_id))));
+      if (ids.length === 0) { instanceScriptsMapRef.current = {}; return; }
+      try {
+        const all = await base44.entities.Model3DScript.list();
+        const map = {};
+        all.forEach(s => { if (ids.includes(s.id)) map[s.id] = s; });
+        instanceScriptsMapRef.current = map;
+      } catch (e) {
+        console.error('Failed to load instance scripts:', e);
+      }
+    };
+    loadScripts();
+  }, [activeScene]);
+
   // Handle Window Resize for Full Page Coverage
   useEffect(() => {
     const handleResize = () => {
@@ -1694,23 +1712,7 @@ export default function LunaTemplate() {
     if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
   }, []);
 
-  // Load scripts bound to scene instances
-  useEffect(() => {
-    const loadScripts = async () => {
-      if (!activeScene?.objects) { instanceScriptsMapRef.current = {}; return; }
-      const ids = Array.from(new Set(activeScene.objects.flatMap(o => (o.scripts || []).map(s => s.script_id))));
-      if (ids.length === 0) { instanceScriptsMapRef.current = {}; return; }
-      try {
-        const all = await base44.entities.Model3DScript.list();
-        const map = {};
-        all.forEach(s => { if (ids.includes(s.id)) map[s.id] = s; });
-        instanceScriptsMapRef.current = map;
-      } catch (e) {
-        console.error('Failed to load instance scripts:', e);
-      }
-    };
-    loadScripts();
-  }, [activeScene]);
+
 
   useEffect(() => {
     return () => {
