@@ -1117,7 +1117,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             // Ground check
             const groundRayOrigin = actorContainerRef.current.position.clone();
             groundRayOrigin.y += 5.0; // Cast from above
-            const groundRay = new THREE.Raycaster(groundRayOrigin, down);
+            const groundRay = new THREE.Raycaster(groundRayOrigin, downVector);
             const groundHits = groundRay.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
 
             if (groundHits.length > 0) {
