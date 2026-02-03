@@ -129,6 +129,7 @@ export default function AnimationFBXManager() {
             <option value="other">Other</option>
           </select>
         </div>
+        <p className="text-xs text-slate-400 mb-2">Type is for organization only—scripts control playback; selecting Idle here will not auto-play this animation.</p>
         <Textarea
           placeholder="Animation description..."
           value={newAnimation.description}
@@ -212,7 +213,7 @@ export default function AnimationFBXManager() {
                   
                   {/* Type Badge */}
                   <div className="absolute top-2 left-2">
-                    <Badge className={animationTypeColors[anim.animation_type]}>
+                    <Badge className={animationTypeColors[anim.animation_type]} title="Label only — does not affect playback">
                       {anim.animation_type}
                     </Badge>
                   </div>
