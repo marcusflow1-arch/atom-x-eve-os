@@ -728,6 +728,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           else if (name.includes('walk')) actionsRef.current.walk = action;
           else if (name.includes('run')) actionsRef.current.run = action;
           else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('roll') || name.includes('dodge')) actionsRef.current.roll = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
           else if (name.includes('kick')) actionsRef.current.kick = action;
           else if (name.includes('dance')) actionsRef.current.dance = action;
@@ -868,6 +869,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       if (key === ' ') {
         e.preventDefault();
+        setBaseAction('jump', true);
+      } else if (key === 'c') {
+        setBaseAction('roll', true);
+      } else if (key === '1') {
+        // Showcase animation slot 1
+        setBaseAction('dance', true);
       }
     };
 
