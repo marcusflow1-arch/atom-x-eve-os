@@ -219,16 +219,45 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
 
-  // Mock media content
-  const videos = [
-    { title: 'Gameplay Trailer', image: game?.cover_image },
-    { title: 'Feature Showcase', image: game?.cover_image },
+  // Helper to extract YouTube ID
+  const getYouTubeId = (url) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
+  // Process Real Media
+  const realVideos = (game?.video_urls?.length > 0 ? game.video_urls : (game?.trailer_url ? [game.trailer_url] : []))
+    .filter(url => url && typeof url === 'string')
+    .map((url, i) => {
+        const id = getYouTubeId(url);
+        return {
+            type: 'video',
+            title: i === 0 ? 'Gameplay Trailer' : `Video Showcase ${i + 1}`,
+            url: url,
+            image: id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : game?.cover_image,
+            embedUrl: id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : null
+        };
+    });
+
+  // Ensure at least placeholders if no real videos
+  const videos = realVideos.length > 0 ? realVideos : [
+    { title: 'Gameplay Trailer', image: game?.cover_image, type: 'image' } // Fallback to image if no video
   ];
 
-  const screenshots = [
-    { title: 'Screenshot 1', image: game?.cover_image },
-    { title: 'Screenshot 2', image: game?.cover_image },
-    { title: 'Screenshot 3', image: game?.cover_image },
+  const realScreenshots = (game?.screenshots?.length > 0 ? game.screenshots : [])
+    .map((url, i) => ({
+        type: 'image',
+        title: `Screenshot ${i + 1}`,
+        image: url
+    }));
+
+  // Ensure at least 3 images as requested, using cover as fallback if needed
+  const screenshots = realScreenshots.length > 0 ? realScreenshots : [
+    { title: 'Screenshot 1', image: game?.cover_image, type: 'image' },
+    { title: 'Screenshot 2', image: game?.cover_image, type: 'image' },
+    { title: 'Screenshot 3', image: game?.cover_image, type: 'image' },
   ];
 
   const achievements = [
@@ -549,13 +578,24 @@ export default function GameDetailPanel({ gameId, onClose }) {
             onMouseMove={handleMouseMove}
           >
             {/* Video/Media Background */}
-            <div className="absolute inset-0 bg-black">
-              <img 
-                src={currentContent[currentMediaIndex]?.image || currentContent[currentMediaIndex]?.icon || game.cover_image}
-                alt={currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
+              {currentContent[currentMediaIndex]?.type === 'video' && currentContent[currentMediaIndex]?.embedUrl ? (
+                  <iframe 
+                      src={currentContent[currentMediaIndex].embedUrl} 
+                      title={currentContent[currentMediaIndex].title}
+                      className="w-[80%] h-[80%] shadow-2xl border border-white/10 rounded-xl z-20"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                  />
+              ) : (
+                  <img 
+                    src={currentContent[currentMediaIndex]?.image || currentContent[currentMediaIndex]?.icon || game.cover_image}
+                    alt={currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
+                    className="w-full h-full object-contain"
+                  />
+              )}
+              <div className="absolute inset-0 bg-black/20 -z-10" />
             </div>
 
             {/* Navigation Arrows */}
@@ -718,28 +758,41 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <div className="flex-[2] min-w-0 flex flex-col gap-4">
 
                   {/* Media Preview Box */}
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                    <img 
-                      src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
-                      alt={selectedMediaItem?.title || game.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                    
-                    {/* Media Title Overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
-                          {selectedMediaItem?.title || game.title}
-                        </h4>
-                    </div>
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview">
+                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                            src={selectedMediaItem.embedUrl} 
+                            title={selectedMediaItem.title}
+                            className="w-full h-full"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <>
+                            <img 
+                              src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
+                              alt={selectedMediaItem?.title || game.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                            
+                            {/* Media Title Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+                                <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
+                                  {selectedMediaItem?.title || game.title}
+                                </h4>
+                            </div>
 
-                    {/* Fullscreen Button */}
-                    <button
-                      onClick={handleFullscreen}
-                      className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group"
-                    >
-                      <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
-                    </button>
+                            {/* Fullscreen Button */}
+                            <button
+                              onClick={handleFullscreen}
+                              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group opacity-0 group-hover/preview:opacity-100"
+                            >
+                              <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
+                            </button>
+                        </>
+                    )}
                   </div>
 
                   {/* Thumbnails Strip */}
