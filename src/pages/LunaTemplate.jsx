@@ -1769,7 +1769,7 @@ export default function LunaTemplate() {
       const slotId = e?.detail?.slotId;
       if (slotId) {
         setClickedSlot(slotId);
-        
+        setShowStats(false); // Close stats panel to prevent duplicate UI background
       }
     };
     window.addEventListener('openInventoryPanel', handler);

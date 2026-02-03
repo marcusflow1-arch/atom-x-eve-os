@@ -111,8 +111,8 @@ export default function AvatarProgressionBox() {
     return (
       <div 
         key={slotId} 
-        // onClick handler removed per user request to disable overlay
-        className={`w-[50px] h-[50px] ${shape} border flex items-center justify-center overflow-hidden relative group transition-all duration-700`} 
+        onClick={() => handleBoxClick(slotId)}
+        className={`w-[50px] h-[50px] ${shape} border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700`} 
         style={{ 
           background: 'rgba(11, 11, 11, 0.85)', 
           backdropFilter: 'blur(35px)', 
