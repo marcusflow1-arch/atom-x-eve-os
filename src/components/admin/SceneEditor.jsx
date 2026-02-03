@@ -294,8 +294,11 @@ const yBotControllersRef = useRef({});
     const map = buildClipMap(clips);
     if (map[n]) return map[n];
     const aliases = {
-      'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybotbreathidle'],
-      'attack1': ['attack01','attack','attack_1']
+      'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybotbreathidle','ybot@breathingidle'],
+      'ybotroll': ['roll'],
+      'ybotfall': ['fall','falling'],
+      'ybotjump': ['jump'],
+      'attack1': ['attack01','attack','attack_1','attack1']
     };
     for (const key in aliases) {
       if (aliases[key].includes(n) && map[key]) return map[key];
@@ -339,11 +342,15 @@ const yBotControllersRef = useRef({});
     };
     return { setBaseAction, playOneShot };
   };
+  const nameMatchesController = (name = '') => {
+    const s = name.toLowerCase();
+    return (s.includes('y-bot') || s.includes('ybot')) && s.includes('controller');
+  };
   const hasYBotController = (objConf) => {
     try {
       const bound = objConf.scripts || [];
       const namesById = new Map((scripts || []).map(s => [s.id, (s.name || '')]));
-      return bound.some(b => (namesById.get(b.script_id) || '').toLowerCase().includes('y-bot controller'));
+      return bound.some(b => nameMatchesController(namesById.get(b.script_id) || ''));
     } catch {
       return false;
     }
@@ -491,7 +498,15 @@ const yBotControllersRef = useRef({});
             obj3d.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
             obj3d.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
             // Re-apply scripts (e.g., when scripts changed on this object)
-            if (mixersRef.current[objConf.id]) runObjectScripts(objConf);
+            if (mixersRef.current[objConf.id]) {
+      runObjectScripts(objConf);
+      if (hasYBotController(objConf) && !yBotControllersRef.current[objConf.id]) {
+        const { mixer, clips } = mixersRef.current[objConf.id];
+        const animator = createAnimator(mixer, clips);
+        yBotControllersRef.current[objConf.id] = animator;
+        animator.setBaseAction('Y Bot@Breathing Idle');
+      }
+    }
         }
     });
 
