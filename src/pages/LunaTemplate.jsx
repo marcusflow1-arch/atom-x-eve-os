@@ -1759,7 +1759,7 @@ export default function LunaTemplate() {
   const handleEquipItem = (item) => {
     if (clickedSlot && item) {
       equipItem(clickedSlot, item);
-      setShowInventory(false);
+      // Do NOT close inventory on equip - keeps UI stable
     }
   };
 
