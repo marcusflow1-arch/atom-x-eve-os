@@ -114,12 +114,28 @@ export default function SceneEditor() {
     const normalizedObjects = originalObjects.map(o => {
       const nameLower = ((o.name || o.instance_name || '') + '').toLowerCase();
       const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
-      if (!autoScaleHumanoids || !isYBot) return o;
-      const s = (o.transform && o.transform.scale) ? o.transform.scale : { x: 1, y: 1, z: 1 };
-      const tooBig = (s.x || 1) > 0.02 || (s.y || 1) > 0.02 || (s.z || 1) > 0.02;
-      if (!tooBig) return o;
-      normalizedChanged = true;
-      return { ...o, transform: { ...(o.transform || {}), scale: { x: 0.01, y: 0.01, z: 0.01 } } };
+      const looksLikePeople = nameLower.includes('people');
+
+      // Start from original and enforce ZERO LOGIC for YBot or "people"-named NPCs
+      let updated = { ...o };
+      if (isYBot || looksLikePeople) {
+        if ((updated.scripts && updated.scripts.length) || updated.role === 'autonomous' || updated.role === 'npc') {
+          normalizedChanged = true;
+        }
+        updated.scripts = [];
+      }
+
+      // Normalize scale for humanoids if needed
+      if (autoScaleHumanoids && isYBot) {
+        const s = (updated.transform && updated.transform.scale) ? updated.transform.scale : { x: 1, y: 1, z: 1 };
+        const tooBig = (s.x || 1) > 0.02 || (s.y || 1) > 0.02 || (s.z || 1) > 0.02;
+        if (tooBig) {
+          normalizedChanged = true;
+          updated = { ...updated, transform: { ...(updated.transform || {}), scale: { x: 0.01, y: 0.01, z: 0.01 } } };
+        }
+      }
+
+      return updated;
     });
 
     // Ensure deep copy and defaults
@@ -387,6 +403,15 @@ const clockRef = useRef(new THREE.Clock());
                 loader.load(objConf.model_url, (asset) => {
                     const model = asset.scene || asset;
                     model.userData.id = objConf.id;
+                    // Detach any legacy/default controllers or behavior graphs on all child nodes
+                    model.traverse((child) => {
+                      if (!child.userData) child.userData = {};
+                      delete child.userData.controller;
+                      delete child.userData.people;
+                      delete child.userData.defaultAvatar;
+                      delete child.userData.behaviorGraph;
+                      delete child.userData.aiController;
+                    });
                     
                     model.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
                     model.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
@@ -544,6 +569,34 @@ const clockRef = useRef(new THREE.Clock());
     setIsDirty(true);
   };
 
+  // Reset a specific object to ZERO STATE (no scripts, no legacy controllers, animations stopped)
+  const resetZeroState = (objectId) => {
+    // Detach scripts in state
+    setSceneConfig(prev => ({
+      ...prev,
+      objects: prev.objects.map(o => o.id === objectId ? { ...o, scripts: [] } : o)
+    }));
+
+    // Stop any running animations and clear legacy userData markers
+    const entry = mixersRef.current[objectId];
+    if (entry?.mixer) {
+      entry.mixer.stopAllAction();
+    }
+    const obj3d = sceneObjectsMap.current[objectId];
+    if (obj3d) {
+      obj3d.traverse((child) => {
+        if (!child.userData) child.userData = {};
+        delete child.userData.controller;
+        delete child.userData.people;
+        delete child.userData.defaultAvatar;
+        delete child.userData.behaviorGraph;
+        delete child.userData.aiController;
+      });
+    }
+
+    setIsDirty(true);
+  };
+
   const handleSetEnvironment = (model) => {
     setSceneConfig(prev => ({
         ...prev,
@@ -563,12 +616,20 @@ const clockRef = useRef(new THREE.Clock());
     const currentLayout = layouts.find(l => l.id === selectedLayoutId);
     const isActive = currentLayout ? currentLayout.is_active : false;
 
+    // Ensure YBot/"people" instances are saved in ZERO STATE (no scripts)
+    const cleanedObjects = sceneConfig.objects.map(o => {
+      const nameLower = ((o.name || o.instance_name || '') + '').toLowerCase();
+      const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
+      const looksLikePeople = nameLower.includes('people');
+      return (isYBot || looksLikePeople) ? { ...o, scripts: [] } : o;
+    });
+
     const data = {
         name: sceneName,
         environment_model_id: sceneConfig.environment.model_id,
         environment_url: sceneConfig.environment.url,
         environment_transform: sceneConfig.environment.transform,
-        objects: sceneConfig.objects,
+        objects: cleanedObjects,
         is_active: isActive
     };
 
@@ -722,6 +783,7 @@ const clockRef = useRef(new THREE.Clock());
                   onChangeRole={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) })); setIsDirty(true); }}
                   onAddScript={(scriptId) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) })); setIsDirty(true); }}
                   onRemoveScript={(idx) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) })); setIsDirty(true); }}
+                  onResetZeroState={() => resetZeroState(selectedObjectId)}
                   onClose={() => setSelectedObjectId('environment')}
                 />
               </div>

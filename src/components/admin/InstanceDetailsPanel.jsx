@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Plus, X } from 'lucide-react';
 
-export default function InstanceDetailsPanel({ obj, scriptsCatalog = [], onChangeName, onChangeRole, onAddScript, onRemoveScript, onClose }) {
+export default function InstanceDetailsPanel({ obj, scriptsCatalog = [], onChangeName, onChangeRole, onAddScript, onRemoveScript, onClose, onResetZeroState }) {
   if (!obj) return null;
 
   return (
@@ -75,8 +75,14 @@ export default function InstanceDetailsPanel({ obj, scriptsCatalog = [], onChang
                 </div>
               );
             })}
-          </div>
-        </div>
+            </div>
+            <div className="pt-3">
+            <Button variant="destructive" className="w-full" onClick={() => onResetZeroState?.()}>
+              Reset to Zero State
+            </Button>
+            <p className="text-xs text-slate-500 mt-1">Removes all scripts and legacy controllers; animations won’t auto-play.</p>
+            </div>
+            </div>
       </div>
     </div>
   );
