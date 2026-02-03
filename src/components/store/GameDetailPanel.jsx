@@ -132,17 +132,58 @@ export default function GameDetailPanel({ game, onPurchase }) {
   // Get AI Achievements for this game
   const aiAchievements = getAIAchievements(game?.id);
 
+  // Construct media list from game properties
+  const mediaList = React.useMemo(() => {
+    if (!game) return [];
+    
+    const list = [];
+    
+    // Add Videos (YouTube)
+    if (game.video_urls && Array.isArray(game.video_urls)) {
+        game.video_urls.forEach(url => {
+            // Extract video ID for thumbnail if possible, or use a generic video placeholder
+            let videoId = null;
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+                videoId = match ? match[1] : null;
+            }
+            
+            list.push({
+                type: 'video',
+                url: url,
+                thumbnail: videoId ? `https://img.youtube.com/vi/${videoId}/0.jpg` : game.cover_image,
+                videoId: videoId
+            });
+        });
+    } else if (game.trailer_url) {
+         // Legacy fallback
+         list.push({ type: 'video', url: game.trailer_url, thumbnail: game.cover_image });
+    }
+
+    // Add Screenshots
+    if (game.screenshots && Array.isArray(game.screenshots)) {
+        game.screenshots.forEach(url => {
+            list.push({ type: 'image', url: url });
+        });
+    }
+    
+    // Fallback if empty
+    if (list.length === 0) {
+        list.push({ 
+            type: 'image', 
+            url: game.cover_image || game.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=600&fit=crop' 
+        });
+    }
+    
+    return list;
+  }, [game]);
+
   // Initialize media
   useEffect(() => {
-    if (game?.media && game.media.length > 0) {
-      setActiveMedia(game.media[0]);
-    } else {
-      setActiveMedia({
-        type: 'image',
-        url: game?.cover_image || game?.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=600&fit=crop'
-      });
+    if (mediaList.length > 0) {
+      setActiveMedia(mediaList[0]);
     }
-  }, [game]);
+  }, [mediaList]);
 
   // Fetch posts if community tab active
   useEffect(() => {
@@ -160,8 +201,6 @@ export default function GameDetailPanel({ game, onPurchase }) {
   }, [activeTab, game?.title]);
 
   if (!game) return <div className="p-8 text-center text-white/40">Select a game to view details.</div>;
-
-  const gameMedia = game.media && game.media.length > 0 ? game.media : [activeMedia];
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Info },
@@ -204,39 +243,56 @@ export default function GameDetailPanel({ game, onPurchase }) {
             <div className="w-full lg:w-[60%] flex flex-col gap-4">
               <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10 relative group">
                 {activeMedia?.type === 'video' ? (
-                  <video src={activeMedia.url} autoPlay muted loop className="w-full h-full object-cover" />
+                  activeMedia.url.includes('youtube') || activeMedia.url.includes('youtu.be') ? (
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src={`https://www.youtube.com/embed/${activeMedia.videoId}?autoplay=1&mute=1&loop=1&playlist=${activeMedia.videoId}`} 
+                        title="YouTube video player" 
+                        frameBorder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowFullScreen
+                        className="w-full h-full object-cover"
+                      ></iframe>
+                  ) : (
+                      <video src={activeMedia.url} autoPlay muted loop className="w-full h-full object-cover" />
+                  )
                 ) : (
                   <img src={activeMedia?.url} alt="Main" className="w-full h-full object-cover" />
                 )}
                 
-                {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                {/* Overlay Gradient (Only for images) */}
+                {activeMedia?.type !== 'video' && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
+                )}
                 
-                {/* Game Logo/Title Overlay */}
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">
-                    {game.title}
-                  </h1>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white text-base">
-                      {game.genre}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      <span className="font-bold text-lg">{game.rating || 4.5}</span>
+                {/* Game Logo/Title Overlay - Hide on video to not obstruct */}
+                {activeMedia?.type !== 'video' && (
+                    <div className="absolute bottom-6 left-6 right-6 pointer-events-none">
+                    <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">
+                        {game.title}
+                    </h1>
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white text-base">
+                        {game.genre}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-yellow-400">
+                        <span className="font-bold text-lg">{game.rating || 4.5}</span>
+                        </div>
                     </div>
-                  </div>
-                </div>
+                    </div>
+                )}
               </div>
 
               {/* Thumbnails */}
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {gameMedia.map((m, i) => (
+                {mediaList.map((m, i) => (
                   <button 
                     key={i}
                     onClick={() => setActiveMedia(m)}
-                    className={`relative w-24 aspect-video rounded-lg overflow-hidden border-2 transition-all ${activeMedia?.url === m.url ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`relative w-24 aspect-video rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${activeMedia?.url === m.url ? 'border-blue-500 scale-105' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
-                    <img src={m.url} className="w-full h-full object-cover" />
+                    <img src={m.type === 'video' ? (m.thumbnail || m.url) : m.url} className="w-full h-full object-cover" onError={(e) => e.target.src = game.cover_image} />
                     {m.type === 'video' && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                         <Play className="w-4 h-4 text-white" />
