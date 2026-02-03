@@ -25,6 +25,9 @@ export default function SceneEditor() {
   const [mode, setMode] = useState('translate'); // translate, rotate, scale
   const [selectedObjectId, setSelectedObjectId] = useState('environment'); // 'environment' or object UUID
   const [isDirty, setIsDirty] = useState(false);
+  const [autoScaleHumanoids, setAutoScaleHumanoids] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('auto_scale_humanoids') || 'true'); } catch { return true; }
+  });
   
   // Data for models
   const { data: models3d = [] } = useQuery({ queryKey: ['models3d'], queryFn: () => base44.entities.Model3D.list() });
@@ -103,6 +106,20 @@ export default function SceneEditor() {
   const loadLayout = (layout) => {
     setSelectedLayoutId(layout.id);
     setSceneName(layout.name);
+
+    const originalObjects = layout.objects || [];
+    let normalizedChanged = false;
+    const normalizedObjects = originalObjects.map(o => {
+      const nameLower = ((o.name || o.instance_name || '') + '').toLowerCase();
+      const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
+      if (!autoScaleHumanoids || !isYBot) return o;
+      const s = (o.transform && o.transform.scale) ? o.transform.scale : { x: 1, y: 1, z: 1 };
+      const tooBig = (s.x || 1) > 0.02 || (s.y || 1) > 0.02 || (s.z || 1) > 0.02;
+      if (!tooBig) return o;
+      normalizedChanged = true;
+      return { ...o, transform: { ...(o.transform || {}), scale: { x: 0.01, y: 0.01, z: 0.01 } } };
+    });
+
     // Ensure deep copy and defaults
     setSceneConfig({
       environment: layout.environment_transform ? {
@@ -110,9 +127,9 @@ export default function SceneEditor() {
         url: layout.environment_url,
         transform: layout.environment_transform
       } : { model_id: null, url: null, transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } } },
-      objects: layout.objects || []
+      objects: normalizedObjects
     });
-    setIsDirty(false);
+    setIsDirty(normalizedChanged ? true : false);
   };
 
   // --- 3D Scene Refs ---
@@ -445,6 +462,7 @@ export default function SceneEditor() {
     const newId = crypto.randomUUID();
     const nameLower = (model.name || '').toLowerCase();
     const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
+    const defaultScale = isYBot && autoScaleHumanoids ? 0.01 : 1;
     const newObj = {
       id: newId,
       model_id: model.id,
@@ -454,7 +472,7 @@ export default function SceneEditor() {
       role: isYBot ? 'npc' : 'static',
       type: 'static',
       scripts: [],
-      transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } }
+      transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: defaultScale, y: defaultScale, z: defaultScale } }
     };
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
     setSelectedObjectId(newId);
@@ -466,7 +484,7 @@ export default function SceneEditor() {
     const newId = crypto.randomUUID();
     const name = (model.name || '').toLowerCase();
     const isYBot = name.includes('ybot') || name.includes('y-bot') || name.includes('y bot') || name.includes('white bot');
-    const defaultScale = isYBot ? 0.01 : 1;
+    const defaultScale = isYBot && autoScaleHumanoids ? 0.01 : 1;
 
     const newObj = {
       id: newId,
@@ -736,9 +754,15 @@ export default function SceneEditor() {
                     </Button>
                 </>
             )}
-            <Button className={`hover:bg-green-700 ${isDirty ? 'bg-green-600' : 'bg-slate-700 cursor-not-allowed'}`} size="sm" onClick={handleSave} disabled={!isDirty}>
-                <Save className="w-4 h-4 mr-2" /> {isDirty ? 'Save Changes' : 'All Saved'}
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-2">
+                <Switch id="auto-scale-humanoids-top" checked={autoScaleHumanoids} onCheckedChange={(v) => { setAutoScaleHumanoids(!!v); try { localStorage.setItem('auto_scale_humanoids', JSON.stringify(!!v)); } catch {} }} />
+                <Label htmlFor="auto-scale-humanoids-top" className="text-slate-300 text-xs">Auto-scale YBot</Label>
+              </div>
+              <Button className={`hover:bg-green-700 ${isDirty ? 'bg-green-600' : 'bg-slate-700 cursor-not-allowed'}`} size="sm" onClick={handleSave} disabled={!isDirty}>
+                  <Save className="w-4 h-4 mr-2" /> {isDirty ? 'Save Changes' : 'All Saved'}
+              </Button>
+            </div>
         </div>
 
         {/* 3D Canvas Container */}
@@ -752,6 +776,10 @@ export default function SceneEditor() {
       {/* Floating Save Bar */}
       {isDirty && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 shadow-xl">
+          <div className="flex items-center gap-2 border-r border-slate-700 pr-3 mr-1">
+            <Switch id="auto-scale-humanoids" checked={autoScaleHumanoids} onCheckedChange={(v) => { setAutoScaleHumanoids(!!v); try { localStorage.setItem('auto_scale_humanoids', JSON.stringify(!!v)); } catch {} }} />
+            <Label htmlFor="auto-scale-humanoids" className="text-slate-300 text-sm">Auto-scale YBot</Label>
+          </div>
           <span className="text-slate-300 text-sm">Unsaved changes</span>
           <Button variant="outline" onClick={handleDiscard}>Discard</Button>
           <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">Save</Button>
