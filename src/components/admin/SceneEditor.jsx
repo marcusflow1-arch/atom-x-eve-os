@@ -147,6 +147,7 @@ export default function SceneEditor() {
   const sceneObjectsMap = useRef({}); 
 const mixersRef = useRef({});
 const clockRef = useRef(new THREE.Clock());
+const yBotControllersRef = useRef({});
 
   // Initialize Three.js
   useEffect(() => {
@@ -281,6 +282,73 @@ const clockRef = useRef(new THREE.Clock());
     }
   };
 
+  // --- YBot Controller Helpers ---
+  const normalize = (s = '') => s.toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
+  const buildClipMap = (clips = []) => {
+    const map = {};
+    clips.forEach(c => { map[normalize(c.name)] = c; });
+    return map;
+  };
+  const resolveClip = (clips, name) => {
+    const n = normalize(name);
+    const map = buildClipMap(clips);
+    if (map[n]) return map[n];
+    const aliases = {
+      'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybotbreathidle'],
+      'attack1': ['attack01','attack','attack_1']
+    };
+    for (const key in aliases) {
+      if (aliases[key].includes(n) && map[key]) return map[key];
+    }
+    const candidates = Object.keys(map).filter(k => k.includes(n));
+    if (candidates[0]) return map[candidates[0]];
+    return null;
+  };
+  const createAnimator = (mixer, clips) => {
+    let baseName = null;
+    let currentAction = null;
+    const getClip = (name) => resolveClip(clips, name);
+    const stopAll = () => { mixer.stopAllAction(); currentAction = null; };
+    const setBaseAction = (name) => {
+      const clip = getClip(name);
+      if (!clip) return;
+      stopAll();
+      const action = mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.clampWhenFinished = false;
+      action.enabled = true;
+      action.play();
+      baseName = name;
+      currentAction = action;
+    };
+    const playOneShot = (name) => {
+      const clip = getClip(name);
+      if (!clip) return;
+      stopAll();
+      const action = mixer.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
+      const onFinished = () => {
+        mixer.removeEventListener('finished', onFinished);
+        if (baseName) setBaseAction(baseName);
+      };
+      mixer.addEventListener('finished', onFinished);
+    };
+    return { setBaseAction, playOneShot };
+  };
+  const hasYBotController = (objConf) => {
+    try {
+      const bound = objConf.scripts || [];
+      const namesById = new Map((scripts || []).map(s => [s.id, (s.name || '')]));
+      return bound.some(b => (namesById.get(b.script_id) || '').toLowerCase().includes('y-bot controller'));
+    } catch {
+      return false;
+    }
+  };
+
   // --- Sync State to Scene ---
   // Load models when sceneConfig changes
   useEffect(() => {
@@ -357,6 +425,7 @@ const clockRef = useRef(new THREE.Clock());
             mixersRef.current[key]?.mixer?.stopAllAction?.();
             delete mixersRef.current[key];
             delete sceneObjectsMap.current[key];
+            delete yBotControllersRef.current[key];
         }
     });
 
@@ -402,6 +471,13 @@ const clockRef = useRef(new THREE.Clock());
                       mixersRef.current[objConf.id] = { mixer, clips };
                       // Apply scripts to choose and play the correct animation
                       runObjectScripts(objConf);
+                      // If Y-Bot Controller is attached, enforce state manager with explicit base action
+                      if (hasYBotController(objConf)) {
+                        const animator = createAnimator(mixer, clips);
+                        yBotControllersRef.current[objConf.id] = animator;
+                        // Force base idle immediately to avoid any auto-play from engine
+                        animator.setBaseAction('Y Bot@Breathing Idle');
+                      }
                     }
 
                     if (selectedObjectId === objConf.id) {
@@ -636,6 +712,23 @@ const clockRef = useRef(new THREE.Clock());
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isDirty, sceneName, sceneConfig, selectedLayoutId]);
+
+  // Input bindings for Y-Bot Controller (hard switch states)
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target && e.target.matches && e.target.matches('input, textarea')) return;
+      const objs = sceneConfig.objects || [];
+      const target = objs.find(o => o.role === 'player' && hasYBotController(o)) || objs.find(o => hasYBotController(o));
+      if (!target) return;
+      const animator = yBotControllersRef.current[target.id];
+      if (!animator) return;
+      if (e.code === 'Space') { e.preventDefault(); animator.playOneShot('jump'); }
+      else if (e.code === 'KeyC') { animator.playOneShot('roll'); }
+      else if (e.code === 'Digit1') { animator.playOneShot('attack 1'); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [sceneConfig.objects]);
 
   return (
     <div className="flex h-[calc(100vh-100px)] gap-4">
