@@ -4,7 +4,7 @@ import {
   Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
-  Maximize2, Star, ThumbsUp, MessageSquare, User
+  Maximize2, Star, ThumbsUp, MessageSquare, User, Radio
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
