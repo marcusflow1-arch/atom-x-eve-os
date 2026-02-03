@@ -31,17 +31,19 @@ async function searchIGDB(clientId, token, query) {
     return await response.json();
 }
 
-async function getPriceAndDetailsFromWeb(base44, gameTitle) {
+async function getEnhancedDetailsFromWeb(base44, gameTitle) {
     try {
         const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-            prompt: `Search for the video game "${gameTitle}" and provide:
+            prompt: `Search the web for the video game "${gameTitle}" and provide comprehensive details:
 1. Current retail price in USD (from Steam, PlayStation Store, Xbox Store, or official retailers)
 2. Release date or year
 3. Brief description (1-2 sentences)
 4. Developer/Publisher name
 5. Is it currently available for purchase?
+6. Find 3-5 high-quality screenshot URLs (direct image links if possible, or credible hosted images).
+7. Find 1-2 official YouTube trailer URLs (e.g. gameplay trailer, launch trailer).
 
-Provide accurate, current market data.`,
+Use the web browser capabilities to find actual media links.`,
             add_context_from_internet: true,
             response_json_schema: {
                 type: 'object',
@@ -50,13 +52,15 @@ Provide accurate, current market data.`,
                     release_year: { type: 'number' },
                     description: { type: 'string' },
                     developer: { type: 'string' },
-                    is_available: { type: 'boolean' }
+                    is_available: { type: 'boolean' },
+                    screenshot_urls: { type: 'array', items: { type: 'string' } },
+                    video_urls: { type: 'array', items: { type: 'string' } }
                 }
             }
         });
         return result;
     } catch (e) {
-        return { price: 59.99, is_available: true };
+        return { price: 59.99, is_available: true, screenshot_urls: [], video_urls: [] };
     }
 }
 
@@ -140,7 +144,7 @@ Focus on AAA titles, indie hits, and games people are actually playing now.`,
                 const igdbQuery = `
                     search "${gameInfo.title}";
                     fields name, summary, cover.url, first_release_date, rating, genres.name, 
-                           screenshots.url, involved_companies.company.name, aggregated_rating;
+                           screenshots.url, involved_companies.company.name, aggregated_rating, videos.video_id;
                     limit 1;
                 `;
 
@@ -154,24 +158,30 @@ Focus on AAA titles, indie hits, and games people are actually playing now.`,
                 const igdbGame = igdbResults[0];
                 await log(base44, jobId, `✅ Found IGDB data for ${gameInfo.title}`, 'success');
 
-                // Get pricing and details from web search
-                await log(base44, jobId, `💰 Searching for price data for ${gameInfo.title}...`, 'info');
-                const priceData = await getPriceAndDetailsFromWeb(base44, gameInfo.title);
-                await log(base44, jobId, `✅ Price: $${priceData.price || 59.99}`, 'success');
+                // Get pricing, screenshots, and trailers from web search
+                await log(base44, jobId, `💰 Searching web for price, trailers, and screenshots for ${gameInfo.title}...`, 'info');
+                const webData = await getEnhancedDetailsFromWeb(base44, gameInfo.title);
+                await log(base44, jobId, `✅ Found price: $${webData.price || 59.99}, ${webData.video_urls?.length || 0} trailers, ${webData.screenshot_urls?.length || 0} screenshots`, 'success');
 
-                // Prepare game data
+                // Process IGDB media
+                const igdbScreenshots = igdbGame.screenshots?.map(s => `https:${s.url.replace('t_thumb', 't_screenshot_big')}`) || [];
+                const igdbVideos = igdbGame.videos?.map(v => `https://www.youtube.com/watch?v=${v.video_id}`) || [];
+
+                // Prepare game data (merging sources)
                 const gameData = {
                     title: igdbGame.name || gameInfo.title,
-                    description: igdbGame.summary || priceData.description || 'No description available',
+                    description: igdbGame.summary || webData.description || 'No description available',
                     cover_image: igdbGame.cover?.url ? `https:${igdbGame.cover.url.replace('t_thumb', 't_cover_big')}` : null,
-                    screenshots: igdbGame.screenshots?.map(s => `https:${s.url.replace('t_thumb', 't_screenshot_big')}`) || [],
+                    screenshots: [...new Set([...igdbScreenshots, ...(webData.screenshot_urls || [])])].slice(0, 10),
+                    video_urls: [...new Set([...igdbVideos, ...(webData.video_urls || [])])].slice(0, 5),
+                    trailer_url: igdbVideos[0] || webData.video_urls?.[0] || '',
                     genre: igdbGame.genres?.[0]?.name?.toLowerCase() || 'action',
-                    price: priceData.price || 59.99,
-                    status: priceData.is_available ? 'available' : 'planned',
-                    developer: igdbGame.involved_companies?.[0]?.company?.name || priceData.developer || 'Unknown',
+                    price: webData.price || 59.99,
+                    status: webData.is_available ? 'available' : 'planned',
+                    developer: igdbGame.involved_companies?.[0]?.company?.name || webData.developer || 'Unknown',
                     original_year: igdbGame.first_release_date 
                         ? new Date(igdbGame.first_release_date * 1000).getFullYear() 
-                        : (priceData.release_year || gameInfo.estimated_year || 2024),
+                        : (webData.release_year || gameInfo.estimated_year || 2024),
                     rating: igdbGame.aggregated_rating ? Math.round(igdbGame.aggregated_rating / 20) : 0
                 };
 
