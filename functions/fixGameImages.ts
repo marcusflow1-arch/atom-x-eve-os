@@ -121,23 +121,44 @@ Deno.serve(async (req) => {
 
                 if (stillNeedsCover || stillNeedsScreenshots || stillNeedsVideos) {
                     const llmResponse = await base44.integrations.Core.InvokeLLM({
-                        prompt: `Find media for the video game "${game.title}".
-                        
-                        REQUIREMENTS:
-                        ${stillNeedsCover ? '- Find 1 OFFICIAL vertical box art/cover image URL.' : ''}
-                        ${stillNeedsScreenshots ? '- Find 3-5 DISTINCT high-quality screenshot URLs.' : ''}
-                        ${stillNeedsVideos ? '- Find 1-2 OFFICIAL YouTube trailer URLs (gameplay or launch trailer).' : ''}
-                        
-                        - Images must be DIRECT URLs (jpg/png/webp).
-                        - Videos must be standard YouTube watch URLs.
-                        - Avoid generic placeholder sites or unsplash.`,
+                        prompt: `Perform a strict, deterministic media search for the game: "${game.title}".
+
+                        1. YOUTUBE TRAILERS (Max 2):
+                           - Search query: "${game.title} official trailer"
+                           - Find EXACTLY 2 official videos (e.g. "Official Trailer", "Launch Trailer", "Gameplay Trailer").
+                           - Prioritize official publisher channels (PlayStation, Xbox, Nintendo, IGN, Gamespot, Developer channels).
+                           - REJECT: Reviews, Let's Plays, Walkthroughs, Fan Edits, "All Bosses", "Ending".
+                           - If no official trailer exists, return empty list.
+
+                        2. SCREENSHOTS (Fill remaining slots):
+                           - Search query: "${game.title} official screenshots"
+                           - Find 5-8 high-quality IN-GAME screenshots.
+                           - NO box art, NO logos, NO posters, NO fan art, NO wallpapers with text.
+                           - Must be clean UI or gameplay action shots.
+                           - Must be DIRECT image URLs (jpg/png/webp).
+
+                        3. BOX ART (If needed):
+                           - Official vertical cover art only.
+
+                        CRITICAL:
+                        - Videos must be standard YouTube watch URLs (https://www.youtube.com/watch?v=...).
+                        - Images must be distinct (no duplicates).
+                        - Do NOT use generic browser scraping results if they don't match the game exactly.`,
                         add_context_from_internet: true,
                         response_json_schema: {
                             type: "object",
                             properties: {
                                 cover_url: { type: "string" },
-                                screenshot_urls: { type: "array", items: { type: "string" } },
-                                video_urls: { type: "array", items: { type: "string" } }
+                                screenshot_urls: { 
+                                    type: "array", 
+                                    items: { type: "string" },
+                                    description: "List of in-game screenshot URLs (no logos/posters)"
+                                },
+                                video_urls: { 
+                                    type: "array", 
+                                    items: { type: "string" },
+                                    description: "List of official YouTube trailer URLs (max 2)"
+                                }
                             }
                         }
                     });
