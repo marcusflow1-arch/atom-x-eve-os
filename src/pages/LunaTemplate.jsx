@@ -102,8 +102,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const actorContainerRef = useRef(null);
   const roomMeshesRef = useRef([]);
   const mixerRef = useRef(null);
-  const clipsRef = useRef([]);
-  const animatorRef = useRef(null);
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
@@ -115,17 +113,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
-  const yVelRef = useRef(0);
-  const isAirborneRef = useRef(false);
-  const groundedRef = useRef(true);
-  const sanitizeScript = (code = '') => {
-    try {
-      return code
-        .replace(/\bexport\s+default\b/g, '')
-        .replace(/\bexport\s+async\s+function\b/g, 'async function')
-        .replace(/\bexport\s+function\b/g, 'function');
-    } catch { return code || ''; }
-  };
 
   // Load scripts bound to scene instances (build map once per activeScene)
   useEffect(() => {
@@ -207,11 +194,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
           try {
               console.log(`Executing 3D Script: ${script.name}`);
-              const code = sanitizeScript(script.script_code || '');
               const func = new Function(
                   'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
-                  code
-                );
+                  script.script_code
+              );
               func(
                   THREE, 
                   sceneRef.current, 
@@ -598,10 +584,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                             const script = instanceScriptsMapRef.current[binding.script_id];
                             if (script && script.script_code) {
                                 try {
-                                    const code = sanitizeScript(script.script_code || '');
                                     const fn = new Function(
                                         'THREE','scene','camera','instance','registerUpdate','params','mixer',
-                                        code
+                                        script.script_code
                                     );
                                     fn(
                                         THREE,
@@ -735,9 +720,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixer = new THREE.AnimationMixer(model);
 
       if (animations && animations.length > 0) {
-        clipsRef.current = animations;
-        animatorRef.current = createAnimator(mixer, animations);
-        animatorRef.current.setBaseAction('Y Bot@Breathing Idle');
+        animations.forEach((clip) => {
+          const action = mixer.clipAction(clip);
+          const name = clip.name.toLowerCase();
+
+          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
+          else if (name.includes('walk')) actionsRef.current.walk = action;
+          else if (name.includes('run')) actionsRef.current.run = action;
+          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
+          else if (name.includes('kick')) actionsRef.current.kick = action;
+          else if (name.includes('dance')) actionsRef.current.dance = action;
+          else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
+        });
+
+        const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
+        if (idleAction) {
+          idleAction.play();
+        }
       }
     };
 
@@ -861,106 +861,54 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
 
     const handleKeyDown = (e) => {
-      const target = e.target;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (!controlsActive.current) return;
 
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
       if (key === ' ') {
         e.preventDefault();
-        // Jump physics + one-shot
-        if (groundedRef.current && animatorRef.current) {
-          yVelRef.current = 6.0; // jump impulse
-          isAirborneRef.current = true;
-          groundedRef.current = false;
-          animatorRef.current.playOneShot('jump');
-        }
-      }
-      if (animatorRef.current) {
-        if (e.code === 'KeyC') { animatorRef.current.playOneShot('roll'); }
-        else if (e.code === 'Digit1') { animatorRef.current.playOneShot('attack 1'); }
       }
     };
 
     const handleKeyUp = (e) => {
-      const target = e.target;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+      if (!controlsActive.current) return;
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
     const animationLocked = { current: false };
 
-    // Animator helpers: hard-switch state manager (no blending over one-shots)
-    const normalize = (s = '') => s.toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
-    const buildClipMap = (clips = []) => { const map = {}; clips.forEach(c => { map[normalize(c.name)] = c; }); return map; };
-    const resolveClip = (clips, name) => {
-      const n = normalize(name);
-      const map = buildClipMap(clips);
-      if (map[n]) return map[n];
-      const aliases = {
-        'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybot@breathingidle','ybotbreathidle'],
-        'ybotroll': ['roll'],
-        'ybotfall': ['fall','falling'],
-        'ybotjump': ['jump'],
-        'attack1': ['attack1','attack_1','attack01','attack']
-      };
-      for (const key in aliases) {
-        if (aliases[key].includes(n) && map[key]) return map[key];
-      }
-      const candidates = Object.keys(map).filter(k => k.includes(n));
-      return candidates[0] ? map[candidates[0]] : null;
-    };
-    const createAnimator = (mixer, clips) => {
-      let baseName = null;
-      let currentAction = null;
-      let isOneShot = false;
-      const stopAll = () => { mixer.stopAllAction(); currentAction = null; };
-      const setBaseAction = (name) => {
-        if (isOneShot) return; // do not override active one-shot
-        const clip = resolveClip(clips, name);
-        if (!clip) return;
-        stopAll();
-        const action = mixer.clipAction(clip);
-        action.reset();
-        action.setLoop(THREE.LoopRepeat, Infinity);
-        action.clampWhenFinished = false;
-        action.enabled = true;
-        action.play();
-        baseName = name;
-        currentAction = action;
-      };
-      const playOneShot = (name) => {
-        if (isOneShot) return; // anti-spam
-        const clip = resolveClip(clips, name);
-        if (!clip) return;
-        isOneShot = true;
-        stopAll();
-        const action = mixer.clipAction(clip);
-        action.reset();
-        action.setLoop(THREE.LoopOnce, 1);
-        action.clampWhenFinished = true;
-        action.play();
-        const onFinished = () => {
-          mixer.removeEventListener('finished', onFinished);
-          isOneShot = false;
-          if (baseName) setBaseAction(baseName);
-        };
-        mixer.addEventListener('finished', onFinished);
-      };
-      return { setBaseAction, playOneShot, get isOneShotPlaying() { return isOneShot; } };
-    };
-
     const setBaseAction = (name, once = false) => {
-      const mixer = mixerRef.current;
-      const clips = clipsRef.current || [];
-      if (!mixer || clips.length === 0) return;
-      if (!animatorRef.current) animatorRef.current = createAnimator(mixer, clips);
-      if (once) {
-        animatorRef.current.playOneShot(name);
-      } else {
-        animatorRef.current.setBaseAction(name);
-        currentBaseActionRef.current = name;
+      if (animationLocked.current && !once) return;
+      if (currentBaseActionRef.current === name && !once) return;
+
+      const action = actionsRef.current[name];
+      if (!action) return;
+
+      currentBaseActionRef.current = name;
+
+      Object.values(actionsRef.current).forEach((a) => {
+        if (a !== action) {
+          a.fadeOut(0.2);
+        }
+      });
+
+      if (!action.isRunning() || once) {
+        action.reset();
+        action.fadeIn(0.2);
+        action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat);
+        action.clampWhenFinished = once;
+        action.play();
+
+        if (once) {
+          animationLocked.current = true;
+          mixer.addEventListener('finished', function onFinish(e) {
+            if (e.action === action) {
+              animationLocked.current = false;
+              mixer.removeEventListener('finished', onFinish);
+            }
+          });
+        }
       }
     };
 
@@ -1108,33 +1056,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 actorContainerRef.current.position.addScaledVector(intendedMove, moveSpeed);
             }
 
-            // Vertical physics (jump/fall)
-            if (isAirborneRef.current) {
-                yVelRef.current += (-9.8) * delta; // gravity
-                actorContainerRef.current.position.y += yVelRef.current * delta;
-            }
-
-            // Ground check
+            // Ground Snapping (Gravity)
             const groundRayOrigin = actorContainerRef.current.position.clone();
             groundRayOrigin.y += 5.0; // Cast from above
-            const groundRay = new THREE.Raycaster(groundRayOrigin, downVector);
+            const down = new THREE.Vector3(0, -1, 0);
+            
+            const groundRay = new THREE.Raycaster(groundRayOrigin, down);
             const groundHits = groundRay.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
 
             if (groundHits.length > 0) {
                 const floorY = groundHits[0].point.y;
-                if (actorContainerRef.current.position.y <= floorY) {
-                    // Landed
-                    actorContainerRef.current.position.y = floorY;
-                    yVelRef.current = 0;
-                    isAirborneRef.current = false;
-                    groundedRef.current = true;
-                } else {
-                    groundedRef.current = false;
-                    // Falling state (no loop overrides while one-shot active)
-                    if (animatorRef.current && !animatorRef.current.isOneShotPlaying) {
-                        animatorRef.current.setBaseAction('fall');
-                    }
-                }
+                // Soft snap or hard snap
+                actorContainerRef.current.position.y = floorY;
             }
         } else {
             // Fallback move if no collision mesh
@@ -1143,19 +1076,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
         }
 
-        // 3. ANIMATION STATE (commanded only)
-        const isRunKeyDown = !!(keysPressed.current['w'] || keysPressed.current['a'] || keysPressed.current['s'] || keysPressed.current['d']);
-        if (!isAirborneRef.current && animatorRef.current && !animatorRef.current.isOneShotPlaying) {
-            if (isRunKeyDown) {
-                animatorRef.current.setBaseAction('run');
-            } else if (groundedRef.current) {
-                animatorRef.current.setBaseAction(resolveIdle());
+        // 3. ANIMATION STATE
+        if (controlsActive.current) {
+            if (isMoving) {
+                if (!animationLocked.current) setBaseAction('run');
+            } else {
+                if (!animationLocked.current) setBaseAction(resolveIdle());
             }
+            
+            const currentState = useLunaStore.getState();
+            if (currentState.actions.skill) handleSkill();
+            else if (currentState.actions.attack) handleAttack();
+        } else {
+            // Idle when not selected
+            if (!animationLocked.current) setBaseAction(resolveIdle());
         }
-        // Skill/attack triggers (from store) still honored
-        const currentState = useLunaStore.getState();
-        if (currentState.actions.skill) handleSkill();
-        else if (currentState.actions.attack) handleAttack();
 
         // 4. CAMERA FOLLOW (Orbit Orbit)
         if (controlsRef.current) {

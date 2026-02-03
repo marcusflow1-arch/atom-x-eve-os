@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Eye, Check, X, Layers, Layout, Globe, Radio, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -147,7 +147,6 @@ export default function SceneEditor() {
   const sceneObjectsMap = useRef({}); 
 const mixersRef = useRef({});
 const clockRef = useRef(new THREE.Clock());
-const yBotControllersRef = useRef({});
 
   // Initialize Three.js
   useEffect(() => {
@@ -282,80 +281,6 @@ const yBotControllersRef = useRef({});
     }
   };
 
-  // --- YBot Controller Helpers ---
-  const normalize = (s = '') => s.toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
-  const buildClipMap = (clips = []) => {
-    const map = {};
-    clips.forEach(c => { map[normalize(c.name)] = c; });
-    return map;
-  };
-  const resolveClip = (clips, name) => {
-    const n = normalize(name);
-    const map = buildClipMap(clips);
-    if (map[n]) return map[n];
-    const aliases = {
-      'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybotbreathidle','ybot@breathingidle'],
-      'ybotroll': ['roll'],
-      'ybotfall': ['fall','falling'],
-      'ybotjump': ['jump'],
-      'attack1': ['attack01','attack','attack_1','attack1']
-    };
-    for (const key in aliases) {
-      if (aliases[key].includes(n) && map[key]) return map[key];
-    }
-    const candidates = Object.keys(map).filter(k => k.includes(n));
-    if (candidates[0]) return map[candidates[0]];
-    return null;
-  };
-  const createAnimator = (mixer, clips) => {
-    let baseName = null;
-    let currentAction = null;
-    const getClip = (name) => resolveClip(clips, name);
-    const stopAll = () => { mixer.stopAllAction(); currentAction = null; };
-    const setBaseAction = (name) => {
-      const clip = getClip(name);
-      if (!clip) return;
-      stopAll();
-      const action = mixer.clipAction(clip);
-      action.reset();
-      action.setLoop(THREE.LoopRepeat, Infinity);
-      action.clampWhenFinished = false;
-      action.enabled = true;
-      action.play();
-      baseName = name;
-      currentAction = action;
-    };
-    const playOneShot = (name) => {
-      const clip = getClip(name);
-      if (!clip) return;
-      stopAll();
-      const action = mixer.clipAction(clip);
-      action.reset();
-      action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
-      action.play();
-      const onFinished = () => {
-        mixer.removeEventListener('finished', onFinished);
-        if (baseName) setBaseAction(baseName);
-      };
-      mixer.addEventListener('finished', onFinished);
-    };
-    return { setBaseAction, playOneShot };
-  };
-  const nameMatchesController = (name = '') => {
-    const s = name.toLowerCase();
-    return (s.includes('y-bot') || s.includes('ybot')) && s.includes('controller');
-  };
-  const hasYBotController = (objConf) => {
-    try {
-      const bound = objConf.scripts || [];
-      const namesById = new Map((scripts || []).map(s => [s.id, (s.name || '')]));
-      return bound.some(b => nameMatchesController(namesById.get(b.script_id) || ''));
-    } catch {
-      return false;
-    }
-  };
-
   // --- Sync State to Scene ---
   // Load models when sceneConfig changes
   useEffect(() => {
@@ -432,7 +357,6 @@ const yBotControllersRef = useRef({});
             mixersRef.current[key]?.mixer?.stopAllAction?.();
             delete mixersRef.current[key];
             delete sceneObjectsMap.current[key];
-            delete yBotControllersRef.current[key];
         }
     });
 
@@ -478,13 +402,6 @@ const yBotControllersRef = useRef({});
                       mixersRef.current[objConf.id] = { mixer, clips };
                       // Apply scripts to choose and play the correct animation
                       runObjectScripts(objConf);
-                      // If Y-Bot Controller is attached, enforce state manager with explicit base action
-                      if (hasYBotController(objConf)) {
-                        const animator = createAnimator(mixer, clips);
-                        yBotControllersRef.current[objConf.id] = animator;
-                        // Force base idle immediately to avoid any auto-play from engine
-                        animator.setBaseAction('Y Bot@Breathing Idle');
-                      }
                     }
 
                     if (selectedObjectId === objConf.id) {
@@ -498,15 +415,7 @@ const yBotControllersRef = useRef({});
             obj3d.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
             obj3d.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
             // Re-apply scripts (e.g., when scripts changed on this object)
-            if (mixersRef.current[objConf.id]) {
-      runObjectScripts(objConf);
-      if (hasYBotController(objConf) && !yBotControllersRef.current[objConf.id]) {
-        const { mixer, clips } = mixersRef.current[objConf.id];
-        const animator = createAnimator(mixer, clips);
-        yBotControllersRef.current[objConf.id] = animator;
-        animator.setBaseAction('Y Bot@Breathing Idle');
-      }
-    }
+            if (mixersRef.current[objConf.id]) runObjectScripts(objConf);
         }
     });
 
@@ -635,23 +544,6 @@ const yBotControllersRef = useRef({});
     setIsDirty(true);
   };
 
-  // Quick attach helper for Luna Dashboard Y-Bot Controller
-  const attachYBotController = () => {
-    const sel = sceneConfig.objects.find(o => o.id === selectedObjectId);
-    if (!sel) return;
-    const controller = (scripts || []).find(s => (s.name || '').toLowerCase().includes('y-bot controller'));
-    if (!controller) { showError('Y-Bot Controller script not found'); return; }
-    if ((sel.scripts || []).some(b => b.script_id === controller.id)) { showSuccess('Y-Bot Controller already attached'); return; }
-    setSceneConfig(prev => ({
-      ...prev,
-      objects: prev.objects.map(o => o.id === selectedObjectId
-        ? { ...o, scripts: [...(o.scripts || []), { script_id: controller.id }] }
-        : o)
-    }));
-    setIsDirty(true);
-    showSuccess('Attached Luna Y-Bot Controller');
-  };
-
   const handleSetEnvironment = (model) => {
     setSceneConfig(prev => ({
         ...prev,
@@ -727,23 +619,6 @@ const yBotControllersRef = useRef({});
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isDirty, sceneName, sceneConfig, selectedLayoutId]);
-
-  // Input bindings for Y-Bot Controller (hard switch states)
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.target && e.target.matches && e.target.matches('input, textarea')) return;
-      const objs = sceneConfig.objects || [];
-      const target = objs.find(o => o.role === 'player' && hasYBotController(o)) || objs.find(o => hasYBotController(o));
-      if (!target) return;
-      const animator = yBotControllersRef.current[target.id];
-      if (!animator) return;
-      if (e.code === 'Space') { e.preventDefault(); animator.playOneShot('jump'); }
-      else if (e.code === 'KeyC') { animator.playOneShot('roll'); }
-      else if (e.code === 'Digit1') { animator.playOneShot('attack 1'); }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [sceneConfig.objects]);
 
   return (
     <div className="flex h-[calc(100vh-100px)] gap-4">
@@ -840,21 +715,6 @@ const yBotControllersRef = useRef({});
 
             {selectedObjectId !== 'environment' && sceneConfig.objects.find(o => o.id === selectedObjectId) && (
               <div className="px-4 pb-4">
-                {(() => {
-                  const sel = sceneConfig.objects.find(o => o.id === selectedObjectId);
-                  const nameLower = ((sel?.name || sel?.instance_name || '') + '').toLowerCase();
-                  const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
-                  const controller = (scripts || []).find(s => (s.name || '').toLowerCase().includes('y-bot controller'));
-                  const attached = !!controller && (sel?.scripts || []).some(b => b.script_id === controller.id);
-                  if (!isYBot || !controller) return null;
-                  return (
-                    <div className="mb-2">
-                      <Button size="sm" variant="outline" onClick={(e) => { e.preventDefault(); attachYBotController(); }} disabled={attached}>
-                        {attached ? 'Y-Bot Controller Attached' : 'Attach Luna Y-Bot Controller'}
-                      </Button>
-                    </div>
-                  );
-                })()}
                 <InstanceDetailsPanel
                   obj={sceneConfig.objects.find(o => o.id === selectedObjectId)}
                   scriptsCatalog={scripts}

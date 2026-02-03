@@ -84,6 +84,7 @@ import InstallApp from './pages/InstallApp';
 import Launcher from './pages/Launcher';
 import Leaderboard from './pages/Leaderboard';
 import Library from './pages/Library';
+import LunaTemplate from './pages/LunaTemplate';
 import Mailbox from './pages/Mailbox';
 import Notifications from './pages/Notifications';
 import OnboardingHome from './pages/OnboardingHome';
@@ -102,7 +103,6 @@ import Streaming from './pages/Streaming';
 import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
-import LunaTemplate from './pages/LunaTemplate';
 import __Layout from './Layout.jsx';
 
 
@@ -144,6 +144,7 @@ export const PAGES = {
     "Launcher": Launcher,
     "Leaderboard": Leaderboard,
     "Library": Library,
+    "LunaTemplate": LunaTemplate,
     "Mailbox": Mailbox,
     "Notifications": Notifications,
     "OnboardingHome": OnboardingHome,
@@ -162,7 +163,6 @@ export const PAGES = {
     "StreamingHome": StreamingHome,
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
-    "LunaTemplate": LunaTemplate,
 }
 
 export const pagesConfig = {
