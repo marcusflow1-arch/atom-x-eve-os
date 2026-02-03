@@ -271,42 +271,13 @@ const clockRef = useRef(new THREE.Clock());
     };
   }, []);
 
-  // Play animations on an object based on attached scripts
+  // Gatekeeper: do not auto-play animations in editor; scripts control playback at runtime
   const runObjectScripts = (objConf) => {
     try {
       const entry = mixersRef.current[objConf.id];
-      const model = sceneObjectsMap.current[objConf.id];
-      if (!entry || !model) return;
-      const { mixer, clips } = entry;
-      if (!clips || clips.length === 0) return;
-      const assigned = objConf.scripts || [];
-      if (!assigned.length) return;
-
-      const desired = new Set();
-      assigned.forEach((binding) => {
-        const scr = (scripts || []).find((s) => s.id === binding.script_id);
-        const nameFromBinding = binding?.params?.animation_name || binding?.params?.animation || binding?.params?.anim;
-        const nameFromScript = scr?.animation_name || scr?.default_params?.animation_name || scr?.name;
-        const animName = (nameFromBinding || nameFromScript || '').toString().trim();
-        if (animName) desired.add(animName.toLowerCase());
-      });
-
-      mixer.stopAllAction();
-      let playedAny = false;
-      desired.forEach((nameLc) => {
-        const clip = clips.find((c) => c.name?.toLowerCase() === nameLc) || clips.find((c) => c.name?.toLowerCase().includes(nameLc));
-        if (clip) {
-          mixer.clipAction(clip, model).reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.2).play();
-          playedAny = true;
-        }
-      });
-
-      if (!playedAny && clips.length) {
-        const clip = clips[0];
-        mixer.clipAction(clip, model).reset().setLoop(THREE.LoopRepeat, Infinity).play();
-      }
+      if (entry?.mixer) entry.mixer.stopAllAction();
     } catch (e) {
-      console.warn('runObjectScripts error', e);
+      console.warn('runObjectScripts noop error', e);
     }
   };
 
@@ -448,7 +419,7 @@ const clockRef = useRef(new THREE.Clock());
         }
     });
 
-  }, [sceneConfig, scripts]); // re-run when config or scripts change so animations sync
+  }, [sceneConfig]); // sync scene when config changes
 
   // Mode & Selection Effect
   useEffect(() => {
