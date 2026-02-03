@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Trophy, Layers, Swords, Rocket, Crown, Users, Gamepad2 } from 'lucide-react';
+import { Home, Trophy, Layers, Swords, Rocket, Crown, Users, Gamepad2, Radio } from 'lucide-react';
 
 export default function MiniLunaNav({ title }) {
   const navigate = useNavigate();
