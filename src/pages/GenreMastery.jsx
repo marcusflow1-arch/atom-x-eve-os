@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import ShinyCard from '@/components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
 
 // --- MOCK DATA ---
 
@@ -844,63 +845,10 @@ export default function GenreMastery({ onClose }) {
                     </div>
                  </div>
 
-                 {/* FEATURED SPOTLIGHT (Migrated UI) */}
-                 {nextBigUnlock && (
-                   <div 
-                     className="mb-12 p-8 md:p-10 rounded-3xl relative overflow-hidden group cursor-pointer"
-                     onClick={() => setViewingLevel(nextBigUnlock)}
-                     style={{
-                       background: 'rgba(255, 255, 255, 0.03)',
-                       backdropFilter: 'blur(60px) saturate(200%)',
-                       border: '1px solid rgba(255, 255, 255, 0.1)',
-                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-                     }}
-                   >
-                     <div className={`absolute inset-0 bg-gradient-to-r ${selectedGenre.color} opacity-5 group-hover:opacity-10 transition-opacity duration-1000`} />
-                     <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
-                       <div>
-                         <Badge 
-                           className="mb-4 text-white text-xs px-3 py-1"
-                           style={{
-                             background: 'rgba(255, 255, 255, 0.1)',
-                             backdropFilter: 'blur(20px)',
-                             border: '1px solid rgba(255, 255, 255, 0.2)',
-                           }}
-                         >
-                           NEXT MAJOR UNLOCK • LEVEL {nextBigUnlock.level}
-                         </Badge>
-                         <h2 className="text-4xl md:text-5xl font-black mb-4 text-white leading-tight">{nextBigUnlock.cardReward.name}</h2>
-                         <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-lg">
-                           {nextBigUnlock.cardReward.description} Reach level {nextBigUnlock.level} to claim this exclusive reward.
-                         </p>
-                         <div className="flex gap-4">
-                           <Button 
-                             style={{
-                               background: 'white',
-                               color: 'black',
-                               fontSize: '14px',
-                               fontWeight: 'bold',
-                             }}
-                             className="hover:bg-slate-200 h-12 px-8 rounded-xl"
-                           >
-                             <Play className="w-4 h-4 mr-2" />
-                             Inspect Reward
-                           </Button>
-                         </div>
-                       </div>
-                       <div className="relative h-80 flex items-center justify-center">
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent rounded-2xl" />
-                         <motion.img 
-                           animate={{ y: [0, -10, 0] }}
-                           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                           src={nextBigUnlock.cardReward.image} 
-                           alt="Reward" 
-                           className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.2)]"
-                         />
-                       </div>
-                     </div>
-                   </div>
-                 )}
+                 {/* SKILL TREE SYSTEM */}
+                 <div className="mb-16">
+                   <SkillTreeSystem genre={selectedGenre} />
+                 </div>
 
                  {/* PROGRESS TRACK HEADER */}
                  <div className="mb-6">
