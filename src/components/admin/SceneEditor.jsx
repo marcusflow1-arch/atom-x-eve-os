@@ -544,6 +544,23 @@ const clockRef = useRef(new THREE.Clock());
     setIsDirty(true);
   };
 
+  // Quick attach helper for Luna Dashboard Y-Bot Controller
+  const attachYBotController = () => {
+    const sel = sceneConfig.objects.find(o => o.id === selectedObjectId);
+    if (!sel) return;
+    const controller = (scripts || []).find(s => (s.name || '').toLowerCase().includes('y-bot controller'));
+    if (!controller) { showError('Y-Bot Controller script not found'); return; }
+    if ((sel.scripts || []).some(b => b.script_id === controller.id)) { showSuccess('Y-Bot Controller already attached'); return; }
+    setSceneConfig(prev => ({
+      ...prev,
+      objects: prev.objects.map(o => o.id === selectedObjectId
+        ? { ...o, scripts: [...(o.scripts || []), { script_id: controller.id }] }
+        : o)
+    }));
+    setIsDirty(true);
+    showSuccess('Attached Luna Y-Bot Controller');
+  };
+
   const handleSetEnvironment = (model) => {
     setSceneConfig(prev => ({
         ...prev,
@@ -715,6 +732,21 @@ const clockRef = useRef(new THREE.Clock());
 
             {selectedObjectId !== 'environment' && sceneConfig.objects.find(o => o.id === selectedObjectId) && (
               <div className="px-4 pb-4">
+                {(() => {
+                  const sel = sceneConfig.objects.find(o => o.id === selectedObjectId);
+                  const nameLower = ((sel?.name || sel?.instance_name || '') + '').toLowerCase();
+                  const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
+                  const controller = (scripts || []).find(s => (s.name || '').toLowerCase().includes('y-bot controller'));
+                  const attached = !!controller && (sel?.scripts || []).some(b => b.script_id === controller.id);
+                  if (!isYBot || !controller) return null;
+                  return (
+                    <div className="mb-2">
+                      <Button size="sm" variant="outline" onClick={(e) => { e.preventDefault(); attachYBotController(); }} disabled={attached}>
+                        {attached ? 'Y-Bot Controller Attached' : 'Attach Luna Y-Bot Controller'}
+                      </Button>
+                    </div>
+                  );
+                })()}
                 <InstanceDetailsPanel
                   obj={sceneConfig.objects.find(o => o.id === selectedObjectId)}
                   scriptsCatalog={scripts}
