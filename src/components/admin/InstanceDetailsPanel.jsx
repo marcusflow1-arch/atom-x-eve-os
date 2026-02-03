@@ -4,14 +4,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, X } from 'lucide-react';
 
-export default function InstanceDetailsPanel({ obj, scriptsCatalog = [], onChangeName, onChangeRole, onAddScript, onRemoveScript }) {
+export default function InstanceDetailsPanel({ obj, scriptsCatalog = [], onChangeName, onChangeRole, onAddScript, onRemoveScript, onClose }) {
   if (!obj) return null;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
-      <h4 className="text-white font-semibold mb-3">Character / Instance Details</h4>
+    <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 relative">
+      <Button size="icon" variant="ghost" className="absolute top-2 right-2 text-slate-400 hover:text-white hover:bg-white/10" onClick={() => onClose?.()}>
+        <X className="w-4 h-4" />
+      </Button>
+      <h4 className="text-white font-semibold mb-3 pr-8">Character / Instance Details</h4>
 
       <div className="space-y-3">
         <div>

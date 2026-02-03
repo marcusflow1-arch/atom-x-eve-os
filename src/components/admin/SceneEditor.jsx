@@ -695,6 +695,7 @@ export default function SceneEditor() {
                   onChangeRole={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) })); setIsDirty(true); }}
                   onAddScript={(scriptId) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) })); setIsDirty(true); }}
                   onRemoveScript={(idx) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) })); setIsDirty(true); }}
+                  onClose={() => setSelectedObjectId('environment')}
                 />
               </div>
             )}
