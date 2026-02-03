@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Eye, Check, X, Layers, Layout, Globe, Radio } from 'lucide-react';
+import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Eye, Check, X, Layers, Layout, Globe, Radio, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
+import InstanceDetailsPanel from './InstanceDetailsPanel';
 
 // Helper to convert Three.js Euler/Vector3 to simple object
 const toObj = (v) => ({ x: v.x, y: v.y, z: v.z });
@@ -28,6 +29,7 @@ export default function SceneEditor() {
   const { data: models3d = [] } = useQuery({ queryKey: ['models3d'], queryFn: () => base44.entities.Model3D.list() });
   const { data: modelsFbx = [] } = useQuery({ queryKey: ['modelsfbx'], queryFn: () => base44.entities.ModelFBX.list() });
   const { data: layouts = [] } = useQuery({ queryKey: ['sceneLayouts'], queryFn: () => base44.entities.SceneLayout.list() });
+  const { data: scripts = [] } = useQuery({ queryKey: ['model3DScripts'], queryFn: () => base44.entities.Model3DScript.list() });
 
   const allModels = [...models3d, ...modelsFbx];
 
@@ -435,12 +437,17 @@ export default function SceneEditor() {
   // Actions
   const handleAddObject = (model) => {
     const newId = crypto.randomUUID();
+    const nameLower = (model.name || '').toLowerCase();
+    const isYBot = nameLower.includes('ybot') || nameLower.includes('y-bot') || nameLower.includes('y bot') || nameLower.includes('white bot');
     const newObj = {
       id: newId,
       model_id: model.id,
       model_url: model.file_url,
       name: model.name || 'Object',
+      instance_name: isYBot ? `YBot_NPC_${Math.floor(Math.random()*1000)}` : (model.name || 'Object'),
+      role: isYBot ? 'npc' : 'static',
       type: 'static',
+      scripts: [],
       transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } }
     };
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
@@ -451,7 +458,7 @@ export default function SceneEditor() {
   const handleAddSpawnPoint = (model) => {
     const newId = crypto.randomUUID();
     // Auto-scale check for Y-Bot or similar large FBX models
-    const name = model.name.toLowerCase();
+    const name = (model.name || '').toLowerCase();
     const isYBot = name.includes('ybot') || name.includes('y-bot') || name.includes('y bot') || name.includes('white bot');
     const defaultScale = isYBot ? 0.01 : 1;
 
@@ -459,8 +466,11 @@ export default function SceneEditor() {
       id: newId,
       model_id: model.id,
       model_url: model.file_url,
-      name: 'Player Spawn (' + model.name + ')',
+      name: 'Player Spawn (' + (model.name || 'Model') + ')',
+      instance_name: isYBot ? 'YBot_Player' : `Spawn_${newId.slice(0,4)}`,
+      role: 'player',
       type: 'spawn_point',
+      scripts: [],
       transform: { 
           position: { x: 0, y: 0, z: 0 }, 
           rotation: { x: 0, y: 0, z: 0 }, 
@@ -470,6 +480,13 @@ export default function SceneEditor() {
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
     setSelectedObjectId(newId);
     setAddModelOpen(false);
+  };
+
+  const handleDuplicateObject = (obj) => {
+    const newId = crypto.randomUUID();
+    const copy = { ...obj, id: newId, instance_name: obj.instance_name ? `${obj.instance_name}_copy` : `${obj.name}_copy` };
+    setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, copy] }));
+    setSelectedObjectId(newId);
   };
 
   const handleSetEnvironment = (model) => {
@@ -591,7 +608,17 @@ export default function SceneEditor() {
                             <Box className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate">{obj.name}</span>
                         </div>
-                        <Button 
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-6 w-6 hover:bg-white/10"
+                            onClick={(e) => { e.stopPropagation(); handleDuplicateObject(obj); }}
+                            title="Duplicate"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <Button 
                             size="icon" 
                             variant="ghost" 
                             className="h-6 w-6 hover:bg-red-500/20 hover:text-red-400"
@@ -600,12 +627,26 @@ export default function SceneEditor() {
                                 setSceneConfig(prev => ({ ...prev, objects: prev.objects.filter(o => o.id !== obj.id) }));
                                 if (selectedObjectId === obj.id) setSelectedObjectId('environment');
                             }}
-                        >
+                          >
                             <Trash2 className="w-3 h-3" />
-                        </Button>
+                          </Button>
+                        </div>
                     </div>
                 ))}
             </div>
+
+            {selectedObjectId !== 'environment' && sceneConfig.objects.find(o => o.id === selectedObjectId) && (
+              <div className="px-4 pb-4">
+                <InstanceDetailsPanel
+                  obj={sceneConfig.objects.find(o => o.id === selectedObjectId)}
+                  scriptsCatalog={scripts}
+                  onChangeName={(val) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, instance_name: val } : o) }))}
+                  onChangeRole={(val) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) }))}
+                  onAddScript={(scriptId) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) }))}
+                  onRemoveScript={(idx) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) }))}
+                />
+              </div>
+            )}
 
             <div className="p-4 border-t border-slate-800 bg-slate-900 flex flex-col gap-2">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { setSelectingMode('obj'); setAddModelOpen(true); }}>
