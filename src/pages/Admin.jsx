@@ -292,7 +292,9 @@ export default function Admin() {
           - price (USD: 29.99, 39.99, 49.99, 59.99, or 69.99)
           - developer (real studio name)
           - rating (4.0 to 5.0)
-          - releaseYear (year as string)`,
+          - releaseYear (year as string)
+          - screenshot_urls (array of 3-4 distinct high-res image URLs)
+          - video_urls (array of 1-2 YouTube gameplay trailer URLs)`,
           add_context_from_internet: true,
           response_json_schema: {
             type: 'object',
@@ -308,7 +310,9 @@ export default function Admin() {
                     price: { type: 'number' },
                     developer: { type: 'string' },
                     rating: { type: 'number' },
-                    releaseYear: { type: 'string' }
+                    releaseYear: { type: 'string' },
+                    screenshot_urls: { type: 'array', items: { type: 'string' } },
+                    video_urls: { type: 'array', items: { type: 'string' } }
                   }
                 }
               }
@@ -330,7 +334,10 @@ export default function Admin() {
                 price: game.price || 59.99,
                 status: 'available',
                 original_year: parseInt(game.releaseYear) || 2024,
-                cover_image: getImageForGame(game.title)
+                cover_image: getImageForGame(game.title),
+                screenshots: game.screenshot_urls || [],
+                video_urls: game.video_urls || [],
+                trailer_url: game.video_urls?.[0] || ''
               });
             }
           }
@@ -384,6 +391,8 @@ export default function Admin() {
               description: igdbGame.description || existingGame.description,
               cover_image: igdbGame.cover_image || existingGame.cover_image,
               screenshots: igdbGame.screenshots?.length > 0 ? igdbGame.screenshots : existingGame.screenshots,
+              video_urls: igdbGame.video_urls?.length > 0 ? igdbGame.video_urls : existingGame.video_urls,
+              trailer_url: igdbGame.trailer_url || existingGame.trailer_url,
               genre: igdbGame.genre || existingGame.genre,
               developer: igdbGame.developer || existingGame.developer
             });
@@ -395,6 +404,8 @@ export default function Admin() {
               description: igdbGame.description,
               cover_image: igdbGame.cover_image,
               screenshots: igdbGame.screenshots || [],
+              video_urls: igdbGame.video_urls || [],
+              trailer_url: igdbGame.trailer_url || '',
               genre: igdbGame.genre?.toLowerCase() || 'action',
               price: 59.99, // Default price since IGDB doesn't have prices
               status: 'available',
