@@ -3086,7 +3086,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
-      {!showInventory && !showConsoleMode && !showAchievements && !activeSubTab && (
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && (
         // SideAccessMenu stays visible even when hideUI is true, per user request:
         // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
         // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
