@@ -749,7 +749,7 @@ const clockRef = useRef(new THREE.Clock());
                   scriptsCatalog={scripts}
                   onChangeName={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, instance_name: val } : o) })); setIsDirty(true); }}
                   onChangeRole={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) })); setIsDirty(true); }}
-                  onAddScript={(scriptId) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) })); setIsDirty(true); }); const obj = sceneObjectsMap.current[selectedObjectId]; if (obj && mixersRef.current[selectedObjectId]) { runObjectScripts(prev.objects.find(o => o.id === selectedObjectId) || { id: selectedObjectId, scripts: [...(obj.scripts||[]), { script_id: scriptId }] }); } }}
+                  onAddScript={(scriptId) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) })); setIsDirty(true); }}
                   onRemoveScript={(idx) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) })); setIsDirty(true); }}
                   onClose={() => setSelectedObjectId('environment')}
                 />
