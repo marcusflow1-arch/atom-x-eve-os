@@ -26,7 +26,7 @@ export default function Admin() {
   const [newTitle, setNewTitle] = useState('');
   const [previewVideo, setPreviewVideo] = useState(null);
   const [populatingGames, setPopulatingGames] = useState(false);
-  const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '' });
+  const [newGame, setNewGame] = useState({ title: '', description: '', genre: '', price: '', cover_image: '', video_urls: [], screenshots: [] });
   const [fixingImages, setFixingImages] = useState(false);
   const [activeJobId, setActiveJobId] = useState(null);
   const [fetchingIGDB, setFetchingIGDB] = useState(false);
@@ -105,7 +105,7 @@ export default function Admin() {
     mutationFn: (data) => Game.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminGames'] });
-      setNewGame({ title: '', description: '', genre: '', price: '', cover_image: '' });
+      setNewGame({ title: '', description: '', genre: '', price: '', cover_image: '', video_urls: [], screenshots: [] });
     },
   });
 
@@ -360,7 +360,10 @@ export default function Admin() {
     createGameMutation.mutate({
       ...newGame,
       price: parseFloat(newGame.price),
-      status: 'available'
+      status: 'available',
+      video_urls: newGame.video_urls,
+      screenshots: newGame.screenshots,
+      trailer_url: newGame.video_urls?.[0] || ''
     }, {
       onSuccess: () => showSuccess('Game added successfully!'),
       onError: (error) => showError(error, 'Add Game')
@@ -731,6 +734,20 @@ export default function Admin() {
                     onChange={(e) => setNewGame({ ...newGame, cover_image: e.target.value })}
                     className="bg-slate-900 border-slate-700"
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Textarea
+                        placeholder="Video URLs (comma separated, YouTube preferred)"
+                        value={newGame.video_urls ? newGame.video_urls.join(', ') : ''}
+                        onChange={(e) => setNewGame({ ...newGame, video_urls: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+                        className="bg-slate-900 border-slate-700 h-24"
+                    />
+                    <Textarea
+                        placeholder="Screenshot URLs (comma separated)"
+                        value={newGame.screenshots ? newGame.screenshots.join(', ') : ''}
+                        onChange={(e) => setNewGame({ ...newGame, screenshots: e.target.value.split(',').map(s => s.trim()).filter(s => s) })}
+                        className="bg-slate-900 border-slate-700 h-24"
+                    />
                 </div>
                 <Textarea
                   placeholder="Game description..."
