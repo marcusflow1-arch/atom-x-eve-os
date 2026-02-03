@@ -14,6 +14,9 @@ import { cn } from '@/lib/utils';
 
 const NODE_SIZE = 48; // px
 const LARGE_NODE_SIZE = 72; // px
+// Virtual canvas size for drag-pan (percentage of viewport)
+const CONTENT_W = 160; // 160% width
+const CONTENT_H = 130; // 130% height
 
 const THEMES = {
   mmorpg: { 
@@ -319,6 +322,17 @@ export default function SkillTreeSystem({ genre }) {
   const [unlockedNodes, setUnlockedNodes] = useState(['root']);
   const [skillPoints, setSkillPoints] = useState(genre?.skillPoints || 0);
   const [nodes, setNodes] = useState([]);
+  // Drag-pan state
+  const viewportRef = useRef(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const panStateRef = useRef({
+    isDown: false,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0,
+    bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0 }
+  });
 
   // Theme Resolution
   const theme = THEMES[genre?.id] || THEMES.default;
@@ -328,6 +342,54 @@ export default function SkillTreeSystem({ genre }) {
     setNodes(generateTreeData(genre?.id));
     setSelectedNode(null); // Reset selection on genre change
   }, [genre]);
+
+  // Compute pan bounds based on viewport size and virtual canvas
+  const recomputePanBounds = () => {
+    const el = viewportRef.current;
+    if (!el) return;
+    const vw = el.clientWidth;
+    const vh = el.clientHeight;
+    const contentW = vw * (CONTENT_W / 100);
+    const contentH = vh * (CONTENT_H / 100);
+    const maxX = 0; // cannot pan beyond left/top
+    const maxY = 0;
+    const minX = Math.min(0, vw - contentW);
+    const minY = Math.min(0, vh - contentH);
+    panStateRef.current.bounds = { minX, maxX, minY, maxY };
+    setPan((p) => ({
+      x: Math.max(minX, Math.min(maxX, p.x)),
+      y: Math.max(minY, Math.min(maxY, p.y)),
+    }));
+  };
+
+  useEffect(() => {
+    recomputePanBounds();
+    window.addEventListener('resize', recomputePanBounds);
+    return () => window.removeEventListener('resize', recomputePanBounds);
+  }, [selectedNode]);
+
+  // Drag handlers
+  const onPanStart = (e) => {
+    e.preventDefault();
+    const ps = panStateRef.current;
+    ps.isDown = true;
+    ps.startX = e.clientX;
+    ps.startY = e.clientY;
+    ps.startPanX = pan.x;
+    ps.startPanY = pan.y;
+  };
+  const onPanMove = (e) => {
+    const ps = panStateRef.current;
+    if (!ps.isDown) return;
+    const dx = e.clientX - ps.startX;
+    const dy = e.clientY - ps.startY;
+    const nx = Math.max(ps.bounds.minX, Math.min(ps.bounds.maxX, ps.startPanX + dx));
+    const ny = Math.max(ps.bounds.minY, Math.min(ps.bounds.maxY, ps.startPanY + dy));
+    setPan({ x: nx, y: ny });
+  };
+  const onPanEnd = () => {
+    panStateRef.current.isDown = false;
+  };
 
   // Determine Node Status
   const getNodeStatus = (node) => {

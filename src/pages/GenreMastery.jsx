@@ -531,6 +531,9 @@ export default function GenreMastery({ onClose }) {
     const [selectedItem, setSelectedItem] = useState(null);
     const scrollContainerRef = useRef(null);
     const carouselRef = useRef(null);
+    // Drag-to-scroll for progression track
+    const isDraggingTrack = useRef(false);
+    const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
 
     // Fetch games from database
     const { data: allGames = [], isLoading: gamesLoading } = useQuery({
@@ -606,6 +609,19 @@ export default function GenreMastery({ onClose }) {
       });
     }
   };
+
+  // Mouse drag handlers for progression track
+  const onTrackMouseDown = (e) => {
+    if (!scrollContainerRef.current) return;
+    isDraggingTrack.current = true;
+    dragStartRef.current = { x: e.clientX, scrollLeft: scrollContainerRef.current.scrollLeft };
+  };
+  const onTrackMouseMove = (e) => {
+    if (!isDraggingTrack.current || !scrollContainerRef.current) return;
+    const dx = e.clientX - dragStartRef.current.x;
+    scrollContainerRef.current.scrollLeft = dragStartRef.current.scrollLeft - dx;
+  };
+  const onTrackMouseUp = () => { isDraggingTrack.current = false; };
 
   // Featured Reward (The next big unlock)
   const nextBigUnlock = progressionData.find(p => !p.isUnlocked && (p.cardReward.rarity === 'Legendary' || p.cardReward.rarity === 'Mythical')) || progressionData[progressionData.length - 1];
@@ -881,10 +897,14 @@ export default function GenreMastery({ onClose }) {
                    </div>
                  </div>
 
-                 {/* HORIZONTAL SCROLL TRACK (Using existing LevelNode but in new layout) */}
+                 {/* HORIZONTAL SCROLL TRACK (drag-to-scroll enabled) */}
                  <div 
                     ref={scrollContainerRef}
-                    className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x mb-12"
+                    onMouseDown={onTrackMouseDown}
+                    onMouseMove={onTrackMouseMove}
+                    onMouseUp={onTrackMouseUp}
+                    onMouseLeave={onTrackMouseUp}
+                    className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x mb-12 cursor-grab active:cursor-grabbing select-none"
                     style={{ 
                       scrollBehavior: 'smooth',
                       background: 'rgba(0, 0, 0, 0.2)',
