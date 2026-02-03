@@ -102,6 +102,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const actorContainerRef = useRef(null);
   const roomMeshesRef = useRef([]);
   const mixerRef = useRef(null);
+  const clipsRef = useRef([]);
+  const animatorRef = useRef(null);
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
@@ -113,6 +115,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
+  const sanitizeScript = (code = '') => {
+    try {
+      return code
+        .replace(/\bexport\s+default\b/g, '')
+        .replace(/\bexport\s+async\s+function\b/g, 'async function')
+        .replace(/\bexport\s+function\b/g, 'function');
+    } catch { return code || ''; }
+  };
 
   // Load scripts bound to scene instances (build map once per activeScene)
   useEffect(() => {
@@ -194,10 +204,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
           try {
               console.log(`Executing 3D Script: ${script.name}`);
+              const code = sanitizeScript(script.script_code || '');
               const func = new Function(
                   'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
-                  script.script_code
-              );
+                  code
+                );
               func(
                   THREE, 
                   sceneRef.current, 
@@ -584,9 +595,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                             const script = instanceScriptsMapRef.current[binding.script_id];
                             if (script && script.script_code) {
                                 try {
+                                    const code = sanitizeScript(script.script_code || '');
                                     const fn = new Function(
                                         'THREE','scene','camera','instance','registerUpdate','params','mixer',
-                                        script.script_code
+                                        code
                                     );
                                     fn(
                                         THREE,
@@ -720,24 +732,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixer = new THREE.AnimationMixer(model);
 
       if (animations && animations.length > 0) {
-        animations.forEach((clip) => {
-          const action = mixer.clipAction(clip);
-          const name = clip.name.toLowerCase();
-
-          if (name.includes('idle') || name.includes('breathing')) actionsRef.current.idle = action;
-          else if (name.includes('walk')) actionsRef.current.walk = action;
-          else if (name.includes('run')) actionsRef.current.run = action;
-          else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
-          else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
-          else if (name.includes('kick')) actionsRef.current.kick = action;
-          else if (name.includes('dance')) actionsRef.current.dance = action;
-          else if (name.includes('wave') || name.includes('greet')) actionsRef.current.wave = action;
-        });
-
-        const idleAction = actionsRef.current.idle || mixer.clipAction(animations[0]);
-        if (idleAction) {
-          idleAction.play();
-        }
+        clipsRef.current = animations;
+        animatorRef.current = createAnimator(mixer, animations);
+        animatorRef.current.setBaseAction('Y Bot@Breathing Idle');
       }
     };
 
@@ -869,6 +866,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (key === ' ') {
         e.preventDefault();
       }
+      if (animatorRef.current) {
+        if (e.code === 'Space') { e.preventDefault(); animatorRef.current.playOneShot('jump'); }
+        else if (e.code === 'KeyC') { animatorRef.current.playOneShot('roll'); }
+        else if (e.code === 'Digit1') { animatorRef.current.playOneShot('attack 1'); }
+      }
     };
 
     const handleKeyUp = (e) => {
@@ -878,37 +880,71 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     const animationLocked = { current: false };
 
-    const setBaseAction = (name, once = false) => {
-      if (animationLocked.current && !once) return;
-      if (currentBaseActionRef.current === name && !once) return;
-
-      const action = actionsRef.current[name];
-      if (!action) return;
-
-      currentBaseActionRef.current = name;
-
-      Object.values(actionsRef.current).forEach((a) => {
-        if (a !== action) {
-          a.fadeOut(0.2);
-        }
-      });
-
-      if (!action.isRunning() || once) {
+    // Animator helpers: hard-switch state manager (no blending over one-shots)
+    const normalize = (s = '') => s.toLowerCase().replace(/[^a-z0-9]+/g, '').trim();
+    const buildClipMap = (clips = []) => { const map = {}; clips.forEach(c => { map[normalize(c.name)] = c; }); return map; };
+    const resolveClip = (clips, name) => {
+      const n = normalize(name);
+      const map = buildClipMap(clips);
+      if (map[n]) return map[n];
+      const aliases = {
+        'ybotbreathingidle': ['breathingidle','idle','ybotidle','ybot@breathingidle','ybotbreathidle'],
+        'ybotroll': ['roll'],
+        'ybotfall': ['fall','falling'],
+        'ybotjump': ['jump'],
+        'attack1': ['attack1','attack_1','attack01','attack']
+      };
+      for (const key in aliases) {
+        if (aliases[key].includes(n) && map[key]) return map[key];
+      }
+      const candidates = Object.keys(map).filter(k => k.includes(n));
+      return candidates[0] ? map[candidates[0]] : null;
+    };
+    const createAnimator = (mixer, clips) => {
+      let baseName = null;
+      let currentAction = null;
+      const stopAll = () => { mixer.stopAllAction(); currentAction = null; };
+      const setBaseAction = (name) => {
+        const clip = resolveClip(clips, name);
+        if (!clip) return;
+        stopAll();
+        const action = mixer.clipAction(clip);
         action.reset();
-        action.fadeIn(0.2);
-        action.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat);
-        action.clampWhenFinished = once;
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.clampWhenFinished = false;
+        action.enabled = true;
         action.play();
+        baseName = name;
+        currentAction = action;
+      };
+      const playOneShot = (name) => {
+        const clip = resolveClip(clips, name);
+        if (!clip) return;
+        stopAll();
+        const action = mixer.clipAction(clip);
+        action.reset();
+        action.setLoop(THREE.LoopOnce, 1);
+        action.clampWhenFinished = true;
+        action.play();
+        const onFinished = () => {
+          mixer.removeEventListener('finished', onFinished);
+          if (baseName) setBaseAction(baseName);
+        };
+        mixer.addEventListener('finished', onFinished);
+      };
+      return { setBaseAction, playOneShot };
+    };
 
-        if (once) {
-          animationLocked.current = true;
-          mixer.addEventListener('finished', function onFinish(e) {
-            if (e.action === action) {
-              animationLocked.current = false;
-              mixer.removeEventListener('finished', onFinish);
-            }
-          });
-        }
+    const setBaseAction = (name, once = false) => {
+      const mixer = mixerRef.current;
+      const clips = clipsRef.current || [];
+      if (!mixer || clips.length === 0) return;
+      if (!animatorRef.current) animatorRef.current = createAnimator(mixer, clips);
+      if (once) {
+        animatorRef.current.playOneShot(name);
+      } else {
+        animatorRef.current.setBaseAction(name);
+        currentBaseActionRef.current = name;
       }
     };
 
