@@ -9,10 +9,15 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { query, limit = 10 } = await req.json();
-
+        // Validate credentials first
         const clientId = Deno.env.get("IGDB_CLIENT_ID");
         const clientSecret = Deno.env.get("IGDB_CLIENT_SECRET");
+
+        if (!clientId || !clientSecret) {
+            throw new Error("Missing IGDB credentials");
+        }
+
+        const { query, limit = 10 } = await req.json();
 
         // Get Twitch OAuth token
         const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
@@ -21,10 +26,14 @@ Deno.serve(async (req) => {
             body: `client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`
         });
 
+        if (!tokenRes.ok) {
+            const errorText = await tokenRes.text();
+            throw new Error(`Twitch Auth Error: ${tokenRes.status} - ${errorText}`);
+        }
+
         const { access_token } = await tokenRes.json();
 
         // Fetch games from IGDB
-        // Added videos.video_id to query
         const igdbQuery = query || `
             fields name, summary, cover.url, first_release_date, rating, genres.name, screenshots.url, involved_companies.company.name, videos.video_id;
             where rating > 70 & first_release_date > ${Math.floor(Date.now() / 1000) - 31536000};
@@ -42,7 +51,16 @@ Deno.serve(async (req) => {
             body: igdbQuery
         });
 
+        if (!gamesRes.ok) {
+            const errorText = await gamesRes.text();
+            throw new Error(`IGDB API Error: ${gamesRes.status} - ${errorText}`);
+        }
+
         const games = await gamesRes.json();
+
+        if (!Array.isArray(games)) {
+             throw new Error("IGDB returned unexpected format (not an array)");
+        }
 
         // Transform data to match our format
         const transformedGames = games.map(game => {
@@ -60,13 +78,13 @@ Deno.serve(async (req) => {
                 release_date: game.first_release_date ? new Date(game.first_release_date * 1000).toISOString() : null,
                 developer: game.involved_companies?.[0]?.company?.name || 'Unknown',
                 igdb_id: game.id,
-                // Price is not available in IGDB, handled by frontend/LLM
                 price: 59.99 
             };
         });
 
         return Response.json({ games: transformedGames });
     } catch (error) {
+        // console.error is helpful if we could see logs, but returning it in response helps frontend debug
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
