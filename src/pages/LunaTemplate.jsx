@@ -2696,25 +2696,20 @@ export default function LunaTemplate() {
         ) : null}
       </AnimatePresence>
 
-      {/* Inventory Panel Overlay (Global) */}
-      <AnimatePresence>
-        {clickedSlot && (
-          <motion.div
-            key="inventory-panel"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[60]"
-          >
-            <InventoryPanel
-              onEquip={handleEquipItem}
-              targetSlot={clickedSlot}
-              onClose={() => setClickedSlot(null)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Inventory Panel Overlay (Global) - Single Instance */}
+      {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
+      {clickedSlot && (
+        <div 
+          className="fixed inset-0 z-[60]"
+          key="inventory-panel-container"
+        >
+          <InventoryPanel
+            onEquip={handleEquipItem}
+            targetSlot={clickedSlot}
+            onClose={() => setClickedSlot(null)}
+          />
+        </div>
+      )}
 
       {/* Avatar Progression Overlay (O key) */}
       <AnimatePresence>
