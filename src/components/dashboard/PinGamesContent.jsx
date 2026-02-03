@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Gamepad2, Play, Search, Clock, Star, Filter, MoreHorizontal, 
   Download, MessageSquare, Users, Trophy, Info, MonitorPlay, 
-  Share2, Settings, ListFilter, Activity
+  Share2, Settings, ListFilter, Activity, Radio, Zap, Sparkles, Eye
 } from 'lucide-react';
 import { aiGamesList, otherSampleGames } from '../store/mockData';
 import StreamAffiliateTab from '../gamedetail/StreamAffiliateTab';
