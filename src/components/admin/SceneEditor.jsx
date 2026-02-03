@@ -24,6 +24,7 @@ export default function SceneEditor() {
   const [selectedLayoutId, setSelectedLayoutId] = useState(null);
   const [mode, setMode] = useState('translate'); // translate, rotate, scale
   const [selectedObjectId, setSelectedObjectId] = useState('environment'); // 'environment' or object UUID
+  const [isDirty, setIsDirty] = useState(false);
   
   // Data for models
   const { data: models3d = [] } = useQuery({ queryKey: ['models3d'], queryFn: () => base44.entities.Model3D.list() });
@@ -58,6 +59,7 @@ export default function SceneEditor() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['sceneLayouts'] });
       showSuccess('Scene saved successfully!');
+      setIsDirty(false);
       if (!selectedLayoutId) setSelectedLayoutId(data.id);
     },
     onError: (err) => showError(err, 'Save Scene')
@@ -95,6 +97,7 @@ export default function SceneEditor() {
       objects: []
     });
     setSelectedObjectId('environment');
+    setIsDirty(false);
   };
 
   const loadLayout = (layout) => {
@@ -109,6 +112,7 @@ export default function SceneEditor() {
       } : { model_id: null, url: null, transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } } },
       objects: layout.objects || []
     });
+    setIsDirty(false);
   };
 
   // --- 3D Scene Refs ---
@@ -199,6 +203,7 @@ export default function SceneEditor() {
                         }
                     }
                 }));
+                setIsDirty(true);
             } else if (id) {
                 setSceneConfig(prev => ({
                     ...prev,
@@ -211,6 +216,7 @@ export default function SceneEditor() {
                         }
                     } : o)
                 }));
+                setIsDirty(true);
             }
         }
     });
@@ -453,11 +459,11 @@ export default function SceneEditor() {
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
     setSelectedObjectId(newId);
     setAddModelOpen(false);
+    setIsDirty(true);
   };
 
   const handleAddSpawnPoint = (model) => {
     const newId = crypto.randomUUID();
-    // Auto-scale check for Y-Bot or similar large FBX models
     const name = (model.name || '').toLowerCase();
     const isYBot = name.includes('ybot') || name.includes('y-bot') || name.includes('y bot') || name.includes('white bot');
     const defaultScale = isYBot ? 0.01 : 1;
@@ -480,6 +486,7 @@ export default function SceneEditor() {
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, newObj] }));
     setSelectedObjectId(newId);
     setAddModelOpen(false);
+    setIsDirty(true);
   };
 
   const handleDuplicateObject = (obj) => {
@@ -487,6 +494,7 @@ export default function SceneEditor() {
     const copy = { ...obj, id: newId, instance_name: obj.instance_name ? `${obj.instance_name}_copy` : `${obj.name}_copy` };
     setSceneConfig(prev => ({ ...prev, objects: [...prev.objects, copy] }));
     setSelectedObjectId(newId);
+    setIsDirty(true);
   };
 
   const handleSetEnvironment = (model) => {
@@ -504,8 +512,7 @@ export default function SceneEditor() {
 
   const handleSave = () => {
     if (!sceneName) return showError('Please name your scene');
-    
-    // Determine is_active state: preserve if updating, default to false if creating
+
     const currentLayout = layouts.find(l => l.id === selectedLayoutId);
     const isActive = currentLayout ? currentLayout.is_active : false;
 
@@ -517,8 +524,18 @@ export default function SceneEditor() {
         objects: sceneConfig.objects,
         is_active: isActive
     };
-    
+
     saveMutation.mutate(data);
+  };
+
+  const handleDiscard = () => {
+    if (selectedLayoutId) {
+      const layout = layouts.find(l => l.id === selectedLayoutId);
+      if (layout) loadLayout(layout);
+    } else {
+      resetEditor();
+    }
+    setIsDirty(false);
   };
 
   // Keyboard Shortcuts for Tools
@@ -542,6 +559,19 @@ export default function SceneEditor() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Save on Cmd/Ctrl+S
+  useEffect(() => {
+    const onKey = (e) => {
+      const key = (e.key || '').toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && key === 's') {
+        e.preventDefault();
+        if (isDirty) handleSave();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDirty, sceneName, sceneConfig, selectedLayoutId]);
 
   return (
     <div className="flex h-[calc(100vh-100px)] gap-4">
@@ -619,16 +649,17 @@ export default function SceneEditor() {
                             <Copy className="w-3 h-3" />
                           </Button>
                           <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-6 w-6 hover:bg-red-500/20 hover:text-red-400"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSceneConfig(prev => ({ ...prev, objects: prev.objects.filter(o => o.id !== obj.id) }));
-                                if (selectedObjectId === obj.id) setSelectedObjectId('environment');
-                            }}
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-6 w-6 hover:bg-red-500/20 hover:text-red-400"
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSceneConfig(prev => ({ ...prev, objects: prev.objects.filter(o => o.id !== obj.id) }));
+                                  if (selectedObjectId === obj.id) setSelectedObjectId('environment');
+                                  setIsDirty(true);
+                              }}
                           >
-                            <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                     </div>
@@ -640,10 +671,10 @@ export default function SceneEditor() {
                 <InstanceDetailsPanel
                   obj={sceneConfig.objects.find(o => o.id === selectedObjectId)}
                   scriptsCatalog={scripts}
-                  onChangeName={(val) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, instance_name: val } : o) }))}
-                  onChangeRole={(val) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) }))}
-                  onAddScript={(scriptId) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) }))}
-                  onRemoveScript={(idx) => setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) }))}
+                  onChangeName={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, instance_name: val } : o) })); setIsDirty(true); }}
+                  onChangeRole={(val) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, role: val } : o) })); setIsDirty(true); }}
+                  onAddScript={(scriptId) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: [...(o.scripts || []), { script_id: scriptId }] } : o) })); setIsDirty(true); }}
+                  onRemoveScript={(idx) => { setSceneConfig(prev => ({ ...prev, objects: prev.objects.map(o => o.id === selectedObjectId ? { ...o, scripts: (o.scripts || []).filter((_, i) => i !== idx) } : o) })); setIsDirty(true); }}
                 />
               </div>
             )}
@@ -705,8 +736,8 @@ export default function SceneEditor() {
                     </Button>
                 </>
             )}
-            <Button className="bg-green-600 hover:bg-green-700" size="sm" onClick={handleSave}>
-                <Save className="w-4 h-4 mr-2" /> Save Scene
+            <Button className={`hover:bg-green-700 ${isDirty ? 'bg-green-600' : 'bg-slate-700 cursor-not-allowed'}`} size="sm" onClick={handleSave} disabled={!isDirty}>
+                <Save className="w-4 h-4 mr-2" /> {isDirty ? 'Save Changes' : 'All Saved'}
             </Button>
         </div>
 
@@ -717,6 +748,15 @@ export default function SceneEditor() {
             onClick={handleCanvasClick}
         />
       </div>
+
+      {/* Floating Save Bar */}
+      {isDirty && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 shadow-xl">
+          <span className="text-slate-300 text-sm">Unsaved changes</span>
+          <Button variant="outline" onClick={handleDiscard}>Discard</Button>
+          <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">Save</Button>
+        </div>
+      )}
 
       {/* Add Model Modal/Drawer */}
       <AnimatePresence>
