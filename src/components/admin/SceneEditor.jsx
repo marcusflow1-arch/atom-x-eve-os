@@ -145,6 +145,8 @@ export default function SceneEditor() {
   
   // Maps specific object IDs to their Three.js Object3D
   const sceneObjectsMap = useRef({}); 
+const mixersRef = useRef({});
+const clockRef = useRef(new THREE.Clock());
 
   // Initialize Three.js
   useEffect(() => {
@@ -246,6 +248,8 @@ export default function SceneEditor() {
     // Animation Loop
     const animate = () => {
       requestAnimationFrame(animate);
+      const delta = clockRef.current.getDelta();
+      Object.values(mixersRef.current).forEach(({ mixer }) => mixer.update(delta));
       orbit.update();
       renderer.render(scene, camera);
     };
@@ -266,6 +270,45 @@ export default function SceneEditor() {
       if (containerRef.current) containerRef.current.innerHTML = '';
     };
   }, []);
+
+  // Play animations on an object based on attached scripts
+  const runObjectScripts = (objConf) => {
+    try {
+      const entry = mixersRef.current[objConf.id];
+      const model = sceneObjectsMap.current[objConf.id];
+      if (!entry || !model) return;
+      const { mixer, clips } = entry;
+      if (!clips || clips.length === 0) return;
+      const assigned = objConf.scripts || [];
+      if (!assigned.length) return;
+
+      const desired = new Set();
+      assigned.forEach((binding) => {
+        const scr = (scripts || []).find((s) => s.id === binding.script_id);
+        const nameFromBinding = binding?.params?.animation_name || binding?.params?.animation || binding?.params?.anim;
+        const nameFromScript = scr?.animation_name || scr?.default_params?.animation_name || scr?.name;
+        const animName = (nameFromBinding || nameFromScript || '').toString().trim();
+        if (animName) desired.add(animName.toLowerCase());
+      });
+
+      mixer.stopAllAction();
+      let playedAny = false;
+      desired.forEach((nameLc) => {
+        const clip = clips.find((c) => c.name?.toLowerCase() === nameLc) || clips.find((c) => c.name?.toLowerCase().includes(nameLc));
+        if (clip) {
+          mixer.clipAction(clip, model).reset().setLoop(THREE.LoopRepeat, Infinity).fadeIn(0.2).play();
+          playedAny = true;
+        }
+      });
+
+      if (!playedAny && clips.length) {
+        const clip = clips[0];
+        mixer.clipAction(clip, model).reset().setLoop(THREE.LoopRepeat, Infinity).play();
+      }
+    } catch (e) {
+      console.warn('runObjectScripts error', e);
+    }
+  };
 
   // --- Sync State to Scene ---
   // Load models when sceneConfig changes
@@ -340,6 +383,8 @@ export default function SceneEditor() {
             const obj = sceneObjectsMap.current[key];
             scene.remove(obj);
             if (transformRef.current.object === obj) transformRef.current.detach();
+            mixersRef.current[key]?.mixer?.stopAllAction?.();
+            delete mixersRef.current[key];
             delete sceneObjectsMap.current[key];
         }
     });
@@ -379,6 +424,15 @@ export default function SceneEditor() {
                     scene.add(model);
                     sceneObjectsMap.current[objConf.id] = model;
 
+                    // Create animation mixer if animations exist
+                    const clips = asset.animations || model.animations || [];
+                    if (clips && clips.length) {
+                      const mixer = new THREE.AnimationMixer(model);
+                      mixersRef.current[objConf.id] = { mixer, clips };
+                      // Apply scripts to choose and play the correct animation
+                      runObjectScripts(objConf);
+                    }
+
                     if (selectedObjectId === objConf.id) {
                         transformRef.current.attach(model);
                     }
@@ -389,6 +443,8 @@ export default function SceneEditor() {
             obj3d.position.set(objConf.transform.position.x, objConf.transform.position.y, objConf.transform.position.z);
             obj3d.rotation.set(objConf.transform.rotation.x, objConf.transform.rotation.y, objConf.transform.rotation.z);
             obj3d.scale.set(objConf.transform.scale.x, objConf.transform.scale.y, objConf.transform.scale.z);
+            // Re-apply scripts (e.g., when scripts changed on this object)
+            if (mixersRef.current[objConf.id]) runObjectScripts(objConf);
         }
     });
 
