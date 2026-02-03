@@ -1572,7 +1572,7 @@ export default function LunaTemplate() {
   const [showStats, setShowStats] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
   const [showSeasonalPass, setShowSeasonalPass] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
+  // showInventory removed to prevent duplicate state source of truth
   const [showPinGames, setShowPinGames] = useState(false);
   const [expandedGenre, setExpandedGenre] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
