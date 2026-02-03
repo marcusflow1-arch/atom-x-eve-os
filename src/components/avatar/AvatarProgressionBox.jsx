@@ -181,7 +181,7 @@ export default function AvatarProgressionBox() {
   };
 
   return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">AI Avatar Progression</h2>
