@@ -582,6 +582,9 @@ const clockRef = useRef(new THREE.Clock());
     if (entry?.mixer) {
       entry.mixer.stopAllAction();
     }
+    // Clear cached mixer/clips to avoid stale controller ties
+    delete mixersRef.current[objectId];
+
     const obj3d = sceneObjectsMap.current[objectId];
     if (obj3d) {
       obj3d.traverse((child) => {
