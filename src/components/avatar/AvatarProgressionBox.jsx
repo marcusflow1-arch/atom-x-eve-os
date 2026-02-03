@@ -106,17 +106,13 @@ export default function AvatarProgressionBox() {
     await saveRecord(next);
   };
 
-  const handleBoxClick = (slotId) => {
-    window.dispatchEvent(new CustomEvent('openInventoryPanel', { detail: { slotId } }));
-  };
-
   const renderSlot = (slotId, shape = "rounded-xl") => {
     const equippedItem = equippedItems[slotId];
     return (
       <div 
         key={slotId} 
-        onClick={() => handleBoxClick(slotId)} 
-        className={`w-[50px] h-[50px] ${shape} border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700`} 
+        // onClick handler removed per user request to disable overlay
+        className={`w-[50px] h-[50px] ${shape} border flex items-center justify-center overflow-hidden relative group transition-all duration-700`} 
         style={{ 
           background: 'rgba(11, 11, 11, 0.85)', 
           backdropFilter: 'blur(35px)', 
