@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, AlertTriangle, CheckCircle, RefreshCw, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 
 /**
@@ -21,19 +20,20 @@ export default function SecurityAuditPanel() {
             console.error('Audit failed:', error);
             setAuditResult({
                 status: 'error',
-                message: error.message
+                message: error.message || "Unknown error occurred"
             });
         }
         setLoading(false);
     };
 
+    // FIX 1: Updated helper to return just the text color classes needed for the UI
     const getSeverityColor = (severity) => {
         switch (severity) {
-            case 'critical': return 'bg-red-500/20 text-red-400 border-red-500/40';
-            case 'high': return 'bg-orange-500/20 text-orange-400 border-orange-500/40';
-            case 'moderate': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40';
-            case 'low': return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
-            default: return 'bg-slate-500/20 text-slate-400 border-slate-500/40';
+            case 'critical': return 'text-red-400';
+            case 'high': return 'text-orange-400';
+            case 'moderate': return 'text-yellow-400';
+            case 'low': return 'text-blue-400';
+            default: return 'text-slate-400';
         }
     };
 
@@ -116,7 +116,7 @@ export default function SecurityAuditPanel() {
                                     <div>
                                         <p className="text-white font-bold">Audit Complete</p>
                                         <p className="text-white/40 text-xs">
-                                            {new Date(auditResult.timestamp).toLocaleString()}
+                                            {auditResult.timestamp ? new Date(auditResult.timestamp).toLocaleString() : 'Just now'}
                                         </p>
                                     </div>
                                 </div>
@@ -126,13 +126,9 @@ export default function SecurityAuditPanel() {
                             <div className="grid grid-cols-5 gap-3 mb-6">
                                 {['critical', 'high', 'moderate', 'low', 'info'].map(severity => (
                                     <div key={severity} className="text-center p-4 bg-white/5 rounded-lg">
-                                        <div className={`text-2xl font-bold mb-1 ${
-                                            severity === 'critical' ? 'text-red-400' :
-                                            severity === 'high' ? 'text-orange-400' :
-                                            severity === 'moderate' ? 'text-yellow-400' :
-                                            'text-blue-400'
-                                        }`}>
-                                            {auditResult.summary[severity]}
+                                        {/* FIX 2: Used getSeverityColor helper & added safety check (?.) */}
+                                        <div className={`text-2xl font-bold mb-1 ${getSeverityColor(severity)}`}>
+                                            {auditResult.summary?.[severity] || 0}
                                         </div>
                                         <div className="text-white/40 text-xs uppercase">{severity}</div>
                                     </div>
@@ -143,12 +139,17 @@ export default function SecurityAuditPanel() {
                             <div>
                                 <h3 className="text-white font-bold mb-3">Recommendations</h3>
                                 <ul className="space-y-2">
-                                    {auditResult.recommendations.map((rec, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-sm text-white/70">
-                                            <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                                            <span>{rec}</span>
-                                        </li>
-                                    ))}
+                                    {/* FIX 3: Added safety check for empty recommendations */}
+                                    {auditResult.recommendations?.length > 0 ? (
+                                        auditResult.recommendations.map((rec, idx) => (
+                                            <li key={idx} className="flex items-start gap-2 text-sm text-white/70">
+                                                <CheckCircle className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                                <span>{rec}</span>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <li className="text-white/40 text-sm italic">No recommendations found. System is healthy.</li>
+                                    )}
                                 </ul>
                             </div>
                         </>
