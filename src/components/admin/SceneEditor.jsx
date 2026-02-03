@@ -448,7 +448,7 @@ const clockRef = useRef(new THREE.Clock());
         }
     });
 
-  }, [sceneConfig]); // Only re-run when config changes (which happens on mouseUp of transform)
+  }, [sceneConfig, scripts]); // re-run when config or scripts change so animations sync
 
   // Mode & Selection Effect
   useEffect(() => {
