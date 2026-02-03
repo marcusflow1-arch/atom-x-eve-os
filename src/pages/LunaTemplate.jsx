@@ -115,6 +115,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
+  const yVelRef = useRef(0);
+  const isAirborneRef = useRef(false);
+  const groundedRef = useRef(true);
   const sanitizeScript = (code = '') => {
     try {
       return code
@@ -858,23 +861,31 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
 
     const handleKeyDown = (e) => {
-      if (!controlsActive.current) return;
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
 
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
 
       if (key === ' ') {
         e.preventDefault();
+        // Jump physics + one-shot
+        if (groundedRef.current && animatorRef.current) {
+          yVelRef.current = 6.0; // jump impulse
+          isAirborneRef.current = true;
+          groundedRef.current = false;
+          animatorRef.current.playOneShot('jump');
+        }
       }
       if (animatorRef.current) {
-        if (e.code === 'Space') { e.preventDefault(); animatorRef.current.playOneShot('jump'); }
-        else if (e.code === 'KeyC') { animatorRef.current.playOneShot('roll'); }
+        if (e.code === 'KeyC') { animatorRef.current.playOneShot('roll'); }
         else if (e.code === 'Digit1') { animatorRef.current.playOneShot('attack 1'); }
       }
     };
 
     const handleKeyUp = (e) => {
-      if (!controlsActive.current) return;
+      const target = e.target;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
       keysPressed.current[e.key.toLowerCase()] = false;
     };
 
@@ -903,8 +914,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const createAnimator = (mixer, clips) => {
       let baseName = null;
       let currentAction = null;
+      let isOneShot = false;
       const stopAll = () => { mixer.stopAllAction(); currentAction = null; };
       const setBaseAction = (name) => {
+        if (isOneShot) return; // do not override active one-shot
         const clip = resolveClip(clips, name);
         if (!clip) return;
         stopAll();
@@ -918,8 +931,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         currentAction = action;
       };
       const playOneShot = (name) => {
+        if (isOneShot) return; // anti-spam
         const clip = resolveClip(clips, name);
         if (!clip) return;
+        isOneShot = true;
         stopAll();
         const action = mixer.clipAction(clip);
         action.reset();
@@ -928,11 +943,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         action.play();
         const onFinished = () => {
           mixer.removeEventListener('finished', onFinished);
+          isOneShot = false;
           if (baseName) setBaseAction(baseName);
         };
         mixer.addEventListener('finished', onFinished);
       };
-      return { setBaseAction, playOneShot };
+      return { setBaseAction, playOneShot, get isOneShotPlaying() { return isOneShot; } };
     };
 
     const setBaseAction = (name, once = false) => {
@@ -1092,18 +1108,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 actorContainerRef.current.position.addScaledVector(intendedMove, moveSpeed);
             }
 
-            // Ground Snapping (Gravity)
+            // Vertical physics (jump/fall)
+            if (isAirborneRef.current) {
+                yVelRef.current += (-9.8) * delta; // gravity
+                actorContainerRef.current.position.y += yVelRef.current * delta;
+            }
+
+            // Ground check
             const groundRayOrigin = actorContainerRef.current.position.clone();
             groundRayOrigin.y += 5.0; // Cast from above
-            const down = new THREE.Vector3(0, -1, 0);
-            
             const groundRay = new THREE.Raycaster(groundRayOrigin, down);
             const groundHits = groundRay.intersectObjects(collisionObjects, collisionMeshesRef.current.length === 0);
 
             if (groundHits.length > 0) {
                 const floorY = groundHits[0].point.y;
-                // Soft snap or hard snap
-                actorContainerRef.current.position.y = floorY;
+                if (actorContainerRef.current.position.y <= floorY) {
+                    // Landed
+                    actorContainerRef.current.position.y = floorY;
+                    yVelRef.current = 0;
+                    isAirborneRef.current = false;
+                    groundedRef.current = true;
+                } else {
+                    groundedRef.current = false;
+                    // Falling state (no loop overrides while one-shot active)
+                    if (animatorRef.current && !animatorRef.current.isOneShotPlaying) {
+                        animatorRef.current.setBaseAction('fall');
+                    }
+                }
             }
         } else {
             // Fallback move if no collision mesh
@@ -1112,21 +1143,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
         }
 
-        // 3. ANIMATION STATE
-        if (controlsActive.current) {
-            if (isMoving) {
-                if (!animationLocked.current) setBaseAction('run');
-            } else {
-                if (!animationLocked.current) setBaseAction(resolveIdle());
+        // 3. ANIMATION STATE (commanded only)
+        const isRunKeyDown = !!(keysPressed.current['w'] || keysPressed.current['a'] || keysPressed.current['s'] || keysPressed.current['d']);
+        if (!isAirborneRef.current && animatorRef.current && !animatorRef.current.isOneShotPlaying) {
+            if (isRunKeyDown) {
+                animatorRef.current.setBaseAction('run');
+            } else if (groundedRef.current) {
+                animatorRef.current.setBaseAction(resolveIdle());
             }
-            
-            const currentState = useLunaStore.getState();
-            if (currentState.actions.skill) handleSkill();
-            else if (currentState.actions.attack) handleAttack();
-        } else {
-            // Idle when not selected
-            if (!animationLocked.current) setBaseAction(resolveIdle());
         }
+        // Skill/attack triggers (from store) still honored
+        const currentState = useLunaStore.getState();
+        if (currentState.actions.skill) handleSkill();
+        else if (currentState.actions.attack) handleAttack();
 
         // 4. CAMERA FOLLOW (Orbit Orbit)
         if (controlsRef.current) {
