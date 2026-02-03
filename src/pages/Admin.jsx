@@ -197,9 +197,9 @@ export default function Admin() {
       }
       
       refetchGames();
-      showSuccess(`Finished fixing images! Processed ${totalFixed} games.`);
+      showSuccess(`Finished fixing media! Processed ${totalFixed} games.`);
     } catch (error) {
-      showError(error, 'Fix Images');
+      showError(error, 'Fix Media');
     } finally {
       setFixingImages(false);
     }
@@ -631,9 +631,9 @@ export default function Admin() {
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     {fixingImages ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing Images...</>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Fixing Media...</>
                     ) : (
-                      <><RefreshCw className="w-4 h-4 mr-2" /> Re-run (Fix Images)</>
+                      <><RefreshCw className="w-4 h-4 mr-2" /> Fix Media (Img/Vid)</>
                     )}
                   </Button>
                   <Button 

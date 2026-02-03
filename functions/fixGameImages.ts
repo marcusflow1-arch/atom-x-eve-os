@@ -13,16 +13,21 @@ Deno.serve(async (req) => {
         const games = await base44.entities.Game.list({ limit: 100 }); // Fetch up to 100 games
 
         // 2. Identify games to fix
-        // We look for games with no image, empty image, or placeholder/unsplash images
+        // We look for games with:
+        // - No image, empty image, or placeholder/unsplash images
+        // - Less than 3 screenshots
+        // - No video URLs or trailers
         const gamesToFix = games.filter(g => 
             !g.cover_image || 
             g.cover_image === '' || 
-            g.cover_image.includes('unsplash.com')
+            g.cover_image.includes('unsplash.com') ||
+            !g.screenshots || g.screenshots.length < 3 ||
+            !g.video_urls || g.video_urls.length === 0
         );
 
         if (gamesToFix.length === 0) {
              return Response.json({ 
-                 message: "No games found that need image fixing.", 
+                 message: "No games found that need media fixing.", 
                  fixedCount: 0,
                  remaining: 0
             });
@@ -55,12 +60,18 @@ Deno.serve(async (req) => {
 
         for (const game of chunk) {
             try {
-                let imageUrl = null;
-                
-                // Strategy 1: Try IGDB first (most reliable for game cover art)
+                let updates = {};
+                let foundAny = false;
+
+                // 1. Fetch Media from IGDB if possible
+                let igdbData = null;
                 if (igdbToken) {
                     try {
-                        const igdbQuery = `search "${game.title}"; fields name, cover.url; limit 1;`;
+                        const igdbQuery = `
+                            search "${game.title}"; 
+                            fields name, cover.url, screenshots.url, videos.video_id; 
+                            limit 1;
+                        `;
                         const igdbRes = await fetch('https://api.igdb.com/v4/games', {
                             method: 'POST',
                             headers: {
@@ -70,49 +81,92 @@ Deno.serve(async (req) => {
                             },
                             body: igdbQuery
                         });
-                        const igdbData = await igdbRes.json();
-                        
-                        if (igdbData.length > 0 && igdbData[0].cover?.url) {
-                            imageUrl = `https:${igdbData[0].cover.url.replace('t_thumb', 't_cover_big')}`;
-                            console.log(`Found IGDB image for ${game.title}`);
-                        }
+                        const igdbResults = await igdbRes.json();
+                        if (igdbResults.length > 0) igdbData = igdbResults[0];
                     } catch (e) {
                         console.log(`IGDB lookup failed for ${game.title}:`, e.message);
                     }
                 }
-                
-                // Strategy 2: If IGDB fails, use grounded search
-                if (!imageUrl) {
+
+                // 2. Determine what's missing
+                const needsCover = !game.cover_image || game.cover_image.includes('unsplash.com');
+                const needsScreenshots = !game.screenshots || game.screenshots.length < 3;
+                const needsVideos = !game.video_urls || game.video_urls.length === 0;
+
+                // 3. Process IGDB Data
+                if (igdbData) {
+                    if (needsCover && igdbData.cover?.url) {
+                        updates.cover_image = `https:${igdbData.cover.url.replace('t_thumb', 't_cover_big')}`;
+                        foundAny = true;
+                    }
+                    if (igdbData.screenshots?.length > 0) {
+                        const newScreens = igdbData.screenshots.map(s => `https:${s.url.replace('t_thumb', 't_screenshot_big')}`);
+                        updates.screenshots = [...new Set([...(game.screenshots || []), ...newScreens])];
+                        if (updates.screenshots.length >= 3) foundAny = true;
+                    }
+                    if (igdbData.videos?.length > 0) {
+                        const newVideos = igdbData.videos.map(v => `https://www.youtube.com/watch?v=${v.video_id}`);
+                        updates.video_urls = [...new Set([...(game.video_urls || []), ...newVideos])];
+                        if (!game.trailer_url && updates.video_urls.length > 0) {
+                            updates.trailer_url = updates.video_urls[0];
+                        }
+                        foundAny = true;
+                    }
+                }
+
+                // 4. Fallback to LLM Web Search if still missing items
+                const stillNeedsCover = needsCover && !updates.cover_image;
+                const stillNeedsScreenshots = needsScreenshots && (!updates.screenshots || updates.screenshots.length < 3);
+                const stillNeedsVideos = needsVideos && (!updates.video_urls || updates.video_urls.length === 0);
+
+                if (stillNeedsCover || stillNeedsScreenshots || stillNeedsVideos) {
                     const llmResponse = await base44.integrations.Core.InvokeLLM({
-                        prompt: `Find the official box art/cover image for the game "${game.title}".
+                        prompt: `Find media for the video game "${game.title}".
                         
-                        CRITICAL REQUIREMENTS:
-                        - Must be a DIRECT image URL (ends in .jpg, .png, .webp)
-                        - Must be vertical/portrait orientation (cover art)
-                        - Prioritize: images.igdb.com, cdn.cloudflare.steamstatic.com, assets.nintendo.com, image.api.playstation.com
-                        - Avoid: encrypted-tbn0, googleusercontent, unsplash, base64
+                        REQUIREMENTS:
+                        ${stillNeedsCover ? '- Find 1 OFFICIAL vertical box art/cover image URL.' : ''}
+                        ${stillNeedsScreenshots ? '- Find 3-5 DISTINCT high-quality screenshot URLs.' : ''}
+                        ${stillNeedsVideos ? '- Find 1-2 OFFICIAL YouTube trailer URLs (gameplay or launch trailer).' : ''}
                         
-                        Return ONLY a working, direct image URL.`,
+                        - Images must be DIRECT URLs (jpg/png/webp).
+                        - Videos must be standard YouTube watch URLs.
+                        - Avoid generic placeholder sites or unsplash.`,
                         add_context_from_internet: true,
                         response_json_schema: {
                             type: "object",
                             properties: {
-                                imageUrl: { type: "string" }
+                                cover_url: { type: "string" },
+                                screenshot_urls: { type: "array", items: { type: "string" } },
+                                video_urls: { type: "array", items: { type: "string" } }
                             }
                         }
                     });
-                    imageUrl = llmResponse.imageUrl;
+
+                    if (stillNeedsCover && llmResponse.cover_url) {
+                        updates.cover_image = llmResponse.cover_url;
+                        foundAny = true;
+                    }
+                    if (stillNeedsScreenshots && llmResponse.screenshot_urls?.length > 0) {
+                        updates.screenshots = [...new Set([...(updates.screenshots || game.screenshots || []), ...llmResponse.screenshot_urls])];
+                        foundAny = true;
+                    }
+                    if (stillNeedsVideos && llmResponse.video_urls?.length > 0) {
+                        updates.video_urls = [...new Set([...(updates.video_urls || game.video_urls || []), ...llmResponse.video_urls])];
+                        if (!game.trailer_url && updates.video_urls.length > 0) {
+                            updates.trailer_url = updates.video_urls[0];
+                        }
+                        foundAny = true;
+                    }
                 }
 
-                // Update game with found image
-                if (imageUrl && !imageUrl.includes('unsplash.com')) {
-                    await base44.entities.Game.update(game.id, {
-                        cover_image: imageUrl
-                    });
-                    results.push({ id: game.id, title: game.title, status: 'fixed', url: imageUrl });
+                // 5. Apply Updates
+                if (foundAny && Object.keys(updates).length > 0) {
+                    await base44.entities.Game.update(game.id, updates);
+                    results.push({ id: game.id, title: game.title, status: 'fixed', updates });
                 } else {
-                    results.push({ id: game.id, title: game.title, status: 'failed_invalid_url', url: imageUrl });
+                    results.push({ id: game.id, title: game.title, status: 'skipped_no_data' });
                 }
+
             } catch (e) {
                 console.error(`Failed to fix ${game.title}:`, e);
                 results.push({ id: game.id, title: game.title, status: 'error', error: e.message });
