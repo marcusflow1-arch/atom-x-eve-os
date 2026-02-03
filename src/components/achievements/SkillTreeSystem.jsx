@@ -1,141 +1,195 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Brain, Zap, Shield, Crosshair, Eye, Navigation, 
-  Cpu, Activity, Lock, Unlock, Check, ChevronRight 
+  Cpu, Activity, Lock, Unlock, Check, ChevronRight,
+  Hexagon, Target, Play, AlertCircle, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-// --- MOCK SKILL DATA PER GENRE ---
+// --- ENHANCED MOCK DATA ---
 const SKILL_DATA = {
   mmorpg: {
-    name: "Warlord AI Protocol",
-    description: "Enhances companion efficiency in large-scale raids and economy management.",
+    name: "WARLORD PROTOCOL",
+    class: "Tactical Command",
+    description: "Advanced raid heuristics and economy optimization algorithms.",
+    color: "purple",
     nodes: [
-      { id: 'core', x: 50, y: 50, label: 'Core Logic', icon: Brain, type: 'core', cost: 0, unlocked: true },
-      { id: 'pathing', x: 30, y: 35, label: 'Auto-Pathing', icon: Navigation, type: 'utility', cost: 1, parent: 'core', desc: 'AI navigates complex terrain automatically, avoiding hazards.' },
-      { id: 'market', x: 70, y: 35, label: 'Trade Analyze', icon: Activity, type: 'economy', cost: 1, parent: 'core', desc: 'Predicts market trends and suggests optimal sell times.' },
-      { id: 'raid', x: 50, y: 20, label: 'Raid Awareness', icon: Eye, type: 'combat', cost: 2, parent: 'core', desc: 'Pre-alerts boss mechanics by 1.5 seconds.' },
-      { id: 'healing', x: 30, y: 15, label: 'Triage Logic', icon: Shield, type: 'support', cost: 2, parent: 'pathing', desc: 'Prioritizes healing targets based on role value.' },
-      { id: 'dps_boost', x: 70, y: 15, label: 'Synergy Spike', icon: Zap, type: 'combat', cost: 3, parent: 'market', desc: 'Grants +5% damage boost when fighting near AI.' },
-      { id: 'ultimate', x: 50, y: 5, label: 'Hive Mind', icon: Cpu, type: 'ultimate', cost: 5, parent: 'raid', desc: 'AI coordinates with other party AIs for perfect ability chaining.' },
+      { id: 'core', x: 50, y: 50, label: 'Cortex', icon: Brain, type: 'core', cost: 0, unlocked: true },
+      { id: 'pathing', x: 35, y: 40, label: 'Auto-Nav', icon: Navigation, type: 'utility', cost: 1, parent: 'core', desc: 'Autonomous terrain traversal and hazard avoidance systems.' },
+      { id: 'market', x: 65, y: 40, label: 'Econ-AI', icon: Activity, type: 'economy', cost: 1, parent: 'core', desc: 'Real-time market arbitrage and resource valuation.' },
+      { id: 'raid', x: 50, y: 25, label: 'Boss Logic', icon: Eye, type: 'combat', cost: 2, parent: 'core', desc: 'Predictive modeling for boss encounter mechanics.' },
+      { id: 'healing', x: 25, y: 25, label: 'Triage', icon: Shield, type: 'support', cost: 2, parent: 'pathing', desc: 'Dynamic health prioritization for party members.' },
+      { id: 'dps_boost', x: 75, y: 25, label: 'Synergy', icon: Zap, type: 'combat', cost: 3, parent: 'market', desc: 'Coordinated attack patterns yield +5% damage output.' },
+      { id: 'ultimate', x: 50, y: 10, label: 'HIVE MIND', icon: Cpu, type: 'ultimate', cost: 5, parent: 'raid', desc: 'Full party neural link for frame-perfect combo execution.' },
     ]
   },
   shooter: {
-    name: "Aim-Assist Matrix",
-    description: "Optimizes target acquisition and recoil control routines.",
+    name: "AIM-ASSIST MATRIX",
+    class: "Precision Ops",
+    description: "Sub-millisecond target acquisition and recoil negation.",
+    color: "emerald",
     nodes: [
-      { id: 'core', x: 50, y: 50, label: 'Core Logic', icon: Brain, type: 'core', cost: 0, unlocked: true },
-      { id: 'snap', x: 40, y: 35, label: 'Snap Reflex', icon: Crosshair, type: 'combat', cost: 1, parent: 'core', desc: 'AI acquires targets 20% faster.' },
-      { id: 'spotter', x: 60, y: 35, label: 'Enemy Spotter', icon: Eye, type: 'utility', cost: 1, parent: 'core', desc: 'Highlights enemies through smoke and foliage.' },
-      { id: 'recoil', x: 20, y: 25, label: 'Recoil Null', icon: Activity, type: 'combat', cost: 2, parent: 'snap', desc: 'AI compensates for 15% of weapon recoil.' },
-      { id: 'revive', x: 80, y: 25, label: 'Combat Medic', icon: Shield, type: 'support', cost: 2, parent: 'spotter', desc: 'AI deploys smoke automatically when reviving.' },
-      { id: 'auto_lock', x: 50, y: 15, label: 'Target Lock', icon: Target, type: 'ultimate', cost: 5, parent: 'core', desc: 'Enables auto-locking on exposed enemy weak points.' },
+      { id: 'core', x: 50, y: 50, label: 'Cortex', icon: Brain, type: 'core', cost: 0, unlocked: true },
+      { id: 'snap', x: 40, y: 35, label: 'Reflex', icon: Crosshair, type: 'combat', cost: 1, parent: 'core', desc: 'Target acquisition latency reduced by 20%.' },
+      { id: 'spotter', x: 60, y: 35, label: 'Vision', icon: Eye, type: 'utility', cost: 1, parent: 'core', desc: 'Thermal imaging overlay for obscured targets.' },
+      { id: 'recoil', x: 30, y: 20, label: 'Stabilizer', icon: Activity, type: 'combat', cost: 2, parent: 'snap', desc: 'AI counter-acts 15% of weapon recoil patterns.' },
+      { id: 'revive', x: 70, y: 20, label: 'Medic', icon: Shield, type: 'support', cost: 2, parent: 'spotter', desc: 'Autonomous smoke deployment during revival actions.' },
+      { id: 'auto_lock', x: 50, y: 10, label: 'DEADEYE', icon: Target, type: 'ultimate', cost: 5, parent: 'core', desc: 'Perfect tracking on exposed weak points for 3s.' },
     ]
   },
-  // Fallback for other genres
   default: {
-    name: "General Intelligence",
-    description: "General purpose enhancements for your AI companion.",
+    name: "GENERAL INTELLIGENCE",
+    class: "Base Systems",
+    description: "Core processing and adaptability enhancements.",
+    color: "cyan",
     nodes: [
-      { id: 'core', x: 50, y: 50, label: 'Core Logic', icon: Brain, type: 'core', cost: 0, unlocked: true },
-      { id: 'efficiency', x: 35, y: 35, label: 'Efficiency', icon: Zap, type: 'utility', cost: 1, parent: 'core', desc: 'Reduces AI ability cooldowns by 10%.' },
-      { id: 'learning', x: 65, y: 35, label: 'Deep Learning', icon: Cpu, type: 'utility', cost: 1, parent: 'core', desc: 'AI adapts to enemy patterns 2x faster.' },
-      { id: 'survival', x: 50, y: 20, label: 'Survival Protocol', icon: Shield, type: 'defense', cost: 3, parent: 'core', desc: 'AI automatically uses consumables at low health.' },
+      { id: 'core', x: 50, y: 50, label: 'Cortex', icon: Brain, type: 'core', cost: 0, unlocked: true },
+      { id: 'efficiency', x: 35, y: 35, label: 'Cycles', icon: Zap, type: 'utility', cost: 1, parent: 'core', desc: 'Ability cooldowns reduced by 10% via overclocking.' },
+      { id: 'learning', x: 65, y: 35, label: 'Adapt', icon: Cpu, type: 'utility', cost: 1, parent: 'core', desc: 'Pattern recognition speed increased by 200%.' },
+      { id: 'survival', x: 50, y: 20, label: 'Protocol', icon: Shield, type: 'defense', cost: 3, parent: 'core', desc: 'Emergency consumable usage at critical health thresholds.' },
     ]
   }
 };
 
-import { Target } from 'lucide-react';
+const THEME_COLORS = {
+  cyan: { main: 'text-cyan-400', border: 'border-cyan-500', glow: 'shadow-cyan-500/50', bg: 'bg-cyan-950', grad: 'from-cyan-500 to-blue-600' },
+  purple: { main: 'text-purple-400', border: 'border-purple-500', glow: 'shadow-purple-500/50', bg: 'bg-purple-950', grad: 'from-purple-500 to-indigo-600' },
+  emerald: { main: 'text-emerald-400', border: 'border-emerald-500', glow: 'shadow-emerald-500/50', bg: 'bg-emerald-950', grad: 'from-emerald-500 to-teal-600' },
+  red: { main: 'text-red-400', border: 'border-red-500', glow: 'shadow-red-500/50', bg: 'bg-red-950', grad: 'from-red-500 to-rose-600' },
+};
 
-const SkillNode = ({ node, onClick, isSelected, isUnlocked, isReachable }) => {
+// --- COMPONENTS ---
+
+const HexNode = ({ node, onClick, isSelected, isUnlocked, isReachable, theme }) => {
   const Icon = node.icon;
+  const isUltimate = node.type === 'ultimate';
   
-  // Node Styles based on state
-  let bg = 'bg-slate-900';
-  let border = 'border-slate-700';
-  let iconColor = 'text-slate-500';
-  let shadow = '';
-
-  if (isUnlocked) {
-    bg = 'bg-cyan-900/80';
-    border = 'border-cyan-400';
-    iconColor = 'text-cyan-300';
-    shadow = 'shadow-[0_0_15px_rgba(34,211,238,0.4)]';
-  } else if (isReachable) {
-    bg = 'bg-slate-800';
-    border = 'border-white/40 border-dashed';
-    iconColor = 'text-white/60';
-  }
-
-  if (isSelected) {
-    border = 'border-white';
-    shadow = 'shadow-[0_0_20px_rgba(255,255,255,0.6)]';
-  }
-
-  if (node.type === 'ultimate') {
-    border = isUnlocked ? 'border-yellow-400' : 'border-yellow-900';
-    iconColor = isUnlocked ? 'text-yellow-300' : 'text-yellow-700';
-  }
-
   return (
     <div 
-      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-10"
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer z-20"
       style={{ left: `${node.x}%`, top: `${node.y}%` }}
       onClick={() => onClick(node)}
     >
-      <motion.div
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${bg} ${border} ${shadow}`}
-      >
-        <Icon className={`w-6 h-6 md:w-8 md:h-8 ${iconColor}`} />
-        
-        {/* Status Indicator */}
-        <div className="absolute -bottom-1 -right-1">
-          {isUnlocked ? (
-            <div className="w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center border border-black text-black">
-              <Check className="w-3 h-3" />
-            </div>
-          ) : !isReachable ? (
-            <div className="w-5 h-5 bg-black/80 rounded-full flex items-center justify-center border border-slate-600">
-              <Lock className="w-3 h-3 text-slate-500" />
-            </div>
-          ) : null}
+      {/* Outer Pulse Ring for Unlocked/Ultimate */}
+      {(isUnlocked || (isUltimate && isReachable)) && (
+        <div className="absolute inset-0 -m-4">
+          <div className={`w-full h-full rounded-full animate-ping opacity-20 bg-${theme.split('-')[1]}-400`} />
         </div>
-      </motion.div>
-      
-      {/* Tooltip Label */}
-      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-        <span className="bg-black/80 text-white text-[10px] px-2 py-1 rounded border border-white/10 uppercase tracking-wider">
-          {node.label}
-        </span>
+      )}
+
+      {/* Connection Line Hub */}
+      <div className="absolute inset-0 flex items-center justify-center -z-10">
+        <div className={`w-24 h-24 bg-black/50 blur-xl rounded-full`} />
       </div>
+
+      <motion.div
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.9 }}
+        animate={{ 
+          scale: isSelected ? 1.1 : 1,
+          borderColor: isSelected ? 'rgba(255,255,255,0.9)' : '',
+        }}
+        className={`
+          relative flex items-center justify-center backdrop-blur-md transition-all duration-500
+          ${isUltimate ? 'w-20 h-20' : 'w-14 h-14'}
+          ${isUnlocked 
+            ? `${THEME_COLORS[theme]?.bg || 'bg-cyan-950'}/80 ${THEME_COLORS[theme]?.border || 'border-cyan-500'} border-2 shadow-[0_0_20px_rgba(34,211,238,0.3)]` 
+            : isReachable 
+              ? 'bg-slate-900/80 border-slate-600 border border-dashed hover:border-white/50' 
+              : 'bg-black/60 border-slate-800 border opacity-60 grayscale'}
+          clip-path-hexagon
+        `}
+        style={{
+          clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
+        }}
+      >
+        {/* Hexagon Border Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+        
+        {/* Icon */}
+        <Icon 
+          className={`
+            relative z-10 transition-colors duration-300
+            ${isUltimate ? 'w-8 h-8' : 'w-6 h-6'}
+            ${isUnlocked 
+              ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' 
+              : isReachable ? 'text-white/70' : 'text-slate-600'}
+          `} 
+        />
+
+        {/* Lock Icon Overlay */}
+        {!isUnlocked && !isReachable && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
+            <Lock className="w-3 h-3 text-slate-500" />
+          </div>
+        )}
+      </motion.div>
+
+      {/* Label Tag */}
+      <AnimatePresence>
+        {(isSelected || isUnlocked) && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className={`
+              absolute top-full mt-3 left-1/2 -translate-x-1/2 
+              whitespace-nowrap px-3 py-1 rounded-sm border-l-2 
+              bg-black/80 backdrop-blur-sm
+              ${THEME_COLORS[theme]?.border || 'border-cyan-500'}
+            `}
+          >
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${isUnlocked ? 'text-white' : 'text-slate-400'}`}>
+              {node.label}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
-// SVG Connector Lines
-const Connection = ({ start, end, active }) => {
-  // Simple calculation assuming % coordinates
+const CircuitLine = ({ start, end, active, theme }) => {
   return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-      <line 
-        x1={`${start.x}%`} 
-        y1={`${start.y}%`} 
-        x2={`${end.x}%`} 
-        y2={`${end.y}%`} 
-        stroke={active ? "#22d3ee" : "#334155"} 
+    <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-visible">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      
+      {/* Background Track */}
+      <path 
+        d={`M${start.x} ${start.y} L${end.x} ${end.y}`} 
+        stroke={active ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)"} 
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+
+      {/* Active Circuit */}
+      <path 
+        d={`M${start.x} ${start.y} L${end.x} ${end.y}`} 
+        stroke={active ? (theme === 'purple' ? '#a855f7' : theme === 'emerald' ? '#10b981' : '#22d3ee') : "#334155"} 
         strokeWidth={active ? "2" : "1"}
         strokeDasharray={active ? "none" : "4 4"}
+        fill="none"
+        filter="url(#glow)"
+        className="transition-all duration-700"
       />
+
+      {/* Data Packet Animation */}
       {active && (
-        <circle r="2" fill="#22d3ee">
+        <circle r="3" fill="white">
           <animateMotion 
-            dur="2s" 
+            dur={`${Math.random() * 2 + 1}s`}
             repeatCount="indefinite"
-            path={`M${start.x*10},${start.y*10} L${end.x*10},${end.y*10}`} // Scaling for viewBox
+            path={`M${start.x} ${start.y} L${end.x} ${end.y}`} 
           />
         </circle>
       )}
@@ -145,16 +199,21 @@ const Connection = ({ start, end, active }) => {
 
 export default function SkillTreeSystem({ genre }) {
   const [selectedNode, setSelectedNode] = useState(null);
-  const [unlockedNodes, setUnlockedNodes] = useState(['core']); // Core always unlocked
+  const [unlockedNodes, setUnlockedNodes] = useState(['core']); 
   const [skillPoints, setSkillPoints] = useState(genre?.skillPoints || 0);
+  const containerRef = useRef(null);
 
-  const treeData = SKILL_DATA[genre?.id] || SKILL_DATA[genre?.short?.toLowerCase()] || SKILL_DATA['default'];
+  // Derive data
+  const skillKey = genre?.id || (genre?.short ? genre.short.toLowerCase() : 'default');
+  const treeData = SKILL_DATA[skillKey] || SKILL_DATA.default;
+  const themeKey = treeData.color || 'cyan';
+  const theme = THEME_COLORS[themeKey];
+
   const nodes = treeData.nodes;
 
-  // Helper to check if a node is reachable (parent is unlocked)
   const isNodeReachable = (nodeId) => {
     const node = nodes.find(n => n.id === nodeId);
-    if (!node.parent) return true; // Core
+    if (!node.parent) return true;
     return unlockedNodes.includes(node.parent);
   };
 
@@ -166,74 +225,91 @@ export default function SkillTreeSystem({ genre }) {
     }
   };
 
-  return (
-    <div className="w-full bg-[#0a0a0a] rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl">
-      {/* Background Grid */}
-      <div className="absolute inset-0 opacity-20" 
-        style={{ 
-          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)', 
-          backgroundSize: '40px 40px' 
-        }} 
-      />
-      
-      {/* Header */}
-      <div className="relative z-20 p-8 border-b border-white/5 flex justify-between items-start bg-black/40 backdrop-blur-md">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 px-3 py-1">
-              AI PROTOCOL V.2.0
-            </Badge>
-            <h3 className="text-white/40 text-sm font-mono uppercase tracking-widest">{genre?.name || 'GENERIC'} MODULE</h3>
-          </div>
-          <h2 className="text-3xl font-black text-white tracking-tight">{treeData.name}</h2>
-          <p className="text-slate-400 text-sm max-w-md mt-2">{treeData.description}</p>
-        </div>
-        
-        {/* Skill Point Counter */}
-        <div className="flex flex-col items-end">
-          <span className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-1">Available Points</span>
-          <div className="flex items-center gap-2 px-6 py-3 bg-cyan-900/20 border border-cyan-500/30 rounded-xl">
-            <Cpu className="w-6 h-6 text-cyan-400" />
-            <span className="text-3xl font-mono font-bold text-white">{skillPoints}</span>
-          </div>
-        </div>
-      </div>
+  // Calculate coordinates for SVG lines based on percentage
+  const getCoords = (node) => {
+    if (!containerRef.current) return { x: 0, y: 0 };
+    const w = containerRef.current.clientWidth;
+    const h = containerRef.current.clientHeight;
+    return { x: (node.x / 100) * w, y: (node.y / 100) * h };
+  };
 
-      <div className="flex flex-col md:flex-row h-[600px] relative z-10">
+  const [dimensions, setDimensions] = useState({ w: 0, h: 0 });
+  useEffect(() => {
+    const updateDims = () => {
+      if (containerRef.current) {
+        setDimensions({ 
+          w: containerRef.current.clientWidth, 
+          h: containerRef.current.clientHeight 
+        });
+      }
+    };
+    window.addEventListener('resize', updateDims);
+    updateDims();
+    return () => window.removeEventListener('resize', updateDims);
+  }, []);
+
+  return (
+    <div className="w-full relative min-h-[700px] flex flex-col md:flex-row gap-6 p-6">
+      
+      {/* --- LEFT: SKILL TREE VISUALIZER --- */}
+      <div className="flex-1 relative rounded-3xl overflow-hidden bg-black/40 border border-white/10 shadow-2xl backdrop-blur-sm group">
         
-        {/* Tree Visualization Area */}
-        <div className="flex-1 relative h-full overflow-hidden">
-          {/* Render Connections */}
-          <div className="absolute inset-0 w-full h-full">
-            {nodes.map(node => {
-              if (!node.parent) return null;
-              const parent = nodes.find(n => n.id === node.parent);
-              if (!parent) return null;
-              
-              const isPathActive = unlockedNodes.includes(node.id);
-              
-              return (
-                <svg key={`conn-${node.id}`} className="absolute inset-0 w-full h-full pointer-events-none">
-                  <line 
-                    x1={`${parent.x}%`} 
-                    y1={`${parent.y}%`} 
-                    x2={`${node.x}%`} 
-                    y2={`${node.y}%`} 
-                    stroke={isPathActive ? "#22d3ee" : "#334155"} 
-                    strokeWidth={isPathActive ? "2" : "1"}
-                    strokeDasharray={isPathActive ? "none" : "6 4"}
-                    className="transition-colors duration-500"
-                  />
-                </svg>
-              );
-            })}
+        {/* Animated Grid Background */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]" />
+        </div>
+        
+        {/* Ambient Glow */}
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-${themeKey}-500/10 blur-[100px] rounded-full pointer-events-none`} />
+
+        {/* Tree Header */}
+        <div className="absolute top-6 left-6 z-30 pointer-events-none">
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-8 bg-gradient-to-b ${theme.grad}`} />
+            <div>
+              <h2 className="text-2xl font-black text-white tracking-tight uppercase leading-none">{treeData.name}</h2>
+              <p className={`text-xs font-bold uppercase tracking-widest ${theme.main} opacity-80`}>{treeData.class} SYSTEM</p>
+            </div>
           </div>
+        </div>
+
+        {/* Points Counter */}
+        <div className="absolute top-6 right-6 z-30">
+          <div className="flex items-center gap-3 px-4 py-2 bg-black/60 border border-white/10 rounded-full backdrop-blur-md">
+            <span className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Available Points</span>
+            <div className={`text-xl font-mono font-bold ${theme.main}`}>{skillPoints}</div>
+          </div>
+        </div>
+
+        {/* Interactive Tree Area */}
+        <div ref={containerRef} className="absolute inset-0 top-20 z-10">
+          {/* Render Connections */}
+          {dimensions.w > 0 && nodes.map(node => {
+            if (!node.parent) return null;
+            const parent = nodes.find(n => n.id === node.parent);
+            if (!parent) return null;
+            
+            const start = { x: (parent.x / 100) * dimensions.w, y: (parent.y / 100) * dimensions.h };
+            const end = { x: (node.x / 100) * dimensions.w, y: (node.y / 100) * dimensions.h };
+            const active = unlockedNodes.includes(node.id);
+
+            return (
+              <CircuitLine 
+                key={`conn-${node.id}`} 
+                start={start} 
+                end={end} 
+                active={active} 
+                theme={themeKey}
+              />
+            );
+          })}
 
           {/* Render Nodes */}
           {nodes.map(node => (
-            <SkillNode 
-              key={node.id} 
-              node={node} 
+            <HexNode 
+              key={node.id}
+              node={node}
+              theme={themeKey}
               onClick={setSelectedNode}
               isSelected={selectedNode?.id === node.id}
               isUnlocked={unlockedNodes.includes(node.id)}
@@ -241,87 +317,121 @@ export default function SkillTreeSystem({ genre }) {
             />
           ))}
         </div>
+      </div>
 
-        {/* Inspector Panel (Right Side) */}
-        <AnimatePresence mode="wait">
-          <motion.div 
-            className="w-full md:w-96 bg-[#0f0f11] border-l border-white/10 p-8 flex flex-col relative z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.5)]"
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            {selectedNode ? (
-              <>
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border-2 ${
-                  unlockedNodes.includes(selectedNode.id) 
-                    ? 'bg-cyan-900/30 border-cyan-400 text-cyan-300 shadow-[0_0_20px_rgba(34,211,238,0.2)]' 
-                    : 'bg-slate-800 border-slate-600 text-slate-400'
-                }`}>
-                  {React.createElement(selectedNode.icon, { className: "w-8 h-8" })}
+      {/* --- RIGHT: INSPECTOR PANEL (HUD STYLE) --- */}
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={selectedNode ? selectedNode.id : 'empty'}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ duration: 0.2 }}
+          className="w-full md:w-[350px] flex-shrink-0 flex flex-col gap-4"
+        >
+          {selectedNode ? (
+            <div className="h-full bg-black/60 border border-white/10 rounded-3xl p-6 backdrop-blur-xl relative overflow-hidden flex flex-col shadow-2xl">
+              
+              {/* Scanline Effect */}
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none" />
+              <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${theme.grad}`} />
+
+              {/* Icon & Status Header */}
+              <div className="flex items-start justify-between mb-6">
+                <div className={`w-16 h-16 rounded-2xl border flex items-center justify-center bg-black/50 shadow-lg ${unlockedNodes.includes(selectedNode.id) ? theme.border : 'border-white/10'}`}>
+                  {React.createElement(selectedNode.icon, { 
+                    className: `w-8 h-8 ${unlockedNodes.includes(selectedNode.id) ? theme.main : 'text-white/40'}` 
+                  })}
                 </div>
-
-                <h3 className="text-2xl font-bold text-white mb-2">{selectedNode.label}</h3>
-                <div className="flex gap-2 mb-6">
-                  <Badge variant="outline" className="text-[10px] uppercase border-white/10 bg-white/5">{selectedNode.type}</Badge>
-                  {unlockedNodes.includes(selectedNode.id) ? (
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Active</Badge>
-                  ) : (
-                    <Badge className="bg-slate-700 text-slate-300 border-slate-600">Locked</Badge>
-                  )}
+                <div className="text-right">
+                  <Badge variant="outline" className={`mb-1 uppercase tracking-widest text-[9px] ${unlockedNodes.includes(selectedNode.id) ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+                    {unlockedNodes.includes(selectedNode.id) ? 'INSTALLED' : 'AVAILABLE'}
+                  </Badge>
+                  <div className="text-[10px] text-white/30 font-mono">ID: {selectedNode.id.toUpperCase()}_v.2.4</div>
                 </div>
+              </div>
 
-                <p className="text-slate-300 leading-relaxed mb-8 border-l-2 border-white/10 pl-4">
+              {/* Title & Desc */}
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{selectedNode.label}</h3>
+                <div className="h-px w-12 bg-white/20 mb-4" />
+                <p className="text-sm text-slate-300 leading-relaxed font-light border-l-2 border-white/10 pl-3">
                   {selectedNode.desc}
                 </p>
+              </div>
 
-                {/* Stats / Impact */}
-                <div className="space-y-4 mb-auto">
-                  <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest">System Impact</h4>
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/5">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-slate-400">AI Efficiency</span>
-                      <span className="text-cyan-400 font-mono">+12%</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500 w-[12%]" />
-                    </div>
+              {/* Stats / Impact Visualization */}
+              <div className="mb-auto space-y-3">
+                <h4 className="text-[10px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                  <Activity className="w-3 h-3" />
+                  Performance Delta
+                </h4>
+                <div className="bg-white/5 rounded-lg p-3 border border-white/5 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">System Load</span>
+                    <span className="text-white">Low</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">Efficiency</span>
+                    <span className={theme.main}>+15.4%</span>
+                  </div>
+                  <div className="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }} 
+                      animate={{ width: '75%' }} 
+                      className={`h-full bg-gradient-to-r ${theme.grad}`} 
+                    />
                   </div>
                 </div>
-
-                {/* Action Button */}
-                <div className="mt-8 border-t border-white/10 pt-6">
-                  {unlockedNodes.includes(selectedNode.id) ? (
-                    <div className="w-full py-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-center gap-2 text-green-400 font-bold">
-                      <Check className="w-5 h-5" />
-                      PROTOCOL ACTIVE
-                    </div>
-                  ) : (
-                    <Button 
-                      className={`w-full py-6 text-lg font-bold ${
-                        skillPoints >= selectedNode.cost && isNodeReachable(selectedNode.id)
-                          ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-[0_0_20px_rgba(34,211,238,0.4)]'
-                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                      }`}
-                      onClick={handleUnlock}
-                      disabled={skillPoints < selectedNode.cost || !isNodeReachable(selectedNode.id)}
-                    >
-                      {skillPoints < selectedNode.cost ? `Need ${selectedNode.cost} Points` : 
-                       !isNodeReachable(selectedNode.id) ? 'Unlock Previous Node' :
-                       `Unlock Protocol (-${selectedNode.cost} SP)`}
-                    </Button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-30">
-                <Brain className="w-24 h-24 mb-4" />
-                <p className="text-xl font-bold">Select a Neural Node</p>
-                <p className="text-sm">View details and upgrade AI protocols.</p>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+
+              {/* Action Button Area */}
+              <div className="pt-6 mt-6 border-t border-white/10 relative z-10">
+                {unlockedNodes.includes(selectedNode.id) ? (
+                  <div className="w-full py-4 rounded-xl bg-green-500/5 border border-green-500/20 flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    <span className="text-xs font-bold text-green-400 tracking-widest uppercase">Protocol Active</span>
+                  </div>
+                ) : (
+                  <Button 
+                    className={`w-full py-6 text-sm font-bold tracking-widest uppercase transition-all duration-300 relative overflow-hidden group
+                      ${skillPoints >= selectedNode.cost && isNodeReachable(selectedNode.id)
+                        ? `bg-white text-black hover:bg-slate-200 shadow-[0_0_20px_rgba(255,255,255,0.2)]`
+                        : 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'}
+                    `}
+                    onClick={handleUnlock}
+                    disabled={skillPoints < selectedNode.cost || !isNodeReachable(selectedNode.id)}
+                  >
+                    {/* Hover Shine Effect */}
+                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+                    
+                    <span className="relative flex items-center gap-2">
+                      {skillPoints < selectedNode.cost 
+                        ? <><AlertCircle className="w-4 h-4" /> INSUFFICIENT DATA</> 
+                        : !isNodeReachable(selectedNode.id) 
+                          ? <><Lock className="w-4 h-4" /> PATHWAY LOCKED</>
+                          : <><Unlock className="w-4 h-4" /> INITIALIZE (-{selectedNode.cost} SP)</>
+                      }
+                    </span>
+                  </Button>
+                )}
+              </div>
+
+            </div>
+          ) : (
+            // Empty State
+            <div className="h-full bg-black/40 border border-white/5 rounded-3xl flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm border-dashed">
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6 animate-pulse">
+                <Brain className="w-8 h-8 text-white/20" />
+              </div>
+              <h3 className="text-lg font-bold text-white/60 mb-2">AWAITING INPUT</h3>
+              <p className="text-xs text-white/30 max-w-[200px] leading-relaxed">
+                Select a neural node from the matrix to view parameters and initialize upgrade protocols.
+              </p>
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
