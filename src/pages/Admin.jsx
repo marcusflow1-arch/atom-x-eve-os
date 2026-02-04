@@ -17,6 +17,7 @@ import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
 import SceneEditor from '../components/admin/SceneEditor';
 import CleanSlateTool from '../components/admin/CleanSlateTool';
+import ProjectCleanupTool from '../components/admin/ProjectCleanupTool';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 
@@ -929,7 +930,10 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="tools">
-            <CleanSlateTool />
+            <div className="space-y-6">
+              <CleanSlateTool />
+              <ProjectCleanupTool />
+            </div>
           </TabsContent>
                     </Tabs>
       </div>

@@ -11,6 +11,7 @@ import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import EnvStatus from './components/env/EnvStatus';
+import { trackPageUsage } from '@/components/utils/usageTracker';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Star, Zap } from 'lucide-react';
@@ -292,6 +293,13 @@ function LayoutContent({ children, currentPageName }) {
   const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
+
+  // Track page usage for cleanup analytics
+  useEffect(() => {
+    if (currentPageName) {
+      trackPageUsage(currentPageName, `pages/${currentPageName}`);
+    }
+  }, [location.pathname, currentPageName]);
   const { mode, toggleMode } = useDashboardMode();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
