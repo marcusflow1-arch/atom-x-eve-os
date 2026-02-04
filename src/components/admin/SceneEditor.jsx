@@ -363,12 +363,17 @@ export default function SceneEditor() {
             if (objConf.model_url) {
                 const ext = objConf.model_url.split('.').pop().toLowerCase();
                 const loader = ext === 'fbx' ? new FBXLoader() : new GLTFLoader();
-                loader.load(objConf.model_url, (asset) => {
-                   const model = asset.scene || asset;
-                   // Check for animations in root asset
-                   if (asset.animations && asset.animations.length) model.animations = asset.animations;
-                   onLoad(model);
-                });
+                // If this object must persist and was previously loaded once in this session, short-circuit creation
+                if (mustPersist && sceneObjectsMap.current[objConf.id]) {
+                    obj3d = sceneObjectsMap.current[objConf.id];
+                    // Only update transform (handled below)
+                } else {
+                    loader.load(objConf.model_url, (asset) => {
+                        const model = asset.scene || asset;
+                        if (asset.animations && asset.animations.length) model.animations = asset.animations;
+                        onLoad(model);
+                    });
+                }
             } else if (objConf.type === 'spawn_point') {
                 // Placeholder for spawn point without model
                 const geometry = new THREE.CylinderGeometry(0.3, 0.3, 1.8, 16);
