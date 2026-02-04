@@ -8,10 +8,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const url = new URL(req.url);
     const now = new Date();
-    const daysParam = url.searchParams.get('days');
-    const days = Math.max(1, Number(daysParam || 30));
+    let body = {};
+    try { body = await req.json(); } catch {}
+    const days = Math.max(1, Number(body?.days || 30));
     const threshold = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
     // Fetch all usage records
