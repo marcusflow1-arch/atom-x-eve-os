@@ -62,8 +62,21 @@ Deno.serve(async (req) => {
     this._id = (this.entity && (this.entity.id || this.entity.uuid || this.entity.name)) || 'player';
     this._restoreState();
 
+    // 1. HARD WIPE: Clear any stuck keys from previous sessions
+    this.keys = { attack: false, roll: false, jump: false, w: false, a: false, s: false, d: false };
+
+    // 2. CLEAR BUFFER: Don't let the window memory force an animation
+    if (typeof window !== 'undefined' && window.__B44_PC_STATE) {
+      window.__B44_PC_STATE = {};
+    }
+
     this.characterController = this.entity.getComponent("CharacterController");
     this.animator = this.entity.getComponent("Animator");
+
+    // 3. STOP ALL: Kill any 'Default' animations playing from the FBX
+    if (this.animator && typeof this.animator.stopAllAction === 'function') {
+      this.animator.stopAllAction();
+    }
 
     if (this.characterController) {
       // Disable built-in default input so the script fully owns controls
