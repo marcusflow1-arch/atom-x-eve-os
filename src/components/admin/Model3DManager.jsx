@@ -87,6 +87,11 @@ function Model3DViewer({ modelUrl, fileType, bundleManifest }) {
       modelUrl,
       (asset) => {
         const obj = asset?.scene || asset;
+        if (!obj || !obj.isObject3D) {
+          setError('Unsupported model format');
+          setLoading(false);
+          return;
+        }
         
         // Auto-Scale and Center
         const box = new THREE.Box3().setFromObject(obj);
@@ -351,17 +356,18 @@ export default function Model3DManager() {
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-4">
             {/* Single File Button */}
-            <label className="relative cursor-pointer flex-1">
             <input
                 type="file"
                 accept=".glb,.gltf,.fbx,.zip"
                 onChange={handleFileUpload}
                 className="hidden"
                 disabled={uploading}
+                ref={(el) => (window.__model3d_single_input = el)}
             />
             <Button 
                 disabled={uploading}
                 className="w-full bg-purple-600 hover:bg-purple-700 h-12"
+                onClick={() => window.__model3d_single_input?.click()}
             >
                 {uploading ? (
                 <>
@@ -373,7 +379,6 @@ export default function Model3DManager() {
                 </>
                 )}
             </Button>
-            </label>
 
             {/* Folder Upload Button */}
             <div className="flex-1">

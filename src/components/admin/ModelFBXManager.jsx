@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress'; // Assuming you have this
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
@@ -122,6 +122,10 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
           }
         });
 
+        if (!fbx || !fbx.isObject3D) {
+          console.error('Loaded FBX is not a Three.js Object3D');
+          return;
+        }
         scene.add(fbx);
         
         // Animation Loop
@@ -177,12 +181,13 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-slate-900 border-slate-700 max-w-5xl w-[90vw] h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl">
+      <DialogContent className="bg-slate-900 border-slate-700 max-w-5xl w-[90vw] h-[85vh] flex flex-col p-0 overflow-hidden shadow-2xl" aria-describedby="fbx-preview-desc">
         <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
            <div className="flex items-center gap-3">
-             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Box className="w-5 h-5 text-cyan-400"/> {model?.name}
-             </h3>
+             <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+               <Box className="w-5 h-5 text-cyan-400"/> {model?.name || 'FBX Preview'}
+             </DialogTitle>
+             <DialogDescription id="fbx-preview-desc" className="sr-only">3D preview for FBX model</DialogDescription>
            </div>
            <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
         </div>
@@ -219,6 +224,8 @@ export default function ModelFBXManager() {
     name: '', description: '', category: '', is_rigged: false, tags: '', textures: []
   });
   const [selectedTextures, setSelectedTextures] = useState([]);
+  const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
 
   // Data
   const { data: models = [], isLoading } = useQuery({
@@ -397,21 +404,17 @@ export default function ModelFBXManager() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3">
-            <label className="flex-1">
-                <input type="file" accept=".fbx" onChange={handleFileUpload} className="hidden" disabled={uploading}/>
-                <Button disabled={uploading} className="w-full bg-cyan-600 hover:bg-cyan-700">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Upload className="w-4 h-4 mr-2"/>}
-                    Upload Single FBX
-                </Button>
-            </label>
+            <input ref={fileInputRef} type="file" accept=".fbx" onChange={handleFileUpload} className="hidden" disabled={uploading}/>
+            <Button disabled={uploading} className="w-full bg-cyan-600 hover:bg-cyan-700" onClick={() => fileInputRef.current?.click()}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Upload className="w-4 h-4 mr-2"/>}
+                Upload Single FBX
+            </Button>
             
-            <label className="flex-1">
-                <input type="file" webkitdirectory="" directory="" onChange={handleFileUpload} className="hidden" disabled={uploading}/>
-                <Button disabled={uploading} variant="outline" className="w-full border-cyan-800 text-cyan-400 hover:bg-cyan-950/50">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <FolderUp className="w-4 h-4 mr-2"/>}
-                    Upload Folder (FBX + Textures)
-                </Button>
-            </label>
+            <input ref={folderInputRef} type="file" webkitdirectory="" directory="" onChange={handleFileUpload} className="hidden" disabled={uploading}/>
+            <Button disabled={uploading} variant="outline" className="w-full border-cyan-800 text-cyan-400 hover:bg-cyan-950/50" onClick={() => folderInputRef.current?.click()}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <FolderUp className="w-4 h-4 mr-2"/>}
+                Upload Folder (FBX + Textures)
+            </Button>
         </div>
 
         {/* Progress Bar */}
