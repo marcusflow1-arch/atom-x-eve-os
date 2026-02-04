@@ -9,6 +9,24 @@ import { base44 } from '@/api/base44Client';
 export default function ProjectCleanupTool() {
   const [days, setDays] = useState(30);
   const [uploading, setUploading] = useState(false);
+  const [selected, setSelected] = useState({});
+
+  const toggleSelect = (filePath) => setSelected((prev) => ({ ...prev, [filePath]: !prev[filePath] }));
+
+  const approveSelected = async () => {
+    const approved = (data?.items || []).filter((it) => selected[it.file_path]);
+    if (approved.length === 0) { alert('Select at least one item to approve.'); return; }
+    setUploading(true);
+    try {
+      const payload = { generated_at: new Date().toISOString(), approved_count: approved.length, items: approved };
+      const file = new File([JSON.stringify(payload, null, 2)], `approved-cleanup-${new Date().toISOString()}.json`, { type: 'application/json' });
+      const up = await base44.integrations.Core.UploadPrivateFile({ file });
+      const signed = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: up.file_uri, expires_in: 86400 });
+      alert(`Approved manifest saved (no deletions performed). Temporary link (24h):\n${signed.signed_url}`);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ['cleanupManifest', days],
@@ -17,6 +35,9 @@ export default function ProjectCleanupTool() {
       return res.data;
     }
   });
+
+  // Reset selection on new data
+  React.useEffect(() => { setSelected({}); }, [data]);
 
   const items = data?.items || [];
 
@@ -50,7 +71,7 @@ export default function ProjectCleanupTool() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-xl font-bold">Project Cleanup (Pages & Components)</h3>
-          <p className="text-slate-400 text-sm">Analytics-based: files unused for N days are candidates. Deletion is executed by Base44 assistant after your confirmation.</p>
+          <p className="text-slate-400 text-sm">Safe mode: no automatic deletions. Candidates must be explicitly approved. Items used or edited within the last N days are excluded.</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-slate-400">{items.length} candidates</Badge>
@@ -68,18 +89,24 @@ export default function ProjectCleanupTool() {
 
       <div className="rounded-xl border border-slate-800 overflow-hidden">
         <div className="grid grid-cols-12 bg-slate-800/40 px-4 py-2 text-xs text-slate-400">
-          <div className="col-span-4">File Path</div>
+          <div className="col-span-1">Approve</div>
+          <div className="col-span-5">File Path</div>
           <div className="col-span-2">Type</div>
-          <div className="col-span-3">Last Used</div>
-          <div className="col-span-3">Uses</div>
+          <div className="col-span-2">Last Used</div>
+          <div className="col-span-1">Edited</div>
+          <div className="col-span-1">Uses</div>
         </div>
         <div className="max-h-72 overflow-y-auto divide-y divide-slate-800">
           {items.map((it) => (
-            <div key={it.file_path} className="grid grid-cols-12 px-4 py-2 text-sm">
-              <div className="col-span-4 truncate" title={it.file_path}>{it.file_path}</div>
+            <div key={it.file_path} className="grid grid-cols-12 px-4 py-2 text-sm items-center">
+              <div className="col-span-1">
+                <input type="checkbox" checked={!!selected[it.file_path]} onChange={() => toggleSelect(it.file_path)} />
+              </div>
+              <div className="col-span-5 truncate" title={it.file_path}>{it.file_path}</div>
               <div className="col-span-2 capitalize">{it.type}</div>
-              <div className="col-span-3">{it.last_used_date || '—'}</div>
-              <div className="col-span-3">{it.use_count}</div>
+              <div className="col-span-2">{it.last_used_date || '—'}</div>
+              <div className="col-span-1">{it.last_edited_date || '—'}</div>
+              <div className="col-span-1">{it.use_count}</div>
             </div>
           ))}
           {items.length === 0 && (
@@ -94,7 +121,10 @@ export default function ProjectCleanupTool() {
           {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin"/> : <Upload className="w-4 h-4 mr-2"/>}
           Upload Manifest to Private Storage
         </Button>
-        <div className="text-xs text-slate-400">After manifest review, ask Base44 here to “Backup & Delete now” and I will perform ZIP backup and deletion using the manifest.</div>
+        <Button onClick={approveSelected} disabled={uploading || Object.values(selected).every(v => !v)} className="bg-emerald-600 hover:bg-emerald-700">
+          <ListChecks className="w-4 h-4 mr-2"/>Approve Selected (no delete)
+        </Button>
+        <div className="text-xs text-slate-400">Approval saves a list for review; no files are deleted automatically. You’ll be asked again before any deletion happens.</div>
       </div>
     </section>
   );

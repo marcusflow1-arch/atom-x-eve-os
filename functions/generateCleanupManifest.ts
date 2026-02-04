@@ -18,8 +18,11 @@ Deno.serve(async (req) => {
     const all = await base44.entities.UIUsage.list();
 
     const stale = (all || []).filter((u) => {
-      const d = u.last_used_date ? new Date(u.last_used_date) : null;
-      return !d || d < threshold;
+      const lastUsed = u.last_used_date ? new Date(u.last_used_date) : null;
+      const lastEdited = u.updated_date ? new Date(u.updated_date) : null;
+      const unused = !lastUsed || lastUsed < threshold;
+      const unedited = !lastEdited || lastEdited < threshold;
+      return unused && unedited;
     });
 
     const manifest = stale
@@ -29,7 +32,9 @@ Deno.serve(async (req) => {
         type: u.type,
         file_path: u.file_path || (u.type === 'page' ? `pages/${u.name}` : null),
         last_used_date: u.last_used_date || null,
+        last_edited_date: u.updated_date || null,
         use_count: u.use_count || 0,
+        requires_approval: true,
       }))
       .filter((m) => !!m.file_path);
 
