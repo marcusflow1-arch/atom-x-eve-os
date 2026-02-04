@@ -1,25 +1,28 @@
-import React, { Suspense, useState, ErrorBoundary } from 'react';
-import { Canvas, useLoader } from '@react-three/fiber';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import AvatarModel from './AvatarModel';
 import CustomizationSidebar from './CustomizationSidebar';
 
-function CustomModel({ modelUrl }) {
-  return null; // Temporarily disabled due to texture loading issues
-}
-
-function ModelErrorBoundary({ children }) {
-  return (
-    <React.Suspense fallback={null}>
-      <React.Fragment>
-        {children}
-      </React.Fragment>
-    </React.Suspense>
-  );
+// Simple Error Boundary Class to catch 3D loading errors
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("3D Error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) return null; // Fallback UI can go here
+    return this.props.children;
+  }
 }
 
 function Scene({ customModelUrl }) {
@@ -40,9 +43,14 @@ function Scene({ customModelUrl }) {
       <directionalLight position={[-5, 3, -5]} intensity={0.4} />
       <pointLight position={[0, 2, 0]} intensity={0.3} />
       
-      <ModelErrorBoundary>
-        <AvatarModel />
-      </ModelErrorBoundary>
+      {/* FIX: Wrapped in proper Class ErrorBoundary + Suspense 
+         FIX: Passed customModelUrl down to the model
+      */}
+      <ErrorBoundary>
+        <Suspense fallback={null}>
+           <AvatarModel modelUrl={customModelUrl} />
+        </Suspense>
+      </ErrorBoundary>
       
       {/* Ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
@@ -55,7 +63,7 @@ function Scene({ customModelUrl }) {
 
 function LoadingFallback() {
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div className="text-white/60 text-center">
         <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-sm">Loading Avatar Studio...</p>
@@ -68,14 +76,14 @@ export default function AvatarCustomizer3D({ onClose }) {
   const [showSidebar, setShowSidebar] = useState(true);
   const [error, setError] = useState(null);
   const [customModelUrl, setCustomModelUrl] = useState(null);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
   
   // Suppress texture source errors globally
-  React.useEffect(() => {
+  useEffect(() => {
     const originalError = console.error;
     console.error = (...args) => {
       if (args[0]?.toString().includes('source') || args[0]?.message?.includes('source')) {
-        return; // Suppress texture source errors
+        return; 
       }
       originalError.apply(console, args);
     };
@@ -86,6 +94,9 @@ export default function AvatarCustomizer3D({ onClose }) {
   }, []);
 
   const handleFileUpload = (event) => {
+    // You mentioned this is disabled, but if enabled later, logic goes here:
+    // const file = event.target.files[0];
+    // if (file) setCustomModelUrl(URL.createObjectURL(file));
     alert('Custom model upload is temporarily disabled due to texture compatibility issues. This feature will be re-enabled soon.');
     event.target.value = '';
   };
@@ -151,28 +162,35 @@ export default function AvatarCustomizer3D({ onClose }) {
       )}
       
       {/* Title */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-40 text-center">
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 z-40 text-center pointer-events-none">
         <h1 className="text-3xl font-bold text-white mb-2">Avatar Studio</h1>
         <p className="text-white/60 text-sm">Customize your character appearance</p>
       </div>
       
       {/* 3D Canvas */}
       <div className="absolute inset-0">
+        {/* FIX: Moved Suspense higher up or kept inside Canvas. 
+            Canvas handles Suspense internally usually, but explicitly wrapping 
+            inner components is safer. */}
+        <Canvas
+            gl={{ 
+            antialias: true,
+            alpha: true,
+            powerPreference: "high-performance"
+            }}
+            dpr={[1, 2]}
+            onCreated={({ gl }) => {
+            gl.setClearColor('#000000', 0);
+            }}
+        >
+            <Scene customModelUrl={customModelUrl} />
+        </Canvas>
+        
+        {/* Loading Overlay (Separate from Canvas for better HTML rendering) */}
         <Suspense fallback={<LoadingFallback />}>
-            <Canvas
-              gl={{ 
-                antialias: true,
-                alpha: true,
-                powerPreference: "high-performance"
-              }}
-              dpr={[1, 2]}
-              onCreated={({ gl }) => {
-                gl.setClearColor('#000000', 0);
-              }}
-            >
-              <Scene customModelUrl={customModelUrl} />
-            </Canvas>
-          </Suspense>
+           {/* Dummy suspense trigger if needed, otherwise rely on Scene */}
+           <span /> 
+        </Suspense>
       </div>
       
       {/* Customization Sidebar */}
@@ -183,7 +201,7 @@ export default function AvatarCustomizer3D({ onClose }) {
       </AnimatePresence>
       
       {/* Instructions */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center pointer-events-none">
         <p className="text-white/40 text-sm">
           Click and drag to rotate • Scroll to zoom
         </p>
