@@ -786,6 +786,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
+                      // Auto-scale to match current baseline by normalizing bounds
+                      try {
+                        const box = new THREE.Box3().setFromObject(fbx);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                        const target = 1; // keep actorContainer scale=0.01; normalize model to unit
+                        const s = target / maxDim;
+                        fbx.scale.multiplyScalar(s);
+                      } catch {}
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
@@ -802,6 +811,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
+                // Auto-scale to unit for consistency
+                try {
+                  const box = new THREE.Box3().setFromObject(fbx);
+                  const size = box.getSize(new THREE.Vector3());
+                  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                  const s = 1 / maxDim;
+                  fbx.scale.multiplyScalar(s);
+                } catch {}
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
@@ -1667,10 +1684,33 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   // Hardcoded assets for System Reboot
-  const [modelUrl, setModelUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
+  const [modelUrl, setModelUrl] = useState(null);
   const [roomModelUrl, setRoomModelUrl] = useState(null);
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
+
+  // Auto-select new dashboard model: Maria WProp J J Ong
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const exact = await base44.entities.ModelFBX.filter({ name: 'Maria WProp J J Ong' });
+        let chosen = exact && exact.length ? exact[0] : null;
+        if (!chosen) {
+          const all = await base44.entities.ModelFBX.list('-created_date', 100);
+          const lowers = ['maria','wprop','jj','ong'];
+          chosen = (all || []).find(m => lowers.every(k => (m.name || '').toLowerCase().includes(k)));
+        }
+        if (!cancelled && chosen?.file_url) {
+          setModelUrl(chosen.file_url);
+        }
+      } catch (e) {
+        console.error('Dashboard model lookup failed:', e);
+      }
+    };
+    if (!modelUrl) load();
+    return () => { cancelled = true; };
+  }, [modelUrl]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
@@ -1708,8 +1748,7 @@ export default function LunaTemplate() {
     };
     fetchScene();
     
-    // Default Y-Bot
-    if (!modelUrl) setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/637e365ff_YBot.fbx');
+    // Model selection handled separately (Maria WProp J J Ong)
   }, []);
 
 
