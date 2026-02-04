@@ -16,6 +16,7 @@ import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
 import SceneEditor from '../components/admin/SceneEditor';
+import CleanSlateTool from '../components/admin/CleanSlateTool';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 
@@ -447,6 +448,7 @@ export default function Admin() {
             <TabsTrigger value="fbx-models">FBX Models</TabsTrigger>
             <TabsTrigger value="scripts">3D Scripts</TabsTrigger>
             <TabsTrigger value="scene-builder">Scene Builder</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -924,6 +926,10 @@ export default function Admin() {
 
           <TabsContent value="scene-builder">
             <SceneEditor />
+          </TabsContent>
+
+          <TabsContent value="tools">
+            <CleanSlateTool />
           </TabsContent>
                     </Tabs>
       </div>
