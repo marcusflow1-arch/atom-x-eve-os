@@ -336,6 +336,9 @@ export default function SceneEditor() {
     sceneConfig.objects.forEach(objConf => {
         let obj3d = sceneObjectsMap.current[objConf.id];
 
+        // Ensure Actor_Layer persistence: never re-create if already present, just update transform
+        const mustPersist = objConf.persistent || objConf.layer === 'Actor_Layer';
+
         if (!obj3d) {
             // NEW OBJECT
             const onLoad = (model) => {
