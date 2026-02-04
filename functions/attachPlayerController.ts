@@ -130,7 +130,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (this.exclusiveAction) return;
+    if (this.exclusiveAction) {
+      // freeze movement to avoid sliding while playing exclusive action
+      if (this.characterController) {
+        if (typeof this.characterController.setMovementDirection === 'function') {
+          this.characterController.setMovementDirection({ x: 0, z: 0 });
+        } else if (typeof this.characterController.setInput === 'function') {
+          this.characterController.setInput({ x: 0, z: 0 });
+        } else {
+          this.characterController.movementDirection = { x: 0, z: 0 };
+        }
+      }
+      return;
+    }
 
     const grounded = this.characterController.isGrounded ? this.characterController.isGrounded() : true;
 
