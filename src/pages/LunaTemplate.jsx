@@ -107,6 +107,31 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
   };
 
+  // Fit model height to a fraction of the environment height (uses world transforms)
+  const adjustModelScaleToEnvironment = (model, envHeightRatio = 0.18) => {
+    try {
+      if (!worldContainerRef.current) return;
+      const envBox = new THREE.Box3().setFromObject(worldContainerRef.current);
+      const envSize = envBox.getSize(new THREE.Vector3());
+      const envH = Math.max(envSize.y, 1e-6);
+      const desiredWorldH = envH * envHeightRatio;
+
+      const modelBoxWorld = new THREE.Box3().setFromObject(model);
+      const modelWorldH = Math.max(modelBoxWorld.getSize(new THREE.Vector3()).y, 1e-6);
+      const k = desiredWorldH / modelWorldH;
+      model.scale.multiplyScalar(k);
+
+      // Recenter and place feet on ground after scaling
+      const box2 = new THREE.Box3().setFromObject(model);
+      const center2 = box2.getCenter(new THREE.Vector3());
+      model.position.x -= center2.x;
+      model.position.z -= center2.z;
+      model.position.y -= box2.min.y;
+    } catch (e) {
+      console.warn('adjustModelScaleToEnvironment failed', e);
+    }
+  };
+
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -539,6 +564,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           collisionMeshesRef.current = meshes; // Update persistent collision ref
           roomMeshesRef.current = meshes;
           console.log(`Environment_Layer successfully loaded Room (${isRoomFBX ? 'FBX' : 'GLTF'}) from Admin:`, roomModelUrl);
+          // If the actor is already present, refit it to this environment
+          if (modelRef.current) adjustModelScaleToEnvironment(modelRef.current, 0.18);
         },
         undefined,
         (err) => console.error('Error loading Room Model:', err)
@@ -766,8 +793,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (idleAction) {
           idleAction.play();
         }
-      }
-    };
+        }
+
+        // Final pass: fit the character to the environment size
+        adjustModelScaleToEnvironment(model, 0.18);
+        };
 
     if (modelUrl) {
         if (isFBX) {
