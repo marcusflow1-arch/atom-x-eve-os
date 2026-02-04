@@ -719,7 +719,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       mixer = new THREE.AnimationMixer(model);
 
-      if (animations && animations.length > 0) {
+      // Ensure baseline container scale (match Y-Bot)
+      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
+
+       if (animations && animations.length > 0) {
         animations.forEach((clip) => {
           const action = mixer.clipAction(clip);
           const name = clip.name.toLowerCase();
@@ -798,6 +801,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
+                      // Force Y-Bot baseline container scale so it fits the viewer
+                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
                       // Enable control immediately for replacement model
                       controlsActive.current = true;
                       setIsActive(true);
@@ -825,6 +830,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
+                // Force Y-Bot baseline container scale so it fits the viewer
+                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
                 // Enable control immediately for replacement model
                 controlsActive.current = true;
                 setIsActive(true);
