@@ -15,6 +15,163 @@ Deno.serve(async (req) => {
 
     // The logic inside this string is the "Game Brain"
     const scriptCode = `export default class PlayerController {
+  static stateBuffer = (typeof window !== 'undefined' && (window.__B44_PC_STATE = window.__B44_PC_STATE || {})) ? window.__B44_PC_STATE : {};
+
+  constructor() {
+    this.characterController = null;
+    this.animator = null;
+
+    this.currentState = "";
+    this.exclusiveAction = null;
+    this.animationFinishedCallback = null;
+
+    this.isJumping = false;
+    this.jumpStartTime = 0;
+    this.jumpDuration = 500;
+
+    this.runSpeed = 8.0;
+
+    this.keys = { attack: false, roll: false, jump: false };
+
+    this._keyDownRef = null;
+    this._keyUpRef = null;
+    this._uiOpenRef = null;
+    this._uiCloseRef = null;
+
+    this._lockCount = 0;
+    this._id = null;
+  }
+
+  _restoreState() {
+    const buf = PlayerController.stateBuffer[this._id] || {};
+    this._lockCount = buf.lockCount || 0;
+  }
+
+  _saveState() {
+    PlayerController.stateBuffer[this._id] = { lockCount: this._lockCount };
+  }
+
+  _applyLockState() {
+    if (this.characterController) {
+      this.characterController.speed = this._lockCount > 0 ? 0 : this.runSpeed;
+    }
+  }
+
+  onStart() {
+    // stable ID across re-inits
+    this._id = (this.entity && (this.entity.id || this.entity.uuid || this.entity.name)) || 'player';
+    this._restoreState();
+
+    this.characterController = this.entity.getComponent("CharacterController");
+    this.animator = this.entity.getComponent("Animator");
+
+    if (this.characterController) {
+      this.characterController.speed = this.runSpeed;
+    }
+
+    this.changeState("Y Bot@Breathing Idle");
+
+    if (!this._keyDownRef) this._keyDownRef = (e) => this.handleKey(e, true);
+    if (!this._keyUpRef) this._keyUpRef = (e) => this.handleKey(e, false);
+
+    window.addEventListener("keydown", this._keyDownRef);
+    window.addEventListener("keyup", this._keyUpRef);
+
+    if (!this._uiOpenRef) this._uiOpenRef = () => { this._lockCount++; this._applyLockState(); this.changeState("Y Bot@Breathing Idle"); this._saveState(); };
+    if (!this._uiCloseRef) this._uiCloseRef = () => { this._lockCount = Math.max(0, this._lockCount - 1); this._applyLockState(); this._saveState(); };
+
+    window.addEventListener("ui_panel_open", this._uiOpenRef);
+    window.addEventListener("ui_panel_close", this._uiCloseRef);
+
+    this._applyLockState();
+  }
+
+  onDestroy() {
+    window.removeEventListener("keydown", this._keyDownRef);
+    window.removeEventListener("keyup", this._keyUpRef);
+    window.removeEventListener("ui_panel_open", this._uiOpenRef);
+    window.removeEventListener("ui_panel_close", this._uiCloseRef);
+    this._saveState();
+  }
+
+  handleKey(e, isDown) {
+    if (this._lockCount > 0) return; // ignore input when locked
+    if (e.key === "1") this.keys.attack = isDown;
+    if (e.key.toLowerCase() === "c") this.keys.roll = isDown;
+    if (e.code === "Space") this.keys.jump = isDown;
+  }
+
+  onUpdate() {
+    if (!this.characterController || !this.animator) return;
+
+    if (this._lockCount > 0) {
+      // Locked: force idle
+      this.changeState("Y Bot@Breathing Idle");
+      return;
+    }
+
+    if (!this.exclusiveAction) {
+      if (this.keys.attack) {
+        this.startExclusive("attack 1");
+        this.keys.attack = false;
+      } else if (this.keys.roll) {
+        this.startExclusive("roll");
+        this.keys.roll = false;
+      }
+    }
+
+    if (this.exclusiveAction) return;
+
+    const grounded = this.characterController.isGrounded ? this.characterController.isGrounded() : true;
+    const movement = this.characterController.getMovementDirection ? this.characterController.getMovementDirection() : { x: 0, z: 0 };
+    const isMoving = movement.x !== 0 || movement.z !== 0;
+
+    if (grounded && this.keys.jump) {
+      if (this.characterController.jump) this.characterController.jump();
+      this.isJumping = true;
+      this.jumpStartTime = Date.now();
+    }
+
+    if (grounded) {
+      this.isJumping = false;
+      this.changeState(isMoving ? "Y Bot@Running" : "Y Bot@Breathing Idle");
+    } else {
+      const timeSinceJump = Date.now() - this.jumpStartTime;
+      const state = (this.isJumping && timeSinceJump < this.jumpDuration) ? "jump" : "fall";
+      this.changeState(state);
+    }
+
+    // keep speed enforced
+    if (this.characterController && typeof this.characterController.speed === "number" && this._lockCount === 0 && this.characterController.speed !== this.runSpeed) {
+      this.characterController.speed = this.runSpeed;
+    }
+  }
+
+  changeState(newState) {
+    if (this.currentState === newState) return;
+    this.currentState = newState;
+    this.animator.setBaseAction(newState);
+    this.animator.mix(newState, 0.1, 1);
+  }
+
+  startExclusive(actionName) {
+    this.exclusiveAction = actionName;
+    this.currentState = actionName;
+
+    this.animator.setBaseAction(actionName);
+    this.animator.mix(actionName, 0.05, 1);
+
+    if (!this.animationFinishedCallback) {
+      this.animationFinishedCallback = (name) => {
+        if (name === this.exclusiveAction) {
+          this.exclusiveAction = null;
+          this.currentState = "";
+        }
+      };
+      this.animator.onFinish(this.animationFinishedCallback);
+    }
+  }
+}`}
     characterController;
     animator;
     

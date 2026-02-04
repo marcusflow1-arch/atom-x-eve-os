@@ -455,6 +455,8 @@ export default function SceneEditor() {
       instance_name: type === 'spawn_point' ? `PlayerStart_${newId.slice(0,4)}` : model.name,
       role: type === 'spawn_point' ? 'player' : 'static',
       type: type,
+      layer: (isHumanoid ? 'Actor_Layer' : (type === 'spawn_point' ? 'Actor_Layer' : 'Default')),
+      persistent: !!(isHumanoid || type === 'spawn_point'),
       scripts: [],
       transform: { 
           position: { x: 0, y: 0, z: 0 }, 
