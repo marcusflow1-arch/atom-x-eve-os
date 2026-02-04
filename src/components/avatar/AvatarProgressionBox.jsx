@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, BarChart2, Backpack } from "lucide-react";
+import { Plus, BarChart2, Backpack, Shield, Sword, Sparkles, Gem } from "lucide-react";
 import { useEquipment } from "../luna/hooks/useEquipment";
 
 const GENRES = ["RPG","FPS","Strategy","Action","MMO","Puzzle","Simulation","Sports"];
@@ -11,8 +11,9 @@ const BASE_XP = 100;
 const XP_EXPONENT = 1.35;
 const GENRE_TO_GLOBAL_RATIO = 0.3; // 30%
 
+// Calculates XP needed for next level: 100 * (Level ^ 1.35)
 function xpToNextLevel(level) {
-  return Math.round(BASE_XP * Math.pow(level || 1, XP_EXPONENT));
+  return Math.round(BASE_XP * Math.pow(Math.max(1, level || 1), XP_EXPONENT));
 }
 
 export default function AvatarProgressionBox() {
@@ -20,8 +21,11 @@ export default function AvatarProgressionBox() {
   const [record, setRecord] = useState(null);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("stats");
+  
+  // Custom hook to fetch currently equipped items map
   const { equippedItems } = useEquipment();
 
+  // Ensure DB record has all defined genres
   const ensureGenres = (rec) => {
     if (!rec.genres || !Array.isArray(rec.genres)) {
       rec.genres = GENRES.map((g) => ({ name: g, level: 1, xp: 0 }));
@@ -36,49 +40,65 @@ export default function AvatarProgressionBox() {
 
   useEffect(() => {
     (async () => {
-      const me = await base44.auth.me();
-      setUser(me);
-      const rows = await base44.entities.AvatarProgression.filter({ user_id: me.id });
-      if (rows.length === 0) {
-        const newRec = await base44.entities.AvatarProgression.create({
-          user_id: me.id,
-          global_level: 1,
-          global_xp: 0,
-          available_stat_points: 0,
-          stats: { hp: 100, strength: 10, intelligence: 10, will: 10, tenacity: 10 },
-          genres: GENRES.map((g) => ({ name: g, level: 1, xp: 0 }))
-        });
-        setRecord(newRec);
-      } else {
-        setRecord(ensureGenres(rows[0]));
+      try {
+        const me = await base44.auth.me();
+        setUser(me);
+        const rows = await base44.entities.AvatarProgression.filter({ user_id: me.id });
+        
+        if (rows.length === 0) {
+          const newRec = await base44.entities.AvatarProgression.create({
+            user_id: me.id,
+            global_level: 1,
+            global_xp: 0,
+            available_stat_points: 0,
+            stats: { hp: 100, strength: 10, intelligence: 10, will: 10, tenacity: 10 },
+            genres: GENRES.map((g) => ({ name: g, level: 1, xp: 0 }))
+          });
+          setRecord(newRec);
+        } else {
+          setRecord(ensureGenres(rows[0]));
+        }
+      } catch (err) {
+        console.error("Failed to load progression:", err);
       }
     })();
   }, []);
 
   const saveRecord = async (next) => {
     setSaving(true);
-    const updated = await base44.entities.AvatarProgression.update(next.id, next);
-    setRecord(updated);
-    setSaving(false);
+    try {
+        const updated = await base44.entities.AvatarProgression.update(next.id, next);
+        setRecord(updated);
+    } catch (e) {
+        console.error("Save failed", e);
+    } finally {
+        setSaving(false);
+    }
   };
 
   const handleAllocate = async (stat) => {
     if (!record || record.available_stat_points <= 0) return;
-    const confirmed = window.confirm(`Allocate 1 point to ${stat}?`);
-    if (!confirmed) return;
+    
+    // Optimistic update
     const next = { ...record, stats: { ...record.stats }, available_stat_points: record.available_stat_points - 1 };
-    if (stat === 'hp') next.stats.hp += 10; else next.stats[stat] = (next.stats[stat] || 0) + 1;
+    if (stat === 'hp') next.stats.hp += 10; 
+    else next.stats[stat] = (next.stats[stat] || 0) + 1;
+    
     await saveRecord(next);
   };
 
   const levelGlobalIfNeeded = (rec) => {
     let changed = false;
+    // Safety break to prevent infinite loops
+    let loops = 0;
     let threshold = xpToNextLevel(rec.global_level || 1);
-    while ((rec.global_xp || 0) >= threshold) {
+    
+    while ((rec.global_xp || 0) >= threshold && loops < 100) {
       rec.global_xp -= threshold;
       rec.global_level = (rec.global_level || 1) + 1;
       threshold = xpToNextLevel(rec.global_level);
       changed = true;
+      loops++;
     }
     return changed;
   };
@@ -88,242 +108,298 @@ export default function AvatarProgressionBox() {
     const next = { ...record, genres: record.genres.map(g => ({ ...g })) };
     const g = next.genres.find((x) => x.name === genreName);
     if (!g) return;
+    
+    // Add XP
     g.xp = (g.xp || 0) + amount;
+    next.global_xp = (next.global_xp || 0) + (amount * GENRE_TO_GLOBAL_RATIO);
 
-    next.global_xp = (next.global_xp || 0) + amount * GENRE_TO_GLOBAL_RATIO;
-
+    // Level up Genre
     let awarded = 0;
-    while (g.xp >= xpToNextLevel(g.level || 1)) {
+    let loopSafety = 0;
+    while (g.xp >= xpToNextLevel(g.level || 1) && loopSafety < 50) {
       g.xp -= xpToNextLevel(g.level || 1);
       g.level = (g.level || 1) + 1;
       awarded += 1;
-      if ((g.level % 5) === 0) awarded += 1;
+      if ((g.level % 5) === 0) awarded += 1; // Bonus point every 5 levels
+      loopSafety++;
     }
     next.available_stat_points = (next.available_stat_points || 0) + awarded;
 
+    // Check Global Level
     levelGlobalIfNeeded(next);
 
     await saveRecord(next);
   };
 
   const handleBoxClick = (slotId) => {
+    // Dispatch event for parent InventoryPanel to catch
     window.dispatchEvent(new CustomEvent('openInventoryPanel', { detail: { slotId } }));
   };
 
-  const renderSlot = (slotId, shape = "rounded-xl") => {
+  // Helper to render inventory slots with proper icons/placeholders
+  const renderSlot = (slotId, typeIcon, label) => {
     const equippedItem = equippedItems[slotId];
+    const isRound = slotId.includes('aspect'); // Aspects are circular
+    
     return (
-      <div 
-        key={slotId} 
-        onClick={() => handleBoxClick(slotId)}
-        className={`w-[50px] h-[50px] ${shape} border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700`} 
-        style={{ 
-          background: 'rgba(11, 11, 11, 0.85)', 
-          backdropFilter: 'blur(35px)', 
-          WebkitBackdropFilter: 'blur(35px)', 
-          borderColor: 'rgba(255, 255, 255, 0.12)', 
-          boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' 
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        {equippedItem && (
-          <img 
-            src={equippedItem.icon_url || equippedItem.icon} 
-            alt={equippedItem.name} 
-            className="w-full h-full object-contain p-1.5 relative z-10" 
-          />
-        )}
+      <div className="flex flex-col items-center gap-1">
+          <div 
+            key={slotId} 
+            onClick={() => handleBoxClick(slotId)}
+            className={`
+                w-12 h-12 ${isRound ? 'rounded-full' : 'rounded-xl'} 
+                border border-white/10 cursor-pointer flex items-center justify-center 
+                relative group transition-all duration-300
+                ${equippedItem ? 'bg-slate-800 border-blue-500/30' : 'bg-black/40 hover:bg-white/5 hover:border-white/20'}
+            `}
+            style={{ 
+              boxShadow: equippedItem ? '0 0 15px rgba(59, 130, 246, 0.15)' : 'inset 0 1px 4px rgba(0,0,0,0.5)'
+            }}
+          >
+            {equippedItem ? (
+              <img 
+                src={equippedItem.icon_url || equippedItem.icon} 
+                alt={equippedItem.name} 
+                className="w-full h-full object-contain p-2 relative z-10 drop-shadow-md" 
+              />
+            ) : (
+                <div className="opacity-20 text-white group-hover:opacity-40 transition-opacity">
+                    {typeIcon}
+                </div>
+            )}
+            
+            {/* Hover Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-inherit pointer-events-none" />
+          </div>
+          {label && <span className="text-[9px] text-white/30 uppercase tracking-wider">{label}</span>}
       </div>
     );
   };
 
   if (!user || !record) {
     return (
-      <div className="p-6 rounded-2xl bg-white/5 border border-white/10 text-white/70">Loading avatar progression...</div>
+      <div className="p-12 rounded-2xl bg-slate-900/50 border border-white/5 text-white/50 flex flex-col items-center justify-center gap-2">
+        <div className="w-6 h-6 border-2 border-t-transparent border-white/30 rounded-full animate-spin"/>
+        <span>Syncing Avatar Data...</span>
+      </div>
     );
   }
 
   const globalThreshold = xpToNextLevel(record.global_level || 1);
   const globalPct = Math.min(100, Math.round(((record.global_xp || 0) / globalThreshold) * 100));
 
-  const StatRow = ({ label, value, onAdd }) => (
-    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5 border border-white/10">
-      <div className="text-white/80 font-medium">{label}</div>
-      <div className="flex items-center gap-2">
-        <Badge className="bg-black/40 border-white/10 text-white">{value}</Badge>
-        {record.available_stat_points > 0 && (
-          <Button size="sm" onClick={onAdd} className="bg-cyan-600 hover:bg-cyan-700 h-8 px-2">
-            <Plus className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-
-  const GenreRow = ({ g }) => {
-    const pct = Math.min(100, Math.round(((g.xp || 0) / xpToNextLevel(g.level || 1)) * 100));
-    return (
-      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-white font-semibold">{g.name}</span>
-            <Badge className="bg-blue-600 text-white border-none">Lv. {g.level || 1}</Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => addGenreXP(g.name, 25)}>+25 XP</Button>
-            <Button size="sm" variant="outline" onClick={() => addGenreXP(g.name, 100)}>+100 XP</Button>
-          </div>
-        </div>
-        <Progress value={pct} className="h-2" />
-        <div className="text-xs text-white/60 mt-1">{Math.round(g.xp || 0)} / {xpToNextLevel(g.level || 1)} XP</div>
-      </div>
-    );
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 select-none">
+      {/* Header Area */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-white">AI Avatar Progression</h2>
-          <p className="text-white/60 text-sm">Genre levels, stat points, and growth.</p>
+          <h2 className="text-xl font-bold text-white tracking-tight">Progression & Gear</h2>
+          <p className="text-white/50 text-xs">Manage stats, genre proficiency, and equipment loadout.</p>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+        <div className="flex items-center gap-4 bg-black/20 p-1.5 rounded-xl border border-white/5">
+           {/* Tab Switcher */}
             <button
               onClick={() => setActiveTab("stats")}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                 activeTab === "stats" 
-                  ? "bg-white/10 text-white shadow-sm" 
-                  : "text-white/50 hover:text-white hover:bg-white/5"
+                  ? "bg-slate-700 text-white shadow-lg shadow-black/20" 
+                  : "text-white/40 hover:text-white hover:bg-white/5"
               }`}
             >
-              <BarChart2 className="w-4 h-4" />
-              AI Stats
+              <BarChart2 className="w-3.5 h-3.5" />
+              Stats
             </button>
             <button
               onClick={() => setActiveTab("inventory")}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
                 activeTab === "inventory" 
-                  ? "bg-white/10 text-white shadow-sm" 
-                  : "text-white/50 hover:text-white hover:bg-white/5"
+                  ? "bg-slate-700 text-white shadow-lg shadow-black/20" 
+                  : "text-white/40 hover:text-white hover:bg-white/5"
               }`}
             >
-              <Backpack className="w-4 h-4" />
-              Inventory
+              <Backpack className="w-3.5 h-3.5" />
+              Loadout
             </button>
-          </div>
-
-          <div className="h-8 w-px bg-white/10" />
-
-          <div className="flex items-center gap-3">
-            <Badge className="bg-emerald-600 text-white border-none">Global Lv. {record.global_level || 1}</Badge>
-            <div className="w-56">
-              <Progress value={globalPct} className="h-2" />
-              <div className="text-[11px] text-white/60 mt-1">{Math.round(record.global_xp || 0)} / {globalThreshold} XP</div>
-            </div>
-          </div>
         </div>
       </div>
 
+      {/* Global Level Bar */}
+      <div className="bg-slate-900/50 rounded-xl p-4 border border-white/5 flex items-center gap-4">
+          <div className="flex flex-col items-center justify-center w-12 h-12 bg-blue-600 rounded-lg shadow-lg shadow-blue-900/20 shrink-0">
+             <span className="text-[10px] text-blue-200 font-bold uppercase">Lvl</span>
+             <span className="text-xl font-black text-white leading-none">{record.global_level || 1}</span>
+          </div>
+          <div className="flex-1 space-y-1.5">
+              <div className="flex justify-between text-xs font-medium text-slate-400">
+                  <span>Global Experience</span>
+                  <span>{Math.round(record.global_xp || 0)} / {globalThreshold} XP</span>
+              </div>
+              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 transition-all duration-500"
+                    style={{ width: `${globalPct}%` }}
+                  />
+              </div>
+          </div>
+      </div>
+
+      {/* TABS CONTENT */}
       {activeTab === "stats" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1 space-y-3">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-semibold">Core Stats</h3>
-                <Badge className="bg-purple-600 text-white border-none">Points: {record.available_stat_points || 0}</Badge>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* LEFT: Core Stats */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="p-5 rounded-2xl bg-slate-900/50 border border-white/10 h-full">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white font-bold text-sm uppercase tracking-wider">Core Attributes</h3>
+                {record.available_stat_points > 0 && (
+                    <Badge className="bg-purple-500 text-white hover:bg-purple-600 animate-pulse">
+                        {record.available_stat_points} Points Available
+                    </Badge>
+                )}
               </div>
-              <div className="space-y-2">
-                <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} />
-                <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} />
-                <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} />
-                <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} />
-                <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} />
+              
+              <div className="space-y-1">
+                <StatRow label="HP" value={record.stats?.hp ?? 0} onAdd={() => handleAllocate('hp')} canAdd={record.available_stat_points > 0} icon={<div className="w-1.5 h-1.5 rounded-full bg-red-500"/>}/>
+                <StatRow label="Strength" value={record.stats?.strength ?? 0} onAdd={() => handleAllocate('strength')} canAdd={record.available_stat_points > 0} icon={<div className="w-1.5 h-1.5 rounded-full bg-orange-500"/>}/>
+                <StatRow label="Intelligence" value={record.stats?.intelligence ?? 0} onAdd={() => handleAllocate('intelligence')} canAdd={record.available_stat_points > 0} icon={<div className="w-1.5 h-1.5 rounded-full bg-blue-500"/>}/>
+                <StatRow label="Will" value={record.stats?.will ?? 0} onAdd={() => handleAllocate('will')} canAdd={record.available_stat_points > 0} icon={<div className="w-1.5 h-1.5 rounded-full bg-purple-500"/>}/>
+                <StatRow label="Tenacity" value={record.stats?.tenacity ?? 0} onAdd={() => handleAllocate('tenacity')} canAdd={record.available_stat_points > 0} icon={<div className="w-1.5 h-1.5 rounded-full bg-yellow-500"/>}/>
               </div>
-              {saving && <div className="text-xs text-white/50 mt-3">Saving...</div>}
             </div>
           </div>
 
-          <div className="md:col-span-2 space-y-3">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-semibold">Genre Levels</h3>
-                <span className="text-white/50 text-xs">30% of genre XP adds to global</span>
+          {/* RIGHT: Genre Levels */}
+          <div className="lg:col-span-8 space-y-4">
+            <div className="p-5 rounded-2xl bg-slate-900/50 border border-white/10 h-full">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-bold text-sm uppercase tracking-wider">Genre Proficiency</h3>
+                <span className="text-white/30 text-[10px] uppercase font-medium">Earn XP by playing games in these genres</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {record.genres
                   .slice()
-                  .sort((a,b) => GENRES.indexOf(a.name) - GENRES.indexOf(b.name))
+                  .sort((a,b) => b.level - a.level) // Sort by highest level first
                   .map((g) => (
-                    <GenreRow key={g.name} g={g} />
+                    <GenreRow 
+                        key={g.name} 
+                        g={g} 
+                        onDebugAdd={(amt) => addGenreXP(g.name, amt)} 
+                    />
                   ))}
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-          <div className="flex flex-col gap-8 items-center">
-            {/* Top Row: Armor, Weapons, Genre */}
-            <div className="flex flex-wrap gap-12 justify-center items-start">
-              {/* Armor - 3x3 Grid */}
-              <div className="flex flex-col items-center gap-4">
-                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Armor</h2>
-                <div className="grid grid-cols-3 gap-3">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => renderSlot(`armor-${i}`))}
-                </div>
-              </div>
+        /* INVENTORY TAB */
+        <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-8 min-h-[400px] flex items-center justify-center">
+          <div className="flex flex-col gap-10 w-full max-w-4xl">
+            
+            {/* Row 1: Gear & Weapons */}
+            <div className="flex flex-wrap justify-center gap-16">
+                 {/* Armor Grid (3x3) */}
+                 <div className="flex flex-col items-center gap-3">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Body Armor</h3>
+                    <div className="grid grid-cols-3 gap-2 p-3 bg-black/20 rounded-2xl border border-white/5">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => renderSlot(`armor-${i}`, <Shield className="w-4 h-4"/>))}
+                    </div>
+                 </div>
 
-              {/* Weapons & Genre Group */}
-              <div className="flex gap-8 items-start">
-                {/* Weapons */}
-                <div className="flex flex-col items-center gap-4">
-                  <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Weapons</h2>
-                  <div className="flex gap-3">
-                    {[1, 2, 3].map((i) => renderSlot(`weapon-${i}`))}
-                  </div>
-                </div>
-
-                {/* Genre */}
-                <div className="flex flex-col items-center gap-4">
-                  <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
-                  <div className="flex gap-3">
-                    {[1, 2].map((i) => renderSlot(`genre-${i}`))}
-                  </div>
-                </div>
-              </div>
+                 {/* Weapons Row */}
+                 <div className="flex flex-col items-center gap-3">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Weapons</h3>
+                    <div className="flex gap-2 p-3 bg-black/20 rounded-2xl border border-white/5 h-full items-center">
+                        {[1, 2, 3].map((i) => renderSlot(`weapon-${i}`, <Sword className="w-4 h-4"/>, `Slot ${i}`))}
+                    </div>
+                 </div>
             </div>
 
-            {/* Bottom Row: Aspects, Artifacts, More Genre */}
-            <div className="flex flex-wrap gap-12 justify-center items-start">
-              {/* Aspects */}
-              <div className="flex flex-col items-center gap-4">
-                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
-                <div className="flex gap-3">
-                  {[1, 2, 3].map((i) => renderSlot(`aspect-${i}`, "rounded-full"))}
-                </div>
-              </div>
+            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent w-full" />
 
-              {/* Artifacts */}
-              <div className="flex flex-col items-center gap-4">
-                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
-                <div className="flex gap-3">
-                  {[1, 2, 3, 4, 5].map((i) => renderSlot(`artifact-${i}`))}
-                </div>
-              </div>
+            {/* Row 2: Aspects & Artifacts */}
+            <div className="flex flex-wrap justify-center gap-16">
+                 {/* Aspects (Round) */}
+                 <div className="flex flex-col items-center gap-3">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Aspects</h3>
+                    <div className="flex gap-4 p-3 px-6 bg-black/20 rounded-full border border-white/5">
+                        {[1, 2, 3].map((i) => renderSlot(`aspect-${i}`, <Sparkles className="w-4 h-4"/>))}
+                    </div>
+                 </div>
 
-              {/* Extra Genre Slots */}
-              <div className="flex flex-col items-center gap-4">
-                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
-                <div className="flex gap-3">
-                  {[3, 4].map((i) => renderSlot(`genre-${i}`))}
-                </div>
-              </div>
+                 {/* Artifacts */}
+                 <div className="flex flex-col items-center gap-3">
+                    <h3 className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">Artifacts</h3>
+                    <div className="flex gap-2 p-3 bg-black/20 rounded-2xl border border-white/5">
+                        {[1, 2, 3, 4, 5].map((i) => renderSlot(`artifact-${i}`, <Gem className="w-4 h-4"/>))}
+                    </div>
+                 </div>
             </div>
+
           </div>
         </div>
       )}
     </div>
   );
 }
+
+// --- Sub-components ---
+
+const StatRow = ({ label, value, onAdd, canAdd, icon }) => (
+    <div className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-white/5 transition-colors group">
+      <div className="flex items-center gap-3">
+        {icon}
+        <span className="text-slate-300 font-medium text-sm">{label}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="font-mono text-white font-bold">{value}</span>
+        <button 
+            disabled={!canAdd}
+            onClick={onAdd}
+            className={`
+                w-6 h-6 rounded flex items-center justify-center transition-all
+                ${canAdd 
+                    ? 'bg-blue-600 text-white hover:bg-blue-500 hover:scale-110' 
+                    : 'bg-white/5 text-white/10 cursor-not-allowed'}
+            `}
+        >
+            <Plus className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+);
+
+const GenreRow = ({ g, onDebugAdd }) => {
+    const nextLevelXP = xpToNextLevel(g.level || 1);
+    const pct = Math.min(100, Math.round(((g.xp || 0) / nextLevelXP) * 100));
+    
+    return (
+      <div className="p-3 rounded-xl bg-black/20 border border-white/5 hover:border-white/10 transition-colors">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-white font-bold text-sm">{g.name}</span>
+          <Badge variant="outline" className="border-blue-500/30 text-blue-300 text-[10px] h-5">
+             Lv. {g.level || 1}
+          </Badge>
+        </div>
+        
+        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden mb-1.5">
+            <div 
+                className="h-full bg-blue-500/80 rounded-full" 
+                style={{ width: `${pct}%` }} 
+            />
+        </div>
+        
+        <div className="flex justify-between items-center">
+            <span className="text-[10px] text-slate-500">{Math.round(g.xp || 0)} / {nextLevelXP} XP</span>
+            
+            {/* Hidden Debug Controls (visible on hover group) */}
+            <div className="opacity-0 hover:opacity-100 transition-opacity flex gap-1">
+                <button onClick={() => onDebugAdd(50)} className="text-[9px] text-white/20 hover:text-white border border-white/10 px-1 rounded">
+                    +XP
+                </button>
+            </div>
+        </div>
+      </div>
+    );
+};
