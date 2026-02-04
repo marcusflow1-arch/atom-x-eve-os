@@ -13,6 +13,7 @@ Deno.serve(async (req) => {
     const existing = await base44.entities.Model3DScript.filter({ name: 'PlayerController' });
     let script = existing && existing.length ? existing[0] : null;
 
+    // The logic inside this string is the "Game Brain"
     const scriptCode = `export default class PlayerController {
     characterController;
     animator;
@@ -29,7 +30,6 @@ Deno.serve(async (req) => {
 
     keys = { attack: false, roll: false, jump: false };
 
-    // Store references to the functions so we can remove them later
     _keyDownRef;
     _keyUpRef;
 
@@ -43,7 +43,6 @@ Deno.serve(async (req) => {
 
         this.changeState("Y Bot@Breathing Idle");
 
-        // Use bound functions so 'this' stays correct
         this._keyDownRef = (e) => this.handleKey(e, true);
         this._keyUpRef = (e) => this.handleKey(e, false);
 
@@ -51,7 +50,6 @@ Deno.serve(async (req) => {
         window.addEventListener("keyup", this._keyUpRef);
     }
 
-    // Call this if the character is removed from the scene
     onDestroy() {
         window.removeEventListener("keydown", this._keyDownRef);
         window.removeEventListener("keyup", this._keyUpRef);
@@ -64,7 +62,6 @@ Deno.serve(async (req) => {
     }
 
     onUpdate() {
-        // 1. EXCLUSIVE ACTIONS (Priority)
         if (!this.exclusiveAction) {
             if (this.keys.attack) {
                 this.startExclusive("attack 1");
@@ -77,7 +74,6 @@ Deno.serve(async (req) => {
 
         if (this.exclusiveAction) return;
 
-        // 2. MOVEMENT & GROUND LOGIC
         const grounded = this.characterController.isGrounded();
         const movement = this.characterController.getMovementDirection();
         const isMoving = movement.x !== 0 || movement.z !== 0;
@@ -88,7 +84,6 @@ Deno.serve(async (req) => {
             this.jumpStartTime = Date.now();
         }
 
-        // 3. STATE SWITCHER
         if (grounded) {
             this.isJumping = false;
             this.changeState(isMoving ? "Y Bot@Running" : "Y Bot@Breathing Idle");
@@ -118,7 +113,7 @@ Deno.serve(async (req) => {
             this.animationFinishedCallback = (name) => {
                 if (name === this.exclusiveAction) {
                     this.exclusiveAction = null;
-                    this.currentState = ""; // Allow loop to take over
+                    this.currentState = ""; 
                 }
             };
             this.animator.onFinish(this.animationFinishedCallback);
@@ -137,6 +132,9 @@ Deno.serve(async (req) => {
         script_type: 'behavior',
         is_active: true,
       });
+    } else {
+      // OPTIONAL: Update the script code if it already exists to ensure it's the latest version
+      await base44.entities.Model3DScript.update(script.id, { script_code: scriptCode });
     }
 
     // 2) Find the active scene
@@ -145,34 +143,34 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'No active scene found' }, { status: 404 });
     }
     const active = activeScenes[0];
-
     const objects = Array.isArray(active.objects) ? [...active.objects] : [];
 
-    // 3) Find Y Bot only in this active scene
-    const findYBotIndex = () => {
-      for (let i = 0; i < objects.length; i++) {
-        const o = objects[i] || {};
-        const name = ((o.name || o.instance_name || '') + '').toLowerCase();
-        if (name.includes('ybot') || name.includes('y bot')) return i;
-      }
-      return -1;
-    };
+    // 3) Find Y Bot 
+    const idx = objects.findIndex(o => {
+      const name = ((o.name || o.instance_name || '') + '').toLowerCase();
+      return name.includes('ybot') || name.includes('y bot');
+    });
 
-    const idx = findYBotIndex();
     if (idx === -1) {
-      return Response.json({ error: 'No Y Bot object found in active scene' }, { status: 404 });
+      return Response.json({ error: 'No Y Bot found in active scene' }, { status: 404 });
     }
 
     const target = { ...objects[idx] };
-    const existingScripts = Array.isArray(target.scripts) ? [...target.scripts] : [];
+    
+    // Ensure scripts array exists
+    if (!Array.isArray(target.scripts)) target.scripts = [];
 
-    const already = existingScripts.some((s) => s && (s.script_id === script.id));
-    if (!already) {
-      existingScripts.push({ script_id: script.id });
-      target.scripts = existingScripts;
+    // Check if script is already attached
+    const isAlreadyAttached = target.scripts.some(s => s.script_id === script.id);
+
+    if (!isAlreadyAttached) {
+      target.scripts.push({ script_id: script.id });
+      // Set role to player so camera/AI scripts can find the main user
+      target.role = 'player'; 
+      
       objects[idx] = target;
 
-      // 4) Update SceneLayout objects only
+      // 4) Update SceneLayout
       await base44.entities.SceneLayout.update(active.id, { objects });
     }
 
@@ -180,8 +178,7 @@ Deno.serve(async (req) => {
       status: 'ok',
       script_id: script.id,
       scene_id: active.id,
-      attached_to_object_id: target.id,
-      message: already ? 'Script already attached' : 'Script attached to Y Bot in active scene',
+      message: isAlreadyAttached ? 'Script already attached' : 'Script attached and role set to Player',
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
