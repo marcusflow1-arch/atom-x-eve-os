@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Code, Trash2, Play, Loader2, Box, FileCode, Eye, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Code, Trash2, Loader2, Plus, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,6 +15,8 @@ export default function Model3DScriptManager() {
   const [expandedScripts, setExpandedScripts] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [editCode, setEditCode] = useState('');
+  const [copiedId, setCopiedId] = useState(null);
+
   const [newScript, setNewScript] = useState({
     name: '',
     description: '',
@@ -36,14 +38,8 @@ export default function Model3DScriptManager() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['model3DScripts'] });
       setNewScript({
-        name: '',
-        description: '',
-        model_reference: '',
-        page_location: '',
-        script_code: '',
-        model_url: '',
-        script_type: 'general',
-        is_active: true
+        name: '', description: '', model_reference: '', page_location: '',
+        script_code: '', model_url: '', script_type: 'general', is_active: true
       });
       setShowNewForm(false);
     },
@@ -67,33 +63,10 @@ export default function Model3DScriptManager() {
     createMutation.mutate(newScript);
   };
 
-  const toggleActive = (script) => {
-    updateMutation.mutate({ id: script.id, data: { is_active: !script.is_active } });
-  };
-
-  const deleteScript = (id) => {
-    if (confirm('Are you sure you want to delete this script?')) {
-      deleteMutation.mutate(id);
-    }
-  };
-
-  const toggleExpanded = (id) => {
-    setExpandedScripts(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const startEditing = (script) => {
-    setEditingId(script.id);
-    setEditCode(script.script_code);
-  };
-
-  const saveEdit = (id) => {
-    updateMutation.mutate({ id, data: { script_code: editCode } });
-    setEditingId(null);
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditCode('');
+  const handleCopy = (code, id) => {
+    navigator.clipboard.writeText(code);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const scriptTypeColors = {
@@ -117,29 +90,28 @@ export default function Model3DScriptManager() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-slate-400">
+          <Badge variant="outline" className="text-slate-400 border-slate-700">
             {scripts.length} Scripts
           </Badge>
           <Button
             onClick={() => setShowNewForm(!showNewForm)}
             className="bg-green-600 hover:bg-green-700"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Script
+            {showNewForm ? <ChevronUp className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            {showNewForm ? 'Close' : 'New Script'}
           </Button>
         </div>
       </div>
 
-      {/* New Script Form */}
       <AnimatePresence>
         {showNewForm && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6"
+            className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-6 overflow-hidden"
           >
-            <h3 className="font-semibold mb-4">Create New 3D Model Script</h3>
+            <h3 className="font-semibold mb-4 text-white">Create New 3D Model Script</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <Input
                 placeholder="Script name"
@@ -148,61 +120,24 @@ export default function Model3DScriptManager() {
                 className="bg-slate-900 border-slate-700"
               />
               <Input
-                placeholder="Model reference (e.g., 'Y Bot', 'Luna Dashboard')"
+                placeholder="Model reference (e.g., 'Y Bot')"
                 value={newScript.model_reference}
                 onChange={(e) => setNewScript({ ...newScript, model_reference: e.target.value })}
                 className="bg-slate-900 border-slate-700"
               />
-              <Input
-                placeholder="Page location (e.g., 'LunaTemplate', 'Dashboard')"
-                value={newScript.page_location}
-                onChange={(e) => setNewScript({ ...newScript, page_location: e.target.value })}
-                className="bg-slate-900 border-slate-700"
-              />
-              <Input
-                placeholder="Model URL (optional)"
-                value={newScript.model_url}
-                onChange={(e) => setNewScript({ ...newScript, model_url: e.target.value })}
-                className="bg-slate-900 border-slate-700"
-              />
-            </div>
-            <Textarea
-              placeholder="Description..."
-              value={newScript.description}
-              onChange={(e) => setNewScript({ ...newScript, description: e.target.value })}
-              className="bg-slate-900 border-slate-700 mb-4 h-20"
-            />
-            <div className="flex items-center gap-4 mb-4">
-              <select
-                value={newScript.script_type}
-                onChange={(e) => setNewScript({ ...newScript, script_type: e.target.value })}
-                className="bg-slate-900 border border-slate-700 text-white rounded-md px-3 py-2 text-sm"
-              >
-                <option value="general">General</option>
-                <option value="animation">Animation</option>
-                <option value="behavior">Behavior</option>
-                <option value="shader">Shader</option>
-                <option value="interaction">Interaction</option>
-              </select>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-400">Active:</span>
-                <Switch
-                  checked={newScript.is_active}
-                  onCheckedChange={(checked) => setNewScript({ ...newScript, is_active: checked })}
-                />
-              </div>
             </div>
             <Textarea
               placeholder="JavaScript/Three.js code..."
               value={newScript.script_code}
               onChange={(e) => setNewScript({ ...newScript, script_code: e.target.value })}
-              className="bg-slate-900 border-slate-700 mb-4 h-64 font-mono text-sm"
+              className="bg-slate-900 border-slate-700 mb-4 h-48 font-mono text-sm"
             />
             <div className="flex gap-3">
               <Button onClick={handleCreate} disabled={createMutation.isPending}>
-                <Plus className="w-4 h-4 mr-2" /> Create Script
+                {createMutation.isPending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                Create Script
               </Button>
-              <Button variant="outline" onClick={() => setShowNewForm(false)}>
+              <Button variant="outline" onClick={() => setShowNewForm(false)} className="border-slate-700">
                 Cancel
               </Button>
             </div>
@@ -210,139 +145,53 @@ export default function Model3DScriptManager() {
         )}
       </AnimatePresence>
 
-      {/* Scripts List */}
-      {isLoading ? (
-        <div className="text-center py-12 text-slate-500">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-          Loading scripts...
-        </div>
-      ) : scripts.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 border-2 border-dashed border-slate-800 rounded-xl">
-          <Code className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No 3D model scripts created yet</p>
-          <p className="text-sm">Click "New Script" to add your first script</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <AnimatePresence>
-            {scripts.map((script) => {
-              const isExpanded = expandedScripts[script.id];
-              return (
-                <motion.div
-                  key={script.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className={`bg-slate-800/50 border rounded-xl overflow-hidden ${
-                    script.is_active ? 'border-green-500/30' : 'border-slate-700'
-                  }`}
-                >
-                  {/* Header */}
-                  <div className="p-4 flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-white truncate">{script.name}</h4>
-                        <Badge className={scriptTypeColors[script.script_type]}>
-                          {script.script_type}
-                        </Badge>
-                        {script.is_active && (
-                          <Badge className="bg-green-600 text-white text-xs">Active</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <span>Model: {script.model_reference}</span>
-                        {script.page_location && (
-                          <>
-                            <span>•</span>
-                            <span>Page: {script.page_location}</span>
-                          </>
-                        )}
-                      </div>
-                      {script.description && (
-                        <p className="text-slate-500 text-sm mt-1 line-clamp-1">{script.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => toggleExpanded(script.id)}
-                        className="text-slate-400 hover:text-white"
-                      >
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </Button>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={script.is_active}
-                          onCheckedChange={() => toggleActive(script)}
-                        />
-                      </div>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                        onClick={() => deleteScript(script.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Expanded Code View */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="border-t border-slate-700"
-                      >
-                        <div className="p-4 bg-slate-900/50">
-                          {script.model_url && (
-                            <div className="mb-3">
-                              <p className="text-xs text-slate-400 mb-1">Model URL:</p>
-                              <a 
-                                href={script.model_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-300 break-all"
-                              >
-                                {script.model_url}
-                              </a>
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs text-slate-400">Script Code:</p>
-                            {editingId === script.id ? (
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="ghost" onClick={cancelEdit}>Cancel</Button>
-                                <Button size="sm" onClick={() => saveEdit(script.id)} className="bg-green-600 hover:bg-green-700">Save Changes</Button>
-                              </div>
-                            ) : (
-                              <Button size="sm" variant="outline" onClick={() => startEditing(script)}>Edit Code</Button>
-                            )}
-                          </div>
-                          {editingId === script.id ? (
-                            <Textarea
-                              value={editCode}
-                              onChange={(e) => setEditCode(e.target.value)}
-                              className="bg-black/40 border-slate-700 font-mono text-xs text-green-400 min-h-[300px]"
-                            />
-                          ) : (
-                            <pre className="bg-black/40 border border-slate-700 rounded-lg p-4 overflow-x-auto text-xs text-green-400 font-mono max-h-96 overflow-y-auto">
-                              {script.script_code}
-                            </pre>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+      <div className="space-y-3">
+        {isLoading ? (
+          <div className="text-center py-12 text-slate-500">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+            Loading scripts...
+          </div>
+        ) : scripts.map((script) => (
+          <motion.div
+            key={script.id}
+            layout
+            className={`bg-slate-800/50 border rounded-xl overflow-hidden ${script.is_active ? 'border-green-500/30' : 'border-slate-700'}`}
+          >
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-white truncate">{script.name}</h4>
+                  <Badge className={scriptTypeColors[script.script_type]}>{script.script_type}</Badge>
+                </div>
+                <p className="text-xs text-slate-400">Model: {script.model_reference} • {script.page_location}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button size="icon" variant="ghost" onClick={() => handleCopy(script.script_code, script.id)}>
+                   {copiedId === script.id ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                </Button>
+                <Switch
+                  checked={script.is_active}
+                  onCheckedChange={() => updateMutation.mutate({ id: script.id, data: { is_active: !script.is_active } })}
+                />
+                <Button size="icon" variant="ghost" onClick={() => setExpandedScripts(prev => ({ ...prev, [script.id]: !prev[script.id] }))}>
+                   {expandedScripts[script.id] ? <ChevronUp /> : <ChevronDown />}
+                </Button>
+                <Button size="icon" variant="ghost" className="text-red-400" onClick={() => deleteMutation.mutate(script.id)}>
+                   <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <AnimatePresence>
+              {expandedScripts[script.id] && (
+                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="border-t border-slate-700 p-4 bg-black/20">
+                   <pre className="text-xs text-green-400 font-mono overflow-x-auto">{script.script_code}</pre>
                 </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-      )}
+              )}
+            </AnimatePresence>
+          </motion.div>
+        ))}
+      </div>
     </section>
   );
 }
