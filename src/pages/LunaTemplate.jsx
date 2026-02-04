@@ -786,7 +786,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
-                      // Auto-scale to match current baseline by normalizing bounds
+                      // Auto-scale to match Y-Bot baseline by normalizing bounds
                       try {
                         const box = new THREE.Box3().setFromObject(fbx);
                         const size = box.getSize(new THREE.Vector3());
@@ -798,6 +798,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
+                      // Enable control immediately for replacement model
+                      controlsActive.current = true;
+                      setIsActive(true);
                       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
                     }
                   },
@@ -811,7 +814,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
-                // Auto-scale to unit for consistency
+                // Auto-scale to Y-Bot baseline by normalizing bounds
                 try {
                   const box = new THREE.Box3().setFromObject(fbx);
                   const size = box.getSize(new THREE.Vector3());
@@ -822,6 +825,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
+                // Enable control immediately for replacement model
+                controlsActive.current = true;
+                setIsActive(true);
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
               }
             },
