@@ -123,13 +123,8 @@ export default function SceneEditor() {
     setSelectedLayoutId(layout.id);
     setSceneName(layout.name);
 
-    // Deep clean objects on load
-    const cleanObjects = (layout.objects || []).map(o => {
-        // Enforce ZERO STATE on load for dangerous bots
-        const nameLower = ((o.name || o.instance_name || '') + '').toLowerCase();
-        const isDangerous = nameLower.includes('ybot') || nameLower.includes('people');
-        return isDangerous ? { ...o, scripts: [] } : o;
-    });
+    // Preserve Actor_Layer/Y Bot scripts so the player brain persists
+    const cleanObjects = (layout.objects || []);
 
     setSceneConfig({
       environment: layout.environment_transform ? {
