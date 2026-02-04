@@ -90,6 +90,15 @@ Deno.serve(async (req) => {
       this.characterController.speed = this.runSpeed;
     }
 
+    // Debug: list available actions if API exists
+    if (this.animator) {
+      if (typeof this.animator.getAvailableActions === 'function') {
+        console.log('Animator actions:', this.animator.getAvailableActions());
+      } else if (typeof this.animator.listActions === 'function') {
+        console.log('Animator actions:', this.animator.listActions());
+      }
+    }
+
     this.changeState("Y Bot@Breathing Idle");
 
     if (!this._keyDownRef) this._keyDownRef = (e) => this.handleKey(e, true);
@@ -138,7 +147,8 @@ Deno.serve(async (req) => {
         this.startExclusive("attack 1");
         this.keys.attack = false;
       } else if (this.keys.roll) {
-        this.startExclusive("roll");
+        // map roll->row (project clip name is 'row')
+        this.startExclusive("row");
         this.keys.roll = false;
       }
     }
@@ -209,153 +219,76 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Map logical states to animator clip names. Update this map to match your project's clip naming.
+  _resolveClipForState(state) {
+    const map = {
+      'jump': 'Y Bot@Jump',
+      'fall': 'Y Bot@Fall',
+      'landing': 'Y Bot@Fall To Ground',
+      // Accept both 'roll' and 'row' as inputs and map to the actual clip name 'row'
+      'roll': 'row',
+      'row': 'row',
+      // The attack clip is named exactly 'attack 1' in the project
+      'attack 1': 'attack 1',
+      'Y Bot@Running': 'Y Bot@Running',
+      'Y Bot@Breathing Idle': 'Y Bot@Breathing Idle'
+    };
+    if (map[state]) return map[state];
+    if (state.includes('@') || state.includes(' ')) return state;
+    return 'Y Bot@' + state.charAt(0).toUpperCase() + state.slice(1);
+  }
+
   changeState(newState) {
-    if (this.currentState === newState) return;
-    this.currentState = newState;
-    this.animator.setBaseAction(newState);
-    this.animator.mix(newState, 0.1, 1);
+    const clip = this._resolveClipForState(newState);
+    if (this.currentState === clip) return;
+    this.currentState = clip;
+    if (!this.animator) return;
+    console.log('Changing state ->', newState, '-> clip:', clip);
+    if (typeof this.animator.setBaseAction === 'function') this.animator.setBaseAction(clip);
+    if (typeof this.animator.mix === 'function') this.animator.mix(clip, 0.1, 1);
   }
 
   startExclusive(actionName) {
-    this.exclusiveAction = actionName;
-    this.currentState = actionName;
+    const clip = this._resolveClipForState(actionName);
+    this.exclusiveAction = clip;
+    this.currentState = clip;
 
-    // Ensure action overrides run layer and has higher priority
+    if (!this.animator) return;
+
     if (typeof this.animator.setLayer === 'function') {
-      this.animator.setLayer(actionName, 'override');
+      this.animator.setLayer(clip, 'override');
     }
     if (typeof this.animator.setPriority === 'function') {
-      this.animator.setPriority(actionName, 10);
+      this.animator.setPriority(clip, 10);
     }
-    // Stop/zero out running so it doesn't crush exclusive actions
     if (typeof this.animator.stop === 'function') {
       this.animator.stop('Y Bot@Running');
     } else if (typeof this.animator.setWeight === 'function') {
       this.animator.setWeight('Y Bot@Running', 0);
     }
 
-    this.animator.setBaseAction(actionName);
-    this.animator.mix(actionName, 0.05, 1);
+    if (typeof this.animator.setBaseAction === 'function') this.animator.setBaseAction(clip);
+    if (typeof this.animator.mix === 'function') this.animator.mix(clip, 0.05, 1);
 
-    if (!this.animationFinishedCallback) {
-      this.animationFinishedCallback = (name) => {
-        if (name === this.exclusiveAction) {
-          this.exclusiveAction = null;
-          this.currentState = "";
-          // Restore running weight after exclusive action completes
-          if (typeof this.animator.setWeight === 'function') {
-            this.animator.setWeight('Y Bot@Running', 1);
-          }
+    const captured = clip;
+    const finishHandler = (name) => {
+      if (!name) return;
+      if (name === captured || name === actionName) {
+        this.exclusiveAction = null;
+        this.currentState = '';
+        if (typeof this.animator.setWeight === 'function') {
+          this.animator.setWeight('Y Bot@Running', 1);
         }
-      };
-      this.animator.onFinish(this.animationFinishedCallback);
+      }
+    };
+
+    this.animationFinishedCallback = finishHandler;
+    if (typeof this.animator.onFinish === 'function') {
+      this.animator.onFinish(finishHandler);
+    } else {
+      console.log('Animator has no onFinish hook; exclusive animations may not clear automatically.');
     }
   }
-}`}
-    characterController;
-    animator;
-    
-    currentState = ""; 
-    exclusiveAction = null;
-    animationFinishedCallback = null;
-
-    isJumping = false;
-    jumpStartTime = 0;
-    jumpDuration = 500; 
-
-    runSpeed = 8.0; 
-
-    keys = { attack: false, roll: false, jump: false };
-
-    _keyDownRef;
-    _keyUpRef;
-
-    onStart() {
-        this.characterController = this.entity.getComponent("CharacterController");
-        this.animator = this.entity.getComponent("Animator");
-
-        if (this.characterController) {
-            this.characterController.speed = this.runSpeed;
-        }
-
-        this.changeState("Y Bot@Breathing Idle");
-
-        this._keyDownRef = (e) => this.handleKey(e, true);
-        this._keyUpRef = (e) => this.handleKey(e, false);
-
-        window.addEventListener("keydown", this._keyDownRef);
-        window.addEventListener("keyup", this._keyUpRef);
-    }
-
-    onDestroy() {
-        window.removeEventListener("keydown", this._keyDownRef);
-        window.removeEventListener("keyup", this._keyUpRef);
-    }
-
-    handleKey(e, isDown) {
-        if (e.key === "1") this.keys.attack = isDown;
-        if (e.key.toLowerCase() === "c") this.keys.roll = isDown;
-        if (e.code === "Space") this.keys.jump = isDown;
-    }
-
-    onUpdate() {
-        if (!this.exclusiveAction) {
-            if (this.keys.attack) {
-                this.startExclusive("attack 1");
-                this.keys.attack = false;
-            } else if (this.keys.roll) {
-                this.startExclusive("roll");
-                this.keys.roll = false;
-            }
-        }
-
-        if (this.exclusiveAction) return;
-
-        const grounded = this.characterController.isGrounded();
-        const movement = this.characterController.getMovementDirection();
-        const isMoving = movement.x !== 0 || movement.z !== 0;
-
-        if (grounded && this.keys.jump) {
-            this.characterController.jump();
-            this.isJumping = true;
-            this.jumpStartTime = Date.now();
-        }
-
-        if (grounded) {
-            this.isJumping = false;
-            this.changeState(isMoving ? "Y Bot@Running" : "Y Bot@Breathing Idle");
-        } else {
-            const timeSinceJump = Date.now() - this.jumpStartTime;
-            const state = (this.isJumping && timeSinceJump < this.jumpDuration) ? "jump" : "fall";
-            this.changeState(state);
-        }
-    }
-
-    changeState(newState) {
-        if (this.currentState === newState) return;
-        this.currentState = newState;
-
-        this.animator.setBaseAction(newState);
-        this.animator.mix(newState, 0.1, 1);
-    }
-
-    startExclusive(actionName) {
-        this.exclusiveAction = actionName;
-        this.currentState = actionName;
-
-        this.animator.setBaseAction(actionName);
-        this.animator.mix(actionName, 0.05, 1);
-
-        if (!this.animationFinishedCallback) {
-            this.animationFinishedCallback = (name) => {
-                if (name === this.exclusiveAction) {
-                    this.exclusiveAction = null;
-                    this.currentState = ""; 
-                }
-            };
-            this.animator.onFinish(this.animationFinishedCallback);
-        }
-    }
 }`;
 
     if (!script) {
