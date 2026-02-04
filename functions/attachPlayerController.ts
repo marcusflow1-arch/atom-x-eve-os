@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
     this.runSpeed = 8.0;
 
-    this.keys = { attack: false, roll: false, jump: false };
+    this.keys = { attack: false, roll: false, jump: false, w: false, a: false, s: false, d: false };
 
     this._keyDownRef = null;
     this._keyUpRef = null;
@@ -66,6 +66,14 @@ Deno.serve(async (req) => {
     this.animator = this.entity.getComponent("Animator");
 
     if (this.characterController) {
+      // Disable built-in default input so the script fully owns controls
+      if (typeof this.characterController.setDefaultInput === 'function') {
+        this.characterController.setDefaultInput(false);
+      } else if ('defaultInput' in this.characterController) {
+        this.characterController.defaultInput = false;
+      } else if ('useDefaultInput' in this.characterController) {
+        this.characterController.useDefaultInput = false;
+      }
       this.characterController.speed = this.runSpeed;
     }
 
@@ -96,9 +104,11 @@ Deno.serve(async (req) => {
 
   handleKey(e, isDown) {
     if (this._lockCount > 0) return; // ignore input when locked
-    if (e.key === "1") this.keys.attack = isDown;
-    if (e.key.toLowerCase() === "c") this.keys.roll = isDown;
-    if (e.code === "Space") this.keys.jump = isDown;
+    const k = (e.key || '').toLowerCase();
+    if (k === "1") this.keys.attack = isDown;
+    if (k === "c") this.keys.roll = isDown;
+    if (e.code === "Space" || k === " ") this.keys.jump = isDown;
+    if (k === 'w' || k === 'a' || k === 's' || k === 'd') this.keys[k] = isDown;
   }
 
   onUpdate() {
@@ -123,8 +133,35 @@ Deno.serve(async (req) => {
     if (this.exclusiveAction) return;
 
     const grounded = this.characterController.isGrounded ? this.characterController.isGrounded() : true;
-    const movement = this.characterController.getMovementDirection ? this.characterController.getMovementDirection() : { x: 0, z: 0 };
-    const isMoving = movement.x !== 0 || movement.z !== 0;
+
+    // Script-controlled movement (overrides component listener)
+    let moveX = 0, moveZ = 0;
+    if (this.keys.w) moveZ -= 1;
+    if (this.keys.s) moveZ += 1;
+    if (this.keys.a) moveX -= 1;
+    if (this.keys.d) moveX += 1;
+    if (moveX !== 0 || moveZ !== 0) {
+      const len = Math.hypot(moveX, moveZ);
+      moveX /= len; moveZ /= len;
+      if (typeof this.characterController.setMovementDirection === 'function') {
+        this.characterController.setMovementDirection({ x: moveX, z: moveZ });
+      } else if (typeof this.characterController.setInput === 'function') {
+        this.characterController.setInput({ x: moveX, z: moveZ });
+      } else if (typeof this.characterController.move === 'function') {
+        this.characterController.move({ x: moveX, z: moveZ });
+      } else {
+        this.characterController.movementDirection = { x: moveX, z: moveZ };
+      }
+    } else {
+      if (typeof this.characterController.setMovementDirection === 'function') {
+        this.characterController.setMovementDirection({ x: 0, z: 0 });
+      } else if (typeof this.characterController.setInput === 'function') {
+        this.characterController.setInput({ x: 0, z: 0 });
+      } else {
+        this.characterController.movementDirection = { x: 0, z: 0 };
+      }
+    }
+    const isMoving = moveX !== 0 || moveZ !== 0;
 
     if (grounded && this.keys.jump) {
       if (this.characterController.jump) this.characterController.jump();
@@ -158,6 +195,20 @@ Deno.serve(async (req) => {
     this.exclusiveAction = actionName;
     this.currentState = actionName;
 
+    // Ensure action overrides run layer and has higher priority
+    if (typeof this.animator.setLayer === 'function') {
+      this.animator.setLayer(actionName, 'override');
+    }
+    if (typeof this.animator.setPriority === 'function') {
+      this.animator.setPriority(actionName, 10);
+    }
+    // Stop/zero out running so it doesn't crush exclusive actions
+    if (typeof this.animator.stop === 'function') {
+      this.animator.stop('Y Bot@Running');
+    } else if (typeof this.animator.setWeight === 'function') {
+      this.animator.setWeight('Y Bot@Running', 0);
+    }
+
     this.animator.setBaseAction(actionName);
     this.animator.mix(actionName, 0.05, 1);
 
@@ -166,6 +217,10 @@ Deno.serve(async (req) => {
         if (name === this.exclusiveAction) {
           this.exclusiveAction = null;
           this.currentState = "";
+          // Restore running weight after exclusive action completes
+          if (typeof this.animator.setWeight === 'function') {
+            this.animator.setWeight('Y Bot@Running', 1);
+          }
         }
       };
       this.animator.onFinish(this.animationFinishedCallback);
