@@ -19,6 +19,21 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const requestRef = useRef(null);
+  const [aiAttaching, setAiAttaching] = useState(false);
+  const [aiMessage, setAiMessage] = useState("");
+
+  const attachEnemyAI = async () => {
+    setAiAttaching(true);
+    setAiMessage("");
+    try {
+      const { data } = await base44.functions.invoke('attachEnemyAI');
+      setAiMessage(data?.message || `Attached to ${data?.attached ?? 0} enemies`);
+    } catch (e) {
+      setAiMessage('Failed to attach Enemy AI');
+    } finally {
+      setAiAttaching(false);
+    }
+  };
 
   useEffect(() => {
     if (!containerRef.current || !model?.file_url || !isOpen) return;
@@ -96,8 +111,9 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         
-        // Normalize scale to ~3 units
-        const scale = 3 / (maxDim || 1);
+        // Normalize scale to ~2 units (avoid oversized preview)
+        const targetSize = 2;
+        const scale = Math.min(targetSize / (maxDim || 1), 10);
         fbx.scale.multiplyScalar(scale);
         
         // Recenter geometry
@@ -189,7 +205,13 @@ function FBXPreviewModal({ model, isOpen, onClose }) {
              </DialogTitle>
              <DialogDescription id="fbx-preview-desc" className="sr-only">3D preview for FBX model</DialogDescription>
            </div>
-           <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
+           <div className="flex items-center gap-2">
+             <Button variant="outline" size="sm" onClick={attachEnemyAI} disabled={aiAttaching} className="gap-2">
+               {aiAttaching ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+               Attach Enemy AI
+             </Button>
+             <Button variant="ghost" size="icon" onClick={onClose}><X className="w-5 h-5" /></Button>
+           </div>
         </div>
         
         <div className="flex-1 relative bg-slate-950">
