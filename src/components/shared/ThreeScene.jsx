@@ -42,7 +42,7 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.autoRotate = autoRotate;
+    controls.autoRotate = !!modelUrl && autoRotate;
     controls.autoRotateSpeed = 2.0;
 
     let model = null;
@@ -77,15 +77,7 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
             console.error('An error happened loading the model', error);
         });
     } else {
-        // Placeholder Cube if no model provided
-        const geometry = new THREE.BoxGeometry(2, 2, 2);
-        const material = new THREE.MeshStandardMaterial({ 
-            color: 0x00ffff, 
-            wireframe: true,
-            emissive: 0x004444
-        });
-        model = new THREE.Mesh(geometry, material);
-        scene.add(model);
+        // No placeholder: render nothing when no modelUrl is provided
     }
 
     // Animation Loop
