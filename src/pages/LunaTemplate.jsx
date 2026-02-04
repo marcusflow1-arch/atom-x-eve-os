@@ -82,6 +82,31 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     }
   };
 
+  // Scale model so its final world height matches a target (meters-like units)
+  const adjustModelScaleToWorldHeight = (model, targetWorldHeight = 1.8) => {
+    try {
+      // Current model local height
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const height = Math.max(size.y, 1e-6);
+
+      // Account for container scale (actorContainerRef scales the whole character group)
+      const containerScale = actorContainerRef.current ? actorContainerRef.current.scale.x : 1;
+      const desiredLocalHeight = targetWorldHeight / (containerScale || 1);
+      const s = desiredLocalHeight / height;
+      model.scale.multiplyScalar(s);
+
+      // Recenter and place feet on ground after scaling
+      const box2 = new THREE.Box3().setFromObject(model);
+      const center2 = box2.getCenter(new THREE.Vector3());
+      model.position.x -= center2.x;
+      model.position.z -= center2.z;
+      model.position.y -= box2.min.y;
+    } catch (e) {
+      console.warn('adjustModelScaleToWorldHeight failed', e);
+    }
+  };
+
   const containerRef = useRef(null);
   const modelRef = useRef(null);
   const weaponRef = useRef(null);
@@ -789,15 +814,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
-                      // Auto-scale to match Y-Bot baseline by normalizing bounds
-                      try {
-                        const box = new THREE.Box3().setFromObject(fbx);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                        const target = 1; // keep actorContainer scale=0.01; normalize model to unit
-                        const s = target / maxDim;
-                        fbx.scale.multiplyScalar(s);
-                      } catch {}
+                      // Scale replacement character to a sensible world height (~1.75m)
+                      adjustModelScaleToWorldHeight(fbx, 1.75);
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
@@ -819,14 +837,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
-                // Auto-scale to Y-Bot baseline by normalizing bounds
-                try {
-                  const box = new THREE.Box3().setFromObject(fbx);
-                  const size = box.getSize(new THREE.Vector3());
-                  const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                  const s = 1 / maxDim;
-                  fbx.scale.multiplyScalar(s);
-                } catch {}
+                // Scale replacement character to a sensible world height (~1.75m)
+                adjustModelScaleToWorldHeight(fbx, 1.75);
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
