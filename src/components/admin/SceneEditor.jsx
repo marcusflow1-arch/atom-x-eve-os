@@ -362,9 +362,11 @@ export default function SceneEditor() {
                 sceneObjectsMap.current[objConf.id] = model;
 
                 // Setup Animation Mixer if clips exist (but don't play yet)
-                const clips = model.animations || (model.geometry ? [] : []); // Handle simple meshes vs scenes
-                // NOTE: GLTF/FBX Loaders put animations on the root asset, we might need to pass them down
-                // For simplicity here, we assume standard structure.
+                const clips = model.animations || (model.geometry ? [] : []);
+                if (clips.length > 0) {
+                    const mixer = new THREE.AnimationMixer(model);
+                    mixersRef.current[objConf.id] = { mixer };
+                }
                 
                 if (selectedObjectId === objConf.id) transformRef.current.attach(model);
             };
