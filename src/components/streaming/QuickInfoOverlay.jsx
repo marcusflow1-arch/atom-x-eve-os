@@ -4,6 +4,8 @@ import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, New
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { addDays, format, isToday, startOfWeek } from 'date-fns';
+import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
 import DLCList, { DLC_DATA } from '@/components/game/DLCList';
 import { useCart } from '@/components/CartContext';
 import { base44 } from '@/api/base44Client';
@@ -30,6 +32,14 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   // Aura streaming subpage view state
   const [activeStreamerIndex, setActiveStreamerIndex] = React.useState(0);
   const [streamers, setStreamers] = React.useState([]);
+  const [activeStreamerTab, setActiveStreamerTab] = React.useState('games');
+  const [scheduleBaseDate, setScheduleBaseDate] = React.useState(new Date());
+  
+  const startDate = React.useMemo(() => startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }), [scheduleBaseDate]);
+  const scheduleDays = React.useMemo(() => Array.from({ length: 14 }).map((_, i) => addDays(startDate, i)), [startDate]);
+  const endDate = scheduleDays[13];
+  const dateRangeString = `${format(startDate, 'MMM d')} - ${format(endDate, 'MMM d, yyyy')}`;
+
   const [chatMessages] = React.useState([
     { user: 'System', text: 'Welcome to the live chat.' },
     { user: 'Mod', text: 'Be respectful and have fun!' }
@@ -383,52 +393,151 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   </div>
                 </div>
 
-                {/* Channel footer */}
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full overflow-hidden ring-1 ring-white/10 bg-white/10 flex items-center justify-center">
-                      {streamers.length > 0 ? (
+                {/* Channel Header */}
+                <div className="w-full px-2 py-4 flex flex-col md:flex-row items-center justify-between gap-6 relative border-b border-white/10 pb-6">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/10 bg-black flex-shrink-0">
+                      {streamers[activeStreamerIndex]?.avatar ? (
                         <img src={streamers[activeStreamerIndex]?.avatar} alt={streamers[activeStreamerIndex]?.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-white/60 text-sm">MF</span>
+                        <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl font-bold">
+                          {(streamers[activeStreamerIndex]?.name || 'S').charAt(0)}
+                        </div>
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white font-semibold truncate">{streamers[activeStreamerIndex]?.name || 'marcus flowers'}</p>
-                      <p className="text-[11px] text-cyan-300 uppercase tracking-wider">Competitive • Strategic</p>
+                      <h2 className="text-lg font-bold text-white tracking-wide truncate">{streamers[activeStreamerIndex]?.name || 'NovaKnight'}</h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest truncate">PERSONALITY</span>
+                        <span className="text-[10px] text-cyan-300 uppercase tracking-wider truncate">COMPETITIVE • STRATEGIC</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="hidden md:flex items-center gap-4 text-white/70">
-                    {['Schedule','Cards','Gallery','Games'].map((t) => (
-                      <button key={t} className="px-3 py-1.5 rounded-full text-xs hover:text-white hover:bg-white/10 border border-white/10">{t}</button>
-                    ))}
+                  <div className="flex items-center gap-6 text-white/70">
+                    {['Schedule','Cards','Gallery','Games'].map((t) => {
+                      const id = t.toLowerCase();
+                      const isActive = activeStreamerTab === id;
+                      return (
+                        <button 
+                          key={id} 
+                          onClick={() => setActiveStreamerTab(id)}
+                          className={`text-sm font-medium transition-colors relative ${isActive ? 'text-white' : 'hover:text-white'}`}
+                        >
+                          {t}
+                          {isActive && <motion.div layoutId="activeTabStreamer" className="absolute -bottom-2 left-0 right-0 h-0.5 bg-white rounded-full" />}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div className="ml-auto text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-white/40">Total Views</p>
-                    <p className="text-white font-bold">{streamers[activeStreamerIndex]?.viewers || '42.5k'}</p>
+                  <div className="flex items-center gap-4">
+                    <Button className="bg-white text-black hover:bg-white/90 rounded-full px-6 font-bold text-xs">
+                      Subscribe
+                    </Button>
+                    <div className="flex items-center gap-1 text-white/60 text-xs font-bold">
+                      <User className="w-3 h-3" /> 1.2K
+                    </div>
                   </div>
                 </div>
 
-                {/* Other people streaming this game */}
-                <div>
-                  <h4 className="text-white/70 text-xs font-bold uppercase tracking-wider mb-2">Other Live Channels</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[420px] overflow-y-auto pr-2 custom-scrollbar">
-                    {streamers.filter((_, i) => i !== activeStreamerIndex).map((s) => (
-                      <button key={s.id} onClick={() => { setActiveStreamerIndex(streamers.findIndex((x) => x.id === s.id)); recordRecentStreamer(s); }} className="group rounded-lg overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
-                        <div className="aspect-video bg-black/60" />
-                        <div className="p-2 flex items-center gap-2">
-                          <img src={s.avatar} alt={s.name} className="w-6 h-6 rounded-full object-cover" />
-                          <div className="min-w-0">
-                            <p className="text-white text-xs font-semibold truncate group-hover:text-cyan-100">{s.name}</p>
-                            <p className="text-[10px] text-white/50">Live • {s.viewers}</p>
+                {/* Tab Content */}
+                <div className="min-h-[300px]">
+                  {activeStreamerTab === 'games' && (
+                    <div>
+                      <h3 className="text-white font-bold text-sm mb-4">Games Played</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {['Valorant','Apex Legends','League of Legends','Overwatch 2','Minecraft','Destiny 2','Elden Ring','Cyberpunk 2077'].map((g, i) => (
+                          <div key={g} className="group relative aspect-video rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                            <img src={`https://source.unsplash.com/random/400x225?game,${g}&sig=${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-3 flex flex-col justify-end">
+                              <p className="text-white font-bold text-sm truncate">{g}</p>
+                              <p className="text-[10px] text-white/50">FPS • Action</p>
+                            </div>
                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStreamerTab === 'gallery' && (
+                    <div>
+                      <h3 className="text-white font-bold text-sm mb-4">Gallery</h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="aspect-video bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all cursor-pointer group relative">
+                            <img src={`https://source.unsplash.com/random/800x600?gaming,setup&sig=${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-center text-white/30 text-xs mt-4">Scroll to view more • Double-click content to collapse</p>
+                    </div>
+                  )}
+
+                  {activeStreamerTab === 'cards' && (
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <h3 className="text-white font-bold text-sm">Stream Collection</h3>
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-300 border-purple-500/20 text-[10px]">Season 0</Badge>
+                        <div className="ml-auto flex gap-2">
+                           <Button variant="ghost" size="sm" className="h-6 text-[10px]">All</Button>
+                           <Button variant="ghost" size="sm" className="h-6 text-[10px] text-white/50">Powers</Button>
+                           <Button variant="ghost" size="sm" className="h-6 text-[10px] text-white/50">Equipment</Button>
                         </div>
-                      </button>
-                    ))}
-                  </div>
+                      </div>
+                      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                        {Array.from({ length: 16 }).map((_, i) => (
+                          <div key={i} className="group relative aspect-[3/4] rounded-lg border border-white/10 bg-white/5 overflow-hidden transition-all hover:scale-105 hover:border-white/30">
+                            <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                            <div className="absolute top-1.5 left-1.5">
+                              <span className="text-[8px] uppercase tracking-wider text-white/40">Common</span>
+                            </div>
+                            <div className="absolute bottom-2 left-2 right-2">
+                              <div className="h-1 w-8 bg-white/10 rounded-full mb-1" />
+                              <div className="h-1 w-12 bg-white/10 rounded-full" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStreamerTab === 'schedule' && (
+                    <div className="w-full select-none pt-2">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                          Streaming Schedule <span className="text-white/40 text-xs font-normal ml-2">{dateRangeString}</span>
+                        </h3>
+                        <div className="flex items-center gap-1">
+                          <Button onClick={() => setScheduleBaseDate(d => addDays(d, -14))} variant="outline" size="icon" className="h-6 w-6 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronLeft className="w-3 h-3" /></Button>
+                          <Button onClick={() => setScheduleBaseDate(new Date())} variant="outline" className="h-6 px-3 rounded-lg bg-white/5 border-white/10 hover:bg-white/10 text-[10px] font-semibold">Today</Button>
+                          <Button onClick={() => setScheduleBaseDate(d => addDays(d, 14))} variant="outline" size="icon" className="h-6 w-6 rounded-lg bg-white/5 border-white/10 hover:bg-white/10"><ChevronRight className="w-3 h-3" /></Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-px bg-white/10 rounded-xl overflow-hidden border border-white/10">
+                        {scheduleDays.map((date, i) => {
+                          const isCurrentDay = isToday(date);
+                          const dayName = format(date, 'EEE');
+                          const dayNumber = format(date, 'd');
+                          return (
+                            <div key={i} className={`bg-[#0f1419] p-2 min-h-[80px] flex flex-col items-center relative group hover:bg-[#1a1f2e] transition-colors ${isCurrentDay ? 'bg-white/[0.03]' : ''}`}>
+                              <div className="w-full flex justify-between items-start mb-1 px-1">
+                                <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">{dayName}</span>
+                              </div>
+                              <span className={`text-lg font-bold ${isCurrentDay ? 'text-cyan-400' : 'text-white'}`}>{dayNumber}</span>
+                              {isCurrentDay && <div className="absolute inset-0 bg-cyan-500/5 pointer-events-none box-border border-b-2 border-cyan-500/50" />}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-center text-white/30 text-[10px] mt-4">Double-click content to collapse • Timezone is localized</p>
+                    </div>
+                  )}
                 </div>
+
+                {/* Partners & Sponsors */}
+                <SponsorsSection allowEditing={false} />
                 </div>
                 ) : isAppView ? (
                 <div className="w-full h-full min-h-0 flex flex-col">
