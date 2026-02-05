@@ -47,6 +47,8 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
     controls.autoRotateSpeed = 2.0;
 
     let model = null;
+    let mixer = null;
+    const clock = new THREE.Clock();
 
     // Load Model
     if (modelUrl) {
@@ -57,6 +59,18 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
             model = isFbx ? asset : asset.scene;
             model.scale.set(scale, scale, scale);
             
+            // Material Fixes (DoubleSide)
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    const materials = Array.isArray(child.material) ? child.material : [child.material];
+                    materials.forEach(mat => {
+                        mat.side = THREE.DoubleSide;
+                        if (mat.map) mat.map.colorSpace = THREE.SRGBColorSpace;
+                        mat.needsUpdate = true;
+                    });
+                }
+            });
+
             // Center the model
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
@@ -67,11 +81,9 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
             // Play animations if any
             const animations = isFbx ? asset.animations : asset.animations;
             if (animations && animations.length) {
-                const mixer = new THREE.AnimationMixer(model);
-                animations.forEach((clip) => {
-                    mixer.clipAction(clip).play();
-                });
-                // You would need a clock and update loop for mixer here
+                mixer = new THREE.AnimationMixer(model);
+                // Play first animation by default
+                mixer.clipAction(animations[0]).play();
             }
         }, 
         (xhr) => {
@@ -80,13 +92,15 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
         (error) => {
             console.error('An error happened loading the model', error);
         });
-    } else {
-        // No placeholder: render nothing when no modelUrl is provided
     }
 
     // Animation Loop
     const animate = () => {
       requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
+      
       controls.update();
       renderer.render(scene, camera);
     };
