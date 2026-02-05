@@ -49,7 +49,6 @@
  */
 import AIAchievements from './pages/AIAchievements';
 import AIBattle from './pages/AIBattle';
-import AIConsole from './pages/AIConsole';
 import AINews from './pages/AINews';
 import AIStory from './pages/AIStory';
 import AbilityAchievements from './pages/AbilityAchievements';
@@ -109,7 +108,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AIAchievements": AIAchievements,
     "AIBattle": AIBattle,
-    "AIConsole": AIConsole,
     "AINews": AINews,
     "AIStory": AIStory,
     "AbilityAchievements": AbilityAchievements,
