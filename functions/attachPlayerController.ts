@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    this.changeState("Y Bot@Breathing Idle");
+    this.changeState("idle");
 
     if (!this._keyDownRef) this._keyDownRef = (e) => this.handleKey(e, true);
     if (!this._keyUpRef) this._keyUpRef = (e) => this.handleKey(e, false);
@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     window.addEventListener("keydown", this._keyDownRef);
     window.addEventListener("keyup", this._keyUpRef);
 
-    if (!this._uiOpenRef) this._uiOpenRef = () => { this._lockCount++; this._applyLockState(); this.changeState("Y Bot@Breathing Idle"); this._saveState(); };
+    if (!this._uiOpenRef) this._uiOpenRef = () => { this._lockCount++; this._applyLockState(); this.changeState("idle"); this._saveState(); };
     if (!this._uiCloseRef) this._uiCloseRef = () => { this._lockCount = Math.max(0, this._lockCount - 1); this._applyLockState(); this._saveState(); };
 
     window.addEventListener("ui_panel_open", this._uiOpenRef);
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
 
     if (this._lockCount > 0) {
       // Locked: force idle
-      this.changeState("Y Bot@Breathing Idle");
+      this.changeState("idle");
       return;
     }
 
@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
 
     if (grounded) {
       this.isJumping = false;
-      this.changeState(isMoving ? "Y Bot@Running" : "Y Bot@Breathing Idle");
+      this.changeState(isMoving ? "run" : "idle");
     } else {
       const timeSinceJump = Date.now() - this.jumpStartTime;
       const state = (this.isJumping && timeSinceJump < this.jumpDuration) ? "jump" : "fall";
@@ -259,8 +259,12 @@ Deno.serve(async (req) => {
       'row': 'row',
       // The attack clip is named exactly 'attack 1' in the project
       'attack 1': 'attack 1',
-      'Y Bot@Running': 'Y Bot@Running',
-      'Y Bot@Breathing Idle': 'Y Bot@Breathing Idle'
+      // New simplified clip names
+      'run': 'run',
+      'idle': 'idle',
+      // Backwards compatibility with previous clip names
+      'Y Bot@Running': 'run',
+      'Y Bot@Breathing Idle': 'idle'
     };
     if (map[state]) return map[state];
     if (state.includes('@') || state.includes(' ')) return state;
@@ -291,9 +295,9 @@ Deno.serve(async (req) => {
       this.animator.setPriority(clip, 10);
     }
     if (typeof this.animator.stop === 'function') {
-      this.animator.stop('Y Bot@Running');
+      this.animator.stop('run');
     } else if (typeof this.animator.setWeight === 'function') {
-      this.animator.setWeight('Y Bot@Running', 0);
+      this.animator.setWeight('run', 0);
     }
 
     if (typeof this.animator.setBaseAction === 'function') this.animator.setBaseAction(clip);
@@ -306,7 +310,7 @@ Deno.serve(async (req) => {
         this.exclusiveAction = null;
         this.currentState = '';
         if (typeof this.animator.setWeight === 'function') {
-          this.animator.setWeight('Y Bot@Running', 1);
+          this.animator.setWeight('run', 1);
         }
       }
     };
