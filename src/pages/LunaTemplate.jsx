@@ -3256,6 +3256,13 @@ export default function LunaTemplate() {
         <SideAccessMenu />
       )}
 
+      {/* Calendar Overlay */}
+      <AnimatePresence>
+        {showCalendar && (
+          <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
+        )}
+      </AnimatePresence>
+
       {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
       <AnimatePresence>
         {activeSubTab &&

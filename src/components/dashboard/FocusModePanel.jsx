@@ -1552,11 +1552,11 @@ const DateTimeTile = ({ onClick, onCalendarClick = () => {} }) => {
   const yearString = time.getFullYear();
 
   return (
-    <motion.button
+    <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="w-full flex-1 rounded-2xl relative overflow-hidden group border border-white/10"
+      className="w-full flex-1 rounded-2xl relative overflow-hidden group border border-white/10 cursor-pointer"
       style={{
         background: 'rgba(255, 255, 255, 0.05)',
         backdropFilter: 'blur(20px) saturate(150%)',
@@ -1593,7 +1593,7 @@ const DateTimeTile = ({ onClick, onCalendarClick = () => {} }) => {
           <span className="text-[10px] text-white/60 font-medium">System Online</span>
         </div>
       </div>
-    </motion.button>
+    </motion.div>
   );
 };
 
