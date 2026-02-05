@@ -125,12 +125,41 @@ Deno.serve(async (req) => {
   }
 
   handleKey(e, isDown) {
-    if (this._lockCount > 0) return; // ignore input when locked
-    const k = (e.key || '').toLowerCase();
-    if (k === "1") this.keys.attack = isDown;
-    if (k === "c") this.keys.roll = isDown;
-    if (e.code === "Space" || k === " ") this.keys.jump = isDown;
-    if (k === 'w' || k === 'a' || k === 's' || k === 'd') this.keys[k] = isDown;
+  if (this._lockCount > 0) return; // ignore input when locked
+  const k = (e.key || '').toLowerCase();
+  if (k === "1") this.keys.attack = isDown;
+  if (k === "c") this.keys.roll = isDown;
+  if (e.code === "Space" || k === " ") this.keys.jump = isDown;
+  if (k === 'w' || k === 'a' || k === 's' || k === 'd') this.keys[k] = isDown;
+
+  // Stop animations on key release as requested
+  if (!isDown) {
+    // Stop row (roll) animation with 'C'
+    if (k === 'c') {
+      const rowClip = this._resolveClipForState('row');
+      if (this.animator && typeof this.animator.stop === 'function') this.animator.stop(rowClip);
+      if (this.exclusiveAction === rowClip) {
+        this.exclusiveAction = null;
+        this.currentState = '';
+      }
+    }
+    // Stop attack animation with '1'
+    if (k === '1') {
+      const attackClip = this._resolveClipForState('attack 1');
+      if (this.animator && typeof this.animator.stop === 'function') this.animator.stop(attackClip);
+      if (this.exclusiveAction === attackClip) {
+        this.exclusiveAction = null;
+        this.currentState = '';
+      }
+    }
+    // Stop jump animation with Spacebar
+    if (e.code === 'Space' || k === ' ') {
+      this.isJumping = false;
+      this.jumpStartTime = 0;
+      // Force back to idle immediately
+      this.changeState('Y Bot@Breathing Idle');
+    }
+  }
   }
 
   onUpdate() {
