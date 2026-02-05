@@ -9,7 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 // Specialized Price Filter Component
-const PriceSpotlightRow = ({ games, onGameClick, activeId }) => {
+const PriceSpotlightRow = ({ games, onGameClick, onGameHover, activeId }) => {
     const [maxPrice, setMaxPrice] = useState(30);
     
     // Sort games by price ascending, then filter
@@ -54,7 +54,8 @@ const PriceSpotlightRow = ({ games, onGameClick, activeId }) => {
                             key={game.id} 
                             game={game} 
                             isActive={activeId === game.id} 
-                            onClick={onGameClick} 
+                            onClick={onGameClick}
+                            onHover={onGameHover} 
                         />
                     ))
                 ) : (
@@ -68,10 +69,11 @@ const PriceSpotlightRow = ({ games, onGameClick, activeId }) => {
 };
 
 // Reusable Card Component
-const GameGridCard = ({ game, isActive, onClick }) => (
+const GameGridCard = ({ game, isActive, onClick, onHover }) => (
     <motion.div
         whileHover={{ y: -5, scale: 1.02 }}
         onClick={() => onClick(game)}
+        onMouseEnter={() => onHover && onHover(game)}
         className={`
             relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border transition-all duration-300
             ${isActive 
@@ -110,9 +112,13 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
         }
     }, [games]);
 
-    const handleGameClick = (game) => {
+    const handleGameHover = (game) => {
         setSelectedGame(game);
         setHeroKey(prev => prev + 1);
+    };
+
+    const handleGameClick = (game) => {
+        onNavigate(game.id);
     };
 
     // --- Enhanced Data Slicing ---
@@ -237,12 +243,14 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                 games={exclusiveGames} 
                 activeId={selectedGame?.id}
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
             />
 
             {/* INTERACTIVE PRICE FILTER SECTION */}
             <PriceSpotlightRow 
                 games={games} 
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
                 activeId={selectedGame?.id}
             />
 
@@ -254,6 +262,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                 games={gamesToDiscover} 
                 activeId={selectedGame?.id}
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
             />
 
             {/* RECOMMENDED SECTION */}
@@ -264,6 +273,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                 games={recommendedGames} 
                 activeId={selectedGame?.id}
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
             />
 
             {/* TOP & MOST PLAYED GRID */}
@@ -275,6 +285,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                     games={topGames} 
                     activeId={selectedGame?.id}
                     onGameClick={handleGameClick}
+                    onGameHover={handleGameHover}
                     cols={3}
                 />
                 <CategoryRow 
@@ -284,6 +295,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                     games={mostPlayedGames} 
                     activeId={selectedGame?.id}
                     onGameClick={handleGameClick}
+                    onGameHover={handleGameHover}
                     cols={3}
                 />
             </div>
@@ -296,6 +308,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                 games={creatorGames} 
                 activeId={selectedGame?.id}
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
             />
 
             {/* LIVE EVENTS */}
@@ -306,16 +319,17 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
                 games={eventGames} 
                 activeId={selectedGame?.id}
                 onGameClick={handleGameClick}
+                onGameHover={handleGameHover}
             />
 
             {/* STANDARD CATEGORIES */}
-            <CategoryRow title="On Sale" icon={Flame} color="text-red-400" games={onSaleGames} activeId={selectedGame?.id} onGameClick={handleGameClick} />
-            <CategoryRow title="Hidden Gems" icon={Eye} color="text-purple-400" games={hiddenGems} activeId={selectedGame?.id} onGameClick={handleGameClick} />
-            <CategoryRow title="Free to Play" icon={Zap} color="text-blue-400" games={freeToPlay} activeId={selectedGame?.id} onGameClick={handleGameClick} />
+            <CategoryRow title="On Sale" icon={Flame} color="text-red-400" games={onSaleGames} activeId={selectedGame?.id} onGameClick={handleGameClick} onGameHover={handleGameHover} />
+            <CategoryRow title="Hidden Gems" icon={Eye} color="text-purple-400" games={hiddenGems} activeId={selectedGame?.id} onGameClick={handleGameClick} onGameHover={handleGameHover} />
+            <CategoryRow title="Free to Play" icon={Zap} color="text-blue-400" games={freeToPlay} activeId={selectedGame?.id} onGameClick={handleGameClick} onGameHover={handleGameHover} />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                <CategoryRow title="Online Multiplayer" icon={Wifi} color="text-green-400" games={onlineGames} activeId={selectedGame?.id} onGameClick={handleGameClick} cols={3} />
-                <CategoryRow title="Offline Adventures" icon={WifiOff} color="text-slate-400" games={offlineGames} activeId={selectedGame?.id} onGameClick={handleGameClick} cols={3} />
+                <CategoryRow title="Online Multiplayer" icon={Wifi} color="text-green-400" games={onlineGames} activeId={selectedGame?.id} onGameClick={handleGameClick} onGameHover={handleGameHover} cols={3} />
+                <CategoryRow title="Offline Adventures" icon={WifiOff} color="text-slate-400" games={offlineGames} activeId={selectedGame?.id} onGameClick={handleGameClick} onGameHover={handleGameHover} cols={3} />
             </div>
 
         </div>
@@ -323,7 +337,7 @@ export default function StoreGridSpotlight({ games, onNavigate }) {
 }
 
 // Helper Component for Rows
-const CategoryRow = ({ title, icon: Icon, color, games, activeId, onGameClick, cols }) => {
+const CategoryRow = ({ title, icon: Icon, color, games, activeId, onGameClick, onGameHover, cols }) => {
     if (!games || games.length === 0) return null;
     
     // Determine grid columns class based on props or default
@@ -346,6 +360,7 @@ const CategoryRow = ({ title, icon: Icon, color, games, activeId, onGameClick, c
                         game={game} 
                         isActive={activeId === game.id} 
                         onClick={onGameClick} 
+                        onHover={onGameHover}
                     />
                 ))}
             </div>
