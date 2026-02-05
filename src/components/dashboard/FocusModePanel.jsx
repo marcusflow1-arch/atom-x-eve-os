@@ -1888,7 +1888,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
         </div>
 
         {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8" style={{ marginTop: 'auto' }}>
+        <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8 mt-8" style={{ marginTop: 'auto' }}>
           <div className="w-full">
             <h3 
                 className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full" 

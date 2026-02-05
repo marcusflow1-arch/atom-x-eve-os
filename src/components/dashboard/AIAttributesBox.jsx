@@ -16,9 +16,11 @@ export default function AIAttributesBox() {
   });
 
   const stats = progression?.stats || {};
-  const topGenres = Array.isArray(progression?.genres)
-    ? progression.genres.slice().sort((a, b) => (b.level ?? 1) - (a.level ?? 1)).slice(0, 2)
+  const sortedGenres = Array.isArray(progression?.genres)
+    ? progression.genres.slice().sort((a, b) => (b.level ?? 1) - (a.level ?? 1))
     : [];
+  const topGenres = sortedGenres.slice(0, 2);
+  const otherGenres = sortedGenres.slice(2);
 
   const rows = [
     { label: 'Global Level', value: progression?.global_level },
@@ -57,6 +59,20 @@ export default function AIAttributesBox() {
               <div key={g.name} className="flex items-center justify-between">
                 <span className="text-white/70 text-sm">{g.name}</span>
                 <span className="text-white font-semibold text-sm">Lv {g.level ?? 1}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {otherGenres.length > 0 && (
+        <div className="px-4 py-3 border-t border-white/10">
+          <div className="text-[10px] font-semibold tracking-widest text-white/40 uppercase mb-2">Other Genres</div>
+          <div className="grid grid-cols-2 gap-y-1 gap-x-3">
+            {otherGenres.map((g) => (
+              <div key={g.name} className="flex items-center justify-between">
+                <span className="text-white/60 text-sm truncate">{g.name}</span>
+                <span className="text-white/90 font-semibold text-sm">Lv {g.level ?? 1}</span>
               </div>
             ))}
           </div>
