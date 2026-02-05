@@ -288,7 +288,7 @@ function LayoutContent({ children, currentPageName }) {
   const navigate = useNavigate();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/discover']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/discover','/aura']
     .some(s => location.pathname.toLowerCase().includes(s));
   const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
@@ -923,7 +923,7 @@ function LayoutContent({ children, currentPageName }) {
                       <>
                         {/* Title - same size as Store */}
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                          Atom X Eve Dashboard Home
+                          Atom X Eve Aura Stream
                         </span>
 
                         {/* Divider */}
