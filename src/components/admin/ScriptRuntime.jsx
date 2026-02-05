@@ -12,12 +12,6 @@ export class ScriptRuntime {
     this.instances = [];
     this.active = false;
     this.cleanupFns = [];
-    this.focusedObjectId = null;
-  }
-
-  setFocus(objectId) {
-      this.focusedObjectId = objectId;
-      console.log("Focused Object:", objectId);
   }
 
   async start(objectsConfig, scriptsCatalog) {
@@ -25,12 +19,6 @@ export class ScriptRuntime {
     this.active = true;
     this.instances = [];
     this.cleanupFns = [];
-
-    // Auto-focus player role
-    const playerObj = objectsConfig.find(o => o.role === 'player');
-    if (playerObj) {
-        this.focusedObjectId = playerObj.id;
-    }
 
     // console.log("Starting Script Runtime...", objectsConfig);
 
@@ -88,33 +76,9 @@ export class ScriptRuntime {
 
   update(delta) {
     if (!this.active) return;
-    
-    // Script Updates
     this.instances.forEach(({ instance }) => {
       if (instance.onUpdate) instance.onUpdate();
     });
-
-    // Camera Follow Logic
-    if (this.focusedObjectId && this.controlsRef.current) {
-        const threeObj = this.objectsMapRef.current[this.focusedObjectId];
-        if (threeObj) {
-             const controls = this.controlsRef.current;
-             const cam = controls.object;
-             
-             // 1. Get current offset from target (radius + rotation)
-             const offset = new THREE.Vector3().subVectors(cam.position, controls.target);
-             
-             // 2. Determine new target position (Character Center)
-             // We use a slight Y offset to look at torso/head instead of feet
-             const newTarget = threeObj.position.clone().add(new THREE.Vector3(0, 1.2, 0));
-             
-             // 3. Update Controls Target
-             controls.target.copy(newTarget);
-             
-             // 4. Move Camera to maintain relative offset (smooth follow)
-             cam.position.addVectors(newTarget, offset);
-        }
-    }
   }
 
   // --- COMPONENT SYSTEM MOCK ---

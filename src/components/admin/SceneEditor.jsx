@@ -463,35 +463,21 @@ export default function SceneEditor() {
     if (intersects.length > 0) {
         // Find root object
         let target = intersects[0].object;
-        let foundId = null;
-        let isEnv = false;
-
         while(target) {
             if (target.userData.id) {
-                foundId = target.userData.id;
-                break;
+                setSelectedObjectId(target.userData.id);
+                return;
             }
             if (target.userData.isEnvironment) {
-                isEnv = true;
-                break;
+                setSelectedObjectId('environment');
+                return;
             }
             if (target === sceneRef.current) break;
             target = target.parent;
         }
-
-        if (isPlaying) {
-            // PLAY MODE: Focus camera on clicked object
-            if (foundId && scriptRuntimeRef.current) {
-                scriptRuntimeRef.current.setFocus(foundId);
-                showSuccess("Controlling: " + (sceneConfig.objects.find(o=>o.id===foundId)?.name || "Object"));
-            }
-        } else {
-            // EDIT MODE: Select for Gizmo
-            if (foundId) setSelectedObjectId(foundId);
-            else if (isEnv) setSelectedObjectId('environment');
-        }
     } else {
-        if (!isPlaying) setSelectedObjectId(null);
+        // Deselect if clicked empty space
+        setSelectedObjectId(null);
     }
   };
 
