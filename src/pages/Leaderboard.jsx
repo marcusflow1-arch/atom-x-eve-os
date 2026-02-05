@@ -144,12 +144,15 @@ export default function Leaderboard() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
-  // Fetch real users from database
+  // Fetch real users from database with real-time polling
   const { data: dbUsers, isLoading } = useQuery({
     queryKey: ['leaderboard-users'],
     queryFn: () => base44.entities.User.list('-level', 50),
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Poll every 5s for "real-time" feel
   });
+
+  // Fetch progression for real score calculation if needed, but for now trusting User entity fields
+  // In a full real-time setup, we might aggregate UserAchievements here.
 
   // Combine real users with mock data for fuller leaderboard
   const leaderboardData = useMemo(() => {
@@ -161,18 +164,22 @@ export default function Leaderboard() {
         username: u.username || u.full_name || 'User',
         avatar: u.avatar_url,
         level: u.level || 1,
-        score: (u.level || 1) * 1500 + Math.floor(Math.random() * 500),
-        achievements: Math.floor((u.level || 1) * 4),
-        gamesPlayed: Math.floor((u.level || 1) * 1.5),
-        rank: idx + 1
+        // In a real scenario, score would come from a 'score' field on User or aggregated events
+        score: u.gamer_score || ((u.level || 1) * 1000), 
+        achievements: u.achievements_count || Math.floor((u.level || 1) * 2), 
+        gamesPlayed: u.games_played || 0,
+        rank: idx + 1,
+        isReal: true // Flag to identify real users
       }));
     }
 
-    // Fill remaining spots with mock data
-    const mockToAdd = MOCK_LEADERBOARD.slice(users.length);
-    mockToAdd.forEach((m, idx) => {
-      users.push({ ...m, rank: users.length + 1 });
-    });
+    // Fill remaining spots with mock data ONLY if list is short
+    if (users.length < 10) {
+      const mockToAdd = MOCK_LEADERBOARD.slice(0, 10 - users.length);
+      mockToAdd.forEach((m, idx) => {
+        users.push({ ...m, rank: users.length + 1, isReal: false });
+      });
+    }
 
     // Sort based on active tab
     if (activeTab === 'achievements') {

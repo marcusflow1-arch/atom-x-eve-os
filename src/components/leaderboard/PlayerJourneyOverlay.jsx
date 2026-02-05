@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Trophy, Calendar, Gamepad2, Target, 
   TrendingUp, Award, Star, BookOpen, Map, 
   Crown, Flame, Scroll, Clock, Swords, Shield
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 const GENRE_COLORS = {
   RPG: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
@@ -14,34 +16,127 @@ const GENRE_COLORS = {
   Sports: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
 };
 
-// Mock data generator for the "Journey"
-const generateJourneyData = (player) => {
-  return {
-    gamesPlayed: [
-      { id: 1, name: "Cyberpunk 2088", genre: "RPG", score: 4500, playtime: "120h", completed: "98%", lastPlayed: "2 days ago", topAchievement: "Legend of Night City" },
-      { id: 2, name: "Elden Ring: Nightreign", genre: "RPG", score: 3800, playtime: "95h", completed: "85%", lastPlayed: "1 week ago", topAchievement: "Elden Lord" },
-      { id: 3, name: "Neon Legends", genre: "Action", score: 2100, playtime: "45h", completed: "60%", lastPlayed: "3 days ago", topAchievement: "Speed Demon" },
-      { id: 4, name: "Stellar Odyssey", genre: "Simulation", score: 1500, playtime: "200h", completed: "100%", lastPlayed: "Yesterday", topAchievement: "Galactic Emperor" },
-    ],
-    milestones: [
-      { date: "2025-12-15", title: "Reached Level 80", type: "level", icon: TrendingUp },
-      { date: "2025-11-20", title: "Tournament Champion", game: "Neon Legends", type: "trophy", icon: Trophy },
-      { date: "2025-10-05", title: "100% Completion", game: "Stellar Odyssey", type: "completion", icon: Star },
-      { date: "2025-09-12", title: "Joined 'Void Walkers' Clan", type: "social", icon: Shield },
-    ],
-    genreMastery: [
-      { name: "RPG", score: 8300, percentage: 85 },
-      { name: "Action", score: 4200, percentage: 60 },
-      { name: "Simulation", score: 3500, percentage: 45 },
-      { name: "Strategy", score: 1200, percentage: 30 },
-    ],
-    signature: player.username === 'DragonSlayer99' ? "Victory is forged in the fires of persistence." : "Leave your mark on the world."
-  };
+// Fetch real data for the player
+const usePlayerRealData = (playerId) => {
+  // Fetch Achievements
+  const { data: achievements } = useQuery({
+    queryKey: ['user-achievements', playerId],
+    queryFn: () => base44.entities.UserAchievement.filter({ user_id: playerId }),
+    enabled: !!playerId,
+    staleTime: 30000
+  });
+
+  // Fetch Progression (Genre stats)
+  const { data: progression } = useQuery({
+    queryKey: ['user-progression', playerId],
+    queryFn: () => base44.entities.AvatarProgression.filter({ user_id: playerId }),
+    enabled: !!playerId,
+    staleTime: 30000
+  });
+
+  // Fetch All Games (to map IDs to names)
+  const { data: allGames } = useQuery({
+    queryKey: ['all-games'],
+    queryFn: () => base44.entities.Game.list(),
+    staleTime: 300000
+  });
+
+  // Fetch Achievement Details (to map IDs to titles/xp)
+  const { data: allAchievements } = useQuery({
+    queryKey: ['all-achievements-details'],
+    queryFn: () => base44.entities.Achievement.list(),
+    staleTime: 300000
+  });
+
+  return useMemo(() => {
+    // Default / Mock Data if real data is missing (for demo purposes)
+    const mockData = {
+      gamesPlayed: [
+        { id: 1, name: "Cyberpunk 2088", genre: "RPG", score: 4500, playtime: "120h", completed: "98%", lastPlayed: "2 days ago", topAchievement: "Legend of Night City" },
+        { id: 2, name: "Elden Ring: Nightreign", genre: "RPG", score: 3800, playtime: "95h", completed: "85%", lastPlayed: "1 week ago", topAchievement: "Elden Lord" },
+        { id: 3, name: "Neon Legends", genre: "Action", score: 2100, playtime: "45h", completed: "60%", lastPlayed: "3 days ago", topAchievement: "Speed Demon" },
+      ],
+      milestones: [
+        { date: "2025-12-15", title: "Reached Level 80", type: "level", icon: TrendingUp },
+        { date: "2025-11-20", title: "Tournament Champion", game: "Neon Legends", type: "trophy", icon: Trophy },
+      ],
+      genreMastery: [
+        { name: "RPG", score: 8300, percentage: 85 },
+        { name: "Action", score: 4200, percentage: 60 },
+      ],
+      signature: "Leave your mark on the world."
+    };
+
+    // If we have real data, build the object
+    if (achievements && allAchievements) {
+      // 1. Milestones from Achievements
+      const unlocked = achievements.filter(ua => ua.status === 'unlocked');
+      
+      const realMilestones = unlocked.map(ua => {
+        const details = allAchievements.find(a => a.id === ua.achievement_id);
+        return {
+          date: ua.updated_date ? new Date(ua.updated_date).toLocaleDateString() : 'Recently',
+          title: details?.title || 'Unknown Achievement',
+          game: details?.game || 'Unknown Game',
+          type: 'trophy',
+          icon: Trophy
+        };
+      }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // 2. Genre Mastery from Progression
+      let realGenreMastery = [];
+      if (progression && progression[0]?.genres) {
+        const maxLevel = 100; // Assuming 100 is max for bar width
+        realGenreMastery = progression[0].genres.map(g => ({
+          name: g.name,
+          score: g.xp || 0,
+          percentage: Math.min(100, ((g.level || 1) / maxLevel) * 100)
+        }));
+      }
+
+      // 3. Games Played (inferred from achievements + games list)
+      const gamesMap = new Map();
+      unlocked.forEach(ua => {
+        const details = allAchievements.find(a => a.id === ua.achievement_id);
+        if (details && details.game) {
+          if (!gamesMap.has(details.game)) {
+            const gameEntity = allGames?.find(g => g.title === details.game);
+            gamesMap.set(details.game, {
+              id: gameEntity?.id || details.game,
+              name: details.game,
+              genre: gameEntity?.genre || 'Unknown',
+              score: details.points || 0,
+              playtime: 'Active', // Placeholder as playtime isn't tracked yet
+              completed: 'In Progress',
+              lastPlayed: 'Recently',
+              topAchievement: details.title
+            });
+          } else {
+            const entry = gamesMap.get(details.game);
+            entry.score += (details.points || 0);
+          }
+        }
+      });
+      const realGamesPlayed = Array.from(gamesMap.values());
+
+      // Only return real data if we actually found some, otherwise fallback to mock for visuals
+      if (realMilestones.length > 0 || realGenreMastery.length > 0) {
+        return {
+          gamesPlayed: realGamesPlayed.length ? realGamesPlayed : mockData.gamesPlayed,
+          milestones: realMilestones.length ? realMilestones : mockData.milestones,
+          genreMastery: realGenreMastery.length ? realGenreMastery : mockData.genreMastery,
+          signature: "Real-time Data Synced"
+        };
+      }
+    }
+
+    return mockData;
+  }, [achievements, progression, allGames, allAchievements, playerId]);
 };
 
 export default function PlayerJourneyOverlay({ player, onClose }) {
   const [activeTab, setActiveTab] = useState('journal');
-  const journeyData = useMemo(() => player ? generateJourneyData(player) : null, [player]);
+  const journeyData = usePlayerRealData(player?.id);
 
   if (!player || !journeyData) return null;
 
