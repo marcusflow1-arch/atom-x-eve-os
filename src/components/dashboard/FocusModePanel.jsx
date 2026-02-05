@@ -1539,7 +1539,7 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
 }
 
 // Date & Time Tile Component
-const DateTimeTile = ({ onClick, onCalendarClick }) => {
+const DateTimeTile = ({ onClick, onCalendarClick = () => {} }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -1569,7 +1569,7 @@ const DateTimeTile = ({ onClick, onCalendarClick }) => {
       <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
         {/* Calendar icon button in the corner */}
         <button
-          onClick={(e) => { e.stopPropagation(); onCalendarClick?.(); }}
+          onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
           className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
           title="Add to Calendar"
         >
