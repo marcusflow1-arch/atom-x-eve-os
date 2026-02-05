@@ -32,7 +32,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   // Aura streaming subpage view state
   const [activeStreamerIndex, setActiveStreamerIndex] = React.useState(0);
   const [streamers, setStreamers] = React.useState([]);
-  const [activeStreamerTab, setActiveStreamerTab] = React.useState('games');
+  const [activeStreamerTab, setActiveStreamerTab] = React.useState(null);
   const [scheduleBaseDate, setScheduleBaseDate] = React.useState(new Date());
   
   const startDate = React.useMemo(() => startOfWeek(scheduleBaseDate, { weekStartsOn: 1 }), [scheduleBaseDate]);
@@ -394,8 +394,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </div>
 
                 {/* Channel Header */}
-                <div className="w-full px-2 py-4 flex flex-col md:flex-row items-center justify-between gap-6 relative border-b border-white/10 pb-6">
-                  <div className="flex items-center gap-4 min-w-0">
+                <div className="w-full py-4 flex items-center relative border-b border-white/10 min-h-[80px]">
+                  {/* Left: Streamer Info */}
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
                     <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/10 bg-black flex-shrink-0">
                       {streamers[activeStreamerIndex]?.avatar ? (
                         <img src={streamers[activeStreamerIndex]?.avatar} alt={streamers[activeStreamerIndex]?.name} className="w-full h-full object-cover" />
@@ -414,24 +415,28 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 text-white/70">
-                    {['Schedule','Cards','Gallery','Games'].map((t) => {
-                      const id = t.toLowerCase();
-                      const isActive = activeStreamerTab === id;
-                      return (
-                        <button 
-                          key={id} 
-                          onClick={() => setActiveStreamerTab(id)}
-                          className={`text-sm font-medium transition-colors relative ${isActive ? 'text-white' : 'hover:text-white'}`}
-                        >
-                          {t}
-                          {isActive && <motion.div layoutId="activeTabStreamer" className="absolute -bottom-2 left-0 right-0 h-0.5 bg-white rounded-full" />}
-                        </button>
-                      );
-                    })}
+                  {/* Center: Navigation Links */}
+                  <div className="w-full flex justify-center">
+                    <div className="flex items-center gap-8">
+                      {['Schedule','Cards','Gallery','Games'].map((t) => {
+                        const id = t.toLowerCase();
+                        const isActive = activeStreamerTab === id;
+                        return (
+                          <button 
+                            key={id} 
+                            onClick={() => setActiveStreamerTab(isActive ? null : id)}
+                            className={`text-sm font-medium transition-all relative py-2 ${isActive ? 'text-white' : 'text-white/60 hover:text-white'}`}
+                          >
+                            {t}
+                            {isActive && <motion.div layoutId="activeTabStreamer" className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  {/* Right: Actions */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
                     <Button className="bg-white text-black hover:bg-white/90 rounded-full px-6 font-bold text-xs">
                       Subscribe
                     </Button>
