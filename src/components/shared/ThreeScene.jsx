@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
@@ -49,9 +50,11 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
 
     // Load Model
     if (modelUrl) {
-        const loader = new GLTFLoader();
-        loader.load(modelUrl, (gltf) => {
-            model = gltf.scene;
+        const isFbx = modelUrl.toLowerCase().includes('.fbx');
+        const loader = isFbx ? new FBXLoader() : new GLTFLoader();
+        
+        loader.load(modelUrl, (asset) => {
+            model = isFbx ? asset : asset.scene;
             model.scale.set(scale, scale, scale);
             
             // Center the model
@@ -62,9 +65,10 @@ const ThreeScene = ({ modelUrl, scale = 1, autoRotate = true }) => {
             scene.add(model);
             
             // Play animations if any
-            if (gltf.animations && gltf.animations.length) {
+            const animations = isFbx ? asset.animations : asset.animations;
+            if (animations && animations.length) {
                 const mixer = new THREE.AnimationMixer(model);
-                gltf.animations.forEach((clip) => {
+                animations.forEach((clip) => {
                     mixer.clipAction(clip).play();
                 });
                 // You would need a clock and update loop for mixer here
