@@ -268,6 +268,11 @@ export default function SceneEditor() {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
+                // Fix for FBX/GLB visibility issues
+                if (child.material) {
+                    child.material.side = THREE.DoubleSide;
+                    child.material.needsUpdate = true;
+                }
             }
         });
     };
