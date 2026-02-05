@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { addDays, format, isToday, startOfWeek } from 'date-fns';
-import { ChevronLeft, ChevronRight, ChevronDown, Gamepad2, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Gamepad2, X, User, Bell } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import SponsorsSection from '@/components/streaming/profile/SponsorsSection';
 import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
 import ViewerSeasonPass from '@/components/streaming/profile/ViewerSeasonPass';
@@ -36,42 +37,11 @@ export default function StreamerProfilePanel({ streamer }) {
         </div>
       </div>
 
-      {/* Toggle Sections (below streaming box) */}
-      <div
-        className="w-full mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white/80 flex items-center justify-between cursor-pointer select-none"
-        onClick={() => { if (!activeTab) setMenuOpen((v) => !v); }}
-        onDoubleClick={() => { setActiveTab(null); setMenuOpen(false); }}
-        title="Click to open sections"
-      >
-        <div className="flex items-center gap-3 text-sm">
-          <span className="font-semibold">Sections</span>
-          <span className="text-white/50">Schedule</span>
-          <span className="text-white/50">Cards</span>
-          <span className="text-white/50">Gallery</span>
-          <span className="text-white/50">Games</span>
-        </div>
-        <ChevronDown className={`w-4 h-4 ${(menuOpen && !activeTab) ? 'rotate-180' : ''} transition-transform`} />
-      </div>
-
-      {/* Dropdown options */}
-      {menuOpen && !activeTab && (
-        <div className="mt-2 flex items-center gap-2 flex-wrap">
-          {['schedule','cards','gallery','games'].map((id) => (
-            <button
-              key={id}
-              onClick={() => { setActiveTab(id); setMenuOpen(false); }}
-              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-white/80 text-sm"
-            >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Info Bar */}
-      <div className="w-full px-2 py-4 flex flex-col md:flex-row items-center justify-between gap-6 relative">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-white/10 bg-black flex-shrink-0">
+      {/* Header Bar */}
+      <div className="w-full py-4 flex items-center relative border-b border-white/10 min-h-[80px]">
+        {/* Left: Streamer Info */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
+          <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/10 bg-black flex-shrink-0">
             {avatar ? (
               <img src={avatar} alt={name} className="w-full h-full object-cover" />
             ) : (
@@ -81,24 +51,48 @@ export default function StreamerProfilePanel({ streamer }) {
             )}
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-white tracking-wide truncate">{name}</h2>
+            <h2 className="text-lg font-bold text-white tracking-wide truncate">{name}</h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-cyan-400 font-bold uppercase tracking-widest truncate">{tagline}</span>
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest truncate">PERSONALITY</span>
               {isLive && <Badge className="bg-red-500 text-white text-[10px] h-4 px-1">LIVE</Badge>}
             </div>
           </div>
         </div>
 
-        {/* Center: Nav removed per UX change (dropdown below stream) */}
+        {/* Center: Navigation Links */}
+        <div className="w-full flex justify-center">
+          <div className="flex items-center gap-8">
+            {['Schedule','Cards','Gallery','Games'].map((t) => {
+              const id = t.toLowerCase();
+              const isActive = activeTab === id;
+              return (
+                <button 
+                  key={id} 
+                  onClick={() => setActiveTab(isActive ? null : id)}
+                  className={`text-sm font-medium transition-all relative py-2 ${isActive ? 'text-white' : 'text-white/60 hover:text-white'}`}
+                >
+                  {t}
+                  {isActive && <motion.div layoutId="activeTabStreamerPanel" className="absolute -bottom-[17px] left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* Right: Views */}
-        <div className="text-right hidden sm:block">
-          <div className="text-xs text-white/40 uppercase font-bold">Total Views</div>
-          <div className="text-lg font-mono font-bold text-white">42.5K</div>
+        {/* Right: Actions */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-4 z-10">
+          <button className="text-white/40 hover:text-white transition-colors relative">
+            <Bell className="w-5 h-5" />
+            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-slate-900"></span>
+          </button>
+          <Button className="bg-white text-black hover:bg-white/90 rounded-full px-6 font-bold text-xs">
+            Subscribe
+          </Button>
+          <div className="hidden sm:flex items-center gap-1 text-white/60 text-xs font-bold">
+             <User className="w-3 h-3" /> 1.2K
+          </div>
         </div>
       </div>
-
-      <div className="w-full h-px bg-white/10" />
 
       {/* Tabs Content */}
       {activeTab === 'schedule' && (
