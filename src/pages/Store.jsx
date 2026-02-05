@@ -21,6 +21,7 @@ import { NAV_HIERARCHY } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
+import StoreGridSpotlight from '../components/store/StoreGridSpotlight';
 import Library from './Library';
 import Achievements from './Achievements';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
@@ -470,6 +471,12 @@ export default function Store() {
         setShowAndroidOnly,
         genreData
     } = useGameFilters(games, loading);
+
+    // Filter games for the Grid Spotlight view based on sidebar selection
+    const filteredGridGames = useMemo(() => {
+        if (selectedGenres.length === 0) return games;
+        return games.filter(g => selectedGenres.includes(g.genre));
+    }, [games, selectedGenres]);
 
     // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
     
@@ -1006,49 +1013,33 @@ export default function Store() {
                             </div>
 
                             <div className="flex h-full max-w-[1920px] mx-auto">
-                                {/* LEFT SIDEBAR - UPDATED LAYOUT */}
-                                <div className="w-[300px] flex-shrink-0 h-full p-6 border-r border-white/10 flex flex-col hidden lg:flex">
-                                    {/* Store Card */}
-                                    <div className="mb-4 flex-shrink-0">
-                                        <div className="group relative h-20 rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all">
-                                            <img 
-                                                src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80" 
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                                                alt="Store"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
-                                            <div className="absolute inset-0 px-4 flex flex-col justify-center">
-                                                <h2 className="text-xl font-black text-white leading-none mb-1 group-hover:text-cyan-400 transition-colors">STORE</h2>
-                                                <p className="text-[10px] text-white/50 font-medium tracking-wider uppercase">Browse Catalog</p>
-                                            </div>
+                                {/* LEFT SIDEBAR - REDESIGNED */}
+                                <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
+                                    <div className="flex items-center gap-3 mb-8">
+                                        <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                                            <Gamepad2 className="w-5 h-5 text-white" />
                                         </div>
+                                        <h2 className="text-lg font-bold text-white tracking-wide">Catalog</h2>
                                     </div>
 
-                                    {/* Divider */}
-                                    <div className="flex items-center gap-4 mb-4 flex-shrink-0">
-                                        <div className="h-px flex-1 bg-white/10" />
-                                        <span className="text-xs font-bold text-white/30 uppercase tracking-widest">Genres</span>
-                                        <div className="h-px flex-1 bg-white/10" />
-                                    </div>
-
-                                    {/* Genre List */}
-                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-                                        {/* All Games Option */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
                                         <button 
-                                            onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} // Clear genres to show all
-                                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border group ${
+                                            onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }}
+                                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-all duration-200 group ${
                                                 activeCategory === 'All Games' && selectedGenres.length === 0
-                                                    ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.1)]' 
-                                                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-500/20'
+                                                    ? 'bg-white/10 text-white' 
+                                                    : 'text-white/50 hover:bg-white/5 hover:text-white'
                                             }`}
                                         >
-                                            <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-white/20 transition-colors">
-                                                <LayoutGrid className={`w-5 h-5 ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'text-cyan-400' : 'text-white/50 group-hover:text-white'}`} />
-                                            </div>
-                                            <span className={`text-sm font-bold ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>All Games</span>
+                                            <span className="text-sm font-medium">All Games</span>
+                                            {activeCategory === 'All Games' && selectedGenres.length === 0 && <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
                                         </button>
 
-                                        {/* Individual Genres */}
+                                        <div className="py-2">
+                                            <div className="h-px bg-white/5 w-full my-2" />
+                                            <p className="px-3 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Categories</p>
+                                        </div>
+
                                         {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
                                             const Icon = GENRE_ICONS[g] || Gamepad2;
                                             const isSelected = selectedGenres.includes(g);
@@ -1056,16 +1047,14 @@ export default function Store() {
                                                 <button 
                                                     key={g} 
                                                     onClick={() => toggleGenre(g)}
-                                                    className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border group ${
+                                                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 group ${
                                                         isSelected
-                                                            ? 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_12px_rgba(59,130,246,0.1)]' 
-                                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500/20'
+                                                            ? 'bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500' 
+                                                            : 'text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent'
                                                     }`}
                                                 >
-                                                    <div className="w-10 h-10 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 group-hover:border-white/20 transition-colors">
-                                                        <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-400' : 'text-white/50 group-hover:text-white'}`} />
-                                                    </div>
-                                                    <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>{g}</span>
+                                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-white/40 group-hover:text-white/60'}`} />
+                                                    <span className="text-sm font-medium">{g}</span>
                                                 </button>
                                             );
                                         })}
@@ -1096,115 +1085,11 @@ export default function Store() {
                                         </button>
                                     </div>
 
-                                    {/* Store Spotlight Feature */}
-                                    <StoreSpotlight games={aiGamesList} />
-
-                                    {/* Featured Section (Horizontal Scroll) */}
-                                    <div className="mb-12">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Flame className="w-5 h-5 text-orange-500" />
-                                            <h3 className="text-xl font-bold text-white">Featured & Recommended</h3>
-                                        </div>
-                                        
-                                        <div className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x">
-                                            {[...aiGamesList].slice(0, 5).map((game) => (
-                                                <motion.div
-                                                    key={game.id}
-                                                    whileHover={{ scale: 1.02, y: -5 }}
-                                                    onClick={() => handleNavigateToGame(game.id)}
-                                                    className="w-[160px] flex-shrink-0 aspect-[3/4] rounded-xl relative overflow-hidden cursor-pointer snap-start border border-white/10 group shadow-lg"
-                                                >
-                                                    <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90" />
-                                                    
-                                                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Badge className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border-white/10 text-[10px] uppercase tracking-wider">
-                                                                {game.genre}
-                                                            </Badge>
-                                                        </div>
-                                                        <h4 className="text-2xl font-bold text-white mb-1 leading-none">{game.title}</h4>
-                                                        <div className="flex items-center gap-2 mt-2">
-                                                            <div className="flex items-center gap-0.5 text-yellow-500">
-                                                                <Star className="w-3.5 h-3.5 fill-current" />
-                                                                <span className="text-sm font-bold ml-1">{game.rating}</span>
-                                                            </div>
-                                                            <span className="text-white/30 text-xs">|</span>
-                                                            <span className="text-blue-400 font-bold text-sm">${game.price}</span>
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Genre Rows */}
-                                    <div className="space-y-12">
-                                        {genreData.map((genre, gIdx) => (
-                                            <div 
-                                                key={genre.id} 
-                                                ref={el => genreRefs.current[gIdx] = el}
-                                                className={`space-y-4 transition-opacity duration-300 ${viewMode === 'classic' || activeGenreIndex === gIdx ? 'opacity-100' : 'opacity-80'}`}
-                                            >
-                                                <div className="flex items-center gap-3 border-b border-white/5 pb-2">
-                                                    <genre.icon className="w-5 h-5 text-blue-400" />
-                                                    <h3 className="text-lg font-bold text-white uppercase tracking-wider">{genre.label}</h3>
-                                                    <span className="text-white/20 text-sm ml-auto">{genre.items.length} titles</span>
-                                                </div>
-                                                
-                                                <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
-                                                    {genre.items.map((game, itemIdx) => {
-                                                        const isKeyboardActive = activeGenreIndex === gIdx && activeGameIndex === itemIdx;
-                                                        return (
-                                                            <motion.div
-                                                                key={game.id}
-                                                                whileHover={{ y: -5, scale: 1.02 }}
-                                                                onMouseEnter={() => {
-                                                                    setHoveredGame(game);
-                                                                }}
-                                                                onMouseLeave={() => setHoveredGame(null)}
-                                                                className={`
-                                                                    group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg transition-all border
-                                                                    ${isKeyboardActive ? 'ring-2 ring-cyan-400 scale-105 z-10' : 'hover:shadow-cyan-500/10 hover:border-cyan-400/30'}
-                                                                `}
-                                                                style={isKeyboardActive ? {} : {
-                                                                  background: 'rgba(100, 120, 140, 0.10)',
-                                                                  backdropFilter: 'blur(12px) saturate(120%)',
-                                                                  WebkitBackdropFilter: 'blur(12px) saturate(120%)',
-                                                                  borderColor: 'rgba(255, 255, 255, 0.08)'
-                                                                }}
-                                                                onClick={() => handleNavigateToGame(game.id)}
-                                                            >
-                                                                <img 
-                                                                    src={game.cover_image || game.image} 
-                                                                    alt={game.title} 
-                                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                                                                />
-                                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
-                                                                
-                                                                <div className="absolute top-2 right-2">
-                                                                    <Badge className="bg-black/60 backdrop-blur-sm border-white/10 text-white text-xs">
-                                                                        ${game.price}
-                                                                    </Badge>
-                                                                </div>
-
-                                                                <div className="absolute bottom-0 left-0 right-0 p-3">
-                                                                    <h4 className="text-white font-bold text-sm truncate mb-1">{game.title}</h4>
-                                                                    <div className="flex items-center justify-between text-xs text-white/50">
-                                                                        <span>{game.genre}</span>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                                                            <span>{game.rating || 4.5}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </motion.div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {/* New Sophisticated Grid Layout */}
+                                    <StoreGridSpotlight 
+                                        games={filteredGridGames} 
+                                        onNavigate={handleNavigateToGame} 
+                                    />
                                 </div>
                             </div>
                         </motion.div>
