@@ -4,12 +4,12 @@ import {
   ChevronRight, Star, Sparkles, ShoppingCart, Check, 
   Gamepad2, Zap, TrendingUp, Shield, Activity, 
   Info, Cpu, Layers, Sword, Share2, Crown, 
-  Flame, Crosshair, Hexagon, Fingerprint
+  Flame, Crosshair, Hexagon, Fingerprint, Network, Video, Play, Bolt
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '../CartContext';
 
-// Developer Data (Existing data structure)
+// Developer Data
 const DEVELOPERS = [
   {
     id: 'ubisoft',
@@ -268,7 +268,7 @@ const rarityColors = {
   Common: { bg: 'bg-slate-700/50', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' }
 };
 
-// 3D Card Visual Component
+// 3D Card Component
 function Card3D({ card }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -294,7 +294,7 @@ function Card3D({ card }) {
   }
 
   return (
-    <div className="relative group w-[280px] h-[400px] perspective-1000 mx-auto" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+    <div className="relative group w-[220px] aspect-[2.5/3.5] perspective-1000 mx-auto" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
       <motion.div
         className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border bg-black/40 backdrop-blur-xl"
         style={{
@@ -316,14 +316,10 @@ function Card3D({ card }) {
           }}
         />
 
-        <div className="absolute bottom-6 left-6 right-6 z-30">
-          <Badge className={`${rarity.bg} ${rarity.text} border-none text-xs w-full justify-center shadow-lg backdrop-blur-md mb-2`}>
+        <div className="absolute bottom-4 left-3 right-3 z-30">
+          <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px] w-full justify-center shadow-lg backdrop-blur-md mb-1`}>
             {card.rarity}
           </Badge>
-          <div className="flex justify-between items-center text-xs text-white/60 font-mono">
-            <span>#{String(card.id).padStart(4, '0')}</span>
-            <span>EDITION 1</span>
-          </div>
         </div>
       </motion.div>
     </div>
@@ -332,12 +328,12 @@ function Card3D({ card }) {
 
 // Stat Bar Component
 const StatBar = ({ label, value, color }) => (
-  <div className="mb-3">
-    <div className="flex justify-between text-xs mb-1">
+  <div className="mb-2">
+    <div className="flex justify-between text-[10px] mb-0.5">
       <span className="text-white/50 font-medium uppercase tracking-wider">{label}</span>
       <span className="text-white font-bold">{value}%</span>
     </div>
-    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
       <motion.div 
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
@@ -354,6 +350,7 @@ export default function DeveloperLimitedEdition() {
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
   const [justAdded, setJustAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState('stats'); // 'stats' or 'skilltree'
 
   const currentDev = DEVELOPERS[currentDevIndex];
   const currentGame = currentDev?.games[selectedGameIndex] || currentDev?.games[0];
@@ -387,222 +384,240 @@ export default function DeveloperLimitedEdition() {
     setTimeout(() => setJustAdded(false), 2000);
   };
 
-  const rarityInfo = selectedCard ? (rarityColors[selectedCard.rarity] || rarityColors.Common) : rarityColors.Common;
-
   return (
     <div className="w-full mb-12">
-      {/* 1. Developer Selector (Top Nav) */}
-      <div className="flex items-center justify-between mb-6 px-2">
-        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-amber-400" />
-          Dev Limited Cards
-        </h2>
-        
+      {/* 1. Developer Selector (Horizontal Scroll) */}
+      <div className="mb-6 overflow-x-auto scrollbar-hide">
         <div className="flex gap-2">
           {DEVELOPERS.map((dev, idx) => (
             <button
               key={dev.id}
               onClick={() => { setCurrentDevIndex(idx); setSelectedGameIndex(0); }}
               className={`
-                px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border
+                flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border whitespace-nowrap
                 ${currentDevIndex === idx 
-                  ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-                  : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+                  ? 'bg-white/10 border-cyan-500/50 text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
+                  : 'bg-transparent border-white/5 text-white/40 hover:text-white hover:bg-white/5'
                 }
               `}
             >
-              {dev.logo}
+              <span className={currentDevIndex === idx ? 'text-cyan-400' : ''}>{dev.logo}</span>
+              <span>{dev.name}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* 2. Unified Glass Container */}
-      <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0a0a]/40 backdrop-blur-xl">
-        {/* Dynamic Background Mesh */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-50%] left-[-20%] w-[80%] h-[150%] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen" />
-          <div className="absolute bottom-[-50%] right-[-20%] w-[80%] h-[150%] bg-purple-600/10 blur-[120px] rounded-full mix-blend-screen" />
-        </div>
-
-        {/* Inner Content */}
-        <div className="relative z-10 grid lg:grid-cols-12 gap-0 min-h-[600px]">
+      {/* 2. Main Layout - 3 Column Flex */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        
+        {/* LEFT: Card Visual & Buy */}
+        <div className="w-full lg:w-[280px] flex-shrink-0 flex flex-col gap-4">
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            Limited Edition
+          </h4>
           
-          {/* LEFT: Visual Showcase (5 Cols) */}
-          <div className="lg:col-span-5 p-8 flex flex-col items-center justify-center relative border-r border-white/5">
+          <div className="flex-1 flex flex-col items-center justify-center bg-white/[0.02] border border-white/5 rounded-2xl p-6 relative">
             {selectedCard && (
               <>
                 <Card3D card={selectedCard} />
                 
-                {/* Visual Footer */}
-                <div className="mt-8 flex gap-4 w-full max-w-[280px]">
-                  <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 flex flex-col items-center gap-1 transition-all group">
-                    <Activity className="w-4 h-4 text-white/40 group-hover:text-cyan-400" />
-                    <span className="text-[10px] text-white/40 font-mono uppercase">Inspect</span>
-                  </button>
-                  <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 flex flex-col items-center gap-1 transition-all group">
-                    <Share2 className="w-4 h-4 text-white/40 group-hover:text-purple-400" />
-                    <span className="text-[10px] text-white/40 font-mono uppercase">Share</span>
+                {isPurchased(`dev_card_${selectedCard.id}`) && (
+                  <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 shadow-lg z-20">
+                    <Check className="w-3 h-3 text-white" />
+                    <span className="text-white text-[10px] font-bold">Owned</span>
+                  </div>
+                )}
+
+                <div className="mt-6 w-full">
+                  <button
+                    onClick={handleBuy}
+                    disabled={justAdded}
+                    className={`
+                      w-full h-10 rounded-lg font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all
+                      ${justAdded 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-cyan-500 text-black hover:bg-cyan-400 hover:shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                      }
+                    `}
+                  >
+                    {justAdded ? (
+                      <>Added <Check className="w-3 h-3" /></>
+                    ) : (
+                      <>Purchase <ShoppingCart className="w-3 h-3" /></>
+                    )}
                   </button>
                 </div>
               </>
             )}
           </div>
+        </div>
 
-          {/* RIGHT: Data Spec Sheet (7 Cols) */}
-          <div className="lg:col-span-7 p-8 flex flex-col">
-            
-            {/* Header: Developer & Game */}
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-cyan-400 text-xs font-bold tracking-widest uppercase">{currentDev.name}</span>
-                  <div className="w-1 h-1 rounded-full bg-white/20" />
-                  <span className="text-white/40 text-xs font-bold tracking-widest uppercase">Official Drop</span>
-                </div>
-                <h1 className="text-4xl font-black text-white leading-none mb-2">{selectedCard?.name || "Select Card"}</h1>
-                <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="border-white/20 text-white/60">{selectedCard?.type}</Badge>
-                  <span className="text-white/30 text-sm">for</span>
-                  <span className="text-white font-medium">{currentGame.title}</span>
-                </div>
+        {/* MIDDLE: Info & Specs */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0">
+          {/* Header Area */}
+          <div className="flex justify-between items-start border-b border-white/10 pb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-[10px]">{currentDev.name}</Badge>
+                <span className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Official Drop</span>
               </div>
-
-              {/* Game Switcher */}
-              <div className="flex gap-2">
-                {currentDev.games.map((game, idx) => (
-                  <button
-                    key={game.id}
-                    onClick={() => { setSelectedGameIndex(idx); }}
-                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${selectedGameIndex === idx ? 'border-cyan-400 scale-110 shadow-lg shadow-cyan-500/20' : 'border-transparent opacity-50 hover:opacity-100'}`}
-                  >
-                    <img src={game.cover} className="w-full h-full object-cover" />
-                  </button>
-                ))}
+              <h2 className="text-2xl font-black text-white mb-1">{selectedCard?.name || "Select Card"}</h2>
+              <div className="flex items-center gap-2 text-sm text-white/50">
+                <span>{selectedCard?.type}</span>
+                <span className="w-1 h-1 rounded-full bg-white/20" />
+                <span>{currentGame.title}</span>
               </div>
             </div>
-
-            {/* Spec Grid */}
-            <div className="grid grid-cols-2 gap-x-12 gap-y-8 mb-8 flex-1">
-              
-              {/* Stats Column */}
-              <div>
-                <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-3 h-3" /> Performance Metrics
-                </h4>
-                <StatBar label="Power Output" value={85} color="bg-red-500" />
-                <StatBar label="Durability" value={62} color="bg-blue-500" />
-                <StatBar label="Rarity Index" value={94} color="bg-yellow-500" />
-                <StatBar label="Synergy" value={78} color="bg-purple-500" />
-              </div>
-
-              {/* Abilities Column */}
-              <div>
-                <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <Zap className="w-3 h-3" /> Core Abilities
-                </h4>
-                <div className="space-y-3">
-                  <div className="flex gap-3 items-start">
-                    <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-cyan-400">
-                      <Hexagon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm font-bold">Primary Effect</div>
-                      <p className="text-white/50 text-xs leading-snug">Enhances {selectedCard?.type.toLowerCase()} capabilities by 25%.</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 items-start">
-                    <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-purple-400">
-                      <Fingerprint className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm font-bold">Unique Signature</div>
-                      <p className="text-white/50 text-xs leading-snug">Cannot be forged. Verified by developer blockchain signature.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="text-right">
+               <div className="text-[10px] text-white/40 uppercase font-bold tracking-wider mb-1">Price</div>
+               <div className="flex items-baseline justify-end gap-1">
+                 <span className="text-2xl font-black text-white">75k</span>
+                 <span className="text-cyan-400 font-bold text-xs">AGP</span>
+               </div>
             </div>
+          </div>
 
-            {/* Lore / Description */}
-            <div className="mb-8 p-4 rounded-xl bg-white/5 border border-white/5">
-              <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2 flex items-center gap-2">
-                <Info className="w-3 h-3" /> Item Description
-              </h4>
-              <p className="text-white/70 text-sm leading-relaxed">
-                "This {selectedCard?.rarity.toLowerCase()} {selectedCard?.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension."
-              </p>
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-4 border-b border-white/5">
+            <button 
+              onClick={() => setActiveTab('stats')}
+              className={`pb-2 text-sm font-bold transition-all relative ${activeTab === 'stats' ? 'text-white' : 'text-white/40 hover:text-white'}`}
+            >
+              Specifications
+              {activeTab === 'stats' && <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />}
+            </button>
+            <button 
+              onClick={() => setActiveTab('skilltree')}
+              className={`pb-2 text-sm font-bold transition-all relative ${activeTab === 'skilltree' ? 'text-white' : 'text-white/40 hover:text-white'}`}
+            >
+              Skill Tree
+              {activeTab === 'skilltree' && <motion.div layoutId="tabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />}
+            </button>
+          </div>
 
-            {/* Footer Actions */}
-            <div className="mt-auto flex items-center justify-between pt-6 border-t border-white/5">
-              <div>
-                <div className="text-[10px] text-white/40 uppercase font-bold tracking-wider mb-1">Market Price</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-white">75,000</span>
-                  <span className="text-cyan-400 font-bold text-sm">AGP</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className="text-[10px] text-green-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1 justify-end">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    In Stock
+          {/* Content Area */}
+          <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-xl p-6 relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              {activeTab === 'stats' ? (
+                <motion.div 
+                  key="stats"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="grid grid-cols-2 gap-8"
+                >
+                  <div>
+                    <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <TrendingUp className="w-3 h-3" /> Performance
+                    </h4>
+                    <StatBar label="Power Output" value={85} color="bg-red-500" />
+                    <StatBar label="Durability" value={62} color="bg-blue-500" />
+                    <StatBar label="Synergy" value={78} color="bg-purple-500" />
                   </div>
-                  <div className="text-white/40 text-xs">Only 12 remaining</div>
-                </div>
-                
+                  <div>
+                    <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <Zap className="w-3 h-3" /> Core Ability
+                    </h4>
+                    <div className="p-3 rounded-lg bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Hexagon className="w-4 h-4 text-cyan-400" />
+                        <span className="text-white font-bold text-sm">Primary Effect</span>
+                      </div>
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        Enhances {selectedCard?.type.toLowerCase()} capabilities by 25%. Passive regeneration active when out of combat.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-2">Lore</h4>
+                      <p className="text-white/50 text-[10px] italic leading-relaxed">
+                        "Forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension."
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="skilltree"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center justify-center h-full min-h-[200px]"
+                >
+                  <div className="text-center">
+                    <Network className="w-12 h-12 text-white/10 mx-auto mb-3" />
+                    <p className="text-white/40 text-sm">Skill Tree Visualization</p>
+                    <p className="text-white/20 text-xs">Unlock card to view progression path</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Card Selector Strip */}
+          <div className="mt-auto">
+            <h4 className="text-white/40 text-[10px] uppercase font-bold tracking-wider mb-2">Select Edition</h4>
+            <div className="flex gap-2">
+              {currentGame?.limitedCards.map((card) => (
                 <button
-                  onClick={handleBuy}
-                  disabled={justAdded}
+                  key={card.id}
+                  onClick={() => { setSelectedCard(card); setJustAdded(false); }}
                   className={`
-                    h-12 px-8 rounded-xl font-bold text-sm uppercase tracking-wide flex items-center gap-2 transition-all
-                    ${justAdded 
-                      ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]' 
-                      : 'bg-white text-black hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                    w-10 h-14 rounded overflow-hidden border transition-all relative
+                    ${selectedCard?.id === card.id 
+                      ? 'border-white scale-105 shadow-lg opacity-100' 
+                      : 'border-white/10 opacity-50 hover:opacity-100'
                     }
                   `}
                 >
-                  {justAdded ? (
-                    <>
-                      <Check className="w-4 h-4" /> Added
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-4 h-4" /> Purchase
-                    </>
-                  )}
+                  <img src={card.image} className="w-full h-full object-cover" />
                 </button>
-              </div>
+              ))}
             </div>
-
           </div>
         </div>
-      </div>
 
-      {/* Card Selector Strip (Bottom) */}
-      <div className="mt-6 flex justify-center">
-        <div className="flex gap-3 p-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10">
-          {currentGame?.limitedCards.map((card) => (
-            <button
-              key={card.id}
-              onClick={() => { setSelectedCard(card); setJustAdded(false); }}
-              className={`
-                w-12 h-16 rounded-lg overflow-hidden border-2 transition-all relative group
-                ${selectedCard?.id === card.id 
-                  ? 'border-white scale-110 shadow-lg z-10' 
-                  : 'border-transparent opacity-50 hover:opacity-100 hover:scale-105'
-                }
-              `}
-            >
-              <img src={card.image} className="w-full h-full object-cover" />
-              {selectedCard?.id === card.id && (
-                <div className="absolute inset-0 bg-white/10 pointer-events-none" />
-              )}
-            </button>
-          ))}
+        {/* RIGHT: Games List */}
+        <div className="w-full lg:w-[260px] flex-shrink-0 flex flex-col gap-4">
+          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+            <Gamepad2 className="w-3 h-3 text-cyan-400" />
+            {currentDev.name} Games
+          </h4>
+          
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 custom-scrollbar max-h-[500px]">
+            {currentDev.games.map((game, index) => (
+              <button
+                key={game.id}
+                onClick={() => setSelectedGameIndex(index)}
+                className={`
+                  w-full group flex items-center gap-3 transition-all text-left p-2 rounded-xl border
+                  ${index === selectedGameIndex 
+                    ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]' 
+                    : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'
+                  }
+                `}
+              >
+                <div className="w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-white/10 relative">
+                  <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
+                  {index === selectedGameIndex && <div className="absolute inset-0 bg-cyan-500/20 mix-blend-overlay" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className={`text-xs font-bold truncate ${index === selectedGameIndex ? 'text-white' : 'text-white/70 group-hover:text-white'}`}>
+                    {game.title}
+                  </h4>
+                  <p className="text-white/30 text-[10px] mt-0.5">{game.year}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Badge variant="outline" className="text-[9px] h-4 px-1 border-white/10 text-white/40">
+                      {game.limitedCards.length} Cards
+                    </Badge>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
+
       </div>
     </div>
   );
