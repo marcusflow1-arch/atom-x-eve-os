@@ -189,7 +189,7 @@ export default function AvatarProgressionBox() {
   const globalPct = Math.min(100, Math.round(((record.global_xp || 0) / globalThreshold) * 100));
 
   return (
-    <div className="space-y-6 select-none">
+    <div className="space-y-6 select-none rounded-2xl border border-white/10 p-6" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)', boxShadow: '0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
