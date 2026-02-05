@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Trophy, Calendar, Gamepad2, Target, 
-  TrendingUp, Award, Star, BookOpen, Map, 
+  TrendingUp, Award, Star, BookOpen, Map as MapIcon, 
   Crown, Flame, Scroll, Clock, Swords, Shield
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
