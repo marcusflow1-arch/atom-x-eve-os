@@ -182,9 +182,9 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                             size="sm" 
                             onClick={game?.isGlobalChat ? onQuickSwitch : onGoMainChat}
                             className="text-white/70 hover:text-white gap-2"
-                            title={game?.isGlobalChat ? (quickSwitchLabel ? `Back to ${quickSwitchLabel}` : 'Back to previous chat') : 'Go to Adam X Eve main chat'}
+                            title={game?.isGlobalChat ? (quickSwitchLabel ? `Back to ${quickSwitchLabel}` : 'Back to previous chat') : 'Go to Atom x Ever main chat'}
                         >
-                            <Hash className="w-4 h-4" /> {game?.isGlobalChat ? (quickSwitchLabel || 'Previous Chat') : 'Adam X Eve'}
+                            <Hash className="w-4 h-4" /> {game?.isGlobalChat ? (quickSwitchLabel || 'Previous Chat') : 'Atom x Ever'}
                         </Button>
                     </div>
                     <div className="flex items-center gap-3">
