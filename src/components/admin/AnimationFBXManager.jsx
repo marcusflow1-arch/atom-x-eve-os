@@ -51,30 +51,61 @@ export default function AnimationFBXManager() {
   });
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.name.toLowerCase().endsWith('.fbx')) {
-      alert('Please upload a valid .fbx file');
+    // Filter valid files
+    const validFiles = files.filter(f => f.name.toLowerCase().endsWith('.fbx'));
+    
+    if (validFiles.length === 0) {
+      alert('Please upload valid .fbx files');
       return;
     }
 
+    if (validFiles.length < files.length) {
+       if (!confirm(`Found ${files.length - validFiles.length} invalid files. Continue uploading ${validFiles.length} valid .fbx files?`)) {
+           e.target.value = null;
+           return;
+       }
+    }
+
     setUploading(true);
+    let successCount = 0;
+    let failCount = 0;
+
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Process sequentially to avoid overwhelming the browser/network
+      for (const file of validFiles) {
+          try {
+              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+              
+              // If multiple files, force using filename. If single, allow override.
+              const entryName = (validFiles.length > 1 || !newAnimation.name) 
+                  ? file.name.replace(/\.fbx$/i, '') 
+                  : newAnimation.name;
+
+              await createMutation.mutateAsync({
+                name: entryName,
+                description: newAnimation.description,
+                file_url: file_url,
+                animation_type: newAnimation.animation_type,
+                is_loopable: newAnimation.is_loopable,
+                tags: newAnimation.tags ? newAnimation.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+              });
+              successCount++;
+          } catch (err) {
+              console.error(`Failed to upload ${file.name}:`, err);
+              failCount++;
+          }
+      }
       
-      await createMutation.mutateAsync({
-        name: newAnimation.name || file.name.replace(/\.fbx$/i, ''),
-        description: newAnimation.description,
-        file_url: file_url,
-        animation_type: newAnimation.animation_type,
-        is_loopable: newAnimation.is_loopable,
-        tags: newAnimation.tags ? newAnimation.tags.split(',').map(t => t.trim()).filter(Boolean) : []
-      });
+      if (failCount > 0) {
+          alert(`Upload complete. Success: ${successCount}, Failed: ${failCount}`);
+      }
       
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert(`Upload failed: ${error.message || 'Unknown error'}.`);
+      console.error('Batch upload error:', error);
+      alert(`Batch upload process failed: ${error.message || 'Unknown error'}.`);
     } finally {
       setUploading(false);
       // Reset file input value to allow re-uploading same file if needed
@@ -187,6 +218,7 @@ export default function AnimationFBXManager() {
           <input
             type="file"
             accept=".fbx"
+            multiple
             onChange={handleFileUpload}
             className="hidden"
             disabled={uploading}
@@ -205,7 +237,7 @@ export default function AnimationFBXManager() {
               ) : (
                 <>
                   <Upload className="w-5 h-5 mr-2" />
-                  Select FBX File to Upload
+                  Select FBX File(s) to Upload
                 </>
               )}
             </span>
