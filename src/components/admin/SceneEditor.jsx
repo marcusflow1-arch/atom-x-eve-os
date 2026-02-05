@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Check, X, Layout, Radio, Copy, Globe } from 'lucide-react';
+import { Save, Plus, Trash2, Box, Move, RotateCw, Maximize, Search, Check, X, Layout, Radio, Copy, Globe, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
