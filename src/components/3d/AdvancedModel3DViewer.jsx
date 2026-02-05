@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
@@ -94,11 +95,13 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
     // Load Model
     let mixer;
-    const loader = new GLTFLoader();
+    const isFbx = modelUrl.toLowerCase().includes('.fbx');
+    const loader = isFbx ? new FBXLoader() : new GLTFLoader();
+    
     loader.load(
       modelUrl,
-      (gltf) => {
-        const model = gltf.scene;
+      (asset) => {
+        const model = isFbx ? asset : asset.scene;
 
         model.traverse((node) => {
           if (node.isMesh && node.material) {
@@ -129,9 +132,10 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
         scene.add(model);
 
         // Enable animation
-        if (gltf.animations && gltf.animations.length > 0) {
+        const animations = isFbx ? asset.animations : asset.animations;
+        if (animations && animations.length > 0) {
           mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(gltf.animations[0]);
+          const action = mixer.clipAction(animations[0]);
           action.play();
         }
       },
