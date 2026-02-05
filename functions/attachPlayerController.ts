@@ -34,26 +34,37 @@ Deno.serve(async (req) => {
     this.exclusiveAction = null;
 
     this.isJumping = false;
-    this.jumpStartTime = 0;
-    this.jumpDuration = 500;
+    this.isCrouching = false;
+    this.isBlocking = false;
+    this.isRunning = false;
 
-    this.runSpeed = 8.0;
+    // Movement speeds
+    this.speeds = {
+      walk: 4.0,
+      run: 8.0,
+      crouch: 2.0,
+      block: 1.5
+    };
 
     this.keys = {
-      attack: false,
-      roll: false,
-      jump: false,
-      w: false,
-      a: false,
-      s: false,
-      d: false,
+      w: false, a: false, s: false, d: false,
+      space: false,
+      shift: false,
+      c: false, // Crouch (toggle)
+      x: false, // Draw sword
+      q: false, // Cast spell
+      lmb: false, // Attack
+      rmb: false, // Block
     };
 
     this._lockCount = 0;
     this._id = null;
 
+    // Event References
     this._keyDownRef = null;
     this._keyUpRef = null;
+    this._mouseDownRef = null;
+    this._mouseUpRef = null;
     this._uiOpenRef = null;
     this._uiCloseRef = null;
   }
@@ -73,8 +84,9 @@ Deno.serve(async (req) => {
 
   _applyLockState() {
     if (this.characterController) {
+      // If locked, stop. Else default to walk speed initially.
       this.characterController.speed =
-        this._lockCount > 0 ? 0 : this.runSpeed;
+        this._lockCount > 0 ? 0 : this.speeds.walk;
     }
   }
 
@@ -88,16 +100,6 @@ Deno.serve(async (req) => {
 
     this._restoreState();
 
-    this.keys = {
-      attack: false,
-      roll: false,
-      jump: false,
-      w: false,
-      a: false,
-      s: false,
-      d: false,
-    };
-
     if (typeof window !== 'undefined') {
       window.__B44_PC_STATE = {};
     }
@@ -110,16 +112,21 @@ Deno.serve(async (req) => {
 
     if (this.characterController) {
       this.characterController.setDefaultInput?.(false);
-      this.characterController.speed = this.runSpeed;
+      this.characterController.speed = this.speeds.walk;
     }
 
     this.changeState('idle');
 
+    // Bind Event Handlers
     this._keyDownRef = (e) => this.handleKey(e, true);
     this._keyUpRef = (e) => this.handleKey(e, false);
+    this._mouseDownRef = (e) => this.handleMouse(e, true);
+    this._mouseUpRef = (e) => this.handleMouse(e, false);
 
     window.addEventListener('keydown', this._keyDownRef);
     window.addEventListener('keyup', this._keyUpRef);
+    window.addEventListener('mousedown', this._mouseDownRef);
+    window.addEventListener('mouseup', this._mouseUpRef);
 
     this._uiOpenRef = () => {
       this._lockCount++;
@@ -143,6 +150,8 @@ Deno.serve(async (req) => {
   onDestroy() {
     window.removeEventListener('keydown', this._keyDownRef);
     window.removeEventListener('keyup', this._keyUpRef);
+    window.removeEventListener('mousedown', this._mouseDownRef);
+    window.removeEventListener('mouseup', this._mouseUpRef);
     window.removeEventListener('ui_panel_open', this._uiOpenRef);
     window.removeEventListener('ui_panel_close', this._uiCloseRef);
     this._saveState();
@@ -155,14 +164,39 @@ Deno.serve(async (req) => {
 
     const k = (e.key || '').toLowerCase();
 
-    if (k === '1') this.keys.attack = isDown;
-    if (k === 'c') this.keys.roll = isDown;
-    if (e.code === 'Space') this.keys.jump = isDown;
+    // Movement
     if (['w', 'a', 's', 'd'].includes(k)) this.keys[k] = isDown;
+    if (e.code === 'Space') this.keys.space = isDown;
+    if (e.shiftKey !== undefined) this.keys.shift = e.shiftKey;
 
-    if (!isDown && (k === 'c' || k === '1' || e.code === 'Space')) {
-      this.exclusiveAction = null;
-      this.changeState('idle');
+    // Actions
+    if (k === 'q') this.keys.q = isDown; // Cast
+    if (k === 'x') this.keys.x = isDown; // Draw
+    if (k === 'c') {
+      if (isDown && !this.keys.c) { // Toggle on key press
+         this.isCrouching = !this.isCrouching;
+      }
+      this.keys.c = isDown;
+    }
+
+    // Trigger exclusives on press (not hold)
+    if (isDown) {
+      if (k === 'q' && !this.exclusiveAction) this.startExclusive('cast');
+      if (k === 'x' && !this.exclusiveAction) this.startExclusive('draw');
+    }
+  }
+
+  handleMouse(e, isDown) {
+    if (this._lockCount > 0) return;
+    
+    // 0 = Left, 2 = Right
+    if (e.button === 0) {
+        this.keys.lmb = isDown;
+        if (isDown && !this.exclusiveAction) this.startExclusive('attack');
+    }
+    if (e.button === 2) {
+        this.keys.rmb = isDown;
+        this.isBlocking = isDown;
     }
   }
 
@@ -171,28 +205,23 @@ Deno.serve(async (req) => {
   onUpdate() {
     if (!this.characterController || !this.animator) return;
 
+    // 1. UI Lock
     if (this._lockCount > 0) {
       this.changeState('idle');
       return;
     }
 
-    if (!this.exclusiveAction) {
-      if (this.keys.attack) {
-        this.startExclusive('attack 1');
-        this.keys.attack = false;
-      } else if (this.keys.roll) {
-        this.startExclusive('row');
-        this.keys.roll = false;
-      }
-    }
-
+    // 2. Exclusive Actions (Attack, Cast, Draw)
+    // If blocked, we also prevent movement? 
+    // Usually attacking stops movement or allows very slow sliding.
+    // Let's stop movement for exclusive actions.
     if (this.exclusiveAction) {
       this.characterController.setMovementDirection?.({ x: 0, z: 0 });
       return;
     }
 
-    let x = 0,
-      z = 0;
+    // 3. Movement Calculation
+    let x = 0, z = 0;
     if (this.keys.w) z -= 1;
     if (this.keys.s) z += 1;
     if (this.keys.a) x -= 1;
@@ -206,32 +235,65 @@ Deno.serve(async (req) => {
 
     this.characterController.setMovementDirection?.({ x, z });
 
+    // 4. Determine Speed & State
     const moving = x !== 0 || z !== 0;
     const grounded = this.characterController.isGrounded?.() ?? true;
 
-    if (grounded && this.keys.jump) {
+    // Handle Jumping
+    if (grounded && this.keys.space && !this.isBlocking && !this.isCrouching) {
       this.characterController.jump?.();
       this.isJumping = true;
+      // Note: Animator usually handles 'jump' state until grounded again
+    } else if (grounded) {
+        this.isJumping = false;
     }
 
-    if (grounded) {
-      this.changeState(moving ? 'run' : 'idle');
+    // Determine Animation State
+    let targetState = 'idle';
+    let targetSpeed = this.speeds.walk;
+
+    if (!grounded) {
+        targetState = 'jump';
+    } else if (this.isBlocking) {
+        targetState = 'block';
+        targetSpeed = this.speeds.block;
+    } else if (this.isCrouching) {
+        targetState = 'crouch'; // If moving, we might need 'crouch_walk' if available, otherwise slide in crouch pose
+        targetSpeed = this.speeds.crouch;
+    } else if (moving) {
+        if (this.keys.shift) {
+            targetState = 'run';
+            targetSpeed = this.speeds.run;
+        } else {
+            targetState = 'walk';
+            targetSpeed = this.speeds.walk;
+        }
     } else {
-      this.changeState(this.isJumping ? 'jump' : 'fall');
+        targetState = 'idle';
     }
+
+    // Apply Speed
+    this.characterController.speed = targetSpeed;
+
+    // Apply Animation
+    this.changeState(targetState);
   }
 
   /* -------------------- ANIMATION -------------------- */
 
   _resolveClip(state) {
+    // Mapping internal states to FBX Animation names
     const map = {
-      idle: 'idle',
-      run: 'run',
-      jump: 'jump',
-      fall: 'fall',
-      roll: 'row',
-      row: 'row',
-      'attack 1': 'attack 1',
+      idle: 'great sword idle',
+      walk: 'great sword walk',
+      run: 'great sword run',
+      jump: 'great sword jump',
+      fall: 'great sword jump', // Fallback
+      crouch: 'great sword crouching',
+      block: 'great sword blocking',
+      attack: 'great sword attack',
+      cast: 'great sword casting', // Or 'spell cast' if preferred
+      draw: 'draw a great sword 1'
     };
     return map[state] || state;
   }
@@ -247,14 +309,16 @@ Deno.serve(async (req) => {
   startExclusive(action) {
     const clip = this._resolveClip(action);
     this.exclusiveAction = clip;
-    this.animator.stop?.('run');
+    // Stop movement animations immediately
     this.animator.setBaseAction?.(clip);
     this.animator.mix?.(clip, 0.05, 1);
 
     this.animator.onFinish?.((name) => {
+      // Check if the finished animation is the one we started
+      // (Handles case where multiple exclusives trigger rapidly)
       if (name === clip) {
         this.exclusiveAction = null;
-        this.changeState('idle');
+        // Re-evaluate state on next frame
       }
     });
   }
