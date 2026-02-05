@@ -24,6 +24,7 @@ import StatsDropdown from '@/components/dashboard/StatsDropdown';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
+import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalendarOverlay';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1646,6 +1647,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [showStreamSettings, setShowStreamSettings] = useState(false);
   const [showStatsDropdown, setShowStatsDropdown] = useState(false);
   const [statsActiveTab, setStatsActiveTab] = useState('ai'); // 'ai' | 'inventory'
+  const [showCalendar, setShowCalendar] = useState(false);
+  const openCalendar = () => setShowCalendar(true);
 
   // Toggle Stats dropdown with 'O' (AI) and 'I' (Inventory) keys
   useEffect(() => {
@@ -1822,7 +1825,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           
           {/* Right Column: System Status + Calendar */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
-             <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar} />
+             <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
                <AIAttributesBox />
@@ -1836,7 +1839,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
-      {/* Calendar Modal removed - using global overlay */}
+      {/* Calendar Overlay - local to FocusModePanel */}
+      <AnimatePresence>
+        {showCalendar && (
+          <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
+        )}
+      </AnimatePresence>
 
       {/* Scroll Transition Overlay */}
       <AnimatePresence>
