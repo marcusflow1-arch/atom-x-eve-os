@@ -13,15 +13,15 @@ export default function InventoryEquipOverlay() {
     setSlotId(null);
   }, []);
 
-  useEffect(() => {
-    const handler = (e) => {
-      const detail = e?.detail || {};
-      setSlotId(detail.slotId || null);
-      setOpen(true);
-    };
-    window.addEventListener("openInventoryPanel", handler);
-    return () => window.removeEventListener("openInventoryPanel", handler);
-  }, []);
+  // useEffect(() => {
+  //   const handler = (e) => {
+  //     const detail = e?.detail || {};
+  //     setSlotId(detail.slotId || null);
+  //     setOpen(true);
+  //   };
+  //   window.addEventListener("openInventoryPanel", handler);
+  //   return () => window.removeEventListener("openInventoryPanel", handler);
+  // }, []);
 
    // Global flag to suppress other inventory UIs while this overlay is open
    useEffect(() => {
