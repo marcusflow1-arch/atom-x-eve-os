@@ -16,6 +16,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import InstanceDetailsPanel from './InstanceDetailsPanel';
+import { ScriptRuntime } from './ScriptRuntime';
 
 // Helper: Convert Three.js vector/euler to clean object
 const toObj = (v) => ({ 
@@ -35,6 +36,7 @@ export default function SceneEditor() {
   const [isDirty, setIsDirty] = useState(false);
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [selectingMode, setSelectingMode] = useState('obj'); // 'obj', 'env', 'spawn'
+  const [isPlaying, setIsPlaying] = useState(false); // PLAY MODE STATE
 
   // Preferences
   const [autoScaleHumanoids, setAutoScaleHumanoids] = useState(() => {
@@ -70,6 +72,7 @@ export default function SceneEditor() {
   const mixersRef = useRef({}); // Map ID -> AnimationMixer
   const clockRef = useRef(new THREE.Clock());
   const reqIdRef = useRef(null); // Animation frame ID
+  const scriptRuntimeRef = useRef(null); // Script Runtime Instance
 
   // --- API Mutations ---
   const saveMutation = useMutation({
@@ -217,13 +220,19 @@ export default function SceneEditor() {
     scene.add(transform);
     transformRef.current = transform;
 
-    // 5. Animation Loop
+    // 5. Script Runtime Init
+    scriptRuntimeRef.current = new ScriptRuntime(sceneRef, sceneObjectsMap, mixersRef, controlsRef);
+
+    // 6. Animation Loop
     const animate = () => {
       reqIdRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
       
       // Update Mixers
       Object.values(mixersRef.current).forEach(({ mixer }) => mixer.update(delta));
+
+      // Update Scripts
+      if (scriptRuntimeRef.current) scriptRuntimeRef.current.update(delta);
       
       orbit.update();
       renderer.render(scene, camera);
@@ -396,9 +405,31 @@ export default function SceneEditor() {
 
   }, [sceneConfig]); // Dependencies: Re-run sync when config changes
 
+  // --- Logic: Play Mode ---
+  useEffect(() => {
+    if (isPlaying) {
+        // Enter Play Mode
+        if (scriptRuntimeRef.current) {
+            scriptRuntimeRef.current.start(sceneConfig.objects, scripts);
+        }
+        // Deselect to hide gizmos
+        if (transformRef.current) transformRef.current.detach();
+    } else {
+        // Exit Play Mode
+        if (scriptRuntimeRef.current) {
+            scriptRuntimeRef.current.stop();
+        }
+        // Restore gizmo if object selected
+        const obj = sceneObjectsMap.current[selectedObjectId];
+        if (obj && transformRef.current) transformRef.current.attach(obj);
+    }
+  }, [isPlaying, sceneConfig, scripts]);
+
   // --- Logic: Selection & Gizmo Mode ---
   useEffect(() => {
     if (!transformRef.current) return;
+    if (isPlaying) return; // Disable gizmo in play mode
+
     transformRef.current.setMode(mode);
     
     const obj = sceneObjectsMap.current[selectedObjectId];
@@ -407,7 +438,7 @@ export default function SceneEditor() {
     } else {
         transformRef.current.detach();
     }
-  }, [mode, selectedObjectId]);
+  }, [mode, selectedObjectId, isPlaying]);
 
   // --- Logic: Click Selection ---
   const handleCanvasClick = (event) => {
@@ -641,6 +672,18 @@ export default function SceneEditor() {
             <Button size="icon" variant={mode === 'translate' ? 'default' : 'ghost'} onClick={() => setMode('translate')}><Move className="w-4 h-4"/></Button>
             <Button size="icon" variant={mode === 'rotate' ? 'default' : 'ghost'} onClick={() => setMode('rotate')}><RotateCw className="w-4 h-4"/></Button>
             <Button size="icon" variant={mode === 'scale' ? 'default' : 'ghost'} onClick={() => setMode('scale')}><Maximize className="w-4 h-4"/></Button>
+            
+            <div className="w-px h-6 bg-slate-700 mx-1"></div>
+            
+            <Button 
+                size="sm" 
+                variant={isPlaying ? "destructive" : "default"} 
+                className={isPlaying ? "bg-red-500 hover:bg-red-600" : "bg-green-600 hover:bg-green-700"}
+                onClick={() => setIsPlaying(!isPlaying)}
+            >
+                {isPlaying ? <Box className="w-4 h-4 mr-1" /> : <Play className="w-4 h-4 mr-1" />}
+                {isPlaying ? "Stop" : "Play"}
+            </Button>
         </div>
 
         {/* Save/Activate Bar */}
