@@ -756,6 +756,12 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "Achievement Cards";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
+        } else if (p.includes('/aibattle')) {
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "AI Battle";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/leaderboard')) {
           headerConfig.hidden = true;
         } else if (p.includes('/library')) {

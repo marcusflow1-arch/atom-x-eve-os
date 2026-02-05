@@ -23,9 +23,7 @@ export default function AIBattle() {
       className="min-h-screen w-full relative"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
     >
-      <div className="relative z-30">
-        <MiniLunaNav title="AI Battle" />
-      </div>
+      {/* MiniLunaNav removed to use global Layout header */}
       <div className="relative z-20">
         <BattleModeOverlay onClose={() => navigate(createPageUrl('LunaTemplate'))} />
       </div>
