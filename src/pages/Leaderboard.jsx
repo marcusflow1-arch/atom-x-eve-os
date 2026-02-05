@@ -9,7 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import UserProfileOverlay from '@/components/profile/UserProfileOverlay';
+import PlayerJourneyOverlay from '../components/leaderboard/PlayerJourneyOverlay';
 import MiniLunaNav from '../components/nav/MiniLunaNav';
 
 // Leaderboard Categories
@@ -358,24 +358,15 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      {/* User Profile Overlay for Selected Player */}
-      <UserProfileOverlay 
-        isOpen={!!selectedPlayer} 
-        onClose={() => setSelectedPlayer(null)} 
-        profileUser={selectedPlayer ? {
-          ...selectedPlayer,
-          avatar_url: selectedPlayer.avatar,
-          gamer_score: selectedPlayer.score,
-          achievements: selectedPlayer.achievements,
-          // Add mock/default data for fields not in leaderboard view
-          bio: selectedPlayer.bio || `Level ${selectedPlayer.level} Player`,
-          social_profile: {
-            tagline: `Rank #${selectedPlayer.rank} on Leaderboard`,
-            playstyle: 'Competitive'
-          }
-        } : null}
-        readOnly={true}
-      />
+      {/* Detailed Player Journey Overlay */}
+      <AnimatePresence>
+        {selectedPlayer && (
+          <PlayerJourneyOverlay 
+            player={selectedPlayer} 
+            onClose={() => setSelectedPlayer(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
