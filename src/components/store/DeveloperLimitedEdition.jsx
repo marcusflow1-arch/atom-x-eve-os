@@ -1,115 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Star, Sparkles, X, ScrollText, Code, Gamepad2, Info, ShoppingCart, Check, Network, Video, Play, Shield, Zap, TrendingUp, Bolt, Wind, Eye, Brain } from 'lucide-react';
+import { 
+  ChevronRight, Star, Sparkles, ShoppingCart, Check, 
+  Gamepad2, Zap, TrendingUp, Shield, Activity, 
+  Info, Cpu, Layers, Sword, Share2, Crown, 
+  Flame, Crosshair, Hexagon, Fingerprint
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import ShinyCard from '@/components/shared/ShinyCard';
 import { useCart } from '../CartContext';
 
-// --- SKILL TREE CONSTANTS & COMPONENTS ---
-
-const POWER_TREE_NODES = [
-  { 
-    id: 'power_root', name: 'Core Activation', description: 'Unlock the card\'s latent power potential.', type: 'core', cost: 0, tier: 0, offsetX: 0, offsetY: 0,
-    perks: [{name: 'Base Energy', icon: 'zap'}, {name: 'Starter Kit', icon: 'box'}]
-  },
-  { 
-    id: 'power_atk1', name: 'Attack Boost I', description: 'Increase base attack power by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'left', offsetX: -60, offsetY: 70, parent: 'power_root',
-    perks: [{name: '+2% Dmg', icon: 'sword'}, {name: 'Sharpness', icon: 'triangle'}]
-  },
-  { 
-    id: 'power_def1', name: 'Defense Boost I', description: 'Increase base defense by 10%.', type: 'stat', cost: 100, tier: 1, branch: 'right', offsetX: 60, offsetY: 70, parent: 'power_root',
-    perks: [{name: '+2% Armor', icon: 'shield'}, {name: 'Hardened', icon: 'square'}]
-  },
-  { 
-    id: 'power_crit', name: 'Critical Strike', description: 'Gain 15% critical hit chance.', type: 'ability', cost: 250, tier: 2, branch: 'left', offsetX: -60, offsetY: 140, parent: 'power_atk1',
-    perks: [{name: '+5% Crit Dmg', icon: 'target'}, {name: 'Precision', icon: 'eye'}]
-  },
-  { 
-    id: 'power_res', name: 'Resilience', description: 'Reduce all incoming damage by 8%.', type: 'ability', cost: 250, tier: 2, branch: 'right', offsetX: 60, offsetY: 140, parent: 'power_def1',
-    perks: [{name: '+5% HP', icon: 'heart'}, {name: 'Recovery', icon: 'plus'}]
-  },
-  { 
-    id: 'power_ult', name: 'Overwhelming Force', description: 'Ultimate: All stats increased by 25%.', type: 'ultimate', cost: 1000, tier: 3, offsetX: 0, offsetY: 210, parent: ['power_crit', 'power_res'],
-    perks: [{name: 'God Mode', icon: 'crown'}, {name: 'Omnipotence', icon: 'star'}]
-  },
-];
-
-const getNodeIcon = (type) => {
-  switch (type) {
-    case 'core': return <Sparkles className="w-4 h-4" />;
-    case 'stat': return <TrendingUp className="w-4 h-4" />;
-    case 'ability': return <Zap className="w-4 h-4" />;
-    case 'ultimate': return <Bolt className="w-4 h-4" />;
-    default: return <Shield className="w-4 h-4" />;
-  }
-};
-
-const getNodeColor = (type) => {
-  switch (type) {
-    case 'core': return 'from-purple-500 to-purple-700';
-    case 'stat': return 'from-blue-500 to-blue-700';
-    case 'ability': return 'from-indigo-500 to-indigo-700';
-    case 'ultimate': return 'from-orange-500 to-red-600';
-    default: return 'from-slate-500 to-slate-700';
-  }
-};
-
-function SkillNode({ node, isUnlocked, isLocked, onClick }) {
-  const colorGradient = getNodeColor(node.type);
-  
-  return (
-    <div className="relative flex items-center justify-center">
-      <motion.button
-        onClick={() => onClick(node)}
-        disabled={isLocked}
-        whileHover={{ scale: isLocked ? 1 : 1.15 }}
-        whileTap={{ scale: 0.95 }}
-        className={`
-          relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 z-10
-          ${isUnlocked ? 'cursor-pointer' : !isLocked ? 'cursor-pointer' : 'cursor-not-allowed'}
-        `}
-      >
-        <div className={`
-          absolute inset-0 rounded-lg transition-all duration-300
-          ${isUnlocked 
-            ? `bg-gradient-to-br ${colorGradient} shadow-lg` 
-            : !isLocked 
-              ? 'bg-slate-700/80 border-2 border-dashed border-white/30' 
-              : 'bg-slate-900/60 border border-white/10'
-          }
-        `} />
-        
-        <div className={`relative z-10 ${isUnlocked ? 'text-white' : !isLocked ? 'text-white/60' : 'text-white/20'}`}>
-          {getNodeIcon(node.type)}
-        </div>
-      </motion.button>
-    </div>
-  );
-}
-
-function ConnectionLine({ fromX, fromY, toX, toY, isUnlocked }) {
-  const angle = Math.atan2(toY - fromY, toX - fromX);
-  const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
-  
-  return (
-    <div
-      className="absolute origin-left"
-      style={{
-        left: fromX + 20, 
-        top: fromY + 20,
-        width: length,
-        height: 2,
-        transform: `rotate(${angle}rad)`,
-        transformOrigin: '0 50%',
-        zIndex: 0
-      }}
-    >
-      <div className={`w-full h-full transition-colors duration-500 ${isUnlocked ? 'bg-purple-500/40' : 'bg-white/5'}`} />
-    </div>
-  );
-}
-
-// Developer data with their games and limited edition cards
+// Developer Data (Existing data structure)
 const DEVELOPERS = [
   {
     id: 'ubisoft',
@@ -361,15 +261,15 @@ const DEVELOPERS = [
 ];
 
 const rarityColors = {
-  Mythic: { bg: 'bg-red-900/50', border: 'border-red-500', text: 'text-red-300' },
-  Legendary: { bg: 'bg-yellow-900/50', border: 'border-yellow-500', text: 'text-yellow-300' },
-  Epic: { bg: 'bg-purple-900/50', border: 'border-purple-500', text: 'text-purple-300' },
-  Rare: { bg: 'bg-blue-900/50', border: 'border-blue-500', text: 'text-blue-300' },
-  Common: { bg: 'bg-slate-700/50', border: 'border-slate-500', text: 'text-slate-300' }
+  Mythic: { bg: 'bg-red-900/50', border: 'border-red-500', text: 'text-red-300', glow: 'shadow-red-500/50' },
+  Legendary: { bg: 'bg-yellow-900/50', border: 'border-yellow-500', text: 'text-yellow-300', glow: 'shadow-yellow-500/50' },
+  Epic: { bg: 'bg-purple-900/50', border: 'border-purple-500', text: 'text-purple-300', glow: 'shadow-purple-500/50' },
+  Rare: { bg: 'bg-blue-900/50', border: 'border-blue-500', text: 'text-blue-300', glow: 'shadow-blue-500/50' },
+  Common: { bg: 'bg-slate-700/50', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' }
 };
 
-// Large Card Display Component
-function LargeCardDisplay({ card }) {
+// 3D Card Visual Component
+function Card3D({ card }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
@@ -378,10 +278,12 @@ function LargeCardDisplay({ card }) {
   const rotateY = useTransform(mouseX, [-150, 150], [-15, 15]);
   const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    const cX = clientX - left - width / 2;
-    const cY = clientY - top - height / 2;
+  const rarity = rarityColors[card.rarity] || rarityColors.Common;
+
+  function handleMouseMove(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const cX = e.clientX - rect.left - rect.width / 2;
+    const cY = e.clientY - rect.top - rect.height / 2;
     x.set(cX);
     y.set(cY);
   }
@@ -391,596 +293,315 @@ function LargeCardDisplay({ card }) {
     y.set(0);
   }
 
-  const rarity = rarityColors[card.rarity] || rarityColors.Common;
-
   return (
-    <div 
-      className="relative group perspective-1000 w-[220px] aspect-[2.5/3.5]"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="relative group w-[280px] h-[400px] perspective-1000 mx-auto" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
       <motion.div
-        className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border-2 bg-slate-900"
+        className="w-full h-full rounded-2xl relative z-10 overflow-hidden shadow-2xl border bg-black/40 backdrop-blur-xl"
         style={{
-          rotateX,
-          rotateY,
-          transformStyle: "preserve-3d",
+          rotateX, rotateY, transformStyle: "preserve-3d",
           borderColor: card.rarity === 'Mythic' ? 'rgba(239,68,68,0.5)' : 
                        card.rarity === 'Legendary' ? 'rgba(249,115,22,0.5)' : 
-                       card.rarity === 'Epic' ? 'rgba(168,85,247,0.5)' : 'rgba(59,130,246,0.5)',
-          boxShadow: `0 0 50px ${
-            card.rarity === 'Mythic' ? 'rgba(239,68,68,0.4)' : 
-            card.rarity === 'Legendary' ? 'rgba(249,115,22,0.4)' : 
-            card.rarity === 'Epic' ? 'rgba(168,85,247,0.4)' : 'rgba(59,130,246,0.4)'
-          }`
+                       'rgba(255,255,255,0.1)',
+          boxShadow: `0 0 40px ${rarity.glow.replace('shadow-', '').replace('/50', '/30')}`
         }}
       >
-        <div className="absolute inset-0 z-0" style={{ transform: "translateZ(0)" }}>
-          <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-        </div>
-
+        <img src={card.image} alt={card.name} className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+        
+        {/* Holographic Shine */}
         <motion.div 
-          className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
+          className="absolute inset-0 z-20 pointer-events-none mix-blend-soft-light"
           style={{
-            background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
+            background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.3) ${val}%, transparent 100%)`)
           }}
         />
 
-        <div className="absolute inset-0 z-10 bg-gradient-to-tr from-white/10 via-transparent to-black/30 pointer-events-none" />
-
-        <div className="absolute bottom-3 left-3 right-3 z-30">
-          <Badge className={`${rarity.bg} ${rarity.text} border-none text-xs w-full justify-center shadow-lg backdrop-blur-md`}>
+        <div className="absolute bottom-6 left-6 right-6 z-30">
+          <Badge className={`${rarity.bg} ${rarity.text} border-none text-xs w-full justify-center shadow-lg backdrop-blur-md mb-2`}>
             {card.rarity}
           </Badge>
+          <div className="flex justify-between items-center text-xs text-white/60 font-mono">
+            <span>#{String(card.id).padStart(4, '0')}</span>
+            <span>EDITION 1</span>
+          </div>
         </div>
       </motion.div>
-      
-      <div className="absolute -bottom-8 left-4 right-4 h-4 bg-black/40 blur-xl rounded-full" />
-      
-      <div className="mt-10 text-center">
-        <h3 className="text-lg font-bold text-white mb-1">{card.name}</h3>
-        <div className="flex items-center justify-center gap-2">
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{card.type}</Badge>
-        </div>
-      </div>
     </div>
   );
 }
 
-// Compact Card Detail Panel
-function CardDetailPanelCompact({ card }) {
-  const rarity = rarityColors[card.rarity] || rarityColors.Common;
-  
-  const cardStats = {
-    Power: 50 + (card.id * 7) % 50,
-    Defense: 30 + (card.id * 11) % 40,
-    Speed: 20 + (card.id * 13) % 30,
-    Synergy: 15 + (card.id * 5) % 35,
-    Durability: 40 + (card.id * 9) % 40,
-  };
-
-  const abilities = [
-    { name: 'Primary Effect', description: `Enhances ${card.type.toLowerCase()} capabilities by ${20 + (card.id * 3) % 30}%` },
-    { name: 'Passive Bonus', description: `Grants bonus experience in related genre activities` },
-  ];
-
-  const lore = `This ${card.rarity.toLowerCase()} ${card.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension.`;
-
-  return (
-    <div className="flex flex-col gap-3" style={{ scrollbarWidth: 'none' }}>
-      <div className="flex gap-4">
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white mb-1">{card.name}</h2>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{card.type}</Badge>
-                <Badge className={`${rarity.bg} ${rarity.text} border-none text-[10px]`}>{card.rarity}</Badge>
-                <span className="text-amber-400/80 text-[10px]">{card.tag}</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-white/40 text-[10px]">Card ID</p>
-              <p className="text-white font-mono text-sm">#{String(card.id).padStart(4, '0')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div>
-          <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-            <Star className="w-3 h-3 text-yellow-400" />
-            Statistics
-          </h3>
-          <div className="grid grid-cols-5 gap-2">
-            {Object.entries(cardStats).map(([key, value]) => (
-              <div key={key} className="bg-black/30 p-2 rounded-lg border border-white/5 text-center">
-                <div className="text-[8px] text-slate-400 uppercase">{key}</div>
-                <div className="text-lg font-bold text-white">{value}</div>
-                <div className="w-full h-0.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                    style={{ width: `${value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            Abilities
-          </h3>
-          <div className="space-y-1.5">
-            {abilities.map((ability, index) => (
-              <div key={index} className="bg-black/20 p-2 rounded-lg border border-white/5 flex items-center gap-2">
-                <div className="w-6 h-6 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-3 h-3 text-purple-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-semibold text-xs">{ability.name}</h4>
-                  <p className="text-white/60 text-[10px] truncate">{ability.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-white/70 text-[10px] font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-            <ScrollText className="w-3 h-3 text-cyan-400" />
-            Lore
-          </h3>
-          <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-            <p className="text-slate-300 text-xs italic leading-relaxed">{lore}</p>
-          </div>
-        </div>
-      </div>
+// Stat Bar Component
+const StatBar = ({ label, value, color }) => (
+  <div className="mb-3">
+    <div className="flex justify-between text-xs mb-1">
+      <span className="text-white/50 font-medium uppercase tracking-wider">{label}</span>
+      <span className="text-white font-bold">{value}%</span>
     </div>
-  );
-}
+    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: `${value}%` }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className={`h-full rounded-full ${color}`}
+      />
+    </div>
+  </div>
+);
 
 export default function DeveloperLimitedEdition() {
   const { addToCart, isPurchased } = useCart();
-  const [currentDeveloperIndex, setCurrentDeveloperIndex] = useState(0);
+  const [currentDevIndex, setCurrentDevIndex] = useState(0);
   const [selectedGameIndex, setSelectedGameIndex] = useState(0);
   const [selectedCard, setSelectedCard] = useState(null);
   const [justAdded, setJustAdded] = useState(false);
-  const [activeSubPage, setActiveSubPage] = useState('skill_tree');
-  
-  const currentDeveloper = DEVELOPERS[currentDeveloperIndex];
-  const currentGame = currentDeveloper?.games[selectedGameIndex] || currentDeveloper?.games[0];
 
-  // Auto-select first card on initial load or developer switch
+  const currentDev = DEVELOPERS[currentDevIndex];
+  const currentGame = currentDev?.games[selectedGameIndex] || currentDev?.games[0];
+
+  // Auto-select first card
   useEffect(() => {
     if (currentGame?.limitedCards?.length > 0) {
       setSelectedCard(currentGame.limitedCards[0]);
     } else {
       setSelectedCard(null);
     }
-  }, [currentDeveloperIndex, selectedGameIndex]);
+  }, [currentDevIndex, selectedGameIndex]);
 
-  const handleSelectDeveloper = (index) => {
-    setCurrentDeveloperIndex(index);
-    setSelectedGameIndex(0);
-  };
-
-  const handleSelectGame = (index) => {
-    setSelectedGameIndex(index);
-  };
-
-  const handleCardClick = (card) => {
-    setSelectedCard(card);
-    setJustAdded(false);
-  };
-
-  const handleBuyCard = () => {
+  const handleBuy = () => {
     if (!selectedCard) return;
-    
-    // Calculate price based on rarity
-    const rarityPrices = {
-      'Mythic': 95000,
-      'Legendary': 75000,
-      'Epic': 45000,
-      'Rare': 25000,
-      'Common': 10000
-    };
-    
-    const price = rarityPrices[selectedCard.rarity] || 25000;
+    const priceMap = { 'Mythic': 95000, 'Legendary': 75000, 'Epic': 45000, 'Rare': 25000, 'Common': 10000 };
+    const price = priceMap[selectedCard.rarity] || 25000;
     
     addToCart({
       id: `dev_card_${selectedCard.id}`,
       title: selectedCard.name,
-      price: price / 1000, // Convert AGP to USD for cart
+      price: price / 1000,
       image: selectedCard.image,
       type: 'limited_card',
       rarity: selectedCard.rarity,
       game: currentGame.title,
-      developer: currentDeveloper.name,
+      developer: currentDev.name,
       cardType: selectedCard.type
     });
-    
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 2000);
   };
 
-  return (
-    <div className="mb-12">
-      {/* Section Header */}
-      <div className="flex items-center justify-center gap-3 mb-6">
-        <h3 className="text-2xl font-bold text-white tracking-wide">Devs Limited Cards</h3>
-      </div>
+  const rarityInfo = selectedCard ? (rarityColors[selectedCard.rarity] || rarityColors.Common) : rarityColors.Common;
 
-      {/* 1. Developer Navigation - NO BOX */}
-      <div className="mb-6">
-        <div className="flex overflow-x-auto gap-2 hover:overflow-x-scroll scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-          {DEVELOPERS.map((dev, index) => (
+  return (
+    <div className="w-full mb-12">
+      {/* 1. Developer Selector (Top Nav) */}
+      <div className="flex items-center justify-between mb-6 px-2">
+        <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+          <Sparkles className="w-6 h-6 text-amber-400" />
+          Dev Limited Cards
+        </h2>
+        
+        <div className="flex gap-2">
+          {DEVELOPERS.map((dev, idx) => (
             <button
               key={dev.id}
-              onClick={() => handleSelectDeveloper(index)}
-              className={`flex-shrink-0 flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl transition-all duration-300 border ${
-                currentDeveloperIndex === index 
-                  ? 'bg-white/10 border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.2)] text-white' 
-                  : 'bg-transparent border-white/5 text-white/40 hover:text-white hover:bg-white/5'
-              }`}
+              onClick={() => { setCurrentDevIndex(idx); setSelectedGameIndex(0); }}
+              className={`
+                px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border
+                ${currentDevIndex === idx 
+                  ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
+                  : 'bg-white/5 text-white/40 border-white/5 hover:bg-white/10 hover:text-white'
+                }
+              `}
             >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] ${
-                currentDeveloperIndex === index ? 'bg-cyan-500/20 text-cyan-300' : 'bg-white/10 text-white/50'
-              }`}>
-                {dev.logo}
-              </div>
-              <span className="text-[13px] font-bold tracking-wide">{dev.name}</span>
+              {dev.logo}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex gap-6">
-        {/* Left Side - Card Display & Buy Button */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col">
-          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            Limited Edition Cards
-          </h4>
+      {/* 2. Unified Glass Container */}
+      <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0a0a]/40 backdrop-blur-xl">
+        {/* Dynamic Background Mesh */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-[-50%] left-[-20%] w-[80%] h-[150%] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen" />
+          <div className="absolute bottom-[-50%] right-[-20%] w-[80%] h-[150%] bg-purple-600/10 blur-[120px] rounded-full mix-blend-screen" />
+        </div>
 
-          {/* Card Display - NO BOX */}
-          <div className="flex-1 flex items-center justify-center relative mb-4">
+        {/* Inner Content */}
+        <div className="relative z-10 grid lg:grid-cols-12 gap-0 min-h-[600px]">
+          
+          {/* LEFT: Visual Showcase (5 Cols) */}
+          <div className="lg:col-span-5 p-8 flex flex-col items-center justify-center relative border-r border-white/5">
             {selectedCard && (
               <>
-                <LargeCardDisplay card={selectedCard} />
-                {isPurchased(`dev_card_${selectedCard.id}`) && (
-                  <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
-                    <Check className="w-4 h-4 text-white" />
-                    <span className="text-white text-xs font-bold">Owned</span>
-                  </div>
-                )}
+                <Card3D card={selectedCard} />
+                
+                {/* Visual Footer */}
+                <div className="mt-8 flex gap-4 w-full max-w-[280px]">
+                  <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 flex flex-col items-center gap-1 transition-all group">
+                    <Activity className="w-4 h-4 text-white/40 group-hover:text-cyan-400" />
+                    <span className="text-[10px] text-white/40 font-mono uppercase">Inspect</span>
+                  </button>
+                  <button className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3 flex flex-col items-center gap-1 transition-all group">
+                    <Share2 className="w-4 h-4 text-white/40 group-hover:text-purple-400" />
+                    <span className="text-[10px] text-white/40 font-mono uppercase">Share</span>
+                  </button>
+                </div>
               </>
             )}
           </div>
 
-          {/* Buy Button */}
-          <div className="flex justify-center">
-            <motion.button 
-              onClick={handleBuyCard}
-              disabled={!selectedCard}
-              whileHover={{ scale: selectedCard ? 1.05 : 1 }}
-              whileTap={{ scale: selectedCard ? 0.95 : 1 }}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all ${
-                selectedCard 
-                  ? justAdded
-                    ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)]'
-                    : 'bg-cyan-500 text-black hover:bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.3)]'
-                  : 'bg-white/10 text-white/30 cursor-not-allowed'
-              }`}
-            >
-              {justAdded ? (
-                <>
-                  <Check className="w-5 h-5" />
-                  <span>Added!</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Buy</span>
-                </>
-              )}
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Middle - Split Container */}
-        <div className="flex-1 flex gap-6">
-          {/* Condensed Info (35%) */}
-          <div className="w-[35%] flex flex-col border-r border-white/10 pr-6">
-            {/* Card Information Header */}
-            {selectedCard && (
-              <div className="mb-3 pb-4 border-b border-white/10">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h2 className="text-lg font-bold text-white mb-1">{selectedCard.name}</h2>
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{selectedCard.type}</Badge>
-                      <Badge className={`${rarityColors[selectedCard.rarity]?.bg} ${rarityColors[selectedCard.rarity]?.text} border-none text-[10px]`}>{selectedCard.rarity}</Badge>
-                    </div>
-                    <span className="text-amber-400/80 text-[10px] block mt-1">{selectedCard.tag}</span>
-                  </div>
+          {/* RIGHT: Data Spec Sheet (7 Cols) */}
+          <div className="lg:col-span-7 p-8 flex flex-col">
+            
+            {/* Header: Developer & Game */}
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-cyan-400 text-xs font-bold tracking-widest uppercase">{currentDev.name}</span>
+                  <div className="w-1 h-1 rounded-full bg-white/20" />
+                  <span className="text-white/40 text-xs font-bold tracking-widest uppercase">Official Drop</span>
                 </div>
-
-                {/* Stats */}
-                <div className="mb-3">
-                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Statistics</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {Object.entries({
-                      Power: 50 + (selectedCard.id * 7) % 50,
-                      Defense: 30 + (selectedCard.id * 11) % 40,
-                      Speed: 20 + (selectedCard.id * 13) % 30,
-                    }).map(([key, value]) => (
-                      <div key={key} className="text-center">
-                        <div className="text-[9px] text-white/40 uppercase mb-0.5">{key}</div>
-                        <div className="text-base font-bold text-white">{value}</div>
-                        <div className="w-full h-0.5 bg-white/10 rounded-full mt-0.5 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${value > 70 ? 'bg-green-500' : value > 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${value}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Abilities */}
-                <div className="mb-3">
-                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Abilities</h3>
-                  <div className="space-y-1.5">
-                    <div className="flex items-start gap-2">
-                      <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="text-white font-semibold text-xs">Primary Effect</h4>
-                        <p className="text-white/60 text-[10px] line-clamp-2">Enhances {selectedCard.type.toLowerCase()} capabilities by {20 + (selectedCard.id * 3) % 30}%</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lore */}
-                <div>
-                  <h3 className="text-white/50 text-[10px] font-semibold uppercase tracking-wider mb-2">Lore</h3>
-                  <p className="text-white/70 text-xs italic leading-relaxed line-clamp-3">
-                    This {selectedCard.rarity.toLowerCase()} {selectedCard.type.toLowerCase()} was forged in the depths of legendary battles.
-                  </p>
+                <h1 className="text-4xl font-black text-white leading-none mb-2">{selectedCard?.name || "Select Card"}</h1>
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline" className="border-white/20 text-white/60">{selectedCard?.type}</Badge>
+                  <span className="text-white/30 text-sm">for</span>
+                  <span className="text-white font-medium">{currentGame.title}</span>
                 </div>
               </div>
-            )}
-            
-            {/* Select Card Header */}
-            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Info className="w-3 h-3 text-purple-400" />
-              Select Card
-            </h4>
-            
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-               {currentGame?.limitedCards.map((card) => {
-                  const isSelected = selectedCard?.id === card.id;
-                  const rarity = rarityColors[card.rarity] || rarityColors.Common;
-                  return (
-                    <motion.div
-                      key={card.id}
-                      onClick={() => handleCardClick(card)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex-shrink-0 w-8 aspect-[2.5/3.5] rounded-md overflow-hidden cursor-pointer border-2 transition-all relative ${
-                        isSelected 
-                          ? `${rarity.border} ring-2 ring-white/20` 
-                          : 'border-white/10 opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={card.image} className="w-full h-full object-cover" />
-                    </motion.div>
-                  );
-               })}
-            </div>
-          </div>
 
-          {/* New Subpages Section */}
-          <div className="flex-1 flex flex-col h-full">
-            {/* Subpage Tabs */}
-            <div className="flex items-center gap-6 mb-6 border-b border-white/10 pb-2 h-[52px]">
-              <button
-                onClick={() => setActiveSubPage('skill_tree')}
-                className={`flex items-center gap-2 text-sm font-bold transition-all relative h-full ${
-                  activeSubPage === 'skill_tree' ? 'text-white' : 'text-white/40 hover:text-white'
-                }`}
-              >
-                <Network className="w-4 h-4" />
-                Skill Tree
-                {activeSubPage === 'skill_tree' && (
-                  <motion.div layoutId="subTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveSubPage('live_view')}
-                className={`flex items-center gap-2 text-sm font-bold transition-all relative h-full ${
-                  activeSubPage === 'live_view' ? 'text-white' : 'text-white/40 hover:text-white'
-                }`}
-              >
-                <Video className="w-4 h-4" />
-                Live View
-                {activeSubPage === 'live_view' && (
-                  <motion.div layoutId="subTabIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500" />
-                )}
-              </button>
-            </div>
-
-            {/* Content Area */}
-            <div className="flex-1 relative bg-white/[0.02] rounded-xl border border-white/5 overflow-hidden">
-              <AnimatePresence mode="wait">
-                {activeSubPage === 'skill_tree' ? (
-                  <motion.div
-                    key="skill_tree"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute inset-0 p-4 flex flex-col overflow-y-auto custom-scrollbar"
+              {/* Game Switcher */}
+              <div className="flex gap-2">
+                {currentDev.games.map((game, idx) => (
+                  <button
+                    key={game.id}
+                    onClick={() => { setSelectedGameIndex(idx); }}
+                    className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all ${selectedGameIndex === idx ? 'border-cyan-400 scale-110 shadow-lg shadow-cyan-500/20' : 'border-transparent opacity-50 hover:opacity-100'}`}
                   >
-                    <div className="flex flex-col items-center min-h-full pb-10">
-                      
-                      {/* Tree Container */}
-                      <div className="relative w-[150px] h-[150px] mb-8 mt-4 flex-shrink-0">
-                        {/* Render Connections */}
-                        {POWER_TREE_NODES.map(node => {
-                          if (!node.parent) return null;
-                          const parents = Array.isArray(node.parent) ? node.parent : [node.parent];
-                          const nodePos = { x: node.offsetX + 130, y: node.offsetY };
-                          
-                          return parents.map(parentId => {
-                            const parent = POWER_TREE_NODES.find(n => n.id === parentId);
-                            if (!parent) return null;
-                            const parentPos = { x: parent.offsetX + 130, y: parent.offsetY };
-                            // Mock unlocked state for visual demo
-                            const isUnlocked = ['power_root', 'power_atk1', 'power_def1'].includes(parentId);
-                            
-                            return (
-                              <ConnectionLine
-                                key={`${parentId}-${node.id}`}
-                                fromX={parentPos.x}
-                                fromY={parentPos.y}
-                                toX={nodePos.x}
-                                toY={nodePos.y}
-                                isUnlocked={isUnlocked}
-                              />
-                            );
-                          });
-                        })}
-
-                        {/* Render Nodes */}
-                        {POWER_TREE_NODES.map(node => {
-                          // Mock unlocked state
-                          const isUnlocked = ['power_root', 'power_atk1', 'power_def1'].includes(node.id);
-                          const isLocked = !isUnlocked && !['power_crit', 'power_res'].includes(node.id);
-                          
-                          return (
-                            <div 
-                              key={node.id}
-                              className="absolute"
-                              style={{ 
-                                left: node.offsetX + 130, 
-                                top: node.offsetY 
-                              }}
-                            >
-                              <SkillNode 
-                                node={node} 
-                                isUnlocked={isUnlocked}
-                                isLocked={isLocked}
-                                onClick={() => {}}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Perks Section (Below Tree) */}
-                      <div className="w-full max-w-sm mt-auto">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="h-px bg-white/10 flex-1" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Active Perks</span>
-                          <div className="h-px bg-white/10 flex-1" />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-white/5 border border-white/10 p-2 rounded-lg flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
-                              <Zap className="w-4 h-4 text-purple-400" />
-                            </div>
-                            <div>
-                              <div className="text-xs font-bold text-white">Power Surge</div>
-                              <div className="text-[9px] text-white/50">+15% Damage</div>
-                            </div>
-                          </div>
-                          <div className="bg-white/5 border border-white/10 p-2 rounded-lg flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                              <Shield className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <div>
-                              <div className="text-xs font-bold text-white">Iron Skin</div>
-                              <div className="text-[9px] text-white/50">+10% Armor</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="live_view"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute inset-0 bg-black flex items-center justify-center group"
-                  >
-                    {/* Placeholder Video View */}
-                    <img 
-                      src={currentGame?.cover} 
-                      className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm group-hover:scale-105 transition-transform duration-1000" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/50" />
-                    
-                    <div className="relative z-10 flex flex-col items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 group-hover:scale-110 transition-all cursor-pointer shadow-2xl">
-                        <Play className="w-6 h-6 text-white fill-current ml-1" />
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-white font-bold tracking-wider">Watch Demonstration</h3>
-                        <p className="text-white/50 text-xs mt-1">See {selectedCard?.name} in action</p>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/40">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        LIVE PREVIEW
-                      </div>
-                      <span>00:45 / 02:30</span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <img src={game.cover} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Spec Grid */}
+            <div className="grid grid-cols-2 gap-x-12 gap-y-8 mb-8 flex-1">
+              
+              {/* Stats Column */}
+              <div>
+                <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-3 h-3" /> Performance Metrics
+                </h4>
+                <StatBar label="Power Output" value={85} color="bg-red-500" />
+                <StatBar label="Durability" value={62} color="bg-blue-500" />
+                <StatBar label="Rarity Index" value={94} color="bg-yellow-500" />
+                <StatBar label="Synergy" value={78} color="bg-purple-500" />
+              </div>
+
+              {/* Abilities Column */}
+              <div>
+                <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Zap className="w-3 h-3" /> Core Abilities
+                </h4>
+                <div className="space-y-3">
+                  <div className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-cyan-400">
+                      <Hexagon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-bold">Primary Effect</div>
+                      <p className="text-white/50 text-xs leading-snug">Enhances {selectedCard?.type.toLowerCase()} capabilities by 25%.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-purple-400">
+                      <Fingerprint className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-bold">Unique Signature</div>
+                      <p className="text-white/50 text-xs leading-snug">Cannot be forged. Verified by developer blockchain signature.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lore / Description */}
+            <div className="mb-8 p-4 rounded-xl bg-white/5 border border-white/5">
+              <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <Info className="w-3 h-3" /> Item Description
+              </h4>
+              <p className="text-white/70 text-sm leading-relaxed">
+                "This {selectedCard?.rarity.toLowerCase()} {selectedCard?.type.toLowerCase()} was forged in the depths of legendary battles. Those who wield this card gain access to powers beyond ordinary comprehension."
+              </p>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="mt-auto flex items-center justify-between pt-6 border-t border-white/5">
+              <div>
+                <div className="text-[10px] text-white/40 uppercase font-bold tracking-wider mb-1">Market Price</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-white">75,000</span>
+                  <span className="text-cyan-400 font-bold text-sm">AGP</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-[10px] text-green-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1 justify-end">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    In Stock
+                  </div>
+                  <div className="text-white/40 text-xs">Only 12 remaining</div>
+                </div>
+                
+                <button
+                  onClick={handleBuy}
+                  disabled={justAdded}
+                  className={`
+                    h-12 px-8 rounded-xl font-bold text-sm uppercase tracking-wide flex items-center gap-2 transition-all
+                    ${justAdded 
+                      ? 'bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)]' 
+                      : 'bg-white text-black hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.2)]'
+                    }
+                  `}
+                >
+                  {justAdded ? (
+                    <>
+                      <Check className="w-4 h-4" /> Added
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4" /> Purchase
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
+      </div>
 
-        {/* Right Side - Games List */}
-        <div className="w-[280px] flex-shrink-0 flex flex-col">
-          <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
-            <Gamepad2 className="w-3 h-3 text-cyan-400" />
-            {currentDeveloper.name} Games
-          </h4>
-          
-          <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1 custom-scrollbar">
-            {currentDeveloper.games.map((game, index) => (
-              <button
-                key={game.id}
-                onClick={() => handleSelectGame(index)}
-                className={`w-full group flex items-center gap-3 transition-all text-left p-2 rounded-lg ${
-                  index === selectedGameIndex 
-                    ? 'bg-cyan-500/10 border-l-2 border-cyan-500' 
-                    : 'hover:bg-white/5'
-                }`}
-              >
-                <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
-                  <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-bold text-sm truncate">{game.title}</h4>
-                  <p className="text-white/50 text-xs">{game.year}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+      {/* Card Selector Strip (Bottom) */}
+      <div className="mt-6 flex justify-center">
+        <div className="flex gap-3 p-2 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10">
+          {currentGame?.limitedCards.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => { setSelectedCard(card); setJustAdded(false); }}
+              className={`
+                w-12 h-16 rounded-lg overflow-hidden border-2 transition-all relative group
+                ${selectedCard?.id === card.id 
+                  ? 'border-white scale-110 shadow-lg z-10' 
+                  : 'border-transparent opacity-50 hover:opacity-100 hover:scale-105'
+                }
+              `}
+            >
+              <img src={card.image} className="w-full h-full object-cover" />
+              {selectedCard?.id === card.id && (
+                <div className="absolute inset-0 bg-white/10 pointer-events-none" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
     </div>
