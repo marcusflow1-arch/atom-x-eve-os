@@ -1220,107 +1220,90 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </AnimatePresence>
                   </TabsContent>
 
-                  <TabsContent value="community" className="mt-6">
-                    <div className="grid grid-cols-12 gap-6 h-[600px]">
-                       {/* Left Column: Main Viewer (Full Screen Experience) */}
-                       <div className="col-span-12 lg:col-span-8 h-full flex flex-col">
-                          <div className="flex-1 bg-black rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl">
-                              {(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]) ? (
-                                  <>
-                                      {(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).type === 'video' ? (
-                                          <video 
-                                              src={(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).url} 
-                                              className="w-full h-full object-contain" 
-                                              controls 
-                                              autoPlay 
-                                              loop
-                                          />
-                                      ) : (
-                                          <img 
-                                              src={(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).url} 
-                                              className="w-full h-full object-contain" 
-                                          />
-                                      )}
-                                      {/* Info Overlay */}
-                                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
-                                          <div className="flex items-end justify-between">
-                                              <div>
-                                                  <h3 className="text-white font-bold text-2xl mb-1">{(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).title}</h3>
-                                                  <p className="text-white/60 text-sm font-medium">Shared by <span className="text-cyan-400">{(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).user}</span></p>
-                                              </div>
-                                              <div className="flex gap-3">
-                                                  <Button size="sm" variant="secondary" className="h-8 rounded-full">
-                                                      <Heart className="w-4 h-4 mr-1 text-red-500 fill-red-500" /> Like
-                                                  </Button>
-                                                  <Button size="sm" variant="secondary" className="h-8 rounded-full">
-                                                      <MessageSquare className="w-4 h-4 mr-1" /> Comment
-                                                  </Button>
-                                              </div>
+                  <TabsContent value="community" className="mt-6 h-[600px] flex flex-col">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4 pb-12">
+                           {/* Montage Content Mixer */}
+                           {[
+                              ...COMMUNITY_SKIRMISH.map(i => ({...i, category: 'Skirmish', tagColor: 'text-yellow-400'})),
+                              { id: 101, type: 'feedback', user: 'TacticalGamer', title: 'Stealth mechanics are insane!', content: 'The AI reaction to sound is next-level. Had to completely rethink my approach.', rating: 5, image: 'https://source.unsplash.com/random/500x300?stealth,gaming' },
+                              ...GAME_REMOTE.map(i => ({...i, category: 'Highlight', tagColor: 'text-red-500'})),
+                              { id: 102, type: 'feedback', user: 'LootGoblin', title: 'Found a rare chest location', content: 'Check behind the waterfall in Sector 4. Requires double jump boots.', rating: 4, image: 'https://source.unsplash.com/random/500x400?treasure,cave' },
+                              { id: 103, type: 'image', url: 'https://source.unsplash.com/random/600x800?cyberpunk,vertical', title: 'Verticality in this map', user: 'ClimberJoe', category: 'Screenshot', tagColor: 'text-purple-400' },
+                              { id: 104, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Funny physics glitch', user: 'GlitchHunter', views: '45k', category: 'Skirmish', tagColor: 'text-yellow-400' }
+                           ].sort(() => Math.random() - 0.5).map((item, idx) => (
+                              <motion.div
+                                 key={`${item.id}-${idx}`}
+                                 initial={{ opacity: 0, y: 20 }}
+                                 animate={{ opacity: 1, y: 0 }}
+                                 transition={{ delay: idx * 0.05 }}
+                                 className="break-inside-avoid mb-4 group relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-white/30 transition-all hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+                              >
+                                 {/* Visual Media Layer */}
+                                 {item.type === 'video' ? (
+                                    <div className="relative aspect-video bg-black">
+                                       <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                                             <Play className="w-5 h-5 text-white fill-white" />
                                           </div>
-                                      </div>
-                                  </>
-                              ) : (
-                                  <div className="flex items-center justify-center h-full text-white/30">Select media to view</div>
-                              )}
-                          </div>
-                       </div>
+                                       </div>
+                                       <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted loop onMouseOver={e => e.target.play()} onMouseOut={e => {e.target.pause(); e.target.currentTime = 0;}} />
+                                       <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-1 text-[10px] font-bold text-white">
+                                          <Radio className="w-3 h-3 text-red-500" /> {item.views || 'New'}
+                                       </div>
+                                    </div>
+                                 ) : (
+                                    <div className="relative">
+                                       <img src={item.image || item.url} className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt={item.title} />
+                                    </div>
+                                 )}
 
-                       {/* Right Column: Community Skirmish & Game Remote */}
-                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-8 overflow-y-auto custom-scrollbar pr-2">
-                          {/* Community Skirmish - Wacky Photos */}
-                          <div>
-                              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                                  <span className="text-yellow-400">🤪</span> Community Skirmish
-                              </h3>
-                              <div className="grid grid-cols-2 gap-3">
-                                  {COMMUNITY_SKIRMISH.map((item) => (
-                                      <div 
-                                          key={item.id} 
-                                          onClick={() => setSelectedCommunityMedia(item)}
-                                          className={`aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition-all border-2 ${selectedCommunityMedia?.id === item.id ? 'border-cyan-400' : 'border-transparent hover:border-white/30'}`}
-                                      >
-                                          <img src={item.url} className="w-full h-full object-cover" />
-                                      </div>
-                                  ))}
-                              </div>
-                          </div>
-
-                          {/* Game Remote - Hardcore Plays */}
-                          <div>
-                              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                                  <span className="text-red-500">🎮</span> Game Remote
-                              </h3>
-                              <div className="grid grid-cols-2 gap-3">
-                                  {GAME_REMOTE.map((item) => (
-                                      <div 
-                                          key={item.id} 
-                                          onClick={() => setSelectedCommunityMedia(item)}
-                                          className={`aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition-all border-2 relative ${selectedCommunityMedia?.id === item.id ? 'border-cyan-400' : 'border-transparent hover:border-white/30'}`}
-                                      >
-                                          {item.type === 'video' ? (
-                                              <div className="w-full h-full bg-black flex items-center justify-center relative">
-                                                  <img src={`https://source.unsplash.com/random/400x225?gaming,action,${item.id}`} className="w-full h-full object-cover opacity-60" />
-                                                  <div className="absolute inset-0 flex items-center justify-center">
-                                                      <Play className="w-6 h-6 text-white fill-white" />
-                                                  </div>
-                                              </div>
-                                          ) : (
-                                              <img src={item.url} className="w-full h-full object-cover" />
-                                          )}
-                                          <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
-                                              <Radio className="w-2 h-2 text-red-500" /> {item.views || 'New'}
+                                 {/* Content Overlay */}
+                                 <div className={`p-4 ${item.type === 'feedback' ? 'bg-white/[0.02]' : 'absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300'}`}>
+                                    
+                                    {/* Feedback Specific Layout */}
+                                    {item.type === 'feedback' ? (
+                                       <div>
+                                          <div className="flex items-center gap-2 mb-2">
+                                             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
+                                                {item.user.charAt(0)}
+                                             </div>
+                                             <span className="text-xs font-bold text-white/80">{item.user}</span>
+                                             <div className="ml-auto flex gap-0.5">
+                                                {Array.from({length: 5}).map((_, i) => (
+                                                   <Star key={i} className={`w-3 h-3 ${i < item.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
+                                                ))}
+                                             </div>
                                           </div>
-                                      </div>
-                                  ))}
-                              </div>
-                          </div>
-                          
-                          <div className="mt-auto pt-4 flex justify-center">
-                              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-white/60">
-                                  Load More Community Content
-                              </Button>
-                          </div>
-                       </div>
+                                          <h4 className="text-white font-bold text-sm mb-1 leading-tight">{item.title}</h4>
+                                          <p className="text-white/60 text-xs leading-relaxed line-clamp-2">{item.content}</p>
+                                          <div className="mt-3 flex items-center gap-3">
+                                             <button className="text-xs text-white/40 hover:text-cyan-400 flex items-center gap-1 transition-colors"><MessageSquare className="w-3 h-3" /> Reply</button>
+                                             <button className="text-xs text-white/40 hover:text-red-400 flex items-center gap-1 transition-colors"><Heart className="w-3 h-3" /> Like</button>
+                                          </div>
+                                       </div>
+                                    ) : (
+                                       /* Media Overlay Layout */
+                                       <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                                          <div className="flex items-center gap-2 mb-1">
+                                             <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md text-[10px] h-5 px-1.5 ${item.tagColor || 'text-white'}`}>
+                                                {item.category || 'Media'}
+                                             </Badge>
+                                          </div>
+                                          <h4 className="text-white font-bold text-sm mb-1 line-clamp-1">{item.title}</h4>
+                                          <div className="flex items-center justify-between">
+                                             <span className="text-white/60 text-xs flex items-center gap-1">by <span className="text-white font-medium">{item.user}</span></span>
+                                             <div className="flex gap-2">
+                                                <button className="p-1.5 hover:bg-white/20 rounded-full text-white/80 transition-colors"><Heart className="w-3.5 h-3.5" /></button>
+                                                <button className="p-1.5 hover:bg-white/20 rounded-full text-white/80 transition-colors"><MessageSquare className="w-3.5 h-3.5" /></button>
+                                             </div>
+                                          </div>
+                                       </div>
+                                    )}
+                                 </div>
+                              </motion.div>
+                           ))}
+                        </div>
                     </div>
                   </TabsContent>
                 </Tabs>
