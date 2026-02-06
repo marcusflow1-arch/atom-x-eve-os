@@ -681,6 +681,10 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
         <div className="flex flex-col gap-6">
           
           {/* Developer Limited Edition Section - Full Width */}
+          <div className="flex items-center gap-2 mb-[-10px]">
+            <Code className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-white font-bold text-lg">Dev Cards</h3>
+          </div>
           <DeveloperLimitedEdition />
 
           {/* Bottom Section: Split Layout */}
