@@ -27,6 +27,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [showCreatePost, setShowCreatePost] = React.useState(false);
   const [selectedMysteryCard, setSelectedMysteryCard] = React.useState(null);
   const [expandedQuestId, setExpandedQuestId] = React.useState(null);
+  const [expandedMissionId, setExpandedMissionId] = React.useState(null);
   const [achievementSubTab, setAchievementSubTab] = React.useState('ability');
   const [achievementFilter, setAchievementFilter] = React.useState('all');
   const [expandedDlcId, setExpandedDlcId] = React.useState(null);
@@ -805,40 +806,241 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
                       </div>
 
-                      {/* Right Column: Abilities (DLC removed from here as moved to left) */}
-                      <div className="col-span-12 lg:col-span-4 space-y-6">
-                        {/* Abilities Unlocked */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-                            <Radio className="w-5 h-5 text-blue-400" /> Abilities Unlocked
-                          </h3>
-                          <div className="flex flex-col items-center justify-center py-2">
-                             {/* Reuse Radial from previous code */}
-                             <div className="w-40 h-40 rounded-full grid place-items-center mb-6 relative">
-                                <div className="absolute inset-0 rounded-full border-4 border-white/5" />
-                                <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(#3b82f6 ${(Math.min(100, Math.round(((achievements?.length || 0)/50)*100)) * 3.6)}deg, transparent 0deg)`, maskImage: 'radial-gradient(transparent 65%, black 66%)', WebkitMaskImage: 'radial-gradient(transparent 65%, black 66%)' }} />
-                                
-                                <div className="flex flex-col items-center">
-                                   <span className="text-white font-black text-3xl tracking-tighter drop-shadow-lg">{Math.min(100, Math.round(((achievements?.length || 0)/50)*100))}%</span>
-                                   <span className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Mastery</span>
-                                </div>
-                             </div>
-                             <div className="w-full space-y-3">
-                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Neural Shock</span>
-                                   <span className="text-white font-bold">Unlocked</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Void Step</span>
-                                   <span className="text-white font-bold">Unlocked</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-white/20" /> Titan Smash</span>
-                                   <span className="text-white/20 font-bold uppercase text-[10px]">Locked</span>
-                                </div>
-                             </div>
-                          </div>
-                        </div>
+                      {/* Right Column: Game Completion Progress */}
+                      <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+                         {/* Overall Progress */}
+                         <div className="mb-2">
+                            <div className="flex items-end justify-between mb-2">
+                               <h3 className="text-white font-bold text-xl tracking-tight">Game Progress</h3>
+                               <span className="text-cyan-400 font-mono text-lg font-bold">35%</span>
+                            </div>
+                            <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                               <div className="h-full bg-cyan-500 w-[35%] shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                            </div>
+                         </div>
+
+                         {/* Main Story Missions */}
+                         <div>
+                            <div className="flex items-center justify-between mb-4">
+                               <h4 className="text-white/90 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                                  <div className="w-1.5 h-4 bg-yellow-500 rounded-sm" /> Main Story
+                               </h4>
+                               <span className="text-xs text-white/40 font-mono">2/12 Completed</span>
+                            </div>
+                            
+                            <div className="space-y-3">
+                               {[
+                                  { 
+                                     id: 'm1', 
+                                     title: 'Prologue: The Awakening', 
+                                     status: 'completed', 
+                                     progress: 100,
+                                     details: {
+                                        quests: { completed: 3, total: 3 },
+                                        cards: { collected: 2, total: 2 },
+                                        gear: { collected: 1, total: 1 }
+                                     }
+                                  },
+                                  { 
+                                     id: 'm2', 
+                                     title: 'Ch. 1: Neon Shadows', 
+                                     status: 'in_progress', 
+                                     progress: 65,
+                                     details: {
+                                        quests: { completed: 2, total: 4 },
+                                        cards: { collected: 1, total: 3 },
+                                        environment: { found: 1, total: 2 }
+                                     }
+                                  },
+                                  { 
+                                     id: 'm3', 
+                                     title: 'Ch. 2: Cyber Breach', 
+                                     status: 'locked', 
+                                     progress: 0,
+                                     details: {
+                                        quests: { completed: 0, total: 5 },
+                                        cards: { collected: 0, total: 4 }
+                                     }
+                                  }
+                               ].map((mission) => (
+                                  <div key={mission.id} className="group">
+                                     <button
+                                        onClick={() => setExpandedMissionId(expandedMissionId === mission.id ? null : mission.id)}
+                                        className={`w-full text-left p-3 rounded-xl border transition-all ${
+                                           expandedMissionId === mission.id 
+                                              ? 'bg-white/10 border-white/20 shadow-lg' 
+                                              : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                                        }`}
+                                     >
+                                        <div className="flex items-center justify-between">
+                                           <div className="min-w-0">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                 <span className={`text-sm font-bold truncate ${mission.status === 'locked' ? 'text-white/40' : 'text-white'}`}>
+                                                    {mission.title}
+                                                 </span>
+                                                 {mission.status === 'completed' && <Check className="w-3 h-3 text-green-400" />}
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                 <div className="h-1 w-20 bg-black/40 rounded-full overflow-hidden">
+                                                    <div 
+                                                       className={`h-full rounded-full ${mission.status === 'completed' ? 'bg-green-500' : mission.status === 'locked' ? 'bg-white/10' : 'bg-yellow-400'}`} 
+                                                       style={{ width: `${mission.progress}%` }} 
+                                                    />
+                                                 </div>
+                                                 <span className="text-[10px] text-white/40 font-mono">{mission.progress}%</span>
+                                              </div>
+                                           </div>
+                                           <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${expandedMissionId === mission.id ? 'rotate-180 text-white' : ''}`} />
+                                        </div>
+                                     </button>
+
+                                     <AnimatePresence>
+                                        {expandedMissionId === mission.id && (
+                                           <motion.div
+                                              initial={{ height: 0, opacity: 0 }}
+                                              animate={{ height: 'auto', opacity: 1 }}
+                                              exit={{ height: 0, opacity: 0 }}
+                                              className="overflow-hidden"
+                                           >
+                                              <div className="px-3 pb-3 pt-1 space-y-2 ml-3 border-l-2 border-white/10">
+                                                 {/* Dynamic Content Rendering */}
+                                                 {mission.details.quests && (
+                                                    <div className="flex items-center justify-between text-xs py-1">
+                                                       <span className="flex items-center gap-2 text-white/70">
+                                                          <Target className="w-3 h-3 text-cyan-400" /> Quests
+                                                       </span>
+                                                       <span className="font-mono text-white/40">
+                                                          {mission.details.quests.completed}/{mission.details.quests.total}
+                                                       </span>
+                                                    </div>
+                                                 )}
+                                                 
+                                                 {mission.details.cards && (
+                                                    <div className="flex items-center justify-between text-xs py-1">
+                                                       <span className="flex items-center gap-2 text-white/70">
+                                                          <div className="w-3 h-3 border border-purple-400 bg-purple-400/20 rounded-sm" /> Cards
+                                                       </span>
+                                                       <span className="font-mono text-white/40">
+                                                          {mission.details.cards.collected}/{mission.details.cards.total}
+                                                       </span>
+                                                    </div>
+                                                 )}
+
+                                                 {mission.details.gear && (
+                                                    <div className="flex items-center justify-between text-xs py-1">
+                                                       <span className="flex items-center gap-2 text-white/70">
+                                                          <Swords className="w-3 h-3 text-orange-400" /> Gear
+                                                       </span>
+                                                       <span className="font-mono text-white/40">
+                                                          {mission.details.gear.collected}/{mission.details.gear.total}
+                                                       </span>
+                                                    </div>
+                                                 )}
+
+                                                 {mission.details.environment && (
+                                                    <div className="flex items-center justify-between text-xs py-1">
+                                                       <span className="flex items-center gap-2 text-white/70">
+                                                          <Radio className="w-3 h-3 text-emerald-400" /> Environment
+                                                       </span>
+                                                       <span className="font-mono text-white/40">
+                                                          {mission.details.environment.found}/{mission.details.environment.total}
+                                                       </span>
+                                                    </div>
+                                                 )}
+
+                                                 {mission.status === 'in_progress' && (
+                                                    <Button size="sm" className="w-full mt-2 h-7 text-xs bg-white/5 border border-white/10 hover:bg-white/10">
+                                                       View Full Briefing
+                                                    </Button>
+                                                 )}
+                                              </div>
+                                           </motion.div>
+                                        )}
+                                     </AnimatePresence>
+                                  </div>
+                               ))}
+                            </div>
+                         </div>
+
+                         {/* Side Missions */}
+                         <div className="mt-2">
+                            <div className="flex items-center justify-between mb-4">
+                               <h4 className="text-white/90 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                                  <div className="w-1.5 h-4 bg-cyan-500 rounded-sm" /> Side Quests
+                               </h4>
+                               <span className="text-xs text-white/40 font-mono">4 Available</span>
+                            </div>
+
+                            <div className="space-y-3">
+                               {[
+                                  { 
+                                     id: 's1', 
+                                     title: 'The Glitch Hunter', 
+                                     progress: 20, 
+                                     details: {
+                                        quests: { completed: 1, total: 5 },
+                                        gear: { collected: 0, total: 1 }
+                                     }
+                                  },
+                                  { 
+                                     id: 's2', 
+                                     title: 'Lost Data Archives', 
+                                     progress: 0, 
+                                     details: {
+                                        cards: { collected: 0, total: 3 },
+                                        environment: { found: 0, total: 1 }
+                                     }
+                                  }
+                               ].map((side) => (
+                                  <div key={side.id} className="group">
+                                     <button
+                                        onClick={() => setExpandedMissionId(expandedMissionId === side.id ? null : side.id)}
+                                        className={`w-full text-left p-3 rounded-xl border transition-all ${
+                                           expandedMissionId === side.id 
+                                              ? 'bg-white/10 border-white/20' 
+                                              : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
+                                        }`}
+                                     >
+                                        <div className="flex items-center justify-between">
+                                           <div className="min-w-0">
+                                              <span className="text-sm font-bold text-white block mb-1">{side.title}</span>
+                                              <div className="flex items-center gap-2">
+                                                 <div className="h-1 w-16 bg-black/40 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-cyan-500" style={{ width: `${side.progress}%` }} />
+                                                 </div>
+                                              </div>
+                                           </div>
+                                           <ChevronDown className={`w-3 h-3 text-white/30 transition-transform ${expandedMissionId === side.id ? 'rotate-180 text-white' : ''}`} />
+                                        </div>
+                                     </button>
+                                     
+                                     <AnimatePresence>
+                                        {expandedMissionId === side.id && (
+                                           <motion.div
+                                              initial={{ height: 0, opacity: 0 }}
+                                              animate={{ height: 'auto', opacity: 1 }}
+                                              exit={{ height: 0, opacity: 0 }}
+                                              className="overflow-hidden"
+                                           >
+                                              <div className="px-3 pb-3 pt-2 ml-3 border-l-2 border-white/10 space-y-2">
+                                                 {side.details.quests && (
+                                                    <div className="flex items-center gap-2 text-xs text-white/60">
+                                                       <Target className="w-3 h-3" /> {side.details.quests.completed}/{side.details.quests.total} Tasks
+                                                    </div>
+                                                 )}
+                                                 {side.details.cards && (
+                                                    <div className="flex items-center gap-2 text-xs text-white/60">
+                                                       <div className="w-3 h-3 border border-white/40 rounded-sm" /> {side.details.cards.collected}/{side.details.cards.total} Cards
+                                                    </div>
+                                                 )}
+                                              </div>
+                                           </motion.div>
+                                        )}
+                                     </AnimatePresence>
+                                  </div>
+                               ))}
+                            </div>
+                         </div>
                       </div>
                     </div>
                   </TabsContent>
