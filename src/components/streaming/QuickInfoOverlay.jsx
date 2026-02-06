@@ -843,47 +843,42 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="achievements" className="mt-6">
-                    <div className="grid grid-cols-12 gap-6 h-[600px]">
-                       {/* Left Column: Selected Card Detail (Full Screen Style) */}
-                       <div className="col-span-12 lg:col-span-8 h-full">
-                          <div className="h-full bg-black/40 rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl flex flex-col">
-                             {selectedMysteryCard !== null ? (
-                                <MysteryCardDetail 
-                                   card={{ id: selectedMysteryCard }} 
-                                   onBack={() => setSelectedMysteryCard(null)}
-                                   minimal={true} 
-                                />
-                             ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center text-white/30 p-10 text-center">
-                                   <Trophy className="w-16 h-16 mb-4 opacity-20" />
-                                   <p className="text-lg font-medium">Select an achievement card to view details</p>
-                                   <p className="text-xs mt-2 max-w-xs opacity-60">Unlock cards by completing in-game challenges and community events.</p>
-                                </div>
-                             )}
-                          </div>
-                       </div>
-
-                       {/* Right Column: Card List with "All" Subpage & Dots */}
-                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col overflow-hidden">
+                  <TabsContent value="achievements" className="h-[600px] mt-6">
+                    <AnimatePresence mode="wait">
+                      {selectedMysteryCard === null ? (
+                        <motion.div
+                          key="list"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="h-full flex flex-col"
+                        >
                           {/* Filter Header */}
-                          <div className="flex items-center gap-4 mb-4 pb-2 border-b border-white/10 overflow-x-auto scrollbar-hide">
-                             {['all', 'common', 'rare', 'legendary'].map(filter => (
+                          <div className="flex items-center gap-6 mb-6 pb-2 border-b border-white/10 overflow-x-auto scrollbar-hide px-2">
+                             {['all', 'ability', 'gear', 'companion', 'environment'].map(filter => (
                                 <button
                                    key={filter}
                                    onClick={() => setAchievementFilter(filter)}
-                                   className={`text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${achievementFilter === filter ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                                   className={`text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors relative pb-2 ${achievementFilter === filter ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
                                 >
                                    {filter}
+                                   {achievementFilter === filter && <motion.div layoutId="achFilter" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />}
                                 </button>
                              ))}
                           </div>
 
                           {/* Cards List (2 per row with dot in middle) */}
-                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-1">
+                          <div className="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-2">
                              {(() => {
-                                const list = Array.from({ length: 16 }).map((_, i) => ({ id: i, rarity: i % 3 === 0 ? 'legendary' : i % 2 === 0 ? 'rare' : 'common' }));
-                                const filtered = achievementFilter === 'all' ? list : list.filter(i => i.rarity === achievementFilter);
+                                const list = Array.from({ length: 24 }).map((_, i) => {
+                                  const types = ['ability', 'gear', 'companion', 'environment'];
+                                  return { 
+                                    id: i, 
+                                    type: types[i % 4],
+                                    rarity: i % 5 === 0 ? 'legendary' : i % 3 === 0 ? 'rare' : 'common'
+                                  };
+                                });
+                                const filtered = achievementFilter === 'all' ? list : list.filter(i => i.type === achievementFilter);
                                 const pairs = [];
                                 for (let i = 0; i < filtered.length; i += 2) {
                                    pairs.push(filtered.slice(i, i + 2));
@@ -895,16 +890,19 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                       <div className="flex-1">
                                          <ShinyCard 
                                             onClick={() => setSelectedMysteryCard(pair[0].id)}
-                                            className={`aspect-[3/4] w-full bg-white/5 border rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-95 cursor-pointer ${selectedMysteryCard === pair[0].id ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                            className="aspect-[3/4] w-full bg-white/5 border border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-[0.98] cursor-pointer hover:border-white/30 group/card"
                                          >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <span className="text-white/20 text-xl font-light">?</span>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                                            <span className="text-white/20 text-2xl font-light">?</span>
+                                            <div className="absolute bottom-2 left-0 right-0 text-center">
+                                               <span className="text-[9px] text-white/30 uppercase tracking-widest font-bold">{pair[0].type}</span>
+                                            </div>
                                             {pair[0].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
                                          </ShinyCard>
                                       </div>
 
                                       {/* Center Dot */}
-                                      <div className="mx-3 flex flex-col items-center">
+                                      <div className="mx-2 flex flex-col items-center">
                                          <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-cyan-400/50 transition-colors" />
                                       </div>
 
@@ -913,10 +911,13 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                          {pair[1] ? (
                                             <ShinyCard 
                                                onClick={() => setSelectedMysteryCard(pair[1].id)}
-                                               className={`aspect-[3/4] w-full bg-white/5 border rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-95 cursor-pointer ${selectedMysteryCard === pair[1].id ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                               className="aspect-[3/4] w-full bg-white/5 border border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-[0.98] cursor-pointer hover:border-white/30 group/card"
                                             >
-                                               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                               <span className="text-white/20 text-xl font-light">?</span>
+                                               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                                               <span className="text-white/20 text-2xl font-light">?</span>
+                                               <div className="absolute bottom-2 left-0 right-0 text-center">
+                                                  <span className="text-[9px] text-white/30 uppercase tracking-widest font-bold">{pair[1].type}</span>
+                                               </div>
                                                {pair[1].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
                                             </ShinyCard>
                                          ) : (
@@ -927,8 +928,22 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                 ));
                              })()}
                           </div>
-                       </div>
-                    </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="detail"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="h-full"
+                        >
+                          <MysteryCardDetail 
+                            card={{ id: selectedMysteryCard }} 
+                            onBack={() => setSelectedMysteryCard(null)} 
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </TabsContent>
 
                   <TabsContent value="community" className="mt-6">
