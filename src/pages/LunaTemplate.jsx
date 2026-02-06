@@ -1771,6 +1771,7 @@ export default function LunaTemplate() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
+  const [currentEnvId, setCurrentEnvId] = useState('default_room');
 
   const { mode } = useDashboardMode();
 
