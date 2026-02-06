@@ -273,40 +273,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       });
   }, [scripts, modelUrl, isModelReady]);
 
-          // Simple Filter
-          if (script.model_reference && script.model_reference.toLowerCase() !== 'general') {
-              // ... check logic ...
-          }
-
-          try {
-              console.log(`Executing 3D Script: ${script.name}`);
-              const func = new Function(
-                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
-                  script.script_code
-              );
-              func(
-                  THREE, 
-                  sceneRef.current, 
-                  cameraRef.current, 
-                  rendererRef.current, 
-                  actorContainerRef.current, 
-                  mixerRef.current, 
-                  actionsRef.current, 
-                  controlsRef.current, 
-                  clockRef.current,
-                  {
-                      getState: useLunaStore.getState,
-                      setState: useLunaStore.setState,
-                      subscribe: useLunaStore.subscribe
-                  }
-              );
-              scriptsExecutedRef.current.add(scriptKey);
-          } catch (e) {
-              console.error(`Error running script ${script.name}:`, e);
-          }
-      });
-  }, [scripts, modelUrl]); // Removed actorLoadedRef.current from dependencies as it is a ref
-
   // Fetch animations for Y Bot
   useEffect(() => {
     const fetchAnimations = async () => {
