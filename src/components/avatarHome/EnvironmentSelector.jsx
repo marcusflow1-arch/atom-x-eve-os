@@ -24,19 +24,27 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
         // 3. Map SceneLayouts to Environment Objects
         const mapped = sceneLayouts.map((layout, index) => {
           // Use a deterministic thumbnail based on index or layout ID
-          const placeholders = [
-            'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
-            'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
-            'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
-            'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
-            'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80'
-          ];
+          // For "Room 2", we use a specific sci-fi room image as requested
+          let thumb = 'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80';
+          
+          if (layout.name === 'Room 2') {
+             thumb = 'https://images.unsplash.com/photo-1555679427-1f6dfcce943b?w=400&q=80'; // Sci-fi room
+          } else {
+             const placeholders = [
+                'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+                'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
+                'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
+                'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
+                'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80'
+             ];
+             thumb = placeholders[index % placeholders.length];
+          }
           
           return {
             id: layout.id,
             name: layout.name || `Scene ${index + 1}`,
             description: layout.description || 'Custom 3D Environment',
-            thumbnail: placeholders[index % placeholders.length],
+            thumbnail: thumb,
             modelUrl: layout.environment_url,
             // Pass full layout data for LunaTemplate to use
             layoutData: layout,
@@ -44,19 +52,20 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
           };
         });
 
-        // Add default/fallback if list is empty
-        if (mapped.length === 0) {
-           mapped.push({
+        // Always include Default Room as the first option
+        const finalEnvironments = [
+           {
              id: 'default_room',
              name: 'Standard Quarters',
              description: 'Default System Environment',
              thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
              modelQuery: ['room 1', 'room1'],
              isLocked: false
-           });
-        }
+           },
+           ...mapped
+        ];
         
-        setEnvironments(mapped);
+        setEnvironments(finalEnvironments);
       } catch (e) {
         console.error("EnvironmentSelector init failed", e);
       } finally {
