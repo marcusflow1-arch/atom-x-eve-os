@@ -104,6 +104,17 @@ export default function LibrarySidebar() {
     }
   }, [activeSub]);
 
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
   if (!shouldShow) return null;
 
   const openOverlay = (item) => {
