@@ -18,7 +18,7 @@ import StreamerProfilePanel from '@/components/streaming/profile/StreamerProfile
 import FriendsListContent from '../dashboard/FriendsListContent';
 
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
-  const [activeTab, setActiveTab] = React.useState('overview');
+  const [activeTab, setActiveTab] = React.useState('content');
   const [selectedDLC, setSelectedDLC] = React.useState(null);
   const [posts, setPosts] = React.useState([]);
   const [replyToId, setReplyToId] = React.useState(null);
@@ -159,7 +159,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
   React.useEffect(() => {
     if (open) {
-      setActiveTab('overview');
+      setActiveTab('content');
       setSelectedMysteryCard(null); // Reset mystery card selection on open
     }
   }, [open]);
