@@ -164,7 +164,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "EnvGuide",
+    mainPage: "Events",
     Pages: PAGES,
     Layout: __Layout,
 };
