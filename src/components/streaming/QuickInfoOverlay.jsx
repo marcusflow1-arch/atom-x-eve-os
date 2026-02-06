@@ -601,15 +601,14 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
                   <TabsContent value="content" className="space-y-6 mt-6">
                     <div className="grid grid-cols-12 gap-6">
-                      {/* Left Column: Updates, Achievements, Quests */}
-                      <div className="col-span-12 lg:col-span-8 space-y-6">
+                      {/* Left Column: Updates, Expansion, Quests */}
+                      <div className="col-span-12 lg:col-span-8 space-y-10">
                         {/* Updates / Patch Notes */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                        <div className="border-b border-white/10 pb-8">
                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
                             <Newspaper className="w-5 h-5 text-cyan-400" /> Game Updates & Patch Notes
                           </h3>
                           <div className="space-y-6">
-                             {/* Mock Updates */}
                              <div className="relative pl-6 border-l-2 border-cyan-500/50">
                                 <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
                                 <h4 className="text-white font-bold text-base">Patch 2.1 - Cyber Dawn</h4>
@@ -625,21 +624,21 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           </div>
                         </div>
 
-                        {/* DLC Expansion Content (Moved Here) */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                        {/* Expansion Content (Clean Design) */}
+                        <div className="border-b border-white/10 pb-8">
                            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
                             <ShoppingBag className="w-5 h-5 text-purple-400" /> Expansion Content
                           </h3>
-                          <div className="space-y-4">
+                          <div className="space-y-2">
                              {DLC_DATA.filter(d => d.id !== 'standard').map(dlc => (
-                                <div key={dlc.id} className="rounded-2xl border border-white/5 bg-white/5 overflow-hidden">
-                                   <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setExpandedDlcId(expandedDlcId === dlc.id ? null : dlc.id)}>
-                                      <div className="flex-1">
-                                         <h4 className="text-white text-sm font-bold mb-1">{dlc.name}</h4>
-                                         <p className="text-white/40 text-[11px] line-clamp-1">{dlc.description}</p>
+                                <div key={dlc.id} className="overflow-hidden">
+                                   <div className="py-2 flex items-center justify-between cursor-pointer group" onClick={() => setExpandedDlcId(expandedDlcId === dlc.id ? null : dlc.id)}>
+                                      <div className="flex-1 flex items-center gap-2">
+                                         <h4 className="text-white text-base font-bold group-hover:text-purple-300 transition-colors">{dlc.name}</h4>
+                                         <ChevronRight className={`w-5 h-5 text-white/50 transition-transform ${expandedDlcId === dlc.id ? 'rotate-90' : ''}`} />
                                       </div>
                                       <div className="flex items-center gap-4 ml-4">
-                                         <span className="text-xs font-mono font-bold text-purple-300">$ {dlc.id === 'dlc_3' ? '29.99' : '14.99'}</span>
+                                         <span className="text-sm font-mono font-bold text-purple-300">$ {dlc.id === 'dlc_3' ? '29.99' : '14.99'}</span>
                                          <Button 
                                             size="sm" 
                                             className="h-8 px-4 text-xs bg-white/10 hover:bg-white/20 border border-yellow-400/40 text-yellow-300 font-bold"
@@ -650,39 +649,37 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                          >
                                             Buy
                                          </Button>
-                                         <ChevronRight className={`w-4 h-4 text-white/30 transition-transform ${expandedDlcId === dlc.id ? 'rotate-90' : ''}`} />
                                       </div>
                                    </div>
                                    
-                                   {/* Dropdown Content */}
+                                   {/* Dropdown Content - No Box */}
                                    <AnimatePresence>
                                       {expandedDlcId === dlc.id && (
                                          <motion.div 
                                             initial={{ height: 0, opacity: 0 }} 
                                             animate={{ height: 'auto', opacity: 1 }} 
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="border-t border-white/5 bg-black/20"
+                                            className="border-l-2 border-purple-500/20 ml-1 pl-4 mb-4"
                                          >
-                                            <div className="p-4 grid grid-cols-2 gap-4">
-                                               <div className="aspect-video rounded-lg bg-black overflow-hidden relative group">
-                                                  <img src={`https://source.unsplash.com/random/400x225?scifi,game,${dlc.id}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                                  <div className="absolute inset-0 flex items-center justify-center">
-                                                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                                        <Play className="w-3 h-3 text-white fill-white" />
-                                                     </div>
-                                                  </div>
-                                               </div>
-                                               <div className="space-y-2">
+                                            <div className="pt-2 grid grid-cols-2 gap-6">
+                                               <div className="space-y-3">
+                                                  <p className="text-white/60 text-sm leading-relaxed">{dlc.description}</p>
                                                   <h5 className="text-white text-xs font-bold uppercase tracking-wider mb-2">Includes</h5>
                                                   {dlc.offers.slice(0, 3).map((offer, i) => (
-                                                     <div key={i} className="flex items-center gap-2 text-[11px] text-white/60">
+                                                     <div key={i} className="flex items-center gap-2 text-xs text-white/60">
                                                         <Check className="w-3 h-3 text-cyan-400" /> {offer}
                                                      </div>
                                                   ))}
-                                                  <div className="pt-2">
-                                                     <div className="flex gap-2">
-                                                        <a href="#" className="text-[10px] text-white/40 hover:text-white flex items-center gap-1"><Instagram className="w-3 h-3" /></a>
-                                                        <a href="#" className="text-[10px] text-white/40 hover:text-white flex items-center gap-1"><Twitter className="w-3 h-3" /></a>
+                                                  <div className="pt-2 flex gap-3">
+                                                     <a href="#" className="text-xs text-white/40 hover:text-white flex items-center gap-1"><Instagram className="w-3 h-3" /> Instagram</a>
+                                                     <a href="#" className="text-xs text-white/40 hover:text-white flex items-center gap-1"><Twitter className="w-3 h-3" /> Twitter</a>
+                                                  </div>
+                                               </div>
+                                               <div className="aspect-video rounded-lg bg-black overflow-hidden relative group cursor-pointer">
+                                                  <img src={`https://source.unsplash.com/random/400x225?scifi,game,${dlc.id}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                                  <div className="absolute inset-0 flex items-center justify-center">
+                                                     <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Play className="w-4 h-4 text-white fill-white" />
                                                      </div>
                                                   </div>
                                                </div>
@@ -695,15 +692,15 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           </div>
                         </div>
 
-                        {/* Quests & Experience (Renamed & Restructured) */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                        {/* Quests & Experience (Clean Design) */}
+                        <div>
                            <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
                             <Trophy className="w-5 h-5 text-yellow-400" /> Quests & Experience
                           </h3>
                           
                           {/* Active Quests Section */}
-                          <div className="space-y-4 mb-8">
-                             <h4 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2">Active Quests</h4>
+                          <div className="space-y-2 mb-8 border-b border-white/10 pb-8">
+                             <h4 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-4">Active Quests</h4>
                              {[
                                 { id: 'q1', name: 'Awakening the Machine', xp: 500, desc: 'Locate the dormant AI core in the lower sector and reboot the system manually.', hint: 'Look for the blue terminal near the subway entrance.' },
                                 { id: 'q2', name: 'Neon Shadows', xp: 1200, desc: 'Infiltrate the neon district gang hideout without raising the alarm.', hint: 'Use the ventilation shafts on the roof.' }
@@ -711,16 +708,16 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                 <div key={quest.id} className="group">
                                    <div 
                                       onClick={() => setExpandedQuestId(expandedQuestId === quest.id ? null : quest.id)}
-                                      className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer flex justify-between items-center"
+                                      className="py-2 cursor-pointer flex justify-between items-center hover:bg-white/[0.02] transition-colors rounded-lg px-2 -mx-2"
                                    >
                                       <div>
                                          <div className="flex items-center gap-2">
-                                            <span className="text-white text-sm font-bold">{quest.name}</span>
+                                            <span className="text-white text-base font-bold group-hover:text-cyan-300 transition-colors">{quest.name}</span>
+                                            <ChevronRight className={`w-5 h-5 text-white/50 transition-transform ${expandedQuestId === quest.id ? 'rotate-90' : ''}`} />
                                             {expandedQuestId === quest.id && <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[9px] px-1.5 py-0">ACTIVE</Badge>}
                                          </div>
-                                         <p className="text-cyan-400 text-xs font-mono font-bold mt-1">+{quest.xp} XP</p>
+                                         <p className="text-cyan-400 text-xs font-mono font-bold mt-1 pl-7">+{quest.xp} XP</p>
                                       </div>
-                                      <ChevronRight className={`w-4 h-4 text-white/30 transition-transform ${expandedQuestId === quest.id ? 'rotate-90' : ''}`} />
                                    </div>
                                    
                                    <AnimatePresence>
@@ -729,17 +726,19 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                             initial={{ height: 0, opacity: 0 }} 
                                             animate={{ height: 'auto', opacity: 1 }} 
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden"
+                                            className="overflow-hidden pl-2"
                                          >
-                                            <div className="p-4 mt-2 rounded-2xl bg-black/20 border border-white/5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                               <div className="space-y-3">
-                                                  <p className="text-white/80 text-xs leading-relaxed">{quest.desc}</p>
-                                                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                                                     <h5 className="text-blue-300 text-[10px] font-bold uppercase mb-1 flex items-center gap-1"><LifeBuoy className="w-3 h-3" /> Community Aid</h5>
-                                                     <p className="text-blue-200/70 text-[10px] italic">"{quest.hint}"</p>
+                                            <div className="py-4 border-l-2 border-cyan-500/20 ml-2 pl-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                               <div className="space-y-4">
+                                                  <p className="text-white/80 text-sm leading-relaxed">{quest.desc}</p>
+                                                  
+                                                  {/* Community Aid - No Box */}
+                                                  <div>
+                                                     <h5 className="text-blue-300 text-xs font-bold uppercase mb-1 flex items-center gap-1"><LifeBuoy className="w-3 h-3" /> Community Aid</h5>
+                                                     <p className="text-blue-200/70 text-sm italic border-l border-blue-500/30 pl-3">"{quest.hint}"</p>
                                                   </div>
                                                </div>
-                                               <div className="aspect-video rounded-xl bg-black overflow-hidden relative">
+                                               <div className="aspect-video rounded-xl bg-black overflow-hidden relative border border-white/10">
                                                   <img src={`https://source.unsplash.com/random/400x225?cyberpunk,city,${quest.id}`} className="w-full h-full object-cover opacity-80" />
                                                   <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/60 backdrop-blur-md text-[9px] text-white font-mono">
                                                      Ref: Sector 4
@@ -754,21 +753,21 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           </div>
 
                           {/* Achievements Section with Migrational Tabs */}
-                          <div className="pt-4 border-t border-white/10">
-                             <div className="flex items-baseline justify-between mb-4 border-b border-white/10 pb-2">
+                          <div>
+                             <div className="flex items-baseline justify-between mb-4">
                                 <h4 className="text-white font-bold text-lg">Achievements</h4>
                              </div>
                              
                              {/* Migrational Subpages (Tabs) */}
-                             <div className="flex gap-6 mb-6">
+                             <div className="flex gap-8 mb-6 border-b border-white/10">
                                 {['ability', 'equipment', 'companion', 'environment'].map(tab => (
                                    <button 
                                       key={tab}
                                       onClick={() => setAchievementSubTab(tab)}
-                                      className={`text-sm font-medium transition-colors uppercase tracking-wider relative ${achievementSubTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                                      className={`text-sm font-bold pb-3 transition-colors uppercase tracking-wider relative ${achievementSubTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
                                    >
                                       {tab}
-                                      {achievementSubTab === tab && <motion.div layoutId="achTab" className="absolute -bottom-[9px] left-0 right-0 h-[2px] bg-yellow-400" />}
+                                      {achievementSubTab === tab && <motion.div layoutId="achTab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]" />}
                                    </button>
                                 ))}
                              </div>
