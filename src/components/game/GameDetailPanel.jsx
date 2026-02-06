@@ -217,6 +217,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const owned = isPurchased(gameId);
   const [userReactions, setUserReactions] = useState({});
   const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
 
   // Helper to extract YouTube ID
@@ -303,7 +304,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
       offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
       price: 14.99,
       stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
-      achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
+      achievements: [
+        { name: 'Neural Master', type: 'Ability', power: 850, rarity: 'Legendary', id: '#NM-001', description: 'Master the neural networks to control battlefield electronics.' },
+        { name: 'Cyber Overlord', type: 'Title', power: 500, rarity: 'Epic', id: '#CO-092', description: 'Rule the cyber space with an iron fist.' },
+        { name: 'Data Stream Complete', type: 'Collection', power: 300, rarity: 'Rare', id: '#DS-114', description: 'Collect all data shards in the Neural sector.' }
+      ],
       abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst'],
       quests: [
         { name: 'Neural Awakening', xp: 1500, type: 'Main' },
@@ -318,7 +323,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
       offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
       price: 9.99,
       stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
-      achievements: ['Shadow Master', 'Void Walker'],
+      achievements: [
+        { name: 'Shadow Master', type: 'Technique', power: 920, rarity: 'Legendary', id: '#SM-666', description: 'Complete an entire mission without being detected.' },
+        { name: 'Void Walker', type: 'Transformation', power: 1200, rarity: 'Mythic', id: '#VW-000', description: 'Unlock the ultimate void form.' }
+      ],
       abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation'],
       quests: [
         { name: 'Shadow Infiltration', xp: 1200, type: 'Main' },
@@ -332,7 +340,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
       offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
       price: 29.99,
       stats: { dlcAccess: 'unlimited', genreXP: 50 },
-      achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
+      achievements: [
+        { name: 'Season Champion', type: 'Trophy', power: 2500, rarity: 'Exotic', id: '#SC-2025', description: 'Complete all season 1 challenges.' },
+        { name: 'Year One Veteran', type: 'Badge', power: 1000, rarity: 'Epic', id: '#Y1-VET', description: 'Logged in for 365 days.' },
+        { name: 'Ultimate Collector', type: 'Collection', power: 1500, rarity: 'Legendary', id: '#UC-MAX', description: 'Collect every item in the base game.' }
+      ],
       abilities: ['All DLC Abilities'],
       quests: [
         { name: 'Season Opener', xp: 2500, type: 'Main' },
@@ -988,13 +1000,17 @@ export default function GameDetailPanel({ gameId, onClose }) {
                                       </h5>
                                       <div className="flex flex-wrap gap-3">
                                         {dlc.achievements.map((ach, i) => (
-                                          <div key={i} className="group/card relative w-10 h-14 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-md flex items-center justify-center cursor-help overflow-hidden hover:scale-110 transition-transform shadow-lg hover:border-cyan-400/50 hover:shadow-cyan-500/20">
+                                          <div 
+                                            key={i} 
+                                            onClick={(e) => { e.stopPropagation(); setSelectedAchievement(ach); }}
+                                            className="group/card relative w-10 h-14 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-md flex items-center justify-center cursor-pointer overflow-hidden hover:scale-110 transition-transform shadow-lg hover:border-cyan-400/50 hover:shadow-cyan-500/20"
+                                          >
                                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-50" />
                                              <span className="text-white/30 font-bold text-lg group-hover/card:text-cyan-400 transition-colors">?</span>
                                              
                                              {/* Tooltip */}
                                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 border border-white/20 rounded text-[10px] text-white whitespace-nowrap opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl backdrop-blur-md">
-                                               {ach}
+                                               {typeof ach === 'string' ? ach : ach.name}
                                              </div>
                                           </div>
                                         ))}
@@ -1140,6 +1156,158 @@ export default function GameDetailPanel({ gameId, onClose }) {
           )}
         </AnimatePresence>
       </motion.div>
+
+      {/* Achievement Detail Overlay */}
+      <AnimatePresence>
+        {selectedAchievement && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+            onClick={() => setSelectedAchievement(null)}
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+            
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 w-full max-w-3xl bg-[#0f1115] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row"
+              style={{
+                boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)'
+              }}
+            >
+              {/* Close Button */}
+              <button 
+                onClick={() => setSelectedAchievement(null)}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+
+              {/* Left Side: Card Visual */}
+              <div className="w-full md:w-1/3 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 relative p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+                
+                {/* 3D Card Effect Container */}
+                <div className="relative w-48 aspect-[2/3] group perspective-1000">
+                  <div className="w-full h-full rounded-xl bg-gradient-to-br from-gray-800 to-black border-2 border-white/10 relative overflow-hidden shadow-2xl transform transition-transform duration-500 hover:rotate-y-12 hover:rotate-x-12">
+                     {/* Card Art */}
+                     <img 
+                       src={game.cover_image} 
+                       alt="Achievement Art" 
+                       className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-500" 
+                     />
+                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                     
+                     {/* Card Info Overlay */}
+                     <div className="absolute bottom-4 left-4 right-4">
+                        <div className="px-2 py-0.5 rounded bg-white/10 backdrop-blur-md border border-white/10 text-[9px] font-bold text-white/80 w-fit mb-2">
+                           {selectedAchievement.rarity || 'Common'}
+                        </div>
+                        <h3 className="text-white font-bold text-lg leading-tight mb-1">{selectedAchievement.name}</h3>
+                        <div className="flex gap-1">
+                           {[1,2,3].map(i => <Star key={i} className="w-2 h-2 text-yellow-400 fill-yellow-400" />)}
+                        </div>
+                     </div>
+
+                     {/* Shine Effect */}
+                     <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ transform: 'skewX(-20deg) translateX(-150%)' }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Details */}
+              <div className="flex-1 p-8 flex flex-col relative overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="relative z-10">
+                   <div className="flex items-center gap-3 mb-1">
+                      <span className="px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-[10px] font-bold uppercase tracking-wider">
+                         Season 1 Exclusive
+                      </span>
+                   </div>
+                   
+                   <h2 className="text-3xl font-black text-white mb-3 tracking-tight">{selectedAchievement.name}</h2>
+                   <p className="text-white/60 text-sm leading-relaxed mb-8">
+                      {selectedAchievement.description || 'An exclusive achievement awarded to those who demonstrate exceptional skill and dedication. Unlocks permanent rewards for your profile.'}
+                   </p>
+
+                   <div className="space-y-6">
+                      <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest border-b border-white/5 pb-2">Reward Details</h4>
+                      
+                      <div className="space-y-1 bg-white/5 rounded-xl border border-white/5 overflow-hidden">
+                         <div className="flex items-center justify-between p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                  <Radio className="w-4 h-4" />
+                               </div>
+                               <span className="text-sm font-medium text-white/80">Item Type</span>
+                            </div>
+                            <span className="text-white font-bold text-sm">{selectedAchievement.type || 'Unknown'}</span>
+                         </div>
+                         
+                         <div className="flex items-center justify-between p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                                  <Zap className="w-4 h-4" />
+                               </div>
+                               <span className="text-sm font-medium text-white/80">Power Score</span>
+                            </div>
+                            <span className="text-white font-bold text-sm">{selectedAchievement.power || '0'}</span>
+                         </div>
+
+                         <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                                  <Database className="w-4 h-4" />
+                               </div>
+                               <span className="text-sm font-medium text-white/80">Card ID</span>
+                            </div>
+                            <span className="text-white font-mono text-xs opacity-60">{selectedAchievement.id || '---'}</span>
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="mt-8">
+                      <button 
+                        onClick={() => {
+                           // Mock claim action
+                           alert('Reward Claimed! Check your inventory.');
+                           setSelectedAchievement(null);
+                        }}
+                        className="w-full py-4 bg-white text-black font-bold text-sm uppercase tracking-widest rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-2"
+                      >
+                         <Check className="w-4 h-4" /> Claim Reward
+                      </button>
+                   </div>
+                   
+                   {/* Bonus Equipment Mini-Section */}
+                   <div className="mt-8 pt-6 border-t border-white/10">
+                      <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest mb-3 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> Bonus Equipment
+                      </h4>
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5">
+                         <div className="w-10 h-10 rounded bg-gray-800 flex-shrink-0">
+                            <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale" />
+                         </div>
+                         <div>
+                            <div className="text-xs font-bold text-white">Elite Gear Tier 5</div>
+                            <div className="text-[10px] text-white/40">High-performance equipment unlocked.</div>
+                         </div>
+                         <span className="ml-auto text-[9px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">Epic</span>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Card Detail Overlay */}
       <AnimatePresence>
