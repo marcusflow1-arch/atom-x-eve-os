@@ -28,6 +28,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [selectedMysteryCard, setSelectedMysteryCard] = React.useState(null);
   const [expandedQuestId, setExpandedQuestId] = React.useState(null);
   const [achievementSubTab, setAchievementSubTab] = React.useState('ability');
+  const [achievementFilter, setAchievementFilter] = React.useState('all');
   const [expandedDlcId, setExpandedDlcId] = React.useState(null);
   const { addToCart } = useCart();
 
@@ -842,41 +843,92 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="achievements" className="h-[400px] mt-6">
-                    <AnimatePresence mode="wait">
-                      {!selectedMysteryCard ? (
-                        <motion.div
-                          key="grid"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1"
-                        >
-                          {Array.from({ length: 8 }).map((_, i) => (
-                            <ShinyCard 
-                              key={i} 
-                              onClick={() => setSelectedMysteryCard(i)}
-                              className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg hover:scale-95"
-                            >
-                              <div className="text-white/20 text-2xl font-light">?</div>
-                            </ShinyCard>
-                          ))}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="detail"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="h-full"
-                        >
-                          <MysteryCardDetail 
-                            card={{ id: selectedMysteryCard }} 
-                            onBack={() => setSelectedMysteryCard(null)} 
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                  <TabsContent value="achievements" className="mt-6">
+                    <div className="grid grid-cols-12 gap-6 h-[600px]">
+                       {/* Left Column: Selected Card Detail (Full Screen Style) */}
+                       <div className="col-span-12 lg:col-span-8 h-full">
+                          <div className="h-full bg-black/40 rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl flex flex-col">
+                             {selectedMysteryCard !== null ? (
+                                <MysteryCardDetail 
+                                   card={{ id: selectedMysteryCard }} 
+                                   onBack={() => setSelectedMysteryCard(null)}
+                                   minimal={true} 
+                                />
+                             ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-white/30 p-10 text-center">
+                                   <Trophy className="w-16 h-16 mb-4 opacity-20" />
+                                   <p className="text-lg font-medium">Select an achievement card to view details</p>
+                                   <p className="text-xs mt-2 max-w-xs opacity-60">Unlock cards by completing in-game challenges and community events.</p>
+                                </div>
+                             )}
+                          </div>
+                       </div>
+
+                       {/* Right Column: Card List with "All" Subpage & Dots */}
+                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col overflow-hidden">
+                          {/* Filter Header */}
+                          <div className="flex items-center gap-4 mb-4 pb-2 border-b border-white/10 overflow-x-auto scrollbar-hide">
+                             {['all', 'common', 'rare', 'legendary'].map(filter => (
+                                <button
+                                   key={filter}
+                                   onClick={() => setAchievementFilter(filter)}
+                                   className={`text-sm font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${achievementFilter === filter ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                                >
+                                   {filter}
+                                </button>
+                             ))}
+                          </div>
+
+                          {/* Cards List (2 per row with dot in middle) */}
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-1">
+                             {(() => {
+                                const list = Array.from({ length: 16 }).map((_, i) => ({ id: i, rarity: i % 3 === 0 ? 'legendary' : i % 2 === 0 ? 'rare' : 'common' }));
+                                const filtered = achievementFilter === 'all' ? list : list.filter(i => i.rarity === achievementFilter);
+                                const pairs = [];
+                                for (let i = 0; i < filtered.length; i += 2) {
+                                   pairs.push(filtered.slice(i, i + 2));
+                                }
+                                
+                                return pairs.map((pair, idx) => (
+                                   <div key={idx} className="flex items-center justify-between group">
+                                      {/* Left Card */}
+                                      <div className="flex-1">
+                                         <ShinyCard 
+                                            onClick={() => setSelectedMysteryCard(pair[0].id)}
+                                            className={`aspect-[3/4] w-full bg-white/5 border rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-95 cursor-pointer ${selectedMysteryCard === pair[0].id ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                         >
+                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <span className="text-white/20 text-xl font-light">?</span>
+                                            {pair[0].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
+                                         </ShinyCard>
+                                      </div>
+
+                                      {/* Center Dot */}
+                                      <div className="mx-3 flex flex-col items-center">
+                                         <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-cyan-400/50 transition-colors" />
+                                      </div>
+
+                                      {/* Right Card (if exists) */}
+                                      <div className="flex-1">
+                                         {pair[1] ? (
+                                            <ShinyCard 
+                                               onClick={() => setSelectedMysteryCard(pair[1].id)}
+                                               className={`aspect-[3/4] w-full bg-white/5 border rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-95 cursor-pointer ${selectedMysteryCard === pair[1].id ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-white/10 hover:border-white/30'}`}
+                                            >
+                                               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                               <span className="text-white/20 text-xl font-light">?</span>
+                                               {pair[1].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
+                                            </ShinyCard>
+                                         ) : (
+                                            <div className="aspect-[3/4] w-full" /> /* Spacer */
+                                         )}
+                                      </div>
+                                   </div>
+                                ));
+                             })()}
+                          </div>
+                       </div>
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="community" className="mt-6">
