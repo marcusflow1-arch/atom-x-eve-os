@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, ChevronDown, Settings, User, ExternalLink, Gamepad2, Heart, Check, Twitter, Instagram, Target, Swords, Lock, AlertCircle, Zap, Map, Star } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, ChevronDown, Settings, User, ExternalLink, Gamepad2, Heart, Check, Twitter, Instagram, Target, Swords, Lock, AlertCircle, Zap, Map, Star, ArrowLeftRight, Flame, Hash, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -33,6 +33,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [expandedDlcId, setExpandedDlcId] = React.useState(null);
   const { addToCart } = useCart();
 
+  const [communityLayout, setCommunityLayout] = React.useState('visuals'); // 'visuals' (80/20) or 'topics' (20/80)
   const [selectedCommunityMedia, setSelectedCommunityMedia] = React.useState(null);
 
   const COMMUNITY_SKIRMISH = [
@@ -1220,90 +1221,158 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </AnimatePresence>
                   </TabsContent>
 
-                  <TabsContent value="community" className="mt-6 h-[600px] flex flex-col">
-                    <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                        <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4 pb-12">
-                           {/* Montage Content Mixer */}
-                           {[
-                              ...COMMUNITY_SKIRMISH.map(i => ({...i, category: 'Skirmish', tagColor: 'text-yellow-400'})),
-                              { id: 101, type: 'feedback', user: 'TacticalGamer', title: 'Stealth mechanics are insane!', content: 'The AI reaction to sound is next-level. Had to completely rethink my approach.', rating: 5, image: 'https://source.unsplash.com/random/500x300?stealth,gaming' },
-                              ...GAME_REMOTE.map(i => ({...i, category: 'Highlight', tagColor: 'text-red-500'})),
-                              { id: 102, type: 'feedback', user: 'LootGoblin', title: 'Found a rare chest location', content: 'Check behind the waterfall in Sector 4. Requires double jump boots.', rating: 4, image: 'https://source.unsplash.com/random/500x400?treasure,cave' },
-                              { id: 103, type: 'image', url: 'https://source.unsplash.com/random/600x800?cyberpunk,vertical', title: 'Verticality in this map', user: 'ClimberJoe', category: 'Screenshot', tagColor: 'text-purple-400' },
-                              { id: 104, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Funny physics glitch', user: 'GlitchHunter', views: '45k', category: 'Skirmish', tagColor: 'text-yellow-400' }
-                           ].sort(() => Math.random() - 0.5).map((item, idx) => (
-                              <motion.div
-                                 key={`${item.id}-${idx}`}
-                                 initial={{ opacity: 0, y: 20 }}
-                                 animate={{ opacity: 1, y: 0 }}
-                                 transition={{ delay: idx * 0.05 }}
-                                 className="break-inside-avoid mb-4 group relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-white/30 transition-all hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
-                              >
-                                 {/* Visual Media Layer */}
-                                 {item.type === 'video' ? (
-                                    <div className="relative aspect-video bg-black">
-                                       <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
-                                             <Play className="w-5 h-5 text-white fill-white" />
-                                          </div>
-                                       </div>
-                                       <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted loop onMouseOver={e => e.target.play()} onMouseOut={e => {e.target.pause(); e.target.currentTime = 0;}} />
-                                       <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-1 text-[10px] font-bold text-white">
-                                          <Radio className="w-3 h-3 text-red-500" /> {item.views || 'New'}
-                                       </div>
-                                    </div>
-                                 ) : (
-                                    <div className="relative">
-                                       <img src={item.image || item.url} className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt={item.title} />
-                                    </div>
-                                 )}
+                  <TabsContent value="community" className="mt-6 h-[600px] bg-black/20 rounded-2xl overflow-hidden border border-white/5">
+                    <div className="flex h-full w-full relative">
+                       {/* LEFT SIDE: VISUALS / SKIRMISH / GAMEPLAY */}
+                       <div className={`transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] h-full overflow-y-auto custom-scrollbar flex flex-col ${communityLayout === 'visuals' ? 'w-[80%]' : 'w-[20%]'}`}>
+                          <div className={`p-4 ${communityLayout === 'visuals' ? '' : 'opacity-50 pointer-events-none'}`}>
+                             {/* Header for Visuals */}
+                             <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-900/90 backdrop-blur-xl z-20 py-2 -mx-4 px-4 border-b border-white/5">
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                                   <Gamepad2 className="w-5 h-5 text-cyan-400" />
+                                   {communityLayout === 'visuals' ? 'Community Skirmishes & Adventures' : 'Skirmishes'}
+                                </h3>
+                                {communityLayout === 'visuals' && (
+                                   <div className="flex gap-2">
+                                      <Button size="sm" variant="ghost" className="h-7 text-xs text-white/60 hover:text-white">Recent</Button>
+                                      <Button size="sm" variant="ghost" className="h-7 text-xs text-cyan-400 bg-cyan-500/10">Top Rated</Button>
+                                      <Button size="sm" variant="ghost" className="h-7 text-xs text-white/60 hover:text-white">Weirdest</Button>
+                                   </div>
+                                )}
+                             </div>
 
-                                 {/* Content Overlay */}
-                                 <div className={`p-4 ${item.type === 'feedback' ? 'bg-white/[0.02]' : 'absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300'}`}>
-                                    
-                                    {/* Feedback Specific Layout */}
-                                    {item.type === 'feedback' ? (
-                                       <div>
-                                          <div className="flex items-center gap-2 mb-2">
-                                             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {item.user.charAt(0)}
-                                             </div>
-                                             <span className="text-xs font-bold text-white/80">{item.user}</span>
-                                             <div className="ml-auto flex gap-0.5">
-                                                {Array.from({length: 5}).map((_, i) => (
-                                                   <Star key={i} className={`w-3 h-3 ${i < item.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}`} />
-                                                ))}
-                                             </div>
-                                          </div>
-                                          <h4 className="text-white font-bold text-sm mb-1 leading-tight">{item.title}</h4>
-                                          <p className="text-white/60 text-xs leading-relaxed line-clamp-2">{item.content}</p>
-                                          <div className="mt-3 flex items-center gap-3">
-                                             <button className="text-xs text-white/40 hover:text-cyan-400 flex items-center gap-1 transition-colors"><MessageSquare className="w-3 h-3" /> Reply</button>
-                                             <button className="text-xs text-white/40 hover:text-red-400 flex items-center gap-1 transition-colors"><Heart className="w-3 h-3" /> Like</button>
-                                          </div>
-                                       </div>
-                                    ) : (
-                                       /* Media Overlay Layout */
-                                       <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                          <div className="flex items-center gap-2 mb-1">
-                                             <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md text-[10px] h-5 px-1.5 ${item.tagColor || 'text-white'}`}>
-                                                {item.category || 'Media'}
-                                             </Badge>
-                                          </div>
-                                          <h4 className="text-white font-bold text-sm mb-1 line-clamp-1">{item.title}</h4>
-                                          <div className="flex items-center justify-between">
-                                             <span className="text-white/60 text-xs flex items-center gap-1">by <span className="text-white font-medium">{item.user}</span></span>
-                                             <div className="flex gap-2">
-                                                <button className="p-1.5 hover:bg-white/20 rounded-full text-white/80 transition-colors"><Heart className="w-3.5 h-3.5" /></button>
-                                                <button className="p-1.5 hover:bg-white/20 rounded-full text-white/80 transition-colors"><MessageSquare className="w-3.5 h-3.5" /></button>
-                                             </div>
-                                          </div>
-                                       </div>
-                                    )}
-                                 </div>
-                              </motion.div>
-                           ))}
-                        </div>
+                             {/* Visual Grid / Masonry */}
+                             <div className={`${communityLayout === 'visuals' ? 'columns-1 md:columns-2 lg:columns-3' : 'flex flex-col'} gap-4 space-y-4 pb-12 transition-all`}>
+                                {[
+                                   ...COMMUNITY_SKIRMISH.map(i => ({...i, category: 'Skirmish', tagColor: 'text-yellow-400'})),
+                                   { id: 101, type: 'feedback', user: 'TacticalGamer', title: 'Stealth mechanics are insane!', content: 'The AI reaction to sound is next-level. Had to completely rethink my approach.', rating: 5, image: 'https://source.unsplash.com/random/500x300?stealth,gaming' },
+                                   ...GAME_REMOTE.map(i => ({...i, category: 'Highlight', tagColor: 'text-red-500'})),
+                                   { id: 102, type: 'feedback', user: 'LootGoblin', title: 'Found a rare chest location', content: 'Check behind the waterfall in Sector 4. Requires double jump boots.', rating: 4, image: 'https://source.unsplash.com/random/500x400?treasure,cave' },
+                                   { id: 103, type: 'image', url: 'https://source.unsplash.com/random/600x800?cyberpunk,vertical', title: 'Verticality in this map', user: 'ClimberJoe', category: 'Screenshot', tagColor: 'text-purple-400' },
+                                   { id: 104, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Funny physics glitch', user: 'GlitchHunter', views: '45k', category: 'Skirmish', tagColor: 'text-yellow-400' }
+                                ].sort(() => Math.random() - 0.5).map((item, idx) => (
+                                   <motion.div
+                                      key={`${item.id}-${idx}`}
+                                      initial={{ opacity: 0, scale: 0.9 }}
+                                      animate={{ opacity: 1, scale: 1 }}
+                                      transition={{ delay: idx * 0.05 }}
+                                      className={`break-inside-avoid mb-4 group relative rounded-xl overflow-hidden border border-white/10 bg-black/40 hover:border-white/30 transition-all hover:shadow-2xl cursor-pointer ${communityLayout === 'topics' ? 'aspect-square' : ''}`}
+                                   >
+                                      {/* Media Layer */}
+                                      {item.type === 'video' ? (
+                                         <div className="relative w-full h-full bg-black aspect-video">
+                                            <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                               <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                                                  <Play className="w-4 h-4 text-white fill-white" />
+                                               </div>
+                                            </div>
+                                            <video src={item.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" muted loop onMouseOver={e => e.target.play()} onMouseOut={e => {e.target.pause(); e.target.currentTime = 0;}} />
+                                         </div>
+                                      ) : (
+                                         <img src={item.image || item.url} className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity" alt={item.title} />
+                                      )}
+
+                                      {/* Info Overlay (Hidden in compact mode) */}
+                                      {communityLayout === 'visuals' && (
+                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                                            <h4 className="text-white text-xs font-bold line-clamp-1">{item.title}</h4>
+                                            <div className="flex justify-between items-center mt-1">
+                                               <span className="text-[10px] text-white/60">{item.user}</span>
+                                               <div className="flex gap-2">
+                                                  <Heart className="w-3 h-3 text-white/80" />
+                                               </div>
+                                            </div>
+                                         </div>
+                                      )}
+                                   </motion.div>
+                                ))}
+                             </div>
+                          </div>
+                       </div>
+
+                       {/* DIVIDER LINE WITH TOGGLE */}
+                       <div className="w-[1px] bg-white/10 relative z-30 flex items-center justify-center h-full group/divider">
+                          <div className="absolute inset-y-0 -left-2 -right-2 hover:bg-white/5 cursor-col-resize transition-colors" /> {/* Click area */}
+                          <button 
+                             onClick={() => setCommunityLayout(prev => prev === 'visuals' ? 'topics' : 'visuals')}
+                             className="absolute w-8 h-8 rounded-full bg-black border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:scale-110 hover:border-cyan-400 hover:text-cyan-400 transition-all shadow-xl z-40"
+                          >
+                             <ArrowLeftRight className="w-4 h-4" />
+                          </button>
+                       </div>
+
+                       {/* RIGHT SIDE: HOT TOPICS / DISCUSSIONS */}
+                       <div className={`transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] h-full overflow-y-auto custom-scrollbar flex flex-col bg-black/20 ${communityLayout === 'visuals' ? 'w-[20%]' : 'w-[80%]'}`}>
+                          <div className="p-4">
+                             <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-900/0 z-20 py-2">
+                                <h3 className="text-white font-bold text-lg flex items-center gap-2 truncate">
+                                   <Flame className="w-5 h-5 text-orange-500 fill-orange-500/20" />
+                                   {communityLayout === 'topics' ? 'Trending Discussions & Hot Topics' : 'Hot Topics'}
+                                </h3>
+                             </div>
+
+                             <div className="space-y-3">
+                                {[
+                                   { id: 1, title: "Weapon Balance Patch 2.1 Analysis", comments: 1240, views: '12k', tag: "Discussion", votes: 452, author: "MetaBreaker" },
+                                   { id: 2, title: "Found a hidden room in Sector 7", comments: 856, views: '8.5k', tag: "Discovery", votes: 320, author: "Explorer99" },
+                                   { id: 3, title: "Best loadout for Stealth build?", comments: 432, views: '5k', tag: "Guide", votes: 215, author: "NinjaStyle" },
+                                   { id: 4, title: "Server maintenance schedule", comments: 120, views: '2k', tag: "News", votes: 890, author: "DevTeam", isOfficial: true },
+                                   { id: 5, title: "Anyone else getting texture glitches?", comments: 89, views: '1.2k', tag: "Bug", votes: 45, author: "Glitchy" },
+                                   { id: 6, title: "Lore Theory: The ending explained", comments: 2200, views: '25k', tag: "Lore", votes: 1500, author: "StoryTeller" },
+                                   { id: 7, title: "Community Tournament Signups", comments: 340, views: '6k', tag: "Event", votes: 600, author: "TourneyAdmin", isOfficial: true },
+                                ].map((topic) => (
+                                   <div 
+                                      key={topic.id} 
+                                      className={`group p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 transition-all cursor-pointer ${communityLayout === 'topics' ? 'flex items-start gap-4' : 'flex flex-col gap-2'}`}
+                                   >
+                                      {/* Vote Count (Left side in expanded mode) */}
+                                      {communityLayout === 'topics' && (
+                                         <div className="flex flex-col items-center gap-1 min-w-[40px] pt-1">
+                                            <button className="text-white/40 hover:text-orange-400 transition-colors"><ChevronDown className="rotate-180 w-5 h-5" /></button>
+                                            <span className="text-sm font-bold text-white/80">{topic.votes}</span>
+                                            <button className="text-white/40 hover:text-blue-400 transition-colors"><ChevronDown className="w-5 h-5" /></button>
+                                         </div>
+                                      )}
+
+                                      <div className="flex-1 min-w-0">
+                                         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                            <Badge variant="outline" className={`h-5 text-[10px] px-1.5 border-white/10 ${topic.isOfficial ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-white/5 text-white/60'}`}>
+                                               {topic.tag}
+                                            </Badge>
+                                            {topic.isOfficial && <span className="text-[10px] bg-red-500 text-white px-1 rounded font-bold">OFFICIAL</span>}
+                                            <span className="text-[10px] text-white/40 ml-auto flex items-center gap-1">
+                                               {topic.views} views
+                                            </span>
+                                         </div>
+                                         
+                                         <h4 className={`text-white font-bold leading-tight group-hover:text-cyan-400 transition-colors ${communityLayout === 'topics' ? 'text-base mb-2' : 'text-sm mb-2'}`}>
+                                            {topic.title}
+                                         </h4>
+
+                                         <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                               <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white">
+                                                  {topic.author.charAt(0)}
+                                               </div>
+                                               <span className="text-xs text-white/50 truncate max-w-[80px]">{topic.author}</span>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-3 text-white/40">
+                                               <span className="flex items-center gap-1 text-xs hover:text-white transition-colors">
+                                                  <MessageSquare className="w-3 h-3" /> {topic.comments}
+                                               </span>
+                                            </div>
+                                         </div>
+                                      </div>
+                                   </div>
+                                ))}
+                             </div>
+                             
+                             <Button variant="ghost" className="w-full mt-4 text-xs text-white/40 hover:text-white border border-dashed border-white/10 hover:border-white/30 h-10">
+                                View All Discussions
+                             </Button>
+                          </div>
+                       </div>
                     </div>
                   </TabsContent>
                 </Tabs>
