@@ -867,66 +867,33 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                              ))}
                           </div>
 
-                          {/* Cards List (2 per row with dot in middle) */}
-                          <div className="flex-1 overflow-y-auto custom-scrollbar px-2 space-y-2">
-                             {(() => {
-                                const list = Array.from({ length: 24 }).map((_, i) => {
-                                  const types = ['ability', 'gear', 'companion', 'environment'];
-                                  return { 
-                                    id: i, 
-                                    type: types[i % 4],
-                                    rarity: i % 5 === 0 ? 'legendary' : i % 3 === 0 ? 'rare' : 'common'
-                                  };
-                                });
-                                const filtered = achievementFilter === 'all' ? list : list.filter(i => i.type === achievementFilter);
-                                const pairs = [];
-                                for (let i = 0; i < filtered.length; i += 2) {
-                                   pairs.push(filtered.slice(i, i + 2));
-                                }
-                                
-                                return pairs.map((pair, idx) => (
-                                   <div key={idx} className="flex items-center justify-between group">
-                                      {/* Left Card */}
-                                      <div className="flex-1">
-                                         <ShinyCard 
-                                            onClick={() => setSelectedMysteryCard(pair[0].id)}
-                                            className="aspect-[3/4] w-full bg-white/5 border border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-[0.98] cursor-pointer hover:border-white/30 group/card"
-                                         >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                                            <span className="text-white/20 text-2xl font-light">?</span>
-                                            <div className="absolute bottom-2 left-0 right-0 text-center">
-                                               <span className="text-[9px] text-white/30 uppercase tracking-widest font-bold">{pair[0].type}</span>
-                                            </div>
-                                            {pair[0].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
-                                         </ShinyCard>
-                                      </div>
-
-                                      {/* Center Dot */}
-                                      <div className="mx-2 flex flex-col items-center">
-                                         <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-cyan-400/50 transition-colors" />
-                                      </div>
-
-                                      {/* Right Card (if exists) */}
-                                      <div className="flex-1">
-                                         {pair[1] ? (
-                                            <ShinyCard 
-                                               onClick={() => setSelectedMysteryCard(pair[1].id)}
-                                               className="aspect-[3/4] w-full bg-white/5 border border-white/10 rounded-xl flex items-center justify-center relative overflow-hidden transition-all hover:scale-[0.98] cursor-pointer hover:border-white/30 group/card"
-                                            >
-                                               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
-                                               <span className="text-white/20 text-2xl font-light">?</span>
-                                               <div className="absolute bottom-2 left-0 right-0 text-center">
-                                                  <span className="text-[9px] text-white/30 uppercase tracking-widest font-bold">{pair[1].type}</span>
-                                               </div>
-                                               {pair[1].rarity === 'legendary' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.8)]" />}
-                                            </ShinyCard>
-                                         ) : (
-                                            <div className="aspect-[3/4] w-full" /> /* Spacer */
-                                         )}
-                                      </div>
-                                   </div>
-                                ));
-                             })()}
+                          {/* Cards List (Dense Grid) */}
+                          <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
+                             <div className="grid grid-cols-5 gap-2 content-start pb-4">
+                                {(() => {
+                                   const list = Array.from({ length: 40 }).map((_, i) => {
+                                     const types = ['ability', 'gear', 'companion', 'environment'];
+                                     return { 
+                                       id: i, 
+                                       type: types[i % 4],
+                                       rarity: i % 5 === 0 ? 'legendary' : i % 3 === 0 ? 'rare' : 'common'
+                                     };
+                                   });
+                                   const filtered = achievementFilter === 'all' ? list : list.filter(i => i.type === achievementFilter);
+                                   
+                                   return filtered.map((card) => (
+                                      <ShinyCard 
+                                         key={card.id}
+                                         onClick={() => setSelectedMysteryCard(card.id)}
+                                         className="aspect-[2/3] w-full bg-white/5 border border-white/10 rounded-lg flex items-center justify-center relative overflow-hidden transition-all hover:scale-105 cursor-pointer hover:border-white/30 group/card shadow-sm"
+                                      >
+                                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
+                                         <span className="text-white/20 text-xs font-light">?</span>
+                                         {card.rarity === 'legendary' && <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.8)]" />}
+                                      </ShinyCard>
+                                   ));
+                                })()}
+                             </div>
                           </div>
                         </motion.div>
                       ) : (
