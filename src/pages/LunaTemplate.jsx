@@ -2572,31 +2572,10 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* Game Banner now below Quick Access */}
-            <LegendaryTile
-              onClick={() => {
-                // Toggle background environment on click
-                if (bannerBackgroundUrl) {
-                  setBannerBackgroundUrl(null);
-                } else {
-                  setBannerBackgroundUrl('https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&q=80');
-                }
-              }}
-              className={`w-full h-48 mb-6 relative overflow-hidden pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-            >
-              <video
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-[#080808]/20 to-transparent" />
-              <div className="absolute bottom-4 left-6 z-10">
-                <h3 className="text-white text-2xl font-bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Game Banner</h3>
-              </div>
-            </LegendaryTile>
+            {/* Environment Selector (Replaces Game Banner) */}
+            <div className={`mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+            </div>
 
             </div>
 
