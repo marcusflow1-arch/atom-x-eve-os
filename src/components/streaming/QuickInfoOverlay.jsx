@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, ChevronDown, Settings, User, ExternalLink, Gamepad2, Heart, Check, Twitter, Instagram, Target, Swords } from 'lucide-react';
+import { X, Play, Radio, Info, ShoppingBag, LifeBuoy, MessageSquare, Trophy, Newspaper, ChevronLeft, ChevronRight, ChevronDown, Settings, User, ExternalLink, Gamepad2, Heart, Check, Twitter, Instagram, Target, Swords, Lock, AlertCircle, Zap, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -819,7 +819,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                             </div>
                          </div>
 
-                         {/* Main Story Missions */}
+                         {/* Main Story Missions (Mission -> Quest -> Rewards) */}
                          <div>
                             <div className="flex items-center justify-between mb-4">
                                <h4 className="text-white/90 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
@@ -835,35 +835,36 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                      title: 'Prologue: The Awakening', 
                                      status: 'completed', 
                                      progress: 100,
-                                     details: {
-                                        quests: { completed: 3, total: 3 },
-                                        cards: { collected: 2, total: 2 },
-                                        gear: { collected: 1, total: 1 }
-                                     }
+                                     stats: { total: 3, completed: 3, remaining: 0 },
+                                     quests: [
+                                       { id: 'm1q1', title: 'Wake Up Call', status: 'completed', rewards: { xp: 100 } },
+                                       { id: 'm1q2', title: 'First Steps', status: 'completed', rewards: { xp: 150, cards: [{name: 'Rusty Sword', type: 'Equipment', status: 'Unlocked'}] } },
+                                       { id: 'm1q3', title: 'The Escape', status: 'completed', rewards: { xp: 300, environment: { name: 'Lab Ruins', status: 'Unlocked' } } }
+                                     ]
                                   },
                                   { 
                                      id: 'm2', 
-                                     title: 'Ch. 1: Neon Shadows', 
+                                     title: 'Ch. 1: Dark Crossing', 
                                      status: 'in_progress', 
-                                     progress: 65,
-                                     details: {
-                                        quests: { completed: 2, total: 4 },
-                                        cards: { collected: 1, total: 3 },
-                                        environment: { found: 1, total: 2 }
-                                     }
+                                     progress: 45,
+                                     stats: { total: 6, completed: 3, remaining: 3 },
+                                     quests: [
+                                       { id: 'm2q1', title: 'Into the Fog', status: 'completed', rewards: { xp: 350, cards: [{name: 'Shadow Boots', type: 'Equipment', status: 'Unlocked'}] } },
+                                       { id: 'm2q2', title: 'Silent Passage', status: 'in_progress', progress: 70, rewards: { xp: 350, cards: [{name: 'Plasma Edge', type: 'Weapon', status: 'Unlocked'}, {name: 'Reflex Boost', type: 'Upgrade', status: 'Rank 1'}], environment: { name: 'Dark Crossing – Night', status: 'Locked', req: 'Complete Quest Stealth Bonus' }, notes: ['Missable Achievement', 'Stealth Bonus Available'] } },
+                                       { id: 'm2q3', title: 'Hidden Relic', status: 'locked', rewards: { xp: 500, cards: [{name: 'Ancient Core', type: 'Key Item', status: 'Locked'}] } }
+                                     ]
                                   },
                                   { 
                                      id: 'm3', 
                                      title: 'Ch. 2: Cyber Breach', 
                                      status: 'locked', 
                                      progress: 0,
-                                     details: {
-                                        quests: { completed: 0, total: 5 },
-                                        cards: { collected: 0, total: 4 }
-                                     }
+                                     stats: { total: 5, completed: 0, remaining: 5 },
+                                     quests: []
                                   }
                                ].map((mission) => (
                                   <div key={mission.id} className="group">
+                                     {/* Level 1: Mission Header */}
                                      <button
                                         onClick={() => setExpandedMissionId(expandedMissionId === mission.id ? null : mission.id)}
                                         className={`w-full text-left p-3 rounded-xl border transition-all ${
@@ -894,6 +895,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                         </div>
                                      </button>
 
+                                     {/* Level 2: Quest List */}
                                      <AnimatePresence>
                                         {expandedMissionId === mission.id && (
                                            <motion.div
@@ -902,57 +904,114 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                               exit={{ height: 0, opacity: 0 }}
                                               className="overflow-hidden"
                                            >
-                                              <div className="px-3 pb-3 pt-1 space-y-2 ml-3 border-l-2 border-white/10">
-                                                 {/* Dynamic Content Rendering */}
-                                                 {mission.details.quests && (
-                                                    <div className="flex items-center justify-between text-xs py-1">
-                                                       <span className="flex items-center gap-2 text-white/70">
-                                                          <Target className="w-3 h-3 text-cyan-400" /> Quests
-                                                       </span>
-                                                       <span className="font-mono text-white/40">
-                                                          {mission.details.quests.completed}/{mission.details.quests.total}
-                                                       </span>
-                                                    </div>
-                                                 )}
-                                                 
-                                                 {mission.details.cards && (
-                                                    <div className="flex items-center justify-between text-xs py-1">
-                                                       <span className="flex items-center gap-2 text-white/70">
-                                                          <div className="w-3 h-3 border border-purple-400 bg-purple-400/20 rounded-sm" /> Cards
-                                                       </span>
-                                                       <span className="font-mono text-white/40">
-                                                          {mission.details.cards.collected}/{mission.details.cards.total}
-                                                       </span>
-                                                    </div>
-                                                 )}
+                                              <div className="px-2 pb-3 pt-2 ml-3 border-l-2 border-white/10 space-y-4">
+                                                 {/* Mission Stats Summary */}
+                                                 <div className="flex items-center gap-4 text-[10px] text-white/40 uppercase tracking-widest pl-2">
+                                                   <span>{mission.stats.total} Quests Total</span>
+                                                   <span className="text-white/60">{mission.stats.completed} Done</span>
+                                                   <span>{mission.stats.remaining} Left</span>
+                                                 </div>
 
-                                                 {mission.details.gear && (
-                                                    <div className="flex items-center justify-between text-xs py-1">
-                                                       <span className="flex items-center gap-2 text-white/70">
-                                                          <Swords className="w-3 h-3 text-orange-400" /> Gear
-                                                       </span>
-                                                       <span className="font-mono text-white/40">
-                                                          {mission.details.gear.collected}/{mission.details.gear.total}
-                                                       </span>
-                                                    </div>
-                                                 )}
+                                                 {/* Quests Accordion */}
+                                                 <div className="space-y-1">
+                                                    {mission.quests.map((quest) => (
+                                                       <div key={quest.id} className="rounded-lg overflow-hidden">
+                                                          <button
+                                                             onClick={() => setExpandedQuestId(expandedQuestId === quest.id ? null : quest.id)}
+                                                             className={`w-full flex items-center justify-between p-2 text-left rounded-lg transition-colors ${expandedQuestId === quest.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                          >
+                                                             <div className="flex items-center gap-3">
+                                                                {quest.status === 'completed' ? (
+                                                                   <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/50">
+                                                                      <Check className="w-2.5 h-2.5 text-green-400" />
+                                                                   </div>
+                                                                ) : quest.status === 'locked' ? (
+                                                                   <Lock className="w-4 h-4 text-white/20" />
+                                                                ) : (
+                                                                   <div className="w-4 h-4 rounded-full border-2 border-yellow-500/50 border-t-yellow-500 animate-spin" />
+                                                                )}
+                                                                <div>
+                                                                   <div className={`text-xs font-bold ${quest.status === 'locked' ? 'text-white/40' : 'text-white'}`}>{quest.title}</div>
+                                                                   {quest.progress !== undefined && quest.progress < 100 && (
+                                                                      <div className="h-0.5 w-12 bg-white/10 rounded-full mt-1">
+                                                                         <div className="h-full bg-yellow-500" style={{ width: `${quest.progress}%` }} />
+                                                                      </div>
+                                                                   )}
+                                                                </div>
+                                                             </div>
+                                                             <ChevronDown className={`w-3 h-3 text-white/20 transition-transform ${expandedQuestId === quest.id ? 'rotate-180 text-white/60' : ''}`} />
+                                                          </button>
 
-                                                 {mission.details.environment && (
-                                                    <div className="flex items-center justify-between text-xs py-1">
-                                                       <span className="flex items-center gap-2 text-white/70">
-                                                          <Radio className="w-3 h-3 text-emerald-400" /> Environment
-                                                       </span>
-                                                       <span className="font-mono text-white/40">
-                                                          {mission.details.environment.found}/{mission.details.environment.total}
-                                                       </span>
-                                                    </div>
-                                                 )}
+                                                          {/* Level 3: Reward Details */}
+                                                          <AnimatePresence>
+                                                             {expandedQuestId === quest.id && (
+                                                                <motion.div
+                                                                   initial={{ height: 0, opacity: 0 }}
+                                                                   animate={{ height: 'auto', opacity: 1 }}
+                                                                   exit={{ height: 0, opacity: 0 }}
+                                                                   className="overflow-hidden bg-black/20"
+                                                                >
+                                                                   <div className="p-3 space-y-4 border-t border-white/5">
+                                                                      {/* Rewards Section */}
+                                                                      <div>
+                                                                         <h5 className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Rewards Breakdown</h5>
+                                                                         <div className="space-y-3">
+                                                                            {/* XP */}
+                                                                            {quest.rewards.xp && (
+                                                                               <div className="flex items-center gap-2 text-xs text-white/80">
+                                                                                  <Zap className="w-3 h-3 text-yellow-400 fill-yellow-400/20" />
+                                                                                  <span>+{quest.rewards.xp} Achievement XP</span>
+                                                                               </div>
+                                                                            )}
 
-                                                 {mission.status === 'in_progress' && (
-                                                    <Button size="sm" className="w-full mt-2 h-7 text-xs bg-white/5 border border-white/10 hover:bg-white/10">
-                                                       View Full Briefing
-                                                    </Button>
-                                                 )}
+                                                                            {/* Cards */}
+                                                                            {quest.rewards.cards && (
+                                                                               <div className="space-y-1">
+                                                                                  <div className="text-[10px] text-white/50 font-bold">Cards</div>
+                                                                                  {quest.rewards.cards.map((card, idx) => (
+                                                                                     <div key={idx} className="flex items-center justify-between text-xs pl-2 border-l border-white/10">
+                                                                                        <span className="text-white">{card.name} <span className="text-white/40 text-[10px]">({card.type})</span></span>
+                                                                                        <span className={`text-[10px] font-mono ${card.status === 'Unlocked' ? 'text-green-400' : 'text-white/30'}`}>{card.status}</span>
+                                                                                     </div>
+                                                                                  ))}
+                                                                               </div>
+                                                                            )}
+
+                                                                            {/* Environment */}
+                                                                            {quest.rewards.environment && (
+                                                                               <div className="space-y-1">
+                                                                                  <div className="text-[10px] text-emerald-400/80 font-bold flex items-center gap-1"><Map className="w-3 h-3" /> Environment Unlock</div>
+                                                                                  <div className="pl-2 border-l border-emerald-500/20">
+                                                                                     <div className="text-xs text-white">{quest.rewards.environment.name}</div>
+                                                                                     <div className="flex items-center justify-between mt-1">
+                                                                                        <span className="text-[9px] text-white/40">{quest.rewards.environment.req}</span>
+                                                                                        <span className={`text-[9px] font-bold uppercase ${quest.rewards.environment.status === 'Unlocked' ? 'text-green-400' : 'text-white/30'}`}>{quest.rewards.environment.status}</span>
+                                                                                     </div>
+                                                                                  </div>
+                                                                               </div>
+                                                                            )}
+                                                                         </div>
+                                                                      </div>
+
+                                                                      {/* Notes */}
+                                                                      {quest.rewards.notes && (
+                                                                         <div className="pt-2 border-t border-white/5">
+                                                                            <h5 className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-1">Replay Notes</h5>
+                                                                            {quest.rewards.notes.map((note, idx) => (
+                                                                               <div key={idx} className="flex items-start gap-1.5 text-[10px] text-white/60">
+                                                                                  <AlertCircle className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+                                                                                  {note}
+                                                                               </div>
+                                                                            ))}
+                                                                         </div>
+                                                                      )}
+                                                                   </div>
+                                                                </motion.div>
+                                                             )}
+                                                          </AnimatePresence>
+                                                       </div>
+                                                    ))}
+                                                 </div>
                                               </div>
                                            </motion.div>
                                         )}
@@ -962,7 +1021,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                             </div>
                          </div>
 
-                         {/* Side Missions */}
+                         {/* Side Missions (Using Same Structure) */}
                          <div className="mt-2">
                             <div className="flex items-center justify-between mb-4">
                                <h4 className="text-white/90 font-bold text-sm uppercase tracking-wider flex items-center gap-2">
@@ -977,19 +1036,20 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                      id: 's1', 
                                      title: 'The Glitch Hunter', 
                                      progress: 20, 
-                                     details: {
-                                        quests: { completed: 1, total: 5 },
-                                        gear: { collected: 0, total: 1 }
-                                     }
+                                     status: 'in_progress',
+                                     stats: { total: 5, completed: 1, remaining: 4 },
+                                     quests: [
+                                        { id: 's1q1', title: 'Trace Signal', status: 'completed', rewards: { xp: 50 } },
+                                        { id: 's1q2', title: 'Hack Node Alpha', status: 'in_progress', progress: 20, rewards: { xp: 100, cards: [{name: 'Data Chip', type: 'Currency', status: 'Locked'}] } }
+                                     ]
                                   },
                                   { 
                                      id: 's2', 
                                      title: 'Lost Data Archives', 
+                                     status: 'locked',
                                      progress: 0, 
-                                     details: {
-                                        cards: { collected: 0, total: 3 },
-                                        environment: { found: 0, total: 1 }
-                                     }
+                                     stats: { total: 3, completed: 0, remaining: 3 },
+                                     quests: []
                                   }
                                ].map((side) => (
                                   <div key={side.id} className="group">
@@ -1003,7 +1063,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                      >
                                         <div className="flex items-center justify-between">
                                            <div className="min-w-0">
-                                              <span className="text-sm font-bold text-white block mb-1">{side.title}</span>
+                                              <span className={`text-sm font-bold block mb-1 ${side.status === 'locked' ? 'text-white/40' : 'text-white'}`}>{side.title}</span>
                                               <div className="flex items-center gap-2">
                                                  <div className="h-1 w-16 bg-black/40 rounded-full overflow-hidden">
                                                     <div className="h-full bg-cyan-500" style={{ width: `${side.progress}%` }} />
@@ -1022,17 +1082,62 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                               exit={{ height: 0, opacity: 0 }}
                                               className="overflow-hidden"
                                            >
-                                              <div className="px-3 pb-3 pt-2 ml-3 border-l-2 border-white/10 space-y-2">
-                                                 {side.details.quests && (
-                                                    <div className="flex items-center gap-2 text-xs text-white/60">
-                                                       <Target className="w-3 h-3" /> {side.details.quests.completed}/{side.details.quests.total} Tasks
-                                                    </div>
-                                                 )}
-                                                 {side.details.cards && (
-                                                    <div className="flex items-center gap-2 text-xs text-white/60">
-                                                       <div className="w-3 h-3 border border-white/40 rounded-sm" /> {side.details.cards.collected}/{side.details.cards.total} Cards
-                                                    </div>
-                                                 )}
+                                              <div className="px-2 pb-3 pt-2 ml-3 border-l-2 border-white/10 space-y-2">
+                                                 <div className="space-y-1">
+                                                    {side.quests.map((quest) => (
+                                                       <div key={quest.id} className="rounded-lg overflow-hidden">
+                                                          <button
+                                                             onClick={() => setExpandedQuestId(expandedQuestId === quest.id ? null : quest.id)}
+                                                             className={`w-full flex items-center justify-between p-2 text-left rounded-lg transition-colors ${expandedQuestId === quest.id ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                                                          >
+                                                             <div className="flex items-center gap-3">
+                                                                {quest.status === 'completed' ? (
+                                                                   <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center border border-green-500/50">
+                                                                      <Check className="w-2.5 h-2.5 text-green-400" />
+                                                                   </div>
+                                                                ) : (
+                                                                   <div className="w-4 h-4 rounded-full border-2 border-cyan-500/50 border-t-cyan-500 animate-spin" />
+                                                                )}
+                                                                <div>
+                                                                   <div className="text-xs font-bold text-white">{quest.title}</div>
+                                                                </div>
+                                                             </div>
+                                                             <ChevronDown className={`w-3 h-3 text-white/20 transition-transform ${expandedQuestId === quest.id ? 'rotate-180 text-white/60' : ''}`} />
+                                                          </button>
+
+                                                          <AnimatePresence>
+                                                             {expandedQuestId === quest.id && (
+                                                                <motion.div
+                                                                   initial={{ height: 0, opacity: 0 }}
+                                                                   animate={{ height: 'auto', opacity: 1 }}
+                                                                   exit={{ height: 0, opacity: 0 }}
+                                                                   className="overflow-hidden bg-black/20"
+                                                                >
+                                                                   <div className="p-3 space-y-2 border-t border-white/5">
+                                                                      {quest.rewards.xp && (
+                                                                         <div className="flex items-center gap-2 text-xs text-white/80">
+                                                                            <Zap className="w-3 h-3 text-yellow-400" />
+                                                                            <span>+{quest.rewards.xp} XP</span>
+                                                                         </div>
+                                                                      )}
+                                                                      {quest.rewards.cards && (
+                                                                         <div className="space-y-1">
+                                                                            <div className="text-[10px] text-white/50 font-bold">Cards</div>
+                                                                            {quest.rewards.cards.map((card, idx) => (
+                                                                               <div key={idx} className="flex items-center justify-between text-xs pl-2 border-l border-white/10">
+                                                                                  <span className="text-white">{card.name}</span>
+                                                                                  <span className={`text-[10px] font-mono ${card.status === 'Unlocked' ? 'text-green-400' : 'text-white/30'}`}>{card.status}</span>
+                                                                               </div>
+                                                                            ))}
+                                                                         </div>
+                                                                      )}
+                                                                   </div>
+                                                                </motion.div>
+                                                             )}
+                                                          </AnimatePresence>
+                                                       </div>
+                                                    ))}
+                                                 </div>
                                               </div>
                                            </motion.div>
                                         )}
