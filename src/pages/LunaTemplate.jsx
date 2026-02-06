@@ -1202,7 +1202,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       renderer.domElement.removeEventListener('click', handleCanvasClick);
       // Persistent renderer/scene: do not dispose or clear between model loads
     };
-  }, [modelUrl, weaponModel, animations, roomModelUrl]);
+  }, [modelUrl, weaponModel, animations, roomModelUrl, activeScene]);
 
 
 
@@ -1818,7 +1818,19 @@ export default function LunaTemplate() {
           const savedId = states[0].currentEnvironmentId;
           setCurrentEnvId(savedId);
           
+          // 1. Try to load as SceneLayout (New System)
           if (savedId !== 'default_room') {
+             try {
+                 const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
+                 if (layouts && layouts.length > 0) {
+                     const layout = layouts[0];
+                     setActiveScene(layout);
+                     if (layout.environment_url) setRoomModelUrl(layout.environment_url);
+                     return;
+                 }
+             } catch (e) { /* Not a scene layout or fetch failed */ }
+
+             // 2. Legacy Fallback (Old IDs)
              const models = await base44.entities.Model3D.list();
              const fbxs = await base44.entities.ModelFBX.list();
              const all = [...(models || []), ...(fbxs || [])];
@@ -1835,6 +1847,15 @@ export default function LunaTemplate() {
                  setRoomModelUrl(found.file_url);
                }
              }
+          } else {
+             // Default Room fallback
+             try {
+                 const models = await base44.entities.Model3D.list();
+                 const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+                 if (room1Asset?.file_url) setRoomModelUrl(room1Asset.file_url);
+                 else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+                 setActiveScene(null);
+             } catch {}
           }
         }
       } catch (e) { console.error('Error loading env pref', e); }

@@ -52,6 +52,16 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
           };
         });
 
+        // Resolve Default Room Model
+        let defaultRoomUrl = null;
+        try {
+            const models = await base44.entities.Model3D.list();
+            const fbxs = await base44.entities.ModelFBX.list();
+            const allModels = [...(models || []), ...(fbxs || [])];
+            const found = allModels.find(m => (m.name || '').toLowerCase().includes('room 1') || (m.name || '').toLowerCase().includes('room1'));
+            if (found) defaultRoomUrl = found.file_url;
+        } catch (e) {}
+
         // Always include Default Room as the first option
         const finalEnvironments = [
            {
@@ -59,7 +69,7 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
              name: 'Standard Quarters',
              description: 'Default System Environment',
              thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
-             modelQuery: ['room 1', 'room1'],
+             modelUrl: defaultRoomUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf', // Fallback URL
              isLocked: false
            },
            ...mapped
