@@ -1,2 +1,3 @@
-import LunaTemplate from "./LunaTemplate";
+
+import LunaTemplate from "./LunaTemplate.jsx";
 export default LunaTemplate;

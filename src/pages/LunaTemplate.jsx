@@ -2685,7 +2685,7 @@ export default function LunaTemplate() {
                               <p className="text-white font-semibold truncate">{friend.name}</p>
                               {friend.game ?
                                 <p className="text-blue-400 text-xs truncate">{friend.game}</p> :
-
+                                
                                 <p className="text-slate-500 text-xs">Offline</p>
                               }
                             </div>
