@@ -1771,49 +1771,16 @@ export default function LunaTemplate() {
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
 
-  // Auto-select new dashboard model: Y-Bot (base.fbx)
+  // Force load Y-Bot (base.fbx)
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        // 1. Try explicit Y-Bot
-        const exact = await base44.entities.ModelFBX.filter({ name: 'Y-Bot' });
-        let chosen = exact && exact.length ? exact[0] : null;
-        
-        // 2. Try 'base.fbx' (commonly Y-Bot) if explicit not found
-        if (!chosen) {
-            const bases = await base44.entities.ModelFBX.filter({ name: 'base.fbx' });
-            if (bases && bases.length) chosen = bases[0];
-        }
-
-        // 3. Try 'base'
-        if (!chosen) {
-            const bases = await base44.entities.ModelFBX.filter({ name: 'base' });
-            if (bases && bases.length) chosen = bases[0];
-        }
-
-        // 4. Fallback search
-        if (!chosen) {
-          const all = await base44.entities.ModelFBX.list('-created_date', 100);
-          chosen = (all || []).find(m => (m.name || '').toLowerCase().includes('y-bot') || (m.name || '').toLowerCase().includes('base'));
-        }
-
-        // 5. HARD FALLBACK: Use known Y-Bot / Base URL
-        const fallbackUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx';
-
-        if (!cancelled) {
-            setModelUrl(chosen?.file_url || fallbackUrl);
-        }
-      } catch (e) {
-        console.error('Dashboard model lookup failed:', e);
-        // Ensure we load SOMETHING
-        if (!cancelled && !modelUrl) {
-            setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx');
-        }
-      }
-    };
-    if (!modelUrl) load();
-    return () => { cancelled = true; };
+    // Hardcoded URL for Y-Bot / Base Mesh to ensure consistency
+    // This replaces any dynamic search which might pick up the wrong model (e.g. Maria)
+    const Y_BOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx';
+    
+    if (modelUrl !== Y_BOT_URL) {
+      console.log('Forcing modelUrl to Y-Bot:', Y_BOT_URL);
+      setModelUrl(Y_BOT_URL);
+    }
   }, [modelUrl]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
