@@ -161,6 +161,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
+  const [isModelReady, setIsModelReady] = useState(false); // State to trigger script injection after load
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
@@ -233,12 +234,44 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const scriptsExecutedRef = useRef(new Set());
 
   useEffect(() => {
-      if (!scripts || !actorContainerRef.current || !sceneRef.current) return;
+      // Only run scripts when the model is fully loaded and ready
+      if (!scripts || !actorContainerRef.current || !sceneRef.current || !isModelReady) return;
 
       scripts.forEach(script => {
           // Prevent duplicate execution if script is meant to run once (init)
-          const scriptKey = `${script.id}-${modelUrl}`;
-          if (scriptsExecutedRef.current.has(scriptKey)) return;
+          const scriptKey = `${script.id}-${modelUrl}-${Date.now()}`; // Force re-run on model reload
+          // We allow re-execution on model reload, so we don't check persistent history too aggressively for same model URL
+          // But we want to avoid loop. 
+          // Let's clear history when model changes? 
+          // Simplified: Just run it. The dependencies handle the "when".
+          
+          try {
+              console.log(`Executing 3D Script: ${script.name}`);
+              const func = new Function(
+                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
+                  script.script_code
+              );
+              func(
+                  THREE, 
+                  sceneRef.current, 
+                  cameraRef.current, 
+                  rendererRef.current, 
+                  actorContainerRef.current, 
+                  mixerRef.current, 
+                  actionsRef.current, 
+                  controlsRef.current, 
+                  clockRef.current,
+                  {
+                      getState: useLunaStore.getState,
+                      setState: useLunaStore.setState,
+                      subscribe: useLunaStore.subscribe
+                  }
+              );
+          } catch (e) {
+              console.error(`Error running script ${script.name}:`, e);
+          }
+      });
+  }, [scripts, modelUrl, isModelReady]);
 
           // Simple Filter
           if (script.model_reference && script.model_reference.toLowerCase() !== 'general') {
@@ -845,25 +878,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
                     if (loadedCount === animations.length) {
                       clearGroup(actorContainerRef.current);
-                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                       
-                      // Reset container scale to 1 for predictable world units
-                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(1);
+                      // Standard FBX Scale (Mixamo units are cm, world is meters)
+                      // Container 0.01, Model 1.0 = 1.0 scale output (1.8m tall)
+                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
                       
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
                       
-                      // Scale replacement character to a sensible world height (~1.75m)
-                      adjustModelScaleToWorldHeight(fbx, 1.75);
-                      
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
+                      setIsModelReady(true); // Trigger script injection
                       
-                      // Enable control immediately for replacement model
                       controlsActive.current = true;
                       setIsActive(true);
-                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (scale fixed)' });
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded Y-Bot FBX (scale 0.01)' });
                     }
                   },
                   undefined,
@@ -873,25 +903,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
               if (animations.length === 0) {
                 clearGroup(actorContainerRef.current);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                 
-                // Reset container scale to 1 for predictable world units
-                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(1);
+                // Standard FBX Scale Fallback
+                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
 
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
                 
-                // Scale replacement character to a sensible world height (~1.75m)
-                adjustModelScaleToWorldHeight(fbx, 1.75);
-                
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
+                setIsModelReady(true); // Trigger script injection
                 
-                // Enable control immediately for replacement model
                 controlsActive.current = true;
                 setIsActive(true);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (scale fixed)' });
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor (scale 0.01)' });
               }
             },
             undefined,
