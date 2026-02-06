@@ -293,7 +293,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
       price: 0,
       stats: {},
       achievements: [],
-      abilities: []
+      abilities: [],
+      quests: []
     },
     {
       id: 'dlc_1',
@@ -303,7 +304,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
       price: 14.99,
       stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
       achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
-      abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst']
+      abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst'],
+      quests: [
+        { name: 'Neural Awakening', xp: 1500, type: 'Main' },
+        { name: 'Cyber Heist', xp: 800, type: 'Side' },
+        { name: 'The Architect', xp: 2000, type: 'Main' }
+      ]
     },
     {
       id: 'dlc_2',
@@ -313,7 +319,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
       price: 9.99,
       stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
       achievements: ['Shadow Master', 'Void Walker'],
-      abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation']
+      abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation'],
+      quests: [
+        { name: 'Shadow Infiltration', xp: 1200, type: 'Main' },
+        { name: 'Void Echoes', xp: 950, type: 'Side' }
+      ]
     },
     {
       id: 'dlc_3',
@@ -323,7 +333,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
       price: 29.99,
       stats: { dlcAccess: 'unlimited', genreXP: 50 },
       achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
-      abilities: ['All DLC Abilities']
+      abilities: ['All DLC Abilities'],
+      quests: [
+        { name: 'Season Opener', xp: 2500, type: 'Main' },
+        { name: 'Weekly Challenge', xp: 500, type: 'Side' }
+      ]
     }
   ];
 
@@ -969,14 +983,39 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                                   {dlc.achievements && dlc.achievements.length > 0 && (
                                     <div>
-                                      <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                      <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-1">
                                         <Trophy className="w-3 h-3" /> New Achievements
                                       </h5>
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="flex flex-wrap gap-3">
                                         {dlc.achievements.map((ach, i) => (
-                                          <span key={i} className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-white/60">
-                                            {ach}
-                                          </span>
+                                          <div key={i} className="group/card relative w-10 h-14 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-md flex items-center justify-center cursor-help overflow-hidden hover:scale-110 transition-transform shadow-lg hover:border-cyan-400/50 hover:shadow-cyan-500/20">
+                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-50" />
+                                             <span className="text-white/30 font-bold text-lg group-hover/card:text-cyan-400 transition-colors">?</span>
+                                             
+                                             {/* Tooltip */}
+                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 border border-white/20 rounded text-[10px] text-white whitespace-nowrap opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl backdrop-blur-md">
+                                               {ach}
+                                             </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {dlc.quests && dlc.quests.length > 0 && (
+                                    <div>
+                                      <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                        <Radio className="w-3 h-3" /> Available Quests
+                                      </h5>
+                                      <div className="space-y-1">
+                                        {dlc.quests.map((quest, i) => (
+                                          <div key={i} className="flex items-center justify-between p-2 bg-white/5 rounded border border-white/5 hover:border-white/10 transition-colors">
+                                            <div className="flex items-center gap-2">
+                                              <span className={`w-1.5 h-1.5 rounded-full ${quest.type === 'Main' ? 'bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'bg-cyan-400 shadow-[0_0_5px_rgba(34,211,238,0.5)]'}`} />
+                                              <span className="text-xs text-white/80 font-medium">{quest.name}</span>
+                                            </div>
+                                            <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-500/20">+{quest.xp} XP</span>
+                                          </div>
                                         ))}
                                       </div>
                                     </div>
