@@ -4,46 +4,6 @@ import { Lock, Check, Map, Globe, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
-// Hardcoded list of environment metadata
-// In a production app, these would likely be entities linked to achievements
-const AVAILABLE_ENVIRONMENTS = [
-  {
-    id: 'default_room',
-    name: 'Standard Quarters',
-    description: 'Standard issue living quarters.',
-    thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
-    modelQuery: ['room 1', 'room1'], // Keywords to search in Model3D/ModelFBX
-    isDefault: true
-  },
-  {
-    id: 'cyber_loft',
-    name: 'Cyber Loft',
-    description: 'High-tech apartment with neon accents.',
-    thumbnail: 'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
-    modelQuery: ['room 2', 'room2'],
-    achievementReq: 'Cyber Overlord',
-    isDefault: false
-  },
-  {
-    id: 'zen_garden',
-    name: 'Zen Sanctuary',
-    description: 'A peaceful retreat for meditation.',
-    thumbnail: 'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
-    modelQuery: ['zen', 'garden'],
-    achievementReq: 'Inner Peace',
-    isDefault: false
-  },
-  {
-    id: 'mars_outpost',
-    name: 'Mars Outpost',
-    description: 'Off-world habitat.',
-    thumbnail: 'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
-    modelQuery: ['mars', 'outpost'],
-    achievementReq: 'Red Planet Explorer',
-    isDefault: false
-  }
-];
-
 export default function EnvironmentSelector({ currentEnvId, onSelect }) {
   const { user } = useAuth();
   const [environments, setEnvironments] = useState([]);
@@ -53,46 +13,48 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
     const init = async () => {
       try {
         setLoading(true);
-        // 1. Fetch real models to resolve URLs
-        const models = await base44.entities.Model3D.list();
-        const fbxs = await base44.entities.ModelFBX.list();
-        const allModels = [...(models || []), ...(fbxs || [])];
-
-        // 2. Fetch User Achievements (for unlock logic)
-        let unlockedKeys = new Set(['default_room']);
         
-        if (user) {
-          // For demo purposes, we will unlock 'Cyber Loft' if ANY achievement exists, 
-          // or if the user has specific achievements.
-          // Real implementation: check UserAchievement where achievement_id matches req.
-          // Since we don't have a strict map of achievement IDs yet, we'll simulate.
-          const ua = await base44.entities.UserAchievement.filter({ user_id: user.id });
-          if (ua && ua.length > 0) {
-             unlockedKeys.add('cyber_loft');
-          }
-          // Uncomment to test all unlocked
-          // unlockedKeys.add('zen_garden'); 
-          // unlockedKeys.add('mars_outpost');
-        }
-
-        // 3. Map available environments to real models
-        const mapped = AVAILABLE_ENVIRONMENTS.map(env => {
-          // Find a matching model
-          const foundModel = allModels.find(m => 
-            env.modelQuery.some(q => (m.name || '').toLowerCase().includes(q))
-          );
+        // 1. Fetch SceneLayouts from Admin Hub
+        const sceneLayouts = await base44.entities.SceneLayout.list();
+        
+        // 2. Fetch User Achievements (for unlock logic placeholder)
+        // For now, we'll assume all layouts are unlocked or unlockable via future logic
+        // If we want to simulate unlocking, we can check for 'unlocked_scenes' on user or similar.
+        
+        // 3. Map SceneLayouts to Environment Objects
+        const mapped = sceneLayouts.map((layout, index) => {
+          // Use a deterministic thumbnail based on index or layout ID
+          const placeholders = [
+            'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+            'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
+            'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
+            'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
+            'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80'
+          ];
           
           return {
-            ...env,
-            modelUrl: foundModel?.file_url || null, // Will be null if not found in DB
-            isLocked: !env.isDefault && !unlockedKeys.has(env.id)
+            id: layout.id,
+            name: layout.name || `Scene ${index + 1}`,
+            description: layout.description || 'Custom 3D Environment',
+            thumbnail: placeholders[index % placeholders.length],
+            modelUrl: layout.environment_url,
+            // Pass full layout data for LunaTemplate to use
+            layoutData: layout,
+            isLocked: false // Initially unlock all for demo, or implement logic later
           };
         });
 
-        // Filter out environments that don't have a model in the DB (to avoid broken 3D view),
-        // unless it's the default one (which might have a hardcoded fallback in LunaTemplate).
-        // Actually, let's keep them but maybe disable selection if modelUrl is missing?
-        // For 'default_room', LunaTemplate has a hardcoded fallback URL, so it's fine.
+        // Add default/fallback if list is empty
+        if (mapped.length === 0) {
+           mapped.push({
+             id: 'default_room',
+             name: 'Standard Quarters',
+             description: 'Default System Environment',
+             thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+             modelQuery: ['room 1', 'room1'],
+             isLocked: false
+           });
+        }
         
         setEnvironments(mapped);
       } catch (e) {
