@@ -826,67 +826,42 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       </div>
                     </div>
                   </TabsContent>
-                      </div>
 
-                      {/* Right Column: Abilities & DLC */}
-                      <div className="col-span-12 lg:col-span-4 space-y-6">
-                        {/* Abilities Unlocked */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-                            <Radio className="w-5 h-5 text-blue-400" /> Abilities Unlocked
-                          </h3>
-                          <div className="flex flex-col items-center justify-center py-2">
-                             {/* Reuse Radial from previous code */}
-                             <div className="w-40 h-40 rounded-full grid place-items-center mb-6 relative">
-                                <div className="absolute inset-0 rounded-full border-4 border-white/5" />
-                                <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(#3b82f6 ${(Math.min(100, Math.round(((achievements?.length || 0)/50)*100)) * 3.6)}deg, transparent 0deg)`, maskImage: 'radial-gradient(transparent 65%, black 66%)', WebkitMaskImage: 'radial-gradient(transparent 65%, black 66%)' }} />
-                                
-                                <div className="flex flex-col items-center">
-                                   <span className="text-white font-black text-3xl tracking-tighter drop-shadow-lg">{Math.min(100, Math.round(((achievements?.length || 0)/50)*100))}%</span>
-                                   <span className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Mastery</span>
-                                </div>
-                             </div>
-                             <div className="w-full space-y-3">
-                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Neural Shock</span>
-                                   <span className="text-white font-bold">Unlocked</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Void Step</span>
-                                   <span className="text-white font-bold">Unlocked</span>
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-white/60">
-                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-white/20" /> Titan Smash</span>
-                                   <span className="text-white/20 font-bold uppercase text-[10px]">Locked</span>
-                                </div>
-                             </div>
-                          </div>
-                        </div>
-
-                        {/* DLC List - Displayed UNDER abilities */}
-                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
-                            <ShoppingBag className="w-5 h-5 text-purple-400" /> Expansion Content
-                          </h3>
-                          <div className="space-y-4">
-                             {/* Using DLC_DATA from import */}
-                             {DLC_DATA.filter(d => d.id !== 'standard').map(dlc => (
-                                <div key={dlc.id} className="group relative p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer overflow-hidden hover:border-white/20">
-                                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                   <h4 className="text-white text-sm font-bold relative z-10 mb-1">{dlc.name}</h4>
-                                   <p className="text-white/40 text-[11px] line-clamp-2 relative z-10 mb-3">{dlc.description}</p>
-                                   <div className="flex justify-between items-center relative z-10 pt-2 border-t border-white/5">
-                                      <span className="text-xs font-mono font-bold text-purple-300">$ {dlc.id === 'dlc_3' ? '29.99' : '14.99'}</span>
-                                      <Button size="icon" className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10">
-                                         <ChevronRight className="w-3 h-3" />
-                                      </Button>
-                                   </div>
-                                </div>
-                             ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <TabsContent value="achievements" className="h-[400px] mt-6">
+                    <AnimatePresence mode="wait">
+                      {!selectedMysteryCard ? (
+                        <motion.div
+                          key="grid"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1"
+                        >
+                          {Array.from({ length: 8 }).map((_, i) => (
+                            <ShinyCard 
+                              key={i} 
+                              onClick={() => setSelectedMysteryCard(i)}
+                              className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg hover:scale-95"
+                            >
+                              <div className="text-white/20 text-2xl font-light">?</div>
+                            </ShinyCard>
+                          ))}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="detail"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="h-full"
+                        >
+                          <MysteryCardDetail 
+                            card={{ id: selectedMysteryCard }} 
+                            onBack={() => setSelectedMysteryCard(null)} 
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </TabsContent>
 
                   <TabsContent value="community" className="mt-6">
