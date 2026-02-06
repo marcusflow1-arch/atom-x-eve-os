@@ -56,6 +56,7 @@ import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
+import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 
 // Transparent 3D Model Viewer with WASD Controls
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
