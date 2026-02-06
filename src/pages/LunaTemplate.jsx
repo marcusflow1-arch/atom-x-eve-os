@@ -140,6 +140,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const keysPressed = useRef({});
   const velocityRef = useRef(new THREE.Vector3());
   const isJumpingRef = useRef(false);
+  const isRollingRef = useRef(false);
+  const rollTimerRef = useRef(0);
   const controlsActive = useRef(false);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
@@ -784,6 +786,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           else if (name.includes('walk')) actionsRef.current.walk = action;
           else if (name.includes('run')) actionsRef.current.run = action;
           else if (name.includes('jump') || name.includes('fall')) actionsRef.current.jump = action;
+          else if (name.includes('roll')) actionsRef.current.roll = action;
           else if (name.includes('swing') || name.includes('attack') || name.includes('sword')) actionsRef.current.swing = action;
           else if (name.includes('kick')) actionsRef.current.kick = action;
           else if (name.includes('dance')) actionsRef.current.dance = action;
@@ -938,6 +941,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       const key = e.key.toLowerCase();
       keysPressed.current[key] = true;
+
+      // ROLL INPUT (C KEY)
+      if (!isRollingRef.current && key === 'c') {
+        isRollingRef.current = true;
+        rollTimerRef.current = 0.6; // 0.6s duration
+        setBaseAction('roll', true);
+      }
 
       if (key === ' ') {
         e.preventDefault();
@@ -1149,20 +1159,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
         }
 
-        // 3. ANIMATION STATE
-        if (controlsActive.current) {
-            if (isMoving) {
-                if (!animationLocked.current) setBaseAction('run');
+        // 3. ANIMATION STATE (Replaced with PlayerController Logic)
+        if (isRollingRef.current) {
+            // ROLL IN PROGRESS
+            rollTimerRef.current -= delta;
+            if (rollTimerRef.current <= 0) {
+                isRollingRef.current = false;
+            }
+            // ⛔ Stop other animations - handled by the 'else' block skipping them
+        } else {
+            // NORMAL MOVEMENT
+            if (controlsActive.current) {
+                // Ground check implied (basic physics)
+                const isGrounded = true; 
+                
+                if (isGrounded) {
+                    if (isMoving) {
+                        if (!animationLocked.current) setBaseAction('run');
+                    } else {
+                        if (!animationLocked.current) setBaseAction(resolveIdle());
+                    }
+                } else {
+                    if (!animationLocked.current) setBaseAction('jump');
+                }
+
+                const currentState = useLunaStore.getState();
+                if (currentState.actions.skill) handleSkill();
+                else if (currentState.actions.attack) handleAttack();
             } else {
                 if (!animationLocked.current) setBaseAction(resolveIdle());
             }
-            
-            const currentState = useLunaStore.getState();
-            if (currentState.actions.skill) handleSkill();
-            else if (currentState.actions.attack) handleAttack();
-        } else {
-            // Idle when not selected
-            if (!animationLocked.current) setBaseAction(resolveIdle());
         }
 
         // 4. CAMERA FOLLOW (Orbit Orbit)
