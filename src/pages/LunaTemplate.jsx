@@ -799,8 +799,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
         }
 
-        // Final pass: fit the character to the environment size
-        adjustModelScaleToEnvironment(model, 0.18);
+        // Final pass: Ensure character is visible and upright
+        // adjustModelScaleToEnvironment(model, 0.18); // Removed to prevent incorrect scaling
         };
 
     if (modelUrl) {
@@ -846,19 +846,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     if (loadedCount === animations.length) {
                       clearGroup(actorContainerRef.current);
                       logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                      
+                      // Reset container scale to 1 for predictable world units
+                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(1);
+                      
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
+                      
                       // Scale replacement character to a sensible world height (~1.75m)
                       adjustModelScaleToWorldHeight(fbx, 1.75);
+                      
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
-                      // Force Y-Bot baseline container scale so it fits the viewer
-                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
+                      
                       // Enable control immediately for replacement model
                       controlsActive.current = true;
                       setIsActive(true);
-                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (scale fixed)' });
                     }
                   },
                   undefined,
@@ -869,19 +874,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               if (animations.length === 0) {
                 clearGroup(actorContainerRef.current);
                 logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
+                
+                // Reset container scale to 1 for predictable world units
+                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(1);
+
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
+                
                 // Scale replacement character to a sensible world height (~1.75m)
                 adjustModelScaleToWorldHeight(fbx, 1.75);
+                
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
-                // Force Y-Bot baseline container scale so it fits the viewer
-                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
+                
                 // Enable control immediately for replacement model
                 controlsActive.current = true;
                 setIsActive(true);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (scale fixed)' });
               }
             },
             undefined,
