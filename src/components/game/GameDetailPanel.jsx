@@ -889,30 +889,109 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     
                     <div className="space-y-1">
                       {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => (
-                        <div key={dlc.id} className="group flex items-center gap-4 p-3 bg-black/20 hover:bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition-colors cursor-pointer" onClick={() => setSelectedDLC(dlc)}>
-                          <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
-                             <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" alt="" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-white truncate">{dlc.name}</h4>
-                            <div className="flex gap-2 mt-0.5">
-                               {dlc.abilities && <span className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded">Abilities</span>}
-                               {dlc.equipment && <span className="text-[10px] text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Equipment</span>}
+                        <div key={dlc.id} className="rounded-lg bg-black/20 border border-white/5 overflow-hidden transition-all duration-300">
+                          <div 
+                            className={`group flex items-center gap-4 p-3 hover:bg-white/5 hover:border-white/10 transition-colors cursor-pointer ${selectedDLC?.id === dlc.id ? 'bg-white/5' : ''}`} 
+                            onClick={() => setSelectedDLC(selectedDLC?.id === dlc.id ? null : dlc)}
+                          >
+                            <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
+                               <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" alt="" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-bold text-white truncate flex items-center gap-2">
+                                {dlc.name}
+                                <ChevronDown className={`w-3 h-3 text-white/40 transition-transform duration-300 ${selectedDLC?.id === dlc.id ? 'rotate-180' : ''}`} />
+                              </h4>
+                              <div className="flex gap-2 mt-0.5">
+                                 {dlc.abilities && <span className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded">Abilities</span>}
+                                 {dlc.equipment && <span className="text-[10px] text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Equipment</span>}
+                              </div>
+                            </div>
+                            <div className="text-right flex items-center gap-3">
+                              <span className="text-sm font-bold text-white/90">${dlc.price}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddDLCToCart(dlc);
+                                }}
+                                className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
+                                title="Add to Cart"
+                              >
+                                <Download className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
-                          <div className="text-right flex items-center gap-3">
-                            <span className="text-sm font-bold text-white/90">${dlc.price}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleAddDLCToCart(dlc);
-                              }}
-                              className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
-                              title="Add to Cart"
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
+                          
+                          <AnimatePresence>
+                            {selectedDLC?.id === dlc.id && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="border-t border-white/5 bg-black/40"
+                              >
+                                <div className="p-4 space-y-4">
+                                  <p className="text-sm text-white/70 leading-relaxed">
+                                    {dlc.description}
+                                  </p>
+                                  
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                        <Check className="w-3 h-3" /> Includes
+                                      </h5>
+                                      <ul className="space-y-1">
+                                        {dlc.offers.map((offer, i) => (
+                                          <li key={i} className="text-xs text-white/60 flex items-start gap-2">
+                                            <span className="text-cyan-400/60">•</span> {offer}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    
+                                    {dlc.stats && Object.keys(dlc.stats).length > 0 && (
+                                      <div>
+                                        <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                          <Database className="w-3 h-3" /> Content Stats
+                                        </h5>
+                                        <div className="space-y-1">
+                                          {Object.entries(dlc.stats).map(([key, value]) => (
+                                            <div key={key} className="flex justify-between text-xs">
+                                              <span className="text-white/60 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                              <span className="text-white font-mono">{value}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {dlc.achievements && dlc.achievements.length > 0 && (
+                                    <div>
+                                      <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                        <Trophy className="w-3 h-3" /> New Achievements
+                                      </h5>
+                                      <div className="flex flex-wrap gap-2">
+                                        {dlc.achievements.map((ach, i) => (
+                                          <span key={i} className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px] text-white/60">
+                                            {ach}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  <button
+                                    onClick={() => handleAddDLCToCart(dlc)}
+                                    className="w-full py-2 mt-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs font-bold text-white uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                                  >
+                                    <CreditCard className="w-3 h-3" /> Add to Cart - ${dlc.price}
+                                  </button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ))}
                     </div>
