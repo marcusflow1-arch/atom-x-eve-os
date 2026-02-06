@@ -590,240 +590,261 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
                 {/* Quick actions & info tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
-                  <TabsList className="bg-white/5 border border-white/10">
-                    <TabsTrigger value="overview">Dashboard</TabsTrigger>
-                    <TabsTrigger value="dlc">DLC</TabsTrigger>
-                    <TabsTrigger value="achievements">Achievements</TabsTrigger>
-                    <TabsTrigger value="discussions">Discussions</TabsTrigger>
+                  <TabsList className="bg-white/5 border border-white/10 w-full justify-start p-1 h-auto rounded-xl">
+                    <TabsTrigger value="content" className="flex-1 py-2 data-[state=active]:bg-white/10 data-[state=active]:shadow-lg">Content</TabsTrigger>
+                    <TabsTrigger value="community" className="flex-1 py-2 data-[state=active]:bg-white/10 data-[state=active]:shadow-lg">Community</TabsTrigger>
                   </TabsList>
 
-                  {/* Original content below remains unchanged */}
-                  <TabsContent value="overview" className="space-y-4">
-                    <div className="grid grid-cols-12 gap-4">
-                      {/* Main Feed */}
-                      <div className="col-span-12 lg:col-span-8">
-                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                              <Newspaper className="w-4 h-4 text-cyan-300" /> Main Feed
-                            </h4>
-                            <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700" onClick={onPlay}>
-                              <Play className="w-4 h-4" /> Play
-                            </Button>
+                  <TabsContent value="content" className="space-y-6 mt-6">
+                    <div className="grid grid-cols-12 gap-6">
+                      {/* Left Column: Updates, Achievements, Quests */}
+                      <div className="col-span-12 lg:col-span-8 space-y-6">
+                        {/* Updates / Patch Notes */}
+                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                          <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                            <Newspaper className="w-5 h-5 text-cyan-400" /> Game Updates & Patch Notes
+                          </h3>
+                          <div className="space-y-6">
+                             {/* Mock Updates */}
+                             <div className="relative pl-6 border-l-2 border-cyan-500/50">
+                                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                                <h4 className="text-white font-bold text-base">Patch 2.1 - Cyber Dawn</h4>
+                                <p className="text-white/60 text-sm mt-2 leading-relaxed">New neon city district, 5 new weapons, and improved ray-tracing performance. Fixed minor bugs in the inventory system.</p>
+                                <span className="text-[10px] text-cyan-400/60 uppercase tracking-widest mt-3 block font-bold">Today • v2.1.0</span>
+                             </div>
+                             <div className="relative pl-6 border-l-2 border-purple-500/50">
+                                <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                                <h4 className="text-white font-bold text-base">Event: Void Walker's Return</h4>
+                                <p className="text-white/60 text-sm mt-2 leading-relaxed">Limited time event! Earn double XP and exclusive void skins for your character.</p>
+                                <span className="text-[10px] text-purple-400/60 uppercase tracking-widest mt-3 block font-bold">2 Days Ago • Event</span>
+                             </div>
                           </div>
-                          <div className="grid gap-3">
-                            {(posts && posts.length > 0) ? (
-                              posts.slice(0, 3).map(up => (
-                                <div
-                                  key={up.id}
-                                  className="p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                                  onClick={() => navigate(createPageUrl('Community') + `?post=${up.id}`)}
-                                >
-                                  <div className="flex justify-between items-start">
-                                    <p className="text-white text-sm font-bold line-clamp-1">{up.title}</p>
-                                    <span className="text-[10px] text-white/40">{new Date(up.created_date || Date.now()).toLocaleDateString()}</span>
+                        </div>
+
+                        {/* Current Achievements & Quests */}
+                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                            <Trophy className="w-5 h-5 text-yellow-400" /> Earnable Rewards
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             {/* Achievements List */}
+                             <div className="space-y-4">
+                                <h4 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2">Achievements</h4>
+                                {(achievements && achievements.length > 0 ? achievements.slice(0, 3) : [{id:'a1', title: 'First Blood', points: 10}, {id:'a2', title: 'Survivor', points: 25}, {id:'a3', title: 'Legend', points: 100}]).map(ach => (
+                                  <div key={ach.id} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                    <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                                      <Trophy className="w-5 h-5 text-yellow-400" />
+                                    </div>
+                                    <div>
+                                      <p className="text-white text-sm font-bold">{ach.title}</p>
+                                      <p className="text-white/40 text-[10px] font-mono">{ach.points} G</p>
+                                    </div>
                                   </div>
-                                  {up.content && <p className="text-white/60 text-xs line-clamp-2 mt-1">{up.content}</p>}
+                                ))}
+                             </div>
+                             {/* Quests / XP */}
+                             <div className="space-y-4">
+                                <h4 className="text-white/40 text-xs font-bold uppercase tracking-widest mb-2">Active Quests</h4>
+                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                   <div className="flex justify-between items-center mb-2">
+                                      <span className="text-white text-xs font-bold">Daily: Eliminate 50 Enemies</span>
+                                      <span className="text-cyan-400 text-xs font-mono font-bold">+500 XP</span>
+                                   </div>
+                                   <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                      <div className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 w-3/4 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                                   </div>
                                 </div>
-                              ))
-                            ) : (
-                              <div className="p-4 rounded-xl border border-white/10 bg-white/5 text-center">
-                                <p className="text-white/40 text-sm">No recent updates found.</p>
-                              </div>
-                            )}
+                                <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                   <div className="flex justify-between items-center mb-2">
+                                      <span className="text-white text-xs font-bold">Weekly: Complete 3 Raids</span>
+                                      <span className="text-purple-400 text-xs font-mono font-bold">+2000 XP</span>
+                                   </div>
+                                   <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                      <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400 w-1/3 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                                   </div>
+                                </div>
+                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Right Column */}
-                      <div className="col-span-12 lg:col-span-4 space-y-4">
-                        {/* Achievement Radial */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                              <Trophy className="w-4 h-4 text-cyan-300" /> Ability Unlocks
-                            </h4>
-                            <span className="text-xs text-white/60">{achievements?.length || 0} found</span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div
-                              className="w-28 h-28 rounded-full grid place-items-center"
-                              style={{
-                                background: `conic-gradient(#22d3ee ${(Math.min(100, Math.round(((achievements?.length || 0)/50)*100)) * 3.6)}deg, rgba(255,255,255,0.08) 0deg)`
-                              }}
-                            >
-                              <div className="w-24 h-24 rounded-full bg-black/40 border border-white/10 grid place-items-center">
-                                <span className="text-white font-bold text-lg">
-                                  {Math.min(100, Math.round(((achievements?.length || 0)/50)*100))}%
-                                </span>
-                              </div>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-white/80 text-sm mb-1">Achievement Hunt</p>
-                              <p className="text-white text-sm font-semibold">Track your ability unlocks</p>
-                              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/60">
-                                <span>Unlocked: <b className="text-white">{Math.round(((achievements?.length || 0)/50)*50)}</b></span>
-                                <span>Total: <b className="text-white">50</b></span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* DLC Expansion Modules */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-bold text-sm">Expansion Modules</h4>
-                            <Button variant="outline" size="sm" className="h-7 text-xs border-yellow-400/40 text-yellow-300 hover:bg-yellow-400/10"
-                              onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}&tab=dlc`)}
-                            >
-                              <ShoppingBag className="w-3.5 h-3.5" /> Store
-                            </Button>
-                          </div>
-                          <div className="space-y-2">
-                            {(DLC_DATA || []).slice(0, 3).map((dlc) => (
-                              <div key={dlc.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between hover:border-yellow-400/40 transition-colors">
-                                <div className="min-w-0">
-                                  <p className="text-white text-sm font-semibold truncate">{dlc.name}</p>
-                                  <p className="text-white/50 text-xs truncate">{item?.title || 'Game'} add-on</p>
+                      {/* Right Column: Abilities & DLC */}
+                      <div className="col-span-12 lg:col-span-4 space-y-6">
+                        {/* Abilities Unlocked */}
+                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                            <Radio className="w-5 h-5 text-blue-400" /> Abilities Unlocked
+                          </h3>
+                          <div className="flex flex-col items-center justify-center py-2">
+                             {/* Reuse Radial from previous code */}
+                             <div className="w-40 h-40 rounded-full grid place-items-center mb-6 relative">
+                                <div className="absolute inset-0 rounded-full border-4 border-white/5" />
+                                <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(#3b82f6 ${(Math.min(100, Math.round(((achievements?.length || 0)/50)*100)) * 3.6)}deg, transparent 0deg)`, maskImage: 'radial-gradient(transparent 65%, black 66%)', WebkitMaskImage: 'radial-gradient(transparent 65%, black 66%)' }} />
+                                
+                                <div className="flex flex-col items-center">
+                                   <span className="text-white font-black text-3xl tracking-tighter drop-shadow-lg">{Math.min(100, Math.round(((achievements?.length || 0)/50)*100))}%</span>
+                                   <span className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Mastery</span>
                                 </div>
-                                <Button size="sm" className="h-8 text-xs bg-white/10 hover:bg-white/20 border border-yellow-400/40 text-yellow-300"
-                                  onClick={() => navigate(createPageUrl('Store') + `?game=${encodeURIComponent(item?.title || '')}&dlc=${encodeURIComponent(dlc.id)}`)}
-                                >
-                                  Buy
-                                </Button>
-                              </div>
-                            ))}
+                             </div>
+                             <div className="w-full space-y-3">
+                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
+                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Neural Shock</span>
+                                   <span className="text-white font-bold">Unlocked</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs text-white/60 border-b border-white/5 pb-3">
+                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.5)]" /> Void Step</span>
+                                   <span className="text-white font-bold">Unlocked</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs text-white/60">
+                                   <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-white/20" /> Titan Smash</span>
+                                   <span className="text-white/20 font-bold uppercase text-[10px]">Locked</span>
+                                </div>
+                             </div>
                           </div>
                         </div>
 
-                        {/* Social Node */}
-                        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                              <MessageSquare className="w-4 h-4 text-cyan-300" /> Hot Topics
-                            </h4>
-                            <Button size="sm" className="h-7 text-xs bg-white/10 border border-white/20 hover:bg-white/20" onClick={() => setShowCreatePost(true)}>
-                              Create Post
-                            </Button>
-                          </div>
-                          <div className="space-y-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
-                            {(posts || []).slice(0, 5).map((p) => (
-                              <button key={p.id} onClick={() => navigate(createPageUrl('Community') + `?post=${p.id}`)} className="w-full text-left px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                                <p className="text-white text-xs font-semibold truncate">{p.title || 'Untitled'}</p>
-                                {p.content && <p className="text-white/50 text-[11px] truncate">{p.content}</p>}
-                              </button>
-                            ))}
-                            {(!posts || posts.length === 0) && (
-                              <div className="text-center py-6 text-white/40 text-sm">No discussions yet.</div>
-                            )}
+                        {/* DLC List - Displayed UNDER abilities */}
+                        <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                           <h3 className="text-white font-bold text-lg mb-6 flex items-center gap-2">
+                            <ShoppingBag className="w-5 h-5 text-purple-400" /> Expansion Content
+                          </h3>
+                          <div className="space-y-4">
+                             {/* Using DLC_DATA from import */}
+                             {DLC_DATA.filter(d => d.id !== 'standard').map(dlc => (
+                                <div key={dlc.id} className="group relative p-4 rounded-2xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all cursor-pointer overflow-hidden hover:border-white/20">
+                                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                   <h4 className="text-white text-sm font-bold relative z-10 mb-1">{dlc.name}</h4>
+                                   <p className="text-white/40 text-[11px] line-clamp-2 relative z-10 mb-3">{dlc.description}</p>
+                                   <div className="flex justify-between items-center relative z-10 pt-2 border-t border-white/5">
+                                      <span className="text-xs font-mono font-bold text-purple-300">$ {dlc.id === 'dlc_3' ? '29.99' : '14.99'}</span>
+                                      <Button size="icon" className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 border border-white/10">
+                                         <ChevronRight className="w-3 h-3" />
+                                      </Button>
+                                   </div>
+                                </div>
+                             ))}
                           </div>
                         </div>
                       </div>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="dlc" className="space-y-4">
-                    <DLCList onSelectDLC={setSelectedDLC} />
-                    {selectedDLC && (
-                      <div className="flex items-center justify-between p-3 border border-white/10 rounded-xl bg-white/5">
-                        <div>
-                          <p className="text-white text-sm font-semibold">{selectedDLC.name}</p>
-                          <p className="text-white/60 text-xs">{item?.title || 'Game'} add-on</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-white font-bold">$ {getDlcPrice(selectedDLC).toFixed(2)}</span>
-                          <Button onClick={handleAddToCart}>Add to Cart</Button>
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="achievements" className="h-[400px]">
-                    <AnimatePresence mode="wait">
-                      {!selectedMysteryCard ? (
-                        <motion.div
-                          key="grid"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1"
-                        >
-                          {Array.from({ length: 8 }).map((_, i) => (
-                            <ShinyCard 
-                              key={i} 
-                              onClick={() => setSelectedMysteryCard(i)}
-                              className="aspect-[2/3] bg-white/5 border border-white/10 flex items-center justify-center hover:border-white/30 transition-all shadow-lg hover:scale-95"
-                            >
-                              <div className="text-white/20 text-2xl font-light">?</div>
-                            </ShinyCard>
-                          ))}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="detail"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          className="h-full"
-                        >
-                          <MysteryCardDetail 
-                            card={{ id: selectedMysteryCard }} 
-                            onBack={() => setSelectedMysteryCard(null)} 
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </TabsContent>
-
-                  <TabsContent value="discussions" className="space-y-3">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-white text-sm font-bold">Community Forum</h4>
-                        <p className="text-white/50 text-xs">Recent discussions for {item?.title}</p>
-                      </div>
-                      <Button size="sm" onClick={() => setShowCreatePost(true)} className="gap-2">
-                        <MessageSquare className="w-4 h-4" /> Create Post
-                      </Button>
-                    </div>
-                    <div className="space-y-3 pr-2 overflow-y-auto max-h-[350px] custom-scrollbar">
-                      {posts.length === 0 && (
-                        <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
-                          <p className="text-white/50 text-sm">No discussions yet.</p>
-                          <Button variant="link" onClick={() => setShowCreatePost(true)} className="text-cyan-400">Start a topic</Button>
-                        </div>
-                      )}
-                      {posts.map((p) => (
-                        <div key={p.id} className="p-4 border border-white/10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="text-white text-sm font-bold line-clamp-1">{p.title}</h5>
-                            <Badge variant="outline" className="text-[10px] h-5 border-white/10 bg-black/20 text-white/60">{p.community || 'General'}</Badge>
+                  <TabsContent value="community" className="mt-6">
+                    <div className="grid grid-cols-12 gap-6 h-[600px]">
+                       {/* Feed / Posts */}
+                       <div className="col-span-12 lg:col-span-8 h-full flex flex-col gap-6">
+                          <div className="flex justify-between items-center px-2">
+                             <div>
+                                <h3 className="text-white font-bold text-xl">Community Feed</h3>
+                                <p className="text-white/40 text-sm">Join the conversation</p>
+                             </div>
+                             <Button onClick={() => setShowCreatePost(true)} className="bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md rounded-xl px-6">
+                                <MessageSquare className="w-4 h-4 mr-2" /> Share Moment
+                             </Button>
                           </div>
-                          {p.content && <p className="text-white/70 text-xs line-clamp-2 mb-3">{p.content}</p>}
-                          <div className="flex items-center gap-3 border-t border-white/5 pt-3">
-                            <Button size="sm" variant="ghost" className="h-7 text-xs px-2 text-white/50 hover:text-white" onClick={() => setReplyToId(replyToId === p.id ? null : p.id)}>
-                              Reply
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-7 text-xs px-2 text-white/50 hover:text-white" onClick={() => navigate(createPageUrl('Community') + `?post=${p.id}`)}>
-                              View Thread
-                            </Button>
+                          
+                          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
+                             {/* User Uploads Mock - Sophisticated Layout */}
+                             <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] group hover:border-white/20 transition-all">
+                                <div className="flex items-center gap-4 mb-4">
+                                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 text-lg">U</div>
+                                   <div>
+                                      <p className="text-white font-bold text-base flex items-center gap-2">User123 <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] py-0 px-2 h-5">PRO</Badge></p>
+                                      <p className="text-white/40 text-xs">Just now • Screenshot</p>
+                                   </div>
+                                   <Button variant="ghost" size="icon" className="ml-auto text-white/20 hover:text-white rounded-full">
+                                      <Settings className="w-4 h-4" />
+                                   </Button>
+                                </div>
+                                
+                                <div className="aspect-video rounded-2xl bg-black/50 mb-4 overflow-hidden border border-white/5 relative group/image">
+                                   <img src="https://source.unsplash.com/random/800x450?gaming,cyberpunk" className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105" />
+                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                                      <Button variant="secondary" className="rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-white hover:bg-white/20">View Fullscreen</Button>
+                                   </div>
+                                </div>
+                                
+                                <p className="text-white/90 text-sm mb-4 leading-relaxed font-light">
+                                  Finally beat the boss on hardcore difficulty! The lighting effects in this level are absolutely insane. Look at this loot drop I got.
+                                </p>
+                                
+                                <div className="flex gap-2 border-t border-white/5 pt-4">
+                                   <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors text-xs font-bold">
+                                      <Radio className="w-3.5 h-3.5" /> 245 Likes
+                                   </button>
+                                   <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors text-xs font-bold">
+                                      <MessageSquare className="w-3.5 h-3.5" /> 42 Replies
+                                   </button>
+                                   <div className="ml-auto flex gap-2">
+                                      <button className="px-4 py-2 rounded-xl text-white/40 hover:text-white transition-colors text-xs font-bold hover:bg-white/5">Edit Post</button>
+                                   </div>
+                                </div>
+                             </div>
+
+                             {/* Existing Posts Mapping */}
+                             {posts.map(p => (
+                                <div key={p.id} className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+                                   <div className="flex justify-between items-start mb-3">
+                                      <div>
+                                        <h4 className="text-white font-bold text-base mb-1">{p.title}</h4>
+                                        <div className="flex gap-2">
+                                          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">{p.community || 'General'}</span>
+                                          <span className="text-[10px] text-white/30">• {new Date(p.created_date || Date.now()).toLocaleDateString()}</span>
+                                        </div>
+                                      </div>
+                                      <Settings className="w-4 h-4 text-white/20 hover:text-white cursor-pointer transition-colors" />
+                                   </div>
+                                   <p className="text-white/70 text-sm mb-6 leading-relaxed font-light">{p.content}</p>
+                                   
+                                   {/* Comments Section Mock */}
+                                   <div className="bg-black/20 rounded-2xl p-4 space-y-3 border border-white/5">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Recent Comments</p>
+                                      </div>
+                                      
+                                      <div className="flex gap-3">
+                                         <div className="w-8 h-8 rounded-full bg-purple-500/20 flex-shrink-0 border border-purple-500/30" />
+                                         <div className="flex-1">
+                                            <div className="bg-white/5 rounded-xl rounded-tl-none p-3 border border-white/5">
+                                              <p className="text-white/90 text-xs"><span className="text-purple-400 font-bold mr-2">GamerX</span> Nice find! I've been looking for that item everywhere.</p>
+                                            </div>
+                                            <div className="flex gap-3 mt-1 ml-1">
+                                              <span className="text-[10px] text-white/30 cursor-pointer hover:text-white">Reply</span>
+                                              <span className="text-[10px] text-white/30 cursor-pointer hover:text-white">Like</span>
+                                            </div>
+                                         </div>
+                                      </div>
+                                      
+                                      {/* Reply Input Mock */}
+                                      <div className="flex gap-3 mt-4 pt-2 border-t border-white/5">
+                                         <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0" />
+                                         <div className="flex-1 relative">
+                                            <input type="text" placeholder="Write a reply..." className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-white/20 focus:bg-white/10 transition-colors" />
+                                         </div>
+                                      </div>
+                                   </div>
+                                </div>
+                             ))}
                           </div>
-                          {replyToId === p.id && (
-                            <div className="mt-3 pl-3 border-l-2 border-white/10">
-                              <textarea
-                                value={replyText}
-                                onChange={(e) => setReplyText(e.target.value)}
-                                placeholder="Write a reply..."
-                                className="w-full p-2 rounded-lg bg-black/30 border border-white/10 text-white text-xs mb-2"
-                                rows={2}
-                              />
-                              <div className="flex justify-end gap-2">
-                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setReplyToId(null); setReplyText(''); }}>Cancel</Button>
-                                <Button size="sm" className="h-7 text-xs bg-cyan-600 hover:bg-cyan-700" onClick={() => handleReplySubmit(p.id)}>Post</Button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                       </div>
+
+                       {/* Sidebar: Trending / Media */}
+                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-6">
+                          <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex-1 flex flex-col">
+                             <h3 className="text-white font-bold text-sm mb-6 uppercase tracking-widest border-b border-white/5 pb-2">Trending Media</h3>
+                             <div className="grid grid-cols-2 gap-3">
+                                {[1,2,3,4,5,6].map(i => (
+                                   <div key={i} className="aspect-square rounded-xl bg-black/30 border border-white/5 overflow-hidden hover:border-white/30 cursor-pointer relative group transition-all">
+                                      <img src={`https://source.unsplash.com/random/200x200?gaming,scifi&sig=${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-110" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                        <span className="text-[10px] text-white font-bold"><Heart className="w-3 h-3 inline mr-1 fill-white" /> 1.2k</span>
+                                      </div>
+                                      {i === 1 && <div className="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded font-bold shadow-lg shadow-red-500/20">LIVE</div>}
+                                   </div>
+                                ))}
+                             </div>
+                          </div>
+                       </div>
                     </div>
                   </TabsContent>
                 </Tabs>
