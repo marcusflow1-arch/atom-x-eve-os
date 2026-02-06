@@ -1771,17 +1771,16 @@ export default function LunaTemplate() {
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
 
-  // Auto-select new dashboard model: Maria WProp J J Ong
+  // Auto-select new dashboard model: Y-Bot
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const exact = await base44.entities.ModelFBX.filter({ name: 'Maria WProp J J Ong' });
+        const exact = await base44.entities.ModelFBX.filter({ name: 'Y-Bot' });
         let chosen = exact && exact.length ? exact[0] : null;
         if (!chosen) {
           const all = await base44.entities.ModelFBX.list('-created_date', 100);
-          const lowers = ['maria','wprop','jj','ong'];
-          chosen = (all || []).find(m => lowers.every(k => (m.name || '').toLowerCase().includes(k)));
+          chosen = (all || []).find(m => (m.name || '').toLowerCase().includes('y-bot'));
         }
         if (!cancelled && chosen?.file_url) {
           setModelUrl(chosen.file_url);
