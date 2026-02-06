@@ -30,6 +30,22 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [achievementSubTab, setAchievementSubTab] = React.useState('ability');
   const [expandedDlcId, setExpandedDlcId] = React.useState(null);
   const { addToCart } = useCart();
+
+  const [selectedCommunityMedia, setSelectedCommunityMedia] = React.useState(null);
+
+  const COMMUNITY_SKIRMISH = [
+    { id: 1, type: 'image', url: 'https://source.unsplash.com/random/800x450?funny,gaming,1', title: 'Glitch in the matrix lol', user: 'BugHunter' },
+    { id: 2, type: 'image', url: 'https://source.unsplash.com/random/800x450?meme,gaming,2', title: 'When the boss sees you', user: 'MemeLord' },
+    { id: 3, type: 'image', url: 'https://source.unsplash.com/random/800x450?cat,gaming,3', title: 'My co-op partner', user: 'CatGamer' },
+    { id: 4, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Physics gone wrong', user: 'PhysicsFail' },
+  ];
+
+  const GAME_REMOTE = [
+    { id: 5, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Insane 1v3 Clutch!', user: 'ProPlayer99', views: '12k' },
+    { id: 6, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'No scope across map', user: 'SniperElite', views: '8.5k' },
+    { id: 7, type: 'image', url: 'https://source.unsplash.com/random/800x450?epic,gaming,4', title: 'Perfect timing screenshot', user: 'ArtisticSoul', views: '5k' },
+    { id: 8, type: 'video', url: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4', title: 'Speedrun Record', user: 'SpeedDemon', views: '22k' },
+  ];
   const navigate = useNavigate();
 
   // Aura streaming subpage view state
@@ -865,118 +881,103 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
                   <TabsContent value="community" className="mt-6">
                     <div className="grid grid-cols-12 gap-6 h-[600px]">
-                       {/* Feed / Posts */}
-                       <div className="col-span-12 lg:col-span-8 h-full flex flex-col gap-6">
-                          <div className="flex justify-between items-center px-2">
-                             <div>
-                                <h3 className="text-white font-bold text-xl">Community Feed</h3>
-                                <p className="text-white/40 text-sm">Join the conversation</p>
-                             </div>
-                             <Button onClick={() => setShowCreatePost(true)} className="bg-white/10 hover:bg-white/20 text-white border border-white/10 backdrop-blur-md rounded-xl px-6">
-                                <MessageSquare className="w-4 h-4 mr-2" /> Share Moment
-                             </Button>
-                          </div>
-                          
-                          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
-                             {/* User Uploads Mock - Sophisticated Layout */}
-                             <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] group hover:border-white/20 transition-all">
-                                <div className="flex items-center gap-4 mb-4">
-                                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/20 text-lg">U</div>
-                                   <div>
-                                      <p className="text-white font-bold text-base flex items-center gap-2">User123 <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] py-0 px-2 h-5">PRO</Badge></p>
-                                      <p className="text-white/40 text-xs">Just now • Screenshot</p>
-                                   </div>
-                                   <Button variant="ghost" size="icon" className="ml-auto text-white/20 hover:text-white rounded-full">
-                                      <Settings className="w-4 h-4" />
-                                   </Button>
-                                </div>
-                                
-                                <div className="aspect-video rounded-2xl bg-black/50 mb-4 overflow-hidden border border-white/5 relative group/image">
-                                   <img src="https://source.unsplash.com/random/800x450?gaming,cyberpunk" className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105" />
-                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                                      <Button variant="secondary" className="rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-white hover:bg-white/20">View Fullscreen</Button>
-                                   </div>
-                                </div>
-                                
-                                <p className="text-white/90 text-sm mb-4 leading-relaxed font-light">
-                                  Finally beat the boss on hardcore difficulty! The lighting effects in this level are absolutely insane. Look at this loot drop I got.
-                                </p>
-                                
-                                <div className="flex gap-2 border-t border-white/5 pt-4">
-                                   <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors text-xs font-bold">
-                                      <Radio className="w-3.5 h-3.5" /> 245 Likes
-                                   </button>
-                                   <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors text-xs font-bold">
-                                      <MessageSquare className="w-3.5 h-3.5" /> 42 Replies
-                                   </button>
-                                   <div className="ml-auto flex gap-2">
-                                      <button className="px-4 py-2 rounded-xl text-white/40 hover:text-white transition-colors text-xs font-bold hover:bg-white/5">Edit Post</button>
-                                   </div>
-                                </div>
-                             </div>
-
-                             {/* Existing Posts Mapping */}
-                             {posts.map(p => (
-                                <div key={p.id} className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-                                   <div className="flex justify-between items-start mb-3">
-                                      <div>
-                                        <h4 className="text-white font-bold text-base mb-1">{p.title}</h4>
-                                        <div className="flex gap-2">
-                                          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider">{p.community || 'General'}</span>
-                                          <span className="text-[10px] text-white/30">• {new Date(p.created_date || Date.now()).toLocaleDateString()}</span>
-                                        </div>
+                       {/* Left Column: Main Viewer (Full Screen Experience) */}
+                       <div className="col-span-12 lg:col-span-8 h-full flex flex-col">
+                          <div className="flex-1 bg-black rounded-3xl overflow-hidden relative border border-white/10 shadow-2xl">
+                              {(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]) ? (
+                                  <>
+                                      {(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).type === 'video' ? (
+                                          <video 
+                                              src={(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).url} 
+                                              className="w-full h-full object-contain" 
+                                              controls 
+                                              autoPlay 
+                                              loop
+                                          />
+                                      ) : (
+                                          <img 
+                                              src={(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).url} 
+                                              className="w-full h-full object-contain" 
+                                          />
+                                      )}
+                                      {/* Info Overlay */}
+                                      <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
+                                          <div className="flex items-end justify-between">
+                                              <div>
+                                                  <h3 className="text-white font-bold text-2xl mb-1">{(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).title}</h3>
+                                                  <p className="text-white/60 text-sm font-medium">Shared by <span className="text-cyan-400">{(selectedCommunityMedia || COMMUNITY_SKIRMISH[0]).user}</span></p>
+                                              </div>
+                                              <div className="flex gap-3">
+                                                  <Button size="sm" variant="secondary" className="h-8 rounded-full">
+                                                      <Heart className="w-4 h-4 mr-1 text-red-500 fill-red-500" /> Like
+                                                  </Button>
+                                                  <Button size="sm" variant="secondary" className="h-8 rounded-full">
+                                                      <MessageSquare className="w-4 h-4 mr-1" /> Comment
+                                                  </Button>
+                                              </div>
+                                          </div>
                                       </div>
-                                      <Settings className="w-4 h-4 text-white/20 hover:text-white cursor-pointer transition-colors" />
-                                   </div>
-                                   <p className="text-white/70 text-sm mb-6 leading-relaxed font-light">{p.content}</p>
-                                   
-                                   {/* Comments Section Mock */}
-                                   <div className="bg-black/20 rounded-2xl p-4 space-y-3 border border-white/5">
-                                      <div className="flex justify-between items-center mb-2">
-                                        <p className="text-white/30 text-[10px] uppercase font-bold tracking-widest">Recent Comments</p>
-                                      </div>
-                                      
-                                      <div className="flex gap-3">
-                                         <div className="w-8 h-8 rounded-full bg-purple-500/20 flex-shrink-0 border border-purple-500/30" />
-                                         <div className="flex-1">
-                                            <div className="bg-white/5 rounded-xl rounded-tl-none p-3 border border-white/5">
-                                              <p className="text-white/90 text-xs"><span className="text-purple-400 font-bold mr-2">GamerX</span> Nice find! I've been looking for that item everywhere.</p>
-                                            </div>
-                                            <div className="flex gap-3 mt-1 ml-1">
-                                              <span className="text-[10px] text-white/30 cursor-pointer hover:text-white">Reply</span>
-                                              <span className="text-[10px] text-white/30 cursor-pointer hover:text-white">Like</span>
-                                            </div>
-                                         </div>
-                                      </div>
-                                      
-                                      {/* Reply Input Mock */}
-                                      <div className="flex gap-3 mt-4 pt-2 border-t border-white/5">
-                                         <div className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0" />
-                                         <div className="flex-1 relative">
-                                            <input type="text" placeholder="Write a reply..." className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-white/20 focus:bg-white/10 transition-colors" />
-                                         </div>
-                                      </div>
-                                   </div>
-                                </div>
-                             ))}
+                                  </>
+                              ) : (
+                                  <div className="flex items-center justify-center h-full text-white/30">Select media to view</div>
+                              )}
                           </div>
                        </div>
 
-                       {/* Sidebar: Trending / Media */}
-                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-6">
-                          <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex-1 flex flex-col">
-                             <h3 className="text-white font-bold text-sm mb-6 uppercase tracking-widest border-b border-white/5 pb-2">Trending Media</h3>
-                             <div className="grid grid-cols-2 gap-3">
-                                {[1,2,3,4,5,6].map(i => (
-                                   <div key={i} className="aspect-square rounded-xl bg-black/30 border border-white/5 overflow-hidden hover:border-white/30 cursor-pointer relative group transition-all">
-                                      <img src={`https://source.unsplash.com/random/200x200?gaming,scifi&sig=${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-110" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                        <span className="text-[10px] text-white font-bold"><Heart className="w-3 h-3 inline mr-1 fill-white" /> 1.2k</span>
+                       {/* Right Column: Community Skirmish & Game Remote */}
+                       <div className="col-span-12 lg:col-span-4 h-full flex flex-col gap-8 overflow-y-auto custom-scrollbar pr-2">
+                          {/* Community Skirmish - Wacky Photos */}
+                          <div>
+                              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                                  <span className="text-yellow-400">🤪</span> Community Skirmish
+                              </h3>
+                              <div className="grid grid-cols-2 gap-3">
+                                  {COMMUNITY_SKIRMISH.map((item) => (
+                                      <div 
+                                          key={item.id} 
+                                          onClick={() => setSelectedCommunityMedia(item)}
+                                          className={`aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition-all border-2 ${selectedCommunityMedia?.id === item.id ? 'border-cyan-400' : 'border-transparent hover:border-white/30'}`}
+                                      >
+                                          <img src={item.url} className="w-full h-full object-cover" />
                                       </div>
-                                      {i === 1 && <div className="absolute top-2 right-2 bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded font-bold shadow-lg shadow-red-500/20">LIVE</div>}
-                                   </div>
-                                ))}
-                             </div>
+                                  ))}
+                              </div>
+                          </div>
+
+                          {/* Game Remote - Hardcore Plays */}
+                          <div>
+                              <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                                  <span className="text-red-500">🎮</span> Game Remote
+                              </h3>
+                              <div className="grid grid-cols-2 gap-3">
+                                  {GAME_REMOTE.map((item) => (
+                                      <div 
+                                          key={item.id} 
+                                          onClick={() => setSelectedCommunityMedia(item)}
+                                          className={`aspect-video rounded-xl overflow-hidden cursor-pointer hover:opacity-80 transition-all border-2 relative ${selectedCommunityMedia?.id === item.id ? 'border-cyan-400' : 'border-transparent hover:border-white/30'}`}
+                                      >
+                                          {item.type === 'video' ? (
+                                              <div className="w-full h-full bg-black flex items-center justify-center relative">
+                                                  <img src={`https://source.unsplash.com/random/400x225?gaming,action,${item.id}`} className="w-full h-full object-cover opacity-60" />
+                                                  <div className="absolute inset-0 flex items-center justify-center">
+                                                      <Play className="w-6 h-6 text-white fill-white" />
+                                                  </div>
+                                              </div>
+                                          ) : (
+                                              <img src={item.url} className="w-full h-full object-cover" />
+                                          )}
+                                          <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                                              <Radio className="w-2 h-2 text-red-500" /> {item.views || 'New'}
+                                          </div>
+                                      </div>
+                                  ))}
+                              </div>
+                          </div>
+                          
+                          <div className="mt-auto pt-4 flex justify-center">
+                              <Button variant="outline" className="w-full border-white/10 hover:bg-white/5 text-white/60">
+                                  Load More Community Content
+                              </Button>
                           </div>
                        </div>
                     </div>
