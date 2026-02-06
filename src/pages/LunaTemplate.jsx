@@ -2093,6 +2093,8 @@ export default function LunaTemplate() {
                  onOpenCalendar={() => setShowCalendar(true)}
                  onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
                  onToggleStats={() => setShowStats((v) => !v)}
+                 currentEnvId={currentEnvId}
+                 onSelectEnv={handleEnvSelect}
                />
             </div>
           </motion.div>

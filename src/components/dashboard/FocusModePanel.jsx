@@ -25,6 +25,7 @@ import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
 import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalendarOverlay';
+import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1182,13 +1183,9 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
-// Game Banner Component - Editable banner display
-function GameBanner({ game, onChangeBanner }) {
+// Environment Hub Tile Component
+function EnvironmentHubTile({ onClick }) {
   const [isHovered, setIsHovered] = useState(false);
-  
-  // Default banner if no game selected
-  const bannerImage = game?.cover_image || game?.cover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800';
-  const bannerTitle = game?.title || 'Select a Game';
   
   return (
     <div 
@@ -1201,28 +1198,29 @@ function GameBanner({ game, onChangeBanner }) {
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={onChangeBanner}
+      onClick={onClick}
     >
-      {/* Banner Image */}
+      {/* Banner Image - Abstract or specific for Environment Hub */}
       <img 
-        src={bannerImage} 
-        alt={bannerTitle}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
+        alt="Environment Hub"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-60"
       />
       
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
       
-      {/* Game Info */}
+      {/* Info */}
       <div className="absolute bottom-3 left-3 right-3">
-        <h4 className="text-white font-bold text-sm truncate">{bannerTitle}</h4>
-        {game?.genre && (
-          <p className="text-white/50 text-[10px] capitalize">{game.genre}</p>
-        )}
+        <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
+          <Globe className="w-4 h-4 text-cyan-400" />
+          Environment Hub
+        </h4>
+        <p className="text-white/50 text-[10px]">Change your 3D world</p>
       </div>
       
-      {/* Change Banner Indicator */}
+      {/* Hover Indicator */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -1233,16 +1231,11 @@ function GameBanner({ game, onChangeBanner }) {
           >
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20">
               <Settings className="w-4 h-4 text-white/70" />
-              <span className="text-white/80 text-xs font-medium">Change Banner</span>
+              <span className="text-white/80 text-xs font-medium">Open Hub</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Banner Label */}
-      <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm">
-        <span className="text-[8px] text-white/60 uppercase tracking-wider">Featured Game</span>
-      </div>
     </div>
   );
 }
@@ -1371,15 +1364,8 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
-export function LibraryBannerSection({ games, onBackgroundChange }) {
-  const [selectedBannerGame, setSelectedBannerGame] = useState(null);
-  useEffect(() => {
-    if (selectedBannerGame && onBackgroundChange) {
-      const url = selectedBannerGame.banner_image || selectedBannerGame.cover_image || selectedBannerGame.cover;
-      onBackgroundChange(url);
-    }
-  }, [selectedBannerGame, onBackgroundChange]);
-  const [showBannerPicker, setShowBannerPicker] = useState(false);
+export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, onSelectEnv }) {
+  const [showEnvPicker, setShowEnvPicker] = useState(false);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
   const scrollRef = useRef(null);
@@ -1423,14 +1409,6 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
     fetchBackgrounds();
   }, []);
 
-  // Sample games for banner picker
-  const bannerGames = games?.slice(0, 8) || [
-    { id: 1, title: 'Cyberpunk 2088', cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800', genre: 'RPG' },
-    { id: 2, title: 'Elden Ring', cover_image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800', genre: 'Action RPG' },
-    { id: 3, title: 'Stellar Odyssey', cover_image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800', genre: 'Space Sim' },
-    { id: 4, title: 'Shadow Realm', cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800', genre: 'Horror' },
-  ];
-
   const handleReferenceClick = (reference) => {
     setActiveReference(reference);
     if (onBackgroundChange) {
@@ -1449,12 +1427,9 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
     <div className="flex flex-col items-start w-full">
       {/* Game Banner + Memories */}
       <div className="flex items-stretch gap-4 w-full">
-        {/* Game Banner */}
+        {/* Environment Hub Tile */}
         <div className="w-[368px] h-[60px] flex-shrink-0">
-          <GameBanner 
-            game={selectedBannerGame} 
-            onChangeBanner={() => setShowBannerPicker(true)} 
-          />
+          <EnvironmentHubTile onClick={() => setShowEnvPicker(true)} />
         </div>
 
         {/* References Section (Memories) */}
@@ -1480,15 +1455,15 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
         </div>
       </div>
 
-      {/* Banner Picker Modal */}
+      {/* Environment Picker Modal */}
       <AnimatePresence>
-        {showBannerPicker && (
+        {showEnvPicker && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowBannerPicker(false)}
+            onClick={() => setShowEnvPicker(false)}
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
@@ -1496,39 +1471,39 @@ export function LibraryBannerSection({ games, onBackgroundChange }) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg rounded-2xl p-6"
+              className="relative w-full max-w-4xl rounded-2xl p-6"
               style={{
-                background: 'rgba(100, 120, 140, 0.15)',
+                background: 'rgba(10, 13, 20, 0.95)',
                 backdropFilter: 'blur(30px) saturate(150%)',
                 WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                border: '1px solid rgba(255,255,255,0.12)'
+                border: '1px solid rgba(255,255,255,0.12)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-white font-bold text-lg">Select Featured Game</h3>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <Globe className="w-6 h-6 text-cyan-400" />
+                  <div>
+                    <h3 className="text-white font-bold text-xl">Environment Hub</h3>
+                    <p className="text-white/40 text-xs">Select a 3D environment for your dashboard</p>
+                  </div>
+                </div>
                 <button 
-                  onClick={() => setShowBannerPicker(false)}
+                  onClick={() => setShowEnvPicker(false)}
                   className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
-                {bannerGames.map((game) => (
-                  <div
-                    key={game.id}
-                    onClick={() => { setSelectedBannerGame(game); setShowBannerPicker(false); }}
-                    className="relative aspect-video rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-cyan-400 transition-all"
-                  >
-                    <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    <div className="absolute bottom-2 left-2">
-                      <p className="text-white font-bold text-xs">{game.title}</p>
-                      <p className="text-white/50 text-[10px]">{game.genre}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="min-h-[300px]">
+                <EnvironmentSelector 
+                  currentEnvId={currentEnvId} 
+                  onSelect={(env) => {
+                    onSelectEnv?.(env);
+                    setShowEnvPicker(false);
+                  }} 
+                />
               </div>
             </motion.div>
           </motion.div>
@@ -1625,7 +1600,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1786,6 +1761,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
+                currentEnvId={currentEnvId}
+                onSelectEnv={onSelectEnv}
               />
             </div>
 
