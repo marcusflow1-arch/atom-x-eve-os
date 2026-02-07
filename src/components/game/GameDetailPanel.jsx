@@ -858,6 +858,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </div>
                     ))}
                   </div>
+
+                  {/* Achievement Card Strip - Below media */}
+                  <AchievementCardStrip 
+                    achievementCards={achievementCards} 
+                    dlcList={dlcList}
+                    onSelectCard={setSelectedCard} 
+                  />
                 </div>
 
                 {/* Right: Game Info Sidebar */}
