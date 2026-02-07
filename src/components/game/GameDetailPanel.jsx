@@ -11,6 +11,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import AchievementCardStrip from './AchievementCardStrip';
 
 
 // --- Components ---
