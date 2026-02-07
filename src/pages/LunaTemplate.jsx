@@ -294,18 +294,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
-        // Skip movement while hurricane kick is playing
-        if (hurricaneKickPlayingRef.current) {
-          // Still update camera
-          const orbit = cameraOrbitRef.current;
-          const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
-          const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
-          const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
-          camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-          camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
-          renderer.render(scene, camera);
-          return;
-        }
+        // During one-shot animations, still update camera + physics but skip locomotion anim changes
+        const isOneShotActive = !!oneShotPlayingRef.current;
 
         // MOVEMENT
         const moveSpeed = 0.6;
