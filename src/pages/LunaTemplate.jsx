@@ -218,15 +218,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                   const animName = (anim.name || '').toLowerCase();
                   const action = mixer.clipAction(clip);
                   
-                  // Map types to standard keys
+                  // Map by animation_type first
                   if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
                   else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
-                  else if (type === 'idle') actionsRef.current['idle'] = action;
                   else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
                   else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
                   else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
+                  // Only map idle if the NAME also says idle (avoid overriding with mistyped types)
+                  else if (type === 'idle' && animName === 'idle') actionsRef.current['idle'] = action;
+
+                  // Fallback: also map by NAME for animations whose type is wrong
+                  if (animName === 'idle') actionsRef.current['idle'] = action;
+                  if (animName === 'running' || animName === 'run') actionsRef.current['running'] = action;
+                  if (animName === 'walking' || animName === 'walk') actionsRef.current['walking'] = action;
+                  if (animName === 'jumping' || animName === 'jump') actionsRef.current['jumping'] = action;
+                  if (animName === 'falling' || animName === 'fall') actionsRef.current['falling'] = action;
                   
-                  // Store by name for manual triggers (e.g. hurricane kick)
+                  // Store by name for manual triggers
                   actionsRef.current[animName] = action;
 
                   // Special: hurricane kick - set to play once, not loop
