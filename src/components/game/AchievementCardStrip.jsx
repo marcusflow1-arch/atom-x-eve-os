@@ -41,9 +41,14 @@ function CardItem({ card, onSelect }) {
   );
 }
 
-export default function AchievementCardStrip({ achievementCards, onSelectCard }) {
+export default function AchievementCardStrip({ achievementCards, dlcList, onSelectCard }) {
   const scrollRef = useRef(null);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [mode, setMode] = useState('achievements'); // 'achievements' or 'dlc'
+  const [dlcIndex, setDlcIndex] = useState(0);
+
+  // DLC items (filter out 'standard' base game entry)
+  const dlcItems = (dlcList || []).filter(d => d.id !== 'standard');
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;
@@ -51,21 +56,29 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
     scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  // Scroll wheel -> horizontal scroll when hovering over the strip
   const handleWheel = useCallback((e) => {
     if (!scrollRef.current) return;
     e.preventDefault();
-    // Scroll up (negative deltaY) -> scroll right, scroll down (positive deltaY) -> scroll left
     const amount = e.deltaY < 0 ? 300 : -300;
     scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
   }, []);
 
-  // Filter cards based on active filter
-  const filteredCards = activeFilter === 'All'
-    ? achievementCards
-    : achievementCards.filter(c => c.type === activeFilter);
+  // When in DLC mode, build cards from the current DLC's achievements
+  const currentDlc = dlcItems[dlcIndex] || null;
+  const dlcCards = currentDlc?.achievements?.map(a => ({
+    name: a.name,
+    type: a.type || 'Ability',
+    description: a.description || '',
+    edition: currentDlc.name,
+  })) || [];
 
-  // Group cards by type, preserving order: All, Ability, Equipment, Companion, Environment
+  const sourceCards = mode === 'achievements' ? achievementCards : dlcCards;
+
+  // Filter
+  const filteredCards = activeFilter === 'All'
+    ? sourceCards
+    : sourceCards.filter(c => c.type === activeFilter);
+
   const types = ['Ability', 'Equipment', 'Companion', 'Environment'];
 
   const flatCards = activeFilter === 'All'
@@ -73,21 +86,87 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
         const cards = filteredCards.filter(c => c.type === type);
         if (cards.length === 0) return [];
         return cards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
-      })
-    : filteredCards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
+      }).concat(filteredCards.filter(c => !types.includes(c.type)))
+    : filteredCards;
+
+  const cycleDlc = (dir) => {
+    if (dlcItems.length === 0) return;
+    setDlcIndex(prev => (prev + dir + dlcItems.length) % dlcItems.length);
+    setActiveFilter('All');
+  };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Centered Title */}
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-lg font-bold text-white tracking-wider">Achievement Cards</h3>
+          <h3 className="text-lg font-bold text-white tracking-wider">
+            {mode === 'achievements' ? 'Achievement Cards' : 'Achievements'}
+          </h3>
         </div>
         <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
       </div>
 
-      {/* Filter Tabs: All, Ability, Equipment, Companion, Environment */}
+      {/* DLC Toggle Button */}
+      <div className="flex items-center justify-center">
+        {mode === 'achievements' ? (
+          <button
+            onClick={() => { setMode('dlc'); setDlcIndex(0); setActiveFilter('All'); }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-orange-300 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
+          >
+            <Package className="w-3 h-3" />
+            DLC
+          </button>
+        ) : (
+          <button
+            onClick={() => { setMode('achievements'); setActiveFilter('All'); }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all"
+          >
+            <ArrowLeft className="w-3 h-3" />
+            Achievements
+          </button>
+        )}
+      </div>
+
+      {/* DLC Name Switcher (only in DLC mode) */}
+      <AnimatePresence mode="wait">
+        {mode === 'dlc' && dlcItems.length > 0 && (
+          <motion.div
+            key="dlc-switcher"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center justify-center gap-3"
+          >
+            <button
+              onClick={() => cycleDlc(-1)}
+              className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+            >
+              <ChevronLeft className="w-3 h-3 text-white/60" />
+            </button>
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={dlcIndex}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="text-sm font-semibold text-orange-300 tracking-wide min-w-[160px] text-center"
+              >
+                {currentDlc?.name}
+              </motion.span>
+            </AnimatePresence>
+            <button
+              onClick={() => cycleDlc(1)}
+              className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all"
+            >
+              <ChevronRight className="w-3 h-3 text-white/60" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Filter Tabs */}
       <div className="flex items-center justify-center gap-2">
         {FILTER_TABS.map((tab) => {
           const isActive = activeFilter === tab.key;
@@ -107,19 +186,17 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
         })}
       </div>
 
-      {/* Horizontal scrolling strip with arrows + wheel scroll */}
+      {/* Horizontal scrolling strip */}
       <div
         className="relative group/strip"
         onWheel={handleWheel}
       >
-        {/* Left arrow */}
         <button
           onClick={() => scroll('left')}
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
         >
           <ChevronLeft className="w-4 h-4 text-white/70" />
         </button>
-        {/* Right arrow */}
         <button
           onClick={() => scroll('right')}
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
@@ -139,7 +216,7 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
           ))}
           {flatCards.length === 0 && (
             <div className="w-full text-center py-6 text-white/30 text-sm">
-              No {activeFilter} cards found
+              No {activeFilter !== 'All' ? activeFilter : ''} cards found{mode === 'dlc' && currentDlc ? ` in ${currentDlc.name}` : ''}
             </div>
           )}
         </div>
