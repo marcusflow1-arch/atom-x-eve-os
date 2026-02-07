@@ -80,7 +80,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isGroundedRef = useRef(true);
 
   // Camera orbit state (right-click drag)
-  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 2.5 });
+  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.35, distance: 1.2 });
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
