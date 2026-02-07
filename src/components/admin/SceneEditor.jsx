@@ -585,10 +585,23 @@ export default function SceneEditor() {
         window.addEventListener('keydown', handleKeyDown);
         window.addEventListener('keyup', handleKeyUp);
         
-        // Find player object (Spawn point or designated player)
-        // We look for the first object in 'Actor_Layer' or type 'spawn_point'
-        const playerObj = sceneConfig.objects.find(o => o.type === 'spawn_point' || o.layer === 'Actor_Layer');
-        if (playerObj) activePlayerId.current = playerObj.id;
+        // Determine Active Player:
+        // 1. If an object is currently selected and it's an actor/spawn, use that.
+        // 2. Else find the first suitable actor/spawn in the scene.
+        let playerObj = null;
+        if (selectedObjectId && selectedObjectId !== 'environment') {
+            playerObj = sceneConfig.objects.find(o => o.id === selectedObjectId && (o.type === 'spawn_point' || o.layer === 'Actor_Layer'));
+        }
+        if (!playerObj) {
+            playerObj = sceneConfig.objects.find(o => o.type === 'spawn_point' || o.layer === 'Actor_Layer');
+        }
+
+        if (playerObj) {
+            activePlayerId.current = playerObj.id;
+            showSuccess(`Playing as ${playerObj.instance_name || playerObj.name}`);
+        } else {
+            showSuccess('Play Mode Active (Free Camera)');
+        }
 
         // Enter Play Mode
         if (scriptRuntimeRef.current) {
@@ -654,11 +667,18 @@ export default function SceneEditor() {
         let target = intersects[0].object;
         while(target) {
             if (target.userData.id) {
-                setSelectedObjectId(target.userData.id);
+                if (isPlaying) {
+                    // In Play Mode: Possess the clicked character
+                    activePlayerId.current = target.userData.id;
+                    showSuccess(`Possessed: ${target.userData.name || 'Character'}`);
+                } else {
+                    // In Edit Mode: Select object
+                    setSelectedObjectId(target.userData.id);
+                }
                 return;
             }
             if (target.userData.isEnvironment) {
-                setSelectedObjectId('environment');
+                if (!isPlaying) setSelectedObjectId('environment');
                 return;
             }
             if (target === sceneRef.current) break;
@@ -666,7 +686,7 @@ export default function SceneEditor() {
         }
     } else {
         // Deselect if clicked empty space
-        setSelectedObjectId(null);
+        if (!isPlaying) setSelectedObjectId(null);
     }
   };
 
