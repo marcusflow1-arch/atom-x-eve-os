@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, Shield, User, Database, Trees, ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Shield, User, Trees, ChevronLeft, ChevronRight, Trophy, Package, ArrowLeft } from 'lucide-react';
 
 const TYPE_CONFIG = {
   Ability: { icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
