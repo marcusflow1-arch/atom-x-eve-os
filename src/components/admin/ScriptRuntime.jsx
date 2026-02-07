@@ -65,9 +65,13 @@ export class ScriptRuntime {
                 if (typeof fn === 'function') this.updates.push(fn);
             };
 
+            const registerCleanup = (fn) => {
+                if (typeof fn === 'function') this.cleanupFns.push(fn);
+            };
+
             // Execute functional script
             const fn = new Function(
-                'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store', 'registerUpdate', 'params',
+                'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store', 'registerUpdate', 'params', 'registerCleanup',
                 scriptDef.script_code
             );
 
@@ -96,7 +100,8 @@ export class ScriptRuntime {
                 new THREE.Clock(), // New clock for script? Or global? Script usually uses delta from update.
                 store,
                 registerUpdate,
-                scriptRef.params || {}
+                scriptRef.params || {},
+                registerCleanup
             );
 
         } catch (e) {
