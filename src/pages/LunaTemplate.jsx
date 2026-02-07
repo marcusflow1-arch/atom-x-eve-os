@@ -259,13 +259,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const rotSpeed = 8.0; 
         let isMoving = false;
         
-        // Simple WASD relative to screen
-        // -Z is forward in ThreeJS
+        // Camera-relative movement
         const moveVector = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) moveVector.z -= 1; // Forward (away)
-        if (keysPressed.current['s']) moveVector.z += 1; // Backward (towards)
-        if (keysPressed.current['a']) moveVector.x -= 1; // Left
-        if (keysPressed.current['d']) moveVector.x += 1; // Right
+        
+        // Get camera direction projected on XZ plane
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+        
+        const right = new THREE.Vector3();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+        if (keysPressed.current['w']) moveVector.add(forward);
+        if (keysPressed.current['s']) moveVector.sub(forward);
+        if (keysPressed.current['a']) moveVector.sub(right);
+        if (keysPressed.current['d']) moveVector.add(right);
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
