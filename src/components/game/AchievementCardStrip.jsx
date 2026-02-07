@@ -132,21 +132,11 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
           className="flex items-end gap-3 overflow-x-auto px-2 pb-2"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {flatCards.map((card, i) => {
-            const cfg = TYPE_CONFIG[card.type] || TYPE_CONFIG.Ability;
-            return (
-              <div key={`${card.name}-${i}`} className="flex-shrink-0 flex flex-col items-center">
-                {/* Type label above the first card of each group */}
-                {card._showLabel && (
-                  <span className={`text-[9px] font-bold uppercase tracking-widest ${cfg.color} mb-1.5`}>
-                    {card.type}
-                  </span>
-                )}
-                {!card._showLabel && <div className="h-[18px]" />}
+          {flatCards.map((card, i) => (
+              <div key={`${card.name}-${i}`} className="flex-shrink-0">
                 <CardItem card={card} onSelect={onSelectCard} />
               </div>
-            );
-          })}
+          ))}
           {flatCards.length === 0 && (
             <div className="w-full text-center py-6 text-white/30 text-sm">
               No {activeFilter} cards found
