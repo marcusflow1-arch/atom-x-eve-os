@@ -107,6 +107,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // --- CONTROLS ---
+    // OrbitControls with Right Click Rotate
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.1;
+    controls.enablePan = false; // Keep centered on character
+    controls.enableZoom = true;
+    controls.minDistance = 2;
+    controls.maxDistance = 15;
+    
+    // Map Right Click to Rotate (Standard MMO style)
+    controls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN, 
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.ROTATE
+    };
+
     // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
     hemiLight.position.set(0, 50, 0);
@@ -122,8 +139,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     const envLoader = new FBXLoader();
     envLoader.load(envUrl, (env) => {
-        // Environment Scaling - Make it MUCH larger to be a map
-        env.scale.set(0.05, 0.05, 0.05); 
+        // Environment Scaling - Increased size as requested
+        env.scale.set(0.15, 0.15, 0.15); 
         env.position.set(0, -0.5, 0); // Lower slightly
         
         // Enable shadows for environment
@@ -248,14 +265,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             model.position.z += moveVector.z * moveSpeed * delta;
         }
 
-        // --- CAMERA (Fixed High Angle Chase) ---
-        // Adjusted offset for smaller character size to keep it visible
-        const idealOffset = new THREE.Vector3(0, 1.8, 2.5); 
-        const targetCamPos = model.position.clone().add(idealOffset);
-        
-        // Smooth camera follow
-        camera.position.lerp(targetCamPos, 0.15); 
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.2, 0)));
+        // --- CAMERA CONTROLS ---
+        // Update OrbitControls target to follow the character
+        const lookAtPos = model.position.clone().add(new THREE.Vector3(0, 1.0, 0)); // Look at upper body
+        controls.target.copy(lookAtPos);
+        controls.update();
 
         // PHYSICS
         const gravity = -25;
@@ -1153,13 +1167,13 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="fixed right-8 z-30 overflow-y-auto pointer-events-none"
+            className="fixed right-8 z-30 overflow-y-auto pointer-events-none scale-90 origin-top-right" // Reduced scale ("white box" size)
             style={{
-              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+              left: 'auto',
+              width: '400px', // Fixed width for the attribute box container
               top: '80px',
               bottom: '32px',
               maxHeight: 'calc(100vh - 112px)',
-              minHeight: '800px'
             }}>
 
             <div className="h-full">
