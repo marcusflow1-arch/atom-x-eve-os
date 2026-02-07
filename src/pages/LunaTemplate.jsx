@@ -236,23 +236,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow (Third Person Chase - Standard)
-          // Positioned closer and lower to match the reference screenshot (shoulder/head height)
-          // Y-Bot faces +Z, so -Z is behind.
-          const relativeOffset = new THREE.Vector3(0, 2.5, -3.5); 
+          // Camera follow (Third Person Chase - Eye Level)
+          // Lowered Y to 1.7 to be at eye level, kept distance for view
+          const relativeOffset = new THREE.Vector3(0, 1.7, -3.5); 
           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
           
-          // Smooth follow (slightly tighter lerp for responsiveness)
+          // Smooth follow
           camera.position.lerp(cameraTargetPos, 0.12);
           
-          // Look slightly above the model's head to see what's in front
+          // Look at head level
           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.12);
         }
         else {
-           // Idle camera - maintain the "Ready" angle
-           const relativeOffset = new THREE.Vector3(0, 2.5, -3.5);
+           // Idle camera - Eye level
+           const relativeOffset = new THREE.Vector3(0, 1.7, -3.5);
            const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
-           camera.position.lerp(cameraTargetPos, 0.05); // Slower drift when idle
+           camera.position.lerp(cameraTargetPos, 0.05);
            controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.1);
         }
 
@@ -295,9 +294,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // 3. Ground Collision Resolution
-        // Add a small offset (0.02) to ensure feet sit ON TOP of the floor, not clipping inside
-        if (model.position.y <= groundY + 0.02) {
-            model.position.y = groundY + 0.02;
+        // Increased offset to 0.15 to ensure feet are clearly above ground/embedded textures
+        if (model.position.y <= groundY + 0.15) {
+            model.position.y = groundY + 0.15;
             verticalVelocityRef.current = Math.max(0, verticalVelocityRef.current); // Stop falling
             isGroundedRef.current = true;
         } else {
@@ -308,8 +307,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
             isGroundedRef.current = false;
-            // Bump up slightly to break ground contact immediately
-            model.position.y += 0.1;
+            model.position.y += 0.2;
         }
 
         // =========================
@@ -1175,7 +1173,7 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-0 pointer-events-auto"
+          className="fixed inset-0 z-[-1] pointer-events-auto"
           style={{
             display: 'flex',
             alignItems: 'center',
