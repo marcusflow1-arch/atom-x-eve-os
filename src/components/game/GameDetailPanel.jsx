@@ -909,10 +909,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Lower Section: Content & Achievement Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/10 pt-8">
-                {/* Left: Content For This Game (DLCs & About) */}
-                <div className="lg:col-span-2 space-y-8">
+              {/* Lower Section: Content */}
+              <div className="border-t border-white/10 pt-8">
+                {/* Content For This Game (DLCs & About) */}
+                <div className="space-y-8">
                   {/* DLC Section */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
