@@ -111,9 +111,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 1, 0);
+    // OrbitControls removed for fixed camera
+    // const controls = new OrbitControls(camera, renderer.domElement);
 
     // --- LOAD MODEL (FBX) ---
     const loader = new FBXLoader();
@@ -209,11 +208,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow
-          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
-          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
-          // Simple lerp for camera could go here, or just orbit controls target update
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
+          // Camera Follow (Fixed Angle)
+          // Keeps camera at a fixed offset relative to the model's position (Isometric-ish / Third Person)
+          const camOffset = new THREE.Vector3(0, 2.5, 3.5); 
+          const targetCamPos = model.position.clone().add(camOffset);
+          camera.position.lerp(targetCamPos, 0.1);
+          camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 1.2, 0)));
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
@@ -294,7 +294,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           play("Idle");
         }
 
-        controls.update();
+        // controls.update();
         renderer.render(scene, camera);
       };
       animate();
