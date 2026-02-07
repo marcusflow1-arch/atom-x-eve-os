@@ -256,53 +256,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
 
       const play = (name) => {
-          // Block normal animation changes while hurricane kick is playing
-          if (hurricaneKickPlayingRef.current) return;
+          // Block normal locomotion changes while a one-shot animation is playing
+          if (oneShotPlayingRef.current) return;
           const key = name.toLowerCase();
           if (currentActionNameRef.current === name) return;
           currentActionNameRef.current = name;
           fadeToAction(key, 0.2);
       };
 
-      // Hurricane kick: play once on "1" key, then return to idle
-      const playHurricaneKick = () => {
-        const kickAction = actionsRef.current['hurricane_kick'];
-        if (!kickAction || hurricaneKickPlayingRef.current) return;
+      // Generic one-shot player: plays an animation once, then returns to current locomotion state
+      const playOneShot = (actionName) => {
+        const action = actionsRef.current[actionName];
+        if (!action || oneShotPlayingRef.current) return; // block if any one-shot is already playing
         
-        hurricaneKickPlayingRef.current = true;
-        currentActionNameRef.current = 'hurricane_kick';
+        oneShotPlayingRef.current = actionName;
+        currentActionNameRef.current = actionName;
         
         if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
-        kickAction.reset().fadeIn(0.15).play();
-        activeActionRef.current = kickAction;
+        action.reset().fadeIn(0.15).play();
+        activeActionRef.current = action;
 
         const onFinished = (e) => {
-          if (e.action === kickAction) {
-            hurricaneKickPlayingRef.current = false;
+          if (e.action === action) {
+            oneShotPlayingRef.current = null;
             currentActionNameRef.current = '';
             mixer.removeEventListener('finished', onFinished);
-          }
-        };
-        mixer.addEventListener('finished', onFinished);
-      };
-
-      // C-key action: play once as an additive layer (doesn't block movement or other anims)
-      const playCAction = () => {
-        const cAction = actionsRef.current['hurricane_kick']; // reuse hurricane kick anim for C key
-        if (!cAction || cActionPlayingRef.current) return;
-        
-        cActionPlayingRef.current = true;
-
-        // Play the C action blended on top of whatever is currently playing
-        cAction.reset();
-        cAction.setEffectiveWeight(1);
-        cAction.fadeIn(0.15).play();
-
-        const onFinished = (e) => {
-          if (e.action === cAction) {
-            cActionPlayingRef.current = false;
-            cAction.fadeOut(0.2);
-            mixer.removeEventListener('finished', onFinished);
+            // Immediately resume the correct locomotion state
+            // (the game loop will pick up the right anim on next frame)
           }
         };
         mixer.addEventListener('finished', onFinished);
