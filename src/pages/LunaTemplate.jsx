@@ -234,13 +234,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     actionsRef.current['hurricane_kick'] = action;
                     action.setLoop(THREE.LoopOnce, 1);
                     action.clampWhenFinished = true;
+                    console.log('Hurricane Kick animation registered:', anim.name);
                   }
 
                   // Special: sprinting forward roll - play once on C key only
-                  if (animName.includes('sprint') && animName.includes('roll')) {
+                  // Match variations: "sprinting forward roll", "sprint roll", "Sprinting Forward Roll"
+                  if ((animName.includes('sprint') && animName.includes('roll')) ||
+                      (animName.includes('sprint') && animName.includes('forward'))) {
                     actionsRef.current['sprint_roll'] = action;
                     action.setLoop(THREE.LoopOnce, 1);
                     action.clampWhenFinished = true;
+                    console.log('Sprint Roll animation registered:', anim.name);
                   }
                 }
               } catch (e) {
@@ -336,14 +340,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const rotSpeed = 8.0; 
         let isMoving = false;
         
-        const moveVector = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) moveVector.y += 1;  // Up
-        if (keysPressed.current['s']) moveVector.y -= 1;  // Back (down)
-        if (keysPressed.current['a']) moveVector.x -= 1;  // Left
-        if (keysPressed.current['d']) moveVector.x += 1;  // Right
-
-        // Map to 3D plane: x stays x, y maps to -z (forward/back)
-        const move3D = new THREE.Vector3(moveVector.x, 0, -moveVector.y);
+        const move3D = new THREE.Vector3(0, 0, 0);
+        if (keysPressed.current['w']) move3D.z = -1;  // W = forward (up on screen)
+        if (keysPressed.current['s']) move3D.z = 1;   // S = backward (down on screen)
+        if (keysPressed.current['a']) move3D.x = -1;  // A = left
+        if (keysPressed.current['d']) move3D.x = 1;   // D = right
 
         if (move3D.lengthSq() > 0) {
             move3D.normalize();
@@ -400,8 +401,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       // Exclusive animation key listeners (must be set after model loads)
       const onExclusiveKey = (e) => {
-        if (e.key === '1') playHurricaneKick();
-        if (e.key === 'c' || e.key === 'C') playSprintRoll();
+        const key = e.key;
+        if (key === '1') playHurricaneKick();
+        if (key === 'c' || key === 'C') {
+          e.preventDefault();
+          playSprintRoll();
+        }
       };
       window.addEventListener('keydown', onExclusiveKey);
       model.userData._exclusiveCleanup = () => window.removeEventListener('keydown', onExclusiveKey);
