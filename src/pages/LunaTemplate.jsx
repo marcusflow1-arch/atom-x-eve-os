@@ -115,15 +115,37 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enableDamping = true;
     controls.target.set(0, 1, 0);
 
-    // --- LOAD MODEL (FBX) ---
+    // --- LOAD ASSETS ---
     const loader = new FBXLoader();
+
+    // 1. Load Room 2 (Environment)
+    const roomUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
+    loader.load(roomUrl, (room) => {
+      room.scale.set(0.01, 0.01, 0.01);
+      room.position.set(0, 0, 0);
+      room.traverse(c => { 
+        if (c.isMesh) { 
+          c.receiveShadow = true; 
+          c.castShadow = true; 
+          // Fix standard material issues if any
+          if (c.material) {
+             c.material.side = THREE.DoubleSide;
+          }
+        } 
+      });
+      scene.add(room);
+    }, undefined, (e) => console.error("Error loading Room 2", e));
+
+    // 2. Load Y-Bot (Character)
     const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
       
-      // FBX Scaling (Mixamo standard is often centimeters, Three.js is meters)
+      // FBX Scaling & Positioning
       model.scale.set(0.01, 0.01, 0.01);
+      model.position.set(0, 0, 0); // Start on floor
+      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
       
       modelRef.current = model;
       scene.add(model);
@@ -132,7 +154,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixerRef.current = mixer;
 
       // --- ANIMATION SYSTEM ---
-      // Load built-in FBX animations
       if (fbx.animations) {
         fbx.animations.forEach(clip => {
           actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
@@ -209,11 +230,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow
-          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
-          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
-          // Simple lerp for camera could go here, or just orbit controls target update
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
+          // Camera follow (Third Person) - Update position ONLY when moving to avoid fighting OrbitControls when idle
+          // But user wants "follow around", so let's enforce a trailing camera
+          const relativeOffset = new THREE.Vector3(0, 3, -5); // Up and behind
+          const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
+          
+          // Smooth follow
+          camera.position.lerp(cameraTargetPos, 0.1);
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0.1);
+        }
+        else {
+           // When idle, still look at player but allow free cam rotation (don't force camera position)
+           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0.1);
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
