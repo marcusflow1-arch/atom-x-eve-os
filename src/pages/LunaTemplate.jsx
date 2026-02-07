@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, BarChart2
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -57,7 +57,6 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
-import AvatarMemoryBoard from '../components/avatarHome/AvatarMemoryBoard';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
@@ -69,6 +68,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const modelRef = useRef(null);
   const actionsRef = useRef({});
   const activeActionRef = useRef(null);
+  const clockRef = useRef(new THREE.Clock());
   const keysPressed = useRef({});
   
   // Player Controller State
@@ -78,7 +78,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentActionNameRef = useRef(""); 
   const verticalVelocityRef = useRef(0);
   const isGroundedRef = useRef(true);
-  const isAttackingRef = useRef(false);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -89,15 +88,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   useEffect(() => {
     if (!containerRef.current) return;
-    
-    // Cleanup existing children to prevent duplicates
-    while (containerRef.current.firstChild) {
-      containerRef.current.removeChild(containerRef.current.firstChild);
-    }
-
-    // Local Clock for this effect instance to avoid delta stealing
-    const clock = new THREE.Clock();
-    let animationFrameId;
 
     // --- SETUP SCENE ---
     const scene = new THREE.Scene();
@@ -107,7 +97,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 500);
-    camera.position.set(0, 1.5, -2.5); // Initial position (Closer)
+    camera.position.set(0, 3, -5); // Initial position
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -116,23 +106,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     renderer.shadowMap.enabled = true; // Enable shadows
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
-
-    // --- CONTROLS ---
-    // OrbitControls with Right Click Rotate
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.1;
-    controls.enablePan = false; // Keep centered on character
-    controls.enableZoom = true;
-    controls.minDistance = 2;
-    controls.maxDistance = 15;
-    
-    // Map Right Click to Rotate (Standard MMO style)
-    controls.mouseButtons = {
-        LEFT: null, // Disable Left Click
-        MIDDLE: THREE.MOUSE.DOLLY,
-        RIGHT: THREE.MOUSE.ROTATE
-    };
 
     // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
@@ -149,8 +122,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     const envLoader = new FBXLoader();
     envLoader.load(envUrl, (env) => {
-        // Environment Scaling - Increased size as requested
-        env.scale.set(0.15, 0.15, 0.15); 
+        // Environment Scaling - Make it MUCH larger to be a map
+        env.scale.set(0.05, 0.05, 0.05); 
         env.position.set(0, -0.5, 0); // Lower slightly
         
         // Enable shadows for environment
@@ -187,7 +160,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
-      mixer.timeScale = 1.0; // Reset to normal speed now that loop conflict is fixed
+      mixer.timeScale = 1.2; // Speed up animations slightly
 
       // Load Built-in & Admin Animations
       const loadAnimations = async () => {
@@ -199,37 +172,29 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           
           if (adminAnimations) {
             const fbxLoader = new FBXLoader();
-            let firstAction = null;
-
             for (const anim of adminAnimations) {
               try {
                 const animAsset = await fbxLoader.loadAsync(anim.file_url);
                 if (animAsset.animations.length > 0) {
                   const clip = animAsset.animations[0];
+                  // Use the explicitly set animation_type from Admin if available
                   const type = (anim.animation_type || '').toLowerCase();
-                  const name = (anim.name || '').toLowerCase();
                   const action = mixer.clipAction(clip);
                   
-                  if (!firstAction) firstAction = action;
-
-                  // Store by name
-                  actionsRef.current[name] = action;
-
-                  // Robust Mapping: Check Type OR Name
-                  if (type === 'idle' || name.includes('idle')) actionsRef.current['idle'] = action;
-                  if (type === 'run' || type === 'running' || name.includes('run') || name.includes('sprint')) actionsRef.current['running'] = action;
-                  if (type === 'walk' || type === 'walking' || name.includes('walk')) actionsRef.current['walking'] = action;
-                  if (type === 'jump' || type === 'jumping' || name.includes('jump')) actionsRef.current['jumping'] = action;
-                  if (type === 'fall' || type === 'falling' || name.includes('fall')) actionsRef.current['falling'] = action;
+                  // Map types to standard keys used by controller
+                  if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
+                  else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
+                  else if (type === 'idle') actionsRef.current['idle'] = action;
+                  else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
+                  else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
+                  else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
+                  
+                  // Also store by name for manual triggers
+                  actionsRef.current[anim.name.toLowerCase()] = action;
                 }
               } catch (e) {
                 console.error("Failed to load animation:", anim.name, e);
               }
-            }
-            
-            // Ensure we have at least an idle animation
-            if (!actionsRef.current['idle'] && firstAction) {
-                actionsRef.current['idle'] = firstAction;
             }
           }
       };
@@ -250,49 +215,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           fadeToAction(key, 0.2);
       };
 
-      const playOneShot = (name) => {
-        const key = name.toLowerCase();
-        let action = actionsRef.current[key];
-        
-        // Fuzzy search if exact match not found
-        if (!action) {
-           const foundKey = Object.keys(actionsRef.current).find(k => k.includes(key));
-           if (foundKey) action = actionsRef.current[foundKey];
-        }
-
-        if (!action) {
-            console.log("Animation not found:", name);
-            return;
-        }
-        
-        if (isAttackingRef.current) return; // Exclusive order: don't interrupt if already attacking
-
-        isAttackingRef.current = true;
-
-        if (activeActionRef.current) activeActionRef.current.fadeOut(0.1);
-        
-        action.reset();
-        action.setLoop(THREE.LoopOnce);
-        action.clampWhenFinished = true;
-        action.fadeIn(0.1);
-        action.play();
-        
-        activeActionRef.current = action;
-        currentActionNameRef.current = name;
-        
-        const onFinished = (e) => {
-            if (e.action === action) {
-                mixer.removeEventListener('finished', onFinished);
-                isAttackingRef.current = false;
-            }
-        };
-        mixer.addEventListener('finished', onFinished);
-      };
-
       // --- GAME LOOP ---
       const animate = () => {
-        animationFrameId = requestAnimationFrame(animate);
-        const delta = clock.getDelta();
+        requestAnimationFrame(animate);
+        const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
         // MOVEMENT
@@ -300,22 +226,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const rotSpeed = 8.0; 
         let isMoving = false;
         
-        // Camera-relative movement
+        // Simple WASD relative to screen
+        // -Z is forward in ThreeJS
         const moveVector = new THREE.Vector3(0, 0, 0);
-        
-        // Get camera direction projected on XZ plane
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        forward.y = 0;
-        forward.normalize();
-        
-        const right = new THREE.Vector3();
-        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
-
-        if (keysPressed.current['w']) moveVector.add(forward);
-        if (keysPressed.current['s']) moveVector.sub(forward);
-        if (keysPressed.current['a']) moveVector.sub(right);
-        if (keysPressed.current['d']) moveVector.add(right);
+        if (keysPressed.current['w']) moveVector.z -= 1; // Forward (away)
+        if (keysPressed.current['s']) moveVector.z += 1; // Backward (towards)
+        if (keysPressed.current['a']) moveVector.x -= 1; // Left
+        if (keysPressed.current['d']) moveVector.x += 1; // Right
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
@@ -326,23 +243,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
             model.quaternion.slerp(targetQuat, 0.2); // Snappier rotation
 
-            // 2. Move Character AND Camera (Chase Cam behavior without rotation)
-            const moveX = moveVector.x * moveSpeed * delta;
-            const moveZ = moveVector.z * moveSpeed * delta;
-            
-            model.position.x += moveX;
-            model.position.z += moveZ;
-            
-            // Move camera by same amount to maintain relative position
-            camera.position.x += moveX;
-            camera.position.z += moveZ;
+            // 2. Move Character
+            model.position.x += moveVector.x * moveSpeed * delta;
+            model.position.z += moveVector.z * moveSpeed * delta;
         }
 
-        // --- CAMERA CONTROLS ---
-        // Update OrbitControls target to follow the character
-        const lookAtPos = model.position.clone().add(new THREE.Vector3(0, 1.0, 0)); // Look at upper body
-        controls.target.copy(lookAtPos);
-        controls.update();
+        // --- CAMERA (Fixed High Angle Chase) ---
+        // Adjusted offset for smaller character size to keep it visible
+        const idealOffset = new THREE.Vector3(0, 1.8, 2.5); 
+        const targetCamPos = model.position.clone().add(idealOffset);
+        
+        // Smooth camera follow
+        camera.position.lerp(targetCamPos, 0.15); 
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.2, 0)));
 
         // PHYSICS
         const gravity = -25;
@@ -365,14 +278,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // ANIMATION STATE
-        if (!isAttackingRef.current) {
-            if (!isGroundedRef.current) {
-                play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
-            } else if (isMoving) {
-                play("Running"); // Since speed is high, always run
-            } else {
-                play("Idle");
-            }
+        if (!isGroundedRef.current) {
+            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+        } else if (isMoving) {
+            play("Running"); // Since speed is high, always run
+        } else {
+            play("Idle");
         }
 
         renderer.render(scene, camera);
@@ -381,11 +292,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
-    const onKeyDown = (e) => {
-        const key = e.key.toLowerCase();
-        keysPressed.current[key] = true;
-        if (key === '1') playOneShot('hurricane kick');
-    };
+    const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
     const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -402,16 +309,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-      if (renderer) renderer.dispose();
-      if (containerRef.current && renderer.domElement) {
-        // Safe check before removing
-        try {
-            if (containerRef.current.contains(renderer.domElement)) {
-                containerRef.current.removeChild(renderer.domElement);
-            }
-        } catch (e) { /* ignore */ }
-      }
+      renderer.dispose();
     };
   }, [adminAnimations]);
 
@@ -1255,13 +1153,13 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="fixed right-8 z-30 overflow-y-auto pointer-events-none scale-90 origin-top-right" // Reduced scale ("white box" size)
+            className="fixed right-8 z-30 overflow-y-auto pointer-events-none"
             style={{
-              left: 'auto',
-              width: '400px', // Fixed width for the attribute box container
+              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
               bottom: '32px',
               maxHeight: 'calc(100vh - 112px)',
+              minHeight: '800px'
             }}>
 
             <div className="h-full">
@@ -1635,6 +1533,7 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden relative z-20" // High Z to sit above fade
+                  style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
                     <AvatarProgressionBox />
@@ -1701,66 +1600,87 @@ export default function LunaTemplate() {
             <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* QUICK ACCESS BOXES */}
-            <div>
-              <div className={`flex flex-wrap gap-4 mb-8 pointer-events-auto transition-opacity duration-500 justify-center ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                {[
-                  { label: 'Stats', icon: Grid, onClick: () => setShowStats((v) => !v) },
-                  { label: 'Friends', icon: Users, onClick: () => setShowFriendsHub(true) },
-                  { label: 'Live', icon: Radio, onClick: () => setShowLive((v) => !v) },
-                  { label: 'Settings', icon: Settings, onClick: () => navigate(createPageUrl('LunaTemplate') + '?panel=settings') },
-                  { label: 'Skill Tree', icon: Layers, onClick: () => navigate(createPageUrl('GenreMastery')) },
-                  { label: 'AI Story', icon: BookOpen, onClick: () => setActiveDrawer({ id: 'story', label: 'AI Story' }) },
-                  { label: 'AI Battle', icon: Swords, onClick: () => setActiveDrawer({ id: 'battle', label: 'AI Battle' }) },
-                  { label: 'Season Pass', icon: Crown, onClick: () => setShowSeasonalPass(true) },
-                  { label: 'Achievements', icon: Trophy, onClick: () => setShowAchievements(true) },
-                  { label: 'Leaderboard', icon: BarChart2, onClick: () => setActiveDrawer({ id: 'leaderboard', label: 'Leaderboard' }) }, // Or redirect
-                ].map((item, index) => (
+            <div style={{ paddingLeft: '440px' }}>
+            <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              {/* Stats */}
+              <ConsoleTile
+                onClick={() => setShowStats((v) => !v)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
+              </ConsoleTile>
+
+              {/* Skill Tree */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
+              </ConsoleTile>
+
+              {/* Season Pass */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
+              </ConsoleTile>
+
+              {/* Achievements */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Achievements'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
+              </ConsoleTile>
+
+              {/* Leaderboard */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Leaderboard'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
+              </ConsoleTile>
+            </div>
+
+            {/* Environment Selector (Replaces Game Banner) */}
+            <div className={`mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+            </div>
+
+            </div>
+
+            {/* Main Grid: Leaderboard + 2x2 Right */}
+            <div className={`flex-1 flex gap-6 min-h-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              {/* Leaderboard Tile - Left */}
+              <div className="pointer-events-auto"><LeaderboardTile /></div>
+
+              {/* Right Side - 2x2 Grid */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* App Shortcuts */}
+                <div className="flex gap-6 flex-1">
+                  {/* Settings */}
                   <ConsoleTile
-                    key={item.label}
-                    onClick={item.onClick}
-                    className="w-28 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
                   >
-                    <item.icon className="w-8 h-8 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                    <span className="text-[#CCCCCC] text-xs font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{item.label}</span>
+                    <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
                   </ConsoleTile>
-                ))}
-              </div>
 
-              {/* Environment Selector and Memories */}
-              <div className={`flex items-end gap-6 mb-6 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                {/* Environment Hub */}
-                <div className="w-[400px]">
-                  <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
-                </div>
-                
-                {/* Memories Section */}
-                <div className="flex-1 flex items-end gap-4 overflow-x-auto pb-2">
-                  <div className="text-white/20 text-xs font-bold tracking-widest uppercase writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
-                    Memories
-                  </div>
-                  
-                  {[
-                    { title: 'Final Stand', img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200' },
-                    { title: 'Base Victory', img: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200' },
-                    { title: 'Epic Battle', img: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200' },
-                    { title: 'Fallen Hero', img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200' },
-                    { title: 'Champion', img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200' },
-                  ].map((mem, i) => (
-                    <div key={i} className="flex-shrink-0 w-24 h-24 rounded-xl border border-white/10 bg-white/5 overflow-hidden relative group cursor-pointer hover:border-white/30 transition-all">
-                      <img src={mem.img} alt={mem.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                      <span className="absolute bottom-1 left-1 right-1 text-[9px] font-bold text-white text-center truncate">{mem.title}</span>
-                    </div>
-                  ))}
-
-                  {/* Home Button */}
-                  <div 
-                    onClick={() => setActiveDrawer({ id: 'home', label: 'AI Home' })}
-                    className="flex-shrink-0 w-24 h-24 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all"
+                  {/* My Games & Apps */}
+                  <ConsoleTile
+                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
                   >
-                    <Home className="w-8 h-8 text-white/60" />
-                    <span className="text-[10px] font-bold text-white/60">Home</span>
-                  </div>
+                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
+                  </ConsoleTile>
                 </div>
               </div>
             </div>
@@ -1768,7 +1688,7 @@ export default function LunaTemplate() {
             )}
 
             {showAvatarProgression && (
-              <div className="pt-4 pr-8">
+              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
                 <div className="max-w-5xl mx-auto pointer-events-auto">
                   <AvatarProgressionBox />
                 </div>

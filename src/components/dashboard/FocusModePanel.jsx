@@ -1313,7 +1313,6 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
 // New QuickActionsBar Component
 function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }) {
   const quickActions = [
-    { id: 'stats', label: 'Stats', icon: TrendingUp, color: 'from-white/5 to-white/5', borderColor: 'border-white/15', onClick: onStatsClick },
     { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onFriendsClick },
     { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'from-slate-500/20 to-gray-500/20', borderColor: 'border-slate-500/30', onClick: () => console.log('Settings clicked') },
@@ -1327,6 +1326,17 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto w-full pointer-events-auto" style={{ scrollbarWidth: 'none' }}>
+      <motion.button
+        key="stats-tile"
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onStatsClick}
+        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/15 transition-all flex-shrink-0"
+        style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', width: '85px', height: '75px' }}
+      >
+        <TrendingUp className="w-5 h-5 text-white/80" />
+        <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">Stats</span>
+      </motion.button>
       {quickActions.map((action) => {
         const Icon = action.icon;
         return (
