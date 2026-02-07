@@ -111,8 +111,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    // OrbitControls removed for fixed camera
-    // const controls = new OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 1, 0);
 
     // --- LOAD MODEL (FBX) ---
     const loader = new FBXLoader();
@@ -122,25 +123,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const model = fbx;
       
       // FBX Scaling (Mixamo standard is often centimeters, Three.js is meters)
-      // User requested 0.9 scale relative to human size (approx 0.009 if raw is cm)
-      model.scale.set(0.01, 0.01, 0.01); 
-      model.position.set(0, 0, 0); // Ensure feet are on ground
+      model.scale.set(0.01, 0.01, 0.01);
       
       modelRef.current = model;
       scene.add(model);
-
-      // --- LOAD ENVIRONMENT (Room 2) ---
-      if (roomModelUrl) {
-          const isFbx = roomModelUrl.toLowerCase().endsWith('.fbx');
-          const envLoader = isFbx ? new FBXLoader() : new GLTFLoader();
-          
-          envLoader.load(roomModelUrl, (envAsset) => {
-              const env = envAsset.scene || envAsset;
-              env.scale.set(1.2, 1.2, 1.2); // Scale environment to viewer
-              env.position.set(0, 0, 0);    // Center environment
-              scene.add(env);
-          }, undefined, (e) => console.error("Error loading environment:", e));
-      }
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
@@ -223,16 +209,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // --- CAMERA UPDATE (ThirdPersonSceneController) ---
-          const cameraOffset = new THREE.Vector3(0, 1.6, 3.5);
-          const cameraLookOffset = new THREE.Vector3(0, 1.4, 0);
-          const cameraLerp = 0.08;
-
-          const targetPos = model.position.clone().add(cameraOffset);
-          camera.position.lerp(targetPos, cameraLerp);
-
-          const lookAtTarget = model.position.clone().add(cameraLookOffset);
-          camera.lookAt(lookAtTarget);
+          // Camera follow
+          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
+          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
+          // Simple lerp for camera could go here, or just orbit controls target update
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
@@ -313,7 +294,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           play("Idle");
         }
 
-        // controls.update();
+        controls.update();
         renderer.render(scene, camera);
       };
       animate();
