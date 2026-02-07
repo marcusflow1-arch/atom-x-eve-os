@@ -1507,73 +1507,16 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                     {/* Content Area (Scrollable) */}
                     <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                       <AnimatePresence mode="wait">
-                        {activeDetailTab === 'overview' && (
-                          <motion.div 
-                            key="overview"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-8"
-                          >
-                             <div className="grid grid-cols-3 gap-6">
-                                <div className="col-span-2 space-y-6">
-                                  <div>
-                                    <h3 className="text-lg font-bold text-white mb-3">About</h3>
-                                    <p className="text-white/60 leading-relaxed text-sm">
-                                      {selectedGame.description || 'Experience an epic journey in this critically acclaimed title. Master unique abilities, explore vast worlds, and uncover deep secrets that will challenge everything you know.'}
-                                    </p>
-                                  </div>
-                                  
-                                  {/* Trailer */}
-                                  <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 aspect-video relative group cursor-pointer">
-                                     <img src={selectedGame.banner || selectedGame.cover_image} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" />
-                                     <div className="absolute inset-0 flex items-center justify-center">
-                                       <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                                          <Play className="w-6 h-6 fill-white text-white" />
-                                       </div>
-                                     </div>
-                                  </div>
-                                </div>
+                        {activeDetailTab === 'content' && (
+                          <GameContentTab game={selectedGame} />
+                        )}
 
-                                <div className="space-y-4">
-                                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                      <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Game Stats</h4>
-                                      <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-sm text-white/60">Last Played</span>
-                                          <span className="text-sm text-white font-medium">Today</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-sm text-white/60">Time Played</span>
-                                          <span className="text-sm text-white font-medium">12.5 hrs</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-sm text-white/60">Achievements</span>
-                                          <span className="text-sm text-white font-medium">8 / 15</span>
-                                        </div>
-                                      </div>
-                                   </div>
-                                   
-                                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                      <h4 className="text-xs font-bold text-white/40 uppercase mb-4">Friends Playing</h4>
-                                      <div className="flex -space-x-2">
-                                        {[1,2,3].map(i => (
-                                          <div key={i} className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-900 flex items-center justify-center text-xs font-bold">
-                                            {String.fromCharCode(64+i)}
-                                          </div>
-                                        ))}
-                                      </div>
-                                   </div>
-                                </div>
-                             </div>
-                          </motion.div>
+                        {activeDetailTab === 'community' && (
+                          <GameCommunityTab game={selectedGame} />
                         )}
 
                         {activeDetailTab === 'discussion' && (
-                          <GameDiscussionSection 
-                            game={selectedGame} 
-                            onNavigateToForum={() => navigate(createPageUrl('Community'), { state: { selectedGame, section: 'general_discussion' } })}
-                          />
+                          <GameDiscussionTab game={selectedGame} />
                         )}
                         
                         {activeDetailTab === 'achievements' && (
@@ -1588,11 +1531,12 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                           </motion.div>
                         )}
 
-                        {['guide', 'support', 'streamer_affiliate'].includes(activeDetailTab) && (
-                          <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center h-64 text-white/30">
-                            <Bot className="w-12 h-12 mb-4 opacity-50" />
-                            <p>Content for {activeDetailTab.replace('_', ' ')} coming soon.</p>
-                          </motion.div>
+                        {activeDetailTab === 'streamer_affiliate' && (
+                          <GameStreamerAffiliateTab game={selectedGame} />
+                        )}
+
+                        {activeDetailTab === 'support' && (
+                          <GameSupportTab game={selectedGame} />
                         )}
                       </AnimatePresence>
                     </div>
