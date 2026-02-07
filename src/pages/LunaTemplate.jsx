@@ -76,6 +76,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const sprintTimerRef = useRef(0);
   const sprintDuration = 0.6;
   const currentActionNameRef = useRef(""); // Track current state name ("Idle", "Running", etc.)
+  const verticalVelocityRef = useRef(0);
+  const isGroundedRef = useRef(true);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -151,6 +153,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               if (actionName.includes('run')) actionsRef.current['running'] = action;
               if (actionName.includes('walk')) actionsRef.current['walking'] = action;
               if (actionName.includes('fall')) actionsRef.current['falling'] = action;
+              if (actionName.includes('jump')) actionsRef.current['jumping'] = action;
             }
           } catch (e) {
             console.warn(`Failed to load animation ${anim.name}`, e);
@@ -212,24 +215,34 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         
         // Helper: Safe Animation Switch
         const play = (name) => {
-          // Map script names to loaded action keys
           let actionKey = name.toLowerCase();
-          
-          // Mapping fix: "Sprinting" -> "sprinting" (mapped from roll/sprint in loader)
-          // "Running" -> "running", "Walking" -> "walking", "Idle" -> "idle"
-          
-          // Check if we are already playing this 'type' of animation by checking strict key equality if possible,
-          // or just rely on fadeToAction's internal check.
-          // The user's script checks `this.currentState === name`. 
-          // We'll trust fadeToAction to handle the "same action" check efficiently, 
-          // but let's implement the state tracking requested.
-          
-          // We use a ref for currentState to match the script's logic
           if (currentActionNameRef.current === name) return;
-          
           currentActionNameRef.current = name;
           fadeToAction(actionKey, 0.2);
         };
+
+        // --- PHYSICS: GRAVITY & JUMP ---
+        const gravity = -20;
+        const jumpForce = 8;
+        
+        // Jump Input
+        if (keysPressed.current[' '] && isGroundedRef.current) {
+            verticalVelocityRef.current = jumpForce;
+            isGroundedRef.current = false;
+        }
+
+        // Apply Gravity
+        verticalVelocityRef.current += gravity * delta;
+        model.position.y += verticalVelocityRef.current * delta;
+
+        // Ground Collision
+        if (model.position.y <= 0) {
+            model.position.y = 0;
+            verticalVelocityRef.current = 0;
+            isGroundedRef.current = true;
+        } else {
+            isGroundedRef.current = false;
+        }
 
         // =========================
         // SPRINT (ROLL) INPUT
@@ -237,36 +250,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (!isSprintingRef.current && keysPressed.current['c']) {
           isSprintingRef.current = true;
           sprintTimerRef.current = sprintDuration;
-          
           play("Sprinting");
-          // Consuming key optional but good for one-shot
           keysPressed.current['c'] = false; 
-          return; // ⛔ prevent other animations
+          return; 
         }
 
-        // =========================
-        // SPRINT IN PROGRESS
-        // =========================
         if (isSprintingRef.current) {
           sprintTimerRef.current -= delta;
           if (sprintTimerRef.current <= 0) {
             isSprintingRef.current = false;
           }
-          return; // ⛔ lock animation during sprint
+          return;
         }
 
         // =========================
         // MOVEMENT STATES
         // =========================
-        const isGrounded = true; // Simulating grounded for this viewer
-
-        if (!isGrounded) {
-          play("Falling");
+        if (!isGroundedRef.current) {
+          // Use Jumping if moving up, Falling if moving down (or just Jumping if Falling missing)
+          if (verticalVelocityRef.current > 0) {
+              play("Jumping");
+          } else {
+              play("Falling"); 
+          }
           return;
         }
 
-        // Calculate speed based on movement
-        const speed = isMoving ? 1.0 : 0.0; // Simplified for viewer (or use moveDir.length())
+        const speed = isMoving ? 1.0 : 0.0;
 
         if (speed > 0.6) {
           play("Running");
