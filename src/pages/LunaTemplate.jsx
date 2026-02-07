@@ -161,13 +161,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   const envLoadedRef = useRef(false);
   const actorLoadedRef = useRef(false);
-  const [isModelReady, setIsModelReady] = useState(false); // State to trigger script injection after load
   const currentEnvKeyRef = useRef(null);
   const cameraResetRef = useRef(false);
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
-  const mainScriptUpdatesRef = useRef([]); // Callbacks for main actor scripts
 
   // Load scripts bound to scene instances (build map once per activeScene)
   useEffect(() => {
@@ -235,20 +233,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const scriptsExecutedRef = useRef(new Set());
 
   useEffect(() => {
-      // Only run scripts when the model is fully loaded and ready
-      if (!scripts || !actorContainerRef.current || !sceneRef.current || !isModelReady) return;
-
-      // Clear previous updates to avoid duplication on re-run
-      mainScriptUpdatesRef.current = [];
+      if (!scripts || !actorContainerRef.current || !sceneRef.current) return;
 
       scripts.forEach(script => {
           // Prevent duplicate execution if script is meant to run once (init)
-          const scriptKey = `${script.id}-${modelUrl}-${Date.now()}`; 
-          
+          const scriptKey = `${script.id}-${modelUrl}`;
+          if (scriptsExecutedRef.current.has(scriptKey)) return;
+
+          // Simple Filter
+          if (script.model_reference && script.model_reference.toLowerCase() !== 'general') {
+              // ... check logic ...
+          }
+
           try {
               console.log(`Executing 3D Script: ${script.name}`);
               const func = new Function(
-                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store', 'registerUpdate',
+                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
                   script.script_code
               );
               func(
@@ -265,18 +265,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       getState: useLunaStore.getState,
                       setState: useLunaStore.setState,
                       subscribe: useLunaStore.subscribe
-                  },
-                  (updateFn) => {
-                      if (typeof updateFn === 'function') {
-                          mainScriptUpdatesRef.current.push(updateFn);
-                      }
                   }
               );
+              scriptsExecutedRef.current.add(scriptKey);
           } catch (e) {
               console.error(`Error running script ${script.name}:`, e);
           }
       });
-  }, [scripts, modelUrl, isModelReady]);
+  }, [scripts, modelUrl]); // Removed actorLoadedRef.current from dependencies as it is a ref
 
   // Fetch animations for Y Bot
   useEffect(() => {
@@ -621,27 +617,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     const instanceId = obj.id;
                     const instanceEntry = { object3d: model, updates: [], mixer: null };
 
-                    // Create a mixer and actions if animations exist
-                    const instanceActions = {};
+                    // Create a mixer if animations exist on the loaded asset
                     if (asset.animations && asset.animations.length > 0) {
                         try {
                             instanceEntry.mixer = new THREE.AnimationMixer(model);
-                            asset.animations.forEach((clip) => {
-                                instanceActions[clip.name] = instanceEntry.mixer.clipAction(clip);
-                                // Also map common names for easier access
-                                const lowerName = clip.name.toLowerCase();
-                                if (lowerName.includes('idle')) instanceActions.idle = instanceActions[clip.name];
-                                if (lowerName.includes('walk')) instanceActions.walk = instanceActions[clip.name];
-                                if (lowerName.includes('run')) instanceActions.run = instanceActions[clip.name];
-                            });
-                            
-                            // Play default idle if available
-                            if (instanceActions.idle) instanceActions.idle.play();
-                            else {
-                                const action = instanceEntry.mixer.clipAction(asset.animations[0]);
-                                action.play();
-                            }
-                        } catch (e) { console.warn("Error setting up instance animations", e); }
+                            const action = instanceEntry.mixer.clipAction(asset.animations[0]);
+                            action.play();
+                        } catch {}
                     }
 
                     npcInstancesRef.current[instanceId] = instanceEntry;
@@ -657,29 +639,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                             const script = instanceScriptsMapRef.current[binding.script_id];
                             if (script && script.script_code) {
                                 try {
-                                    // Extended signature to match PlayerController expectations
                                     const fn = new Function(
-                                        'THREE','scene','camera','renderer','model','mixer','actions','controls','clock','store','registerUpdate','params','instance',
+                                        'THREE','scene','camera','instance','registerUpdate','params','mixer',
                                         script.script_code
                                     );
                                     fn(
                                         THREE,
                                         scene,
                                         camera,
-                                        renderer,
                                         model,
-                                        npcInstancesRef.current[instanceId].mixer,
-                                        instanceActions,
-                                        controlsRef.current,
-                                        clockRef.current,
-                                        {
-                                            getState: useLunaStore.getState,
-                                            setState: useLunaStore.setState,
-                                            subscribe: useLunaStore.subscribe
-                                        },
                                         registerUpdate,
                                         binding.params || {},
-                                        model // alias for 'instance' legacy support
+                                        npcInstancesRef.current[instanceId].mixer
                                     );
                                 } catch (e) { console.error('Error running instance script', e); }
                             }
@@ -828,8 +799,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
         }
 
-        // Final pass: Ensure character is visible and upright
-        // adjustModelScaleToEnvironment(model, 0.18); // Removed to prevent incorrect scaling
+        // Final pass: fit the character to the environment size
+        adjustModelScaleToEnvironment(model, 0.18);
         };
 
     if (modelUrl) {
@@ -874,22 +845,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
                     if (loadedCount === animations.length) {
                       clearGroup(actorContainerRef.current);
-                      
-                      // Standard FBX Scale (Mixamo units are cm, world is meters)
-                      // Container 0.01, Model 1.0 = 1.0 scale output (1.8m tall)
-                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
-                      
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                       fbx.scale.setScalar(1);
                       fbx.position.set(0, 0, 0);
-                      
+                      // Scale replacement character to a sensible world height (~1.75m)
+                      adjustModelScaleToWorldHeight(fbx, 1.75);
                       processModel(fbx, allClips);
                       mixerRef.current = mixer;
                       actorLoadedRef.current = true;
-                      setIsModelReady(true); // Trigger script injection
-                      
+                      // Force Y-Bot baseline container scale so it fits the viewer
+                      if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
+                      // Enable control immediately for replacement model
                       controlsActive.current = true;
                       setIsActive(true);
-                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded Y-Bot FBX (scale 0.01)' });
+                      logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
                     }
                   },
                   undefined,
@@ -899,21 +868,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
               if (animations.length === 0) {
                 clearGroup(actorContainerRef.current);
-                
-                // Standard FBX Scale Fallback
-                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
-
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer only' });
                 fbx.scale.setScalar(1);
                 fbx.position.set(0, 0, 0);
-                
+                // Scale replacement character to a sensible world height (~1.75m)
+                adjustModelScaleToWorldHeight(fbx, 1.75);
                 processModel(fbx, allClips);
                 mixerRef.current = mixer;
                 actorLoadedRef.current = true;
-                setIsModelReady(true); // Trigger script injection
-                
+                // Force Y-Bot baseline container scale so it fits the viewer
+                if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(0.01);
+                // Enable control immediately for replacement model
                 controlsActive.current = true;
                 setIsActive(true);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor (scale 0.01)' });
+                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded FBX actor into Actor_Layer (container scale=0.01)' });
               }
             },
             undefined,
@@ -1096,12 +1064,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Animation Heartbeat (Anti-T-Pose)
       const activeMixer = mixerRef.current || mixer;
       if (activeMixer) activeMixer.update(delta);
-      
-      // Main Script Updates
-      if (mainScriptUpdatesRef.current?.length) {
-          mainScriptUpdatesRef.current.forEach(fn => { try { fn(delta); } catch {} });
-      }
-
       // Per-instance mixers and script updates
       try {
         Object.values(npcInstancesRef.current || {}).forEach((inst) => {
@@ -1809,16 +1771,49 @@ export default function LunaTemplate() {
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
 
-  // Force load Y-Bot (base.fbx)
+  // Auto-select new dashboard model: Y-Bot (base.fbx)
   useEffect(() => {
-    // Hardcoded URL for Y-Bot / Base Mesh to ensure consistency
-    // This replaces any dynamic search which might pick up the wrong model (e.g. Maria)
-    const Y_BOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx';
-    
-    if (modelUrl !== Y_BOT_URL) {
-      console.log('Forcing modelUrl to Y-Bot:', Y_BOT_URL);
-      setModelUrl(Y_BOT_URL);
-    }
+    let cancelled = false;
+    const load = async () => {
+      try {
+        // 1. Try explicit Y-Bot
+        const exact = await base44.entities.ModelFBX.filter({ name: 'Y-Bot' });
+        let chosen = exact && exact.length ? exact[0] : null;
+        
+        // 2. Try 'base.fbx' (commonly Y-Bot) if explicit not found
+        if (!chosen) {
+            const bases = await base44.entities.ModelFBX.filter({ name: 'base.fbx' });
+            if (bases && bases.length) chosen = bases[0];
+        }
+
+        // 3. Try 'base'
+        if (!chosen) {
+            const bases = await base44.entities.ModelFBX.filter({ name: 'base' });
+            if (bases && bases.length) chosen = bases[0];
+        }
+
+        // 4. Fallback search
+        if (!chosen) {
+          const all = await base44.entities.ModelFBX.list('-created_date', 100);
+          chosen = (all || []).find(m => (m.name || '').toLowerCase().includes('y-bot') || (m.name || '').toLowerCase().includes('base'));
+        }
+
+        // 5. HARD FALLBACK: Use known Y-Bot / Base URL
+        const fallbackUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx';
+
+        if (!cancelled) {
+            setModelUrl(chosen?.file_url || fallbackUrl);
+        }
+      } catch (e) {
+        console.error('Dashboard model lookup failed:', e);
+        // Ensure we load SOMETHING
+        if (!cancelled && !modelUrl) {
+            setModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/6b628bb29_base.fbx');
+        }
+      }
+    };
+    if (!modelUrl) load();
+    return () => { cancelled = true; };
   }, [modelUrl]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -1828,31 +1823,37 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // Fetch Room 2 (System Reboot)
+  // Fetch Active Scene Layout from Admin
   useEffect(() => {
     const fetchScene = async () => {
         try {
-            console.log("Forcing Room 2 load...");
-            const models = await base44.entities.Model3D.list();
-            const fbxs = await base44.entities.ModelFBX.list();
-            const allModels = [...models, ...fbxs];
+            // 1. Try to find an ACTIVE SceneLayout
+            const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
             
-            // Prioritize Room 2
-            const room2 = allModels.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')));
-            
-            if (room2?.file_url) {
-                console.log("Found Room 2:", room2.name);
-                setRoomModelUrl(room2.file_url);
-                setActiveScene(null); // Clear active scene to avoid overrides
+            if (layouts.length > 0) {
+                const layout = layouts[0];
+                console.log("Loading Active Scene:", layout.name);
+                setActiveScene(layout);
+                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
             } else {
-                console.warn("Room 2 not found, falling back to default.");
-                setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+                // Fallback to legacy auto-fetch logic if no scene is active
+                console.warn("No active scene found, falling back to auto-discovery.");
+                const models = await base44.entities.Model3D.list();
+                const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
+                const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
+                const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+                const selectedAsset = room2Fbx || room2Any || room1Asset;
+                
+                if (selectedAsset?.file_url) setRoomModelUrl(selectedAsset.file_url);
+                else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
             console.error("Failed to load scene configuration:", e);
         }
     };
     fetchScene();
+    
+    // Model selection handled separately (Maria WProp J J Ong)
   }, []);
 
   // Load saved environment preference
@@ -2077,20 +2078,31 @@ export default function LunaTemplate() {
     return () => window.removeEventListener('openInventoryPanel', handler);
   }, []);
 
+  if (mode === 'user') {
+    return (
+      <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
+        <UserInterfaceView />
+      </div>);
+
+  }
+
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-      <div
-        className="min-h-screen text-white p-0 overflow-hidden relative"
-        style={{
-          backgroundColor: '#080808',
-          // Keep background image if part of scene ambiance, or remove for cleaner 3D view
-          backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}>
+    <div
+      className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
+      style={{
+        backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#080808'
+      }}>
 
-        {/* 3D Model Viewer */}
+
+
+      {/* 3D Model Viewer - Full Page Background */}
+      {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
+      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
           className="fixed inset-0 z-0 pointer-events-auto"
           style={{
@@ -2099,6 +2111,8 @@ export default function LunaTemplate() {
             justifyContent: 'center',
             width: '100vw',
             height: '100vh',
+            // Ensure background image container doesn't move, only this 3D view container is affected
+            // but the transform is inside TransparentModel3DViewer, so this wrapper stays put.
           }}>
 
           <TransparentModel3DViewer 
@@ -2108,13 +2122,1299 @@ export default function LunaTemplate() {
             backgroundUrl={bannerBackgroundUrl} 
             roomModelUrl={roomModelUrl} 
             activeScene={activeScene}
-            isStatsOpen={false}
+            isStatsOpen={showStats}
           />
         </div>
+      }
 
-      </div>
+      {/* Focus Mode Background Overlay - Removed to show custom background */}
+
+      {/* Plasma Water Video Background - Shows when I key is pressed (uiVisible) */}
+      <AnimatePresence>
+        {uiVisible && !showConsoleMode && !showAchievements &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 z-0"
+          >
+            <video
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
+          </motion.div>
+        }
+      </AnimatePresence>
+
+      {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
+      <AnimatePresence>
+        {!uiVisible && !showConsoleMode &&
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.4, ease: 'easeOut' }}
+            className="fixed right-8 z-30 overflow-y-auto pointer-events-none"
+            style={{
+              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+              top: '80px',
+              bottom: '32px',
+              maxHeight: 'calc(100vh - 112px)',
+              minHeight: '800px'
+            }}>
+
+            <div className="h-full">
+              <FocusModePanel
+                 onOpenCalendar={() => setShowCalendar(true)}
+                 onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+                 onToggleStats={() => setShowStats((v) => !v)}
+                 currentEnvId={currentEnvId}
+                 onSelectEnv={handleEnvSelect}
+               />
+            </div>
+          </motion.div>
+        }
+      </AnimatePresence>
+
+
+
+
+
+      {/* Universal Slide-Out Drawer */}
+      <AnimatePresence>
+        {activeDrawer &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              onClick={() => setActiveDrawer(null)} />
+
+            <motion.div
+              initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+              exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
+                'inset-0' :
+                'left-0 rounded-3xl'}`
+              }
+              style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? {
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+              } : {
+                top: '80px',
+                bottom: '48px',
+                width: '28vw',
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+              }}>
+
+              {/* Header - Hidden for full screen apps that have their own header */}
+              {!['skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) &&
+                <div className="p-6 flex items-center justify-between">
+                  <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
+                  <button
+                    onClick={() => setActiveDrawer(null)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
+
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+                </div>
+              }
+
+              {/* Close Button Overlay for Full Screen Apps (Story has its own internal close button) */}
+              {['battle', 'home'].includes(activeDrawer.id) &&
+                <button
+                  onClick={() => setActiveDrawer(null)}
+                  className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+
+                  <X className="w-5 h-5" />
+                </button>
+              }
+
+              {/* Content Area */}
+              <div className={`flex-1 overflow-y-auto ${activeDrawer.id === 'skill-tree' ? '' : 'p-6'}`}>
+                {activeDrawer.id === 'loadout' ?
+                  <LoadoutPanel /> :
+                  activeDrawer.id === 'settings' ?
+                    <SettingsPanel /> :
+                    activeDrawer.id === 'skill-tree' ?
+                      <GenreMastery onClose={() => setActiveDrawer(null)} /> :
+                      activeDrawer.id === 'battle' ?
+                        <BattleModeOverlay onClose={() => setActiveDrawer(null)} /> :
+                        activeDrawer.id === 'home' ?
+                          <AIHomeOverlay
+                            onClose={() => setActiveDrawer(null)}
+                            onSelectItem={(item) => setActiveDrawer(item)} /> :
+
+                          activeDrawer.id === 'story' ?
+                            <AIStoryOverlay onClose={() => setActiveDrawer(null)} /> :
+                            activeDrawer.id === 'games' ?
+                              <div className="space-y-6">
+                                {/* Pinned Games Header */}
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Pinned Games</h3>
+                                  <span className="text-white/40 text-xs">Quick Access</span>
+                                </div>
+
+                                {/* Pinned Games Grid */}
+                                <div className="grid grid-cols-7 gap-3">
+                                  {Array.from({ length: 70 }, (_, i) => {
+                                    const games = [
+                                      { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
+                                      { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
+                                      { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
+                                      { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' }];
+
+                                    const game = games[i % games.length];
+                                    return { ...game, index: i };
+                                  }).map((game, index) =>
+                                    <motion.div
+                                      key={index}
+                                      initial={{ opacity: 0, y: 20 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: Math.min(index * 0.02, 1) }}
+                                      onClick={() => setSelectedGame(game)}
+                                      className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all">
+
+                                      {/* Game Image */}
+                                      <img src={game.image} alt={game.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+
+                                      {/* Gradient Overlay */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
+                                      {/* Status Badge */}
+                                      <div className="absolute top-1 right-1">
+                                        <div className={`w-2 h-2 rounded-full ${game.status === 'Playing' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                                      </div>
+
+                                      {/* Game Info - Only on hover */}
+                                      <div className="absolute inset-0 flex flex-col justify-end p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <p className="text-white/60 text-[8px] uppercase tracking-wider mb-0.5">{game.genre}</p>
+                                        <h4 className="text-white font-bold text-[10px] mb-1 truncate">{game.title}</h4>
+                                      </div>
+
+                                      {/* Achievements Link - Top Right on Hover */}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
+                                        }}
+                                        className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
+                                        title="View Achievements"
+                                      >
+                                        <Trophy size={12} />
+                                      </button>
+                                    </motion.div>
+                                  )}
+                                </div>
+
+                                {/* Add More Games */}
+                                <motion.button
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ delay: 0.5 }}
+                                  className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2">
+
+                                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
+                                    <Gamepad2 className="w-6 h-6" />
+                                  </div>
+                                  <span className="text-sm font-semibold">Pin More Games</span>
+                                </motion.button>
+                              </div> :
+
+                              <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
+                }
+              </div>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+      {/* Game Detail Drawer - Slides from Right */}
+      <AnimatePresence>
+        {selectedGame &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setSelectedGame(null)} />
+
+            <motion.div
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{
+                top: '80px',
+                bottom: '48px',
+                width: '35vw',
+                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+              }}>
+
+              {/* Header */}
+              <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
+                <h2 className="text-white font-bold text-xl tracking-wider uppercase">Game Details</h2>
+                <button
+                  onClick={() => setSelectedGame(null)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
+
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Game Cover */}
+                <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+                  <img src={selectedGame.image} alt={selectedGame.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <h3 className="text-2xl font-bold text-white mb-1">{selectedGame.title}</h3>
+                    <p className="text-white/60 text-sm">{selectedGame.genre}</p>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center gap-3">
+                  <div className={`w-3 h-3 rounded-full ${selectedGame.status === 'Playing' ? 'bg-green-400 animate-pulse' : 'bg-blue-400'}`} />
+                  <span className="text-white font-semibold">{selectedGame.status}</span>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 rounded-lg py-3 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                    <Gamepad2 className="w-4 h-4" />
+                    Launch Game
+                  </button>
+                  <button className="bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg py-3 text-white font-semibold transition-all">
+                    View Library
+                  </button>
+                </div>
+
+                {/* Game Stats */}
+                <div className="space-y-3">
+                  <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Statistics</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Playtime</p>
+                      <p className="text-white font-bold text-lg">24.5h</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Achievements</p>
+                      <p className="text-white font-bold text-lg">12/50</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Last Played</p>
+                      <p className="text-white font-bold text-sm">2 hours ago</p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                      <p className="text-white/40 text-xs mb-1">Progress</p>
+                      <p className="text-white font-bold text-lg">68%</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recent Achievements */}
+                <div className="space-y-3">
+                  <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Recent Achievements</h4>
+                  <div className="space-y-2">
+                    {[1, 2, 3].map((i) =>
+                      <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                          <Trophy className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm font-semibold">Achievement Title</p>
+                          <p className="text-white/40 text-xs">Unlocked today</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pin/Unpin Button */}
+                <button className="w-full bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg py-3 text-white font-semibold transition-all">
+                  Unpin from Dashboard
+                </button>
+              </div>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+
+
+      {/* Main Content Area - Switches based on Console Mode or Achievements */}
+      <AnimatePresence mode="wait">
+        {showAchievements ? (
+          <motion.div
+            key="achievements-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+          >
+            <Achievements 
+              showCloseButton={true} 
+              onClose={() => navigate(createPageUrl('LunaTemplate'))}
+            />
+          </motion.div>
+        ) : showConsoleMode ? (
+          <motion.div
+            key="console-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
+          >
+{!showAvatarProgression && (
+            <>
+            {/* LIVE STREAM SECTION (Condition Rendered) */}
+            <AnimatePresence>
+              {showLive && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px] pointer-events-auto"
+                >
+                  {/* Streamy Box */}
+                  <div className="basis-[75%] h-full bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
+                            <span className="text-white/40">Stream Offline</span>
+                        </div>
+                    </div>
+                    {/* Mock Controls */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-3">
+                            <button className="text-white hover:text-cyan-400"><Play className="w-5 h-5 fill-current" /></button>
+                            <span className="text-white text-sm">00:00 / 00:00</span>
+                        </div>
+                        <button className="text-white hover:text-cyan-400"><Settings className="w-5 h-5" /></button>
+                    </div>
+                  </div>
+
+                  {/* Chat Box */}
+                  <div className="basis-[25%] h-full bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden">
+                    <div className="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                        <span className="text-white font-bold text-sm">Stream Chat</span>
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    </div>
+                    <div className="flex-1 p-3 space-y-2 overflow-y-auto">
+                        <div className="text-xs text-white/60">Welcome to the chat!</div>
+                        <div className="flex gap-2">
+                            <span className="text-cyan-400 text-xs font-bold">Bot:</span>
+                            <span className="text-white text-xs">Stream starting soon...</span>
+                        </div>
+                    </div>
+                    <div className="p-3 border-t border-white/10 bg-white/5">
+                        <input 
+                            type="text" 
+                            placeholder="Send a message..." 
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
+                        />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* STATS SECTION (Dropdown) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, mb: 0 }}
+                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
+                  exit={{ opacity: 0, height: 0, mb: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full overflow-hidden relative z-20" // High Z to sit above fade
+                  style={{ paddingLeft: '440px' }}
+                >
+                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
+                    <AvatarProgressionBox />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* TOP SECTION: Aspects / Artifacts / Genre */}
+            <div className={`flex gap-12 mb-6 items-start pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              {/* Aspects */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2,3].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Artifacts */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
+                <div className="relative w-52 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2,3,4,5].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Genre */}
+              <div className="flex flex-col items-center gap-4">
+                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                <div className="relative w-40 h-4">
+                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                </div>
+                <div className="flex gap-3">
+                  {[1,2].map((i)=> (
+                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Divider Line under Game Banner */}
+            <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
+
+            {/* QUICK ACCESS BOXES */}
+            <div style={{ paddingLeft: '440px' }}>
+            <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              {/* Stats */}
+              <ConsoleTile
+                onClick={() => setShowStats((v) => !v)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
+              </ConsoleTile>
+
+              {/* Skill Tree */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
+              </ConsoleTile>
+
+              {/* Season Pass */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('SeasonalPass'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
+              </ConsoleTile>
+
+              {/* Achievements */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Achievements'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
+              </ConsoleTile>
+
+              {/* Leaderboard */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('Leaderboard'))}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
+              </ConsoleTile>
+            </div>
+
+            {/* Environment Selector (Replaces Game Banner) */}
+            <div className={`mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+            </div>
+
+            </div>
+
+            {/* Main Grid: Leaderboard + 2x2 Right */}
+            <div className={`flex-1 flex gap-6 min-h-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              {/* Leaderboard Tile - Left */}
+              <div className="pointer-events-auto"><LeaderboardTile /></div>
+
+              {/* Right Side - 2x2 Grid */}
+              <div className="flex-1 flex flex-col gap-6">
+                {/* App Shortcuts */}
+                <div className="flex gap-6 flex-1">
+                  {/* Settings */}
+                  <ConsoleTile
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
+                  >
+                    <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
+                  </ConsoleTile>
+
+                  {/* My Games & Apps */}
+                  <ConsoleTile
+                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
+                  >
+                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
+                  </ConsoleTile>
+                </div>
+              </div>
+            </div>
+            </>
+            )}
+
+            {showAvatarProgression && (
+              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
+                <div className="max-w-5xl mx-auto pointer-events-auto">
+                  <AvatarProgressionBox />
+                </div>
+              </div>
+            )}
+
+            {/* Time Display - Bottom Left */}
+            <div className="absolute bottom-6 left-12 z-30 pointer-events-auto">
+              <span className="text-[#CCCCCC] text-lg font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </span>
+            </div>
+
+            {/* SVG Gradient Definitions */}
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="silverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="100%" stopColor="#A0A0A0" />
+                </linearGradient>
+                <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" />
+                  <stop offset="50%" stopColor="#FFA500" />
+                  <stop offset="100%" stopColor="#FF8C00" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </motion.div>
+        ) : uiVisible ? (
+          <motion.div
+            key="loadout-mode"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full">
+
+            <AnimatePresence mode="wait">
+              {false &&
+                <motion.div
+                  key="hidden-ui"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full h-full flex gap-8 py-8">
+
+                  {/* Friends List - Far Left */}
+                <div className="w-80 flex-shrink-0">
+                  <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-full flex flex-col">
+                    <FriendRequestsPanel currentUserId={user?.id} />
+                    <div className="mt-6 flex-1 overflow-y-auto">
+                      <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-blue-400" />
+                        Friends Online
+                      </h2>
+                      <div className="space-y-3">
+                        {mockFriends.map((friend) =>
+                          <div
+                            key={friend.id}
+                            onClick={() => setSelectedFriend(friend)}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+
+                            <div className="relative">
+                              <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full" />
+                              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'}`
+                              } />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-semibold truncate">{friend.name}</p>
+                              {friend.game ?
+                                <p className="text-blue-400 text-xs truncate">{friend.game}</p> :
+                                
+                                <p className="text-slate-500 text-xs">Offline</p>
+                              }
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Center - Calendar, Clock & Date */}
+                <div className="flex-1 flex flex-col gap-6">
+                  {/* Clock & Date */}
+                  <div
+                    onClick={() => setShowCalendar(true)}
+                    className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/[0.05] transition-colors">
+
+                    <div className="text-7xl font-bold text-white mb-2 font-mono">
+                      {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="text-2xl text-white/60">
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    </div>
+                    <p className="text-xs text-white/40 mt-2">Click to open calendar</p>
+                  </div>
+
+                  {/* Calendar */}
+                  <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6 flex-1">
+                    <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-purple-400" />
+                      Upcoming Events
+                    </h2>
+                    <div className="space-y-3">
+                      {userEvents.slice(0, 3).map((event, i) =>
+                        <div
+                          key={i}
+                          onClick={() => setShowCalendar(true)}
+                          className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer">
+
+                          <div className="flex items-center gap-3">
+                            <div className="bg-purple-500/20 rounded-lg px-3 py-2 text-purple-300 font-bold text-sm">
+                              {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-white font-semibold">{event.title}</p>
+                              {event.game && <p className="text-white/50 text-sm">{event.game}</p>}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {userEvents.length === 0 &&
+                        <p className="text-white/40 text-sm text-center py-4">No upcoming events</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div className="mt-6 w-full max-w-sm">
+                  <LunaStatsPanel />
+                </div>
+
+                {/* AI News */}
+                  <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                    <h2 className="text-white font-bold text-xl mb-4 flex items-center gap-2">
+                      <Radio className="w-5 h-5 text-green-400" />
+                      Platform Updates
+                    </h2>
+                    <div className="space-y-3">
+                      {platformUpdates.slice(0, 3).map((update, i) =>
+                        <div
+                          key={i}
+                          onClick={() => setSelectedUpdate(update)}
+                          className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${update.update_type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'}`
+                          }>
+
+                          <div className="flex items-start gap-3">
+                            <Bot className={`w-5 h-5 flex-shrink-0 mt-0.5 ${update.update_type === 'required' ? 'text-red-400' : 'text-green-400'}`} />
+                            <div className="flex-1">
+                              <p className="text-white font-semibold mb-1">{update.title}</p>
+                              <p className="text-white/60 text-sm">{update.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {platformUpdates.length === 0 &&
+                        <p className="text-white/40 text-sm text-center py-4">No updates available</p>
+                      }
+                    </div>
+                  </div>
+                </div>
+                </motion.div>
+              }
+              {uiVisible &&
+                <motion.div
+                  key="visible-ui"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="w-full">
+
+                  <AnimatePresence mode="wait">
+                  {expandedGenre ?
+                    <motion.div
+                      key="expanded-genre"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[70] p-8"
+                      style={{
+                        background: 'rgba(11, 11, 11, 0.95)',
+                        backdropFilter: 'blur(40px)',
+                        WebkitBackdropFilter: 'blur(40px)'
+                      }}
+                    >
+                      <ExpandedGenreView
+                        genre={expandedGenre}
+                        onClose={() => setExpandedGenre(null)}
+                        onCardClick={setSelectedCardForUpgrade}
+                      />
+                    </motion.div> :
+
+
+                      <motion.div
+                        key="boxes"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex h-full relative">
+
+                        {/* Left: 3D Viewer Spacing */}
+                        <div className="w-[420px] flex-shrink-0" />
+
+
+
+                        {/* Middle: All Equipment Sections - positioned below header */}
+                        <div className="flex flex-col gap-8 flex-shrink-0 ml-8 relative z-30 items-center mt-20">
+                          {/* Top Row: Armor and Weapons with Genre */}
+                          <div className="flex gap-12 items-start">
+                            {/* Armor - 3x3 Grid */}
+                            <div className="flex flex-col items-center gap-4">
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Armor</h2>
+                              <div className="relative w-48 h-4 mb-2"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
+                              <div className="grid grid-cols-3 gap-3">{[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {const slotId = `armor-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);})}</div>
+                            </div>
+
+                            {/* Weapons with Genre to the right */}
+                            <div className="flex gap-8 items-start">
+                              {/* Weapons */}
+                              <div className="flex flex-col items-center">
+                                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase mb-4 text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Weapons</h2>
+                                <div className="relative w-64 h-4 mb-4">
+                                  <div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div>
+                                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-20 h-[1px] bg-white/10"></div>
+                                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
+                                </div>
+                                <div className="flex gap-3">
+                                  {[1, 2, 3].map((i) => {
+                                    const slotId = `weapon-${i}`;
+                                    const equippedItem = equippedItems[slotId];
+                                    return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Genre (right of Weapons) */}
+                              <div className="flex flex-col items-center gap-4">
+                                <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                                <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
+                                <div className="flex gap-3">{[1, 2].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);})}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bottom Row: Aspects, Artifacts, Genre (pushed to very bottom) */}
+                          <div className="flex gap-8 mt-32">
+                            {/* Aspects */}
+                            <div className="flex flex-col items-center gap-4">
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Aspects</h2>
+                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
+                              <div className="flex gap-3">{[1, 2, 3].map((i) => {const slotId = `aspect-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);})}</div>
+                            </div>
+
+                            {/* Artifacts */}
+                            <div className="flex flex-col items-center gap-4">
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Artifacts</h2>
+                              <div className="relative w-52 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-16 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
+                              <div className="flex gap-3">{[1, 2, 3, 4, 5].map((i) => {const slotId = `artifact-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);})}</div>
+                            </div>
+
+                            {/* Genre (bottom row) */}
+                            <div className="flex flex-col items-center gap-4">
+                              <h2 className="text-[10px] font-light tracking-[0.35em] uppercase text-[#9A9A9A]" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>Genre</h2>
+                              <div className="relative w-40 h-4"><div className="absolute top-2 left-0 right-0 h-[1px] bg-white/10"></div><div className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-[1px] bg-white/10"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div></div>
+                              <div className="flex gap-3">{[3, 4].map((i) => {const slotId = `genre-${i}`; const equippedItem = equippedItems[slotId]; return (<div key={slotId} onClick={() => handleBoxClick(slotId)} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}><div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />{equippedItem && <img src={equippedItem.icon_url || equippedItem.icon} alt={equippedItem.name} className="w-full h-full object-contain p-2 relative z-10" />}</div>);})}</div>
+                            </div>
+                          </div>
+                        </div>
+
+
+                      </motion.div>
+                  }
+                  </AnimatePresence>
+                </motion.div>
+              }
+            </AnimatePresence>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* Inventory Panel Overlay (Global) - Single Instance */}
+      {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
+      {clickedSlot && (
+        <div 
+          className="fixed inset-0 z-[60]"
+          key="inventory-panel-container"
+        >
+          <InventoryPanel
+            onEquip={handleEquipItem}
+            targetSlot={clickedSlot}
+            onClose={() => setClickedSlot(null)}
+          />
+        </div>
+      )}
+
+      {/* Avatar Progression Overlay (O key) */}
+      <AnimatePresence>
+        {showAvatarProgression && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowAvatarProgression(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
+            >
+              <div className="flex-1 overflow-y-auto p-8">
+                <AvatarProgressionBox />
+              </div>
+              <button
+                onClick={() => setShowAvatarProgression(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Settings Overlay */}
+      <AnimatePresence>
+        {showSettings &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSettings(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+
+              <div className="flex-1 overflow-y-auto">
+                <SettingsPanel />
+              </div>
+
+              <button
+                onClick={() => setShowSettings(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+      {/* AI News Overlay */}
+      <AnimatePresence>
+        {showAINews &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowAINews(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+
+              <div className="flex-1 overflow-y-auto">
+                <AINewsContent />
+              </div>
+
+              <button
+                onClick={() => setShowAINews(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+      {/* Seasonal Pass Overlay */}
+      <AnimatePresence>
+        {showSeasonalPass &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowSeasonalPass(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+
+              <div className="flex-1 overflow-y-auto">
+                <SeasonalPassContent />
+              </div>
+
+              <button
+                onClick={() => setShowSeasonalPass(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+
+
+
+
+      {/* Pin Games Overlay */}
+      <AnimatePresence>
+        {showPinGames &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowPinGames(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-50 flex flex-col p-8"
+              style={{
+                background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
+                backdropFilter: 'blur(16px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+                boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.05)'
+              }}>
+
+              <div className="flex-1 overflow-hidden">
+                <PinGamesContent />
+              </div>
+
+              <button
+                onClick={() => setShowPinGames(false)}
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+      {/* Card Enhancement Overlay */}
+      <AnimatePresence>
+        {selectedCardForUpgrade &&
+          <CardEnhancementOverlay
+            card={selectedCardForUpgrade}
+            onClose={() => setSelectedCardForUpgrade(null)} />
+
+        }
+
+
+      </AnimatePresence>
+
+      {/* Blank Page Overlay */}
+      <AnimatePresence>
+        {showBlankPage &&
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={() => setShowBlankPage(false)} />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 z-50 flex flex-col p-8"
+              style={{
+                background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
+                backdropFilter: 'blur(40px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(59, 130, 246, 0.15)'
+              }}>
+
+              {/* Header with Tabs */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-6">
+                  <h2 className="text-3xl font-bold text-white/90 drop-shadow-lg">User Interface</h2>
+                  <div className="h-8 w-px bg-white/20" />
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setBlankPageTab('entertainment')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'entertainment' ?
+                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                        'text-white/60 hover:text-white'}`
+                      }
+                      style={blankPageTab === 'entertainment' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}>
+
+                      Entertainment
+                    </button>
+                    <button
+                      onClick={() => setBlankPageTab('streaming')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'streaming' ?
+                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                        'text-white/60 hover:text-white'}`
+                      }
+                      style={blankPageTab === 'streaming' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}>
+
+                      Streaming
+                    </button>
+                    <button
+                      onClick={() => setBlankPageTab('social')}
+                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'social' ?
+                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                        'text-white/60 hover:text-white'}`
+                      }
+                      style={blankPageTab === 'social' ? {
+                        background: 'rgba(59, 130, 246, 0.3)',
+                        backdropFilter: 'blur(20px)',
+                        WebkitBackdropFilter: 'blur(20px)',
+                        border: '1px solid rgba(147, 197, 253, 0.3)'
+                      } : {}}>
+
+                      Social Hub
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowBlankPage(false)}
+                  className="text-white/60 hover:text-white transition-colors">
+
+                  <X className="w-8 h-8" />
+                </button>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={blankPageTab}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full overflow-y-auto">
+
+                    {blankPageTab === 'entertainment' &&
+                      <AnimatePresence mode="wait">
+                        {!selectedStreamingService ?
+                          <motion.div
+                            key="service-grid"
+                            initial={{ opacity: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{ duration: 0.4 }}
+                            className="grid grid-cols-4 gap-4">
+
+                            {[
+                              { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
+                              { name: 'Disney+', icon: Sparkles, color: 'rgba(17, 60, 207, 0.3)', topText: 'Disney', bottomText: '+' },
+                              { name: 'HBO Max', icon: Play, color: 'rgba(185, 28, 255, 0.3)', topText: 'HBO', bottomText: 'Max' },
+                              { name: 'Prime Video', icon: ShoppingBag, color: 'rgba(0, 168, 225, 0.3)', topText: 'Prime', bottomText: 'Video' },
+                              { name: 'Hulu', icon: Tv, color: 'rgba(28, 231, 131, 0.3)', topText: 'Hulu', bottomText: '' },
+                              { name: 'Apple TV+', icon: Monitor, color: 'rgba(0, 0, 0, 0.5)', topText: 'Apple', bottomText: 'TV+' },
+                              { name: 'Paramount+', icon: Mountain, color: 'rgba(0, 99, 235, 0.3)', topText: 'Paramount', bottomText: '+' },
+                              { name: 'Peacock', icon: Feather, color: 'rgba(0, 0, 0, 0.4)', topText: 'Peacock', bottomText: '' }].
+                              map((service, idx) => {
+                                const Icon = service.icon;
+                                return (
+                                  <motion.div
+                                    key={service.name}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    onClick={() => setSelectedStreamingService(service.name)}
+                                    className="w-20 h-20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:scale-110 transition-transform p-1"
+                                    style={{
+                                      background: `linear-gradient(135deg, ${service.color} 0%, rgba(147, 197, 253, 0.15) 100%)`,
+                                      backdropFilter: 'blur(20px)',
+                                      WebkitBackdropFilter: 'blur(20px)',
+                                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                                      boxShadow: '0 4px 16px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                                    }}>
+
+                                    <span className="text-white/90 text-[10px] font-semibold">{service.topText}</span>
+                                    <Icon className="w-5 h-5 text-white/90 my-0.5" />
+                                    {service.bottomText && <span className="text-white/90 text-[10px] font-semibold">{service.bottomText}</span>}
+                                  </motion.div>);
+
+                              })}
+                          </motion.div> :
+
+                          <motion.div
+                            key="streaming-app"
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="fixed inset-0 flex items-center justify-center bg-black z-[100]">
+
+                            <button
+                              onClick={() => setSelectedStreamingService(null)}
+                              className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors">
+
+                              <X className="w-8 h-8" />
+                            </button>
+
+                            <div className="text-center">
+                              <Clapperboard className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                              <p className="text-white/60 text-lg">{selectedStreamingService} app will load here</p>
+                              <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
+                            </div>
+                          </motion.div>
+                        }
+                      </AnimatePresence>
+                    }
+                    {blankPageTab === 'streaming' &&
+                      <StreamingDiscovery />
+                    }
+                    {blankPageTab === 'social' &&
+                      <SocialHub />
+                    }
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </>
+        }
+      </AnimatePresence>
+
+      {/* Side Access Menu - Minimally invasive left edge interaction */}
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && (
+        // SideAccessMenu stays visible even when hideUI is true, per user request:
+        // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
+        // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
+        <SideAccessMenu />
+      )}
+
+      {/* Calendar Overlay */}
+      <AnimatePresence>
+        {showCalendar && (
+          <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
+        )}
+      </AnimatePresence>
+
+      {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
+      <AnimatePresence>
+        {activeSubTab &&
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-40"
+            style={{
+              background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
+            }}>
+
+             {/* Close Blacksmith -> Console */}
+             {activeSubTab === 'blacksmith' && (
+               <button
+                 onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
+                 className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             )}
+
+             <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
+              {activeSubTab === 'forum' && <CommunityPage />}
+              {activeSubTab === 'blacksmith' && <Blacksmith />}
+              {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
+              {activeSubTab === 'entertainment' && <EntertainmentHub />}
+              {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
+            </div>
+          </motion.div>
+        }
+      </AnimatePresence>
+
+    </div>
     </PageErrorBoundary>
-  );
+    );
 
 
 }

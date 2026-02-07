@@ -4,58 +4,31 @@ import * as THREE from 'three';
  * Handles runtime execution of attached scripts (behaviors) for the Scene Editor.
  */
 export class ScriptRuntime {
-  constructor(sceneRef, sceneObjectsMapRef, mixersRef, controlsRef, rendererRef) {
+  constructor(sceneRef, sceneObjectsMapRef, mixersRef, controlsRef) {
     this.sceneRef = sceneRef;
     this.objectsMapRef = sceneObjectsMapRef;
     this.mixersRef = mixersRef;
     this.controlsRef = controlsRef; // OrbitControls
-    this.rendererRef = rendererRef;
-    this.updates = []; // Functional updates
+    this.instances = [];
     this.active = false;
     this.cleanupFns = [];
   }
 
-  start(objectsConfig, scriptsCatalog) {
+  async start(objectsConfig, scriptsCatalog) {
     if (this.active) return;
     this.active = true;
-    this.updates = [];
+    this.instances = [];
     this.cleanupFns = [];
 
-    const scene = this.sceneRef.current;
-    const camera = this.controlsRef.current?.object;
-    const controls = this.controlsRef.current;
-    const renderer = this.rendererRef?.current || null;
-    
+    // console.log("Starting Script Runtime...", objectsConfig);
+
     for (const objConf of objectsConfig) {
       if (!objConf.scripts || objConf.scripts.length === 0) continue;
       
       const threeObj = this.objectsMapRef.current[objConf.id];
-      if (!threeObj) continue;
-
-      // Prepare Actions Map
-      const actions = {};
-      const mixerEntry = this.mixersRef.current[objConf.id];
-      const mixer = mixerEntry?.mixer;
-      
-      if (mixer && threeObj.animations) {
-          threeObj.animations.forEach(clip => {
-              const action = mixer.clipAction(clip);
-              actions[clip.name] = action;
-              // Map common names
-              const lower = clip.name.toLowerCase();
-              
-              // 1. Exact User-Specified Matches (High Priority)
-              if (clip.name === 'Neutral Idle' || lower === 'neutral idle') actions.idle = action;
-              else if (clip.name === 'Walking' || lower === 'walking') actions.walk = action;
-              else if (clip.name === 'Running' || lower === 'running') actions.run = action;
-              else if (clip.name === 'Sprinting' || lower === 'sprinting') actions.run = action; // "Sprinting for run" fallback
-
-              // 2. Loose Matches (Fallback)
-              if (!actions.idle && lower.includes('idle')) actions.idle = action;
-              if (!actions.walk && lower.includes('walk')) actions.walk = action;
-              if (!actions.run && lower.includes('run')) actions.run = action;
-              if (!actions.jump && lower.includes('jump')) actions.jump = action;
-          });
+      if (!threeObj) {
+          console.warn("ScriptRuntime: Object not found in scene:", objConf.id);
+          continue;
       }
 
       for (const scriptRef of objConf.scripts) {
@@ -63,43 +36,27 @@ export class ScriptRuntime {
         if (!scriptDef || !scriptDef.script_code) continue;
 
         try {
-            const registerUpdate = (fn) => {
-                if (typeof fn === 'function') this.updates.push(fn);
-            };
+          // Dynamic Import from Blob to bypass build steps and allow runtime execution
+          const blob = new Blob([scriptDef.script_code], { type: 'application/javascript' });
+          const url = URL.createObjectURL(blob);
+          const module = await import(url);
+          URL.revokeObjectURL(url);
+          
+          const ClassDef = module.default;
+          if (!ClassDef) continue;
 
-            const registerCleanup = (fn) => {
-                if (typeof fn === 'function') this.cleanupFns.push(fn);
-            };
+          const instance = new ClassDef();
+          
+          // Inject Entity / Component System Mock
+          instance.entity = {
+            getComponent: (name) => this._getComponent(name, objConf.id, threeObj)
+          };
 
-            // Execute functional script
-            const fn = new Function(
-                'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store', 'registerUpdate', 'params', 'registerCleanup',
-                scriptDef.script_code
-            );
-
-            // Mock Store (for now, or pass real one if available)
-            const store = { 
-                getState: () => ({}), 
-                setState: () => {}, 
-                subscribe: () => () => {} 
-            };
-
-            fn(
-                THREE, // Use module-level import
-                scene,
-                camera,
-                renderer,
-                threeObj,
-                mixer,
-                actions,
-                controls,
-                new THREE.Clock(), // New clock for script? Or global? Script usually uses delta from update.
-                store,
-                registerUpdate,
-                scriptRef.params || {},
-                registerCleanup
-            );
-
+          if (instance.onStart) {
+              instance.onStart();
+          }
+          
+          this.instances.push({ instance, objectId: objConf.id });
         } catch (e) {
           console.error(`Failed to start script ${scriptDef.name}:`, e);
         }
@@ -109,15 +66,18 @@ export class ScriptRuntime {
 
   stop() {
     this.active = false;
-    this.updates = [];
+    this.instances.forEach(({ instance }) => {
+      if (instance.onDestroy) instance.onDestroy();
+    });
+    this.instances = [];
     this.cleanupFns.forEach(fn => fn());
     this.cleanupFns = [];
   }
 
   update(delta) {
     if (!this.active) return;
-    this.updates.forEach(fn => {
-        try { fn(delta); } catch (e) { console.error("Script Update Error:", e); }
+    this.instances.forEach(({ instance }) => {
+      if (instance.onUpdate) instance.onUpdate();
     });
   }
 

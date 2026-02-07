@@ -127,20 +127,7 @@ export default function SceneEditor() {
     setSceneName(layout.name);
 
     // Preserve Actor_Layer/Y Bot scripts so the player brain persists
-    // Also auto-attach PlayerController if missing on Y-Bot
-    const playerScript = scripts.find(s => s.name === 'PlayerController');
-    const cleanObjects = (layout.objects || []).map(obj => {
-         const name = (obj.name || '').toLowerCase();
-         const isHumanoid = name.includes('ybot') || name.includes('bot');
-         if (isHumanoid && playerScript && (!obj.scripts || !obj.scripts.find(s => s.script_id === playerScript.id))) {
-             console.log("Auto-attaching PlayerController to existing Y-Bot:", obj.name);
-             return {
-                 ...obj,
-                 scripts: [...(obj.scripts || []), { script_id: playerScript.id, params: {} }]
-             };
-         }
-         return obj;
-    });
+    const cleanObjects = (layout.objects || []);
 
     setSceneConfig({
       environment: layout.environment_transform ? {
@@ -234,7 +221,7 @@ export default function SceneEditor() {
     transformRef.current = transform;
 
     // 5. Script Runtime Init
-    scriptRuntimeRef.current = new ScriptRuntime(sceneRef, sceneObjectsMap, mixersRef, controlsRef, rendererRef);
+    scriptRuntimeRef.current = new ScriptRuntime(sceneRef, sceneObjectsMap, mixersRef, controlsRef);
 
     // 6. Animation Loop
     const animate = () => {
@@ -501,27 +488,17 @@ export default function SceneEditor() {
     const isHumanoid = nameLower.includes('ybot') || nameLower.includes('bot');
     const scaleVal = (isHumanoid && autoScaleHumanoids) ? 0.01 : 1;
 
-    // Auto-attach PlayerController for Y-Bot or Humanoids
-    const defaultScripts = [];
-    if (isHumanoid) {
-        const playerScript = scripts.find(s => s.name === 'PlayerController');
-        if (playerScript) {
-            defaultScripts.push({ script_id: playerScript.id, params: {} });
-            console.log("Auto-attached PlayerController to:", model.name);
-        }
-    }
-
     const newObj = {
       id: newId,
       model_id: model.id,
       model_url: model.file_url,
       name: type === 'spawn_point' ? `Spawn (${model.name})` : model.name,
       instance_name: type === 'spawn_point' ? `PlayerStart_${newId.slice(0,4)}` : model.name,
-      role: (isHumanoid || type === 'spawn_point') ? 'player' : 'static',
+      role: type === 'spawn_point' ? 'player' : 'static',
       type: type,
       layer: (isHumanoid ? 'Actor_Layer' : (type === 'spawn_point' ? 'Actor_Layer' : 'Default')),
       persistent: !!(isHumanoid || type === 'spawn_point'),
-      scripts: defaultScripts,
+      scripts: [],
       transform: { 
           position: { x: 0, y: 0, z: 0 }, 
           rotation: { x: 0, y: 0, z: 0 }, 
