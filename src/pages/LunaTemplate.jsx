@@ -79,6 +79,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const verticalVelocityRef = useRef(0);
   const isGroundedRef = useRef(true);
 
+  // Camera orbit state (right-click drag)
+  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 2.5 });
+  const isRightMouseDownRef = useRef(false);
+  const lastMouseRef = useRef({ x: 0, y: 0 });
+
+  // Hurricane kick lock
+  const hurricaneKickPlayingRef = useRef(false);
+
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
     queryKey: ['adminAnimations'],
@@ -97,13 +105,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 500);
-    camera.position.set(0, 3, -5); // Initial position
+    camera.position.set(0, 3, -5);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true; // Enable shadows
+    renderer.shadowMap.enabled = true;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -117,23 +125,52 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.castShadow = true;
     scene.add(dirLight);
 
+    // --- MOUSE CONTROLS (right-click orbit + scroll zoom) ---
+    const onMouseDown = (e) => {
+      if (e.button === 2) {
+        isRightMouseDownRef.current = true;
+        lastMouseRef.current = { x: e.clientX, y: e.clientY };
+        e.preventDefault();
+      }
+    };
+    const onMouseUp = (e) => {
+      if (e.button === 2) isRightMouseDownRef.current = false;
+    };
+    const onMouseMove = (e) => {
+      if (!isRightMouseDownRef.current) return;
+      const dx = e.clientX - lastMouseRef.current.x;
+      const dy = e.clientY - lastMouseRef.current.y;
+      lastMouseRef.current = { x: e.clientX, y: e.clientY };
+      const orbit = cameraOrbitRef.current;
+      orbit.yaw -= dx * 0.005;
+      orbit.pitch = Math.max(0.05, Math.min(Math.PI / 2.2, orbit.pitch + dy * 0.005));
+    };
+    const onWheel = (e) => {
+      const orbit = cameraOrbitRef.current;
+      orbit.distance = Math.max(0.5, Math.min(15, orbit.distance + e.deltaY * 0.003));
+      e.preventDefault();
+    };
+    const onContextMenu = (e) => e.preventDefault();
+
+    const el = renderer.domElement;
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('mousemove', onMouseMove);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('contextmenu', onContextMenu);
+
     // --- ENVIRONMENT ---
-    // Always load Room 2 (ModularEnvironment)
     const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     const envLoader = new FBXLoader();
     envLoader.load(envUrl, (env) => {
-        // Environment Scaling - Make it MUCH larger to be a map
         env.scale.set(0.05, 0.05, 0.05); 
-        env.position.set(0, -0.5, 0); // Lower slightly
-        
-        // Enable shadows for environment
+        env.position.set(0, -0.5, 0);
         env.traverse((child) => {
             if (child.isMesh) {
                 child.receiveShadow = true;
                 child.castShadow = true;
             }
         });
-        
         scene.add(env);
     });
 
@@ -143,11 +180,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      // Y-Bot Scaling - Significantly smaller to fit in the map environment
-      model.scale.set(0.002, 0.002, 0.002); 
-      model.position.set(0, -0.5, 0); // Lowered to floor level
+      // Y-Bot Scaling - 50% smaller than previous 0.002
+      model.scale.set(0.001, 0.001, 0.001); 
+      model.position.set(0, -0.5, 0);
       
-      // Shadows
       model.traverse((child) => {
           if (child.isMesh) {
               child.castShadow = true;
@@ -160,7 +196,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
-      mixer.timeScale = 1.2; // Speed up animations slightly
+      mixer.timeScale = 1.2;
 
       // Load Built-in & Admin Animations
       const loadAnimations = async () => {
@@ -177,11 +213,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 const animAsset = await fbxLoader.loadAsync(anim.file_url);
                 if (animAsset.animations.length > 0) {
                   const clip = animAsset.animations[0];
-                  // Use the explicitly set animation_type from Admin if available
                   const type = (anim.animation_type || '').toLowerCase();
+                  const animName = (anim.name || '').toLowerCase();
                   const action = mixer.clipAction(clip);
                   
-                  // Map types to standard keys used by controller
+                  // Map types to standard keys
                   if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
                   else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
                   else if (type === 'idle') actionsRef.current['idle'] = action;
@@ -189,8 +225,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                   else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
                   else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
                   
-                  // Also store by name for manual triggers
-                  actionsRef.current[anim.name.toLowerCase()] = action;
+                  // Store by name for manual triggers (e.g. hurricane kick)
+                  actionsRef.current[animName] = action;
+
+                  // Special: hurricane kick - set to play once, not loop
+                  if (animName.includes('hurricane') && animName.includes('kick')) {
+                    actionsRef.current['hurricane_kick'] = action;
+                    action.setLoop(THREE.LoopOnce, 1);
+                    action.clampWhenFinished = true;
+                  }
                 }
               } catch (e) {
                 console.error("Failed to load animation:", anim.name, e);
@@ -209,10 +252,35 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
 
       const play = (name) => {
+          // Block normal animation changes while hurricane kick is playing
+          if (hurricaneKickPlayingRef.current) return;
           const key = name.toLowerCase();
           if (currentActionNameRef.current === name) return;
           currentActionNameRef.current = name;
           fadeToAction(key, 0.2);
+      };
+
+      // Hurricane kick: play once on "1" key, then return to idle
+      const playHurricaneKick = () => {
+        const kickAction = actionsRef.current['hurricane_kick'];
+        if (!kickAction || hurricaneKickPlayingRef.current) return;
+        
+        hurricaneKickPlayingRef.current = true;
+        currentActionNameRef.current = 'hurricane_kick';
+        
+        if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
+        kickAction.reset().fadeIn(0.15).play();
+        activeActionRef.current = kickAction;
+
+        // When the animation finishes, unlock and return to idle
+        const onFinished = (e) => {
+          if (e.action === kickAction) {
+            hurricaneKickPlayingRef.current = false;
+            currentActionNameRef.current = '';
+            mixer.removeEventListener('finished', onFinished);
+          }
+        };
+        mixer.addEventListener('finished', onFinished);
       };
 
       // --- GAME LOOP ---
@@ -221,46 +289,54 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
+        // Skip movement while hurricane kick is playing
+        if (hurricaneKickPlayingRef.current) {
+          // Still update camera
+          const orbit = cameraOrbitRef.current;
+          const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
+          const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
+          const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
+          camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
+          camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
+          renderer.render(scene, camera);
+          return;
+        }
+
         // MOVEMENT
-        const moveSpeed = 1.2; // Reduced speed for smaller character scale
+        const moveSpeed = 0.6;
         const rotSpeed = 8.0; 
         let isMoving = false;
         
-        // Simple WASD relative to screen
-        // -Z is forward in ThreeJS
         const moveVector = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) moveVector.z -= 1; // Forward (away)
-        if (keysPressed.current['s']) moveVector.z += 1; // Backward (towards)
-        if (keysPressed.current['a']) moveVector.x -= 1; // Left
-        if (keysPressed.current['d']) moveVector.x += 1; // Right
+        if (keysPressed.current['w']) moveVector.z -= 1;
+        if (keysPressed.current['s']) moveVector.z += 1;
+        if (keysPressed.current['a']) moveVector.x -= 1;
+        if (keysPressed.current['d']) moveVector.x += 1;
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
             isMoving = true;
 
-            // 1. Rotate Character to face movement direction smoothly
             const targetQuat = new THREE.Quaternion();
             targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
-            model.quaternion.slerp(targetQuat, 0.2); // Snappier rotation
+            model.quaternion.slerp(targetQuat, 0.2);
 
-            // 2. Move Character
             model.position.x += moveVector.x * moveSpeed * delta;
             model.position.z += moveVector.z * moveSpeed * delta;
         }
 
-        // --- CAMERA (Fixed High Angle Chase) ---
-        // Adjusted offset for smaller character size to keep it visible
-        const idealOffset = new THREE.Vector3(0, 1.8, 2.5); 
-        const targetCamPos = model.position.clone().add(idealOffset);
-        
-        // Smooth camera follow
-        camera.position.lerp(targetCamPos, 0.15); 
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.2, 0)));
+        // --- CAMERA (Orbit with right-click, follows character) ---
+        const orbit = cameraOrbitRef.current;
+        const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
+        const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
+        const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
+        camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
 
         // PHYSICS
         const gravity = -25;
         const jumpForce = 8;
-        const floorY = -0.5; // Match initial position
+        const floorY = -0.5;
         
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
@@ -281,7 +357,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (!isGroundedRef.current) {
             play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
         } else if (isMoving) {
-            play("Running"); // Since speed is high, always run
+            play("Running");
         } else {
             play("Idle");
         }
@@ -289,6 +365,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         renderer.render(scene, camera);
       };
       animate();
+
+      // Hurricane kick key listener (must be set after model loads)
+      const onHurricaneKey = (e) => {
+        if (e.key === '1') playHurricaneKick();
+      };
+      window.addEventListener('keydown', onHurricaneKey);
+      // Store for cleanup
+      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onHurricaneKey);
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
@@ -309,6 +393,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
+      el.removeEventListener('mousedown', onMouseDown);
+      el.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('mousemove', onMouseMove);
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('contextmenu', onContextMenu);
+      if (modelRef.current?.userData?._hurricaneCleanup) modelRef.current.userData._hurricaneCleanup();
       renderer.dispose();
     };
   }, [adminAnimations]);
