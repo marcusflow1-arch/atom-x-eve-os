@@ -357,13 +357,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
 
-        // ANIMATION STATE
-        if (!isGroundedRef.current) {
-            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
-        } else if (isMoving) {
-            play("Running");
-        } else {
-            play("Idle");
+        // ANIMATION STATE (only update locomotion if no one-shot is active)
+        if (!isOneShotActive) {
+          if (!isGroundedRef.current) {
+              play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+          } else if (isMoving) {
+              play("Running");
+          } else {
+              play("Idle");
+          }
         }
 
         renderer.render(scene, camera);
