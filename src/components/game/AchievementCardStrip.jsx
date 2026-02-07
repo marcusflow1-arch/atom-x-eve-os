@@ -50,51 +50,62 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
     return [{ _label: type }, ...cards];
   });
 
+  // Build flat list with label markers on the FIRST card of each type
+  const flatCards = types.flatMap(type => {
+    const cards = achievementCards.filter(c => c.type === type);
+    if (cards.length === 0) return [];
+    return cards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
+  });
+
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      {/* Centered Title */}
+      <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-sm font-bold text-white uppercase tracking-wider">Achievement Cards</h3>
+          <h3 className="text-lg font-bold text-white tracking-wider">Achievement Cards</h3>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => scroll('left')}
-            className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 text-white/60" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
-          >
-            <ChevronRight className="w-3.5 h-3.5 text-white/60" />
-          </button>
-        </div>
+        <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
       </div>
 
-      {/* Horizontal scrolling strip */}
-      <div
-        ref={scrollRef}
-        className="flex items-end gap-3 overflow-x-auto pb-2"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {allCards.map((item, i) => {
-          if (item._label) {
-            const cfg = TYPE_CONFIG[item._label] || TYPE_CONFIG.Ability;
+      {/* Horizontal scrolling strip with arrows */}
+      <div className="relative group/strip">
+        {/* Left arrow */}
+        <button
+          onClick={() => scroll('left')}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
+        >
+          <ChevronLeft className="w-4 h-4 text-white/70" />
+        </button>
+        {/* Right arrow */}
+        <button
+          onClick={() => scroll('right')}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
+        >
+          <ChevronRight className="w-4 h-4 text-white/70" />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex items-end gap-3 overflow-x-auto px-2 pb-2"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {flatCards.map((card, i) => {
+            const cfg = TYPE_CONFIG[card.type] || TYPE_CONFIG.Ability;
             return (
-              <div key={`label-${item._label}`} className="flex-shrink-0 flex flex-col items-center justify-end mr-1">
-                <span className={`text-[9px] font-bold uppercase tracking-widest ${cfg.color} mb-1`}>
-                  {item._label}
-                </span>
+              <div key={`${card.name}-${i}`} className="flex-shrink-0 flex flex-col items-center">
+                {/* Type label above the first card of each group */}
+                {card._showLabel && (
+                  <span className={`text-[9px] font-bold uppercase tracking-widest ${cfg.color} mb-1.5`}>
+                    {card.type}
+                  </span>
+                )}
+                {!card._showLabel && <div className="h-[18px]" />}
+                <CardItem card={card} onSelect={onSelectCard} />
               </div>
             );
-          }
-          return (
-            <CardItem key={`${item.name}-${i}`} card={item} onSelect={onSelectCard} />
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );
