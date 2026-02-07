@@ -351,10 +351,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         let isMoving = false;
         
         const move3D = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) move3D.z = -1;  // W = forward (up on screen)
-        if (keysPressed.current['s']) move3D.z = 1;   // S = backward (down on screen)
-        if (keysPressed.current['a']) move3D.x = -1;  // A = left
-        if (keysPressed.current['d']) move3D.x = 1;   // D = right
+        if (keysPressed.current['w']) move3D.z = 1;   // W = forward (up on screen) - was inverted
+        if (keysPressed.current['s']) move3D.z = -1;  // S = backward (down on screen) - was inverted  
+        if (keysPressed.current['a']) move3D.x = 1;   // A = left - was inverted
+        if (keysPressed.current['d']) move3D.x = -1;  // D = right - was inverted
 
         if (move3D.lengthSq() > 0) {
             move3D.normalize();
