@@ -68,7 +68,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const modelRef = useRef(null);
   const actionsRef = useRef({});
   const activeActionRef = useRef(null);
-  const clockRef = useRef(new THREE.Clock());
   const keysPressed = useRef({});
   
   // Player Controller State
@@ -88,6 +87,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   useEffect(() => {
     if (!containerRef.current) return;
+    
+    // Cleanup existing children to prevent duplicates
+    while (containerRef.current.firstChild) {
+      containerRef.current.removeChild(containerRef.current.firstChild);
+    }
+
+    // Local Clock for this effect instance to avoid delta stealing
+    const clock = new THREE.Clock();
+    let animationFrameId;
 
     // --- SETUP SCENE ---
     const scene = new THREE.Scene();
@@ -177,7 +185,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
-      mixer.timeScale = 3.0; // Significantly increased speed to fix slow motion issue
+      mixer.timeScale = 1.0; // Reset to normal speed now that loop conflict is fixed
 
       // Load Built-in & Admin Animations
       const loadAnimations = async () => {
@@ -242,8 +250,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       // --- GAME LOOP ---
       const animate = () => {
-        requestAnimationFrame(animate);
-        const delta = clockRef.current.getDelta();
+        animationFrameId = requestAnimationFrame(animate);
+        const delta = clock.getDelta();
         if (mixer) mixer.update(delta);
 
         // MOVEMENT
@@ -331,7 +339,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
-      renderer.dispose();
+      cancelAnimationFrame(animationFrameId);
+      if (renderer) renderer.dispose();
+      if (containerRef.current && renderer.domElement) {
+        // Safe check before removing
+        try {
+            if (containerRef.current.contains(renderer.domElement)) {
+                containerRef.current.removeChild(renderer.domElement);
+            }
+        } catch (e) { /* ignore */ }
+      }
     };
   }, [adminAnimations]);
 
