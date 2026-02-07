@@ -66,7 +66,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const mixerRef = useRef(null);
   const modelRef = useRef(null);
-  const environmentRef = useRef(null); // Reference for collision mesh
   const actionsRef = useRef({});
   const activeActionRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
@@ -116,42 +115,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enableDamping = true;
     controls.target.set(0, 1, 0);
 
-    // --- LOAD ASSETS ---
+    // --- LOAD MODEL (FBX) ---
     const loader = new FBXLoader();
-
-    // 1. Load Room 2 (Environment)
-    const roomUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
-    loader.load(roomUrl, (room) => {
-      // Scale UP to make it a proper world
-      room.scale.set(3.5, 3.5, 3.5); 
-      room.position.set(0, 0, 0);
-      room.traverse(c => { 
-        if (c.isMesh) { 
-          c.receiveShadow = true; 
-          c.castShadow = true; 
-          if (c.material) {
-             c.material.side = THREE.DoubleSide;
-          }
-        } 
-      });
-      environmentRef.current = room; // Store for collision detection
-      scene.add(room);
-    }, undefined, (e) => console.error("Error loading Room 2", e));
-
-    // 2. Load Y-Bot (Character)
     const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
       
-      // FBX Scaling & Positioning
-      model.scale.set(0.008, 0.008, 0.008); 
-      model.position.set(0, 5, 0); // Start HIGH in the air to prevent clipping initially
-      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-      
-      modelRef.current = model;
-      scene.add(model);
-      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+      // FBX Scaling (Mixamo standard is often centimeters, Three.js is meters)
+      model.scale.set(0.01, 0.01, 0.01);
       
       modelRef.current = model;
       scene.add(model);
@@ -160,6 +132,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixerRef.current = mixer;
 
       // --- ANIMATION SYSTEM ---
+      // Load built-in FBX animations
       if (fbx.animations) {
         fbx.animations.forEach(clip => {
           actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
@@ -236,23 +209,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow (Third Person Chase - Eye Level)
-          // Lowered Y to 1.7 to be at eye level, kept distance for view
-          const relativeOffset = new THREE.Vector3(0, 1.7, -3.5); 
-          const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
-          
-          // Smooth follow
-          camera.position.lerp(cameraTargetPos, 0.12);
-          
-          // Look at head level
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.12);
-        }
-        else {
-           // Idle camera - Eye level
-           const relativeOffset = new THREE.Vector3(0, 1.7, -3.5);
-           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
-           camera.position.lerp(cameraTargetPos, 0.05);
-           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.1);
+          // Camera follow
+          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
+          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
+          // Simple lerp for camera could go here, or just orbit controls target update
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
@@ -266,48 +227,27 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           fadeToAction(actionKey, 0.2);
         };
 
-        // --- PHYSICS: GRAVITY, JUMP & COLLISION ---
+        // --- PHYSICS: GRAVITY & JUMP ---
         const gravity = -20;
         const jumpForce = 8;
         
-        // 1. Apply Gravity first
-        verticalVelocityRef.current += gravity * delta;
-        model.position.y += verticalVelocityRef.current * delta;
-
-        // 2. Raycast for Ground Detection (Static Mesh Collision)
-        let groundY = -100; // Default abyss
-        if (environmentRef.current) {
-            // Cast ray downwards from player center (plus small offset up)
-            const rayOrigin = model.position.clone();
-            rayOrigin.y += 2; // Start ray above feet
-            const raycaster = new THREE.Raycaster(rayOrigin, new THREE.Vector3(0, -1, 0));
-            
-            // Intersect with environment
-            const intersects = raycaster.intersectObject(environmentRef.current, true); // Recursive
-            if (intersects.length > 0) {
-                // Find highest intersection below us
-                groundY = intersects[0].point.y;
-            }
-        } else {
-             // Fallback to flat plane if env not loaded yet
-             groundY = 0;
-        }
-
-        // 3. Ground Collision Resolution
-        // Increased offset to 0.15 to ensure feet are clearly above ground/embedded textures
-        if (model.position.y <= groundY + 0.15) {
-            model.position.y = groundY + 0.15;
-            verticalVelocityRef.current = Math.max(0, verticalVelocityRef.current); // Stop falling
-            isGroundedRef.current = true;
-        } else {
-            isGroundedRef.current = false;
-        }
-
-        // 4. Jump Input
+        // Jump Input
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
             isGroundedRef.current = false;
-            model.position.y += 0.2;
+        }
+
+        // Apply Gravity
+        verticalVelocityRef.current += gravity * delta;
+        model.position.y += verticalVelocityRef.current * delta;
+
+        // Ground Collision
+        if (model.position.y <= 0) {
+            model.position.y = 0;
+            verticalVelocityRef.current = 0;
+            isGroundedRef.current = true;
+        } else {
+            isGroundedRef.current = false;
         }
 
         // =========================
@@ -1173,7 +1113,7 @@ export default function LunaTemplate() {
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
         <div
-          className="fixed inset-0 z-[-1] pointer-events-auto"
+          className="fixed inset-0 z-0 pointer-events-auto"
           style={{
             display: 'flex',
             alignItems: 'center',
