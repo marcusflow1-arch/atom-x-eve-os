@@ -1445,7 +1445,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                 />
               </div>
 
-              {/* RIGHT CONTENT AREA - GAME DETAILS */}
+              {/* RIGHT CONTENT AREA - 90% */}
               <div className="flex-1 h-[calc(100vh-140px)] flex flex-col overflow-hidden">
                 {selectedGame ? (
                   <>
