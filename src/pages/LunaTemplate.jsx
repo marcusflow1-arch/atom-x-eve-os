@@ -145,7 +145,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const model = fbx;
       // Y-Bot Scaling - Significantly smaller to fit in the map environment
       model.scale.set(0.002, 0.002, 0.002); 
-      model.position.set(0, 0, 0);
+      model.position.set(0, -0.5, 0); // Lowered to floor level
       
       // Shadows
       model.traverse((child) => {
@@ -177,18 +177,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 const animAsset = await fbxLoader.loadAsync(anim.file_url);
                 if (animAsset.animations.length > 0) {
                   const clip = animAsset.animations[0];
-                  const actionName = anim.name.toLowerCase(); 
+                  // Use the explicitly set animation_type from Admin if available
+                  const type = (anim.animation_type || '').toLowerCase();
                   const action = mixer.clipAction(clip);
-                  actionsRef.current[actionName] = action;
                   
-                  if (actionName.includes('sprint') || actionName.includes('roll')) actionsRef.current['sprinting'] = action;
-                  if (actionName.includes('idle')) actionsRef.current['idle'] = action;
-                  if (actionName.includes('run')) actionsRef.current['running'] = action;
-                  if (actionName.includes('walk')) actionsRef.current['walking'] = action;
-                  if (actionName.includes('fall')) actionsRef.current['falling'] = action;
-                  if (actionName.includes('jump')) actionsRef.current['jumping'] = action;
+                  // Map types to standard keys used by controller
+                  if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
+                  else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
+                  else if (type === 'idle') actionsRef.current['idle'] = action;
+                  else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
+                  else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
+                  else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
+                  
+                  // Also store by name for manual triggers
+                  actionsRef.current[anim.name.toLowerCase()] = action;
                 }
-              } catch (e) {}
+              } catch (e) {
+                console.error("Failed to load animation:", anim.name, e);
+              }
             }
           }
       };
@@ -254,14 +260,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // PHYSICS
         const gravity = -25;
         const jumpForce = 8;
+        const floorY = -0.5; // Match initial position
+        
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
             isGroundedRef.current = false;
         }
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
-        if (model.position.y <= 0) {
-            model.position.y = 0;
+        
+        if (model.position.y <= floorY) {
+            model.position.y = floorY;
             verticalVelocityRef.current = 0;
             isGroundedRef.current = true;
         } else {
