@@ -122,11 +122,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     const envLoader = new FBXLoader();
     envLoader.load(envUrl, (env) => {
-        // Environment Scaling - Make it "Map Sized"
-        // If Y-Bot is 0.01 (approx 1.7m), the environment scale needs to match or be slightly larger if the raw FBX is small.
-        // Assuming ModularEnvironment is standard scale (cm or m), we start with 0.015 to be slightly larger/map-like.
-        env.scale.set(0.012, 0.012, 0.012); 
-        env.position.set(0, 0, 0);
+        // Environment Scaling - Make it MUCH larger to be a map
+        env.scale.set(0.05, 0.05, 0.05); 
+        env.position.set(0, -0.5, 0); // Lower slightly
         
         // Enable shadows for environment
         env.traverse((child) => {
@@ -145,7 +143,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      model.scale.set(0.01, 0.01, 0.01); 
+      // Y-Bot Scaling - Smaller to fit in environment
+      model.scale.set(0.005, 0.005, 0.005); 
       model.position.set(0, 0, 0);
       
       // Shadows
@@ -217,23 +216,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (mixer) mixer.update(delta);
 
         // MOVEMENT
-        const moveSpeed = 6.0; // Increased speed
-        const rotSpeed = 4.0;
-        let moveForward = 0; // -1 back, 1 forward
-        let moveRight = 0;   // -1 left, 1 right
-
-        if (keysPressed.current['w']) moveForward = 1;
-        if (keysPressed.current['s']) moveForward = -1;
-        if (keysPressed.current['a']) moveRight = 1; // A turns left (yaw) or moves left? 
-        if (keysPressed.current['d']) moveRight = -1;
-
-        // Direction relative to camera (Chase Cam Logic)
-        // Actually for standard 3rd person WASD:
-        // W moves character away from camera (Forward)
-        // S moves character towards camera (Backward)
-        // A rotates left OR moves left
-        // D rotates right OR moves right
-        
+        const moveSpeed = 3.5; // Adjusted for smaller scale
+        const rotSpeed = 8.0; // Faster rotation
         let isMoving = false;
         
         // Simple WASD relative to screen
@@ -249,34 +233,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isMoving = true;
 
             // 1. Rotate Character to face movement direction smoothly
-            const targetRotation = Math.atan2(moveVector.x, moveVector.z); // 0 is +Z, PI is -Z
-            // Basic rotation snap for responsiveness
-            const rotDelta = moveVector.x * rotSpeed * delta;
-            
-            // For smooth turning to face direction:
-            // Calculate target quaternion
             const targetQuat = new THREE.Quaternion();
             targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
-            model.quaternion.slerp(targetQuat, 0.15); // Smooth rotation
+            model.quaternion.slerp(targetQuat, 0.2); // Snappier rotation
 
             // 2. Move Character
             model.position.x += moveVector.x * moveSpeed * delta;
             model.position.z += moveVector.z * moveSpeed * delta;
         }
 
-        // --- CHASE CAMERA ---
-        // Desired Position: Behind and Up relative to Character's orientation? 
-        // OR Fixed Angle (Legend of Zelda / Diablo style)?
-        // User complained "camera moving around Y-Bot". 
-        // Best approach: Camera follows position but keeps fixed offset relative to WORLD, 
-        // OR Camera follows smoothly behind.
-        // Let's implement a "Soft Follow" where camera stays at a fixed offset (0, 4, 6) relative to character position.
-        // This is stable and prevents "moving around" dizziness.
-        
-        const idealOffset = new THREE.Vector3(0, 4.5, 6.5); // High angle, behind
+        // --- CAMERA (Fixed High Angle Chase) ---
+        // Fixed offset relative to WORLD (not character rotation) for stability
+        // "Fixed in front" request likely implies seeing the character clearly from a consistent angle
+        const idealOffset = new THREE.Vector3(0, 3.5, 5.0); 
         const targetCamPos = model.position.clone().add(idealOffset);
-        camera.position.lerp(targetCamPos, 0.1); // Smooth follow
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 1.0, 0))); // Look at torso
+        
+        // Very fast lerp to prevent "slow motion" feel on camera
+        camera.position.lerp(targetCamPos, 0.2); 
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.5, 0)));
 
         // PHYSICS
         const gravity = -25;
