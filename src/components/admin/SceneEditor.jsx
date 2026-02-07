@@ -55,6 +55,7 @@ export default function SceneEditor() {
   const { data: modelsFbx = [] } = useQuery({ queryKey: ['modelsfbx'], queryFn: () => base44.entities.ModelFBX.list() });
   const { data: layouts = [] } = useQuery({ queryKey: ['sceneLayouts'], queryFn: () => base44.entities.SceneLayout.list() });
   const { data: scripts = [] } = useQuery({ queryKey: ['model3DScripts'], queryFn: () => base44.entities.Model3DScript.list() });
+  const { data: animations = [] } = useQuery({ queryKey: ['animationfbx'], queryFn: () => base44.entities.AnimationFBX.list() });
 
   const allModels = [...models3d, ...modelsFbx];
 
@@ -313,38 +314,42 @@ export default function SceneEditor() {
                   if (mixerData && mixerData.mixer && player.animations) {
                       let targetAnimName = 'idle';
                       
-                      // "isGrounded" check (Simplified: y < 0.1)
+                      // "isGrounded" check (Simplified: y < 0.5)
                       const isGrounded = player.position.y < 0.5;
 
                       if (!isGrounded) {
                           targetAnimName = 'fall';
                       } else {
+                          // Match RogueAnimator logic: > 0.6 run, > 0.1 walk
                           if (dirLength > 0.6) targetAnimName = 'run';
                           else if (dirLength > 0.1) targetAnimName = 'walk';
                           else targetAnimName = 'idle';
                       }
 
-                      // Find clip
+                      // Find clip matching targetAnimName (e.g. "run", "walking", "idle")
+                      // The loop above renamed clips based on animation_type or name
                       const targetClip = player.animations.find(c => c.name.toLowerCase().includes(targetAnimName))
                                       || player.animations.find(c => targetAnimName === 'idle' && c.name.toLowerCase().includes('breath')) // fallback for idle
                                       || player.animations[0]; // fallback to first
 
                       if (targetClip) {
                           const targetAction = mixerData.mixer.clipAction(targetClip);
-                          if (targetAction.getEffectiveWeight() < 1) {
+                          
+                          // Only fade in if not already playing or gaining weight
+                          if (targetAction.getEffectiveWeight() < 0.9) {
                               targetAction.enabled = true;
                               targetAction.setEffectiveTimeScale(1);
                               targetAction.setEffectiveWeight(1);
                               targetAction.play();
+                              targetAction.fadeIn(0.2);
                               
                               // Crossfade others out
                               player.animations.forEach(c => {
-                                  if (c !== targetClip) {
+                                  if (c !== targetClip && c.name !== 'roll') { // Don't interrupt roll if it's somehow lingering (though rolling logic handles that separately)
                                       const other = mixerData.mixer.clipAction(c);
                                       if (other.getEffectiveWeight() > 0) other.fadeOut(0.2);
                                   }
                               });
-                              targetAction.fadeIn(0.2);
                           }
                       }
                   }
@@ -483,11 +488,53 @@ export default function SceneEditor() {
                 scene.add(model);
                 sceneObjectsMap.current[objConf.id] = model;
 
-                // Setup Animation Mixer if clips exist (but don't play yet)
-                const clips = model.animations || (model.geometry ? [] : []);
-                if (clips.length > 0) {
-                    const mixer = new THREE.AnimationMixer(model);
-                    mixersRef.current[objConf.id] = { mixer };
+                // Setup Animation Mixer
+                // If it's a humanoid/player, inject global animations if they aren't present
+                const isActor = objConf.layer === 'Actor_Layer' || objConf.type === 'spawn_point';
+                
+                const initMixer = () => {
+                    const clips = model.animations || [];
+                    if (clips.length > 0) {
+                        const mixer = new THREE.AnimationMixer(model);
+                        mixersRef.current[objConf.id] = { mixer };
+                    }
+                };
+
+                if (isActor && animations.length > 0) {
+                    const loader = new FBXLoader();
+                    let loadedCount = 0;
+                    
+                    // Filter for standard locomotion clips to avoid overloading
+                    const relevantAnims = animations.filter(a => 
+                        ['idle', 'walk', 'run', 'roll', 'sprint', 'jump', 'fall'].some(k => (a.name||'').toLowerCase().includes(k) || (a.animation_type||'').includes(k))
+                    );
+
+                    if (relevantAnims.length === 0) {
+                        initMixer();
+                    } else {
+                        relevantAnims.forEach(anim => {
+                            loader.load(anim.file_url, (asset) => {
+                                if (asset.animations && asset.animations.length) {
+                                    const clip = asset.animations[0];
+                                    // Rename clip to match type/name for easier lookup
+                                    if (anim.animation_type) clip.name = anim.animation_type;
+                                    else clip.name = anim.name.toLowerCase();
+                                    
+                                    model.animations.push(clip);
+                                }
+                                loadedCount++;
+                                if (loadedCount === relevantAnims.length) {
+                                    initMixer();
+                                }
+                            }, undefined, (e) => {
+                                console.warn("Failed to load anim", anim.name);
+                                loadedCount++;
+                                if (loadedCount === relevantAnims.length) initMixer();
+                            });
+                        });
+                    }
+                } else {
+                    initMixer();
                 }
                 
                 if (selectedObjectId === objConf.id) transformRef.current.attach(model);
@@ -527,7 +574,7 @@ export default function SceneEditor() {
         }
     });
 
-  }, [sceneConfig]); // Dependencies: Re-run sync when config changes
+  }, [sceneConfig, animations]); // Dependencies: Re-run sync when config changes
 
   // --- Logic: Play Mode ---
   useEffect(() => {
