@@ -37,6 +37,13 @@ export default function SceneEditor() {
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [selectingMode, setSelectingMode] = useState('obj'); // 'obj', 'env', 'spawn'
   const [isPlaying, setIsPlaying] = useState(false); // PLAY MODE STATE
+  
+  // --- Player Controller State ---
+  const keysPressed = useRef({});
+  const isRollingRef = useRef(false);
+  const rollTimerRef = useRef(0);
+  const activePlayerId = useRef(null);
+  const playerVelocity = useRef(new THREE.Vector3());
 
   // Preferences
   const [autoScaleHumanoids, setAutoScaleHumanoids] = useState(() => {
@@ -233,6 +240,67 @@ export default function SceneEditor() {
 
       // Update Scripts
       if (scriptRuntimeRef.current) scriptRuntimeRef.current.update(delta);
+
+      // --- PLAYER CONTROLLER LOGIC (WASD + ROLL) ---
+      if (isPlaying && activePlayerId.current) {
+          const player = sceneObjectsMap.current[activePlayerId.current];
+          if (player) {
+              const moveSpeed = 5.0 * delta; // units per second
+              const intendedMove = new THREE.Vector3();
+              
+              // Camera-relative direction
+              const camDir = new THREE.Vector3();
+              camera.getWorldDirection(camDir);
+              camDir.y = 0; camDir.normalize();
+              const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x);
+
+              if (keysPressed.current['w']) intendedMove.add(camDir);
+              if (keysPressed.current['s']) intendedMove.sub(camDir);
+              if (keysPressed.current['a']) intendedMove.sub(camRight);
+              if (keysPressed.current['d']) intendedMove.add(camRight);
+
+              // ROLL LOGIC
+              if (keysPressed.current['c'] && !isRollingRef.current) {
+                  isRollingRef.current = true;
+                  rollTimerRef.current = 0.6;
+                  // Trigger animation if mixer exists
+                  const mixerData = mixersRef.current[activePlayerId.current];
+                  if (mixerData && mixerData.mixer) {
+                      // Find roll clip... simplified for now
+                      // In a real setup, we'd map actions similar to LunaTemplate
+                  }
+              }
+
+              if (isRollingRef.current) {
+                  rollTimerRef.current -= delta;
+                  if (rollTimerRef.current <= 0) isRollingRef.current = false;
+                  // Move faster or locked direction during roll? 
+                  // For now, keep momentum
+                  intendedMove.multiplyScalar(1.5); 
+              }
+
+              if (intendedMove.lengthSq() > 0.001) {
+                  intendedMove.normalize();
+                  player.position.addScaledVector(intendedMove, moveSpeed);
+                  
+                  // Rotate to face movement
+                  const targetAngle = Math.atan2(intendedMove.x, intendedMove.z);
+                  const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), targetAngle);
+                  player.quaternion.slerp(q, 10 * delta);
+
+                  // Update Animation State -> Run
+                  const mixerData = mixersRef.current[activePlayerId.current];
+                  if (mixerData && mixerData.mixer) {
+                      // Simple hack to find 'run' animation if not playing
+                      // Real implementation needs an Action Manager map
+                  }
+              }
+
+              // Simple Camera Follow
+              orbit.target.copy(player.position);
+              camera.position.add(new THREE.Vector3(intendedMove.x, 0, intendedMove.z).multiplyScalar(moveSpeed)); // Soft follow
+          }
+      }
       
       orbit.update();
       renderer.render(scene, camera);
@@ -409,7 +477,18 @@ export default function SceneEditor() {
 
   // --- Logic: Play Mode ---
   useEffect(() => {
+    const handleKeyDown = (e) => { if (isPlaying) keysPressed.current[e.key.toLowerCase()] = true; };
+    const handleKeyUp = (e) => { if (isPlaying) keysPressed.current[e.key.toLowerCase()] = false; };
+
     if (isPlaying) {
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+        
+        // Find player object (Spawn point or designated player)
+        // We look for the first object in 'Actor_Layer' or type 'spawn_point'
+        const playerObj = sceneConfig.objects.find(o => o.type === 'spawn_point' || o.layer === 'Actor_Layer');
+        if (playerObj) activePlayerId.current = playerObj.id;
+
         // Enter Play Mode
         if (scriptRuntimeRef.current) {
             scriptRuntimeRef.current.start(sceneConfig.objects, scripts);
@@ -417,6 +496,11 @@ export default function SceneEditor() {
         // Deselect to hide gizmos
         if (transformRef.current) transformRef.current.detach();
     } else {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+        activePlayerId.current = null;
+        keysPressed.current = {};
+
         // Exit Play Mode
         if (scriptRuntimeRef.current) {
             scriptRuntimeRef.current.stop();
@@ -425,6 +509,10 @@ export default function SceneEditor() {
         const obj = sceneObjectsMap.current[selectedObjectId];
         if (obj && transformRef.current) transformRef.current.attach(obj);
     }
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+    };
   }, [isPlaying, sceneConfig, scripts]);
 
   // --- Logic: Selection & Gizmo Mode ---
