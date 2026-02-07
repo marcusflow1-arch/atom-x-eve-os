@@ -1792,37 +1792,31 @@ export default function LunaTemplate() {
 
   const { mode } = useDashboardMode();
 
-  // Fetch Active Scene Layout from Admin
+  // Fetch Room 2 (System Reboot)
   useEffect(() => {
     const fetchScene = async () => {
         try {
-            // 1. Try to find an ACTIVE SceneLayout
-            const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
+            console.log("Forcing Room 2 load...");
+            const models = await base44.entities.Model3D.list();
+            const fbxs = await base44.entities.ModelFBX.list();
+            const allModels = [...models, ...fbxs];
             
-            if (layouts.length > 0) {
-                const layout = layouts[0];
-                console.log("Loading Active Scene:", layout.name);
-                setActiveScene(layout);
-                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
+            // Prioritize Room 2
+            const room2 = allModels.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')));
+            
+            if (room2?.file_url) {
+                console.log("Found Room 2:", room2.name);
+                setRoomModelUrl(room2.file_url);
+                setActiveScene(null); // Clear active scene to avoid overrides
             } else {
-                // Fallback to legacy auto-fetch logic if no scene is active
-                console.warn("No active scene found, falling back to auto-discovery.");
-                const models = await base44.entities.Model3D.list();
-                const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
-                const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
-                const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-                const selectedAsset = room2Fbx || room2Any || room1Asset;
-                
-                if (selectedAsset?.file_url) setRoomModelUrl(selectedAsset.file_url);
-                else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+                console.warn("Room 2 not found, falling back to default.");
+                setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
             console.error("Failed to load scene configuration:", e);
         }
     };
     fetchScene();
-    
-    // Model selection handled separately (Maria WProp J J Ong)
   }, []);
 
   // Load saved environment preference
