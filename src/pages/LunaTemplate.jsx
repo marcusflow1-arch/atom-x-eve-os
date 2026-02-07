@@ -880,7 +880,7 @@ export default function LunaTemplate() {
   const [platformUpdates, setPlatformUpdates] = useState([]);
   const [showForumOverlay, setShowForumOverlay] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState(null);
-  const [showConsoleMode, setShowConsoleMode] = useState(false);
+  const [showConsoleMode, setShowConsoleMode] = useState(true);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState(null);
