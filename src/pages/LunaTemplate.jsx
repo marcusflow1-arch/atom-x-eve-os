@@ -189,29 +189,37 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           
           if (adminAnimations) {
             const fbxLoader = new FBXLoader();
+            let firstAction = null;
+
             for (const anim of adminAnimations) {
               try {
                 const animAsset = await fbxLoader.loadAsync(anim.file_url);
                 if (animAsset.animations.length > 0) {
                   const clip = animAsset.animations[0];
-                  // Use the explicitly set animation_type from Admin if available
                   const type = (anim.animation_type || '').toLowerCase();
+                  const name = (anim.name || '').toLowerCase();
                   const action = mixer.clipAction(clip);
                   
-                  // Map types to standard keys used by controller
-                  if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
-                  else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
-                  else if (type === 'idle') actionsRef.current['idle'] = action;
-                  else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
-                  else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
-                  else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
-                  
-                  // Also store by name for manual triggers
-                  actionsRef.current[anim.name.toLowerCase()] = action;
+                  if (!firstAction) firstAction = action;
+
+                  // Store by name
+                  actionsRef.current[name] = action;
+
+                  // Robust Mapping: Check Type OR Name
+                  if (type === 'idle' || name.includes('idle')) actionsRef.current['idle'] = action;
+                  if (type === 'run' || type === 'running' || name.includes('run') || name.includes('sprint')) actionsRef.current['running'] = action;
+                  if (type === 'walk' || type === 'walking' || name.includes('walk')) actionsRef.current['walking'] = action;
+                  if (type === 'jump' || type === 'jumping' || name.includes('jump')) actionsRef.current['jumping'] = action;
+                  if (type === 'fall' || type === 'falling' || name.includes('fall')) actionsRef.current['falling'] = action;
                 }
               } catch (e) {
                 console.error("Failed to load animation:", anim.name, e);
               }
+            }
+            
+            // Ensure we have at least an idle animation
+            if (!actionsRef.current['idle'] && firstAction) {
+                actionsRef.current['idle'] = firstAction;
             }
           }
       };
