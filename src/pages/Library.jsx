@@ -1431,8 +1431,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
         {viewMode === 'grid' ? (
           <div className="flex h-full">
-              {/* LEFT SIDEBAR - 10% width */}
-              <div className="w-[10%] min-w-[180px] max-w-[240px] flex-shrink-0 h-[calc(100vh-140px)] pr-4 hidden lg:flex flex-col">
+              {/* LEFT SIDEBAR - 15% width */}
+              <div className="w-[15%] min-w-[200px] max-w-[300px] flex-shrink-0 h-[calc(100vh-140px)] pr-4 hidden lg:flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
                   <div className="text-white/40 text-xs">{filteredGames.length} games</div>
