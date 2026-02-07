@@ -241,11 +241,13 @@ export default function SceneEditor() {
       // Update Scripts
       if (scriptRuntimeRef.current) scriptRuntimeRef.current.update(delta);
 
-      // --- PLAYER CONTROLLER LOGIC (WASD + ROLL) ---
+      // --- PLAYER CONTROLLER LOGIC (Manual Script Application) ---
       if (isPlaying && activePlayerId.current) {
           const player = sceneObjectsMap.current[activePlayerId.current];
           if (player) {
-              const moveSpeed = 5.0 * delta; // units per second
+              const baseSpeed = 5.0;
+              const sprintMultiplier = 1.5;
+              const moveSpeed = baseSpeed * delta; 
               const intendedMove = new THREE.Vector3();
               
               // Camera-relative direction
@@ -254,51 +256,103 @@ export default function SceneEditor() {
               camDir.y = 0; camDir.normalize();
               const camRight = new THREE.Vector3(-camDir.z, 0, camDir.x);
 
+              // Input Processing
               if (keysPressed.current['w']) intendedMove.add(camDir);
               if (keysPressed.current['s']) intendedMove.sub(camDir);
               if (keysPressed.current['a']) intendedMove.sub(camRight);
               if (keysPressed.current['d']) intendedMove.add(camRight);
 
-              // ROLL LOGIC
-              if (keysPressed.current['c'] && !isRollingRef.current) {
+              const dirLength = intendedMove.length();
+              if (dirLength > 0) intendedMove.normalize();
+
+              // --- SPRINT / ROLL LOGIC (C Key) ---
+              if (!isRollingRef.current && keysPressed.current['c']) {
                   isRollingRef.current = true;
-                  rollTimerRef.current = 0.6;
-                  // Trigger animation if mixer exists
+                  rollTimerRef.current = 0.6; // sprintDuration
+                  
+                  // Play 'roll' or 'sprint' animation
                   const mixerData = mixersRef.current[activePlayerId.current];
                   if (mixerData && mixerData.mixer) {
-                      // Find roll clip... simplified for now
-                      // In a real setup, we'd map actions similar to LunaTemplate
+                      const rollClip = player.animations.find(c => c.name.toLowerCase().includes('roll')) 
+                                    || player.animations.find(c => c.name.toLowerCase().includes('run')); // Fallback
+                      if (rollClip) {
+                          const action = mixerData.mixer.clipAction(rollClip);
+                          action.reset();
+                          action.setLoop(THREE.LoopOnce);
+                          action.clampWhenFinished = true;
+                          action.play();
+                          // Fade out others
+                          player.animations.forEach(c => {
+                              if (c !== rollClip) mixerData.mixer.clipAction(c).fadeOut(0.1);
+                          });
+                      }
                   }
               }
 
+              // --- UPDATE LOOP ---
               if (isRollingRef.current) {
                   rollTimerRef.current -= delta;
-                  if (rollTimerRef.current <= 0) isRollingRef.current = false;
-                  // Move faster or locked direction during roll? 
-                  // For now, keep momentum
-                  intendedMove.multiplyScalar(1.5); 
-              }
+                  if (rollTimerRef.current <= 0) {
+                      isRollingRef.current = false;
+                  }
+                  // Sprint movement (locked direction or boosted)
+                  player.position.addScaledVector(intendedMove.lengthSq() > 0 ? intendedMove : new THREE.Vector3(0,0,1).applyQuaternion(player.quaternion), moveSpeed * sprintMultiplier);
+              } else {
+                  // Normal Movement
+                  if (dirLength > 0.001) {
+                      player.position.addScaledVector(intendedMove, moveSpeed);
+                      
+                      // Rotation
+                      const targetAngle = Math.atan2(intendedMove.x, intendedMove.z);
+                      const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), targetAngle);
+                      player.quaternion.slerp(q, 10 * delta);
+                  }
 
-              if (intendedMove.lengthSq() > 0.001) {
-                  intendedMove.normalize();
-                  player.position.addScaledVector(intendedMove, moveSpeed);
-                  
-                  // Rotate to face movement
-                  const targetAngle = Math.atan2(intendedMove.x, intendedMove.z);
-                  const q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), targetAngle);
-                  player.quaternion.slerp(q, 10 * delta);
-
-                  // Update Animation State -> Run
+                  // Animation State Machine
                   const mixerData = mixersRef.current[activePlayerId.current];
-                  if (mixerData && mixerData.mixer) {
-                      // Simple hack to find 'run' animation if not playing
-                      // Real implementation needs an Action Manager map
+                  if (mixerData && mixerData.mixer && player.animations) {
+                      let targetAnimName = 'idle';
+                      
+                      // "isGrounded" check (Simplified: y < 0.1)
+                      const isGrounded = player.position.y < 0.5;
+
+                      if (!isGrounded) {
+                          targetAnimName = 'fall';
+                      } else {
+                          if (dirLength > 0.6) targetAnimName = 'run';
+                          else if (dirLength > 0.1) targetAnimName = 'walk';
+                          else targetAnimName = 'idle';
+                      }
+
+                      // Find clip
+                      const targetClip = player.animations.find(c => c.name.toLowerCase().includes(targetAnimName))
+                                      || player.animations.find(c => targetAnimName === 'idle' && c.name.toLowerCase().includes('breath')) // fallback for idle
+                                      || player.animations[0]; // fallback to first
+
+                      if (targetClip) {
+                          const targetAction = mixerData.mixer.clipAction(targetClip);
+                          if (targetAction.getEffectiveWeight() < 1) {
+                              targetAction.enabled = true;
+                              targetAction.setEffectiveTimeScale(1);
+                              targetAction.setEffectiveWeight(1);
+                              targetAction.play();
+                              
+                              // Crossfade others out
+                              player.animations.forEach(c => {
+                                  if (c !== targetClip) {
+                                      const other = mixerData.mixer.clipAction(c);
+                                      if (other.getEffectiveWeight() > 0) other.fadeOut(0.2);
+                                  }
+                              });
+                              targetAction.fadeIn(0.2);
+                          }
+                      }
                   }
               }
 
-              // Simple Camera Follow
+              // Camera Follow
               orbit.target.copy(player.position);
-              camera.position.add(new THREE.Vector3(intendedMove.x, 0, intendedMove.z).multiplyScalar(moveSpeed)); // Soft follow
+              camera.position.add(new THREE.Vector3(intendedMove.x, 0, intendedMove.z).multiplyScalar(moveSpeed));
           }
       }
       
