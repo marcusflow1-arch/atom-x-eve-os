@@ -84,10 +84,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
-  // Hurricane kick lock
-  const hurricaneKickPlayingRef = useRef(false);
-  // C-key action lock
-  const cActionPlayingRef = useRef(false);
+  // One-shot animation locks
+  const oneShotPlayingRef = useRef(null); // tracks which one-shot is active: 'hurricane_kick', 'sprinting', 'c_action', or null
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
