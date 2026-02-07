@@ -80,7 +80,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isGroundedRef = useRef(true);
 
   // Camera orbit state (right-click drag)
-  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 2.5 });
+  // Camera orbit: 35% closer than 2.5 => ~1.625
+  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 1.625 });
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
@@ -181,8 +182,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      // Y-Bot Scaling - 50% smaller than previous 0.002
-      model.scale.set(0.001, 0.001, 0.001); 
+      // Y-Bot Scaling - reduced 25% from 0.001
+      model.scale.set(0.00075, 0.00075, 0.00075); 
       model.position.set(0, -0.5, 0);
       
       model.traverse((child) => {
@@ -261,7 +262,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           }
       };
-      loadAnimations();
+      await loadAnimations();
+      console.log('All animations loaded. Available actions:', Object.keys(actionsRef.current));
 
       const fadeToAction = (name, duration = 0.2) => {
         const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
@@ -275,8 +277,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Block normal animation changes while exclusive anims are playing
           if (hurricaneKickPlayingRef.current || sprintRollPlayingRef.current) return;
           const key = name.toLowerCase();
-          if (currentActionNameRef.current === name) return;
-          currentActionNameRef.current = name;
+          if (currentActionNameRef.current === key) return;
+          currentActionNameRef.current = key;
           fadeToAction(key, 0.2);
       };
 
@@ -394,13 +396,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
 
-        // ANIMATION STATE
+        // ANIMATION STATE (use lowercase keys to match actionsRef)
         if (!isGroundedRef.current) {
-            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+            play(verticalVelocityRef.current > 0 ? "jumping" : "falling");
         } else if (isMoving) {
-            play("Running");
+            play("running");
         } else {
-            play("Idle");
+            play("idle");
         }
 
         renderer.render(scene, camera);
