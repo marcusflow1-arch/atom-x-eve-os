@@ -143,8 +143,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      // Y-Bot Scaling - Smaller to fit in environment
-      model.scale.set(0.005, 0.005, 0.005); 
+      // Y-Bot Scaling - Significantly smaller to fit in the map environment
+      model.scale.set(0.002, 0.002, 0.002); 
       model.position.set(0, 0, 0);
       
       // Shadows
@@ -216,8 +216,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (mixer) mixer.update(delta);
 
         // MOVEMENT
-        const moveSpeed = 3.5; // Adjusted for smaller scale
-        const rotSpeed = 8.0; // Faster rotation
+        const moveSpeed = 1.2; // Reduced speed for smaller character scale
+        const rotSpeed = 8.0; 
         let isMoving = false;
         
         // Simple WASD relative to screen
@@ -243,14 +243,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // --- CAMERA (Fixed High Angle Chase) ---
-        // Fixed offset relative to WORLD (not character rotation) for stability
-        // "Fixed in front" request likely implies seeing the character clearly from a consistent angle
-        const idealOffset = new THREE.Vector3(0, 3.5, 5.0); 
+        // Adjusted offset for smaller character size to keep it visible
+        const idealOffset = new THREE.Vector3(0, 1.8, 2.5); 
         const targetCamPos = model.position.clone().add(idealOffset);
         
-        // Very fast lerp to prevent "slow motion" feel on camera
-        camera.position.lerp(targetCamPos, 0.2); 
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.5, 0)));
+        // Smooth camera follow
+        camera.position.lerp(targetCamPos, 0.15); 
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.2, 0)));
 
         // PHYSICS
         const gravity = -25;
