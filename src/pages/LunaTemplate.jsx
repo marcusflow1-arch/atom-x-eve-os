@@ -147,7 +147,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
     const onWheel = (e) => {
       const orbit = cameraOrbitRef.current;
-      orbit.distance = Math.max(0.5, Math.min(15, orbit.distance + e.deltaY * 0.003));
+      orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
       e.preventDefault();
     };
     const onContextMenu = (e) => e.preventDefault();
