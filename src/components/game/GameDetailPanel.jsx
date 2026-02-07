@@ -1070,45 +1070,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </p>
                   </div>
                 </div>
-
-                {/* Right: Achievement Cards (Restored Vertical Layout) */}
-                <div className="space-y-6">
-                   <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                    <Database className="w-4 h-4 text-cyan-400" />
-                    Achievement Cards
-                  </h3>
-                  
-                  <div className="space-y-6 pr-2 max-h-[600px] overflow-y-auto custom-scrollbar">
-                    {['Ability', 'Equipment', 'Companion', 'Teacher'].map(type => {
-                      const typeCards = achievementCards.filter(c => c.type === type);
-                      if (typeCards.length === 0) return null;
-                      
-                      return (
-                        <div key={type} className="space-y-2">
-                          <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider sticky top-0 bg-[#0d0d0d] z-10 py-1">{type}</h4>
-                          <div className="grid grid-cols-2 gap-2">
-                            {typeCards.map((card, i) => (
-                              <motion.div
-                                key={i}
-                                onClick={() => setSelectedCard(card)}
-                                className="group cursor-pointer p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all hover:scale-105"
-                              >
-                                <div className="aspect-[3/4] rounded-md overflow-hidden bg-black/20 mb-2 flex items-center justify-center border border-white/5 group-hover:border-cyan-400/30">
-                                   {card.type === 'Ability' && <Zap className="w-6 h-6 text-white/20 group-hover:text-cyan-400 transition-colors" />}
-                                   {card.type === 'Equipment' && <Shield className="w-6 h-6 text-white/20 group-hover:text-purple-400 transition-colors" />}
-                                   {card.type === 'Companion' && <User className="w-6 h-6 text-white/20 group-hover:text-green-400 transition-colors" />}
-                                   {card.type === 'Teacher' && <Database className="w-6 h-6 text-white/20 group-hover:text-yellow-400 transition-colors" />}
-                                </div>
-                                <p className="text-[10px] font-bold text-white truncate">{card.name}</p>
-                                <p className="text-[9px] text-white/40 truncate">{card.edition}</p>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
 
               {/* Reviews Section - Full Width Below Everything */}
