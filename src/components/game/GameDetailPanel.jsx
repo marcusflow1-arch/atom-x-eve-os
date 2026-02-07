@@ -739,6 +739,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
               transition={{ duration: 0.4 }}
               className="space-y-8"
             >
+              {/* Achievement Card Strip - Horizontal above title */}
+              <AchievementCardStrip 
+                achievementCards={achievementCards} 
+                onSelectCard={setSelectedCard} 
+              />
+
               {/* Header Section: Title & Actions */}
               <div className="flex items-center justify-between gap-6 mb-8">
                 <div className="flex items-center gap-4">
