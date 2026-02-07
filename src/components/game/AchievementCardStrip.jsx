@@ -43,6 +43,7 @@ function CardItem({ card, onSelect }) {
 
 export default function AchievementCardStrip({ achievementCards, onSelectCard }) {
   const scrollRef = useRef(null);
+  const [activeFilter, setActiveFilter] = useState('All');
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;
@@ -50,20 +51,30 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
     scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
   };
 
-  // Group cards by type, preserving order
-  const types = ['Ability', 'Equipment', 'Companion', 'Teacher'];
-  const allCards = types.flatMap(type => {
-    const cards = achievementCards.filter(c => c.type === type);
-    if (cards.length === 0) return [];
-    return [{ _label: type }, ...cards];
-  });
+  // Scroll wheel -> horizontal scroll when hovering over the strip
+  const handleWheel = useCallback((e) => {
+    if (!scrollRef.current) return;
+    e.preventDefault();
+    // Scroll up (negative deltaY) -> scroll right, scroll down (positive deltaY) -> scroll left
+    const amount = e.deltaY < 0 ? 300 : -300;
+    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+  }, []);
 
-  // Build flat list with label markers on the FIRST card of each type
-  const flatCards = types.flatMap(type => {
-    const cards = achievementCards.filter(c => c.type === type);
-    if (cards.length === 0) return [];
-    return cards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
-  });
+  // Filter cards based on active filter
+  const filteredCards = activeFilter === 'All'
+    ? achievementCards
+    : achievementCards.filter(c => c.type === activeFilter);
+
+  // Group cards by type, preserving order: All, Ability, Equipment, Companion, Environment
+  const types = ['Ability', 'Equipment', 'Companion', 'Environment'];
+
+  const flatCards = activeFilter === 'All'
+    ? types.flatMap(type => {
+        const cards = filteredCards.filter(c => c.type === type);
+        if (cards.length === 0) return [];
+        return cards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
+      })
+    : filteredCards.map((card, idx) => ({ ...card, _showLabel: idx === 0 }));
 
   return (
     <div className="space-y-4">
@@ -76,8 +87,31 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
         <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
       </div>
 
-      {/* Horizontal scrolling strip with arrows */}
-      <div className="relative group/strip">
+      {/* Filter Tabs: All, Ability, Equipment, Companion, Environment */}
+      <div className="flex items-center justify-center gap-2">
+        {FILTER_TABS.map((tab) => {
+          const isActive = activeFilter === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveFilter(tab.key)}
+              className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                isActive
+                  ? `${tab.color} bg-white/10 border-white/20 shadow-[0_0_8px_rgba(255,255,255,0.1)]`
+                  : 'text-white/40 bg-transparent border-transparent hover:text-white/70 hover:bg-white/5'
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Horizontal scrolling strip with arrows + wheel scroll */}
+      <div
+        className="relative group/strip"
+        onWheel={handleWheel}
+      >
         {/* Left arrow */}
         <button
           onClick={() => scroll('left')}
@@ -113,6 +147,11 @@ export default function AchievementCardStrip({ achievementCards, onSelectCard })
               </div>
             );
           })}
+          {flatCards.length === 0 && (
+            <div className="w-full text-center py-6 text-white/30 text-sm">
+              No {activeFilter} cards found
+            </div>
+          )}
         </div>
       </div>
     </div>
