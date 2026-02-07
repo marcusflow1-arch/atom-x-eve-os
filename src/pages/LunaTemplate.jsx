@@ -278,11 +278,32 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         kickAction.reset().fadeIn(0.15).play();
         activeActionRef.current = kickAction;
 
-        // When the animation finishes, unlock and return to idle
         const onFinished = (e) => {
           if (e.action === kickAction) {
             hurricaneKickPlayingRef.current = false;
             currentActionNameRef.current = '';
+            mixer.removeEventListener('finished', onFinished);
+          }
+        };
+        mixer.addEventListener('finished', onFinished);
+      };
+
+      // C-key action: play once as an additive layer (doesn't block movement or other anims)
+      const playCAction = () => {
+        const cAction = actionsRef.current['hurricane_kick']; // reuse hurricane kick anim for C key
+        if (!cAction || cActionPlayingRef.current) return;
+        
+        cActionPlayingRef.current = true;
+
+        // Play the C action blended on top of whatever is currently playing
+        cAction.reset();
+        cAction.setEffectiveWeight(1);
+        cAction.fadeIn(0.15).play();
+
+        const onFinished = (e) => {
+          if (e.action === cAction) {
+            cActionPlayingRef.current = false;
+            cAction.fadeOut(0.2);
             mixer.removeEventListener('finished', onFinished);
           }
         };
