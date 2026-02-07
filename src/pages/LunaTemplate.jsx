@@ -1050,7 +1050,7 @@ export default function LunaTemplate() {
     setShowLive(panel === 'live');
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
-    setShowConsoleMode(!panel || panel === 'console' || panel === 'live');
+    setShowConsoleMode(panel === 'console');
 
     if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
