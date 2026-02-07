@@ -888,47 +888,69 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             (err) => console.error('Error loading FBX model:', err)
           );
         } else {
+          // GLB/GLTF Loading (Treated as ACTOR now, not Environment)
           const loader = new GLTFLoader();
-
-          // Load environment first if preference is set and not already loaded or changed
-          // DISABLE legacy env loading if activeScene is present
-          if (!activeScene && envMapUrl && (!envLoadedRef.current || currentEnvKeyRef.current !== envMapUrl)) {
-            const envLoader = new GLTFLoader();
-            envLoader.load(
-              envMapUrl,
-              (envGltf) => {
-                const world = envGltf.scene;
-                world.scale.setScalar(1);
-                world.position.set(0, 0, 0);
-                clearGroup(worldContainerRef.current);
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-                if (worldContainerRef.current) {
-                  worldContainerRef.current.add(world);
-                }
-                envLoadedRef.current = true;
-                currentEnvKeyRef.current = envMapUrl;
-                logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: `Loaded ${envMapUrl} into Environment_Layer` });
-              },
-              undefined,
-              (err) => console.error('Error loading ENV glTF:', err)
-            );
-          }
+          const fbxLoader = new FBXLoader(); // For animations
 
           loader.load(
             modelUrl,
             (gltf) => {
-              const world = gltf.scene;
-              // Normalize map scale and reset position
-              world.scale.setScalar(1);
-              world.position.set(0, 0, 0);
-              clearGroup(worldContainerRef.current);
-              logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-clear', summary: 'Cleared Environment_Layer only' });
-              if (worldContainerRef.current) {
-                worldContainerRef.current.add(world);
+              const model = gltf.scene;
+              
+              // Prepare for Actor Layer
+              clearGroup(actorContainerRef.current);
+              logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-clear', summary: 'Cleared Actor_Layer for GLB' });
+              
+              model.scale.setScalar(1);
+              model.position.set(0, 0, 0);
+              
+              // Adjust Scale (GLB might need different scaling than FBX)
+              adjustModelScaleToWorldHeight(model, 1.75);
+
+              // Load extra animations (FBX) onto this GLB model
+              const allClips = [...(gltf.animations || [])];
+              let loadedCount = 0;
+
+              // Helper to finalize
+              const finalize = () => {
+                  processModel(model, allClips);
+                  mixerRef.current = mixer;
+                  actorLoadedRef.current = true;
+                  // Baseline scale for container (standardized)
+                  if (actorContainerRef.current) actorContainerRef.current.scale.setScalar(1.0); // GLB usually implies real scale, unlike 0.01 FBX
+                  
+                  controlsActive.current = true;
+                  setIsActive(true);
+                  logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'actor-load', summary: 'Loaded GLB actor into Actor_Layer' });
+              };
+
+              if (animations.length > 0) {
+                  animations.forEach((anim) => {
+                    fbxLoader.load(
+                      anim.file_url,
+                      (animFbx) => {
+                        if (animFbx.animations && animFbx.animations.length > 0) {
+                          animFbx.animations.forEach((clip) => {
+                            if (anim.animation_type === 'idle') clip.name = 'idle';
+                            else if (anim.animation_type === 'run') clip.name = 'run';
+                            else if (anim.name.toLowerCase().includes('falling')) clip.name = 'fall';
+                            allClips.push(clip);
+                          });
+                        }
+                        loadedCount++;
+                        if (loadedCount === animations.length) finalize();
+                      },
+                      undefined,
+                      (err) => {
+                          console.error(`Error loading animation ${anim.name}:`, err);
+                          loadedCount++;
+                          if (loadedCount === animations.length) finalize();
+                      }
+                    );
+                  });
+              } else {
+                  finalize();
               }
-              envLoadedRef.current = true;
-              currentEnvKeyRef.current = modelUrl;
-              logChange({ scope: '3d', file: 'pages/LunaTemplate', action: 'world-load', summary: 'Loaded GLTF map into Environment_Layer (scale=1, pos=0,0,0)' });
             },
             undefined,
             (err) => console.error('Error loading GLTF model:', err)
@@ -1771,20 +1793,20 @@ export default function LunaTemplate() {
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
 
-  // Auto-select new dashboard model: Maria WProp J J Ong
+  // Auto-select model: Y-Bot (Xbot.glb)
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const exact = await base44.entities.ModelFBX.filter({ name: 'Maria WProp J J Ong' });
-        let chosen = exact && exact.length ? exact[0] : null;
-        if (!chosen) {
-          const all = await base44.entities.ModelFBX.list('-created_date', 100);
-          const lowers = ['maria','wprop','jj','ong'];
-          chosen = (all || []).find(m => lowers.every(k => (m.name || '').toLowerCase().includes(k)));
-        }
-        if (!cancelled && chosen?.file_url) {
-          setModelUrl(chosen.file_url);
+        // Default to Y-bot (using Xbot.glb as standard web-ready version)
+        let url = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
+        
+        // Optional: Check for override in DB
+        // const exact = await base44.entities.ModelFBX.filter({ name: 'Y-bot' });
+        // if (exact && exact.length) url = exact[0].file_url;
+
+        if (!cancelled) {
+          setModelUrl(url);
         }
       } catch (e) {
         console.error('Dashboard model lookup failed:', e);
