@@ -402,13 +402,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
       animate();
 
-      // Hurricane kick key listener (must be set after model loads)
-      const onHurricaneKey = (e) => {
+      // Special key listeners (must be set after model loads)
+      const onSpecialKey = (e) => {
         if (e.key === '1') playHurricaneKick();
+        if (e.key === 'c' || e.key === 'C') playCAction();
       };
-      window.addEventListener('keydown', onHurricaneKey);
+      window.addEventListener('keydown', onSpecialKey);
       // Store for cleanup
-      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onHurricaneKey);
+      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onSpecialKey);
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
