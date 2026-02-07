@@ -84,8 +84,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
-  // Hurricane kick lock
+  // Exclusive animation locks (hurricane kick, sprint roll)
   const hurricaneKickPlayingRef = useRef(false);
+  const sprintRollPlayingRef = useRef(false);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -234,6 +235,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     action.setLoop(THREE.LoopOnce, 1);
                     action.clampWhenFinished = true;
                   }
+
+                  // Special: sprinting forward roll - play once on C key only
+                  if (animName.includes('sprint') && animName.includes('roll')) {
+                    actionsRef.current['sprint_roll'] = action;
+                    action.setLoop(THREE.LoopOnce, 1);
+                    action.clampWhenFinished = true;
+                  }
                 }
               } catch (e) {
                 console.error("Failed to load animation:", anim.name, e);
@@ -252,8 +260,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
 
       const play = (name) => {
-          // Block normal animation changes while hurricane kick is playing
-          if (hurricaneKickPlayingRef.current) return;
+          // Block normal animation changes while exclusive anims are playing
+          if (hurricaneKickPlayingRef.current || sprintRollPlayingRef.current) return;
           const key = name.toLowerCase();
           if (currentActionNameRef.current === name) return;
           currentActionNameRef.current = name;
@@ -263,7 +271,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Hurricane kick: play once on "1" key, then return to idle
       const playHurricaneKick = () => {
         const kickAction = actionsRef.current['hurricane_kick'];
-        if (!kickAction || hurricaneKickPlayingRef.current) return;
+        if (!kickAction || hurricaneKickPlayingRef.current || sprintRollPlayingRef.current) return;
         
         hurricaneKickPlayingRef.current = true;
         currentActionNameRef.current = 'hurricane_kick';
@@ -272,10 +280,31 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         kickAction.reset().fadeIn(0.15).play();
         activeActionRef.current = kickAction;
 
-        // When the animation finishes, unlock and return to idle
         const onFinished = (e) => {
           if (e.action === kickAction) {
             hurricaneKickPlayingRef.current = false;
+            currentActionNameRef.current = '';
+            mixer.removeEventListener('finished', onFinished);
+          }
+        };
+        mixer.addEventListener('finished', onFinished);
+      };
+
+      // Sprinting Forward Roll: play once on "C" key, then return to idle
+      const playSprintRoll = () => {
+        const rollAction = actionsRef.current['sprint_roll'];
+        if (!rollAction || sprintRollPlayingRef.current || hurricaneKickPlayingRef.current) return;
+        
+        sprintRollPlayingRef.current = true;
+        currentActionNameRef.current = 'sprint_roll';
+        
+        if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
+        rollAction.reset().fadeIn(0.15).play();
+        activeActionRef.current = rollAction;
+
+        const onFinished = (e) => {
+          if (e.action === rollAction) {
+            sprintRollPlayingRef.current = false;
             currentActionNameRef.current = '';
             mixer.removeEventListener('finished', onFinished);
           }
@@ -289,8 +318,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
-        // Skip movement while hurricane kick is playing
-        if (hurricaneKickPlayingRef.current) {
+        // Skip movement while exclusive animations are playing
+        if (hurricaneKickPlayingRef.current || sprintRollPlayingRef.current) {
           // Still update camera
           const orbit = cameraOrbitRef.current;
           const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
@@ -308,21 +337,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         let isMoving = false;
         
         const moveVector = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) moveVector.z -= 1;
-        if (keysPressed.current['s']) moveVector.z += 1;
-        if (keysPressed.current['a']) moveVector.x -= 1;
-        if (keysPressed.current['d']) moveVector.x += 1;
+        if (keysPressed.current['w']) moveVector.y += 1;  // Up
+        if (keysPressed.current['s']) moveVector.y -= 1;  // Back (down)
+        if (keysPressed.current['a']) moveVector.x -= 1;  // Left
+        if (keysPressed.current['d']) moveVector.x += 1;  // Right
 
-        if (moveVector.lengthSq() > 0) {
-            moveVector.normalize();
+        // Map to 3D plane: x stays x, y maps to -z (forward/back)
+        const move3D = new THREE.Vector3(moveVector.x, 0, -moveVector.y);
+
+        if (move3D.lengthSq() > 0) {
+            move3D.normalize();
             isMoving = true;
 
             const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
+            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(move3D.x, move3D.z));
             model.quaternion.slerp(targetQuat, 0.2);
 
-            model.position.x += moveVector.x * moveSpeed * delta;
-            model.position.z += moveVector.z * moveSpeed * delta;
+            model.position.x += move3D.x * moveSpeed * delta;
+            model.position.z += move3D.z * moveSpeed * delta;
         }
 
         // --- CAMERA (Orbit with right-click, follows character) ---
@@ -366,13 +398,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
       animate();
 
-      // Hurricane kick key listener (must be set after model loads)
-      const onHurricaneKey = (e) => {
+      // Exclusive animation key listeners (must be set after model loads)
+      const onExclusiveKey = (e) => {
         if (e.key === '1') playHurricaneKick();
+        if (e.key === 'c' || e.key === 'C') playSprintRoll();
       };
-      window.addEventListener('keydown', onHurricaneKey);
-      // Store for cleanup
-      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onHurricaneKey);
+      window.addEventListener('keydown', onExclusiveKey);
+      model.userData._exclusiveCleanup = () => window.removeEventListener('keydown', onExclusiveKey);
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
@@ -398,7 +430,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('contextmenu', onContextMenu);
-      if (modelRef.current?.userData?._hurricaneCleanup) modelRef.current.userData._hurricaneCleanup();
+      if (modelRef.current?.userData?._exclusiveCleanup) modelRef.current.userData._exclusiveCleanup();
       renderer.dispose();
     };
   }, [adminAnimations]);
