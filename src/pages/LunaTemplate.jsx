@@ -78,6 +78,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const currentActionNameRef = useRef(""); 
   const verticalVelocityRef = useRef(0);
   const isGroundedRef = useRef(true);
+  const isAttackingRef = useRef(false);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -249,6 +250,45 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           fadeToAction(key, 0.2);
       };
 
+      const playOneShot = (name) => {
+        const key = name.toLowerCase();
+        let action = actionsRef.current[key];
+        
+        // Fuzzy search if exact match not found
+        if (!action) {
+           const foundKey = Object.keys(actionsRef.current).find(k => k.includes(key));
+           if (foundKey) action = actionsRef.current[foundKey];
+        }
+
+        if (!action) {
+            console.log("Animation not found:", name);
+            return;
+        }
+        
+        if (isAttackingRef.current) return; // Exclusive order: don't interrupt if already attacking
+
+        isAttackingRef.current = true;
+
+        if (activeActionRef.current) activeActionRef.current.fadeOut(0.1);
+        
+        action.reset();
+        action.setLoop(THREE.LoopOnce);
+        action.clampWhenFinished = true;
+        action.fadeIn(0.1);
+        action.play();
+        
+        activeActionRef.current = action;
+        currentActionNameRef.current = name;
+        
+        const onFinished = (e) => {
+            if (e.action === action) {
+                mixer.removeEventListener('finished', onFinished);
+                isAttackingRef.current = false;
+            }
+        };
+        mixer.addEventListener('finished', onFinished);
+      };
+
       // --- GAME LOOP ---
       const animate = () => {
         animationFrameId = requestAnimationFrame(animate);
@@ -325,12 +365,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // ANIMATION STATE
-        if (!isGroundedRef.current) {
-            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
-        } else if (isMoving) {
-            play("Running"); // Since speed is high, always run
-        } else {
-            play("Idle");
+        if (!isAttackingRef.current) {
+            if (!isGroundedRef.current) {
+                play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+            } else if (isMoving) {
+                play("Running"); // Since speed is high, always run
+            } else {
+                play("Idle");
+            }
         }
 
         renderer.render(scene, camera);
@@ -339,7 +381,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
-    const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
+    const onKeyDown = (e) => {
+        const key = e.key.toLowerCase();
+        keysPressed.current[key] = true;
+        if (key === '1') playOneShot('hurricane kick');
+    };
     const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
