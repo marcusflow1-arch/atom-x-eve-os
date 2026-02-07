@@ -1481,13 +1481,13 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
                       {/* Clean Navigation Line */}
                       <div className="flex items-center gap-8 border-b border-white/10">
-                        {['Overview', 'Discussion', 'Streamers', 'Guide', 'Support', 'Achievements', 'Streamer Affiliate'].map((tab) => {
-                          const id = tab.toLowerCase().replace(' ', '_');
+                        {['Content', 'Community', 'Achievements', 'Streamers', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
+                          const id = tab.toLowerCase().replace(/ /g, '_');
                           return (
                             <button
                               key={id}
                               onClick={() => setActiveDetailTab(id)}
-                              className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative ${
+                              className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${
                                 activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
                               }`}
                             >
