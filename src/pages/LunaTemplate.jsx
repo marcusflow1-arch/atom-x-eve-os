@@ -58,110 +58,227 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 
-// Transparent 3D Model Viewer with Y-Bot
+// Transparent 3D Model Viewer with Player Controller Script
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const mixerRef = useRef(null);
+  const modelRef = useRef(null);
+  const actionsRef = useRef({});
+  const activeActionRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
+  const keysPressed = useRef({});
+  
+  // Player Controller State
+  const isSprintingRef = useRef(false);
+  const sprintTimerRef = useRef(0);
+  const sprintDuration = 0.6;
+
+  // 1. Fetch Animations from Admin
+  const { data: adminAnimations } = useQuery({
+    queryKey: ['adminAnimations'],
+    queryFn: () => base44.entities.AnimationFBX.list(),
+    staleTime: Infinity
+  });
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // 1. Setup Scene
+    // --- SETUP SCENE ---
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Setup Camera
     const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 100);
     camera.position.set(0, 2, 4);
     cameraRef.current = camera;
 
-    // 3. Setup Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.setPixelRatio(window.devicePixelRatio);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Lights
+    // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
-
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    // 5. Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.target.set(0, 1, 0);
-    controls.update();
 
-    // 6. Load Y-Bot (Xbot.glb is the web-standard Y-Bot variant)
+    // --- LOAD MODEL ---
     const loader = new GLTFLoader();
     const yBotUrl = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
     
-    loader.load(yBotUrl, (gltf) => {
+    loader.load(yBotUrl, async (gltf) => {
       const model = gltf.scene;
+      modelRef.current = model;
       scene.add(model);
 
-      // Animation Mixer
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
 
-      // Play Idle if available
-      const clips = gltf.animations;
-      if (clips && clips.length > 0) {
-        // Usually the first clip is Idle or Walk in Xbot.glb
-        // Xbot has: agree, headShake, idle, run, walk...
-        const idleClip = clips.find(c => c.name.toLowerCase() === 'idle') || clips[0];
-        if (idleClip) {
-          mixer.clipAction(idleClip).play();
+      // --- ANIMATION SYSTEM ---
+      // Load built-in GLB animations
+      gltf.animations.forEach(clip => {
+        actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
+      });
+
+      // Load Admin FBX Animations
+      if (adminAnimations) {
+        const fbxLoader = new FBXLoader();
+        for (const anim of adminAnimations) {
+          try {
+            const animAsset = await fbxLoader.loadAsync(anim.file_url);
+            if (animAsset.animations.length > 0) {
+              const clip = animAsset.animations[0];
+              // Map by name or type
+              const actionName = anim.name.toLowerCase(); 
+              // Create action
+              const action = mixer.clipAction(clip);
+              actionsRef.current[actionName] = action;
+              
+              // Map specific keywords to standardized keys if needed
+              if (actionName.includes('sprint') || actionName.includes('roll')) actionsRef.current['sprinting'] = action;
+              if (actionName.includes('idle')) actionsRef.current['idle'] = action;
+              if (actionName.includes('run')) actionsRef.current['running'] = action;
+              if (actionName.includes('walk')) actionsRef.current['walking'] = action;
+              if (actionName.includes('fall')) actionsRef.current['falling'] = action;
+            }
+          } catch (e) {
+            console.warn(`Failed to load animation ${anim.name}`, e);
+          }
         }
       }
+
+      // Helper to blend animations
+      const fadeToAction = (name, duration = 0.2) => {
+        const nextAction = actionsRef.current[name] || actionsRef.current['idle']; // Fallback to idle
+        if (!nextAction || activeActionRef.current === nextAction) return;
+
+        if (activeActionRef.current) {
+          activeActionRef.current.fadeOut(duration);
+        }
+        nextAction.reset().fadeIn(duration).play();
+        activeActionRef.current = nextAction;
+      };
+
+      // --- UPDATE LOOP (Script Logic) ---
+      const animate = () => {
+        requestAnimationFrame(animate);
+        
+        const delta = clockRef.current.getDelta();
+        if (mixer) mixer.update(delta);
+
+        // --- PLAYER SCRIPT LOGIC ADAPTATION ---
+        const moveSpeed = 3.5;
+        let moveDir = new THREE.Vector3(0, 0, 0);
+        let isMoving = false;
+
+        // Input
+        if (keysPressed.current['w']) moveDir.z += 1; // In Three.js usually -Z is forward for camera, but standard models face +Z
+        if (keysPressed.current['s']) moveDir.z -= 1;
+        if (keysPressed.current['a']) moveDir.x += 1; 
+        if (keysPressed.current['d']) moveDir.x -= 1;
+
+        if (moveDir.lengthSq() > 0) {
+          moveDir.normalize();
+          isMoving = true;
+          
+          // Rotate model to face movement
+          const angle = Math.atan2(moveDir.x, moveDir.z);
+          model.rotation.y = angle;
+          
+          // Move model
+          model.position.x += moveDir.x * moveSpeed * delta;
+          model.position.z += moveDir.z * moveSpeed * delta;
+          
+          // Camera follow
+          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
+          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
+          // Simple lerp for camera could go here, or just orbit controls target update
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
+        }
+
+        // --- SCRIPT: UPDATE() ---
+        
+        // SPRINT (ROLL) INPUT
+        if (!isSprintingRef.current && keysPressed.current['c']) {
+          isSprintingRef.current = true;
+          sprintTimerRef.current = sprintDuration;
+          
+          fadeToAction('sprinting', 0.1); // "Sprinting" action
+          keysPressed.current['c'] = false; // consume key
+        }
+
+        // SPRINT IN PROGRESS
+        if (isSprintingRef.current) {
+          sprintTimerRef.current -= delta;
+          if (sprintTimerRef.current <= 0) {
+            isSprintingRef.current = false;
+          }
+          // Return to prevent other animations (logic from script)
+        } 
+        else {
+          // NORMAL MOVEMENT
+          // Simulate isGrounded = true for this viewer
+          const isGrounded = true; 
+
+          if (isGrounded) {
+            const dirLength = isMoving ? 1.0 : 0.0; // Simplified magnitude
+
+            if (dirLength > 0.6) {
+              fadeToAction('running', 0.2);
+            } else if (dirLength > 0.1) {
+              fadeToAction('walking', 0.2);
+            } else {
+              fadeToAction('idle', 0.2);
+            }
+          } else {
+            fadeToAction('falling', 0.2);
+          }
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+      };
+      animate();
+
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
-    // 7. Animation Loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-      
-      const delta = clockRef.current.getDelta();
-      if (mixerRef.current) mixerRef.current.update(delta);
-      
-      controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
+    // Input Listeners
+    const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
+    const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
 
-    // 8. Resize Handler
+    // Resize
     const handleResize = () => {
-      if (!containerRef.current || !camera || !renderer) return;
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      camera.aspect = width / height;
+      if (!containerRef.current) return;
+      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     };
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
-      if (renderer.domElement.parentNode) {
-        renderer.domElement.parentNode.removeChild(renderer.domElement);
-      }
+      if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, []);
-  
+  }, [adminAnimations]); // Re-run if animations list changes (unlikely frequent)
+
   return (
     <div ref={containerRef} className="w-full h-full relative group">
-      {/* 3D Viewer Active */}
+      {/* 3D Viewer Active - Click for focus if needed */}
     </div>
   );
 }
