@@ -214,21 +214,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 if (animAsset.animations.length > 0) {
                   const clip = animAsset.animations[0];
                   const type = (anim.animation_type || '').toLowerCase();
-                  const animName = (anim.name || '').toLowerCase();
+                  const animName = (anim.name || '').toLowerCase().trim();
                   const action = mixer.clipAction(clip);
                   
-                  // Map types to standard keys
+                  // Store by raw name first
+                  actionsRef.current[animName] = action;
+
+                  // Map by animation_type if it's not just 'idle' fallback
                   if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
                   else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
-                  else if (type === 'idle') actionsRef.current['idle'] = action;
                   else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
                   else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
                   else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
-                  
-                  // Store by name for manual triggers (e.g. hurricane kick)
-                  actionsRef.current[animName] = action;
 
-                  // Special: hurricane kick - set to play once, not loop
+                  // ALSO map by NAME to catch mis-categorized animations
+                  if (animName === 'running' || animName === 'run') actionsRef.current['running'] = action;
+                  else if (animName === 'walking' || animName === 'walk') actionsRef.current['walking'] = action;
+                  else if (animName === 'idle') actionsRef.current['idle'] = action;
+                  else if (animName === 'jumping' || animName === 'jump') { 
+                    actionsRef.current['jumping'] = action;
+                    action.setLoop(THREE.LoopOnce, 1);
+                    action.clampWhenFinished = true;
+                  }
+                  else if (animName === 'falling' || animName === 'fall') actionsRef.current['falling'] = action;
+                  else if (animName.includes('sprint') && animName.includes('roll')) {
+                    actionsRef.current['sprinting'] = action;
+                    action.setLoop(THREE.LoopOnce, 1);
+                    action.clampWhenFinished = true;
+                  }
+
+                  // Special: hurricane kick - play once only on "1" key
                   if (animName.includes('hurricane') && animName.includes('kick')) {
                     actionsRef.current['hurricane_kick'] = action;
                     action.setLoop(THREE.LoopOnce, 1);
@@ -239,6 +254,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 console.error("Failed to load animation:", anim.name, e);
               }
             }
+          }
+          
+          // Start idle animation after all are loaded
+          const idleAction = actionsRef.current['idle'];
+          if (idleAction) {
+            idleAction.reset().fadeIn(0.2).play();
+            activeActionRef.current = idleAction;
+            currentActionNameRef.current = 'Idle';
           }
       };
       loadAnimations();
