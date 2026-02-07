@@ -1104,7 +1104,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
-  const [activeDetailTab, setActiveDetailTab] = useState('overview');
+  const [activeDetailTab, setActiveDetailTab] = useState('content');
   const [activeGenre, setActiveGenre] = useState('All');
   const [sectionView, setSectionView] = useState('grid'); // 'grid' | 'details'
   
