@@ -86,6 +86,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
   // Hurricane kick lock
   const hurricaneKickPlayingRef = useRef(false);
+  // C-key action lock
+  const cActionPlayingRef = useRef(false);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
