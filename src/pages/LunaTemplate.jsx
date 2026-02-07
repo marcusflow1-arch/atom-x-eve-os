@@ -1635,7 +1635,6 @@ export default function LunaTemplate() {
                   exit={{ opacity: 0, height: 0, mb: 0 }}
                   transition={{ duration: 0.3 }}
                   className="w-full overflow-hidden relative z-20" // High Z to sit above fade
-                  style={{ paddingLeft: '440px' }}
                 >
                   <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
                     <AvatarProgressionBox />
@@ -1702,7 +1701,7 @@ export default function LunaTemplate() {
             <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* QUICK ACCESS BOXES */}
-            <div style={{ paddingLeft: '440px' }}>
+            <div>
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
@@ -1801,7 +1800,7 @@ export default function LunaTemplate() {
             )}
 
             {showAvatarProgression && (
-              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
+              <div className="pt-4 pr-8">
                 <div className="max-w-5xl mx-auto pointer-events-auto">
                   <AvatarProgressionBox />
                 </div>
