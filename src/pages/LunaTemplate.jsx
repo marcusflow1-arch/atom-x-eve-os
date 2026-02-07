@@ -198,73 +198,54 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixerRef.current = mixer;
       mixer.timeScale = 1.2;
 
-      // Load Built-in & Admin Animations
-      const loadAnimations = async () => {
-          if (fbx.animations) {
-            fbx.animations.forEach(clip => {
-              actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
-            });
-          }
+      // Load Admin Animations by NAME (animation_type in DB is unreliable)
+      const loadAnimations = async () => {          
+          if (!adminAnimations || adminAnimations.length === 0) return;
           
-          if (adminAnimations) {
-            const fbxLoader = new FBXLoader();
-            for (const anim of adminAnimations) {
-              try {
-                const animAsset = await fbxLoader.loadAsync(anim.file_url);
-                if (animAsset.animations.length > 0) {
-                  const clip = animAsset.animations[0];
-                  const type = (anim.animation_type || '').toLowerCase();
-                  const animName = (anim.name || '').toLowerCase().trim();
-                  const action = mixer.clipAction(clip);
-                  
-                  // Store by raw name first
-                  actionsRef.current[animName] = action;
+          const fbxLoader = new FBXLoader();
+          for (const anim of adminAnimations) {
+            try {
+              const animAsset = await fbxLoader.loadAsync(anim.file_url);
+              if (animAsset.animations.length === 0) continue;
+              
+              const clip = animAsset.animations[0];
+              const action = mixer.clipAction(clip);
+              const name = (anim.name || '').toLowerCase().trim();
 
-                  // Map by animation_type if it's not just 'idle' fallback
-                  if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
-                  else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
-                  else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
-                  else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
-                  else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
-
-                  // ALSO map by NAME to catch mis-categorized animations
-                  if (animName === 'running' || animName === 'run') actionsRef.current['running'] = action;
-                  else if (animName === 'walking' || animName === 'walk') actionsRef.current['walking'] = action;
-                  else if (animName === 'idle') actionsRef.current['idle'] = action;
-                  else if (animName === 'jumping' || animName === 'jump') { 
-                    actionsRef.current['jumping'] = action;
-                    action.setLoop(THREE.LoopOnce, 1);
-                    action.clampWhenFinished = true;
-                  }
-                  else if (animName === 'falling' || animName === 'fall') actionsRef.current['falling'] = action;
-                  else if (animName.includes('sprint') && animName.includes('roll')) {
-                    actionsRef.current['sprinting'] = action;
-                    action.setLoop(THREE.LoopOnce, 1);
-                    action.clampWhenFinished = true;
-                  }
-
-                  // Special: hurricane kick - play once only on "1" key
-                  if (animName.includes('hurricane') && animName.includes('kick')) {
-                    actionsRef.current['hurricane_kick'] = action;
-                    action.setLoop(THREE.LoopOnce, 1);
-                    action.clampWhenFinished = true;
-                  }
-                }
-              } catch (e) {
-                console.error("Failed to load animation:", anim.name, e);
+              // Map strictly by name
+              if (name === 'idle') {
+                actionsRef.current['idle'] = action;
+              } else if (name === 'running') {
+                actionsRef.current['running'] = action;
+              } else if (name === 'jumping') {
+                actionsRef.current['jumping'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              } else if (name === 'hurricane kick') {
+                actionsRef.current['hurricane_kick'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              } else if (name === 'sprinting forward roll') {
+                actionsRef.current['sprinting'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
               }
+              
+              // Also store raw name
+              actionsRef.current[name] = action;
+            } catch (e) {
+              console.error("Failed to load animation:", anim.name, e);
             }
           }
           
-          // Start idle animation after all are loaded
-          const idleAction = actionsRef.current['idle'];
-          if (idleAction) {
-            idleAction.reset().fadeIn(0.2).play();
-            activeActionRef.current = idleAction;
-            currentActionNameRef.current = 'Idle';
+          // Start idle
+          if (actionsRef.current['idle']) {
+            actionsRef.current['idle'].reset().play();
+            activeActionRef.current = actionsRef.current['idle'];
+            currentActionNameRef.current = 'idle';
           }
       };
-      loadAnimations();
+      await loadAnimations();
 
       const fadeToAction = (name, duration = 0.2) => {
         const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
