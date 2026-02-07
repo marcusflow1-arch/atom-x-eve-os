@@ -742,6 +742,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               {/* Achievement Card Strip - Horizontal above title */}
               <AchievementCardStrip 
                 achievementCards={achievementCards} 
+                dlcList={dlcList}
                 onSelectCard={setSelectedCard} 
               />
 
