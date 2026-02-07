@@ -80,8 +80,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isGroundedRef = useRef(true);
 
   // Camera orbit state (right-click drag)
-  // Camera orbit: 35% closer than 2.5 => ~1.625
-  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 1.625 });
+  const cameraOrbitRef = useRef({ yaw: 0, pitch: 0.4, distance: 2.5 });
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
@@ -182,8 +181,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      // Y-Bot Scaling - reduced 25% from 0.001
-      model.scale.set(0.00075, 0.00075, 0.00075); 
+      // Y-Bot Scaling - 50% smaller than previous 0.002
+      model.scale.set(0.001, 0.001, 0.001); 
       model.position.set(0, -0.5, 0);
       
       model.traverse((child) => {
@@ -219,23 +218,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                   const animName = (anim.name || '').toLowerCase();
                   const action = mixer.clipAction(clip);
                   
-                  // Map by animation_type first
+                  // Map types to standard keys
                   if (type === 'run' || type === 'running') actionsRef.current['running'] = action;
                   else if (type === 'walk' || type === 'walking') actionsRef.current['walking'] = action;
+                  else if (type === 'idle') actionsRef.current['idle'] = action;
                   else if (type === 'jump' || type === 'jumping') actionsRef.current['jumping'] = action;
                   else if (type === 'fall' || type === 'falling') actionsRef.current['falling'] = action;
                   else if (type === 'sprint' || type === 'sprinting') actionsRef.current['sprinting'] = action;
-                  // Only map idle if the NAME also says idle (avoid overriding with mistyped types)
-                  else if (type === 'idle' && animName === 'idle') actionsRef.current['idle'] = action;
-
-                  // Fallback: also map by NAME for animations whose type is wrong
-                  if (animName === 'idle') actionsRef.current['idle'] = action;
-                  if (animName === 'running' || animName === 'run') actionsRef.current['running'] = action;
-                  if (animName === 'walking' || animName === 'walk') actionsRef.current['walking'] = action;
-                  if (animName === 'jumping' || animName === 'jump') actionsRef.current['jumping'] = action;
-                  if (animName === 'falling' || animName === 'fall') actionsRef.current['falling'] = action;
                   
-                  // Store by name for manual triggers
+                  // Store by name for manual triggers (e.g. hurricane kick)
                   actionsRef.current[animName] = action;
 
                   // Special: hurricane kick - set to play once, not loop
@@ -243,17 +234,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     actionsRef.current['hurricane_kick'] = action;
                     action.setLoop(THREE.LoopOnce, 1);
                     action.clampWhenFinished = true;
-                    console.log('Hurricane Kick animation registered:', anim.name);
                   }
 
                   // Special: sprinting forward roll - play once on C key only
-                  // Match variations: "sprinting forward roll", "sprint roll", "Sprinting Forward Roll"
-                  if ((animName.includes('sprint') && animName.includes('roll')) ||
-                      (animName.includes('sprint') && animName.includes('forward'))) {
+                  if (animName.includes('sprint') && animName.includes('roll')) {
                     actionsRef.current['sprint_roll'] = action;
                     action.setLoop(THREE.LoopOnce, 1);
                     action.clampWhenFinished = true;
-                    console.log('Sprint Roll animation registered:', anim.name);
                   }
                 }
               } catch (e) {
@@ -262,8 +249,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           }
       };
-      await loadAnimations();
-      console.log('All animations loaded. Available actions:', Object.keys(actionsRef.current));
+      loadAnimations();
 
       const fadeToAction = (name, duration = 0.2) => {
         const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
@@ -277,8 +263,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Block normal animation changes while exclusive anims are playing
           if (hurricaneKickPlayingRef.current || sprintRollPlayingRef.current) return;
           const key = name.toLowerCase();
-          if (currentActionNameRef.current === key) return;
-          currentActionNameRef.current = key;
+          if (currentActionNameRef.current === name) return;
+          currentActionNameRef.current = name;
           fadeToAction(key, 0.2);
       };
 
@@ -350,11 +336,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const rotSpeed = 8.0; 
         let isMoving = false;
         
-        const move3D = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) move3D.z = 1;   // W = forward (up on screen) - was inverted
-        if (keysPressed.current['s']) move3D.z = -1;  // S = backward (down on screen) - was inverted  
-        if (keysPressed.current['a']) move3D.x = 1;   // A = left - was inverted
-        if (keysPressed.current['d']) move3D.x = -1;  // D = right - was inverted
+        const moveVector = new THREE.Vector3(0, 0, 0);
+        if (keysPressed.current['w']) moveVector.y += 1;  // Up
+        if (keysPressed.current['s']) moveVector.y -= 1;  // Back (down)
+        if (keysPressed.current['a']) moveVector.x -= 1;  // Left
+        if (keysPressed.current['d']) moveVector.x += 1;  // Right
+
+        // Map to 3D plane: x stays x, y maps to -z (forward/back)
+        const move3D = new THREE.Vector3(moveVector.x, 0, -moveVector.y);
 
         if (move3D.lengthSq() > 0) {
             move3D.normalize();
@@ -396,13 +385,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
 
-        // ANIMATION STATE (use lowercase keys to match actionsRef)
+        // ANIMATION STATE
         if (!isGroundedRef.current) {
-            play(verticalVelocityRef.current > 0 ? "jumping" : "falling");
+            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
         } else if (isMoving) {
-            play("running");
+            play("Running");
         } else {
-            play("idle");
+            play("Idle");
         }
 
         renderer.render(scene, camera);
@@ -411,12 +400,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       // Exclusive animation key listeners (must be set after model loads)
       const onExclusiveKey = (e) => {
-        const key = e.key;
-        if (key === '1') playHurricaneKick();
-        if (key === 'c' || key === 'C') {
-          e.preventDefault();
-          playSprintRoll();
-        }
+        if (e.key === '1') playHurricaneKick();
+        if (e.key === 'c' || e.key === 'C') playSprintRoll();
       };
       window.addEventListener('keydown', onExclusiveKey);
       model.userData._exclusiveCleanup = () => window.removeEventListener('keydown', onExclusiveKey);
