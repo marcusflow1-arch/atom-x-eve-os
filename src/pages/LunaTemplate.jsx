@@ -75,6 +75,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isSprintingRef = useRef(false);
   const sprintTimerRef = useRef(0);
   const sprintDuration = 0.6;
+  const currentActionNameRef = useRef(""); // Track current state name ("Idle", "Running", etc.)
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -206,43 +207,75 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
         }
 
-        // --- SCRIPT: UPDATE() ---
+        // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
+        const currentState = activeActionRef.current ? activeActionRef.current.getClip().name : "";
         
+        // Helper: Safe Animation Switch
+        const play = (name) => {
+          // Map script names to loaded action keys
+          let actionKey = name.toLowerCase();
+          
+          // Mapping fix: "Sprinting" -> "sprinting" (mapped from roll/sprint in loader)
+          // "Running" -> "running", "Walking" -> "walking", "Idle" -> "idle"
+          
+          // Check if we are already playing this 'type' of animation by checking strict key equality if possible,
+          // or just rely on fadeToAction's internal check.
+          // The user's script checks `this.currentState === name`. 
+          // We'll trust fadeToAction to handle the "same action" check efficiently, 
+          // but let's implement the state tracking requested.
+          
+          // We use a ref for currentState to match the script's logic
+          if (currentActionNameRef.current === name) return;
+          
+          currentActionNameRef.current = name;
+          fadeToAction(actionKey, 0.2);
+        };
+
+        // =========================
         // SPRINT (ROLL) INPUT
+        // =========================
         if (!isSprintingRef.current && keysPressed.current['c']) {
           isSprintingRef.current = true;
           sprintTimerRef.current = sprintDuration;
           
-          fadeToAction('sprinting', 0.1); // "Sprinting" action
-          keysPressed.current['c'] = false; // consume key
+          play("Sprinting");
+          // Consuming key optional but good for one-shot
+          keysPressed.current['c'] = false; 
+          return; // ⛔ prevent other animations
         }
 
+        // =========================
         // SPRINT IN PROGRESS
+        // =========================
         if (isSprintingRef.current) {
           sprintTimerRef.current -= delta;
           if (sprintTimerRef.current <= 0) {
             isSprintingRef.current = false;
           }
-          // Return to prevent other animations (logic from script)
-        } 
+          return; // ⛔ lock animation during sprint
+        }
+
+        // =========================
+        // MOVEMENT STATES
+        // =========================
+        const isGrounded = true; // Simulating grounded for this viewer
+
+        if (!isGrounded) {
+          play("Falling");
+          return;
+        }
+
+        // Calculate speed based on movement
+        const speed = isMoving ? 1.0 : 0.0; // Simplified for viewer (or use moveDir.length())
+
+        if (speed > 0.6) {
+          play("Running");
+        }
+        else if (speed > 0.1) {
+          play("Walking");
+        }
         else {
-          // NORMAL MOVEMENT
-          // Simulate isGrounded = true for this viewer
-          const isGrounded = true; 
-
-          if (isGrounded) {
-            const dirLength = isMoving ? 1.0 : 0.0; // Simplified magnitude
-
-            if (dirLength > 0.6) {
-              fadeToAction('running', 0.2);
-            } else if (dirLength > 0.1) {
-              fadeToAction('walking', 0.2);
-            } else {
-              fadeToAction('idle', 0.2);
-            }
-          } else {
-            fadeToAction('falling', 0.2);
-          }
+          play("Idle");
         }
 
         controls.update();
