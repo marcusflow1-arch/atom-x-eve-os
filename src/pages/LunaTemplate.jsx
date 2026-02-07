@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, BarChart2
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -1702,97 +1702,65 @@ export default function LunaTemplate() {
 
             {/* QUICK ACCESS BOXES */}
             <div>
-            <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              {/* Stats */}
-              <ConsoleTile
-                onClick={() => setShowStats((v) => !v)}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
-              </ConsoleTile>
-
-              {/* Friends */}
-              <ConsoleTile
-                onClick={() => setShowFriendsHub(true)}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Users className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
-              </ConsoleTile>
-
-              {/* Live */}
-              <ConsoleTile
-                onClick={() => setShowLive((v) => !v)}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Radio className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Live</span>
-              </ConsoleTile>
-
-              {/* Settings */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Settings className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
-              </ConsoleTile>
-
-              {/* Skill Tree */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
-              </ConsoleTile>
-            </div>
-
-            {/* Environment Selector and Memories */}
-            <div className={`flex gap-6 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <div className="flex-[2]">
-                <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
-              </div>
-              <div className="flex-1">
-                <AvatarMemoryBoard 
-                    activities={[
-                        { id: 1, description: 'Unlocked "Cosmic Explorer"', timestamp: Date.now() - 10000000 },
-                        { id: 2, description: 'Visited Cyber Loft', timestamp: Date.now() - 50000000 },
-                        { id: 3, description: 'Reached Level 5', timestamp: Date.now() - 100000000 }
-                    ]} 
-                />
-              </div>
-            </div>
-
-            </div>
-
-            {/* Main Grid: Leaderboard + 2x2 Right */}
-            <div className={`flex-1 flex gap-6 min-h-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              {/* Leaderboard Tile - Left */}
-              <div className="pointer-events-auto"><LeaderboardTile /></div>
-
-              {/* Right Side - 2x2 Grid */}
-              <div className="flex-1 flex flex-col gap-6">
-                {/* App Shortcuts */}
-                <div className="flex gap-6 flex-1">
-                  {/* Settings */}
+              <div className={`flex flex-wrap gap-4 mb-8 pointer-events-auto transition-opacity duration-500 justify-center ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {[
+                  { label: 'Stats', icon: Grid, onClick: () => setShowStats((v) => !v) },
+                  { label: 'Friends', icon: Users, onClick: () => setShowFriendsHub(true) },
+                  { label: 'Live', icon: Radio, onClick: () => setShowLive((v) => !v) },
+                  { label: 'Settings', icon: Settings, onClick: () => navigate(createPageUrl('LunaTemplate') + '?panel=settings') },
+                  { label: 'Skill Tree', icon: Layers, onClick: () => navigate(createPageUrl('GenreMastery')) },
+                  { label: 'AI Story', icon: BookOpen, onClick: () => setActiveDrawer({ id: 'story', label: 'AI Story' }) },
+                  { label: 'AI Battle', icon: Swords, onClick: () => setActiveDrawer({ id: 'battle', label: 'AI Battle' }) },
+                  { label: 'Season Pass', icon: Crown, onClick: () => setShowSeasonalPass(true) },
+                  { label: 'Achievements', icon: Trophy, onClick: () => setShowAchievements(true) },
+                  { label: 'Leaderboard', icon: BarChart2, onClick: () => setActiveDrawer({ id: 'leaderboard', label: 'Leaderboard' }) }, // Or redirect
+                ].map((item, index) => (
                   <ConsoleTile
-                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
-                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
+                    key={item.label}
+                    onClick={item.onClick}
+                    className="w-28 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
                   >
-                    <Settings className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                    <span className="text-[#CCCCCC] text-lg font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
+                    <item.icon className="w-8 h-8 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                    <span className="text-[#CCCCCC] text-xs font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{item.label}</span>
                   </ConsoleTile>
+                ))}
+              </div>
 
-                  {/* My Games & Apps */}
-                  <ConsoleTile
-                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
+              {/* Environment Selector and Memories */}
+              <div className={`flex items-end gap-6 mb-6 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {/* Environment Hub */}
+                <div className="w-[400px]">
+                  <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+                </div>
+                
+                {/* Memories Section */}
+                <div className="flex-1 flex items-end gap-4 overflow-x-auto pb-2">
+                  <div className="text-white/20 text-xs font-bold tracking-widest uppercase writing-mode-vertical rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                    Memories
+                  </div>
+                  
+                  {[
+                    { title: 'Final Stand', img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200' },
+                    { title: 'Base Victory', img: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200' },
+                    { title: 'Epic Battle', img: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200' },
+                    { title: 'Fallen Hero', img: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200' },
+                    { title: 'Champion', img: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200' },
+                  ].map((mem, i) => (
+                    <div key={i} className="flex-shrink-0 w-24 h-24 rounded-xl border border-white/10 bg-white/5 overflow-hidden relative group cursor-pointer hover:border-white/30 transition-all">
+                      <img src={mem.img} alt={mem.title} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                      <span className="absolute bottom-1 left-1 right-1 text-[9px] font-bold text-white text-center truncate">{mem.title}</span>
+                    </div>
+                  ))}
+
+                  {/* Home Button */}
+                  <div 
+                    onClick={() => setActiveDrawer({ id: 'home', label: 'AI Home' })}
+                    className="flex-shrink-0 w-24 h-24 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer flex flex-col items-center justify-center gap-2 transition-all"
                   >
-                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
-                  </ConsoleTile>
+                    <Home className="w-8 h-8 text-white/60" />
+                    <span className="text-[10px] font-bold text-white/60">Home</span>
+                  </div>
                 </div>
               </div>
             </div>
