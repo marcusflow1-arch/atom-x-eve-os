@@ -66,6 +66,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const cameraRef = useRef(null);
   const mixerRef = useRef(null);
   const modelRef = useRef(null);
+  const environmentRef = useRef(null); // Reference for collision mesh
   const actionsRef = useRef({});
   const activeActionRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
@@ -121,10 +122,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // 1. Load Room 2 (Environment)
     const roomUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     loader.load(roomUrl, (room) => {
-      // Scale UP significantly to be a proper environment (Assuming units were small)
-      // Increasing scale to make it feel like a large world
+      // Scale UP to make it a proper world
       room.scale.set(3.5, 3.5, 3.5); 
-      room.position.set(0, -0.5, 0); // Slight offset to ensure floor is below bot
+      room.position.set(0, 0, 0);
       room.traverse(c => { 
         if (c.isMesh) { 
           c.receiveShadow = true; 
@@ -134,6 +134,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         } 
       });
+      environmentRef.current = room; // Store for collision detection
       scene.add(room);
     }, undefined, (e) => console.error("Error loading Room 2", e));
 
@@ -143,9 +144,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
       
-      // FBX Scaling & Positioning (Make bot smaller relative to world)
+      // FBX Scaling & Positioning
       model.scale.set(0.008, 0.008, 0.008); 
-      model.position.set(0, 0, 0); // Start on floor
+      model.position.set(0, 5, 0); // Start HIGH in the air to prevent clipping initially
+      model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+      
+      modelRef.current = model;
+      scene.add(model);
       model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
       
       modelRef.current = model;
@@ -231,22 +236,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow (Third Person Chase)
-          // Position camera behind and above the player
-          // Assuming model forward is +Z or -Z, we want camera at -Z relative to player (behind)
-          // Let's adjust offset to be "in front" (meaning facing forward)
-          const relativeOffset = new THREE.Vector3(0, 4, -6); // Higher and further back for better view of environment
+          // Camera follow (Third Person Chase - Elevated)
+          // Adjust offset to be behind (+Z or -Z depending on model) and up
+          // Y-Bot usually faces +Z. So -Z is behind.
+          const relativeOffset = new THREE.Vector3(0, 6, -8); // Higher up (6) and further back (-8) to see environment
           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
           
           // Smooth follow
-          camera.position.lerp(cameraTargetPos, 0.15); // Slightly faster follow
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.15);
+          camera.position.lerp(cameraTargetPos, 0.1);
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
         }
         else {
-           // Always maintain follow even when idle to keep "in front" perspective if user rotates
-           const relativeOffset = new THREE.Vector3(0, 4, -6);
-           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
-           camera.position.lerp(cameraTargetPos, 0.05);
+           // Idle camera
            controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
         }
 
@@ -261,27 +262,48 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           fadeToAction(actionKey, 0.2);
         };
 
-        // --- PHYSICS: GRAVITY & JUMP ---
+        // --- PHYSICS: GRAVITY, JUMP & COLLISION ---
         const gravity = -20;
         const jumpForce = 8;
         
-        // Jump Input
-        if (keysPressed.current[' '] && isGroundedRef.current) {
-            verticalVelocityRef.current = jumpForce;
-            isGroundedRef.current = false;
-        }
-
-        // Apply Gravity
+        // 1. Apply Gravity first
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
 
-        // Ground Collision
-        if (model.position.y <= 0) {
-            model.position.y = 0;
-            verticalVelocityRef.current = 0;
+        // 2. Raycast for Ground Detection (Static Mesh Collision)
+        let groundY = -100; // Default abyss
+        if (environmentRef.current) {
+            // Cast ray downwards from player center (plus small offset up)
+            const rayOrigin = model.position.clone();
+            rayOrigin.y += 2; // Start ray above feet
+            const raycaster = new THREE.Raycaster(rayOrigin, new THREE.Vector3(0, -1, 0));
+            
+            // Intersect with environment
+            const intersects = raycaster.intersectObject(environmentRef.current, true); // Recursive
+            if (intersects.length > 0) {
+                // Find highest intersection below us
+                groundY = intersects[0].point.y;
+            }
+        } else {
+             // Fallback to flat plane if env not loaded yet
+             groundY = 0;
+        }
+
+        // 3. Ground Collision Resolution
+        if (model.position.y <= groundY) {
+            model.position.y = groundY;
+            verticalVelocityRef.current = Math.max(0, verticalVelocityRef.current); // Stop falling
             isGroundedRef.current = true;
         } else {
             isGroundedRef.current = false;
+        }
+
+        // 4. Jump Input
+        if (keysPressed.current[' '] && isGroundedRef.current) {
+            verticalVelocityRef.current = jumpForce;
+            isGroundedRef.current = false;
+            // Bump up slightly to break ground contact immediately
+            model.position.y += 0.1;
         }
 
         // =========================
