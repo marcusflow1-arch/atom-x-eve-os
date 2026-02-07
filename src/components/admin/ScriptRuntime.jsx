@@ -43,10 +43,18 @@ export class ScriptRuntime {
               actions[clip.name] = action;
               // Map common names
               const lower = clip.name.toLowerCase();
-              if (lower.includes('idle')) actions.idle = action;
-              if (lower.includes('walk')) actions.walk = action;
-              if (lower.includes('run')) actions.run = action;
-              if (lower.includes('jump')) actions.jump = action;
+              
+              // 1. Exact User-Specified Matches (High Priority)
+              if (clip.name === 'Neutral Idle' || lower === 'neutral idle') actions.idle = action;
+              else if (clip.name === 'Walking' || lower === 'walking') actions.walk = action;
+              else if (clip.name === 'Running' || lower === 'running') actions.run = action;
+              else if (clip.name === 'Sprinting' || lower === 'sprinting') actions.run = action; // "Sprinting for run" fallback
+
+              // 2. Loose Matches (Fallback)
+              if (!actions.idle && lower.includes('idle')) actions.idle = action;
+              if (!actions.walk && lower.includes('walk')) actions.walk = action;
+              if (!actions.run && lower.includes('run')) actions.run = action;
+              if (!actions.jump && lower.includes('jump')) actions.jump = action;
           });
       }
 
