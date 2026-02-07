@@ -371,7 +371,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         // PHYSICS
         const gravity = -25;
-        const jumpForce = 8;
+        const jumpForce = 5;
         const floorY = -0.5;
         
         if (keysPressed.current[' '] && isGroundedRef.current) {
