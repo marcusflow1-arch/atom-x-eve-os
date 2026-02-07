@@ -331,10 +331,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         let isMoving = false;
         
         const moveVector = new THREE.Vector3(0, 0, 0);
-        if (keysPressed.current['w']) moveVector.z -= 1;
-        if (keysPressed.current['s']) moveVector.z += 1;
-        if (keysPressed.current['a']) moveVector.x -= 1;
-        if (keysPressed.current['d']) moveVector.x += 1;
+        // Camera-relative movement: use camera yaw to determine forward/right
+        const camYaw = cameraOrbitRef.current.yaw;
+        const forwardX = -Math.sin(camYaw);
+        const forwardZ = -Math.cos(camYaw);
+        const rightX = -Math.cos(camYaw);
+        const rightZ = Math.sin(camYaw);
+        
+        if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; } // Forward
+        if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; } // Backward
+        if (keysPressed.current['a']) { moveVector.x -= rightX; moveVector.z -= rightZ; }     // Left
+        if (keysPressed.current['d']) { moveVector.x += rightX; moveVector.z += rightZ; }     // Right
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
