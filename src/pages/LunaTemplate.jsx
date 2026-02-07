@@ -121,13 +121,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // 1. Load Room 2 (Environment)
     const roomUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     loader.load(roomUrl, (room) => {
-      room.scale.set(0.01, 0.01, 0.01);
-      room.position.set(0, 0, 0);
+      // Scale UP significantly to be a proper environment (Assuming units were small)
+      // Increasing scale to make it feel like a large world
+      room.scale.set(3.5, 3.5, 3.5); 
+      room.position.set(0, -0.5, 0); // Slight offset to ensure floor is below bot
       room.traverse(c => { 
         if (c.isMesh) { 
           c.receiveShadow = true; 
           c.castShadow = true; 
-          // Fix standard material issues if any
           if (c.material) {
              c.material.side = THREE.DoubleSide;
           }
@@ -142,8 +143,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
       
-      // FBX Scaling & Positioning
-      model.scale.set(0.01, 0.01, 0.01);
+      // FBX Scaling & Positioning (Make bot smaller relative to world)
+      model.scale.set(0.008, 0.008, 0.008); 
       model.position.set(0, 0, 0); // Start on floor
       model.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
       
@@ -230,18 +231,23 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow (Third Person) - Update position ONLY when moving to avoid fighting OrbitControls when idle
-          // But user wants "follow around", so let's enforce a trailing camera
-          const relativeOffset = new THREE.Vector3(0, 3, -5); // Up and behind
+          // Camera follow (Third Person Chase)
+          // Position camera behind and above the player
+          // Assuming model forward is +Z or -Z, we want camera at -Z relative to player (behind)
+          // Let's adjust offset to be "in front" (meaning facing forward)
+          const relativeOffset = new THREE.Vector3(0, 4, -6); // Higher and further back for better view of environment
           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
           
           // Smooth follow
-          camera.position.lerp(cameraTargetPos, 0.1);
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0.1);
+          camera.position.lerp(cameraTargetPos, 0.15); // Slightly faster follow
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.15);
         }
         else {
-           // When idle, still look at player but allow free cam rotation (don't force camera position)
-           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.5, 0)), 0.1);
+           // Always maintain follow even when idle to keep "in front" perspective if user rotates
+           const relativeOffset = new THREE.Vector3(0, 4, -6);
+           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
+           camera.position.lerp(cameraTargetPos, 0.05);
+           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
