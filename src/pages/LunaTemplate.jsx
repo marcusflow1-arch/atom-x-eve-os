@@ -58,7 +58,7 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 
-// Transparent 3D Model Viewer with Player Controller Script
+// Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
@@ -75,7 +75,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isSprintingRef = useRef(false);
   const sprintTimerRef = useRef(0);
   const sprintDuration = 0.6;
-  const currentActionNameRef = useRef(""); // Track current state name ("Idle", "Running", etc.)
+  const currentActionNameRef = useRef(""); 
   const verticalVelocityRef = useRef(0);
   const isGroundedRef = useRef(true);
 
@@ -92,171 +92,201 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     // --- SETUP SCENE ---
     const scene = new THREE.Scene();
     sceneRef.current = scene;
+    
+    // Add Fog for depth
+    scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
-    const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 100);
-    camera.position.set(0, 2, 4);
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 500);
+    camera.position.set(0, 3, -5); // Initial position
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true; // Enable shadows
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Lighting
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0);
-    hemiLight.position.set(0, 20, 0);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(3, 10, 10);
+    
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(10, 20, 10);
+    dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // --- CAMERA SETTINGS ---
-    const cameraOffset = new THREE.Vector3(0, 1.6, 3.5); // Fixed offset relative to character
-    const cameraLookOffset = new THREE.Vector3(0, 1.4, 0); // Where to look (upper body)
-    const cameraLerp = 0.08; // Smoothness
-
-    // --- LOAD ENVIRONMENT (Room 2) ---
-    if (roomModelUrl) {
-        const envLoader = roomModelUrl.endsWith('.fbx') ? new FBXLoader() : new GLTFLoader();
-        envLoader.load(roomModelUrl, (asset) => {
-            const envModel = asset.scene || asset;
-            envModel.scale.set(1.2, 1.2, 1.2); // Scale environment to viewer
-            envModel.position.set(0, 0, 0); // Center environment
-            scene.add(envModel);
+    // --- ENVIRONMENT ---
+    // Always load Room 2 (ModularEnvironment)
+    const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
+    const envLoader = new FBXLoader();
+    envLoader.load(envUrl, (env) => {
+        // Environment Scaling - Make it "Map Sized"
+        // If Y-Bot is 0.01 (approx 1.7m), the environment scale needs to match or be slightly larger if the raw FBX is small.
+        // Assuming ModularEnvironment is standard scale (cm or m), we start with 0.015 to be slightly larger/map-like.
+        env.scale.set(0.012, 0.012, 0.012); 
+        env.position.set(0, 0, 0);
+        
+        // Enable shadows for environment
+        env.traverse((child) => {
+            if (child.isMesh) {
+                child.receiveShadow = true;
+                child.castShadow = true;
+            }
         });
-    }
+        
+        scene.add(env);
+    });
 
-    // --- LOAD MODEL (FBX) ---
+    // --- CHARACTER (Y-Bot) ---
     const loader = new FBXLoader();
     const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
-      
-      // FBX Scaling (Mixamo standard is centimeters, converting to human scale ~1.7m)
       model.scale.set(0.01, 0.01, 0.01); 
-      model.position.set(0, 0, 0); // Ensure feet are on ground
+      model.position.set(0, 0, 0);
+      
+      // Shadows
+      model.traverse((child) => {
+          if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+          }
+      });
       
       modelRef.current = model;
       scene.add(model);
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
+      mixer.timeScale = 1.2; // Speed up animations slightly
 
-      // --- ANIMATION SYSTEM ---
-      // Load built-in FBX animations
-      if (fbx.animations) {
-        fbx.animations.forEach(clip => {
-          actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
-        });
-      }
-
-      // Load Admin FBX Animations
-      if (adminAnimations) {
-        const fbxLoader = new FBXLoader();
-        for (const anim of adminAnimations) {
-          try {
-            const animAsset = await fbxLoader.loadAsync(anim.file_url);
-            if (animAsset.animations.length > 0) {
-              const clip = animAsset.animations[0];
-              // Map by name or type
-              const actionName = anim.name.toLowerCase(); 
-              // Create action
-              const action = mixer.clipAction(clip);
-              actionsRef.current[actionName] = action;
-              
-              // Map specific keywords to standardized keys if needed
-              if (actionName.includes('sprint') || actionName.includes('roll')) actionsRef.current['sprinting'] = action;
-              if (actionName.includes('idle')) actionsRef.current['idle'] = action;
-              if (actionName.includes('run')) actionsRef.current['running'] = action;
-              if (actionName.includes('walk')) actionsRef.current['walking'] = action;
-              if (actionName.includes('fall')) actionsRef.current['falling'] = action;
-              if (actionName.includes('jump')) actionsRef.current['jumping'] = action;
-            }
-          } catch (e) {
-            console.warn(`Failed to load animation ${anim.name}`, e);
+      // Load Built-in & Admin Animations
+      const loadAnimations = async () => {
+          if (fbx.animations) {
+            fbx.animations.forEach(clip => {
+              actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
+            });
           }
-        }
-      }
+          
+          if (adminAnimations) {
+            const fbxLoader = new FBXLoader();
+            for (const anim of adminAnimations) {
+              try {
+                const animAsset = await fbxLoader.loadAsync(anim.file_url);
+                if (animAsset.animations.length > 0) {
+                  const clip = animAsset.animations[0];
+                  const actionName = anim.name.toLowerCase(); 
+                  const action = mixer.clipAction(clip);
+                  actionsRef.current[actionName] = action;
+                  
+                  if (actionName.includes('sprint') || actionName.includes('roll')) actionsRef.current['sprinting'] = action;
+                  if (actionName.includes('idle')) actionsRef.current['idle'] = action;
+                  if (actionName.includes('run')) actionsRef.current['running'] = action;
+                  if (actionName.includes('walk')) actionsRef.current['walking'] = action;
+                  if (actionName.includes('fall')) actionsRef.current['falling'] = action;
+                  if (actionName.includes('jump')) actionsRef.current['jumping'] = action;
+                }
+              } catch (e) {}
+            }
+          }
+      };
+      loadAnimations();
 
-      // Helper to blend animations
       const fadeToAction = (name, duration = 0.2) => {
-        const nextAction = actionsRef.current[name] || actionsRef.current['idle']; // Fallback to idle
+        const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
         if (!nextAction || activeActionRef.current === nextAction) return;
-
-        if (activeActionRef.current) {
-          activeActionRef.current.fadeOut(duration);
-        }
+        if (activeActionRef.current) activeActionRef.current.fadeOut(duration);
         nextAction.reset().fadeIn(duration).play();
         activeActionRef.current = nextAction;
       };
 
-      // --- UPDATE LOOP (Script Logic) ---
+      const play = (name) => {
+          const key = name.toLowerCase();
+          if (currentActionNameRef.current === name) return;
+          currentActionNameRef.current = name;
+          fadeToAction(key, 0.2);
+      };
+
+      // --- GAME LOOP ---
       const animate = () => {
         requestAnimationFrame(animate);
-        
         const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
-        // --- PLAYER SCRIPT LOGIC ADAPTATION ---
-        const moveSpeed = 3.5;
-        let moveDir = new THREE.Vector3(0, 0, 0);
+        // MOVEMENT
+        const moveSpeed = 6.0; // Increased speed
+        const rotSpeed = 4.0;
+        let moveForward = 0; // -1 back, 1 forward
+        let moveRight = 0;   // -1 left, 1 right
+
+        if (keysPressed.current['w']) moveForward = 1;
+        if (keysPressed.current['s']) moveForward = -1;
+        if (keysPressed.current['a']) moveRight = 1; // A turns left (yaw) or moves left? 
+        if (keysPressed.current['d']) moveRight = -1;
+
+        // Direction relative to camera (Chase Cam Logic)
+        // Actually for standard 3rd person WASD:
+        // W moves character away from camera (Forward)
+        // S moves character towards camera (Backward)
+        // A rotates left OR moves left
+        // D rotates right OR moves right
+        
         let isMoving = false;
+        
+        // Simple WASD relative to screen
+        // -Z is forward in ThreeJS
+        const moveVector = new THREE.Vector3(0, 0, 0);
+        if (keysPressed.current['w']) moveVector.z -= 1; // Forward (away)
+        if (keysPressed.current['s']) moveVector.z += 1; // Backward (towards)
+        if (keysPressed.current['a']) moveVector.x -= 1; // Left
+        if (keysPressed.current['d']) moveVector.x += 1; // Right
 
-        // Input
-        if (keysPressed.current['w']) moveDir.z += 1; // In Three.js usually -Z is forward for camera, but standard models face +Z
-        if (keysPressed.current['s']) moveDir.z -= 1;
-        if (keysPressed.current['a']) moveDir.x += 1; 
-        if (keysPressed.current['d']) moveDir.x -= 1;
+        if (moveVector.lengthSq() > 0) {
+            moveVector.normalize();
+            isMoving = true;
 
-        if (moveDir.lengthSq() > 0) {
-          moveDir.normalize();
-          isMoving = true;
-          
-          // Rotate model to face movement
-          const angle = Math.atan2(moveDir.x, moveDir.z);
-          model.rotation.y = angle;
-          
-          // Move model
-          model.position.x += moveDir.x * moveSpeed * delta;
-          model.position.z += moveDir.z * moveSpeed * delta;
-          
+            // 1. Rotate Character to face movement direction smoothly
+            const targetRotation = Math.atan2(moveVector.x, moveVector.z); // 0 is +Z, PI is -Z
+            // Basic rotation snap for responsiveness
+            const rotDelta = moveVector.x * rotSpeed * delta;
+            
+            // For smooth turning to face direction:
+            // Calculate target quaternion
+            const targetQuat = new THREE.Quaternion();
+            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
+            model.quaternion.slerp(targetQuat, 0.15); // Smooth rotation
+
+            // 2. Move Character
+            model.position.x += moveVector.x * moveSpeed * delta;
+            model.position.z += moveVector.z * moveSpeed * delta;
         }
 
-        // --- CAMERA FOLLOW LOGIC (Fixed 3rd Person) ---
-        const targetPos = model.position.clone().add(cameraOffset);
-        camera.position.lerp(targetPos, cameraLerp);
-
-        const lookAtTarget = model.position.clone().add(cameraLookOffset);
-        camera.lookAt(lookAtTarget);
-
-        // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
-        const currentState = activeActionRef.current ? activeActionRef.current.getClip().name : "";
+        // --- CHASE CAMERA ---
+        // Desired Position: Behind and Up relative to Character's orientation? 
+        // OR Fixed Angle (Legend of Zelda / Diablo style)?
+        // User complained "camera moving around Y-Bot". 
+        // Best approach: Camera follows position but keeps fixed offset relative to WORLD, 
+        // OR Camera follows smoothly behind.
+        // Let's implement a "Soft Follow" where camera stays at a fixed offset (0, 4, 6) relative to character position.
+        // This is stable and prevents "moving around" dizziness.
         
-        // Helper: Safe Animation Switch
-        const play = (name) => {
-          let actionKey = name.toLowerCase();
-          if (currentActionNameRef.current === name) return;
-          currentActionNameRef.current = name;
-          fadeToAction(actionKey, 0.2);
-        };
+        const idealOffset = new THREE.Vector3(0, 4.5, 6.5); // High angle, behind
+        const targetCamPos = model.position.clone().add(idealOffset);
+        camera.position.lerp(targetCamPos, 0.1); // Smooth follow
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 1.0, 0))); // Look at torso
 
-        // --- PHYSICS: GRAVITY & JUMP ---
-        const gravity = -20;
+        // PHYSICS
+        const gravity = -25;
         const jumpForce = 8;
-        
-        // Jump Input
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
             isGroundedRef.current = false;
         }
-
-        // Apply Gravity
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
-
-        // Ground Collision
         if (model.position.y <= 0) {
             model.position.y = 0;
             verticalVelocityRef.current = 0;
@@ -265,48 +295,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
 
-        // =========================
-        // SPRINT (ROLL) INPUT
-        // =========================
-        if (!isSprintingRef.current && keysPressed.current['c']) {
-          isSprintingRef.current = true;
-          sprintTimerRef.current = sprintDuration;
-          play("Sprinting");
-          keysPressed.current['c'] = false; 
-          return; 
-        }
-
-        if (isSprintingRef.current) {
-          sprintTimerRef.current -= delta;
-          if (sprintTimerRef.current <= 0) {
-            isSprintingRef.current = false;
-          }
-          return;
-        }
-
-        // =========================
-        // MOVEMENT STATES
-        // =========================
+        // ANIMATION STATE
         if (!isGroundedRef.current) {
-          // Use Jumping if moving up, Falling if moving down (or just Jumping if Falling missing)
-          if (verticalVelocityRef.current > 0) {
-              play("Jumping");
-          } else {
-              play("Falling"); 
-          }
-          return;
-        }
-
-        const speed = isMoving ? 1.0 : 0.0;
-
-        if (speed > 0.6) {
-          play("Running");
-        }
-        else if (speed > 0.1) {
-          play("Walking");
-        }
-        else {
-          play("Idle");
+            play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+        } else if (isMoving) {
+            play("Running"); // Since speed is high, always run
+        } else {
+            play("Idle");
         }
 
         renderer.render(scene, camera);
@@ -315,13 +310,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
-    // Input Listeners
     const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
     const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
 
-    // Resize
     const handleResize = () => {
       if (!containerRef.current) return;
       camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
@@ -334,16 +327,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
-      if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
       renderer.dispose();
     };
-  }, [adminAnimations]); // Re-run if animations list changes (unlikely frequent)
+  }, [adminAnimations]);
 
-  return (
-    <div ref={containerRef} className="w-full h-full relative group">
-      {/* 3D Viewer Active - Click for focus if needed */}
-    </div>
-  );
+  return <div ref={containerRef} className="w-full h-full relative" />;
 }
 
 
