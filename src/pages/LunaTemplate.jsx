@@ -111,9 +111,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 1, 0);
+    // --- CAMERA SETTINGS ---
+    const cameraOffset = new THREE.Vector3(0, 1.6, 3.5); // Fixed offset relative to character
+    const cameraLookOffset = new THREE.Vector3(0, 1.4, 0); // Where to look (upper body)
+    const cameraLerp = 0.08; // Smoothness
+
+    // --- LOAD ENVIRONMENT (Room 2) ---
+    if (roomModelUrl) {
+        const envLoader = roomModelUrl.endsWith('.fbx') ? new FBXLoader() : new GLTFLoader();
+        envLoader.load(roomModelUrl, (asset) => {
+            const envModel = asset.scene || asset;
+            envModel.scale.set(1.2, 1.2, 1.2); // Scale environment to viewer
+            envModel.position.set(0, 0, 0); // Center environment
+            scene.add(envModel);
+        });
+    }
 
     // --- LOAD MODEL (FBX) ---
     const loader = new FBXLoader();
@@ -122,8 +134,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
       
-      // FBX Scaling (Mixamo standard is often centimeters, Three.js is meters)
-      model.scale.set(0.01, 0.01, 0.01);
+      // FBX Scaling (Mixamo standard is centimeters, converting to human scale ~1.7m)
+      model.scale.set(0.01, 0.01, 0.01); 
+      model.position.set(0, 0, 0); // Ensure feet are on ground
       
       modelRef.current = model;
       scene.add(model);
@@ -209,12 +222,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow
-          const relativeCameraOffset = new THREE.Vector3(0, 2, -4); // Behind
-          const cameraOffset = relativeCameraOffset.applyMatrix4(model.matrixWorld);
-          // Simple lerp for camera could go here, or just orbit controls target update
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
         }
+
+        // --- CAMERA FOLLOW LOGIC (Fixed 3rd Person) ---
+        const targetPos = model.position.clone().add(cameraOffset);
+        camera.position.lerp(targetPos, cameraLerp);
+
+        const lookAtTarget = model.position.clone().add(cameraLookOffset);
+        camera.lookAt(lookAtTarget);
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
         const currentState = activeActionRef.current ? activeActionRef.current.getClip().name : "";
@@ -294,7 +309,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           play("Idle");
         }
 
-        controls.update();
         renderer.render(scene, camera);
       };
       animate();
