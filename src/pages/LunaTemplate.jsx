@@ -347,8 +347,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             moveVector.normalize();
             isMoving = true;
 
+            // Rotate character to face the direction of movement
+            const angle = Math.atan2(moveVector.x, moveVector.z);
             const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
+            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
             model.quaternion.slerp(targetQuat, 0.2);
 
             model.position.x += moveVector.x * moveSpeed * delta;
