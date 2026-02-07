@@ -374,8 +374,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       // Special key listeners (must be set after model loads)
       const onSpecialKey = (e) => {
-        if (e.key === '1') playHurricaneKick();
-        if (e.key === 'c' || e.key === 'C') playCAction();
+        if (e.key === '1') playOneShot('hurricane_kick');
+        if (e.key === 'c' || e.key === 'C') playOneShot('hurricane_kick');
+        if (e.key === 'r' || e.key === 'R') playOneShot('sprinting'); // sprinting forward roll
       };
       window.addEventListener('keydown', onSpecialKey);
       // Store for cleanup
