@@ -1,13 +1,21 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Shield, User, Database, ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { Zap, Shield, User, Database, Trees, ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 
 const TYPE_CONFIG = {
   Ability: { icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
   Equipment: { icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
   Companion: { icon: User, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
-  Teacher: { icon: Database, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+  Environment: { icon: Trees, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
 };
+
+const FILTER_TABS = [
+  { key: 'All', label: 'All', color: 'text-white' },
+  { key: 'Ability', label: 'Ability', color: 'text-cyan-400' },
+  { key: 'Equipment', label: 'Equipment', color: 'text-purple-400' },
+  { key: 'Companion', label: 'Companion', color: 'text-green-400' },
+  { key: 'Environment', label: 'Environment', color: 'text-amber-400' },
+];
 
 function CardItem({ card, onSelect }) {
   const cfg = TYPE_CONFIG[card.type] || TYPE_CONFIG.Ability;
