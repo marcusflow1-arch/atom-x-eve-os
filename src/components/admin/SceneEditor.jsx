@@ -488,17 +488,27 @@ export default function SceneEditor() {
     const isHumanoid = nameLower.includes('ybot') || nameLower.includes('bot');
     const scaleVal = (isHumanoid && autoScaleHumanoids) ? 0.01 : 1;
 
+    // Auto-attach PlayerController for Y-Bot or Humanoids
+    const defaultScripts = [];
+    if (isHumanoid) {
+        const playerScript = scripts.find(s => s.name === 'PlayerController');
+        if (playerScript) {
+            defaultScripts.push({ script_id: playerScript.id, params: {} });
+            console.log("Auto-attached PlayerController to:", model.name);
+        }
+    }
+
     const newObj = {
       id: newId,
       model_id: model.id,
       model_url: model.file_url,
       name: type === 'spawn_point' ? `Spawn (${model.name})` : model.name,
       instance_name: type === 'spawn_point' ? `PlayerStart_${newId.slice(0,4)}` : model.name,
-      role: type === 'spawn_point' ? 'player' : 'static',
+      role: (isHumanoid || type === 'spawn_point') ? 'player' : 'static',
       type: type,
       layer: (isHumanoid ? 'Actor_Layer' : (type === 'spawn_point' ? 'Actor_Layer' : 'Default')),
       persistent: !!(isHumanoid || type === 'spawn_point'),
-      scripts: [],
+      scripts: defaultScripts,
       transform: { 
           position: { x: 0, y: 0, z: 0 }, 
           rotation: { x: 0, y: 0, z: 0 }, 
