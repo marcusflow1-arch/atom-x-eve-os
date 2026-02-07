@@ -24,6 +24,11 @@ import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
 import EmbeddedGameStreamersList from '@/components/streaming/EmbeddedGameStreamersList';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
+import GameContentTab from '@/components/library/GameContentTab';
+import GameCommunityTab from '@/components/library/GameCommunityTab';
+import GameDiscussionTab from '@/components/library/GameDiscussionTab';
+import GameStreamerAffiliateTab from '@/components/library/GameStreamerAffiliateTab';
+import GameSupportTab from '@/components/library/GameSupportTab';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
