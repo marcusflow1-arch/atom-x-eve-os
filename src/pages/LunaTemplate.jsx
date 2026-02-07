@@ -321,8 +321,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         
         if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; } // Forward
         if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; } // Backward
-        if (keysPressed.current['a']) { moveVector.x -= rightX; moveVector.z -= rightZ; }     // Left
-        if (keysPressed.current['d']) { moveVector.x += rightX; moveVector.z += rightZ; }     // Right
+        if (keysPressed.current['a']) { moveVector.x += rightX; moveVector.z += rightZ; }     // Right
+        if (keysPressed.current['d']) { moveVector.x -= rightX; moveVector.z -= rightZ; }     // Left
 
         if (moveVector.lengthSq() > 0) {
             moveVector.normalize();
