@@ -115,12 +115,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     controls.enableDamping = true;
     controls.target.set(0, 1, 0);
 
-    // --- LOAD MODEL ---
-    const loader = new GLTFLoader();
-    const yBotUrl = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
+    // --- LOAD MODEL (FBX) ---
+    const loader = new FBXLoader();
+    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
-    loader.load(yBotUrl, async (gltf) => {
-      const model = gltf.scene;
+    loader.load(yBotUrl, async (fbx) => {
+      const model = fbx;
+      
+      // FBX Scaling (Mixamo standard is often centimeters, Three.js is meters)
+      model.scale.set(0.01, 0.01, 0.01);
+      
       modelRef.current = model;
       scene.add(model);
 
@@ -128,10 +132,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       mixerRef.current = mixer;
 
       // --- ANIMATION SYSTEM ---
-      // Load built-in GLB animations
-      gltf.animations.forEach(clip => {
-        actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
-      });
+      // Load built-in FBX animations
+      if (fbx.animations) {
+        fbx.animations.forEach(clip => {
+          actionsRef.current[clip.name.toLowerCase()] = mixer.clipAction(clip);
+        });
+      }
 
       // Load Admin FBX Animations
       if (adminAnimations) {
