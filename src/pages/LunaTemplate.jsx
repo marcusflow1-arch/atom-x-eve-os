@@ -167,6 +167,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const collisionMeshesRef = useRef([]); // Dedicated collision storage
   const npcInstancesRef = useRef({});
   const instanceScriptsMapRef = useRef({});
+  const mainScriptUpdatesRef = useRef([]); // Callbacks for main actor scripts
 
   // Load scripts bound to scene instances (build map once per activeScene)
   useEffect(() => {
@@ -237,18 +238,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Only run scripts when the model is fully loaded and ready
       if (!scripts || !actorContainerRef.current || !sceneRef.current || !isModelReady) return;
 
+      // Clear previous updates to avoid duplication on re-run
+      mainScriptUpdatesRef.current = [];
+
       scripts.forEach(script => {
           // Prevent duplicate execution if script is meant to run once (init)
-          const scriptKey = `${script.id}-${modelUrl}-${Date.now()}`; // Force re-run on model reload
-          // We allow re-execution on model reload, so we don't check persistent history too aggressively for same model URL
-          // But we want to avoid loop. 
-          // Let's clear history when model changes? 
-          // Simplified: Just run it. The dependencies handle the "when".
+          const scriptKey = `${script.id}-${modelUrl}-${Date.now()}`; 
           
           try {
               console.log(`Executing 3D Script: ${script.name}`);
               const func = new Function(
-                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store',
+                  'THREE', 'scene', 'camera', 'renderer', 'model', 'mixer', 'actions', 'controls', 'clock', 'store', 'registerUpdate',
                   script.script_code
               );
               func(
@@ -265,6 +265,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                       getState: useLunaStore.getState,
                       setState: useLunaStore.setState,
                       subscribe: useLunaStore.subscribe
+                  },
+                  (updateFn) => {
+                      if (typeof updateFn === 'function') {
+                          mainScriptUpdatesRef.current.push(updateFn);
+                      }
                   }
               );
           } catch (e) {
@@ -1066,6 +1071,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Animation Heartbeat (Anti-T-Pose)
       const activeMixer = mixerRef.current || mixer;
       if (activeMixer) activeMixer.update(delta);
+      
+      // Main Script Updates
+      if (mainScriptUpdatesRef.current?.length) {
+          mainScriptUpdatesRef.current.forEach(fn => { try { fn(delta); } catch {} });
+      }
+
       // Per-instance mixers and script updates
       try {
         Object.values(npcInstancesRef.current || {}).forEach((inst) => {
