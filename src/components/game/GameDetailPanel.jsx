@@ -904,6 +904,15 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
+              {/* Achievement Card Strip - Below media section */}
+              <div className="border-t border-white/10 pt-6">
+                <AchievementCardStrip 
+                  achievementCards={achievementCards} 
+                  dlcList={dlcList}
+                  onSelectCard={setSelectedCard} 
+                />
+              </div>
+
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">
                 {/* Content For This Game (DLCs & About) */}
