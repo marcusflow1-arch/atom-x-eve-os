@@ -58,13 +58,110 @@ import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 
-// Transparent 3D Model Viewer (Reset)
+// Transparent 3D Model Viewer with Y-Bot
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
   const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
+  const cameraRef = useRef(null);
+  const mixerRef = useRef(null);
+  const clockRef = useRef(new THREE.Clock());
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // 1. Setup Scene
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+
+    // 2. Setup Camera
+    const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 100);
+    camera.position.set(0, 2, 4);
+    cameraRef.current = camera;
+
+    // 3. Setup Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    // 4. Lights
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2.0);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(3, 10, 10);
+    scene.add(dirLight);
+
+    // 5. Controls
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 1, 0);
+    controls.update();
+
+    // 6. Load Y-Bot (Xbot.glb is the web-standard Y-Bot variant)
+    const loader = new GLTFLoader();
+    const yBotUrl = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
+    
+    loader.load(yBotUrl, (gltf) => {
+      const model = gltf.scene;
+      scene.add(model);
+
+      // Animation Mixer
+      const mixer = new THREE.AnimationMixer(model);
+      mixerRef.current = mixer;
+
+      // Play Idle if available
+      const clips = gltf.animations;
+      if (clips && clips.length > 0) {
+        // Usually the first clip is Idle or Walk in Xbot.glb
+        // Xbot has: agree, headShake, idle, run, walk...
+        const idleClip = clips.find(c => c.name.toLowerCase() === 'idle') || clips[0];
+        if (idleClip) {
+          mixer.clipAction(idleClip).play();
+        }
+      }
+    }, undefined, (err) => console.error('Error loading Y-Bot:', err));
+
+    // 7. Animation Loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      
+      const delta = clockRef.current.getDelta();
+      if (mixerRef.current) mixerRef.current.update(delta);
+      
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // 8. Resize Handler
+    const handleResize = () => {
+      if (!containerRef.current || !camera || !renderer) return;
+      const width = containerRef.current.clientWidth;
+      const height = containerRef.current.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, []);
   
   return (
     <div ref={containerRef} className="w-full h-full relative group">
-      {/* 3D Viewer Content Reset */}
+      {/* 3D Viewer Active */}
     </div>
   );
 }
