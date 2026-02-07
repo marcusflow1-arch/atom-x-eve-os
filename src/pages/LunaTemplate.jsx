@@ -105,7 +105,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     scene.fog = new THREE.FogExp2(0x000000, 0.02);
 
     const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 500);
-    camera.position.set(0, 3, -5); // Initial position
+    camera.position.set(0, 1.5, -2.5); // Initial position (Closer)
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -127,7 +127,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     
     // Map Right Click to Rotate (Standard MMO style)
     controls.mouseButtons = {
-        LEFT: THREE.MOUSE.PAN, 
+        LEFT: null, // Disable Left Click
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.ROTATE
     };
@@ -276,9 +276,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), Math.atan2(moveVector.x, moveVector.z));
             model.quaternion.slerp(targetQuat, 0.2); // Snappier rotation
 
-            // 2. Move Character
-            model.position.x += moveVector.x * moveSpeed * delta;
-            model.position.z += moveVector.z * moveSpeed * delta;
+            // 2. Move Character AND Camera (Chase Cam behavior without rotation)
+            const moveX = moveVector.x * moveSpeed * delta;
+            const moveZ = moveVector.z * moveSpeed * delta;
+            
+            model.position.x += moveX;
+            model.position.z += moveZ;
+            
+            // Move camera by same amount to maintain relative position
+            camera.position.x += moveX;
+            camera.position.z += moveZ;
         }
 
         // --- CAMERA CONTROLS ---
