@@ -236,19 +236,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           model.position.x += moveDir.x * moveSpeed * delta;
           model.position.z += moveDir.z * moveSpeed * delta;
           
-          // Camera follow (Third Person Chase - Elevated)
-          // Adjust offset to be behind (+Z or -Z depending on model) and up
-          // Y-Bot usually faces +Z. So -Z is behind.
-          const relativeOffset = new THREE.Vector3(0, 6, -8); // Higher up (6) and further back (-8) to see environment
+          // Camera follow (Third Person Chase - Standard)
+          // Positioned closer and lower to match the reference screenshot (shoulder/head height)
+          // Y-Bot faces +Z, so -Z is behind.
+          const relativeOffset = new THREE.Vector3(0, 2.5, -3.5); 
           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
           
-          // Smooth follow
-          camera.position.lerp(cameraTargetPos, 0.1);
-          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
+          // Smooth follow (slightly tighter lerp for responsiveness)
+          camera.position.lerp(cameraTargetPos, 0.12);
+          
+          // Look slightly above the model's head to see what's in front
+          controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.12);
         }
         else {
-           // Idle camera
-           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
+           // Idle camera - maintain the "Ready" angle
+           const relativeOffset = new THREE.Vector3(0, 2.5, -3.5);
+           const cameraTargetPos = relativeOffset.applyMatrix4(model.matrixWorld);
+           camera.position.lerp(cameraTargetPos, 0.05); // Slower drift when idle
+           controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1.6, 0)), 0.1);
         }
 
         // --- SCRIPT LOGIC (PlayerController.ts adaptation) ---
@@ -290,8 +295,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // 3. Ground Collision Resolution
-        if (model.position.y <= groundY) {
-            model.position.y = groundY;
+        // Add a small offset (0.02) to ensure feet sit ON TOP of the floor, not clipping inside
+        if (model.position.y <= groundY + 0.02) {
+            model.position.y = groundY + 0.02;
             verticalVelocityRef.current = Math.max(0, verticalVelocityRef.current); // Stop falling
             isGroundedRef.current = true;
         } else {
