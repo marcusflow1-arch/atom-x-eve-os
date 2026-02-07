@@ -177,7 +177,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
-      mixer.timeScale = 1.2; // Speed up animations slightly
+      mixer.timeScale = 3.0; // Significantly increased speed to fix slow motion issue
 
       // Load Built-in & Admin Animations
       const loadAnimations = async () => {
