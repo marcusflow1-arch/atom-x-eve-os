@@ -57,6 +57,7 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
+import AvatarMemoryBoard from '../components/avatarHome/AvatarMemoryBoard';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
@@ -1666,6 +1667,33 @@ export default function LunaTemplate() {
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
               </ConsoleTile>
 
+              {/* Friends */}
+              <ConsoleTile
+                onClick={() => setShowFriendsHub(true)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Users className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
+              </ConsoleTile>
+
+              {/* Live */}
+              <ConsoleTile
+                onClick={() => setShowLive((v) => !v)}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Radio className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Live</span>
+              </ConsoleTile>
+
+              {/* Settings */}
+              <ConsoleTile
+                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+              >
+                <Settings className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Settings</span>
+              </ConsoleTile>
+
               {/* Skill Tree */}
               <ConsoleTile
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
@@ -1674,38 +1702,22 @@ export default function LunaTemplate() {
                 <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
               </ConsoleTile>
-
-              {/* Season Pass */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
-              </ConsoleTile>
-
-              {/* Achievements */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('Achievements'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
-              </ConsoleTile>
-
-              {/* Leaderboard */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('Leaderboard'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
-              </ConsoleTile>
             </div>
 
-            {/* Environment Selector (Replaces Game Banner) */}
-            <div className={`mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+            {/* Environment Selector and Memories */}
+            <div className={`flex gap-6 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <div className="flex-[2]">
+                <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+              </div>
+              <div className="flex-1">
+                <AvatarMemoryBoard 
+                    activities={[
+                        { id: 1, description: 'Unlocked "Cosmic Explorer"', timestamp: Date.now() - 10000000 },
+                        { id: 2, description: 'Visited Cyber Loft', timestamp: Date.now() - 50000000 },
+                        { id: 3, description: 'Reached Level 5', timestamp: Date.now() - 100000000 }
+                    ]} 
+                />
+              </div>
             </div>
 
             </div>
