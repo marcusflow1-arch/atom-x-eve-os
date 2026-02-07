@@ -621,13 +621,27 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                     const instanceId = obj.id;
                     const instanceEntry = { object3d: model, updates: [], mixer: null };
 
-                    // Create a mixer if animations exist on the loaded asset
+                    // Create a mixer and actions if animations exist
+                    const instanceActions = {};
                     if (asset.animations && asset.animations.length > 0) {
                         try {
                             instanceEntry.mixer = new THREE.AnimationMixer(model);
-                            const action = instanceEntry.mixer.clipAction(asset.animations[0]);
-                            action.play();
-                        } catch {}
+                            asset.animations.forEach((clip) => {
+                                instanceActions[clip.name] = instanceEntry.mixer.clipAction(clip);
+                                // Also map common names for easier access
+                                const lowerName = clip.name.toLowerCase();
+                                if (lowerName.includes('idle')) instanceActions.idle = instanceActions[clip.name];
+                                if (lowerName.includes('walk')) instanceActions.walk = instanceActions[clip.name];
+                                if (lowerName.includes('run')) instanceActions.run = instanceActions[clip.name];
+                            });
+                            
+                            // Play default idle if available
+                            if (instanceActions.idle) instanceActions.idle.play();
+                            else {
+                                const action = instanceEntry.mixer.clipAction(asset.animations[0]);
+                                action.play();
+                            }
+                        } catch (e) { console.warn("Error setting up instance animations", e); }
                     }
 
                     npcInstancesRef.current[instanceId] = instanceEntry;
@@ -643,18 +657,29 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                             const script = instanceScriptsMapRef.current[binding.script_id];
                             if (script && script.script_code) {
                                 try {
+                                    // Extended signature to match PlayerController expectations
                                     const fn = new Function(
-                                        'THREE','scene','camera','instance','registerUpdate','params','mixer',
+                                        'THREE','scene','camera','renderer','model','mixer','actions','controls','clock','store','registerUpdate','params','instance',
                                         script.script_code
                                     );
                                     fn(
                                         THREE,
                                         scene,
                                         camera,
+                                        renderer,
                                         model,
+                                        npcInstancesRef.current[instanceId].mixer,
+                                        instanceActions,
+                                        controlsRef.current,
+                                        clockRef.current,
+                                        {
+                                            getState: useLunaStore.getState,
+                                            setState: useLunaStore.setState,
+                                            subscribe: useLunaStore.subscribe
+                                        },
                                         registerUpdate,
                                         binding.params || {},
-                                        npcInstancesRef.current[instanceId].mixer
+                                        model // alias for 'instance' legacy support
                                     );
                                 } catch (e) { console.error('Error running instance script', e); }
                             }
