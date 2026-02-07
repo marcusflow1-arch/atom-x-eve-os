@@ -4,11 +4,12 @@ import * as THREE from 'three';
  * Handles runtime execution of attached scripts (behaviors) for the Scene Editor.
  */
 export class ScriptRuntime {
-  constructor(sceneRef, sceneObjectsMapRef, mixersRef, controlsRef) {
+  constructor(sceneRef, sceneObjectsMapRef, mixersRef, controlsRef, rendererRef) {
     this.sceneRef = sceneRef;
     this.objectsMapRef = sceneObjectsMapRef;
     this.mixersRef = mixersRef;
     this.controlsRef = controlsRef; // OrbitControls
+    this.rendererRef = rendererRef;
     this.updates = []; // Functional updates
     this.active = false;
     this.cleanupFns = [];
@@ -20,17 +21,10 @@ export class ScriptRuntime {
     this.updates = [];
     this.cleanupFns = [];
 
-    const THREE = window.THREE || import('three'); // Fallback if needed, though usually window.THREE isn't set in modules. We assume THREE is passed or available globally if we were in a script tag, but here we inject.
-    // Actually, we need to pass the THREE instance imported in SceneEditor. 
-    // Since we don't have it here easily without passing it in constructor, let's assume standard named imports work if the script uses "THREE.Vector3".
-    // Better: Pass THREE in the Function constructor args.
-
     const scene = this.sceneRef.current;
     const camera = this.controlsRef.current?.object;
     const controls = this.controlsRef.current;
-    
-    // Use the imported THREE instance
-    const THREE_LIB = THREE;
+    const renderer = this.rendererRef?.current || null;
     
     for (const objConf of objectsConfig) {
       if (!objConf.scripts || objConf.scripts.length === 0) continue;
@@ -82,14 +76,8 @@ export class ScriptRuntime {
                 subscribe: () => () => {} 
             };
 
-            // Renderer is accessible via controls.domElement -> canvas -> gl context? No.
-            // We can approximate renderer or pass null if not strictly needed for basic movement.
-            // SceneEditor *has* the renderer ref, we should pass it.
-            // For now, pass null or mock if missing.
-            const renderer = null; 
-
             fn(
-                THREE_LIB,
+                THREE, // Use module-level import
                 scene,
                 camera,
                 renderer,

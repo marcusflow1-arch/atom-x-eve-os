@@ -127,7 +127,20 @@ export default function SceneEditor() {
     setSceneName(layout.name);
 
     // Preserve Actor_Layer/Y Bot scripts so the player brain persists
-    const cleanObjects = (layout.objects || []);
+    // Also auto-attach PlayerController if missing on Y-Bot
+    const playerScript = scripts.find(s => s.name === 'PlayerController');
+    const cleanObjects = (layout.objects || []).map(obj => {
+         const name = (obj.name || '').toLowerCase();
+         const isHumanoid = name.includes('ybot') || name.includes('bot');
+         if (isHumanoid && playerScript && (!obj.scripts || !obj.scripts.find(s => s.script_id === playerScript.id))) {
+             console.log("Auto-attaching PlayerController to existing Y-Bot:", obj.name);
+             return {
+                 ...obj,
+                 scripts: [...(obj.scripts || []), { script_id: playerScript.id, params: {} }]
+             };
+         }
+         return obj;
+    });
 
     setSceneConfig({
       environment: layout.environment_transform ? {
@@ -221,7 +234,7 @@ export default function SceneEditor() {
     transformRef.current = transform;
 
     // 5. Script Runtime Init
-    scriptRuntimeRef.current = new ScriptRuntime(sceneRef, sceneObjectsMap, mixersRef, controlsRef);
+    scriptRuntimeRef.current = new ScriptRuntime(sceneRef, sceneObjectsMap, mixersRef, controlsRef, rendererRef);
 
     // 6. Animation Loop
     const animate = () => {
