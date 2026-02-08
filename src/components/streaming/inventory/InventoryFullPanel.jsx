@@ -247,55 +247,47 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
             </div>
 
             {/* Items Grid */}
-            <div className="flex-1 overflow-y-auto p-5">
-              <div className="grid gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="grid gap-1.5 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {gameItems.map((item, i) => {
                   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                   const Icon = cfg.icon;
                   const isActive = marketItem?.id === item.id;
                   const isLocked = !item.owned;
                   return (
-                    <motion.div
+                    <InventoryShinyCard
                       key={item.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.02 }}
+                      delay={i}
                       onClick={() => setMarketItem(item)}
-                      className={`group relative aspect-[3/4] rounded-xl overflow-hidden border cursor-pointer transition-all ${
+                      className={`group relative aspect-[3/4] rounded-lg overflow-hidden border transition-all ${
                         isActive ? `${cfg.border} ring-2 ring-offset-0 shadow-lg`
                         : isLocked ? 'border-white/5 opacity-50 hover:opacity-80 hover:border-white/15'
                         : 'border-white/10 hover:border-white/20'
                       }`}
-                      style={isActive ? { boxShadow: `0 0 20px ${cfg.color.includes('cyan') ? 'rgba(6,182,212,0.3)' : 'rgba(168,85,247,0.3)'}` } : {}}
                     >
                       <div className={`absolute inset-0 ${isLocked ? 'bg-black/40' : cfg.bg} opacity-30`} />
                       {isLocked && <div className="absolute inset-0 bg-black/50 z-10" />}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-3 z-20">
-                        {isLocked && <Lock className="w-4 h-4 text-white/30 absolute top-2 left-2" />}
-                        <Icon className={`w-8 h-8 ${isLocked ? 'text-white/20' : cfg.color} mb-2 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
-                        <p className={`font-bold text-xs text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
-                        <Badge className={`mt-1.5 text-[8px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5 z-20">
+                        {isLocked && <Lock className="w-3 h-3 text-white/30 absolute top-1 left-1" />}
+                        <Icon className={`w-5 h-5 ${isLocked ? 'text-white/20' : cfg.color} mb-1 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
+                        <p className={`font-bold text-[9px] text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
+                        <Badge className={`mt-1 text-[7px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
                           {item.rarity}
                         </Badge>
-                        {/* Owned count */}
                         {!isLocked && (
-                          <span className="mt-1 text-[8px] text-emerald-400/80 font-bold">Owned ×1</span>
+                          <span className="mt-0.5 text-[7px] text-emerald-400/80 font-bold">×1</span>
                         )}
                       </div>
-                      <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-1">
-                        <div className={`w-5 h-5 rounded-md ${isLocked ? 'bg-white/5 border-white/10' : cfg.bg} border ${isLocked ? 'border-white/10' : cfg.border} flex items-center justify-center`}>
-                          <Icon className={`w-3 h-3 ${isLocked ? 'text-white/20' : cfg.color}`} />
+                      <div className="absolute top-1 right-1 z-20">
+                        <div className={`w-4 h-4 rounded ${isLocked ? 'bg-white/5 border-white/10' : cfg.bg} border ${isLocked ? 'border-white/10' : cfg.border} flex items-center justify-center`}>
+                          <Icon className={`w-2.5 h-2.5 ${isLocked ? 'text-white/20' : cfg.color}`} />
                         </div>
-                        {/* Market indicator */}
-                        {!isLocked && Math.random() > 0.5 && (
-                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="Active on market" />
-                        )}
                       </div>
-                    </motion.div>
+                    </InventoryShinyCard>
                   );
                 })}
                 {gameItems.length === 0 && (
-                  <div className="col-span-full py-16 text-center text-white/30">No items found.</div>
+                  <div className="col-span-full py-12 text-center text-white/30 text-sm">No items found.</div>
                 )}
               </div>
             </div>
