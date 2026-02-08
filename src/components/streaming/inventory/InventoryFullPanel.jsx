@@ -4,6 +4,7 @@ import { X, Search, Mic, MicOff, Package, Gamepad2, Zap, Shield, User, Trees, Tr
 import { Badge } from '@/components/ui/badge';
 import { libraryGames } from '../../dashboard/gamehub/mockLibraryData';
 import TradingWorkspace from './TradingWorkspace';
+import InventoryShinyCard from './InventoryShinyCard';
 
 const CATEGORY_CONFIG = {
   achievement: { icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', label: 'Achievement' },
