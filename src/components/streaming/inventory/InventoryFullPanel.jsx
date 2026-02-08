@@ -298,12 +298,11 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* PANEL 3: Market Actions (appears to the right when item selected) */}
+      {/* PANEL 3: Trading Workspace (appears to the right when item selected) */}
       <AnimatePresence>
         {marketItem && (
-          <InventoryMarketPanel
+          <TradingWorkspace
             item={marketItem}
-            owned={!!marketItem.owned}
             onClose={() => setMarketItem(null)}
           />
         )}
