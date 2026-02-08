@@ -139,7 +139,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
           {/* Bottom border that fades at center to meet vertical divider */}
           <div className="absolute bottom-0 left-0 right-0 h-px" style={{
             background: 'linear-gradient(to right, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) 45%, transparent 50%, rgba(255,255,255,0.08) 55%, rgba(255,255,255,0.08) 100%)',
-          }} />
+          }}></div>
           <div className="flex items-center justify-between">
             {/* Left: title + search */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
