@@ -399,13 +399,13 @@ export default function LibrarySidebar() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4">
                   <Package className="w-4 h-4 text-amber-400" />
-                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Your Inventory</h3>
+                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recent Rewards</h3>
                   <div className="ml-auto flex items-center gap-2">
                     <div
                       onClick={(e) => { e.stopPropagation(); setIsExpandedInventory(!isExpandedInventory); }}
                       className="flex items-center gap-1.5 cursor-pointer group"
                     >
-                      <span className="text-[10px] font-medium text-amber-400 border-b border-amber-400/60 pb-px group-hover:border-amber-400 transition-colors">Full I.nvy</span>
+                      <span className="text-[10px] font-medium text-amber-400 border-b border-amber-400/60 pb-px group-hover:border-amber-400 transition-colors">Full Inventory</span>
                       <div className={`p-1 rounded hover:bg-white/10 transition-colors ${isExpandedInventory ? 'text-amber-400 bg-white/10' : 'text-white/40'}`}>
                         <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isExpandedInventory ? 'rotate-180' : ''}`} />
                       </div>
@@ -413,14 +413,20 @@ export default function LibrarySidebar() {
                   </div>
                 </div>
 
-                {/* Recently Unlocked Items */}
+                {/* Read-only Recent Rewards Feed */}
                 <div className="space-y-2">
                   {[
-                    { name: 'Neural Shock', category: 'ability', rarity: 'Legendary', game: 'Cyberpunk 2088', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-                    { name: 'Void Walker Set', category: 'equipment', rarity: 'Epic', game: 'Elden Ring', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-                    { name: 'First Blood', category: 'achievement', rarity: 'Rare', game: 'Valorant', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+                    { name: 'Neural Shock', category: 'ability', rarity: 'Legendary', game: 'Cyberpunk 2088', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10', time: '2h ago', owned: true },
+                    { name: 'Void Walker Set', category: 'equipment', rarity: 'Epic', game: 'Elden Ring', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', time: '5h ago', owned: true },
+                    { name: 'First Blood', category: 'achievement', rarity: 'Rare', game: 'Valorant', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10', time: '1d ago', owned: true },
+                    { name: 'Shadow Blade', category: 'equipment', rarity: 'Legendary', game: 'Elden Ring', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', time: '2d ago', owned: true },
+                    { name: 'Phoenix Companion', category: 'companion', rarity: 'Epic', game: 'Cyberpunk 2088', icon: User, color: 'text-green-400', bg: 'bg-green-500/10', time: '3d ago', owned: true },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-amber-400/30 transition group">
+                    <div
+                      key={i}
+                      onClick={() => { setIsExpandedInventory(true); }}
+                      className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-amber-400/30 transition group"
+                    >
                       <div className={`w-10 h-10 rounded-lg ${item.bg} border border-white/10 flex items-center justify-center flex-shrink-0`}>
                         <item.icon className={`w-5 h-5 ${item.color}`} />
                       </div>
@@ -428,10 +434,15 @@ export default function LibrarySidebar() {
                         <h4 className="text-white font-medium text-sm truncate">{item.name}</h4>
                         <p className="text-white/40 text-[10px] truncate">{item.rarity} • {item.game}</p>
                       </div>
-                      <Badge className="text-[8px] bg-white/5 border-white/10 text-white/40">{item.category}</Badge>
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span className="text-[9px] text-white/30">{item.time}</span>
+                        <Badge className="text-[8px] bg-white/5 border-white/10 text-white/40">{item.category}</Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
+
+                <p className="text-[10px] text-white/20 text-center mt-3 italic">Click any item to open Full Inventory & Trading Workspace</p>
               </div>
             )}
         </div>
