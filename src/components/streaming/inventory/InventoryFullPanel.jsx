@@ -178,19 +178,17 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
         </div>
 
         {/* Game Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className={`grid gap-3 ${selectedGame ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'}`}>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className={`grid gap-2 ${selectedGame ? 'grid-cols-3 md:grid-cols-4' : 'grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8'}`}>
             {filteredGames.map((game, i) => {
               const itemCount = (allInventory[game.id] || []).length;
               const isActive = selectedGame?.id === game.id;
               return (
-                <motion.div
+                <InventoryShinyCard
                   key={game.id || i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.02 }}
+                  delay={i}
                   onClick={() => setSelectedGame(game)}
-                  className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border cursor-pointer transition-all ${
+                  className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border transition-all ${
                     isActive
                       ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/20'
                       : 'border-white/10 hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
@@ -198,13 +196,13 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                 >
                   <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h4 className="text-white font-bold text-sm leading-tight mb-1 truncate">{game.title || game.name}</h4>
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px]">
-                      <Package className="w-2.5 h-2.5 mr-1" /> {itemCount} Items
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <h4 className="text-white font-bold text-[10px] leading-tight mb-0.5 truncate">{game.title || game.name}</h4>
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[8px]">
+                      <Package className="w-2 h-2 mr-0.5" /> {itemCount}
                     </Badge>
                   </div>
-                </motion.div>
+                </InventoryShinyCard>
               );
             })}
             {filteredGames.length === 0 && (
