@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Mic, MicOff, Package, Gamepad2, Zap, Shield, User, Trees, Trophy, ChevronRight, ArrowLeftRight, DollarSign, Star, Trash2, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { libraryGames } from '../../dashboard/gamehub/mockLibraryData';
-import InventoryMarketPanel from './InventoryMarketPanel';
+import TradingWorkspace from './TradingWorkspace';
 
 const CATEGORY_CONFIG = {
   achievement: { icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', label: 'Achievement' },
