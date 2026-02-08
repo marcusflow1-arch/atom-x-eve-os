@@ -247,7 +247,7 @@ export default function LibrarySidebar() {
                   onClick={() => setActiveSub('inventory')}
                   className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='inventory' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
                 >
-                  I.nvy
+                  Rewards
                 </button>
               </div>
             </div>
