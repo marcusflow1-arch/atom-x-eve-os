@@ -173,6 +173,14 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                   {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
                 </button>
               </div>
+              {/* View toggle */}
+              <button
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className="ml-2 flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
+                title={viewMode === 'grid' ? 'Switch to list view' : 'Switch to grid view'}
+              >
+                {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
+              </button>
             </div>
 
             {/* Right: selected game name + close */}
