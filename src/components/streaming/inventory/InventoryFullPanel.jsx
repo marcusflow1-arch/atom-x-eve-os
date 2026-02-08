@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Mic, MicOff, Package, Gamepad2, Zap, Shield, User, Trees, Trophy, ChevronRight, ArrowLeftRight, DollarSign, Star, Trash2, Lock } from 'lucide-react';
+import { X, Search, Mic, MicOff, Package, Gamepad2, Zap, Shield, User, Trees, Trophy, ChevronRight, ArrowLeftRight, DollarSign, Star, Trash2, Lock, LayoutGrid, List } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { libraryGames } from '../../dashboard/gamehub/mockLibraryData';
 import TradingWorkspace from './TradingWorkspace';
