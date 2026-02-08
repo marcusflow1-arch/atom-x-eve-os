@@ -204,39 +204,78 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
         {/* Body: Game strip left | divider | Cards right */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
 
-          {/* LEFT: Game icon strip (50%) */}
-          <div className="w-1/2 flex-shrink-0 overflow-y-auto p-3">
-            <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5">
-            {filteredGames.map((game, i) => {
-              const itemCount = (allInventory[game.id] || []).length;
-              const isActive = selectedGame?.id === game.id;
-              return (
-                <div
-                  key={game.id || i}
-                  onClick={() => setSelectedGame(game)}
-                  className={`relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer border transition-all group ${
-                    isActive
-                      ? 'border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] ring-1 ring-amber-400/30'
-                      : 'border-white/10 hover:border-amber-400/40'
-                  }`}
-                >
-                  <img
-                    src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
-                    alt={game.title}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-1 text-center">
-                    <span className="text-[7px] text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
-                    <span className="text-[6px] text-amber-300/80">{itemCount}</span>
-                  </div>
-                </div>
-              );
-            })}
-              {filteredGames.length === 0 && (
-                <div className="col-span-full text-center text-white/20 text-[9px] pt-8">None</div>
-              )}
-            </div>
+          {/* LEFT: Game library (65%) */}
+          <div style={{ width: '65%' }} className="flex-shrink-0 overflow-y-auto p-3">
+            {viewMode === 'grid' ? (
+              /* GRID VIEW — larger covers (+25%) with aspect-[3/4] */
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                {filteredGames.map((game, i) => {
+                  const itemCount = (allInventory[game.id] || []).length;
+                  const isActive = selectedGame?.id === game.id;
+                  return (
+                    <div
+                      key={game.id || i}
+                      onClick={() => setSelectedGame(game)}
+                      className={`relative w-full aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border transition-all group ${
+                        isActive
+                          ? 'border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] ring-1 ring-amber-400/30'
+                          : 'border-white/10 hover:border-amber-400/40'
+                      }`}
+                    >
+                      <img
+                        src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                        alt={game.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-1.5 text-center">
+                        <span className="text-[9px] text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
+                        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[7px] px-1 py-0 mt-0.5">
+                          {itemCount}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredGames.length === 0 && (
+                  <div className="col-span-full text-center text-white/20 text-[9px] pt-8">None</div>
+                )}
+              </div>
+            ) : (
+              /* LIST VIEW — compact rows: small thumbnail + game name, multi-column */
+              <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-1">
+                {filteredGames.map((game, i) => {
+                  const itemCount = (allInventory[game.id] || []).length;
+                  const isActive = selectedGame?.id === game.id;
+                  return (
+                    <div
+                      key={game.id || i}
+                      onClick={() => setSelectedGame(game)}
+                      className={`flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer border mb-0.5 break-inside-avoid transition-all ${
+                        isActive
+                          ? 'border-amber-400/50 bg-amber-500/10'
+                          : 'border-transparent hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0 border border-white/10">
+                        <img
+                          src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                          alt={game.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[9px] text-white font-medium truncate leading-tight">{game.title || game.name}</p>
+                        <p className="text-[7px] text-amber-300/60">{itemCount} items</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredGames.length === 0 && (
+                  <div className="text-center text-white/20 text-[9px] pt-8">None</div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* VERTICAL DIVIDER — fades at top & bottom */}
