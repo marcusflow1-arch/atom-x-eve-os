@@ -973,7 +973,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: 'auto', opacity: 1 }}
                                   exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.3 }}
+                                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1], opacity: { duration: 0.25, delay: 0.1 } }}
                                   className="border-t border-white/5 bg-black/40 overflow-hidden"
                                 >
                                   <div className="p-4 space-y-4">
