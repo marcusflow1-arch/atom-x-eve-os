@@ -926,48 +926,144 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                     
                     <div className="flex gap-0">
-                      {/* Left Column: DLC List */}
+                      {/* Left Column: DLC List with dropdowns */}
                       <motion.div 
-                        animate={{ flex: selectedDLC ? '1.2' : '1' }}
+                        animate={{ flex: selectedDLC ? '1' : '1' }}
                         transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="min-w-0 space-y-1"
+                        className="min-w-0 space-y-1 flex-1"
                       >
                         {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => (
-                          <div 
-                            key={dlc.id} 
-                            onClick={() => setSelectedDLC(selectedDLC?.id === dlc.id ? null : dlc)}
-                            className={`group flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all duration-200 border ${
-                              selectedDLC?.id === dlc.id 
-                                ? 'bg-white/[0.07] border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.08)]' 
-                                : 'bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10'
-                            }`}
-                          >
-                            <div className="w-20 h-10 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
-                              <img src={game.cover_image} className={`w-full h-full object-cover transition-all duration-300 ${selectedDLC?.id === dlc.id ? 'opacity-80 grayscale-0' : 'opacity-50 grayscale group-hover:grayscale-0'}`} alt="" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-white truncate flex items-center gap-2">
-                                {dlc.name}
-                                <ChevronRight className={`w-3 h-3 text-white/30 transition-all duration-200 ${selectedDLC?.id === dlc.id ? 'text-cyan-400 translate-x-0.5' : ''}`} />
-                              </h4>
-                              <div className="flex gap-2 mt-0.5">
-                                {dlc.abilities && dlc.abilities.length > 0 && <span className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded">Abilities</span>}
-                                {dlc.stats?.equipment && <span className="text-[10px] text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Equipment</span>}
+                          <div key={dlc.id} className="rounded-lg bg-black/20 border border-white/5 overflow-hidden transition-all duration-300">
+                            <div 
+                              className={`group flex items-center gap-4 p-3 hover:bg-white/5 hover:border-white/10 transition-colors cursor-pointer ${selectedDLC?.id === dlc.id ? 'bg-white/5' : ''}`} 
+                              onClick={() => setSelectedDLC(selectedDLC?.id === dlc.id ? null : dlc)}
+                            >
+                              <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
+                                 <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" alt="" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-bold text-white truncate flex items-center gap-2">
+                                  {dlc.name}
+                                  <ChevronDown className={`w-3 h-3 text-white/40 transition-transform duration-300 ${selectedDLC?.id === dlc.id ? 'rotate-180' : ''}`} />
+                                </h4>
+                                <div className="flex gap-2 mt-0.5">
+                                   {dlc.abilities && dlc.abilities.length > 0 && <span className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded">Abilities</span>}
+                                   {dlc.stats?.equipment && <span className="text-[10px] text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Equipment</span>}
+                                </div>
+                              </div>
+                              <div className="text-right flex items-center gap-3">
+                                <span className="text-sm font-bold text-white/90">${dlc.price}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddDLCToCart(dlc);
+                                  }}
+                                  className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
+                                  title="Add to Cart"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
-                            <div className="text-right flex items-center gap-3 flex-shrink-0">
-                              <span className="text-sm font-bold text-white/90">${dlc.price}</span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddDLCToCart(dlc);
-                                }}
-                                className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
-                                title="Add to Cart"
-                              >
-                                <Download className="w-4 h-4" />
-                              </button>
-                            </div>
+                            
+                            {/* Dropdown Details */}
+                            <AnimatePresence>
+                              {selectedDLC?.id === dlc.id && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="border-t border-white/5 bg-black/40 overflow-hidden"
+                                >
+                                  <div className="p-4 space-y-4">
+                                    <p className="text-sm text-white/70 leading-relaxed">
+                                      {dlc.description}
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                          <Check className="w-3 h-3" /> Includes
+                                        </h5>
+                                        <ul className="space-y-1">
+                                          {dlc.offers.map((offer, i) => (
+                                            <li key={i} className="text-xs text-white/60 flex items-start gap-2">
+                                              <span className="text-cyan-400/60">•</span> {offer}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      
+                                      {dlc.stats && Object.keys(dlc.stats).length > 0 && (
+                                        <div>
+                                          <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                            <Database className="w-3 h-3" /> Content Stats
+                                          </h5>
+                                          <div className="space-y-1">
+                                            {Object.entries(dlc.stats).map(([key, value]) => (
+                                              <div key={key} className="flex justify-between text-xs">
+                                                <span className="text-white/60 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                                                <span className="text-white font-mono">{value}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {dlc.achievements && dlc.achievements.length > 0 && (
+                                      <div>
+                                        <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3 flex items-center gap-1">
+                                          <Trophy className="w-3 h-3" /> New Achievements
+                                        </h5>
+                                        <div className="flex flex-wrap gap-3">
+                                          {dlc.achievements.map((ach, i) => (
+                                            <div 
+                                              key={i} 
+                                              onClick={(e) => { e.stopPropagation(); setSelectedAchievement(ach); }}
+                                              className="group/card relative w-10 h-14 bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-md flex items-center justify-center cursor-pointer overflow-hidden hover:scale-110 transition-transform shadow-lg hover:border-cyan-400/50 hover:shadow-cyan-500/20"
+                                            >
+                                               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-50" />
+                                               <span className="text-white/30 font-bold text-lg group-hover/card:text-cyan-400 transition-colors">?</span>
+                                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 border border-white/20 rounded text-[10px] text-white whitespace-nowrap opacity-0 group-hover/card:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl backdrop-blur-md">
+                                                 {typeof ach === 'string' ? ach : ach.name}
+                                               </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {dlc.quests && dlc.quests.length > 0 && (
+                                      <div>
+                                        <h5 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
+                                          <Radio className="w-3 h-3" /> Available Quests
+                                        </h5>
+                                        <div className="space-y-1">
+                                          {dlc.quests.map((quest, i) => (
+                                            <div key={i} className="flex items-center justify-between p-2 bg-white/5 rounded border border-white/5 hover:border-white/10 transition-colors">
+                                              <div className="flex items-center gap-2">
+                                                <span className={`w-1.5 h-1.5 rounded-full ${quest.type === 'Main' ? 'bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'bg-cyan-400 shadow-[0_0_5px_rgba(34,211,238,0.5)]'}`} />
+                                                <span className="text-xs text-white/80 font-medium">{quest.name}</span>
+                                              </div>
+                                              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/30 px-1.5 py-0.5 rounded border border-cyan-500/20">+{quest.xp} XP</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    <button
+                                      onClick={() => handleAddDLCToCart(dlc)}
+                                      className="w-full py-2 mt-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-xs font-bold text-white uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                                    >
+                                      <CreditCard className="w-3 h-3" /> Add to Cart - ${dlc.price}
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         ))}
                       </motion.div>
@@ -982,7 +1078,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             transition={{ duration: 0.25, ease: 'easeOut' }}
                             className="flex overflow-hidden flex-shrink-0"
                           >
-                            {/* Divider */}
                             <motion.div 
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
@@ -990,8 +1085,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               transition={{ duration: 0.2, delay: 0.05 }}
                               className="w-px bg-gradient-to-b from-transparent via-white/15 to-transparent mx-5 flex-shrink-0 self-stretch" 
                             />
-
-                            {/* Right Panel */}
                             <motion.div
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
