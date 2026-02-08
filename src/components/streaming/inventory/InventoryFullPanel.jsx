@@ -268,11 +268,22 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Market Actions Panel (slides in from right) */}
+      <AnimatePresence>
+        {marketItem && (
+          <InventoryMarketPanel
+            item={marketItem}
+            owned={!!marketItem.owned}
+            onClose={() => setMarketItem(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
 
-/* Right-side item detail panel */
+/* Right-side item detail panel (legacy export for LibrarySidebar) */
 export function InventoryItemDetailPanel({ item, onClose }) {
   if (!item) return null;
 
@@ -332,7 +343,7 @@ export function InventoryItemDetailPanel({ item, onClose }) {
                 { label: 'Category', value: cfg.label, icon: <Icon className={`w-4 h-4 ${cfg.color}`} /> },
                 { label: 'Rarity', value: item.rarity, icon: <Star className="w-4 h-4 text-yellow-400" /> },
                 { label: 'Game', value: item.game, icon: <Gamepad2 className="w-4 h-4 text-cyan-400" /> },
-                { label: 'Unlocked', value: new Date(item.unlockedAt).toLocaleDateString(), icon: <Trophy className="w-4 h-4 text-amber-400" /> },
+                { label: 'Unlocked', value: item.unlockedAt ? new Date(item.unlockedAt).toLocaleDateString() : 'N/A', icon: <Trophy className="w-4 h-4 text-amber-400" /> },
               ].map((row, i) => (
                 <div key={i} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
                   <div className="flex items-center gap-2">
