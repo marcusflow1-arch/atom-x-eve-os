@@ -54,6 +54,7 @@ function generateInventoryForGame(game) {
 export default function InventoryFullPanel({ isOpen, onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [marketItem, setMarketItem] = useState(null); // item for the market actions panel
   const [searchTerm, setSearchTerm] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
