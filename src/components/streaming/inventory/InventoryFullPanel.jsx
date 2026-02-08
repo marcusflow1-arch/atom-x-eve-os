@@ -236,8 +236,8 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
             />
           </div>
 
-          {/* RIGHT: Cards grid */}
-          <div className="flex-1 overflow-y-auto p-4 min-w-0">
+          {/* RIGHT: Cards grid (50%) */}
+          <div className="w-1/2 overflow-y-auto p-4 min-w-0">
             {!selectedGame ? (
               <div className="h-full flex items-center justify-center text-white/20 text-sm">
                 <div className="text-center">
