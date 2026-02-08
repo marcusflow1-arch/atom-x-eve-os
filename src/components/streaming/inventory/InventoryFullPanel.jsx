@@ -242,8 +242,8 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                 )}
               </div>
             ) : (
-              /* LIST VIEW — compact rows: small thumbnail + game name, multi-column */
-              <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-1">
+              /* LIST VIEW — Steam-style: single column list with icons */
+              <div className="flex flex-col gap-0.5">
                 {filteredGames.map((game, i) => {
                   const itemCount = (allInventory[game.id] || []).length;
                   const isActive = selectedGame?.id === game.id;
@@ -251,28 +251,25 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                     <div
                       key={game.id || i}
                       onClick={() => setSelectedGame(game)}
-                      className={`flex items-center gap-2 px-1.5 py-1 rounded-md cursor-pointer border mb-0.5 break-inside-avoid transition-all ${
+                      className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer border transition-all ${
                         isActive
                           ? 'border-amber-400/50 bg-amber-500/10'
                           : 'border-transparent hover:bg-white/5'
                       }`}
                     >
-                      <div className="w-7 h-7 rounded overflow-hidden flex-shrink-0 border border-white/10">
+                      <div className="w-5 h-5 rounded-sm overflow-hidden flex-shrink-0 border border-white/10">
                         <img
                           src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
                           alt={game.title}
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[9px] text-white font-medium truncate leading-tight">{game.title || game.name}</p>
-                        <p className="text-[7px] text-amber-300/60">{itemCount} items</p>
-                      </div>
+                      <p className={`text-[13px] truncate leading-tight flex-1 ${isActive ? 'text-white font-semibold' : 'text-white/70'}`}>{game.title || game.name}</p>
                     </div>
                   );
                 })}
                 {filteredGames.length === 0 && (
-                  <div className="text-center text-white/20 text-[9px] pt-8">None</div>
+                  <div className="text-center text-white/30 text-sm pt-8">None</div>
                 )}
               </div>
             )}
