@@ -175,7 +175,7 @@ export default function TradingWorkspace({ item, onClose }) {
       <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           {activeMode === 'sell' && owned && (
-            <TradingWorkspaceSell key="sell" item={item} marketPrice={marketPrice} />
+            <TradingWorkspaceSell key="sell" item={item} owned={owned} marketPrice={marketPrice} />
           )}
 
           {activeMode === 'auction' && (
