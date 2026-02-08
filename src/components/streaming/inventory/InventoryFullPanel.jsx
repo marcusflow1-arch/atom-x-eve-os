@@ -54,6 +54,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
   const [marketItem, setMarketItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const recognitionRef = useRef(null);
 
   const allInventory = useMemo(() => {
