@@ -306,7 +306,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                       key={item.id}
                       delay={i}
                       onClick={() => setMarketItem(item)}
-                      className={`group relative aspect-[3/4] rounded-lg overflow-hidden border transition-all ${
+                      className={`group relative aspect-[3/4] rounded-xl overflow-hidden border transition-all ${
                         isActive ? `${cfg.border} ring-2 ring-offset-0 shadow-lg`
                         : isLocked ? 'border-white/5 opacity-50 hover:opacity-80 hover:border-white/15'
                         : 'border-white/10 hover:border-white/20'
