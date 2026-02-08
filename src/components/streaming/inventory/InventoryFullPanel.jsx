@@ -125,130 +125,119 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
 
   return (
     <>
-      {/* PANEL 1: Game Grid (always visible) */}
+      {/* SINGLE FULL-SCREEN PANEL: Game icons left | divider | cards right */}
       <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
-          selectedGame ? 'right-[35%]' : 'right-0'
-        }`}
+        className="fixed top-0 bottom-0 left-80 sm:left-96 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
         style={glassStyle}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 p-6 pb-4 border-b border-white/5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Package className="w-6 h-6 text-amber-400" />
-              <div>
-                <h2 className="text-2xl font-bold text-white">Full Inventory</h2>
-                <p className="text-sm text-white/40">{totalItems} items across {libraryGames.length} games</p>
+        <div className="sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 px-5 py-4 border-b border-white/5">
+          <div className="flex items-center justify-between">
+            {/* Left: title + search */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Package className="w-5 h-5 text-amber-400 flex-shrink-0" />
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-white leading-tight">Full Inventory</h2>
+                <p className="text-[10px] text-white/40">{totalItems} items · {libraryGames.length} games</p>
               </div>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 focus-within:border-white/20 transition-all">
-            <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={isListening ? 'Listening...' : 'Search games or items...'}
-              className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-full"
-            />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm('')} className="text-white/40 hover:text-white flex-shrink-0">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              onClick={toggleVoice}
-              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-                isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50 hover:bg-white/20 hover:text-white'
-              }`}
-            >
-              {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Game Grid */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className={`grid gap-1.5 ${selectedGame ? 'grid-cols-4 md:grid-cols-5' : 'grid-cols-5 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-10'}`}>
-            {filteredGames.map((game, i) => {
-              const itemCount = (allInventory[game.id] || []).length;
-              const isActive = selectedGame?.id === game.id;
-              return (
-                <InventoryShinyCard
-                  key={game.id || i}
-                  delay={i}
-                  onClick={() => setSelectedGame(game)}
-                  className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border transition-all ${
-                    isActive
-                      ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/20'
-                      : 'border-white/10 hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+              {/* Inline search */}
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 ml-4 max-w-xs flex-1 focus-within:border-white/20 transition-all">
+                <Search className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={isListening ? 'Listening...' : 'Search...'}
+                  className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full"
+                />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm('')} className="text-white/40 hover:text-white flex-shrink-0">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+                <button
+                  onClick={toggleVoice}
+                  className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                    isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-white/10 text-white/50 hover:bg-white/20 hover:text-white'
                   }`}
                 >
-                  <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                    <h4 className="text-white font-bold text-[8px] leading-tight mb-0.5 truncate">{game.title || game.name}</h4>
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[7px] px-1 py-0">
-                      {itemCount}
-                    </Badge>
-                  </div>
-                </InventoryShinyCard>
-              );
-            })}
-            {filteredGames.length === 0 && (
-              <div className="col-span-full py-16 text-center text-white/30">No games match your search.</div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* PANEL 2: Item Grid (appears to the right when game selected) */}
-      <AnimatePresence>
-        {selectedGame && (
-          <motion.div
-            key="items-panel"
-            initial={{ x: 30, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 30, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-0 bottom-0 left-[65%] right-0 z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
-            style={{
-              ...glassStyle,
-              borderLeft: '1px solid rgba(245, 158, 11, 0.15)',
-              boxShadow: '-10px 0 40px rgba(0,0,0,0.4)',
-            }}
-          >
-            {/* Items Header */}
-            <div className="sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 p-5 pb-4 border-b border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                    <img src={selectedGame.cover || selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white leading-tight">{selectedGame.title || selectedGame.name}</h3>
-                    <p className="text-xs text-white/40">{gameItems.length} items • {gameItems.filter(i => i.owned).length} owned</p>
-                  </div>
-                </div>
-                <button onClick={() => setSelectedGame(null)} className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-                  <X className="w-4 h-4" />
+                  {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
                 </button>
               </div>
             </div>
 
-            {/* Items Grid */}
-            <div className="flex-1 overflow-y-auto p-3">
-              <div className="grid gap-1.5 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {/* Right: selected game name + close */}
+            <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+              {selectedGame && (
+                <div className="flex items-center gap-2">
+                  <Gamepad2 className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-bold text-white">{selectedGame.title || selectedGame.name}</span>
+                  <span className="text-[10px] text-white/30">
+                    {gameItems.length} items · {gameItems.filter(i => i.owned).length} owned
+                  </span>
+                </div>
+              )}
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Body: Game strip left | divider | Cards right */}
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+
+          {/* LEFT: Game icon strip */}
+          <div className="w-20 flex-shrink-0 overflow-y-auto p-2 space-y-1.5">
+            {filteredGames.map((game, i) => {
+              const itemCount = (allInventory[game.id] || []).length;
+              const isActive = selectedGame?.id === game.id;
+              return (
+                <div
+                  key={game.id || i}
+                  onClick={() => setSelectedGame(game)}
+                  className={`relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer border transition-all group ${
+                    isActive
+                      ? 'border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)] ring-1 ring-amber-400/30'
+                      : 'border-white/10 hover:border-amber-400/40'
+                  }`}
+                >
+                  <img
+                    src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                    alt={game.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-1 text-center">
+                    <span className="text-[7px] text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
+                    <span className="text-[6px] text-amber-300/80">{itemCount}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredGames.length === 0 && (
+              <div className="text-center text-white/20 text-[9px] pt-8">None</div>
+            )}
+          </div>
+
+          {/* VERTICAL DIVIDER */}
+          <div className="w-px bg-white/10 flex-shrink-0" />
+
+          {/* RIGHT: Cards grid */}
+          <div className="flex-1 overflow-y-auto p-4 min-w-0">
+            {!selectedGame ? (
+              <div className="h-full flex items-center justify-center text-white/20 text-sm">
+                <div className="text-center">
+                  <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p>Select a game to view its cards</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-2 grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
                 {gameItems.map((item, i) => {
                   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                   const Icon = cfg.icon;
@@ -269,7 +258,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                       {isLocked && <div className="absolute inset-0 bg-black/50 z-10" />}
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5 z-20">
                         {isLocked && <Lock className="w-3 h-3 text-white/30 absolute top-1 left-1" />}
-                        <Icon className={`w-5 h-5 ${isLocked ? 'text-white/20' : cfg.color} mb-1 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
+                        <Icon className={`w-6 h-6 ${isLocked ? 'text-white/20' : cfg.color} mb-1 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
                         <p className={`font-bold text-[9px] text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
                         <Badge className={`mt-1 text-[7px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
                           {item.rarity}
@@ -290,12 +279,12 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                   <div className="col-span-full py-12 text-center text-white/30 text-sm">No items found.</div>
                 )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
-      {/* PANEL 3: Trading Workspace (appears to the right when item selected) */}
+      {/* Trading Workspace (appears to the right when item selected) */}
       <AnimatePresence>
         {marketItem && (
           <TradingWorkspace
