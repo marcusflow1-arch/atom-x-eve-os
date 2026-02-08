@@ -298,14 +298,16 @@ export default function TradingWorkspaceBuy({ item, owned, marketPrice }) {
                           <span className="text-white font-bold text-xs">{(seller.price * qty).toLocaleString()} <span className="text-cyan-400 text-[9px]">AGP</span></span>
                         </div>
 
-                        {/* Buy Button */}
-                        <button className={`w-full py-2 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                        {/* Buy Button — adds to cart checkout */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleBuyFromSeller(seller, qty); }}
+                          className={`w-full py-2 font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                           seller.isPlatform
                             ? 'bg-cyan-600 hover:bg-cyan-500 text-white hover:shadow-md hover:shadow-cyan-500/20'
                             : 'bg-white/10 hover:bg-white/15 text-white border border-white/10 hover:border-white/20'
                         }`}>
                           <ShoppingCart className="w-3 h-3" />
-                          Buy{qty > 1 ? ` ×${qty}` : ''}
+                          Buy{qty > 1 ? ` ×${qty}` : ''} — Add to Cart
                         </button>
                       </div>
                     </motion.div>
