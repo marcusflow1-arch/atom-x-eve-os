@@ -23,16 +23,19 @@ const RARITY_COLORS = {
   Common: 'text-slate-400 bg-slate-500/10 border-slate-500/30',
 };
 
-// Generate mock inventory items per game
+// Generate mock inventory items per game (some owned, some locked)
 function generateInventoryForGame(game) {
   const title = game.title || game.name || 'Unknown';
   const categories = ['achievement', 'ability', 'equipment', 'companion', 'environment'];
   const rarities = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'];
   const items = [];
-  const count = 4 + Math.floor(Math.random() * 8);
+  const count = 6 + Math.floor(Math.random() * 10);
   for (let i = 0; i < count; i++) {
     const cat = categories[Math.floor(Math.random() * categories.length)];
     const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+    // ~30% of items are locked (not owned)
+    const seed = (game.id || '').charCodeAt(0) + i;
+    const owned = seed % 10 > 2; // ~70% owned
     items.push({
       id: `${game.id}_item_${i}`,
       name: `${title.split(' ')[0]} ${CATEGORY_CONFIG[cat].label} ${i + 1}`,
@@ -40,7 +43,8 @@ function generateInventoryForGame(game) {
       rarity,
       game: title,
       gameId: game.id,
-      unlockedAt: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(),
+      owned,
+      unlockedAt: owned ? new Date(Date.now() - Math.random() * 30 * 86400000).toISOString() : null,
       image: game.cover || game.cover_image,
     });
   }
