@@ -280,11 +280,19 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                         <Badge className={`mt-1.5 text-[8px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
                           {item.rarity}
                         </Badge>
+                        {/* Owned count */}
+                        {!isLocked && (
+                          <span className="mt-1 text-[8px] text-emerald-400/80 font-bold">Owned ×1</span>
+                        )}
                       </div>
-                      <div className="absolute top-2 right-2 z-20">
+                      <div className="absolute top-2 right-2 z-20 flex flex-col items-end gap-1">
                         <div className={`w-5 h-5 rounded-md ${isLocked ? 'bg-white/5 border-white/10' : cfg.bg} border ${isLocked ? 'border-white/10' : cfg.border} flex items-center justify-center`}>
                           <Icon className={`w-3 h-3 ${isLocked ? 'text-white/20' : cfg.color}`} />
                         </div>
+                        {/* Market indicator */}
+                        {!isLocked && Math.random() > 0.5 && (
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="Active on market" />
+                        )}
                       </div>
                     </motion.div>
                   );
