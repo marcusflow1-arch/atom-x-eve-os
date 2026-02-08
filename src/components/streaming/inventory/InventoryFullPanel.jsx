@@ -207,8 +207,8 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
           {/* LEFT: Game library (65%) */}
           <div style={{ width: '65%' }} className="flex-shrink-0 overflow-y-auto p-3">
             {viewMode === 'grid' ? (
-              /* GRID VIEW — larger covers (+25%) with aspect-[3/4] */
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+              /* GRID VIEW — larger covers with aspect-[3/4] */
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
                 {filteredGames.map((game, i) => {
                   const itemCount = (allInventory[game.id] || []).length;
                   const isActive = selectedGame?.id === game.id;
@@ -228,9 +228,9 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-1.5 text-center">
-                        <span className="text-[9px] text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
-                        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[7px] px-1 py-0 mt-0.5">
+                      <div className="absolute bottom-0 left-0 right-0 p-2 text-center">
+                        <span className="text-xs text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
+                        <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] px-1.5 py-0 mt-1">
                           {itemCount}
                         </Badge>
                       </div>
@@ -238,7 +238,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                   );
                 })}
                 {filteredGames.length === 0 && (
-                  <div className="col-span-full text-center text-white/20 text-[9px] pt-8">None</div>
+                  <div className="col-span-full text-center text-white/30 text-sm pt-8">None</div>
                 )}
               </div>
             ) : (
