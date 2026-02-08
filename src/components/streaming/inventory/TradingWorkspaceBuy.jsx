@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Plus, Minus, Sparkles, Star, TrendingDown, SlidersHorizontal, ArrowUpDown, Store, User, Clock, ChevronDown, Filter, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useCart } from '../../CartContext';
 
 export default function TradingWorkspaceBuy({ item, owned, marketPrice }) {
   const [sortBy, setSortBy] = useState('price_low');
