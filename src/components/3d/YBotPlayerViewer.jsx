@@ -65,6 +65,17 @@ export default function YBotPlayerViewer({ className, style }) {
     controls.dampingFactor = 0.1;
     controls.target.set(0, 1, 0);
 
+    // Right-click drag to orbit, scroll wheel to zoom
+    controls.mouseButtons = {
+      LEFT: null,               // disable left-click orbit (used for canvas focus)
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.ROTATE,
+    };
+    controls.enableZoom = true;
+    controls.enablePan = false;  // disable pan to keep camera centred on character
+    controls.minDistance = 2;
+    controls.maxDistance = 20;
+
     // ─── LIGHTING ───
     const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
     keyLight.position.set(2, 3, 2);
