@@ -387,56 +387,23 @@ export default function LibrarySidebar() {
             {activeSub === 'entertainment' && (
               <>
                 {/* Entertainment Apps */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Play className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Entertainment Apps</h3>
-                    <span className="ml-auto text-[10px] text-white/40">{entertainmentApps.length} apps</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {entertainmentApps.map((app, i) => (
-                      <div
-                        key={`ent_${i}`}
-                        onClick={() => openOverlay({ type: 'app', title: app.name, image: app.image, subtitle: app.category, url: app.url })}
-                        className="group relative aspect-square rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-emerald-400/40 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)] transition">
-                        <img src={app.image} alt={app.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2 flex items-center justify-between">
-                          <h4 className="text-white font-bold text-xs leading-snug line-clamp-1">{app.name}</h4>
-                          <Badge className="bg-white/10 text-white/70 border-white/20">{app.category}</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="mt-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Other Streaming Services</h3>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => openOverlay({ type: 'app', title: 'Anime Kai', url: 'https://animekai.to/home' })}
-                      className="text-sm text-cyan-300 hover:text-cyan-200 text-left"
-                    >
-                      Anime Kai
-                    </button>
-                    <button
-                      onClick={() => openOverlay({ type: 'app', title: 'Watch Cartoons Online', url: 'https://www.wcostream.tv/' })}
-                      className="text-sm text-cyan-300 hover:text-cyan-200 text-left"
-                    >
-                      Watch Cartoons Online
-                    </button>
-                    <button
-                      onClick={() => openOverlay({ type: 'app', title: 'Watch 32' })}
-                      title="Awaiting link"
-                      className="text-sm text-white/60 hover:text-white/80 text-left"
-                    >
-                      Watch 32
-                    </button>
-                  </div>
-                </section>
+...
               </>
+            )}
+            {activeSub === 'inventory' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Package className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Your Inventory</h3>
+                </div>
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                    <Package className="w-8 h-8 text-white/20" />
+                  </div>
+                  <p className="text-white/40 text-sm font-medium mb-1">Inventory Coming Soon</p>
+                  <p className="text-white/20 text-xs max-w-[200px]">Your collected cards, equipment, and items will appear here.</p>
+                </div>
+              </div>
             )}
         </div>
 
