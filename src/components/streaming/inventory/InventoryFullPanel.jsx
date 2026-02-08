@@ -132,7 +132,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
-          selectedGame ? 'right-[50%]' : 'right-0'
+          selectedGame ? 'right-[35%]' : 'right-0'
         }`}
         style={glassStyle}
       >
@@ -223,7 +223,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 30, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-0 bottom-0 left-[50%] right-0 z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
+            className="fixed top-0 bottom-0 left-[65%] right-0 z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
             style={{
               ...glassStyle,
               borderLeft: '1px solid rgba(245, 158, 11, 0.15)',
