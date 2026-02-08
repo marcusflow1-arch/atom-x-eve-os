@@ -191,8 +191,9 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
         {/* Body: Game strip left | divider | Cards right */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
 
-          {/* LEFT: Game icon strip */}
-          <div className="w-20 flex-shrink-0 overflow-y-auto p-2 space-y-1.5">
+          {/* LEFT: Game icon strip (50%) */}
+          <div className="w-1/2 flex-shrink-0 overflow-y-auto p-3">
+            <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-1.5">
             {filteredGames.map((game, i) => {
               const itemCount = (allInventory[game.id] || []).length;
               const isActive = selectedGame?.id === game.id;
