@@ -46,17 +46,19 @@ export default function TradingWorkspace({ item, onClose }) {
   const marketPrice = PRICE_MAP[item.rarity] || 10000;
 
   // Contextual modes based on ownership
+  // Sell now contains both Fixed Price and Auction creation inside it (toggle)
+  // Auction button = browse the global auction house for this card
   const modes = owned
     ? [
-        { id: 'sell', label: 'Sell', icon: DollarSign, color: 'green', desc: 'List for a fixed price' },
-        { id: 'auction', label: 'Auction', icon: Gavel, color: 'purple', desc: 'Competitive bidding' },
+        { id: 'sell', label: 'Sell', icon: DollarSign, color: 'green', desc: 'Fixed price or auction it off' },
+        { id: 'auction', label: 'Auctions', icon: Gavel, color: 'purple', desc: 'Browse active auctions' },
         { id: 'trade', label: 'Trade', icon: ArrowLeftRight, color: 'blue', desc: 'Item-for-item exchange' },
         { id: 'buy', label: 'Buy More', icon: ShoppingCart, color: 'cyan', desc: 'Stack for upgrades' },
       ]
     : [
         { id: 'buy', label: 'Buy', icon: ShoppingCart, color: 'cyan', desc: 'Purchase this card' },
-        { id: 'auction', label: 'Bid', icon: Gavel, color: 'purple', desc: 'Bid on auctions' },
-        { id: 'trade', label: 'Trade Offer', icon: ArrowLeftRight, color: 'blue', desc: 'Offer a trade' },
+        { id: 'auction', label: 'Auctions', icon: Gavel, color: 'purple', desc: 'Browse & bid on auctions' },
+        { id: 'trade', label: 'Trade', icon: ArrowLeftRight, color: 'blue', desc: 'Offer a trade' },
       ];
 
   const colorMap = {
