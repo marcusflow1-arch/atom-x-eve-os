@@ -222,9 +222,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 30, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className={`fixed top-0 bottom-0 left-[50%] z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
-              marketItem ? 'right-[420px] xl:right-[480px]' : 'right-0'
-            }`}
+            className="fixed top-0 bottom-0 left-[50%] right-0 z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300"
             style={{
               ...glassStyle,
               borderLeft: '1px solid rgba(245, 158, 11, 0.15)',
@@ -251,7 +249,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
 
             {/* Items Grid */}
             <div className="flex-1 overflow-y-auto p-5">
-              <div className={`grid gap-3 ${marketItem ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
+              <div className="grid gap-3 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {gameItems.map((item, i) => {
                   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                   const Icon = cfg.icon;
