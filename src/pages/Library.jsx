@@ -1552,39 +1552,102 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
           </div>
         ) : (
           <div className="flex flex-col">
-            {/* Genre Tabs at Top */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <button
-                onClick={() => { setActiveGenre('All'); setSectionView('grid'); }}
-                className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
-                  activeGenre === 'All' 
-                    ? 'bg-white/15 text-white border-white/30 shadow-lg' 
-                    : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'
-                }`}
-              >
-                All
-              </button>
-              {Object.keys(gamesByGenre).map((genre) => (
+            {/* Genre Tabs + List/Grid Toggle at Top */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  key={genre}
-                  onClick={() => { setActiveGenre(genre); setSectionView('grid'); }}
+                  onClick={() => { setActiveGenre('All'); setSectionView('grid'); }}
                   className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
-                    activeGenre === genre 
+                    activeGenre === 'All' 
                       ? 'bg-white/15 text-white border-white/30 shadow-lg' 
                       : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'
                   }`}
                 >
-                  {genre}
+                  All
                 </button>
-              ))}
+                {Object.keys(gamesByGenre).map((genre) => (
+                  <button
+                    key={genre}
+                    onClick={() => { setActiveGenre(genre); setSectionView('grid'); }}
+                    className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
+                      activeGenre === genre 
+                        ? 'bg-white/15 text-white border-white/30 shadow-lg' 
+                        : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'
+                    }`}
+                  >
+                    {genre}
+                  </button>
+                ))}
+              </div>
+              {/* Grid / List toggle for this view */}
+              <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 flex-shrink-0">
+                <button
+                  onClick={() => setSectionView(sectionView === 'list_compact' ? 'grid' : 'grid')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    sectionView === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setSectionView('list_compact')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    sectionView === 'list_compact' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Separator Line */}
             <div className="h-px w-full bg-white/10 mb-6" />
 
-            {/* Content Below Line - Switches Between Grid & Details */}
+            {/* Content Below Line - Switches Between Grid, List, & Details */}
             <AnimatePresence mode="wait">
-              {sectionView === 'grid' ? (
+              {sectionView === 'list_compact' ? (
+                <motion.div
+                  key="games-list-compact"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-x-6"
+                >
+                  {/* Genre headers with game rows */}
+                  {(activeGenre === 'All' ? Object.entries(gamesByGenre) : [[activeGenre, filteredGames.filter(g => g.genre === activeGenre)]]).map(([genre, games]) => (
+                    <div key={genre} className="break-inside-avoid mb-4">
+                      <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-2 px-1">{genre}</p>
+                      <div className="flex flex-col gap-0.5">
+                        {games.map((game, i) => {
+                          const isActive = selectedGame?.id === game.id;
+                          return (
+                            <div
+                              key={game.id || i}
+                              onClick={() => { setSelectedGame(game); setSectionView('details'); }}
+                              className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer border transition-all group ${
+                                isActive
+                                  ? 'border-cyan-400/40 bg-cyan-500/10'
+                                  : 'border-transparent hover:bg-white/5'
+                              }`}
+                            >
+                              <div className="w-6 h-6 rounded-sm overflow-hidden flex-shrink-0 border border-white/10">
+                                <img
+                                  src={game.cover_image || game.cover}
+                                  alt={game.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className={`text-[13px] truncate flex-1 ${isActive ? 'text-white font-semibold' : 'text-white/70 group-hover:text-white'}`}>
+                                {game.title}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              ) : sectionView === 'grid' ? (
                 <motion.div
                   key="games-grid"
                   initial={{ opacity: 0, y: 10 }}
