@@ -295,7 +295,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                 </div>
               </div>
             ) : (
-              <div className="grid gap-1.5 grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {gameItems.map((item, i) => {
                   const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                   const Icon = cfg.icon;
