@@ -56,10 +56,10 @@ export default function DLCInfoPanel({ dlc }) {
   return (
     <motion.div
       key={dlc.id}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      initial={{ opacity: 0, x: 12, filter: 'blur(3px)' }}
+      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, x: -8, filter: 'blur(3px)' }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="flex flex-col gap-5 h-full"
     >
       {/* DLC Title */}
