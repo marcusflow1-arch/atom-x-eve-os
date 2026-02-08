@@ -117,7 +117,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
 
   // Reset on close
   useEffect(() => {
-    if (!isOpen) { setSelectedGame(null); setSelectedItem(null); setSearchTerm(''); }
+    if (!isOpen) { setSelectedGame(null); setSelectedItem(null); setMarketItem(null); setSearchTerm(''); }
   }, [isOpen]);
 
   if (!isOpen) return null;
