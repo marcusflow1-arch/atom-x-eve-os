@@ -227,30 +227,35 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
               {gameItems.map((item, i) => {
                 const cfg = CATEGORY_CONFIG[item.category] || CATEGORY_CONFIG.achievement;
                 const Icon = cfg.icon;
-                const isActive = selectedItem?.id === item.id;
+                const isActive = marketItem?.id === item.id;
+                const isLocked = !item.owned;
                 return (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.02 }}
-                    onClick={() => setSelectedItem(item)}
+                    onClick={() => setMarketItem(item)}
                     className={`group relative aspect-[3/4] rounded-xl overflow-hidden border cursor-pointer transition-all ${
-                      isActive ? `${cfg.border} ring-2 ring-offset-0 shadow-lg` : 'border-white/10 hover:border-white/20'
+                      isActive ? `${cfg.border} ring-2 ring-offset-0 shadow-lg` 
+                      : isLocked ? 'border-white/5 opacity-50 hover:opacity-80 hover:border-white/15'
+                      : 'border-white/10 hover:border-white/20'
                     }`}
                     style={isActive ? { boxShadow: `0 0 20px ${cfg.color.replace('text-', '').includes('cyan') ? 'rgba(6,182,212,0.3)' : 'rgba(168,85,247,0.3)'}` } : {}}
                   >
-                    <div className={`absolute inset-0 ${cfg.bg} opacity-30`} />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                      <Icon className={`w-8 h-8 ${cfg.color} mb-2 opacity-40 group-hover:opacity-80 transition-opacity`} />
-                      <p className="text-white font-bold text-xs text-center leading-tight truncate w-full">{item.name}</p>
-                      <Badge className={`mt-1.5 text-[8px] border ${RARITY_COLORS[item.rarity] || RARITY_COLORS.Common}`}>
+                    <div className={`absolute inset-0 ${isLocked ? 'bg-black/40' : cfg.bg} opacity-30`} />
+                    {isLocked && <div className="absolute inset-0 bg-black/50 z-10" />}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-3 z-20">
+                      {isLocked && <Lock className="w-4 h-4 text-white/30 absolute top-2 left-2" />}
+                      <Icon className={`w-8 h-8 ${isLocked ? 'text-white/20' : cfg.color} mb-2 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
+                      <p className={`font-bold text-xs text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
+                      <Badge className={`mt-1.5 text-[8px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
                         {item.rarity}
                       </Badge>
                     </div>
-                    <div className="absolute top-2 right-2">
-                      <div className={`w-5 h-5 rounded-md ${cfg.bg} border ${cfg.border} flex items-center justify-center`}>
-                        <Icon className={`w-3 h-3 ${cfg.color}`} />
+                    <div className="absolute top-2 right-2 z-20">
+                      <div className={`w-5 h-5 rounded-md ${isLocked ? 'bg-white/5 border-white/10' : cfg.bg} border ${isLocked ? 'border-white/10' : cfg.border} flex items-center justify-center`}>
+                        <Icon className={`w-3 h-3 ${isLocked ? 'text-white/20' : cfg.color}`} />
                       </div>
                     </div>
                   </motion.div>
