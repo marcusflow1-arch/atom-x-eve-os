@@ -220,13 +220,21 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                 </div>
               );
             })}
-            {filteredGames.length === 0 && (
-              <div className="text-center text-white/20 text-[9px] pt-8">None</div>
-            )}
+              {filteredGames.length === 0 && (
+                <div className="col-span-full text-center text-white/20 text-[9px] pt-8">None</div>
+              )}
+            </div>
           </div>
 
-          {/* VERTICAL DIVIDER */}
-          <div className="w-px bg-white/10 flex-shrink-0" />
+          {/* VERTICAL DIVIDER — fades at top & bottom */}
+          <div className="flex-shrink-0 w-px relative">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0.15) 80%, transparent 100%)',
+              }}
+            />
+          </div>
 
           {/* RIGHT: Cards grid */}
           <div className="flex-1 overflow-y-auto p-4 min-w-0">
