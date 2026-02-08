@@ -90,6 +90,8 @@ export default function LibrarySidebar() {
       setSelectedItem(null);
       setIsExpandedLibrary(false);
       setPreviewGame(null);
+      setIsExpandedInventory(false);
+      setInventoryDetailItem(null);
     }
   }, [isOpen]);
 
