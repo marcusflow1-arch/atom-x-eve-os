@@ -213,43 +213,22 @@ export default function LibrarySidebar() {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
             {/* Sub-pages (Library | Aurora) */}
-            <div className="flex items-center justify-center mb-4">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mb-4">
+              {[
+                { id: 'library', label: 'Library' },
+                { id: 'aura', label: 'Aura' },
+                { id: 'entertainment', label: 'Entertain' },
+                { id: 'friends', label: 'Friends' },
+                { id: 'inventory', label: 'Rewards' },
+              ].map((tab) => (
                 <button
-                  onClick={() => setActiveSub('library')}
-                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='library' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
+                  key={tab.id}
+                  onClick={() => setActiveSub(tab.id)}
+                  className={`text-[10px] uppercase tracking-widest pb-1 border-b transition-colors whitespace-nowrap ${activeSub === tab.id ? 'text-white border-white/60' : 'text-white/50 border-white/10 hover:text-white/70'}`}
                 >
-                  Library
+                  {tab.label}
                 </button>
-                <div className="h-4 w-px bg-white/20" />
-                <button
-                  onClick={() => setActiveSub('aura')}
-                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='aura' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
-                >
-                  Aura
-                </button>
-                <div className="h-4 w-px bg-white/20" />
-                <button
-                  onClick={() => setActiveSub('entertainment')}
-                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='entertainment' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
-                >
-                  Entertainment
-                </button>
-                <div className="h-4 w-px bg-white/20" />
-                <button
-                  onClick={() => setActiveSub('friends')}
-                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='friends' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
-                >
-                  Friends List
-                </button>
-                <div className="h-4 w-px bg-white/20" />
-                <button
-                  onClick={() => setActiveSub('inventory')}
-                  className={`text-[11px] uppercase tracking-widest pb-1 border-b ${activeSub==='inventory' ? 'text-white border-white/60' : 'text-white/50 border-white/10'}`}
-                >
-                  Rewards
-                </button>
-              </div>
+              ))}
             </div>
             {activeSub === 'friends' && (
               <div className="space-y-4">
