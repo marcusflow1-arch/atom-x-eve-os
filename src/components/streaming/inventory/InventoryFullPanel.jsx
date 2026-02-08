@@ -223,7 +223,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
             exit={{ x: 30, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className={`fixed top-0 bottom-0 left-[50%] z-[69] shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${
-              marketItem ? 'right-[360px] xl:right-[420px]' : 'right-0'
+              marketItem ? 'right-[420px] xl:right-[480px]' : 'right-0'
             }`}
             style={{
               ...glassStyle,
