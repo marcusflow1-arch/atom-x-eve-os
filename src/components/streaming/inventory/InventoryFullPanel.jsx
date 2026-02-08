@@ -128,7 +128,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -20, opacity: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-hidden flex flex-col ${selectedItem ? 'right-[400px] xl:right-[480px]' : 'right-0'}`}
+      className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-hidden flex flex-col ${marketItem ? 'right-[360px] xl:right-[420px]' : 'right-0'}`}
       style={{
         background: 'rgba(12, 16, 24, 0.6)',
         backdropFilter: 'blur(40px) saturate(180%)',
