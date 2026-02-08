@@ -640,6 +640,16 @@ export default function LibrarySidebar() {
         )}
       </AnimatePresence>
 
+      {/* Expanded Inventory Panel */}
+      <AnimatePresence>
+        {isExpandedInventory && isOpen && (
+          <InventoryFullPanel
+            isOpen={isExpandedInventory && isOpen}
+            onClose={() => { setIsExpandedInventory(false); setInventoryDetailItem(null); }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
       <QuickInfoOverlay
         open={overlayOpen}
