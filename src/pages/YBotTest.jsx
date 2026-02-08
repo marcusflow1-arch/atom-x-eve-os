@@ -31,12 +31,12 @@ export default function YBotTest() {
             <span className="text-white/50">Roll</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-white/10 border border-white/20 rounded text-white font-mono text-[10px]">Mouse</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white/10 border border-white/20 rounded text-white font-mono text-[10px]">Right-Click</kbd>
             <span className="text-white/50">Orbit Camera</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-white/10 border border-white/20 rounded text-white font-mono text-[10px]">Click</kbd>
-            <span className="text-white/50">Focus Canvas</span>
+            <kbd className="px-1.5 py-0.5 bg-white/10 border border-white/20 rounded text-white font-mono text-[10px]">Scroll</kbd>
+            <span className="text-white/50">Zoom In/Out</span>
           </div>
         </div>
         <p className="text-white/30 text-[9px] text-center mt-2">Click the 3D view first to enable keyboard input</p>
