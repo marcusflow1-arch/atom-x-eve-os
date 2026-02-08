@@ -316,13 +316,13 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
                       {isLocked && <div className="absolute inset-0 bg-black/50 z-10" />}
                       <div className="absolute inset-0 flex flex-col items-center justify-center p-1.5 z-20">
                         {isLocked && <Lock className="w-3 h-3 text-white/30 absolute top-1 left-1" />}
-                        <Icon className={`w-6 h-6 ${isLocked ? 'text-white/20' : cfg.color} mb-1 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
-                        <p className={`font-bold text-[9px] text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
-                        <Badge className={`mt-1 text-[7px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
+                        <Icon className={`w-8 h-8 ${isLocked ? 'text-white/20' : cfg.color} mb-1.5 ${isLocked ? '' : 'opacity-40 group-hover:opacity-80'} transition-opacity`} />
+                        <p className={`font-bold text-[11px] text-center leading-tight truncate w-full ${isLocked ? 'text-white/40' : 'text-white'}`}>{item.name}</p>
+                        <Badge className={`mt-1 text-[8px] border ${isLocked ? 'text-white/30 bg-white/5 border-white/10' : (RARITY_COLORS[item.rarity] || RARITY_COLORS.Common)}`}>
                           {item.rarity}
                         </Badge>
                         {!isLocked && (
-                          <span className="mt-0.5 text-[7px] text-emerald-400/80 font-bold">×1</span>
+                          <span className="mt-0.5 text-[8px] text-emerald-400/80 font-bold">×1</span>
                         )}
                       </div>
                       <div className="absolute top-1 right-1 z-20">
