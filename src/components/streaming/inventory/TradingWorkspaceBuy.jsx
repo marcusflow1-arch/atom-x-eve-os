@@ -12,6 +12,22 @@ export default function TradingWorkspaceBuy({ item, owned, marketPrice }) {
   const [showFilters, setShowFilters] = useState(false);
   const [expandedSeller, setExpandedSeller] = useState(null);
   const [quantities, setQuantities] = useState({});
+  const { addToCart } = useCart();
+
+  const handleBuyFromSeller = (seller, qty) => {
+    addToCart({
+      id: `buy-${seller.id}-${Date.now()}`,
+      title: `${item.name} ×${qty} (from ${seller.name})`,
+      type: seller.isPlatform ? 'platform_purchase' : 'player_purchase',
+      price: seller.price * qty,
+      image: item.image,
+      seller: seller.name,
+      itemName: item.name,
+      itemCategory: item.category,
+      itemRarity: item.rarity,
+      quantity: qty,
+    });
+  };
 
   // Large mock seller pool (50+)
   const allSellers = useMemo(() => {
