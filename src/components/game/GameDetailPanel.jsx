@@ -1075,21 +1075,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             initial={{ opacity: 0, width: 0 }}
                             animate={{ opacity: 1, width: 'auto' }}
                             exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1], opacity: { duration: 0.3, delay: 0.05 } }}
                             className="flex overflow-hidden flex-shrink-0"
                           >
                             <motion.div 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2, delay: 0.05 }}
-                              className="w-px bg-gradient-to-b from-transparent via-white/15 to-transparent mx-5 flex-shrink-0 self-stretch" 
+                              initial={{ opacity: 0, scaleY: 0.3 }}
+                              animate={{ opacity: 1, scaleY: 1 }}
+                              exit={{ opacity: 0, scaleY: 0.3 }}
+                              transition={{ duration: 0.4, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
+                              className="w-px bg-gradient-to-b from-transparent via-white/15 to-transparent mx-5 flex-shrink-0 self-stretch origin-center" 
                             />
                             <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2, delay: 0.1 }}
+                              initial={{ opacity: 0, x: 15, filter: 'blur(4px)' }}
+                              animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                              exit={{ opacity: 0, x: 15, filter: 'blur(4px)' }}
+                              transition={{ duration: 0.3, delay: 0.15, ease: [0.4, 0, 0.2, 1] }}
                               className="w-72 flex-shrink-0"
                             >
                               <AnimatePresence mode="wait">
