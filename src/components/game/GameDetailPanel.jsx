@@ -12,6 +12,7 @@ import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
+import DLCInfoPanel from './DLCInfoPanel';
 
 
 // --- Components ---
