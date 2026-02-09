@@ -18,6 +18,24 @@ const MOCK_FRIENDS = [
 
 const PARTY_MEMBERS = [MOCK_FRIENDS[1]];
 
+const MOCK_REQUESTS = [
+  { 
+    id: 101, name: 'BladeRunner_X', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', sentAgo: '2h',
+    achievementRank: 'Diamond', pvpRank: 'Platinum II', pveRank: 'Mythic', 
+    genres: ['RPG', 'Sci-Fi'], mutualFriends: ['Shadow_Striker', 'CyberVixen'] 
+  },
+  { 
+    id: 102, name: 'NightOwl_92', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', sentAgo: '5h',
+    achievementRank: 'Gold', pvpRank: 'Silver III', pveRank: 'Epic', 
+    genres: ['Horror', 'FPS'], mutualFriends: ['GhostReaper'] 
+  },
+  { 
+    id: 103, name: 'PixelSamurai', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', sentAgo: '1d',
+    achievementRank: 'Silver', pvpRank: 'Gold I', pveRank: 'Rare', 
+    genres: ['Strategy', 'RPG', 'Action'], mutualFriends: [] 
+  },
+];
+
 export default function FriendsDropdown() {
   const [activeTab, setActiveTab] = useState('online'); 
   const [selectedFriend, setSelectedFriend] = useState(null);
