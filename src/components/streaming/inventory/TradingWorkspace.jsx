@@ -33,7 +33,7 @@ const PRICE_MAP = {
   Mythic: 95000, Legendary: 75000, Epic: 45000, Rare: 25000, Uncommon: 12000, Common: 5000
 };
 
-export default function TradingWorkspace({ item, onClose }) {
+export default function TradingWorkspace({ item, onClose, onBack }) {
   const [activeMode, setActiveMode] = useState(null);
 
   if (!item) return null;
