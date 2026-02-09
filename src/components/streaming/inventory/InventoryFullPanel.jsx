@@ -205,6 +205,11 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName })
               >
                 {viewMode === 'grid' ? <List className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
               </button>
+              {/* Favorite indicator */}
+              <div className="ml-1 flex items-center gap-1 text-[10px] text-white/30" title="Heart a game to pin it to the top">
+                <Heart className="w-3.5 h-3.5 text-pink-400/60" />
+                <span>{favoriteGames.length}</span>
+              </div>
             </div>
 
             {/* Right: selected game name + close */}
