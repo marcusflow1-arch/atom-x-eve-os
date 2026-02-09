@@ -102,11 +102,19 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
   return (
     <div className="w-full">
       {/* Top row: Stream video + Live chat */}
-      <div className="flex gap-4 flex-col lg:flex-row">
-        {/* Stream box (bigger) */}
-        <div className="flex-[3] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden">
+      <div className="flex gap-0 flex-col lg:flex-row relative">
+        {/* Stream box (bigger) — blends into page */}
+        <div className="flex-[3] rounded-3xl overflow-hidden relative"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.02) 100%)',
+          }}
+        >
+          {/* Soft inner edge glow instead of hard border */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+            boxShadow: 'inset 0 0 30px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }} />
           <div className="h-[520px] w-full relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/40 to-slate-800/20" />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-transparent to-slate-800/10" />
             <div className="relative flex flex-col items-center justify-center text-center">
               <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-4">
                 <Play className="w-7 h-7 text-white/80" />
@@ -114,15 +122,35 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
               <p className="text-white/60 text-sm">Live stream preview</p>
             </div>
           </div>
+          {/* Fade right edge into gap */}
+          <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-[#0f1419] to-transparent pointer-events-none hidden lg:block" />
         </div>
 
-        {/* Live chat (smaller) */}
-        <div className="flex-[2] h-[520px] rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        {/* Subtle vertical blend between the two panels */}
+        <div className="hidden lg:block w-px relative z-10">
+          <div className="absolute inset-y-[10%] w-px" style={{
+            background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.06) 70%, transparent)',
+          }} />
+        </div>
+
+        {/* Live chat (smaller) — blends into page */}
+        <div className="flex-[2] h-[520px] rounded-3xl overflow-hidden flex flex-col relative"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(255,255,255,0.03) 100%)',
+          }}
+        >
+          {/* Soft inner edge glow */}
+          <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{
+            boxShadow: 'inset 0 0 30px rgba(255,255,255,0.03), inset 0 1px 0 rgba(255,255,255,0.06)',
+          }} />
+          {/* Fade left edge from gap */}
+          <div className="absolute top-0 left-0 bottom-0 w-8 bg-gradient-to-r from-[#0f1419] to-transparent pointer-events-none hidden lg:block z-10" />
+
+          <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between relative z-20">
             <span className="text-white/80 text-sm font-semibold">Live Chat</span>
             <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">1.2k watching</Badge>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 relative z-20">
             {Array.from({ length: 14 }).map((_, i) => (
               <div key={i} className="flex gap-2">
                 <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10" />
@@ -133,8 +161,8 @@ export default function StreamerRightPane({ streamer, allowEditing = true }) {
               </div>
             ))}
           </div>
-          <div className="p-3 border-t border-white/10">
-            <div className="h-9 w-full rounded-xl bg-white/10 border border-white/15" />
+          <div className="p-3 border-t border-white/[0.06] relative z-20">
+            <div className="h-9 w-full rounded-xl bg-white/[0.06] border border-white/[0.08]" />
           </div>
         </div>
       </div>
