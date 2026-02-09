@@ -519,6 +519,39 @@ function LayoutContent({ children, currentPageName }) {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
 
+  // Mobile mode rendering
+  if (isMobile) {
+    return (
+      <div className="h-screen w-screen text-slate-300 font-sans overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+        <div className="absolute inset-0 -z-10">
+          <ThemeBackground themeId="moon_essence" />
+        </div>
+        <EnvStatus />
+        <Toaster position="top-right" />
+        <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
+
+        <MobileLayoutShell>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteLoadingFallback />}>
+              {children}
+            </Suspense>
+          </ErrorBoundary>
+        </MobileLayoutShell>
+
+        {/* Sign Up Modal */}
+        {showSignUp && isAuthenticated && (
+          <SignUpForm onComplete={completeSignUp} onCancel={() => setShowSignUp(false)} />
+        )}
+        <CartDrawer />
+
+        {/* Floating toggle to switch back to desktop */}
+        <div className="fixed top-2 right-2 z-[200]">
+          <ViewModeToggle />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
