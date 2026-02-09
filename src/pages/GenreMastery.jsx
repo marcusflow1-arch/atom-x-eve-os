@@ -742,7 +742,7 @@ export default function GenreMastery({ onClose }) {
         />
 
         {/* MAIN CONTENT AREA (MIGRATED UI LAYOUT FROM SEASONAL PASS) */}
-        <div className="flex-1 flex flex-col z-[210] relative overflow-visible">
+        <div className="flex-1 flex flex-col z-[210] relative overflow-hidden">
         <AnimatePresence mode="wait">
           {selectedGenre ? (
             <motion.div
