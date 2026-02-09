@@ -94,6 +94,7 @@ export default function LibrarySidebar() {
       setPreviewGame(null);
       setIsExpandedInventory(false);
       setInventoryDetailItem(null);
+      setRewardActionItem(null);
     }
   }, [isOpen]);
 
