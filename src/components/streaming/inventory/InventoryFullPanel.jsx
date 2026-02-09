@@ -348,6 +348,7 @@ export default function InventoryFullPanel({ isOpen, onClose }) {
           <TradingWorkspace
             item={marketItem}
             onClose={() => setMarketItem(null)}
+            onBack={() => setMarketItem(null)}
           />
         )}
       </AnimatePresence>
