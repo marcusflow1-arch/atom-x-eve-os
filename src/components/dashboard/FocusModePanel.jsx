@@ -26,6 +26,7 @@ import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalendarOverlay';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
+import EnvironmentHub from '@/components/environment/EnvironmentHub';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1480,29 +1481,16 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Globe className="w-6 h-6 text-cyan-400" />
-                  <div>
-                    <h3 className="text-white font-bold text-xl">Environment Hub</h3>
-                    <p className="text-white/40 text-xs">Select a 3D environment for your dashboard</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setShowEnvPicker(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
+              {/* Header is now inside EnvironmentHub */}
               
-              <div className="min-h-[300px]">
-                <EnvironmentSelector 
-                  currentEnvId={currentEnvId} 
-                  onSelect={(env) => {
+              <div className="min-h-[400px]">
+                <EnvironmentHub
+                  currentEnvId={currentEnvId}
+                  onSelectEnv={(env) => {
                     onSelectEnv?.(env);
                     setShowEnvPicker(false);
-                  }} 
+                  }}
+                  onClose={() => setShowEnvPicker(false)}
                 />
               </div>
             </motion.div>
