@@ -427,7 +427,7 @@ export default function LibrarySidebar() {
                   ))}
                 </div>
 
-                <p className="text-[10px] text-white/20 text-center mt-3 italic">Click any item to open Full Inventory & Trading Workspace</p>
+                <p className="text-[10px] text-white/20 text-center mt-3 italic">Click any reward to see its game achievements & quick trade options</p>
               </div>
             )}
         </div>
