@@ -11,7 +11,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const steps = [
-    { id: 1, name: 'Shipping', icon: Truck },
+    { id: 1, name: 'Purchase Details', icon: ShoppingCart },
     { id: 2, name: 'Payment', icon: CreditCard },
     { id: 3, name: 'Review', icon: Check },
 ];
@@ -149,37 +149,10 @@ export default function Checkout() {
                     <span className="text-sm font-medium">Back</span>
                 </button>
 
-                {/* Progress Stepper */}
-                <div className="mb-12">
-                    <div className="flex justify-center items-center relative">
-                        <div className="absolute h-1 bg-slate-800 w-full max-w-2xl top-1/2 -translate-y-1/2 -z-0 rounded-full">
-                            <div 
-                                className="h-full bg-blue-600 transition-all duration-500 rounded-full" 
-                                style={{ width: `${((currentStep - 1) / 2) * 100}%` }}
-                            />
-                        </div>
-                        <div className="flex justify-between w-full max-w-2xl z-10 relative">
-                            {steps.map((step) => {
-                                const isActive = currentStep >= step.id;
-                                const isCurrent = currentStep === step.id;
-                                return (
-                                    <div key={step.id} className="flex flex-col items-center gap-2">
-                                        <div 
-                                            className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300
-                                                ${isActive ? 'bg-blue-600 border-blue-900 text-white' : 'bg-slate-900 border-slate-800 text-slate-500'}
-                                                ${isCurrent ? 'ring-4 ring-blue-500/30 scale-110' : ''}
-                                            `}
-                                        >
-                                            <step.icon className="w-5 h-5" />
-                                        </div>
-                                        <span className={`text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-slate-600'}`}>
-                                            {step.name}
-                                        </span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                {/* Step indicator (minimal) */}
+                <div className="mb-10 text-center">
+                    <h1 className="text-3xl font-bold text-white">Checkout</h1>
+                    <p className="text-slate-500 text-sm mt-1">Step {currentStep} of {steps.length} — {steps[currentStep - 1].name}</p>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-8">
@@ -196,7 +169,7 @@ export default function Checkout() {
                                     className="bg-slate-900/50 border border-slate-800 rounded-xl p-8"
                                 >
                                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                        <MapPin className="w-6 h-6 text-blue-500" /> Shipping Details
+                                        <ShoppingCart className="w-6 h-6 text-blue-500" /> Purchase Details
                                     </h2>
                                     <div className="grid md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
