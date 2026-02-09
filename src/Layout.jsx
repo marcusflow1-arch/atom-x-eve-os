@@ -1176,11 +1176,13 @@ export default function Layout({ children, currentPageName }) {
     <ErrorBoundary>
       <AuthProvider>
         <DashboardModeProvider>
-          <CartProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <LayoutContent children={children} currentPageName={currentPageName} />
-            </Suspense>
-          </CartProvider>
+          <ViewModeProvider>
+            <CartProvider>
+              <Suspense fallback={<LoadingFallback />}>
+                <LayoutContent children={children} currentPageName={currentPageName} />
+              </Suspense>
+            </CartProvider>
+          </ViewModeProvider>
         </DashboardModeProvider>
       </AuthProvider>
     </ErrorBoundary>
