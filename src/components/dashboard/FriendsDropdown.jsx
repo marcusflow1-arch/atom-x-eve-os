@@ -155,24 +155,8 @@ export default function FriendsDropdown() {
 
         {activeTab === 'requests' && (
           <div className="space-y-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10" />
-                  <div>
-                    <p className="text-white text-sm font-bold">NewPlayer_{i}</p>
-                    <p className="text-white/40 text-xs">Sent 2h ago</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 rounded-lg bg-white/5 hover:bg-green-500/20 text-white/40 hover:text-green-400 transition-colors">
-                    <Check className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+            {MOCK_REQUESTS.map(req => (
+              <FriendRequestCard key={req.id} request={req} />
             ))}
           </div>
         )}
