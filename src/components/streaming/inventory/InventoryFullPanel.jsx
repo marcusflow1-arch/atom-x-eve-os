@@ -257,6 +257,13 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName })
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                      {/* Favorite heart */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(game.id); }}
+                        className="absolute top-1.5 right-1.5 z-10 w-6 h-6 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all hover:bg-black/60"
+                      >
+                        <Heart className={`w-3.5 h-3.5 transition-colors ${favoriteGames.includes(game.id) ? 'text-pink-400 fill-pink-400' : 'text-white/40'}`} />
+                      </button>
                       <div className="absolute bottom-0 left-0 right-0 p-2 text-center">
                         <span className="text-xs text-white font-bold leading-tight block truncate">{game.title || game.name}</span>
                         <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] px-1.5 py-0 mt-1">
