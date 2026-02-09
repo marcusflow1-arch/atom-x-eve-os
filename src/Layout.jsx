@@ -930,9 +930,21 @@ function LayoutContent({ children, currentPageName }) {
 
                     {showLunaHeaderBar && (
                       <>
-                        {/* Title - same size as Store */}
+                        {/* Title - dynamic per page */}
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                          Atom X Eve Aura Stream
+                          {(() => {
+                            const pp = location.pathname.toLowerCase();
+                            if (pp.includes('/clan')) return 'Atom X Eve Clan';
+                            if (pp.includes('/community')) return 'Atom X Eve Forum';
+                            if (pp.includes('/blacksmith')) return 'Atom X Eve Blacksmith';
+                            if (pp.includes('/seasonalpass')) return 'Atom X Eve Season Pass';
+                            if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
+                            if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
+                            if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
+                            if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
+                            if (pp.includes('/discover')) return 'Atom X Eve Discover';
+                            return 'Atom X Eve Dashboard';
+                          })()}
                         </span>
 
                         {/* Divider */}
