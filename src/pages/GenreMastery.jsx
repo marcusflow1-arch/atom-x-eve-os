@@ -834,6 +834,11 @@ export default function GenreMastery({ onClose }) {
                    </div>
                  </div>
 
+                 {/* SKILL TREE SYSTEM */}
+                 <div className="mb-16">
+                   <SkillTreeSystem genre={selectedGenre} />
+                 </div>
+
                  {/* CAROUSEL: Limited Edition Rewards (Migrated UI) */}
                  <div className="mb-12">
                     <div className="flex items-center justify-between mb-6">
@@ -854,16 +859,11 @@ export default function GenreMastery({ onClose }) {
                       {carouselItems.map((card) => (
                         <LimitedEditionCard 
                            key={card.id} 
-                           card={{...card, rarity: card.rarity}} // Ensure rarity prop is passed correctly
+                           card={{...card, rarity: card.rarity}}
                            onClick={() => setViewingLevel(progressionData.find(p => p.level === card.id))} 
                         />
                       ))}
                     </div>
-                 </div>
-
-                 {/* SKILL TREE SYSTEM */}
-                 <div className="mb-16">
-                   <SkillTreeSystem genre={selectedGenre} />
                  </div>
 
                  {/* PROGRESS TRACK HEADER */}
