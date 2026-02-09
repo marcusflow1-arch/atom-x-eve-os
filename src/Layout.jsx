@@ -1001,6 +1001,8 @@ function LayoutContent({ children, currentPageName }) {
                   </>
                 )}
 
+              {/* View Mode Toggle */}
+              <ViewModeToggle />
             </div>
             </div>
 
