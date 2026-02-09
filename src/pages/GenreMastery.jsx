@@ -750,7 +750,7 @@ export default function GenreMastery({ onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full overflow-y-auto no-scrollbar relative z-[220]"
+              className="flex-1 flex flex-col h-full overflow-y-auto scrollbar-hide relative z-[220]"
             >
                <div className="p-8 md:p-12 pb-32">
 
