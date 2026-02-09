@@ -111,7 +111,7 @@ export default function LibrarySidebar() {
     setPreviewGame(null);
     setIsExpandedInventory(false);
     setInventoryDetailItem(null);
-    setRewardActionItem(null);
+    setPendingRewardGame(null);
   }, [activeSub]);
 
   // Close sidebar on Escape key
