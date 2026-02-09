@@ -109,6 +109,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
