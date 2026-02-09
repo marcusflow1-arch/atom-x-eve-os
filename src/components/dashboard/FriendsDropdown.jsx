@@ -299,6 +299,91 @@ const QuickAction = ({ icon: Icon, label, onClick }) => (
   </button>
 );
 
+const RANK_COLORS = {
+  'Mythic': 'text-red-400 bg-red-500/15 border-red-500/25',
+  'Diamond': 'text-cyan-300 bg-cyan-500/15 border-cyan-500/25',
+  'Platinum II': 'text-teal-300 bg-teal-500/15 border-teal-500/25',
+  'Gold': 'text-amber-300 bg-amber-500/15 border-amber-500/25',
+  'Gold I': 'text-amber-300 bg-amber-500/15 border-amber-500/25',
+  'Silver': 'text-slate-300 bg-slate-500/15 border-slate-500/25',
+  'Silver III': 'text-slate-300 bg-slate-500/15 border-slate-500/25',
+  'Epic': 'text-purple-300 bg-purple-500/15 border-purple-500/25',
+  'Rare': 'text-blue-300 bg-blue-500/15 border-blue-500/25',
+};
+
+const RankPill = ({ icon: Icon, label, value }) => {
+  const colors = RANK_COLORS[value] || 'text-white/50 bg-white/5 border-white/10';
+  return (
+    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8px] font-bold ${colors}`}>
+      <Icon className="w-2.5 h-2.5" />
+      <span className="truncate">{label}</span>
+      <span className="opacity-70">{value}</span>
+    </div>
+  );
+};
+
+const FriendRequestCard = ({ request }) => (
+  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.07] transition-colors">
+    <div className="flex gap-3">
+      {/* Left: Avatar + Name */}
+      <div className="flex-shrink-0">
+        <div className="w-10 h-10 rounded-lg overflow-hidden ring-1 ring-white/10">
+          <img src={request.avatar} alt={request.name} className="w-full h-full object-cover" />
+        </div>
+      </div>
+
+      {/* Middle: Info + Ranks */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <h4 className="text-white text-sm font-bold truncate">{request.name}</h4>
+          <span className="text-[9px] text-white/25 flex-shrink-0 ml-2">{request.sentAgo} ago</span>
+        </div>
+
+        {/* Rank row */}
+        <div className="flex items-center gap-1 flex-wrap mb-1.5">
+          <RankPill icon={Trophy} label="Ach" value={request.achievementRank} />
+          <RankPill icon={Crosshair} label="PvP" value={request.pvpRank} />
+          <RankPill icon={Shield} label="PvE" value={request.pveRank} />
+        </div>
+
+        {/* Genres + Mutual Friends row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Genres */}
+          <div className="flex items-center gap-1">
+            <Gamepad2 className="w-2.5 h-2.5 text-white/20 flex-shrink-0" />
+            {request.genres.map(g => (
+              <span key={g} className="text-[8px] px-1.5 py-0 rounded bg-white/[0.06] border border-white/[0.06] text-white/45 font-medium">{g}</span>
+            ))}
+          </div>
+
+          {/* Mutual Friends */}
+          {request.mutualFriends.length > 0 && (
+            <div className="flex items-center gap-1">
+              <Users className="w-2.5 h-2.5 text-white/20 flex-shrink-0" />
+              <span className="text-[8px] text-white/35">
+                {request.mutualFriends.length} mutual{request.mutualFriends.length > 1 && 's'}
+              </span>
+              <span className="text-[8px] text-white/20 truncate max-w-[100px]" title={request.mutualFriends.join(', ')}>
+                ({request.mutualFriends.join(', ')})
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right: Action buttons */}
+      <div className="flex flex-col gap-1 flex-shrink-0 justify-center">
+        <button className="w-7 h-7 rounded-lg bg-green-500/15 hover:bg-green-500/30 border border-green-500/20 flex items-center justify-center text-green-400 transition-colors">
+          <Check className="w-3.5 h-3.5" />
+        </button>
+        <button className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-red-500/15 border border-white/[0.06] hover:border-red-500/20 flex items-center justify-center text-white/30 hover:text-red-400 transition-colors">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 const SettingsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
