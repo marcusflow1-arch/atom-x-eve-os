@@ -81,18 +81,26 @@ export default function TradingWorkspace({ item, onClose, onBack }) {
     >
       {/* ═══ TOP BAR: Item Info + Mode Tabs (horizontal, like MMO auction house) ═══ */}
       <div className="flex-shrink-0 border-b border-white/5" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' }}>
-        {/* Top row: breadcrumb + close */}
+        {/* Top row: back button + breadcrumb + close */}
         <div className="flex items-center justify-between px-6 pt-4 pb-2">
-          <div className="flex items-center gap-1.5 text-[10px] text-white/30">
-            <span>Inventory</span>
-            <ChevronRight className="w-3 h-3" />
-            <span>{item.game}</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-white/60">{item.name}</span>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-amber-400 font-medium">Trading Workspace</span>
+          <div className="flex items-center gap-2">
+            {/* Back to Full Inventory */}
+            <button
+              onClick={onBack || onClose}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-all text-[11px] font-medium"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Full Inventory</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[10px] text-white/30 ml-2">
+              <span>{item.game}</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-white/60">{item.name}</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-amber-400 font-medium">Trading Workspace</span>
+            </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors" title="Close Trading Workspace">
             <X className="w-4 h-4" />
           </button>
         </div>
