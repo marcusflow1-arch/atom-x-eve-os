@@ -1050,6 +1050,19 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
+      {/* Floating View Mode Toggle for pages with hidden headers */}
+      {(() => {
+        const p = location.pathname.toLowerCase();
+        const hiddenHeaderPages = ['/store', '/library', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass'];
+        const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
+        if (!isHiddenHeader) return null;
+        return (
+          <div className="fixed top-4 right-4 z-[50]">
+            <ViewModeToggle />
+          </div>
+        );
+      })()}
+
       {/* Main Content with Error Boundary */}
       <main className="flex-grow overflow-hidden">
         <div className="page-container">
