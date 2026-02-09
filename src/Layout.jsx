@@ -290,6 +290,7 @@ const NavDropdown = ({ groupName, icon: Icon, items, currentPath }) => {
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isMobile } = useViewMode();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
   const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/discover','/aura']
