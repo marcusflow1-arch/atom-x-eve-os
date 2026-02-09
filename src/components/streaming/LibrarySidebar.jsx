@@ -409,7 +409,7 @@ export default function LibrarySidebar() {
                   ].map((item, i) => (
                     <div
                       key={i}
-                      onClick={() => { setIsExpandedInventory(true); }}
+                      onClick={() => { setRewardActionItem(item); }}
                       className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-amber-400/30 transition group"
                     >
                       <div className={`w-10 h-10 rounded-lg ${item.bg} border border-white/10 flex items-center justify-center flex-shrink-0`}>
