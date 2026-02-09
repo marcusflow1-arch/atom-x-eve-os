@@ -1086,6 +1086,16 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
+      {/* Guided Tour for First-Time Users */}
+      {showGuidedTour && (
+        <GuidedTour onComplete={() => {
+          setShowGuidedTour(false);
+          if (user?.id) {
+            localStorage.setItem(`atom_eve_tour_done_${user.id}`, 'true');
+          }
+        }} />
+      )}
+
       {/* Dev Tools Panel */}
       <DevTools />
       <ChangesConsole />
