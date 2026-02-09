@@ -49,12 +49,15 @@ function generateInventoryForGame(game) {
   return items;
 }
 
-export default function InventoryFullPanel({ isOpen, onClose }) {
+export default function InventoryFullPanel({ isOpen, onClose, initialGameName }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [marketItem, setMarketItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [favoriteGames, setFavoriteGames] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('inventory_favorites') || '[]'); } catch { return []; }
+  });
   const recognitionRef = useRef(null);
 
   const allInventory = useMemo(() => {
