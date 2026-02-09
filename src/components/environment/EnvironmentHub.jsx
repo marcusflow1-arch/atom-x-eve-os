@@ -14,8 +14,6 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const [activeTab, setActiveTab] = useState('environments');
   const [selectedEnv, setSelectedEnv] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Data
   const [hubProgression, setHubProgression] = useState(null);
   const [environments, setEnvironments] = useState([]);
 
@@ -23,16 +21,12 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // Fetch hub progression for current user
         let hubList = [];
         if (user?.id) {
           hubList = await base44.entities.HubProgression.filter({ user_id: user.id });
         }
-        const hub = hubList[0] || { global_hub_level: 1, global_hub_xp: 0, unlocked_features: [], mastery_badges: [] };
-        setHubProgression(hub);
+        setHubProgression(hubList[0] || { global_hub_level: 1, global_hub_xp: 0, unlocked_features: [], mastery_badges: [] });
 
-        // Fetch environment instances for current user
         let envList = [];
         if (user?.id) {
           envList = await base44.entities.EnvironmentInstance.filter({ owner_id: user.id });
@@ -40,7 +34,6 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         setEnvironments(envList);
       } catch (e) {
         console.error('EnvironmentHub fetch error:', e);
-        // Fallback to safe defaults
         setHubProgression({ global_hub_level: 1, global_hub_xp: 0, unlocked_features: [], mastery_badges: [] });
         setEnvironments([]);
       } finally {
@@ -53,66 +46,68 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const globalLevel = hubProgression?.global_hub_level || 1;
 
   const tabs = [
-    { id: 'environments', label: 'My Environments', icon: Map },
-    { id: 'features', label: 'Feature Unlocks', icon: Gift },
+    { id: 'environments', label: 'Environments', icon: Map },
+    { id: 'features', label: 'Features', icon: Gift },
     { id: 'selector', label: '3D Viewer', icon: Globe },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 text-white/30 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 text-cyan-400/50 animate-spin mx-auto mb-2" />
+          <p className="text-[10px] text-white/20">Loading hub...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
-      {/* Header: Global Hub Progression */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <HubProgressionHeader hubProgression={hubProgression} environmentCount={environments.length} />
-        </div>
-        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0 ml-4">
-          <X className="w-4 h-4 text-white/60" />
+      {/* Header */}
+      <div className="flex items-start justify-between pb-4 mb-4 border-b border-white/[0.06]">
+        <HubProgressionHeader hubProgression={hubProgression} environmentCount={environments.length} />
+        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/10 flex items-center justify-center flex-shrink-0 ml-3 transition-colors">
+          <X className="w-3.5 h-3.5 text-white/50" />
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-4">
+      <div className="flex items-center gap-0.5 mb-4 p-0.5 rounded-lg bg-white/[0.03] border border-white/[0.05] w-fit">
         {tabs.map(tab => {
           const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setSelectedEnv(null); }}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white/10 text-white border border-white/15'
-                  : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                isActive
+                  ? 'bg-white/10 text-white shadow-sm'
+                  : 'text-white/35 hover:text-white/60'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3 h-3" />
               {tab.label}
             </button>
           );
         })}
       </div>
 
-      {/* Tab Content */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence mode="wait">
           {activeTab === 'environments' && (
             <motion.div key="envs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
               {environments.length === 0 ? (
-                <div className="text-center py-12 text-white/20">
-                  <Globe className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm">No environments yet.</p>
-                  <p className="text-xs text-white/15 mt-1">Earn achievements or visit the 3D Viewer tab to get started.</p>
+                <div className="text-center py-16">
+                  <Globe className="w-10 h-10 mx-auto mb-3 text-white/10" />
+                  <p className="text-white/30 text-sm font-medium">No environments yet</p>
+                  <p className="text-white/15 text-xs mt-1">Earn achievements or use the 3D Viewer to get started.</p>
                 </div>
               ) : (
                 <>
-                  <div className="flex gap-3 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {environments.map(env => (
                       <EnvironmentInstanceCard
                         key={env.id}
@@ -124,7 +119,6 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                     ))}
                   </div>
 
-                  {/* Detail panel for selected environment */}
                   <AnimatePresence>
                     {selectedEnv && (
                       <EnvironmentDetailPanel
@@ -141,9 +135,8 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
 
           {activeTab === 'features' && (
             <motion.div key="feats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <p className="text-white/40 text-xs mb-4">
-                Level up your Global Hub to unlock interactive features inside all environments.
-                Legendary and Mythical environments have additional per-rank unlocks.
+              <p className="text-white/30 text-xs mb-4">
+                Features unlock globally at each Hub Level and become available across all environments.
               </p>
               <FeatureUnlockGrid
                 globalHubLevel={globalLevel}

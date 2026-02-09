@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Check, Star, Zap, Crown, Fingerprint } from 'lucide-react';
+import { Lock, Check, Crown, Fingerprint } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { RARITY_CONFIG, RARITY_STYLES, xpForEnvRank, canImprint } from './envProgressionConfig';
 
@@ -14,108 +14,85 @@ export default function EnvironmentInstanceCard({ env, isActive, isSelected, onC
   const xpPercent = Math.min(Math.round((xp / xpNeeded) * 100), 100);
   const isMaxRank = rank >= config.maxRank;
   const imprintEligible = canImprint(rarity, rank);
-  const masteryCount = env.mastery_flags?.length || 0;
+  const structureCount = Object.values(env.structures || {}).filter(v => v > 0).length;
 
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.02, y: -3 }}
+      whileTap={{ scale: 0.98 }}
       onClick={() => onClick?.(env)}
-      className={`relative flex-shrink-0 w-56 rounded-xl overflow-hidden cursor-pointer border-2 transition-all group ${
-        isSelected
-          ? `${rs.border} ${rs.ring} ring-2 ring-offset-0 ${rs.glow}`
-          : isActive
-          ? `${rs.border} ring-1 ${rs.ring}`
-          : 'border-white/10 hover:border-white/20'
+      className={`relative flex-shrink-0 w-48 rounded-xl overflow-hidden cursor-pointer border transition-all group ${
+        isSelected ? `border-cyan-400 ${rs.glow}` :
+        isActive ? `${rs.border}` :
+        'border-white/8 hover:border-white/15'
       }`}
+      style={{ background: 'rgba(255,255,255,0.03)' }}
     >
       {/* Thumbnail */}
-      <div className="relative h-32">
+      <div className="relative h-24">
         <img
           src={env.thumbnail_url || 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80'}
           alt={env.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        {/* Rarity Badge */}
-        <div className="absolute top-2 left-2 z-10">
-          <Badge className={`text-[9px] font-bold border ${rs.bg} ${rs.text} ${rs.border}`}>
+        {/* Top badges row */}
+        <div className="absolute top-1.5 left-1.5 right-1.5 flex items-center justify-between z-10">
+          <Badge className={`text-[8px] font-bold border px-1.5 py-0 ${rs.bg} ${rs.text} ${rs.border}`}>
             {rarity}
           </Badge>
+          <div className="flex items-center gap-1">
+            {config.soulbound && (
+              <div className="w-4 h-4 rounded-full bg-black/50 border border-amber-500/40 flex items-center justify-center" title="Soulbound">
+                <Lock className="w-2 h-2 text-amber-400" />
+              </div>
+            )}
+            {isActive && (
+              <div className="bg-cyan-500 text-black text-[7px] font-bold px-1.5 py-0 rounded-full flex items-center gap-0.5">
+                <Check className="w-2 h-2" /> ON
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Active indicator */}
-        {isActive && (
-          <div className="absolute top-2 right-2 z-10 bg-cyan-500 text-black text-[8px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg shadow-cyan-500/30">
-            <Check className="w-2.5 h-2.5" /> ACTIVE
-          </div>
-        )}
-
-        {/* Soulbound indicator */}
-        {config.soulbound && (
-          <div className="absolute top-2 right-2 z-10" style={isActive ? { top: '2rem', right: '0.5rem' } : {}}>
-            <div className="w-5 h-5 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center" title="Soulbound">
-              <Lock className="w-2.5 h-2.5 text-amber-400" />
-            </div>
-          </div>
-        )}
-
-        {/* Imprint eligible glow */}
+        {/* Imprint badge */}
         {imprintEligible && (
-          <div className="absolute bottom-10 left-2 z-10">
-            <Badge className="text-[8px] bg-red-500/20 text-red-300 border-red-500/30 flex items-center gap-1">
-              <Fingerprint className="w-2.5 h-2.5" /> Imprint Ready
+          <div className="absolute bottom-1.5 left-1.5 z-10">
+            <Badge className="text-[7px] bg-red-500/20 text-red-300 border-red-500/30 px-1.5 py-0 flex items-center gap-0.5">
+              <Fingerprint className="w-2 h-2" /> Imprint
             </Badge>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-3 bg-black/40 backdrop-blur-sm">
-        {/* Name + Rank */}
-        <div className="flex items-center justify-between mb-1.5">
-          <h4 className="text-white font-bold text-sm truncate flex-1">{env.name}</h4>
-          <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-            <Crown className="w-3 h-3 text-amber-400" />
-            <span className="text-white font-black text-xs">
-              {rank}{isMaxRank ? ' MAX' : ''}
-            </span>
-          </div>
+      <div className="p-2.5">
+        <div className="flex items-center justify-between mb-1">
+          <h4 className="text-white font-semibold text-xs truncate flex-1">{env.name}</h4>
+          <span className="text-[9px] text-white/50 font-mono flex-shrink-0 ml-1.5 flex items-center gap-0.5">
+            <Crown className="w-2.5 h-2.5 text-amber-400/70" />
+            {rank}{isMaxRank ? '★' : ''}
+          </span>
         </div>
 
-        {/* Rank XP bar */}
-        {!isMaxRank && (
-          <div className="mb-1.5">
-            <div className="flex justify-between text-[8px] mb-0.5">
-              <span className="text-white/30">Rank {rank} → {rank + 1}</span>
-              <span className="text-white/50 font-bold">{xpPercent}%</span>
-            </div>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full bg-gradient-to-r ${
-                  rarity === 'Mythical' ? 'from-red-500 to-pink-500' :
-                  rarity === 'Legendary' ? 'from-amber-500 to-yellow-500' :
-                  rarity === 'Epic' ? 'from-purple-500 to-indigo-500' :
-                  rarity === 'Rare' ? 'from-blue-500 to-cyan-500' :
-                  'from-slate-400 to-slate-500'
-                }`}
-                style={{ width: `${xpPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Rank progress bar */}
+        <div className="h-1 bg-white/8 rounded-full overflow-hidden mb-1">
+          <div
+            className={`h-full rounded-full bg-gradient-to-r ${
+              rarity === 'Mythical' ? 'from-red-500 to-pink-500' :
+              rarity === 'Legendary' ? 'from-amber-500 to-yellow-500' :
+              rarity === 'Epic' ? 'from-purple-500 to-indigo-500' :
+              rarity === 'Rare' ? 'from-blue-500 to-cyan-500' :
+              'from-slate-400 to-slate-500'
+            }`}
+            style={{ width: isMaxRank ? '100%' : `${xpPercent}%` }}
+          />
+        </div>
 
-        {/* Bottom row: Mastery + Structures */}
-        <div className="flex items-center justify-between text-[9px]">
-          <div className="flex items-center gap-1 text-white/40">
-            <Star className="w-3 h-3 text-yellow-400/60" />
-            <span>{masteryCount} mastery</span>
-          </div>
-          <div className="flex items-center gap-1 text-white/40">
-            <Zap className="w-3 h-3 text-cyan-400/60" />
-            <span>{Object.values(env.structures || {}).filter(v => v > 0).length} structures</span>
-          </div>
+        <div className="flex items-center justify-between text-[8px] text-white/30">
+          <span>{isMaxRank ? 'MAX' : `${xpPercent}% to Rank ${rank + 1}`}</span>
+          <span>{structureCount} built</span>
         </div>
       </div>
     </motion.div>

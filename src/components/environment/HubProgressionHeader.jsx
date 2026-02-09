@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, ArrowUp, Zap, Shield, Star, TrendingUp } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { GLOBAL_HUB_UNLOCKS, xpForGlobalLevel, RARITY_STYLES } from './envProgressionConfig';
+import { Globe, Zap, Shield, Star, TrendingUp } from 'lucide-react';
+import { GLOBAL_HUB_UNLOCKS, xpForGlobalLevel } from './envProgressionConfig';
 
 export default function HubProgressionHeader({ hubProgression, environmentCount }) {
   const level = hubProgression?.global_hub_level || 1;
@@ -12,62 +11,62 @@ export default function HubProgressionHeader({ hubProgression, environmentCount 
   const unlockedFeatures = hubProgression?.unlocked_features?.length || 0;
   const totalFeatures = GLOBAL_HUB_UNLOCKS.length;
   const masteryCount = hubProgression?.mastery_badges?.length || 0;
-
-  // Next feature unlock
   const nextUnlock = GLOBAL_HUB_UNLOCKS.find(u => u.level > level);
 
+  const stats = [
+    { icon: Zap, value: `${xp.toLocaleString()}`, label: 'XP', color: 'text-yellow-400' },
+    { icon: Shield, value: `${unlockedFeatures}/${totalFeatures}`, label: 'Features', color: 'text-blue-400' },
+    { icon: Star, value: `${masteryCount}`, label: 'Mastery', color: 'text-purple-400' },
+    { icon: TrendingUp, value: `${environmentCount}`, label: 'Worlds', color: 'text-emerald-400' },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Top Row: Level ring + Stats */}
-      <div className="flex items-center gap-5">
-        {/* Level Ring */}
-        <div className="relative flex-shrink-0">
-          <div className="w-16 h-16 rounded-full border-2 border-cyan-400 flex items-center justify-center bg-cyan-500/10">
-            <span className="text-cyan-300 font-black text-2xl">{level}</span>
-          </div>
-          <svg className="absolute inset-0 w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-            <circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
-            <circle cx="32" cy="32" r="28" fill="none" stroke="#22d3ee" strokeWidth="3"
-              strokeDasharray={`${(xpPercent / 100) * 176} 176`} strokeLinecap="round" />
-          </svg>
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-slate-900 border border-cyan-400/50 flex items-center justify-center">
-            <Globe className="w-3 h-3 text-cyan-400" />
-          </div>
+    <div className="flex items-center gap-5">
+      {/* Level Ring */}
+      <div className="relative flex-shrink-0">
+        <div className="w-14 h-14 rounded-full border-2 border-cyan-400/80 flex items-center justify-center bg-cyan-500/10">
+          <span className="text-cyan-300 font-black text-xl">{level}</span>
+        </div>
+        <svg className="absolute inset-0 w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+          <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="2.5" />
+          <circle cx="28" cy="28" r="24" fill="none" stroke="#22d3ee" strokeWidth="2.5"
+            strokeDasharray={`${(xpPercent / 100) * 151} 151`} strokeLinecap="round" />
+        </svg>
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <h4 className="text-white font-bold text-sm mb-1.5">Hub Level {level}</h4>
+        
+        {/* Compact stat pills */}
+        <div className="flex items-center gap-2 mb-2">
+          {stats.map((s, i) => (
+            <div key={i} className="flex items-center gap-1 px-2 py-1 rounded-md bg-white/[0.04] border border-white/[0.06]">
+              <s.icon className={`w-3 h-3 ${s.color}`} />
+              <span className="text-white font-bold text-[10px]">{s.value}</span>
+              <span className="text-white/30 text-[9px]">{s.label}</span>
+            </div>
+          ))}
         </div>
 
-        {/* Stats */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-white font-bold text-base">Global Hub Level {level}</h4>
-            <Badge className="text-[8px] bg-cyan-500/20 text-cyan-300 border-cyan-500/30">Account-Wide</Badge>
-          </div>
-          <div className="flex items-center gap-4 text-[10px] text-white/50 mb-2">
-            <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-400" />{xp.toLocaleString()} / {xpNeeded.toLocaleString()} XP</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-blue-400" />{unlockedFeatures}/{totalFeatures} Features</span>
-            <span className="flex items-center gap-1"><Star className="w-3 h-3 text-purple-400" />{masteryCount} Mastery</span>
-            <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3 text-emerald-400" />{environmentCount} Environments</span>
-          </div>
-
-          {/* XP Bar */}
-          <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+        {/* XP Bar */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${xpPercent}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-full"
+              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
             />
           </div>
-
-          {/* Next unlock */}
-          {nextUnlock && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <ArrowUp className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] text-white/30">
-                Next at Lv {nextUnlock.level}: <span className="text-white/60 font-medium">{nextUnlock.name}</span>
-              </span>
-            </div>
-          )}
+          <span className="text-[9px] text-white/30 flex-shrink-0">{xpPercent}%</span>
         </div>
+
+        {nextUnlock && (
+          <p className="text-[9px] text-white/25 mt-1">
+            Next: <span className="text-white/50">{nextUnlock.name}</span> at Lv {nextUnlock.level}
+          </p>
+        )}
       </div>
     </div>
   );
