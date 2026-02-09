@@ -8,6 +8,7 @@ import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
 import { playItem } from '@/functions/playItem';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
+import RewardActionPanel from './inventory/RewardActionPanel';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
