@@ -301,6 +301,19 @@ function LayoutContent({ children, currentPageName }) {
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
+  const [showGuidedTour, setShowGuidedTour] = useState(false);
+
+  // Show guided tour on first login
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      const tourKey = `atom_eve_tour_done_${user.id}`;
+      if (!localStorage.getItem(tourKey)) {
+        // Small delay to let the UI render first
+        const timer = setTimeout(() => setShowGuidedTour(true), 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isAuthenticated, user?.id]);
 
   const [navOrder, setNavOrder] = useState(() => {
     try {
