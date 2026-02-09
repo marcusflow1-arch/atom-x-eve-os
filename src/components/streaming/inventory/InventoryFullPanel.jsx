@@ -87,16 +87,32 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName })
     else { recognitionRef.current?.start(); setIsListening(true); }
   };
 
-  const filteredGames = useMemo(() => {
-    if (!searchTerm.trim()) return libraryGames;
-    const term = searchTerm.toLowerCase();
-    return libraryGames.filter(g => {
-      const name = (g.title || g.name || '').toLowerCase();
-      if (name.includes(term)) return true;
-      const items = allInventory[g.id] || [];
-      return items.some(item => item.name.toLowerCase().includes(term) || item.category.includes(term) || item.rarity.toLowerCase().includes(term));
+  const toggleFavorite = (gameId) => {
+    setFavoriteGames(prev => {
+      const next = prev.includes(gameId) ? prev.filter(id => id !== gameId) : [...prev, gameId];
+      localStorage.setItem('inventory_favorites', JSON.stringify(next));
+      return next;
     });
-  }, [searchTerm, allInventory]);
+  };
+
+  const filteredGames = useMemo(() => {
+    let games = libraryGames;
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      games = games.filter(g => {
+        const name = (g.title || g.name || '').toLowerCase();
+        if (name.includes(term)) return true;
+        const items = allInventory[g.id] || [];
+        return items.some(item => item.name.toLowerCase().includes(term) || item.category.includes(term) || item.rarity.toLowerCase().includes(term));
+      });
+    }
+    // Sort: favorites first
+    return [...games].sort((a, b) => {
+      const aFav = favoriteGames.includes(a.id) ? 1 : 0;
+      const bFav = favoriteGames.includes(b.id) ? 1 : 0;
+      return bFav - aFav;
+    });
+  }, [searchTerm, allInventory, favoriteGames]);
 
   const gameItems = useMemo(() => {
     if (!selectedGame) return [];
