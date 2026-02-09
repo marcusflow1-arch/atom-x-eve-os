@@ -106,9 +106,14 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName })
     return items.filter(item => item.name.toLowerCase().includes(term) || item.category.includes(term) || item.rarity.toLowerCase().includes(term));
   }, [selectedGame, allInventory, searchTerm]);
 
+  // Auto-select game when opened via a reward click
   useEffect(() => {
+    if (isOpen && initialGameName) {
+      const match = libraryGames.find(g => (g.title || g.name || '').toLowerCase() === initialGameName.toLowerCase());
+      if (match) setSelectedGame(match);
+    }
     if (!isOpen) { setSelectedGame(null); setMarketItem(null); setSearchTerm(''); }
-  }, [isOpen]);
+  }, [isOpen, initialGameName]);
 
   // Clear market item when switching games
   useEffect(() => {
