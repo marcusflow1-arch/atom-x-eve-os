@@ -4,7 +4,7 @@ import {
   Users, MessageSquare, UserPlus, Gamepad2, 
   Swords, Repeat, Play, Crown, Shield, 
   MoreHorizontal, Check, X, Bell, Search,
-  Circle, Activity
+  Circle, Activity, Trophy, Star, Target, Crosshair
 } from 'lucide-react';
 
 // Mock Data
