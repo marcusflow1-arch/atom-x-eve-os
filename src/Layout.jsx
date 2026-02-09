@@ -21,6 +21,9 @@ import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
 import GuidedTour from './components/onboarding/GuidedTour';
+import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
+import ViewModeToggle from './components/mobile/ViewModeToggle';
+import MobileLayoutShell from './components/mobile/MobileLayoutShell';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
