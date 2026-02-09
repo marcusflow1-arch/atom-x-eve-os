@@ -101,12 +101,14 @@ export default function LibrarySidebar() {
     }
   }, [isExpandedLibrary]);
 
-  // Close overlay when switching between Library/Aurora/Entertainment
+  // Close all expanded panels and overlays when switching tabs
   useEffect(() => {
-    if (overlayOpen) {
-      setOverlayOpen(false);
-      setSelectedItem(null);
-    }
+    setOverlayOpen(false);
+    setSelectedItem(null);
+    setIsExpandedLibrary(false);
+    setPreviewGame(null);
+    setIsExpandedInventory(false);
+    setInventoryDetailItem(null);
   }, [activeSub]);
 
   // Close sidebar on Escape key
