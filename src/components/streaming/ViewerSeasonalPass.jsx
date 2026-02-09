@@ -325,7 +325,7 @@ export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
   };
 
   return (
-    <>
+    <React.Fragment>
     <div className="w-full bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-8 relative overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -386,6 +386,6 @@ export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
           <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
       )}
     </AnimatePresence>
-    </>
+    </React.Fragment>
   );
 }
