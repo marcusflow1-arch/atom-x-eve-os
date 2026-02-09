@@ -375,8 +375,62 @@ export default function LibrarySidebar() {
             )}
             {activeSub === 'entertainment' && (
               <>
-                {/* Entertainment Apps */}
-...
+                {/* Streaming / Entertainment Apps */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Tv className="w-4 h-4 text-indigo-400" />
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Entertainment Apps</h3>
+                    <span className="ml-auto text-[10px] text-white/40">{entertainmentApps.length} apps</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {entertainmentApps.map((app, i) => (
+                      <div
+                        key={`ea_${i}`}
+                        onClick={() => openOverlay({ type: 'app', title: app.name, url: app.url, image: app.image })}
+                        className="group flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:border-indigo-400/40 hover:bg-white/10 transition"
+                      >
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/40 border border-white/10">
+                          <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-white text-xs font-semibold truncate">{app.name}</p>
+                          <div className="flex items-center justify-center gap-1 mt-0.5">
+                            <Badge className="text-[8px] bg-white/5 border-white/10 text-white/40 px-1.5 py-0">{app.category}</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Other Streaming Services */}
+                <section className="mt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <ExternalLink className="w-4 h-4 text-white/40" />
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Other Streaming Services</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { name: 'Anime Kai', url: 'https://animekai.to', category: 'Anime' },
+                      { name: 'Watch Cartoons Online', url: 'https://www.wcostream.tv', category: 'Cartoons' },
+                      { name: 'Watch 32', url: 'https://www.watch32.is', category: 'Movies' },
+                    ].map((svc, i) => (
+                      <div
+                        key={`svc_${i}`}
+                        onClick={() => openOverlay({ type: 'app', title: svc.name, url: svc.url })}
+                        className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-white/15 transition group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white/50 group-hover:text-white transition-colors flex-shrink-0">
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-semibold truncate">{svc.name}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors flex-shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </>
             )}
             {activeSub === 'inventory' && (
