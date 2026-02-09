@@ -634,7 +634,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
-    <div className="min-h-screen w-full bg-black text-white font-sans overflow-visible relative z-[200] flex flex-col pl-[10%]">
+    <div className="min-h-screen w-full bg-black text-white font-sans overflow-hidden relative z-[200] flex flex-col pl-[10%]">
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
       </div>
