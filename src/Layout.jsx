@@ -20,6 +20,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import DevTools from './components/dev/DevTools';
 import ChangesConsole from './components/dev/ChangesConsole';
 import LibrarySidebar from './components/streaming/LibrarySidebar';
+import GuidedTour from './components/onboarding/GuidedTour';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
