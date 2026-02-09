@@ -636,6 +636,17 @@ export default function LibrarySidebar() {
         )}
       </AnimatePresence>
 
+      {/* Reward Action Panel (game achievements + quick actions) */}
+      <AnimatePresence>
+        {rewardActionItem && isOpen && !isExpandedInventory && (
+          <RewardActionPanel
+            item={rewardActionItem}
+            onClose={() => setRewardActionItem(null)}
+            onOpenFullInventory={() => { setRewardActionItem(null); setIsExpandedInventory(true); }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Expanded Inventory Panel */}
       <AnimatePresence>
         {isExpandedInventory && isOpen && (
