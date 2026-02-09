@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, DollarSign, ArrowLeftRight, Gavel, ShoppingCart, TrendingUp,
   Star, Gamepad2, Trophy, Zap, Shield, User, Trees, Package,
-  ChevronRight, Clock, Sparkles, Eye, CheckCircle2
+  ChevronRight, ChevronLeft, Clock, Sparkles, Eye, CheckCircle2, ArrowLeft
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
