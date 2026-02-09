@@ -1468,22 +1468,21 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl rounded-2xl p-6"
+              className="relative w-full max-w-4xl rounded-2xl p-5"
               style={{
-                background: 'rgba(10, 13, 20, 0.95)',
-                backdropFilter: 'blur(30px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                background: 'rgba(8, 10, 16, 0.92)',
+                backdropFilter: 'blur(40px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(40px) saturate(160%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.04)'
               }}
             >
-              {/* Header is now inside EnvironmentHub */}
-              
-              <div className="min-h-[400px]">
+              <div className="min-h-[420px]">
                 <EnvironmentHub
                   currentEnvId={currentEnvId}
                   onSelectEnv={(env) => {
