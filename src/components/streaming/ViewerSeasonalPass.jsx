@@ -374,17 +374,18 @@ export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
         ))}
       </div>
 
-      {/* Reward Modal */}
-      <AnimatePresence>
-        {viewingLevel && (
-            <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
-        )}
-      </AnimatePresence>
-
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
+
+    {/* Reward Modal — rendered OUTSIDE the progression box for full-screen space */}
+    <AnimatePresence>
+      {viewingLevel && (
+          <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }
