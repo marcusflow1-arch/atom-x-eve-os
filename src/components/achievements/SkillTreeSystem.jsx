@@ -12,11 +12,8 @@ import { cn } from '@/lib/utils';
 
 // --- CONSTANTS & THEMES ---
 
-const NODE_SIZE = 48; // px
-const LARGE_NODE_SIZE = 72; // px
-// Virtual canvas size for drag-pan (percentage of viewport)
-const CONTENT_W = 160; // 160% width
-const CONTENT_H = 130; // 130% height
+const NODE_SIZE = 44; // px
+const LARGE_NODE_SIZE = 64; // px
 
 const THEMES = {
   mmorpg: { 
