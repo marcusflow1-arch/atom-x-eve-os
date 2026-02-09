@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GenreSelector from '@/components/profile/GenreSelector';
+
 import { 
   Crosshair, Shield, Zap, Brain, Activity, Globe, 
   ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
@@ -733,14 +733,8 @@ export default function GenreMastery({ onClose }) {
         </div>
       </div>
 
-      {/* LEFT SIDEBAR + MAIN CONTENT WRAPPER */}
+      {/* MAIN CONTENT WRAPPER */}
       <div className="relative z-20 flex flex-1 min-h-0">
-        <GenreSelector 
-          genres={GENRES} 
-          selectedGenre={selectedGenre} 
-          onSelect={setSelectedGenre} 
-        />
-
         {/* MAIN CONTENT AREA */}
         <div className="flex-1 flex flex-col z-[210] relative overflow-hidden">
         <AnimatePresence mode="wait">
