@@ -752,7 +752,7 @@ export default function GenreMastery({ onClose }) {
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col h-full overflow-y-auto scrollbar-hide relative z-[220]"
             >
-               <div className="p-8 md:p-12 pb-32">
+               <div className="p-6 md:p-10 pb-16">
 
                  {/* HEADER: Similar to Seasonal Pass */}
                  <div className="mb-12">
