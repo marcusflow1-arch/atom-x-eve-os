@@ -301,6 +301,12 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName })
                         />
                       </div>
                       <p className={`text-[13px] truncate leading-tight flex-1 ${isActive ? 'text-white font-semibold' : 'text-white/70'}`}>{game.title || game.name}</p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(game.id); }}
+                        className="flex-shrink-0 p-1 rounded hover:bg-white/10 transition-colors"
+                      >
+                        <Heart className={`w-3.5 h-3.5 transition-colors ${favoriteGames.includes(game.id) ? 'text-pink-400 fill-pink-400' : 'text-white/20 hover:text-white/40'}`} />
+                      </button>
                     </div>
                   );
                 })}
