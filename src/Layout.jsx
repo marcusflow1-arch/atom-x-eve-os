@@ -1061,7 +1061,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Floating View Mode Toggle for pages with hidden headers */}
       {(() => {
         const p = location.pathname.toLowerCase();
-        const hiddenHeaderPages = ['/store', '/library', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass'];
+        const hiddenHeaderPages = ['/store', '/library', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass', '/streaminghome', '/discover'];
         const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
         if (!isHiddenHeader) return null;
         return (
