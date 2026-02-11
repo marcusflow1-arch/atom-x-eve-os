@@ -884,6 +884,7 @@ function LayoutContent({ children, currentPageName }) {
                            location.pathname.toLowerCase().includes('/aura') ? 'Atom X Eve Aura Stream' :
                            location.pathname.toLowerCase().includes('/streaminghome') ? 'Atom X Eve Aura Home' :
                            location.pathname.toLowerCase().includes('/discover') ? 'Atom X Eve Discover' :
+                           location.pathname.toLowerCase().includes('/aibattle') ? 'Atom X Eve AI Battle' :
                            'Atom X Eve Achievements'}
                         </span>
 
@@ -990,6 +991,7 @@ function LayoutContent({ children, currentPageName }) {
                             if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
                             if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
                             if (pp.includes('/discover')) return 'Atom X Eve Discover';
+                            if (pp.includes('/aistory')) return 'Atom X Eve AI Story';
                             return 'Atom X Eve Dashboard';
                           })()}
                         </span>
