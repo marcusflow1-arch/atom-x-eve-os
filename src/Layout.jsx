@@ -543,11 +543,6 @@ function LayoutContent({ children, currentPageName }) {
           <SignUpForm onComplete={completeSignUp} onCancel={() => setShowSignUp(false)} />
         )}
         <CartDrawer />
-
-        {/* Floating toggle to switch back to desktop */}
-        <div className="fixed top-2 right-2 z-[200]">
-          <ViewModeToggle />
-        </div>
       </div>
     );
   }
