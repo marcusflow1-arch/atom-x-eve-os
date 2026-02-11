@@ -508,7 +508,7 @@ export default function BattleModeOverlay({ onClose }) {
 
   const renderContent = () => {
     switch (activeView) {
-      case 'pvp': return <PvPView onBack={() => setActiveView('menu')} />;
+      case 'pvp': return <PvPPlaystyleCards onBack={() => setActiveView('menu')} />;
       case 'pve': return <PvEView onBack={() => setActiveView('menu')} />;
       case 'tournaments': return <TournamentsView onBack={() => setActiveView('menu')} />;
       case 'world': return <WorldEventsView onBack={() => setActiveView('menu')} />;
