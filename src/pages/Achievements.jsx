@@ -488,56 +488,54 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                   {/* Cards Grid */}
                   <div className="flex-1 overflow-y-auto p-5">
                     {displayCards.length > 0 ? (
-                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         {displayCards.map((card, i) => (
                           <motion.div
                             key={card.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.02 }}
-                            className="aspect-[2.5/3.5]"
+                            onClick={() => {
+                              if (skillTreeMode) setSkillTreeCard(card);
+                              else if (blacksmithMode) setBlacksmithCard(card);
+                              else setSelectedCard(card);
+                            }}
+                            whileHover={{ scale: 1.05, y: -4 }}
+                            className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-blue-500/10"
                           >
-                            <ShinyCard
-                              index={i}
-                              onClick={() => {
-                                if (skillTreeMode) setSkillTreeCard(card);
-                                else if (blacksmithMode) setBlacksmithCard(card);
-                                else setSelectedCard(card);
-                              }}
-                            >
-                              <div className="absolute inset-0 flex flex-col p-2">
-                                <div className="relative w-full h-3/5 rounded-md overflow-hidden mb-1.5 border border-white/10">
-                                  <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                  {card.isPurchased && !card.isUnlocked && (
-                                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-green-500/90 flex items-center justify-center border border-white/20">
-                                      <DollarSign className="w-2.5 h-2.5 text-white" />
-                                    </div>
-                                  )}
+                            {/* Card image top section */}
+                            <div className="relative w-full h-3/5 overflow-hidden">
+                              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
+                              {card.isPurchased && !card.isUnlocked && (
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-green-500/90 flex items-center justify-center border border-white/20">
+                                  <DollarSign className="w-3 h-3 text-white" />
                                 </div>
-                                <div className="flex-1 flex flex-col justify-between">
-                                  <div>
-                                    <h3 className="text-white font-bold text-[10px] leading-tight mb-0.5 line-clamp-2">{card.title}</h3>
-                                    <div className="flex gap-1 flex-wrap">
-                                      <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${
-                                        card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                        card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                        card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                        card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                        'border-slate-500/50 text-slate-400'
-                                      }`}>
-                                        {card.rarity}
-                                      </Badge>
-                                      {card.isPurchased && (
-                                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[8px] h-3.5 px-1">
-                                          BOUGHT
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
+                              )}
+                            </div>
+                            {/* Card info bottom section */}
+                            <div className="p-2 flex flex-col gap-1">
+                              <h3 className="text-white font-bold text-[10px] leading-tight line-clamp-2">{card.title}</h3>
+                              <div className="flex gap-1 flex-wrap">
+                                <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${
+                                  card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                  card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                  card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                  card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                  'border-slate-500/50 text-slate-400'
+                                }`}>
+                                  {card.rarity}
+                                </Badge>
+                                {card.isPurchased && (
+                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[8px] h-3.5 px-1">
+                                    BOUGHT
+                                  </Badge>
+                                )}
                               </div>
-                            </ShinyCard>
+                            </div>
+
+                            {/* Subtle shine overlay on hover */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
                           </motion.div>
                         ))}
                       </div>
