@@ -714,6 +714,30 @@ export default function GenreMastery({ onClose }) {
             >
                <div className="p-6 md:p-10 pb-16">
 
+                 {/* GAMES BUTTON - centered under header */}
+                 <div className="flex justify-center mb-6">
+                   <button
+                     onClick={() => setShowGamesPanel(true)}
+                     className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border ${
+                       showGamesPanel
+                         ? 'bg-white/15 border-white/25 text-white shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                         : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white'
+                     }`}
+                     style={{
+                       backdropFilter: 'blur(20px)',
+                       WebkitBackdropFilter: 'blur(20px)',
+                     }}
+                   >
+                     <Gamepad2 className="w-4 h-4" />
+                     Games
+                     {genreGames.length > 0 && (
+                       <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[10px] font-bold text-white/50">
+                         {genreGames.length}
+                       </span>
+                     )}
+                   </button>
+                 </div>
+
                  {/* HEADER: Similar to Seasonal Pass */}
                  <div className="mb-12">
                    <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
