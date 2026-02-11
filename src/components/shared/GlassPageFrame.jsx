@@ -1,6 +1,6 @@
 import React from 'react';
 
-const glassStyle = {
+export const glassStyle = {
   background: 'rgba(100, 120, 140, 0.12)',
   backdropFilter: 'blur(30px) saturate(150%)',
   WebkitBackdropFilter: 'blur(30px) saturate(150%)',
@@ -10,17 +10,18 @@ const glassStyle = {
 export default function GlassPageFrame({ children, bottomContent, topContent, className = '' }) {
   return (
     <div className={`relative w-full h-full min-h-screen ${className}`}>
-      {/* Top Glass Bar */}
+      {/* Top Glass Bar - always rendered for the visual frame effect */}
       <div
-        className="fixed top-0 left-0 right-0 z-[35] pointer-events-none"
+        className="fixed top-0 left-0 right-0 z-[35]"
         style={{
           ...glassStyle,
           height: '64px',
           borderBottom: '1px solid rgba(255,255,255,0.08)',
+          pointerEvents: topContent ? 'auto' : 'none',
         }}
       >
         {topContent && (
-          <div className="h-full flex items-center px-6 pointer-events-auto">
+          <div className="h-full flex items-center px-6 w-full">
             {topContent}
           </div>
         )}
@@ -33,15 +34,16 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
 
       {/* Bottom Glass Bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[35] pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-[35]"
         style={{
           ...glassStyle,
           minHeight: '48px',
           borderTop: '1px solid rgba(255,255,255,0.08)',
+          pointerEvents: bottomContent ? 'auto' : 'none',
         }}
       >
         {bottomContent && (
-          <div className="h-full flex items-center px-6 py-2 pointer-events-auto">
+          <div className="h-full flex items-center px-6 py-2">
             {bottomContent}
           </div>
         )}
