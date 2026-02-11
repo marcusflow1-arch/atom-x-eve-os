@@ -501,15 +501,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
 
-  const gamesByGenre = React.useMemo(() => {
-    return ownedGames.reduce((acc, game) => {
-      const g = game.genre || 'Uncategorized';
-      if (!acc[g]) acc[g] = [];
-      acc[g].push(game);
-      return acc;
-    }, {});
-  }, [ownedGames]);
-
   const handleStreamGame = async (game) => {
     try {
       const res = await base44.functions.invoke('initiateRemotePlay', { game_id: game.id });
