@@ -784,7 +784,7 @@ function LayoutContent({ children, currentPageName }) {
                                     } else if (p.includes('/genremastery')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
-          headerConfig.title = "Achievement Cards";
+          headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/blanktransition')) {
@@ -845,11 +845,11 @@ function LayoutContent({ children, currentPageName }) {
 
         return (
           <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{
-            background: 'rgba(100, 120, 140, 0.12)',
+            background: 'rgba(8, 12, 18, 0.55)',
             backdropFilter: 'blur(30px) saturate(150%)',
             WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
           }}>
             <div className="h-16 flex items-center justify-between px-6">
               <div className="flex items-center gap-6">
