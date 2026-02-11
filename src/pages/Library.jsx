@@ -551,7 +551,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       }
       
       setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
-      setFavoriteGames(userGames.slice(0, 3));
       if (userGames.length > 0) setSelectedGame(userGames[0]);
       setLoading(false);
     };
