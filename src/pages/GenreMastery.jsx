@@ -99,68 +99,39 @@ export default function GenreMastery({ onClose }) {
 
         {/* ═══ SUB-NAV BAR (below global header) ═══ */}
         <div className="relative z-10 flex-shrink-0 mt-16">
-          <div className="flex items-center justify-between px-6 py-2.5"
+          <div className="flex items-center px-6 py-2 gap-0"
             style={{
               background: 'rgba(8, 12, 18, 0.5)',
               backdropFilter: 'blur(20px)',
               borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            {/* Left: Genre Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setGenreDropdownOpen(!genreDropdownOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/15"
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: `w-4 h-4 ${selectedGenre.accent}` })}
-                <span>{selectedGenre.name}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform ${genreDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              <AnimatePresence>
-                {genreDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-1.5 w-56 rounded-xl overflow-hidden z-50 shadow-2xl"
-                    style={{
-                      background: 'rgba(10, 14, 20, 0.95)',
-                      backdropFilter: 'blur(30px)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                  >
-                    {GENRES.map((g) => (
-                      <button
-                        key={g.id}
-                        onClick={() => { setSelectedGenre(g); setGenreDropdownOpen(false); }}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-all ${
-                          selectedGenre.id === g.id
-                            ? 'bg-white/10 text-white'
-                            : 'text-white/60 hover:bg-white/5 hover:text-white'
-                        }`}
-                      >
-                        {g.icon && React.createElement(g.icon, { className: `w-4 h-4 ${g.accent}` })}
-                        <span className="font-medium">{g.name}</span>
-                        <span className="text-white/20 text-xs ml-auto">Lvl {g.level}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Center: Page title */}
-            <span className="text-white/40 text-xs font-bold uppercase tracking-widest hidden md:block">
+            {/* Left: Genre Progression label */}
+            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
               Genre Progression
             </span>
+
+            {/* Fade divider left */}
+            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+            </div>
+
+            {/* Center: Scrollable genre tabs */}
+            <GenreScrollTabs
+              genres={GENRES}
+              selectedGenre={selectedGenre}
+              onSelect={setSelectedGenre}
+            />
+
+            {/* Fade divider right */}
+            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+            </div>
 
             {/* Right: Skill Tree button */}
             <button
               onClick={() => setRightPanel(rightPanel === 'skilltree' ? 'games' : 'skilltree')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap flex-shrink-0 ${
                 rightPanel === 'skilltree'
                   ? 'bg-white/12 border-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.06)]'
                   : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
