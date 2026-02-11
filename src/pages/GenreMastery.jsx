@@ -636,10 +636,7 @@ export default function GenreMastery({ onClose }) {
 
   return (
     <GlassPageFrame>
-    <div className="min-h-screen w-full bg-black text-white font-sans overflow-hidden relative z-[200] flex flex-col pl-[10%]">
-      <div className="relative z-30">
-        <MiniLunaNav title="Skill Tree" />
-      </div>
+    <div className="min-h-screen w-full bg-black text-white font-sans overflow-hidden relative z-[200] flex flex-col pt-16">
       {/* Background Ambience - Sumi-e Theme */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {/* Base dark background */}
