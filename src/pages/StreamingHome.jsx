@@ -15,9 +15,10 @@ import ProductsGrid from '@/components/streaming/profile/ProductsGrid';
 import ViewerSeasonalPass from '@/components/streaming/ViewerSeasonalPass';
 import StreamerCardDetailModal from '@/components/streaming/StreamerCardDetailModal';
 import { useAuth } from '@/components/auth/AuthContext';
-import BottomQuickBar from '@/components/streaming/BottomQuickBar';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import AuraBottomNav from '@/components/streaming/AuraBottomNav';
 
 // Helper for schedule data
 const getScheduleData = (date) => {
@@ -144,6 +145,7 @@ export default function StreamingHome() {
   };
 
   return (
+    <GlassPageFrame bottomContent={<AuraBottomNav />}>
     <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
       <div className="mx-auto max-w-none w-full flex flex-col gap-8">
         
@@ -656,8 +658,7 @@ export default function StreamingHome() {
         </AnimatePresence>
 
       </div>
-      
-      <BottomQuickBar />
     </div>
+    </GlassPageFrame>
   );
 }
