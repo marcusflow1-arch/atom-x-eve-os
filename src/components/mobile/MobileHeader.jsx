@@ -32,12 +32,14 @@ export default function MobileHeader({ onMenuOpen }) {
 
   return (
     <div
-      className="flex items-center justify-between px-3 flex-shrink-0 relative z-[50]"
+      className="flex items-center justify-between px-3 flex-shrink-0 relative"
       style={{
         height: '48px',
-        background: 'rgba(10, 14, 20, 0.92)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(100, 120, 140, 0.12)',
+        backdropFilter: 'blur(30px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
       }}
     >
       {/* Left: Menu */}
