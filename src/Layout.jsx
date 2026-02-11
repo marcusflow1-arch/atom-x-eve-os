@@ -785,15 +785,7 @@ function LayoutContent({ children, currentPageName }) {
                                                                 headerConfig.hidden = true;
                                                               } else if (p.includes('/blanktransition')) {
                                                                 headerConfig.hidden = true;
-                                                              } else if (p.includes('/library')) {
-          headerConfig.hidden = true;
-        } else if (p.includes('/library')) {
-          headerConfig.hidden = false;
-          headerConfig.showMenu = true;
-          headerConfig.title = "Library";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
-        } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
+                                                              } else if (p.includes('/achievements') || p.includes('/aiachievements') || p.includes('/library')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
           headerConfig.title = "Achievement Cards";
