@@ -295,7 +295,7 @@ function LayoutContent({ children, currentPageName }) {
   const [pendingRoute, setPendingRoute] = useState(null);
   const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aura']
     .some(s => location.pathname.toLowerCase().includes(s));
-  const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
+  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
 
@@ -869,7 +869,7 @@ function LayoutContent({ children, currentPageName }) {
                     {showAchievementsHeader && (
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
-                          Atom X Eve Achievements
+                          {location.pathname.toLowerCase().includes('/library') ? 'Atom X Eve Library' : 'Atom X Eve Achievements'}
                         </span>
 
                         <div className="h-6 w-px bg-white/20 mx-4"></div>
@@ -1051,7 +1051,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Floating View Mode Toggle for pages with hidden headers */}
       {(() => {
         const p = location.pathname.toLowerCase();
-        const hiddenHeaderPages = ['/store', '/library', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass', '/streaminghome', '/discover'];
+        const hiddenHeaderPages = ['/store', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass', '/streaminghome', '/discover'];
         const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
         if (!isHiddenHeader) return null;
         return (
