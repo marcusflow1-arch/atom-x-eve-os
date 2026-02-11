@@ -28,6 +28,7 @@ import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 // Icon mapping for genres
 const GENRE_ICONS = {
@@ -721,6 +722,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   }, [blacksmithCard, skillTreeCard, selectedCard, selectedAchievement, onClosePage, navigate]);
 
   return (
+    <GlassPageFrame>
     <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       
       <AnimatePresence mode="wait">
@@ -1550,7 +1552,8 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         </div>
       </motion.div>
 
-    </div>);
+    </div>
+    </GlassPageFrame>);
 
 }
 

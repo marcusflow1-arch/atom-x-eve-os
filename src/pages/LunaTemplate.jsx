@@ -57,6 +57,7 @@ import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
+import GlassPageFrame from '../components/shared/GlassPageFrame';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
@@ -1180,6 +1181,7 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
+    <GlassPageFrame>
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
@@ -2505,6 +2507,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
     </div>
+    </GlassPageFrame>
     </PageErrorBoundary>
     );
 

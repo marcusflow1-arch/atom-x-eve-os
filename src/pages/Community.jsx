@@ -23,6 +23,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import HotTopicsSidebar from '../components/community/HotTopicsSidebar';
 import GameBanner from '../components/community/GameBanner';
 import { getWallpaperFor } from '../components/community/gameWallpapers';
+import GlassPageFrame from '../components/shared/GlassPageFrame';
 
 // Mock Genres configuration matching Store/Marketplace
 const GENRE_CONFIG = [
@@ -314,6 +315,7 @@ export default function CommunityPage() {
 
     return (
         <PageErrorBoundary pageName="Community">
+        <GlassPageFrame>
         <div 
             className="min-h-screen text-white p-4 sm:p-8 pt-40 overflow-hidden"
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -695,6 +697,7 @@ export default function CommunityPage() {
                 )}
             </AnimatePresence>
         </div>
+        </GlassPageFrame>
         </PageErrorBoundary>
     );
 }

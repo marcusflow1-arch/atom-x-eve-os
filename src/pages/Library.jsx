@@ -29,6 +29,7 @@ import GameCommunityTab from '@/components/library/GameCommunityTab';
 import GameDiscussionTab from '@/components/library/GameDiscussionTab';
 import GameStreamerAffiliateTab from '@/components/library/GameStreamerAffiliateTab';
 import GameSupportTab from '@/components/library/GameSupportTab';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -1236,6 +1237,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
   return (
     <PageErrorBoundary pageName="Library">
+    <GlassPageFrame>
     <div 
       className="min-h-screen text-white"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -1737,6 +1739,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       </AnimatePresence>
 
           </div>
+    </GlassPageFrame>
     </PageErrorBoundary>
         );
 }

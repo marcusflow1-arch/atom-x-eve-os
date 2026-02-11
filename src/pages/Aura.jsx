@@ -5,11 +5,13 @@ import { Home, Gamepad2, Users, MessageSquare, Settings, Play, Radio, LayoutGrid
 import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
 import BottomQuickBar from '@/components/streaming/BottomQuickBar';
 import LibrarySidebar from '@/components/streaming/LibrarySidebar';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 export default function Aura() {
   const navigate = useNavigate();
 
   return (
+    <GlassPageFrame>
     <div className="w-full min-h-screen bg-[#0f1419] relative">
       {/* Main Content */}
       <div className="pt-20 pb-24">
@@ -20,5 +22,6 @@ export default function Aura() {
       <LibrarySidebar />
       <BottomQuickBar />
     </div>
+    </GlassPageFrame>
   );
 }

@@ -17,6 +17,7 @@ import ShinyCard from '@/components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 // --- MOCK DATA ---
 
@@ -634,6 +635,7 @@ export default function GenreMastery({ onClose }) {
   }));
 
   return (
+    <GlassPageFrame>
     <div className="min-h-screen w-full bg-black text-white font-sans overflow-hidden relative z-[200] flex flex-col pl-[10%]">
       <div className="relative z-30">
         <MiniLunaNav title="Skill Tree" />
@@ -975,5 +977,6 @@ export default function GenreMastery({ onClose }) {
         }
       `}</style>
     </div>
+    </GlassPageFrame>
   );
 }

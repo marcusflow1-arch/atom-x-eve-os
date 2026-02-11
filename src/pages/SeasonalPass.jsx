@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import MiniLunaNav from '../components/nav/MiniLunaNav';
+import GlassPageFrame from '../components/shared/GlassPageFrame';
 
 export default function SeasonalPass() {
   const navigate = useNavigate();
@@ -19,11 +20,13 @@ export default function SeasonalPass() {
   }, [navigate]);
 
   return (
+    <GlassPageFrame>
     <div className="min-h-screen">
       <MiniLunaNav title="Season Pass" />
       <div className="mt-2 md:mt-4">
       <SeasonalPassContent />
       </div>
     </div>
+    </GlassPageFrame>
   );
 }

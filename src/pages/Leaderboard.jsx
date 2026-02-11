@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import PlayerJourneyOverlay from '../components/leaderboard/PlayerJourneyOverlay';
 import MiniLunaNav from '../components/nav/MiniLunaNav';
+import GlassPageFrame from '../components/shared/GlassPageFrame';
 
 // Leaderboard Categories
 const LEADERBOARD_TABS = [
@@ -209,6 +210,7 @@ export default function Leaderboard() {
   const restOfList = filteredData.slice(3);
 
   return (
+    <GlassPageFrame>
     <div className="min-h-screen w-full text-white overflow-y-auto pb-20" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -375,5 +377,6 @@ export default function Leaderboard() {
         )}
       </AnimatePresence>
     </div>
+    </GlassPageFrame>
   );
 }
