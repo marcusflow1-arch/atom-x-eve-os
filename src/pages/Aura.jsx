@@ -11,7 +11,7 @@ function AuraBottomNav() {
   const path = (typeof window !== 'undefined' ? window.location.pathname : '').toLowerCase();
   const isDiscover = path.includes('/discover');
   const isHome = path.includes('/streaminghome');
-  const isAura = path.includes('/aura');
+  const isAura = path.includes('/aura') && !isHome;
 
   const Item = ({ active, icon: Icon, label, to }) => (
     <button
@@ -30,7 +30,7 @@ function AuraBottomNav() {
   return (
     <div className="flex items-center justify-center gap-2 w-full">
       <Item icon={Compass} label="Discover" to={createPageUrl('Discover')} active={isDiscover} />
-      <Item icon={Home} label="Home" to={createPageUrl('Aura')} active={isHome} />
+      <Item icon={Home} label="Home" to={createPageUrl('StreamingHome')} active={isHome} />
       <Item icon={Radio} label="Aura" to={createPageUrl('Aura')} active={isAura} />
     </div>
   );
