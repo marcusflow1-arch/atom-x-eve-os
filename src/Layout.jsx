@@ -848,7 +848,13 @@ function LayoutContent({ children, currentPageName }) {
         ];
 
         return (
-          <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 100%)' }}>
+          <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{
+            background: 'rgba(100, 120, 140, 0.12)',
+            backdropFilter: 'blur(30px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
+          }}>
             <div className="h-16 flex items-center justify-between px-6">
               <div className="flex items-center gap-6">
                 {headerConfig.showMenu && (
