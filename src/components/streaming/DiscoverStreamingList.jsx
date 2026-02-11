@@ -1,8 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import ShinyCard from '@/components/shared/ShinyCard';
+import { ChevronDown } from 'lucide-react';
+import StreamerCard from './StreamerCard';
 import StreamerRightPane from './StreamerRightPane';
+
+const GAMES = [
+  'Valorant', 'Apex Legends', 'League of Legends', 'Fortnite', 'Overwatch 2',
+  'Elden Ring', 'Cyberpunk 2077', 'Minecraft', 'GTA V', 'Destiny 2',
+  'Call of Duty', 'Rocket League', 'CS2', 'Genshin Impact'
+];
 
 const mockStreamers = Array.from({ length: 14 }).map((_, i) => ({
   id: `str_${i + 1}`,
@@ -10,7 +16,8 @@ const mockStreamers = Array.from({ length: 14 }).map((_, i) => ({
     'NovaKnight','PixelSage','ZeroShift','LunaVox','CrimsonByte','EchoBlade','SolarFlare',
     'FrostSpark','NeonRift','AstraWave','NightPulse','QuantumFox','VortexEdge','ZenithKai'
   ][i],
-  avatar: `https://source.unsplash.com/random/240x240?gamer,portrait&sig=${i + 11}`,
+  avatar: `https://i.pravatar.cc/400?img=${i + 10}`,
+  game: GAMES[i % GAMES.length],
 }));
 
 export default function DiscoverStreamingList() {
@@ -58,45 +65,22 @@ export default function DiscoverStreamingList() {
               className="w-full overflow-hidden"
             >
               <div className="w-full overflow-x-auto no-scrollbar pb-2">
-                <div className="flex gap-4">
+                <div className="flex gap-5 px-2">
                   {mockStreamers.map((s, idx) => (
                     <motion.div
                       key={s.id}
                       ref={(el) => (itemRefs.current[idx] = el)}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.02 }}
-                      onClick={() => setSelected(idx)}
-                      className="flex-shrink-0"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: idx * 0.03 }}
                     >
-                      <ShinyCard
-                        className={`relative w-[240px] rounded-2xl p-3 border ${
-                          selected === idx
-                            ? 'border-white/30 bg-white/15'
-                            : 'border-white/10 bg-white/8'
-                        } backdrop-blur-xl transition-all cursor-pointer`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-12 h-12 rounded-xl overflow-hidden ring-1 ring-white/15 flex-shrink-0">
-                            <img
-                              src={s.avatar}
-                              alt={s.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-bold text-sm tracking-wide truncate">
-                              {s.name}
-                            </h3>
-                            <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                                style={{ width: `${40 + (idx % 5) * 12}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </ShinyCard>
+                      <StreamerCard
+                        name={s.name}
+                        avatar={s.avatar}
+                        game={s.game}
+                        isSelected={selected === idx}
+                        onClick={() => setSelected(idx)}
+                      />
                     </motion.div>
                   ))}
                 </div>
