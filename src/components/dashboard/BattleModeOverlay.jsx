@@ -4,6 +4,7 @@ import {
   Swords, Target, Flame, Zap, Shield, X, Map as MapIcon, 
   Crosshair, Trophy, Globe, ChevronLeft, Search, Navigation
 } from 'lucide-react';
+import PvPPlaystyleCards from '@/components/battle/PvPPlaystyleCards';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
