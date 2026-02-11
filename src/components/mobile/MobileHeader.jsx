@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Menu, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
+import ViewModeToggle from './ViewModeToggle';
 
 export default function MobileHeader({ onMenuOpen }) {
   const location = useLocation();
@@ -54,18 +55,21 @@ export default function MobileHeader({ onMenuOpen }) {
         <span className="text-[13px] font-semibold text-white/90 tracking-wide">{getTitle()}</span>
       </div>
 
-      {/* Right: Cart */}
-      <button
-        onClick={openCart}
-        className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center relative active:bg-white/15 transition-colors"
-      >
-        <ShoppingBag className="w-4 h-4 text-white/70" />
-        {cartCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-cyan-500 rounded-full text-[8px] font-bold text-black flex items-center justify-center">
-            {cartCount}
-          </span>
-        )}
-      </button>
+      {/* Right: Toggle + Cart */}
+      <div className="flex items-center gap-1.5">
+        <ViewModeToggle />
+        <button
+          onClick={openCart}
+          className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center relative active:bg-white/15 transition-colors"
+        >
+          <ShoppingBag className="w-4 h-4 text-white/70" />
+          {cartCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-cyan-500 rounded-full text-[8px] font-bold text-black flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
