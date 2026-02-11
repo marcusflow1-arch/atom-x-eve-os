@@ -799,8 +799,6 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = false;
         } else if (p.includes('/leaderboard')) {
           headerConfig.hidden = true;
-        } else if (p.includes('/library')) {
-          headerConfig.hidden = true;
         } else if (p.includes('/genremastery')) {
           headerConfig.title = "Adam - Marcus | Skill Tree";
           headerConfig.showLevel = false;
