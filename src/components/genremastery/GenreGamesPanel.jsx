@@ -42,14 +42,13 @@ export default function GenreGamesPanel({ isOpen, onClose, genre, allGames }) {
             onClick={onClose}
           />
 
-          {/* Panel - slides from left */}
+          {/* Panel - slides from left, uses full width when game selected */}
           <motion.div
             initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '-100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-            className="fixed left-0 top-0 bottom-0 z-[301] flex"
-            style={{ width: selectedGame ? '85vw' : '380px', maxWidth: selectedGame ? '1400px' : '380px' }}
+            className="fixed left-0 top-0 bottom-0 right-0 z-[301] flex"
           >
             {/* Games List */}
             <div
