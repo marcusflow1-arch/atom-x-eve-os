@@ -6,13 +6,16 @@ import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import Achievements from './Achievements';
 import { Badge } from '@/components/ui/badge';
-import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Clock, Eye, Bot, Sparkles, Users, ChevronRight, Star, Zap, Trophy, X, Shield, Mic, LayoutGrid } from 'lucide-react';
+import { Library as LibraryIcon, Search, Play, Loader2, Gamepad2, Radio, Clock, Eye, Bot, Sparkles, Users, ChevronRight, ChevronLeft, Star, Zap, Trophy, X, Shield, Mic, LayoutGrid } from 'lucide-react';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
 import GameLauncherOverlay from '../components/library/GameLauncherOverlay';
 import RemotePlayOverlay from '../components/streaming/RemotePlayOverlay';
-import LibraryGameOverlay from '../components/library/LibraryGameOverlay';
-import LibraryFullGrid from '../components/library/LibraryFullGrid';
+import GameContentTab from '@/components/library/GameContentTab';
+import GameCommunityTab from '@/components/library/GameCommunityTab';
+import GameDiscussionTab from '@/components/library/GameDiscussionTab';
+import GameStreamerAffiliateTab from '@/components/library/GameStreamerAffiliateTab';
+import GameSupportTab from '@/components/library/GameSupportTab';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
@@ -496,8 +499,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [embeddedView, setEmbeddedView] = useState('library');
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [selectedGame, setSelectedGame] = useState(null);
-  const [overlayGame, setOverlayGame] = useState(null); // game for the right-side overlay
-  const [showFullLibrary, setShowFullLibrary] = useState(false);
+  const [rightView, setRightView] = useState('details'); // 'details' | 'fullgrid'
+  const [activeDetailTab, setActiveDetailTab] = useState('content');
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
 
