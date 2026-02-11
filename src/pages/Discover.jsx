@@ -1,14 +1,16 @@
 import React from 'react';
-import BottomQuickBar from '../components/streaming/BottomQuickBar';
 import DiscoverStreamingList from '../components/streaming/DiscoverStreamingList';
 import LibrarySidebar from '../components/streaming/LibrarySidebar';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import AuraBottomNav from '@/components/streaming/AuraBottomNav';
 
 export default function Discover() {
   return (
-    <div className="min-h-screen w-full relative">
-      <LibrarySidebar />
-      <DiscoverStreamingList />
-      <BottomQuickBar />
-    </div>
+    <GlassPageFrame bottomContent={<AuraBottomNav />}>
+      <div className="min-h-screen w-full relative">
+        <LibrarySidebar />
+        <DiscoverStreamingList />
+      </div>
+    </GlassPageFrame>
   );
 }
