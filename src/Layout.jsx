@@ -293,9 +293,9 @@ function LayoutContent({ children, currentPageName }) {
   const { isMobile } = useViewMode();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory']
     .some(s => location.pathname.toLowerCase().includes(s));
-  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery', '/aura', '/streaminghome', '/discover'].some(s => location.pathname.toLowerCase().includes(s));
+  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
 
