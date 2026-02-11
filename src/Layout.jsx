@@ -787,6 +787,12 @@ function LayoutContent({ children, currentPageName }) {
                                                                 headerConfig.hidden = true;
                                                               } else if (p.includes('/library')) {
           headerConfig.hidden = true;
+        } else if (p.includes('/library')) {
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "Library";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/achievements') || p.includes('/aiachievements')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
