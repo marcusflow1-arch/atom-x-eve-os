@@ -1276,9 +1276,8 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
       </div>
 
       <div className="relative z-10 px-8 pt-20 pb-8">
-        {/* Search & View Toggle Bar */}
-        <div className="flex items-center justify-end gap-4 mb-8">
-          {/* Search */}
+        {/* Search Bar */}
+        <div className="flex items-center justify-end gap-4 mb-6">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
             <input
@@ -1292,52 +1291,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
               <Mic className="w-4 h-4" />
             </button>
           </div>
-
-          {/* View Toggle */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-              }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
         </div>
-
-        {/* Filter Tabs (List View Only) */}
-        {viewMode === 'list' && (
-        <div className="flex items-center gap-6 mb-8">
-          {['all', 'installed', 'favorites'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`text-sm font-medium transition-colors capitalize pb-2 relative ${
-                activeTab === tab ? 'text-white' : 'text-white/40 hover:text-white/70'
-              }`}
-            >
-              {tab === 'favorites' && <Heart className="w-4 h-4 inline mr-2" />}
-              {tab}
-              {activeTab === tab && (
-                <motion.div 
-                  layoutId="activeLibraryTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400 to-cyan-400"
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-        )}
 
         {/* Unified Library Layout: Sidebar + Content */}
         <div className="flex h-[calc(100vh-160px)]">
