@@ -9,23 +9,23 @@ export default function MobileLayoutShell({ children }) {
 
   return (
     <div
-      className="h-full w-full flex flex-col overflow-hidden relative"
-      style={{
-        /* Fill the screen exactly: header 48px + content + nav 52px = 100% */
-        maxHeight: '100vh',
-        maxWidth: '100vw',
-      }}
+      className="h-full w-full relative overflow-hidden"
+      style={{ maxHeight: '100vh', maxWidth: '100vw' }}
     >
-      {/* Mobile Header - 48px */}
-      <MobileHeader onMenuOpen={() => setDrawerOpen(true)} />
+      {/* Mobile Header - floating glass overlay at top */}
+      <div className="absolute top-0 left-0 right-0 z-[50]">
+        <MobileHeader onMenuOpen={() => setDrawerOpen(true)} />
+      </div>
 
-      {/* Page Content - fills remaining space, scrollable */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden relative min-h-0">
+      {/* Page Content - full screen, scrollable, content flows behind bars */}
+      <div className="h-full w-full overflow-y-auto overflow-x-hidden" style={{ paddingTop: '48px', paddingBottom: '52px' }}>
         {children}
       </div>
 
-      {/* Bottom Navigation - 52px */}
-      <MobileBottomNav />
+      {/* Bottom Navigation - floating glass overlay at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-[50]">
+        <MobileBottomNav />
+      </div>
 
       {/* Mobile Drawer */}
       <AnimatePresence>
