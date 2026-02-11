@@ -880,7 +880,7 @@ function LayoutContent({ children, currentPageName }) {
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           {location.pathname.toLowerCase().includes('/library') ? 'Atom X Eve Library' : 
-                           location.pathname.toLowerCase().includes('/genremastery') ? 'Atom X Eve Skill Tree' : 
+                           location.pathname.toLowerCase().includes('/genremastery') ? 'Atom X Eve Genre Progression' : 
                            location.pathname.toLowerCase().includes('/aura') ? 'Atom X Eve Aura Stream' :
                            location.pathname.toLowerCase().includes('/streaminghome') ? 'Atom X Eve Aura Home' :
                            location.pathname.toLowerCase().includes('/discover') ? 'Atom X Eve Discover' :
