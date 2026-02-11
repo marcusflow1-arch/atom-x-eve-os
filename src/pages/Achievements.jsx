@@ -271,10 +271,14 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     return score || 12450;
   }, [user, localAchievements]);
 
-  // Reset selected game when genre changes
+  // Auto-select first game when genre changes or games load
   useEffect(() => {
-    setSelectedGame(null);
-  }, [selectedGenre]);
+    if (gameData.length > 0) {
+      setSelectedGame(gameData[0]);
+    } else {
+      setSelectedGame(null);
+    }
+  }, [selectedGenre, gameData.length]);
 
   // Escape key handling
   useEffect(() => {
