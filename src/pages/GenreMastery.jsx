@@ -1,970 +1,310 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import { 
-  Crosshair, Shield, Zap, Brain, Activity, Globe, 
-  ChevronRight, ChevronLeft, Lock, Unlock, Star, Hexagon, Swords, 
-  Trophy, Flame, Sparkles, Orbit, 
-  Rocket, Map, Ghost, Box, Monitor, Crown, Gamepad2, X,
-  Check, Play, RotateCw, TrendingUp, Clock, Users, Target, User
+import {
+  Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
+  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
-import MiniLunaNav from '../components/nav/MiniLunaNav';
-import { Button } from '@/components/ui/button';
-import ShinyCard from '@/components/shared/ShinyCard';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import SkillTreeSystem from '@/components/achievements/SkillTreeSystem';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GenreGamesPanel from '@/components/genremastery/GenreGamesPanel';
-
-// --- MOCK DATA ---
+import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
+import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 
 const GENRES = [
-  { 
-    id: 'mmorpg', 
-    name: 'MMORPG', 
-    short: 'MMO',
-    icon: Globe, 
-    color: 'from-purple-500 to-indigo-600', 
-    accent: 'text-purple-400',
-    xpType: 'Social XP',
-    level: 42, 
-    maxLevel: 50,
-    rank: 'Warlord',
-    xp: 92,
-    skillPoints: 5,
-    paths: ['Synergy', 'Raid', 'Trade'],
-    matchGenres: ['mmo', 'mmorpg']
-  },
-  { 
-    id: 'scifi', 
-    name: 'Sci-Fi', 
-    short: 'SCI',
-    icon: Rocket, 
-    color: 'from-cyan-500 to-blue-600',
-    accent: 'text-cyan-400', 
-    xpType: 'Tech XP',
-    level: 28, 
-    maxLevel: 50,
-    rank: 'Pilot',
-    xp: 78,
-    skillPoints: 3,
-    paths: ['Cybernetics', 'Spaceflight', 'Hacking'],
-    matchGenres: ['sci-fi', 'scifi', 'sci_fi']
-  },
-  { 
-    id: 'fantasy', 
-    name: 'Fantasy', 
-    short: 'FAN',
-    icon: Crown, 
-    color: 'from-amber-400 to-orange-500',
-    accent: 'text-amber-400', 
-    xpType: 'Magic XP',
-    level: 15, 
-    maxLevel: 50,
-    rank: 'Mage',
-    xp: 45,
-    skillPoints: 1,
-    paths: ['Sorcery', 'Enchanting', 'Lore'],
-    matchGenres: ['fantasy', 'rpg']
-  },
-  { 
-    id: 'action', 
-    name: 'Action', 
-    short: 'ACT',
-    icon: Swords, 
-    color: 'from-red-500 to-rose-600',
-    accent: 'text-red-400', 
-    xpType: 'Combat XP',
-    level: 33, 
-    maxLevel: 50,
-    rank: 'Warrior',
-    xp: 60,
-    skillPoints: 2,
-    paths: ['Combo', 'Reflex', 'Power'],
-    matchGenres: ['action', 'fighting']
-  },
-  { 
-    id: 'shooter', 
-    name: 'Shooter', 
-    short: 'FPS',
-    icon: Crosshair, 
-    color: 'from-emerald-500 to-green-600',
-    accent: 'text-emerald-400', 
-    xpType: 'Aim XP',
-    level: 50, 
-    maxLevel: 50,
-    rank: 'Sniper',
-    xp: 99,
-    skillPoints: 8,
-    paths: ['Precision', 'Tactics', 'Loadout'],
-    matchGenres: ['shooter', 'shooting', 'fps']
-  },
-  { 
-    id: 'adventure', 
-    name: 'Adventure', 
-    short: 'ADV',
-    icon: Map, 
-    color: 'from-yellow-400 to-orange-400',
-    accent: 'text-yellow-400', 
-    xpType: 'Discovery XP',
-    level: 12, 
-    maxLevel: 50,
-    rank: 'Explorer',
-    xp: 30,
-    skillPoints: 1,
-    paths: ['Survival', 'Navigation', 'Crafting'],
-    matchGenres: ['adventure', 'open_world']
-  },
-  { 
-    id: 'fear', 
-    name: 'Fear', 
-    short: 'HOR',
-    icon: Ghost, 
-    color: 'from-slate-800 to-gray-900',
-    accent: 'text-slate-400', 
-    xpType: 'Sanity XP',
-    level: 5, 
-    maxLevel: 50,
-    rank: 'Survivor',
-    xp: 15,
-    skillPoints: 0,
-    paths: ['Stealth', 'Willpower', 'Investigation'],
-    matchGenres: ['horror', 'survival']
-  },
-  { 
-    id: 'simulation', 
-    name: 'Simulation', 
-    short: 'SIM',
-    icon: Monitor, 
-    color: 'from-blue-400 to-indigo-400',
-    accent: 'text-blue-400', 
-    xpType: 'Logic XP',
-    level: 20, 
-    maxLevel: 50,
-    rank: 'Architect',
-    xp: 55,
-    skillPoints: 2,
-    paths: ['Management', 'Efficiency', 'Design'],
-    matchGenres: ['simulation', 'strategy']
-  },
+  { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
+  { id: 'scifi', name: 'Sci-Fi', short: 'SCI', icon: Rocket, color: 'from-cyan-500 to-blue-600', accent: 'text-cyan-400', xpType: 'Tech XP', level: 28, maxLevel: 50, rank: 'Pilot', xp: 78, skillPoints: 3, paths: ['Cybernetics', 'Spaceflight', 'Hacking'], matchGenres: ['sci-fi', 'scifi', 'sci_fi'] },
+  { id: 'fantasy', name: 'Fantasy', short: 'FAN', icon: Crown, color: 'from-amber-400 to-orange-500', accent: 'text-amber-400', xpType: 'Magic XP', level: 15, maxLevel: 50, rank: 'Mage', xp: 45, skillPoints: 1, paths: ['Sorcery', 'Enchanting', 'Lore'], matchGenres: ['fantasy', 'rpg'] },
+  { id: 'action', name: 'Action', short: 'ACT', icon: Swords, color: 'from-red-500 to-rose-600', accent: 'text-red-400', xpType: 'Combat XP', level: 33, maxLevel: 50, rank: 'Warrior', xp: 60, skillPoints: 2, paths: ['Combo', 'Reflex', 'Power'], matchGenres: ['action', 'fighting'] },
+  { id: 'shooter', name: 'Shooter', short: 'FPS', icon: Crosshair, color: 'from-emerald-500 to-green-600', accent: 'text-emerald-400', xpType: 'Aim XP', level: 50, maxLevel: 50, rank: 'Sniper', xp: 99, skillPoints: 8, paths: ['Precision', 'Tactics', 'Loadout'], matchGenres: ['shooter', 'shooting', 'fps'] },
+  { id: 'adventure', name: 'Adventure', short: 'ADV', icon: Map, color: 'from-yellow-400 to-orange-400', accent: 'text-yellow-400', xpType: 'Discovery XP', level: 12, maxLevel: 50, rank: 'Explorer', xp: 30, skillPoints: 1, paths: ['Survival', 'Navigation', 'Crafting'], matchGenres: ['adventure', 'open_world'] },
+  { id: 'fear', name: 'Fear', short: 'HOR', icon: Ghost, color: 'from-slate-800 to-gray-900', accent: 'text-slate-400', xpType: 'Sanity XP', level: 5, maxLevel: 50, rank: 'Survivor', xp: 15, skillPoints: 0, paths: ['Stealth', 'Willpower', 'Investigation'], matchGenres: ['horror', 'survival'] },
+  { id: 'simulation', name: 'Simulation', short: 'SIM', icon: Monitor, color: 'from-blue-400 to-indigo-400', accent: 'text-blue-400', xpType: 'Logic XP', level: 20, maxLevel: 50, rank: 'Architect', xp: 55, skillPoints: 2, paths: ['Management', 'Efficiency', 'Design'], matchGenres: ['simulation', 'strategy'] },
 ];
 
-const rarityColors = {
-  Common: { bg: 'bg-slate-700', border: 'border-slate-500', text: 'text-slate-300', glow: 'shadow-slate-500/50' },
-  Rare: { bg: 'bg-blue-900', border: 'border-blue-500', text: 'text-blue-300', glow: 'shadow-blue-500/50' },
-  Epic: { bg: 'bg-purple-900', border: 'border-purple-500', text: 'text-purple-300', glow: 'shadow-purple-500/50' },
-  Legendary: { bg: 'bg-yellow-900', border: 'border-yellow-500', text: 'text-yellow-300', glow: 'shadow-yellow-500/50' },
-  Mythical: { bg: 'bg-red-900', border: 'border-red-500', text: 'text-red-300', glow: 'shadow-red-500/50' },
-  Godlike: { bg: 'bg-gradient-to-br from-purple-600 via-pink-600 to-yellow-600', border: 'border-pink-400', text: 'text-white', glow: 'shadow-pink-500/80' }
-};
-
-// Generate Mock Progression Levels
-const generateProgressionLevels = (genreId, genreName) => {
-  const levels = [];
-  
-  // Icons for "transition-free" look (using Lucide for now as placeholders for transparent assets)
-  const getIcon = (id, level) => {
-    // In a real app, these would be URLs to transparent PNGs of weapons/armor
-    return `https://source.unsplash.com/random/500x500?${id},weapon,armor,transparent&sig=${level}`;
-  };
-  
-  for (let i = 1; i <= 20; i++) {
-    const isCardLevel = i === 1 || i % 5 === 0;
-    
-    let rarity = 'Common';
-    let rewardData = {};
-
-    if (isCardLevel) {
-      rarity = i === 20 ? 'Godlike' : 
-               i === 15 ? 'Mythical' :
-               i === 10 ? 'Legendary' :
-               i === 5 ? 'Epic' : 'Rare';
-      
-      rewardData = {
-        name: `${genreName} Mastery Card ${i}`,
-        type: 'Ability Card',
-        rarity: rarity,
-        image: getIcon(genreId, i),
-        description: `Exclusive Season 0 mastery card for reaching rank ${i} in ${genreName}.`
-      };
-    } else {
-      // Intermediary levels: Materials or Experience
-      const isMaterial = i % 2 === 0;
-      rarity = isMaterial ? 'Rare' : 'Common';
-      
-      if (isMaterial) {
-        rewardData = {
-          name: `${genreName} Essence`,
-          type: 'Material',
-          rarity: rarity,
-          image: `https://source.unsplash.com/random/500x500?gem,crystal,ore&sig=${i}`,
-          description: `Rare crafting material used for upgrading ${genreName} equipment.`
-        };
-      } else {
-        rewardData = {
-          name: 'Experience Bundle',
-          type: 'Experience',
-          rarity: rarity,
-          image: `https://source.unsplash.com/random/500x500?lightning,energy,spark&sig=${i}`,
-          description: `A bundle of ${i * 150} XP to boost your progression.`
-        };
-      }
-    }
-    
-    levels.push({
-      level: i,
-      isUnlocked: i <= 12, // Mock progress relative to max level 20
-      season: 0,
-      rewardType: isCardLevel ? 'card' : 'resource',
-      cardReward: rewardData, // Using same key for compatibility with existing components
-      equipmentReward: {
-        name: `Elite Gear Tier ${i}`,
-        type: 'Equipment',
-        rarity: rarity === 'Godlike' ? 'Mythical' : rarity === 'Common' ? 'Common' : rarity,
-        image: `https://source.unsplash.com/random/300x300?armor,weapon,tech&sig=${i}`,
-        description: `High-performance equipment unlocked at level ${i}.`
-      }
-    });
-  }
-  return levels;
-};
-
-// --- COMPONENTS ---
-
-// Limited Edition Card Component (Migrated from SeasonalPass)
-const LimitedEditionCard = ({ card, onClick }) => {
-  const rarity = rarityColors[card.rarity];
-  
-  return (
-    <ShinyCard
-      onClick={() => onClick && onClick(card)}
-      className="relative w-64 h-96 rounded-xl overflow-hidden cursor-pointer shadow-2xl flex-shrink-0"
-    >
-      <div
-        className="w-full h-full relative"
-        style={{
-          background: 'rgba(148, 163, 184, 0.06)',
-          backdropFilter: 'blur(50px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-          border: '1px solid rgba(148, 163, 184, 0.15)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-        }}
-      >
-        {/* Liquid Glass Shine Effect */}
-        <motion.div
-          className="absolute inset-0 opacity-15 pointer-events-none"
-          style={{
-            background: 'linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
-          }}
-          animate={{
-            x: ['-100%', '200%'],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            repeatDelay: 4,
-          }}
-        />
-        
-        {/* Card Image */}
-        <img src={card.image} alt={card.name} className="w-full h-56 object-cover" />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-        
-        {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <Badge className={`${rarity.bg} ${rarity.text} border-slate-600/40 backdrop-blur-md text-[10px] font-semibold px-2 py-0.5`}>
-              {card.rarity}
-            </Badge>
-            <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 backdrop-blur-md text-[10px] px-2 py-0.5">
-              {card.type}
-            </Badge>
-          </div>
-          
-          <h3 className="text-lg font-bold text-white mb-1 drop-shadow-lg">{card.name}</h3>
-          <p className="text-xs text-white/85 line-clamp-2 drop-shadow">{card.description}</p>
-          
-          {/* Rarity Indicator */}
-          <div className="flex items-center gap-0.5 mt-2">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                className={`w-2.5 h-2.5 ${i < (card.rarity === 'Godlike' ? 5 : card.rarity === 'Mythical' ? 4 : card.rarity === 'Legendary' ? 3 : card.rarity === 'Epic' ? 2 : 1) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`} 
-              />
-            ))}
-          </div>
-        </div>
-        
-        {/* Liquid Glass Border */}
-        <motion.div
-          className="absolute inset-0 rounded-xl pointer-events-none border border-slate-300/25"
-          animate={{
-            opacity: [0.25, 0.5, 0.25],
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-          }}
-        />
-      </div>
-    </ShinyCard>
-  );
-};
-
-// Reward Preview Modal
-const RewardModal = ({ level, onClose }) => {
-  if (!level) return null;
-  const cardRarity = rarityColors[level.cardReward.rarity];
-  const equipRarity = rarityColors[level.equipmentReward.rarity];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/30 backdrop-blur-md z-[500] flex items-center justify-center p-8"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="max-w-5xl w-full relative flex flex-col md:flex-row items-start gap-8"
-        style={{
-          background: 'rgba(100, 120, 140, 0.12)',
-          backdropFilter: 'blur(30px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          borderRadius: '24px',
-          padding: '48px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        }}
-      >
-        <button
-            onClick={onClose}
-            className="absolute -top-12 right-0 z-20 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
-          >
-            <X className="w-6 h-6 text-white" />
-        </button>
-
-        {/* Left Side: Main Reward Card with Info Below */}
-        <div className="flex-shrink-0 flex flex-col items-center gap-4">
-          <LimitedEditionCard 
-            card={level.cardReward} 
-            onClick={null}
-            className="w-64 h-80"
-          />
-          
-          <div className="text-center">
-            <Badge className={`${cardRarity.bg} ${cardRarity.text} border-white/10 mb-2 px-3 py-1 text-xs backdrop-blur-md`}>
-              SEASON {level.season} • {level.cardReward.rarity.toUpperCase()}
-            </Badge>
-            <h2 className="text-3xl font-black text-white tracking-tight">{level.cardReward.name}</h2>
-          </div>
-        </div>
-
-        {/* Right Side: Details & Bonus Equipment */}
-        <div className="flex-1 flex flex-col gap-6">
-          {/* Reward Details Section */}
-          <div className="relative">
-            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest">Reward Details</h3>
-            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-              {level.cardReward.description} Unlocks permanent access to this item for all characters in the current season.
-            </p>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-400" />
-                  <span className="text-slate-300 text-sm">Item Type</span>
-                </div>
-                <span className="text-white font-bold text-sm">{level.cardReward.type}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  <span className="text-slate-300 text-sm">Power Score</span>
-                </div>
-                <span className="text-white font-bold text-sm">850</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/5">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
-                  <span className="text-slate-300 text-sm">Card ID</span>
-                </div>
-                <span className="text-white font-bold text-sm font-mono">#{level.level.toString().padStart(4, '0')}</span>
-              </div>
-            </div>
-
-            <Button 
-              className={`w-full py-4 text-sm font-bold tracking-wide rounded-lg transition-all ${
-                level.isUnlocked 
-                  ? 'bg-white text-black hover:bg-slate-200' 
-                  : 'bg-white/10 text-white/40 cursor-not-allowed hover:bg-white/10'
-              }`}
-            >
-              {level.isUnlocked ? (
-                <span className="flex items-center justify-center gap-2"><Check className="w-4 h-4" /> CLAIM REWARD</span>
-              ) : (
-                <span className="flex items-center justify-center gap-2"><Lock className="w-4 h-4" /> LOCKED (Lvl {level.level})</span>
-              )}
-            </Button>
-          </div>
-          
-          {/* Bonus Equipment Section */}
-          <div className="relative border-t border-white/10 pt-6">
-            <h3 className="text-xs font-bold text-white/40 mb-3 uppercase tracking-widest flex items-center gap-2">
-              <Shield className="w-3 h-3 text-blue-400" /> Bonus Equipment
-            </h3>
-            
-            <div className="flex items-center gap-4">
-              {/* Small Equipment Card */}
-              <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                <img 
-                  src={level.equipmentReward.image} 
-                  alt={level.equipmentReward.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <Badge className={`absolute bottom-1 left-1 right-1 ${equipRarity.bg} ${equipRarity.text} text-[8px] px-1 py-0.5 justify-center`}>
-                  {level.equipmentReward.rarity}
-                </Badge>
-              </div>
-              
-              {/* Equipment Info */}
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-white mb-1">{level.equipmentReward.name}</h4>
-                <p className="text-xs text-slate-400 line-clamp-2">{level.equipmentReward.description}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </motion.div>
-    </motion.div>
-  );
-};
-
-
-// Progression Node Component (Refined: Liquid Glass, No Black Box)
-const LevelNode = ({ levelData, onClick, isActive }) => {
-  const { level, isUnlocked, cardReward } = levelData;
-  const rarity = rarityColors[cardReward.rarity];
-  const isElite = ['Legendary', 'Mythical', 'Godlike'].includes(cardReward.rarity);
-
-  return (
-    <motion.div
-      onClick={() => onClick(levelData)}
-      className={`relative flex-shrink-0 group cursor-pointer transition-all duration-500 ${
-        isActive ? 'w-44 -translate-y-4' : 'w-28'
-      }`}
-    >
-      {/* Node Content */}
-      <div className={`flex flex-col items-center gap-3 transition-all duration-300`}>
-         
-         {/* Top Info */}
-         <div className={`text-center transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 group-hover:opacity-100'}`}>
-            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
-              Lvl {level}
-            </div>
-         </div>
-
-         {/* Reward Visual Container (Liquid Glass, No Solid Box) */}
-         <div className={`
-           relative rounded-2xl transition-all duration-300 flex items-center justify-center
-           ${isActive 
-             ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` 
-             : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`
-           }
-         `}
-         style={{
-            boxShadow: isActive ? `0 0 20px ${rarity.glow?.replace('shadow-', '') || 'rgba(255,255,255,0.2)'}` : 'none'
-         }}
-         >
-            {/* Inner Glow for Rarity */}
-            <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
-            
-            {/* Reward Image/Icon (Floating) */}
-            <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
-               <img src={cardReward.image} alt="Reward" className="w-full h-full object-contain drop-shadow-lg" />
-            </div>
-            
-            {/* Status Indicator (Minimalist) */}
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
-               {isUnlocked ? (
-                 <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-[0_0_10px_rgba(255,255,255,0.5)]">
-                    <Check className="w-3 h-3 text-black" />
-                 </div>
-               ) : (
-                 <div className="w-4 h-4 rounded-full bg-black/50 border border-white/10 flex items-center justify-center backdrop-blur-md">
-                   <Lock className="w-2.5 h-2.5 text-white/40" />
-                 </div>
-               )}
-            </div>
-
-            {/* Elite Particle Effect for rare items */}
-            {isElite && isActive && (
-               <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />
-            )}
-         </div>
-      </div>
-
-      {/* Connection Line Segment */}
-      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
-        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
-      `} />
-    </motion.div>
-  );
-};
-
-
 export default function GenreMastery({ onClose }) {
-    const navigate = useNavigate();
-    const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
-    const [progressionData, setProgressionData] = useState([]);
-    const [viewingLevel, setViewingLevel] = useState(null);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [showGamesPanel, setShowGamesPanel] = useState(false);
-    const scrollContainerRef = useRef(null);
-    const carouselRef = useRef(null);
-    // Drag-to-scroll for progression track
-    const isDraggingTrack = useRef(false);
-    const dragStartRef = useRef({ x: 0, scrollLeft: 0 });
+  const navigate = useNavigate();
+  const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
+  const [selectedGame, setSelectedGame] = useState(null);
+  const [rightPanel, setRightPanel] = useState('games'); // 'games' or 'skilltree'
+  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-    // Fetch games from database
-    const { data: allGames = [], isLoading: gamesLoading } = useQuery({
-      queryKey: ['games-for-genre-mastery'],
-      queryFn: () => base44.entities.Game.list(),
+  const { data: allGames = [], isLoading: gamesLoading } = useQuery({
+    queryKey: ['games-for-genre-mastery'],
+    queryFn: () => base44.entities.Game.list(),
+  });
+
+  const genreGames = useMemo(() => {
+    if (!allGames || !selectedGenre) return [];
+    return allGames.filter(game => {
+      const gameGenre = (game.genre || '').toLowerCase();
+      return selectedGenre.matchGenres?.some(mg => gameGenre.includes(mg));
     });
+  }, [allGames, selectedGenre]);
 
-    // Filter games by selected genre
-    const genreGames = useMemo(() => {
-      if (!allGames || allGames.length === 0 || !selectedGenre) return [];
-      return allGames.filter(game => {
-        const gameGenre = (game.genre || '').toLowerCase();
-        return selectedGenre.matchGenres?.some(mg => gameGenre.includes(mg));
-      });
-    }, [allGames, selectedGenre]);
+  const gameData = useMemo(() => {
+    return genreGames.map(game => ({
+      ...game,
+      questCount: Math.floor(Math.random() * 30) + 10,
+      achievementCards: Math.floor(Math.random() * 20) + 5,
+      totalXP: Math.floor(Math.random() * 5000) + 1000,
+      completionRate: Math.floor(Math.random() * 60) + 10,
+      communityCompletions: Math.floor(Math.random() * 500) + 50,
+    }));
+  }, [genreGames]);
 
-  // Escape key to go back to Luna
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (onClose) {
-          onClose();
-        } else {
-          navigate(createPageUrl('LunaTemplate'));
-        }
+        if (onClose) onClose();
+        else navigate(createPageUrl('LunaTemplate'));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate, onClose]);
 
-  // Load progression when genre changes
+  // Close dropdown on outside click
   useEffect(() => {
-    if (selectedGenre) {
-      setProgressionData(generateProgressionLevels(selectedGenre.id, selectedGenre.name));
-    }
-  }, [selectedGenre]);
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setGenreDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-  // Auto-scroll carousel
+  // Reset selected game when switching to skill tree
   useEffect(() => {
-    const carousel = carouselRef.current;
-    if (!carousel) return;
-    
-    let scrollInterval = setInterval(() => {
-      if (carousel.scrollLeft >= carousel.scrollWidth - carousel.clientWidth) {
-        carousel.scrollLeft = 0;
-      } else {
-        carousel.scrollLeft += 1;
-      }
-    }, 30);
-    
-    return () => clearInterval(scrollInterval);
+    if (rightPanel === 'skilltree') setSelectedGame(null);
+  }, [rightPanel]);
+
+  // Reset selected game when genre changes
+  useEffect(() => {
+    setSelectedGame(null);
   }, [selectedGenre]);
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, x: -50 },
-    show: { opacity: 1, x: 0, transition: { staggerChildren: 0.05 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    show: { opacity: 1, x: 0 }
-  };
-
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const { current } = scrollContainerRef;
-      const scrollAmount = 400;
-      current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  // Mouse drag handlers for progression track
-  const onTrackMouseDown = (e) => {
-    if (!scrollContainerRef.current) return;
-    isDraggingTrack.current = true;
-    dragStartRef.current = { x: e.clientX, scrollLeft: scrollContainerRef.current.scrollLeft };
-  };
-  const onTrackMouseMove = (e) => {
-    if (!isDraggingTrack.current || !scrollContainerRef.current) return;
-    const dx = e.clientX - dragStartRef.current.x;
-    scrollContainerRef.current.scrollLeft = dragStartRef.current.scrollLeft - dx;
-  };
-  const onTrackMouseUp = () => { isDraggingTrack.current = false; };
-
-  // Featured Reward (The next big unlock)
-  const nextBigUnlock = progressionData.find(p => !p.isUnlocked && (p.cardReward.rarity === 'Legendary' || p.cardReward.rarity === 'Mythical')) || progressionData[progressionData.length - 1];
-
-  // Carousel Items (Filter specific items for carousel display)
-  const carouselItems = progressionData.filter(p => ['Legendary', 'Mythical', 'Godlike'].includes(p.cardReward.rarity)).map(p => ({
-    ...p.cardReward,
-    id: p.level,
-    season: `Season ${p.season}`
-  }));
 
   return (
     <GlassPageFrame>
-    <div className="min-h-screen w-full bg-black text-white font-sans overflow-hidden relative z-[200] flex flex-col pt-16">
-      {/* Background Ambience - Sumi-e Theme */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Base dark background */}
-        <div className="absolute inset-0 bg-[#050505]" />
-        
-        {/* Ink Wash / Smoke Texture */}
-        <div 
-          className="absolute inset-0 opacity-40 bg-cover bg-center"
-          style={{ 
-            backgroundImage: "url('https://images.unsplash.com/photo-1605806616949-1e87b487bc2a?q=80&w=2574&auto=format&fit=crop')",
-            filter: 'grayscale(100%) contrast(1.2)'
-          }}
-        />
-        
-        {/* Medium Blue-Gray Theme Tint */}
-        <div className="absolute inset-0 bg-[#475569] mix-blend-color opacity-85" />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/30 to-[#0f172a] opacity-90" />
-        
-        {/* Subtle Paper Texture Overlay */}
-        <div 
-          className="absolute inset-0 opacity-10 mix-blend-overlay bg-repeat"
-          style={{ 
-             backgroundImage: "url('https://www.transparenttextures.com/patterns/rice-paper-2.png')",
-             backgroundSize: '200px'
-          }} 
-        />
+      <div className="h-screen w-full text-white font-sans overflow-hidden relative flex flex-col"
+        style={{
+          backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
+          backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'
+        }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/60 z-0" />
+        <div className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} opacity-[0.06] z-0`} />
 
-        {/* Dynamic Ink Flow / Genre Color Accent */}
-        {selectedGenre && (
-          <>
-            <motion.div 
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{ opacity: 0.4, scale: 1 }}
-              transition={{ duration: 2 }}
-              className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} mix-blend-soft-light`}
-            />
-            {/* Ink blot effect in corner */}
-            <motion.div
-               initial={{ opacity: 0, scale: 0.8 }}
-               animate={{ opacity: 0.3, scale: 1 }}
-               transition={{ duration: 3, ease: "easeOut" }}
-               className="absolute -top-1/4 -right-1/4 w-[80vw] h-[80vw] rounded-full blur-[100px] bg-gradient-to-b from-white/10 to-transparent mix-blend-overlay"
-            />
-          </>
-        )}
-        
-        {/* Vignette for focus */}
-        <div className="absolute inset-0 bg-radial-gradient from-transparent via-black/40 to-black/90" />
-      </div>
+        {/* ═══ SUB-NAV BAR (below global header) ═══ */}
+        <div className="relative z-10 flex-shrink-0 mt-16">
+          <div className="flex items-center justify-between px-6 py-2.5"
+            style={{
+              background: 'rgba(8, 12, 18, 0.5)',
+              backdropFilter: 'blur(20px)',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {/* Left: Genre Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setGenreDropdownOpen(!genreDropdownOpen)}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/15"
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: `w-4 h-4 ${selectedGenre.accent}` })}
+                <span>{selectedGenre.name}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-white/40 transition-transform ${genreDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-
-
-      {/* Genre Games Panel (slides from left when "Games" button clicked) */}
-      <GenreGamesPanel
-        isOpen={showGamesPanel}
-        onClose={() => setShowGamesPanel(false)}
-        genre={selectedGenre}
-        allGames={allGames}
-      />
-
-      {/* MAIN CONTENT WRAPPER */}
-      <div className="relative z-20 flex flex-1 min-h-0">
-        {/* MAIN CONTENT AREA */}
-        <div className="flex-1 flex flex-col z-[210] relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {selectedGenre ? (
-            <motion.div
-              key={selectedGenre.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 flex flex-col h-full overflow-y-auto scrollbar-hide relative z-[220]"
-            >
-               <div className="p-6 md:p-10 pb-16">
-
-                 {/* GAMES BUTTON - centered under header */}
-                 <div className="flex justify-center mb-6">
-                   <button
-                     onClick={() => setShowGamesPanel(true)}
-                     className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border ${
-                       showGamesPanel
-                         ? 'bg-white/15 border-white/25 text-white shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                         : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white'
-                     }`}
-                     style={{
-                       backdropFilter: 'blur(20px)',
-                       WebkitBackdropFilter: 'blur(20px)',
-                     }}
-                   >
-                     <Gamepad2 className="w-4 h-4" />
-                     Games
-                     {genreGames.length > 0 && (
-                       <span className="ml-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[10px] font-bold text-white/50">
-                         {genreGames.length}
-                       </span>
-                     )}
-                   </button>
-                 </div>
-
-                 {/* HEADER: Similar to Seasonal Pass */}
-                 <div className="mb-12">
-                   <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-6">
-                     <div>
-                       <div className="flex items-center gap-3 mb-2">
-                         <Badge variant="outline" className={`bg-black/40 border-white/10 backdrop-blur-md ${selectedGenre.accent} px-3 py-1`}>
-                           {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: "w-3 h-3 mr-2" })}
-                           {selectedGenre.rank}
-                         </Badge>
-                         <Badge variant="outline" className="bg-black/40 border-white/10 text-white/60 px-3 py-1">
-                           Level {selectedGenre.level} / 20
-                         </Badge>
-                         <Badge variant="outline" className="bg-blue-500/20 border-blue-500/30 text-blue-300 px-3 py-1 ml-2">
-                           SEASON 0
-                         </Badge>
-                       </div>
-                       
-                       <h1 className="text-5xl md:text-7xl font-black mb-2 bg-gradient-to-r from-white via-slate-300 to-slate-500 bg-clip-text text-transparent uppercase tracking-tighter">
-                         {selectedGenre.name} Mastery
-                       </h1>
-                       <p className="text-slate-400 text-lg">Level {selectedGenre.level} / 20 • Season 0 Pass</p>
-                     </div>
-                     
-                     <div className="flex items-center gap-4">
-                       <div 
-                         className="text-right px-5 py-3 rounded-xl"
-                         style={{
-                           background: 'rgba(148, 163, 184, 0.08)',
-                           backdropFilter: 'blur(50px) saturate(200%)',
-                           border: '1px solid rgba(148, 163, 184, 0.15)',
-                         }}
-                       >
-                         <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">{selectedGenre.xpType}</div>
-                         <div className="text-2xl font-black text-white">{selectedGenre.xp} / 100</div>
-                       </div>
-                     </div>
-                   </div>
-                   
-                   {/* XP Progress Bar */}
-                   <div 
-                     className="w-full h-3 rounded-full overflow-hidden"
-                     style={{
-                       background: 'rgba(255, 255, 255, 0.05)',
-                       backdropFilter: 'blur(20px)',
-                       border: '1px solid rgba(255, 255, 255, 0.1)',
-                     }}
-                   >
-                     <motion.div
-                       className="h-full"
-                       style={{
-                         background: `linear-gradient(90deg, ${selectedGenre.color.split(' ')[1].replace('to-', '')} 0%, white 100%)`,
-                       }}
-                       initial={{ width: 0 }}
-                       animate={{ width: `${selectedGenre.xp}%` }}
-                       transition={{ duration: 1.5, ease: "circOut" }}
-                     />
-                   </div>
-                 </div>
-
-                 {/* Genre Tabs under page title */}
-                 <div className="mb-8 -mt-2">
-                   <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2 pr-2">
-                     {GENRES.map((g) => (
-                       <button
-                         key={g.id}
-                         onClick={() => setSelectedGenre(g)}
-                         className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap border transition-all hover:bg-white/10 hover:border-white/20 ${
-                           selectedGenre?.id === g.id
-                             ? 'bg-white/15 border-white/30 text-white'
-                             : 'bg-white/5 border-white/10 text-white/70'
-                         }`}
-                         title={`${g.name} Skill Tree`}
-                       >
-                         {g.icon && React.createElement(g.icon, { className: 'w-4 h-4' })}
-                         <span className="text-sm font-semibold">{g.name}</span>
-                       </button>
-                     ))}
-                   </div>
-                 </div>
-
-                 {/* SKILL TREE SYSTEM */}
-                 <div className="mb-16">
-                   <SkillTreeSystem genre={selectedGenre} />
-                 </div>
-
-                 {/* CAROUSEL: Limited Edition Rewards (Migrated UI) */}
-                 <div className="mb-12">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-                        <Sparkles className="w-5 h-5 text-yellow-400" />
-                        Exclusive Season Rewards
-                      </h2>
-                      <div className="text-sm text-slate-500 font-medium">
-                        Scroll to explore • Click to preview
-                      </div>
-                    </div>
-                    
-                    <div 
-                      ref={carouselRef}
-                      className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide mask-fade-sides"
-                      style={{ scrollBehavior: 'smooth' }}
-                    >
-                      {carouselItems.map((card) => (
-                        <LimitedEditionCard 
-                           key={card.id} 
-                           card={{...card, rarity: card.rarity}}
-                           onClick={() => setViewingLevel(progressionData.find(p => p.level === card.id))} 
-                        />
-                      ))}
-                    </div>
-                 </div>
-
-                 {/* PROGRESS TRACK HEADER */}
-                 <div className="mb-6">
-                   <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-                     <Trophy className="w-5 h-5 text-blue-500" />
-                     Progression Track
-                   </h2>
-                   
-                   {/* Scroll Controls */}
-                   <div className="flex items-center gap-4 mt-6 p-4 bg-white/5 rounded-2xl border border-white/5">
-                     <Button 
-                       variant="ghost" 
-                       size="icon"
-                       className="bg-white/5 hover:bg-white/10 text-white"
-                       onClick={() => scroll('left')}
-                     >
-                       <ChevronLeft className="w-5 h-5" />
-                     </Button>
-                     <div className="flex-1 text-center text-sm text-slate-400 font-medium">
-                       Navigate through 20 Levels of {selectedGenre.name} Mastery
-                     </div>
-                     <Button 
-                       variant="ghost" 
-                       size="icon"
-                       className="bg-white/5 hover:bg-white/10 text-white"
-                       onClick={() => scroll('right')}
-                     >
-                       <ChevronRight className="w-5 h-5" />
-                     </Button>
-                   </div>
-                 </div>
-
-                 {/* HORIZONTAL SCROLL TRACK (drag-to-scroll enabled) */}
-                 <div 
-                    ref={scrollContainerRef}
-                    onMouseDown={onTrackMouseDown}
-                    onMouseMove={onTrackMouseMove}
-                    onMouseUp={onTrackMouseUp}
-                    onMouseLeave={onTrackMouseUp}
-                    className="relative flex gap-4 overflow-x-auto pb-12 pt-6 px-4 rounded-2xl scrollbar-hide snap-x mb-12 cursor-grab active:cursor-grabbing select-none"
-                    style={{ 
-                      scrollBehavior: 'smooth',
-                      background: 'rgba(0, 0, 0, 0.2)',
-                      border: '1px solid rgba(255, 255, 255, 0.05)',
+              <AnimatePresence>
+                {genreDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 mt-1.5 w-56 rounded-xl overflow-hidden z-50 shadow-2xl"
+                    style={{
+                      background: 'rgba(10, 14, 20, 0.95)',
+                      backdropFilter: 'blur(30px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
                     }}
                   >
-                    {progressionData.map((level) => (
-                      <LevelNode 
-                        key={level.level}
-                        levelData={level} 
-                        isActive={level.level === 36} // Mock active state
-                        onClick={() => setViewingLevel(level)} 
-                        />
+                    {GENRES.map((g) => (
+                      <button
+                        key={g.id}
+                        onClick={() => { setSelectedGenre(g); setGenreDropdownOpen(false); }}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm transition-all ${
+                          selectedGenre.id === g.id
+                            ? 'bg-white/10 text-white'
+                            : 'text-white/60 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        {g.icon && React.createElement(g.icon, { className: `w-4 h-4 ${g.accent}` })}
+                        <span className="font-medium">{g.name}</span>
+                        <span className="text-white/20 text-xs ml-auto">Lvl {g.level}</span>
+                      </button>
                     ))}
-                 </div>
-
-                 {/* STATS GRID (Migrated UI) */}
-                 <div className="grid md:grid-cols-4 gap-4">
-                   {[
-                     { icon: TrendingUp, label: 'Genre Rank', value: selectedGenre.rank, color: 'text-blue-400' },
-                     { icon: Clock, label: 'Time Played', value: '127h', color: 'text-green-400' },
-                     { icon: Trophy, label: 'Unlocks', value: '12/20', color: 'text-yellow-400' },
-                     { icon: Users, label: 'Skill Points', value: selectedGenre.skillPoints, color: 'text-purple-400' }
-                   ].map((stat, i) => (
-                     <div 
-                       key={i} 
-                       className="p-6 rounded-2xl transition-all hover:bg-white/5"
-                       style={{
-                         background: 'rgba(255, 255, 255, 0.03)',
-                         backdropFilter: 'blur(50px) saturate(200%)',
-                         border: '1px solid rgba(255, 255, 255, 0.05)',
-                       }}
-                     >
-                       <div className="flex items-center gap-3 mb-2">
-                         {React.createElement(stat.icon, { className: `w-5 h-5 ${stat.color}` })}
-                         <span className="text-sm text-slate-500 font-bold uppercase tracking-wider">{stat.label}</span>
-                       </div>
-                       <div className="text-2xl font-black text-white">{stat.value}</div>
-                     </div>
-                   ))}
-                 </div>
-               </div>
-            </motion.div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-center opacity-40 p-8">
-              <Orbit className="w-32 h-32 text-white mb-8 animate-spin-slow opacity-50" />
-              <h1 className="text-6xl font-black uppercase tracking-tighter text-white/50 mb-6">Select a Discipline</h1>
-              <p className="text-white/30 max-w-lg mx-auto text-xl font-light">
-                Choose a genre from the left sidebar to view your mastery progression, unlock rewards, and track your stats.
-              </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          )}
-        </AnimatePresence>
+
+            {/* Center: Page title */}
+            <span className="text-white/40 text-xs font-bold uppercase tracking-widest hidden md:block">
+              Genre Progression
+            </span>
+
+            {/* Right: Skill Tree button */}
+            <button
+              onClick={() => setRightPanel(rightPanel === 'skilltree' ? 'games' : 'skilltree')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                rightPanel === 'skilltree'
+                  ? 'bg-white/12 border-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.06)]'
+                  : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+              }`}
+              style={{ backdropFilter: 'blur(12px)' }}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Skill Tree</span>
+            </button>
+          </div>
+        </div>
+
+        {/* ═══ MAIN CONTENT: Games List + Right Panel ═══ */}
+        <div className="flex-1 flex min-h-0 relative z-10">
+          {/* LEFT: Games List (always visible) */}
+          <div
+            className="h-full flex flex-col overflow-hidden flex-shrink-0"
+            style={{
+              width: '320px',
+              minWidth: '320px',
+              background: 'rgba(10, 14, 20, 0.65)',
+              backdropFilter: 'blur(30px)',
+              borderRight: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {/* List Header */}
+            <div className="p-4 border-b border-white/6 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center`}>
+                  <Gamepad2 className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-sm">{selectedGenre.name} Games</h2>
+                  <p className="text-white/35 text-[10px]">{gameData.length} game{gameData.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Games */}
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
+              {gamesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+                </div>
+              ) : gameData.length === 0 ? (
+                <div className="text-center py-12 text-white/25">
+                  <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs">No games in this genre yet</p>
+                </div>
+              ) : (
+                gameData.map((game) => (
+                  <motion.button
+                    key={game.id}
+                    onClick={() => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
+                    whileHover={{ x: 2 }}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
+                      selectedGame?.id === game.id && rightPanel === 'games'
+                        ? 'bg-white/10 border-white/15'
+                        : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
+                    }`}
+                  >
+                    <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
+                      {game.cover_image ? (
+                        <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
+                          <Gamepad2 className="w-4 h-4 text-white/25" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-white/30 text-[10px] flex items-center gap-0.5"><Scroll className="w-2.5 h-2.5" />{game.questCount}</span>
+                        <span className="text-yellow-400/50 text-[10px] flex items-center gap-0.5"><Trophy className="w-2.5 h-2.5" />{game.achievementCards}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex-1 h-0.5 rounded-full bg-white/5 overflow-hidden">
+                          <div className={`h-full rounded-full bg-gradient-to-r ${selectedGenre.color}`} style={{ width: `${game.completionRate}%` }} />
+                        </div>
+                        <span className="text-white/20 text-[9px]">{game.completionRate}%</span>
+                      </div>
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT: Game Detail OR Skill Tree */}
+          <div className="flex-1 h-full overflow-hidden"
+            style={{
+              background: 'rgba(8, 12, 18, 0.55)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {rightPanel === 'skilltree' ? (
+                <motion.div
+                  key="skilltree"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <SkillTreeContent genre={selectedGenre} />
+                </motion.div>
+              ) : selectedGame ? (
+                <motion.div
+                  key={`game-${selectedGame.id}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <GenreGameDetail
+                    game={selectedGame}
+                    genre={selectedGenre}
+                    onClose={() => setSelectedGame(null)}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-full flex flex-col items-center justify-center text-center px-8"
+                >
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} opacity-20 flex items-center justify-center mb-6`}>
+                    <Gamepad2 className="w-10 h-10 text-white/40" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
+                  <p className="text-white/20 text-sm max-w-sm">
+                    Choose a game from the {selectedGenre.name} library to explore its quests, achievement cards, and community progress.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-
-      {/* Reward Detail Overlay */}
-      <AnimatePresence>
-        {viewingLevel && (
-          <RewardModal level={viewingLevel} onClose={() => setViewingLevel(null)} />
-        )}
-      </AnimatePresence>
-      
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .mask-fade-sides {
-          mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-        }
-      `}</style>
-    </div>
     </GlassPageFrame>
   );
 }
