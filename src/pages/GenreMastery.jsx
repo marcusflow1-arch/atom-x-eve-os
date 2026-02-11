@@ -23,6 +23,63 @@ const GENRES = [
   { id: 'simulation', name: 'Simulation', short: 'SIM', icon: Monitor, color: 'from-blue-400 to-indigo-400', accent: 'text-blue-400', xpType: 'Logic XP', level: 20, maxLevel: 50, rank: 'Architect', xp: 55, skillPoints: 2, paths: ['Management', 'Efficiency', 'Design'], matchGenres: ['simulation', 'strategy'] },
 ];
 
+function GenreScrollTabs({ genres, selectedGenre, onSelect }) {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY > 0 ? 80 : -80;
+    };
+
+    const handleKeyDown = (e) => {
+      if (!el.matches(':hover')) return;
+      if (e.key === 'd' || e.key === 'D') { el.scrollLeft += 80; }
+      if (e.key === 'a' || e.key === 'A') { el.scrollLeft -= 80; }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      el.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  return (
+    <div className="flex-1 min-w-0 relative">
+      {/* Left fade mask */}
+      <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
+      {/* Right fade mask */}
+      <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
+
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2"
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        {genres.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => onSelect(g)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
+              selectedGenre?.id === g.id
+                ? 'bg-white/12 border-white/20 text-white'
+                : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
+            }`}
+          >
+            {g.icon && React.createElement(g.icon, { className: 'w-3.5 h-3.5' })}
+            <span>{g.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
