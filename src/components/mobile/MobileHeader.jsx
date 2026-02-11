@@ -1,12 +1,10 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { Menu, Bell, ShoppingBag } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { Menu, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 
 export default function MobileHeader({ onMenuOpen }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { openCart, getCartCount } = useCart();
 
   const getTitle = () => {
@@ -18,23 +16,25 @@ export default function MobileHeader({ onMenuOpen }) {
     if (p.includes('/achievements') || p.includes('/aiachievements')) return 'Achievements';
     if (p.includes('/aibattle')) return 'AI Battle';
     if (p.includes('/blacksmith')) return 'Blacksmith';
-    if (p.includes('/aura') || p.includes('/streaming')) return 'Aura Stream';
+    if (p.includes('/aura') || p.includes('/streaming')) return 'Aura';
     if (p.includes('/friends')) return 'Friends';
     if (p.includes('/leaderboard')) return 'Leaderboard';
     if (p.includes('/seasonalpass')) return 'Season Pass';
     if (p.includes('/genremastery')) return 'Skill Tree';
     if (p.includes('/storyline')) return 'Storyline';
     if (p.includes('/discover')) return 'Discover';
-    return 'Dashboard';
+    if (p.includes('/onboarding')) return 'Welcome';
+    return 'Home';
   };
 
   const cartCount = getCartCount();
 
   return (
     <div
-      className="h-14 flex items-center justify-between px-4 flex-shrink-0 relative z-[50]"
+      className="flex items-center justify-between px-3 flex-shrink-0 relative z-[50]"
       style={{
-        background: 'rgba(10, 14, 20, 0.9)',
+        height: '48px',
+        background: 'rgba(10, 14, 20, 0.92)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}
@@ -42,26 +42,26 @@ export default function MobileHeader({ onMenuOpen }) {
       {/* Left: Menu */}
       <button
         onClick={onMenuOpen}
-        className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"
+        className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center active:bg-white/15 transition-colors"
       >
-        <Menu className="w-4 h-4 text-white/80" />
+        <Menu className="w-4 h-4 text-white/70" />
       </button>
 
       {/* Center: Title */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-bold text-white/40 tracking-widest uppercase">AXE</span>
-        <span className="text-white/20">|</span>
-        <span className="text-sm font-bold text-white tracking-wide">{getTitle()}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-extrabold text-cyan-400/60 tracking-[0.2em] uppercase">AXE</span>
+        <span className="text-white/15 text-xs">|</span>
+        <span className="text-[13px] font-semibold text-white/90 tracking-wide">{getTitle()}</span>
       </div>
 
       {/* Right: Cart */}
       <button
         onClick={openCart}
-        className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center relative"
+        className="w-8 h-8 rounded-lg bg-white/8 flex items-center justify-center relative active:bg-white/15 transition-colors"
       >
-        <ShoppingBag className="w-4 h-4 text-white/80" />
+        <ShoppingBag className="w-4 h-4 text-white/70" />
         {cartCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 rounded-full text-[9px] font-bold text-black flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-cyan-500 rounded-full text-[8px] font-bold text-black flex items-center justify-center">
             {cartCount}
           </span>
         )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import MobileBottomNav from './MobileBottomNav';
 import MobileHeader from './MobileHeader';
 import MobileDrawer from './MobileDrawer';
@@ -8,20 +8,23 @@ export default function MobileLayoutShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden relative"
+    <div
+      className="h-full w-full flex flex-col overflow-hidden relative"
       style={{
-        background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)',
+        /* Fill the screen exactly: header 48px + content + nav 52px = 100% */
+        maxHeight: '100vh',
+        maxWidth: '100vw',
       }}
     >
-      {/* Mobile Header */}
+      {/* Mobile Header - 48px */}
       <MobileHeader onMenuOpen={() => setDrawerOpen(true)} />
 
-      {/* Page Content */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
+      {/* Page Content - fills remaining space, scrollable */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden relative min-h-0">
         {children}
       </div>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - 52px */}
       <MobileBottomNav />
 
       {/* Mobile Drawer */}
