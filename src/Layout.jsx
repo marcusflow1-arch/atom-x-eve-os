@@ -293,7 +293,7 @@ function LayoutContent({ children, currentPageName }) {
   const { isMobile } = useViewMode();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aura']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve']
     .some(s => location.pathname.toLowerCase().includes(s));
   const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery', '/aura', '/streaminghome', '/discover'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
@@ -1066,7 +1066,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Floating View Mode Toggle for pages with hidden headers */}
       {(() => {
         const p = location.pathname.toLowerCase();
-        const hiddenHeaderPages = ['/store', '/leaderboard', '/friends', '/worldevents', '/genremastery', '/blanktransition', '/seasonalpass', '/streaminghome', '/discover'];
+        const hiddenHeaderPages = ['/store', '/leaderboard', '/friends', '/worldevents', '/blanktransition', '/seasonalpass'];
         const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
         if (!isHiddenHeader) return null;
         return (
