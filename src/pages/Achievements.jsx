@@ -770,7 +770,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
               {/* HORIZONTAL GENRE FILTER (Top) */}
               <div 
-                className="absolute top-24 left-0 right-0 z-40 h-20 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
+                className="absolute top-20 left-0 right-0 z-40 h-14 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
                 onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
               >
                 <div className="flex items-center gap-4">
@@ -817,56 +817,61 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 </div>
               </div>
               
-              {/* Header with Game Name and Controls */}
-              <div className="absolute top-44 left-12 flex items-center gap-4 z-30">
-                <span className="text-white/90 font-bold text-lg uppercase tracking-wider">
+              {/* Header with Controls (left) and Game Name (right) */}
+              <div className="absolute top-36 left-12 right-12 flex items-center justify-between z-30">
+                {/* Left: Control Buttons */}
+                <div className="flex items-center gap-3">
+                  {/* Aftermarket Mode Toggle */}
+                  <button
+                  onClick={() => setAftermarketMode(!aftermarketMode)}
+                  className={`pl-2 pr-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${
+                    aftermarketMode
+                      ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-200'
+                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
+                  }`}
+                  title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}>
+                    <DollarSign className="w-5 h-5" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider">Black Market Cards</span>
+                  </button>
+                  {aftermarketMode && (
+                    <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
+                      {currentCrossCards.length > 0 ? `${currentCrossCards.length} cards` : 'Empty cards'}
+                    </Badge>
+                  )}
+
+                  {/* Skill Tree Mode Toggle */}
+                  <button
+                  onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);} }
+                  className={`p-2 rounded-lg border transition-all ${
+                  skillTreeMode ?
+                  'bg-purple-500/30 border-purple-400/50 text-purple-300' :
+                  'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                  }
+                  title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
+                    <Layers className="w-5 h-5" />
+                  </button>
+
+                  {/* Blacksmith Mode Toggle */}
+                  <button
+                  onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);} }
+                  className={`p-2 rounded-lg border transition-all ${
+                  blacksmithMode ?
+                  'bg-orange-500/30 border-orange-400/50 text-orange-300' :
+                  'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
+                  }
+                  title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
+                    <Hammer className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Right: Game Name (large) */}
+                <h2 className="text-2xl font-black text-white/90 uppercase tracking-wider drop-shadow-lg truncate max-w-[50%] text-right">
                   {currentCrossGame?.title || 'Select a Game'}
-                </span>
-                
-                {/* Aftermarket Mode Toggle */}
-                <button
-                onClick={() => setAftermarketMode(!aftermarketMode)}
-                className={`pl-2 pr-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${
-                  aftermarketMode
-                    ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-200'
-                    : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
-                }`}
-                title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}>
-                  <DollarSign className="w-5 h-5" />
-                  <span className="text-[11px] font-semibold uppercase tracking-wider">Black Market Cards</span>
-                </button>
-                {aftermarketMode && (
-                  <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
-                    {currentCrossCards.length > 0 ? `${currentCrossCards.length} cards` : 'Empty cards'}
-                  </Badge>
-                )}
-
-                {/* Skill Tree Mode Toggle */}
-                <button
-                onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);} }
-                className={`p-2 rounded-lg border transition-all ${
-                skillTreeMode ?
-                'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                }
-                title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
-
-                  <Layers className="w-5 h-5" />
-                </button>
-
-                {/* Blacksmith Mode Toggle */}
-                <button
-                onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);} }
-                className={`p-2 rounded-lg border transition-all ${
-                blacksmithMode ?
-                'bg-orange-500/30 border-orange-400/50 text-orange-300' :
-                'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                }
-                title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
-
-                  <Hammer className="w-5 h-5" />
-                </button>
+                </h2>
               </div>
+
+              {/* Faded Vertical Divider between games and cards */}
+              <div className="absolute top-[15%] bottom-[15%] left-[240px] w-px z-20 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
 
               {/* VERTICAL AXIS (Games) */}
               <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
@@ -1068,7 +1073,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
               <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
             </div>
 
-            <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-32">
+            <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-20">
               
               {/* Main Layout: 2 Columns */}
               <div className="flex gap-8 h-full overflow-hidden">
@@ -1274,6 +1279,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
 
                   </ShinySidebarBox>
                 </div>
+
+                {/* Faded Vertical Divider */}
+                <div className="w-px flex-shrink-0 self-stretch my-4" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, transparent 100%)' }} />
 
                 {/* Center Content: Achievements Grid (Cards) */}
                 <div className="flex-1 flex flex-col h-full overflow-hidden">

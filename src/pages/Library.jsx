@@ -1339,274 +1339,129 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         </div>
         )}
 
-        {viewMode === 'grid' ? (
-          <div className="flex h-full">
-              {/* LEFT SIDEBAR - 15% width */}
-              <div className="w-[15%] min-w-[200px] max-w-[300px] flex-shrink-0 h-[calc(100vh-140px)] pr-4 hidden lg:flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
-                  <div className="text-white/40 text-xs">{filteredGames.length} games</div>
-                </div>
-                <VerticalGameScroller
-                  games={filteredGames}
-                  selectedGame={selectedGame}
-                  onSelect={setSelectedGame}
-                  onPlay={handleLaunchGame}
-                />
-              </div>
-
-
-              {/* RIGHT CONTENT AREA - 90% */}
-              <div className="flex-1 h-[calc(100vh-140px)] flex flex-col overflow-hidden">
-                {selectedGame ? (
-                  <>
-                    {/* Game Header (No Box) */}
-                    <div className="mb-8">
-                      <div className="flex items-end gap-6 mb-6">
-                         <div className="w-32 h-40 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
-                           <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
-                         </div>
-                         <div className="flex-1">
-                           <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
-                           <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
-                           <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
-                             <div className="flex items-center gap-2">
-                               <Clock className="w-4 h-4 text-blue-400" />
-                               <span>12.5h played</span>
-                             </div>
-                             <div className="flex items-center gap-2">
-                               <Trophy className="w-4 h-4 text-yellow-400" />
-                               <span>8/15 achievements</span>
-                             </div>
-                           </div>
-                           <div className="flex gap-3">
-                             <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
-                               <Play className="w-4 h-4 mr-2 fill-current" /> Play
-                             </Button>
-                             <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                               <Radio className="w-4 h-4 mr-2" /> Stream
-                             </Button>
-                           </div>
-                         </div>
-                      </div>
-
-                      {/* Clean Navigation Line */}
-                      <div className="flex items-center gap-8 border-b border-white/10">
-                        {['Content', 'Community', 'Achievements', 'Streamers', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
-                          const id = tab.toLowerCase().replace(/ /g, '_');
-                          return (
-                            <button
-                              key={id}
-                              onClick={() => setActiveDetailTab(id)}
-                              className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${
-                                activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
-                              }`}
-                            >
-                              {tab}
-                              {activeDetailTab === id && (
-                                <motion.div 
-                                  layoutId="activeTabLine"
-                                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                                />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Content Area (Scrollable) */}
-                    <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-                      <AnimatePresence mode="wait">
-                        {activeDetailTab === 'content' && (
-                          <GameContentTab game={selectedGame} />
-                        )}
-
-                        {activeDetailTab === 'community' && (
-                          <GameCommunityTab game={selectedGame} />
-                        )}
-
-                        {activeDetailTab === 'discussion' && (
-                          <GameDiscussionTab game={selectedGame} />
-                        )}
-                        
-                        {activeDetailTab === 'achievements' && (
-                          <AchievementCardsSection 
-                            onShowAchievementsOverlay={() => setShowAchievementsOverlay(true)}
-                          />
-                        )}
-
-                        {activeDetailTab === 'streamers' && (
-                          <motion.div key="streamers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                            <EmbeddedGameStreamersList game={selectedGame} />
-                          </motion.div>
-                        )}
-
-                        {activeDetailTab === 'streamer_affiliate' && (
-                          <GameStreamerAffiliateTab game={selectedGame} />
-                        )}
-
-                        {activeDetailTab === 'support' && (
-                          <GameSupportTab game={selectedGame} />
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-white/30">
-                    <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
-                    <p>Select a game from the library</p>
-                  </div>
-                )}
-              </div>
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            {/* Genre Tabs + List/Grid Toggle at Top */}
+        {/* Unified Library Layout: Sidebar + Content */}
+        <div className="flex h-[calc(100vh-160px)]">
+          {/* LEFT SIDEBAR - Game List */}
+          <div className="w-[220px] min-w-[200px] flex-shrink-0 h-full pr-4 hidden lg:flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => { setActiveGenre('All'); setSectionView('grid'); }}
-                  className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
-                    activeGenre === 'All' 
-                      ? 'bg-white/15 text-white border-white/30 shadow-lg' 
-                      : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'
-                  }`}
-                >
-                  All
-                </button>
-                {Object.keys(gamesByGenre).map((genre) => (
-                  <button
-                    key={genre}
-                    onClick={() => { setActiveGenre(genre); setSectionView('grid'); }}
-                    className={`px-5 py-2.5 rounded-full border transition-all text-sm font-medium ${
-                      activeGenre === genre 
-                        ? 'bg-white/15 text-white border-white/30 shadow-lg' 
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border-white/10'
-                    }`}
-                  >
-                    {genre}
-                  </button>
-                ))}
-              </div>
-              {/* Grid / List toggle for this view */}
-              <div className="flex items-center gap-1 p-1 rounded-xl bg-white/5 border border-white/10 flex-shrink-0">
-                <button
-                  onClick={() => setSectionView(sectionView === 'list_compact' ? 'grid' : 'grid')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    sectionView === 'grid' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                  }`}
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setSectionView('list_compact')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    sectionView === 'list_compact' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+              <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
+              <div className="text-white/40 text-xs">{filteredGames.length} games</div>
             </div>
-
-            {/* Separator Line */}
-            <div className="h-px w-full bg-white/10 mb-6" />
-
-            {/* Content Below Line - Switches Between Grid, List, & Details */}
-            <AnimatePresence mode="wait">
-              {sectionView === 'list_compact' ? (
-                <motion.div
-                  key="games-list-compact"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-x-6"
-                >
-                  {/* Genre headers with game rows */}
-                  {(activeGenre === 'All' ? Object.entries(gamesByGenre) : [[activeGenre, filteredGames.filter(g => g.genre === activeGenre)]]).map(([genre, games]) => (
-                    <div key={genre} className="break-inside-avoid mb-4">
-                      <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-2 px-1">{genre}</p>
-                      <div className="flex flex-col gap-0.5">
-                        {games.map((game, i) => {
-                          const isActive = selectedGame?.id === game.id;
-                          return (
-                            <div
-                              key={game.id || i}
-                              onClick={() => { setSelectedGame(game); setSectionView('details'); }}
-                              className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md cursor-pointer border transition-all group ${
-                                isActive
-                                  ? 'border-cyan-400/40 bg-cyan-500/10'
-                                  : 'border-transparent hover:bg-white/5'
-                              }`}
-                            >
-                              <div className="w-6 h-6 rounded-sm overflow-hidden flex-shrink-0 border border-white/10">
-                                <img
-                                  src={game.cover_image || game.cover}
-                                  alt={game.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              </div>
-                              <p className={`text-[13px] truncate flex-1 ${isActive ? 'text-white font-semibold' : 'text-white/70 group-hover:text-white'}`}>
-                                {game.title}
-                              </p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              ) : sectionView === 'grid' ? (
-                <motion.div
-                  key="games-grid"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4"
-                >
-                  {(activeGenre === 'All' ? filteredGames : filteredGames.filter(g => g.genre === activeGenre)).map((game, i) => (
-                    <LunaGameCard
-                      key={game.id || i}
-                      game={game}
-                      isStreaming={game.id === streamingGameId}
-                      onSelect={(g) => { setSelectedGame(g); setSectionView('details'); }}
-                      onPlay={handleLaunchGame}
-                      index={i}
-                    />
-                  ))}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="game-details"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col"
-                >
-                  {/* Back Button */}
-                  <button
-                    onClick={() => setSectionView('grid')}
-                    className="self-start mb-6 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90 transition-all"
-                  >
-                    <ChevronDown className="w-4 h-4 rotate-90" />
-                    <span>Back to Library</span>
-                  </button>
-
-                  {/* Game Details Panel */}
-                  <LunaGamePanel
-                    game={selectedGame}
-                    isStreaming={selectedGame?.id === streamingGameId}
-                    onPlay={handleLaunchGame}
-                    onStream={handleStreamGame}
-                    onShowAchievements={() => setShowAchievementsOverlay(true)}
-                    onShowGameDetails={() => setShowGameDetailsOverlay(true)}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <VerticalGameScroller
+              games={filteredGames}
+              selectedGame={selectedGame}
+              onSelect={(game) => { setSelectedGame(game); }}
+              onPlay={handleLaunchGame}
+            />
           </div>
-        )}
+
+          {/* Faded Vertical Divider */}
+          <div className="w-px flex-shrink-0 self-stretch my-4 hidden lg:block" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
+
+          {/* RIGHT CONTENT AREA */}
+          <div className="flex-1 h-full flex flex-col overflow-hidden pl-4">
+            {selectedGame ? (
+              <>
+                {/* Game Header */}
+                <div className="mb-6 flex-shrink-0">
+                  <div className="flex items-end gap-6 mb-6">
+                     <div className="w-28 h-36 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
+                       <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+                     </div>
+                     <div className="flex-1">
+                       <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
+                       <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
+                       <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
+                         <div className="flex items-center gap-2">
+                           <Clock className="w-4 h-4 text-blue-400" />
+                           <span>12.5h played</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           <Trophy className="w-4 h-4 text-yellow-400" />
+                           <span>8/15 achievements</span>
+                         </div>
+                       </div>
+                       <div className="flex gap-3">
+                         <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
+                           <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                         </Button>
+                         <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                           <Radio className="w-4 h-4 mr-2" /> Stream
+                         </Button>
+                       </div>
+                     </div>
+                  </div>
+
+                  {/* Clean Navigation Line */}
+                  <div className="flex items-center gap-8 border-b border-white/10">
+                    {['Content', 'Community', 'Achievements', 'Streamers', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
+                      const id = tab.toLowerCase().replace(/ /g, '_');
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => setActiveDetailTab(id)}
+                          className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${
+                            activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
+                          }`}
+                        >
+                          {tab}
+                          {activeDetailTab === id && (
+                            <motion.div 
+                              layoutId="activeTabLine"
+                              className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Content Area (Scrollable) */}
+                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
+                  <AnimatePresence mode="wait">
+                    {activeDetailTab === 'content' && (
+                      <GameContentTab game={selectedGame} />
+                    )}
+
+                    {activeDetailTab === 'community' && (
+                      <GameCommunityTab game={selectedGame} />
+                    )}
+
+                    {activeDetailTab === 'discussion' && (
+                      <GameDiscussionTab game={selectedGame} />
+                    )}
+                    
+                    {activeDetailTab === 'achievements' && (
+                      <AchievementCardsSection 
+                        onShowAchievementsOverlay={() => setShowAchievementsOverlay(true)}
+                      />
+                    )}
+
+                    {activeDetailTab === 'streamers' && (
+                      <motion.div key="streamers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                        <EmbeddedGameStreamersList game={selectedGame} />
+                      </motion.div>
+                    )}
+
+                    {activeDetailTab === 'streamer_affiliate' && (
+                      <GameStreamerAffiliateTab game={selectedGame} />
+                    )}
+
+                    {activeDetailTab === 'support' && (
+                      <GameSupportTab game={selectedGame} />
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-white/30">
+                <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
+                <p>Select a game from the library</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Overlays */}
