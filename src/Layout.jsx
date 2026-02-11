@@ -293,7 +293,7 @@ function LayoutContent({ children, currentPageName }) {
   const { isMobile } = useViewMode();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/discover','/aura']
+  const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aura']
     .some(s => location.pathname.toLowerCase().includes(s));
   const showAchievementsHeader = ['/achievements', '/aiachievements'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
@@ -776,6 +776,10 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/steamlibrary')) {
           headerConfig.hidden = true;
         } else if (p.includes('/store')) {
+          headerConfig.hidden = true;
+        } else if (p.includes('/streaminghome')) {
+          headerConfig.hidden = true;
+        } else if (p.includes('/discover')) {
           headerConfig.hidden = true;
         } else if (p.includes('/clan')) {
           headerConfig.title = "";
