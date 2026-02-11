@@ -1029,7 +1029,10 @@ function LayoutContent({ children, currentPageName }) {
                   </>
                 )}
 
-              {/* View Mode Toggle */}
+            </div>
+
+            {/* View Mode Toggle - right side */}
+            <div className="flex items-center">
               <ViewModeToggle />
             </div>
             </div>
