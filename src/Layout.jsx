@@ -345,28 +345,33 @@ function LayoutContent({ children, currentPageName }) {
 
     switch (id) {
       case 'home':
+        const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
+        const isOnStorePage = location.pathname.toLowerCase().includes('/store');
         return (
-          <div className="relative inline-block">
-            <button
-              onClick={() => {
-                const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
-                if (!isOnLunaPage) {
-                  navigate(createPageUrl('LunaTemplate'));
-                } else {
-                  navigate(createPageUrl('Store'));
-                }
-              }}
-              className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-            >
-              Home
-            </button>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
-            >
-              <span className="text-sm font-medium">Store</span>
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              if (isOnLunaPage) {
+                navigate(createPageUrl('Store'));
+              } else if (isOnStorePage) {
+                navigate(createPageUrl('LunaTemplate'));
+              } else {
+                navigate(createPageUrl('LunaTemplate'));
+              }
+            }}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] flex items-center gap-2"
+          >
+            {isOnLunaPage ? (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+              </>
+            ) : isOnStorePage ? (
+              <>
+                <Home className="w-4 h-4" />
+              </>
+            ) : (
+              <>Home</>
+            )}
+          </button>
         );
       case 'library':
         return (
