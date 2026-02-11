@@ -295,7 +295,7 @@ function LayoutContent({ children, currentPageName }) {
   const [pendingRoute, setPendingRoute] = useState(null);
   const showLunaHeaderBar = ['/lunatemplate','/home','/blacksmith','/seasonalpass','/entertainment','/streaming','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aura']
     .some(s => location.pathname.toLowerCase().includes(s));
-  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery'].some(s => location.pathname.toLowerCase().includes(s));
+  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery', '/aura', '/streaminghome', '/discover'].some(s => location.pathname.toLowerCase().includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
 
@@ -770,9 +770,17 @@ function LayoutContent({ children, currentPageName }) {
         } else if (p.includes('/store')) {
           headerConfig.hidden = true;
         } else if (p.includes('/streaminghome')) {
-          headerConfig.hidden = true;
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/discover')) {
-          headerConfig.hidden = true;
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/clan')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
@@ -845,11 +853,11 @@ function LayoutContent({ children, currentPageName }) {
 
         return (
           <div className="fixed top-0 left-0 right-0 z-40 flex flex-col" style={{
-            background: 'rgba(8, 12, 18, 0.55)',
+            background: 'rgba(8, 12, 18, 0.42)',
             backdropFilter: 'blur(30px) saturate(150%)',
             WebkitBackdropFilter: 'blur(30px) saturate(150%)',
             borderBottom: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
           }}>
             <div className="h-16 flex items-center justify-between px-6">
               <div className="flex items-center gap-6">
@@ -873,6 +881,9 @@ function LayoutContent({ children, currentPageName }) {
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           {location.pathname.toLowerCase().includes('/library') ? 'Atom X Eve Library' : 
                            location.pathname.toLowerCase().includes('/genremastery') ? 'Atom X Eve Skill Tree' : 
+                           location.pathname.toLowerCase().includes('/aura') ? 'Atom X Eve Aura Stream' :
+                           location.pathname.toLowerCase().includes('/streaminghome') ? 'Atom X Eve Aura Home' :
+                           location.pathname.toLowerCase().includes('/discover') ? 'Atom X Eve Discover' :
                            'Atom X Eve Achievements'}
                         </span>
 

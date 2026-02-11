@@ -1,10 +1,10 @@
 import React from 'react';
 
 export const glassStyle = {
-  background: 'rgba(8, 12, 18, 0.55)',
+  background: 'rgba(8, 12, 18, 0.42)',
   backdropFilter: 'blur(30px) saturate(150%)',
   WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
 export default function GlassPageFrame({ children, bottomContent, topContent, className = '' }) {
