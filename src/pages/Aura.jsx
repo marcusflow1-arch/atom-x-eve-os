@@ -5,7 +5,7 @@ import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
 import LibrarySidebar from '@/components/streaming/LibrarySidebar';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
-import AuraBottomNav from '@/components/streaming/AuraBottomNav';
+import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 
 export default function Aura() {
   const navigate = useNavigate();
