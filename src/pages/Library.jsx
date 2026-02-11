@@ -491,28 +491,15 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
   const [ownedGames, setOwnedGames] = useState([]);
-  const [favoriteGames, setFavoriteGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [embeddedView, setEmbeddedView] = useState('library'); // 'library' | 'achievements'
+  const [embeddedView, setEmbeddedView] = useState('library');
   const [streamingGameId, setStreamingGameId] = useState(localStorage.getItem('streaming_game_id'));
   const [selectedGame, setSelectedGame] = useState(null);
-  const [showRecentlyAchieved, setShowRecentlyAchieved] = useState(false);
-  const [showAchievementsOverlay, setShowAchievementsOverlay] = useState(false);
-  const [showGameDetailsOverlay, setShowGameDetailsOverlay] = useState(false);
+  const [overlayGame, setOverlayGame] = useState(null); // game for the right-side overlay
+  const [showFullLibrary, setShowFullLibrary] = useState(false);
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
-  const [activeDetailTab, setActiveDetailTab] = useState('content');
-  const [activeGenre, setActiveGenre] = useState('All');
-  const [sectionView, setSectionView] = useState('grid'); // 'grid' | 'details'
-  
-  // Sidebar Filters
-  const [selectedGenres, setSelectedGenres] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 100]);
-  const [minRating, setMinRating] = useState(0);
-  const [isGenreOpen, setIsGenreOpen] = useState(true);
 
   const gamesByGenre = React.useMemo(() => {
     return ownedGames.reduce((acc, game) => {
