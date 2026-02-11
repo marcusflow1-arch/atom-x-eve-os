@@ -345,28 +345,20 @@ function LayoutContent({ children, currentPageName }) {
 
     switch (id) {
       case 'home':
+        const isHomePage = location.pathname.toLowerCase().includes('/lunatemplate');
         return (
-          <div className="relative inline-block">
-            <button
-              onClick={() => {
-                const isOnLunaPage = location.pathname.toLowerCase().includes('/lunatemplate');
-                if (!isOnLunaPage) {
-                  navigate(createPageUrl('LunaTemplate'));
-                } else {
-                  navigate(createPageUrl('Store'));
-                }
-              }}
-              className="relative z-10 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-            >
-              Home
-            </button>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-full px-4 py-2 border bg-white/10 border-white/20 text-white/60 backdrop-blur-md z-0 flex items-center justify-center"
-            >
-              <span className="text-sm font-medium">Store</span>
-            </div>
-          </div>
+          <button
+            onClick={() => {
+              if (isHomePage) {
+                navigate(createPageUrl('Store'));
+              } else {
+                navigate(createPageUrl('LunaTemplate'));
+              }
+            }}
+            className={btnClass(isHomePage)}
+          >
+            {isHomePage ? 'Store' : 'Home'}
+          </button>
         );
       case 'library':
         return (
