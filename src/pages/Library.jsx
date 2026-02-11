@@ -599,225 +599,261 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   return (
     <PageErrorBoundary pageName="Library">
     <GlassPageFrame>
-    <div 
-      className="min-h-screen text-white"
+    <div
+      className="min-h-screen h-screen text-white overflow-hidden"
       style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
     >
-      {/* Achievements Overlay-style Transition */}
+      {/* Achievements Overlay */}
       <AnimatePresence>
         {embeddedView === 'achievements' && (
-          <motion.div
-            key="library-achievements"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl"
-          >
-            <div className="absolute top-6 left-6">
-              <button
-                onClick={() => setEmbeddedView('library')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90"
-              >
-                <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                <span>Achievements</span>
+          <motion.div key="lib-ach" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl">
+            <div className="absolute top-6 left-6 z-10">
+              <button onClick={() => setEmbeddedView('library')} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-white/90">
+                <Gamepad2 className="w-4 h-4 text-cyan-400" /><span>Back to Library</span>
               </button>
             </div>
-
-            <div className="w-full h-full overflow-hidden">
-              <Achievements onExitToLibrary={() => setEmbeddedView('library')} />
-            </div>
+            <div className="w-full h-full overflow-hidden"><Achievements onExitToLibrary={() => setEmbeddedView('library')} /></div>
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Ambient Glow Effects */}
+
+      {/* Ambient Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
       </div>
 
-      <div className="relative z-10 px-8 pt-20 pb-8">
-        {/* Search Bar */}
-        <div className="flex items-center justify-end gap-4 mb-6">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+      {/* Main Layout */}
+      <div className="relative z-10 flex h-full pt-16">
+        {/* LEFT SIDEBAR (10%) - Game List */}
+        <div className="w-[240px] min-w-[220px] flex-shrink-0 h-full flex flex-col px-4 pt-4 pb-4">
+          {/* Library Header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <LibraryIcon className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-white/70 text-xs font-bold uppercase tracking-widest">Library</h3>
+            </div>
+            <span className="text-white/30 text-[10px] font-medium">{filteredGames.length} games</span>
+          </div>
+
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/25" />
             <input
               type="text"
-              placeholder="Search games..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-white/5 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/20 focus:bg-white/10 transition-all backdrop-blur-xl"
+              className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 transition-all"
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all">
-              <Mic className="w-4 h-4" />
-            </button>
+          </div>
+
+          {/* Full Library Button */}
+          <button
+            onClick={() => setShowFullLibrary(true)}
+            className="flex items-center justify-between w-full px-3 py-2 mb-3 rounded-lg bg-white/5 border border-white/8 hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
+          >
+            <span className="text-[10px] font-medium text-cyan-400 uppercase tracking-wider">Full Library</span>
+            <LayoutGrid className="w-3.5 h-3.5 text-white/30 group-hover:text-cyan-400 transition-colors" />
+          </button>
+
+          {/* Game List */}
+          <div className="flex-1 overflow-y-auto space-y-1" style={{ scrollbarWidth: 'none' }}>
+            {filteredGames.map((game, i) => (
+              <LibrarySidebarItem
+                key={game.id || i}
+                game={game}
+                isSelected={selectedGame?.id === game.id}
+                onSelect={(g) => setSelectedGame(g)}
+                onPlay={handleLaunchGame}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Unified Library Layout: Sidebar + Content */}
-        <div className="flex h-[calc(100vh-160px)]">
-          {/* LEFT SIDEBAR - Game List */}
-          <div className="w-[220px] min-w-[200px] flex-shrink-0 h-full pr-4 hidden lg:flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white/60 text-xs font-bold uppercase tracking-widest">Library</h3>
-              <div className="text-white/40 text-xs">{filteredGames.length} games</div>
-            </div>
-            <VerticalGameScroller
-              games={filteredGames}
-              selectedGame={selectedGame}
-              onSelect={(game) => { setSelectedGame(game); }}
-              onPlay={handleLaunchGame}
-            />
-          </div>
+        {/* Faded Vertical Divider */}
+        <div className="w-px flex-shrink-0 self-stretch my-8" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
 
-          {/* Faded Vertical Divider */}
-          <div className="w-px flex-shrink-0 self-stretch my-4 hidden lg:block" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
-
-          {/* RIGHT CONTENT AREA */}
-          <div className="flex-1 h-full flex flex-col overflow-hidden pl-4">
-            {selectedGame ? (
-              <>
-                {/* Game Header */}
-                <div className="mb-6 flex-shrink-0">
-                  <div className="flex items-end gap-6 mb-6">
-                     <div className="w-28 h-36 rounded-xl overflow-hidden shadow-2xl flex-shrink-0">
-                       <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
-                     </div>
-                     <div className="flex-1">
-                       <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md">{selectedGame.genre}</Badge>
-                       <h1 className="text-4xl font-black text-white mb-2 tracking-tight">{selectedGame.title}</h1>
-                       <div className="flex items-center gap-6 text-sm text-white/60 mb-4">
-                         <div className="flex items-center gap-2">
-                           <Clock className="w-4 h-4 text-blue-400" />
-                           <span>12.5h played</span>
-                         </div>
-                         <div className="flex items-center gap-2">
-                           <Trophy className="w-4 h-4 text-yellow-400" />
-                           <span>8/15 achievements</span>
-                         </div>
-                       </div>
-                       <div className="flex gap-3">
-                         <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
-                           <Play className="w-4 h-4 mr-2 fill-current" /> Play
-                         </Button>
-                         <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                           <Radio className="w-4 h-4 mr-2" /> Stream
-                         </Button>
-                       </div>
-                     </div>
+        {/* RIGHT CONTENT AREA (90%) - Overview */}
+        <div className="flex-1 h-full flex flex-col overflow-hidden px-8 pt-4 pb-4">
+          {selectedGame ? (
+            <>
+              {/* Game Overview Header */}
+              <div className="mb-6 flex-shrink-0">
+                <div className="flex items-end gap-6 mb-4">
+                  <div className="w-24 h-32 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10">
+                    <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
                   </div>
-
-                  {/* Clean Navigation Line */}
-                  <div className="flex items-center gap-8 border-b border-white/10">
-                    {['Content', 'Community', 'Achievements', 'Streamers', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
-                      const id = tab.toLowerCase().replace(/ /g, '_');
-                      return (
-                        <button
-                          key={id}
-                          onClick={() => setActiveDetailTab(id)}
-                          className={`pb-4 text-sm font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${
-                            activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
-                          }`}
-                        >
-                          {tab}
-                          {activeDetailTab === id && (
-                            <motion.div 
-                              layoutId="activeTabLine"
-                              className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
+                  <div className="flex-1 min-w-0">
+                    <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">{selectedGame.genre}</Badge>
+                    <h1 className="text-3xl font-black text-white mb-2 tracking-tight truncate">{selectedGame.title}</h1>
+                    <div className="flex items-center gap-6 text-sm text-white/50 mb-3">
+                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /><span>12.5h played</span></div>
+                      <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-yellow-400" /><span>8/15 achievements</span></div>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
+                        <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                      </Button>
+                      <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                        <Radio className="w-4 h-4 mr-2" /> Stream
+                      </Button>
+                      <Button variant="outline" onClick={() => setOverlayGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                        <Eye className="w-4 h-4 mr-2" /> Full Details
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
-                {/* Content Area (Scrollable) */}
-                <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
-                  <AnimatePresence mode="wait">
-                    {activeDetailTab === 'content' && (
-                      <GameContentTab game={selectedGame} />
-                    )}
-
-                    {activeDetailTab === 'community' && (
-                      <GameCommunityTab game={selectedGame} />
-                    )}
-
-                    {activeDetailTab === 'discussion' && (
-                      <GameDiscussionTab game={selectedGame} />
-                    )}
-                    
-                    {activeDetailTab === 'achievements' && (
-                      <AchievementCardsSection 
-                        onShowAchievementsOverlay={() => setShowAchievementsOverlay(true)}
-                      />
-                    )}
-
-                    {activeDetailTab === 'streamers' && (
-                      <motion.div key="streamers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-                        <EmbeddedGameStreamersList game={selectedGame} />
-                      </motion.div>
-                    )}
-
-                    {activeDetailTab === 'streamer_affiliate' && (
-                      <GameStreamerAffiliateTab game={selectedGame} />
-                    )}
-
-                    {activeDetailTab === 'support' && (
-                      <GameSupportTab game={selectedGame} />
-                    )}
-                  </AnimatePresence>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-white/30">
-                <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
-                <p>Select a game from the library</p>
               </div>
-            )}
-          </div>
+
+              {/* Overview Content (Scrollable) */}
+              <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-4 gap-4">
+                    {[
+                      { icon: Sparkles, value: '5/12', label: 'Cards Unlocked', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+                      { icon: Zap, value: '3', label: 'Active Abilities', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+                      { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+                      { icon: Users, value: '2.4k', label: 'Players Online', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
+                    ].map((stat, i) => (
+                      <div key={i} className={`p-4 rounded-xl border ${stat.bg} text-center`}>
+                        <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
+                        <p className="text-xl font-bold text-white">{stat.value}</p>
+                        <p className="text-white/40 text-xs">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Rewards Summary */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 p-4 rounded-xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400"><Sparkles className="w-4 h-4" /></div>
+                        <h4 className="font-bold text-white text-sm">Progression</h4>
+                      </div>
+                      <p className="text-sm text-white/60">Unlocks <span className="text-white font-bold">3 Abilities</span> & <span className="text-white font-bold">5 Cards</span></p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400"><Bot className="w-4 h-4" /></div>
+                        <h4 className="font-bold text-white text-sm">AI Evolution</h4>
+                      </div>
+                      <p className="text-sm text-white/60">Trains <span className="text-white font-bold">Combat</span> & <span className="text-white font-bold">Stealth</span></p>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-500/20 rounded-lg text-green-400"><Shield className="w-4 h-4" /></div>
+                        <h4 className="font-bold text-white text-sm">Synergy</h4>
+                      </div>
+                      <p className="text-sm text-white/60">Compatible with <span className="text-white font-bold">RPG</span> & <span className="text-white font-bold">Sci-Fi</span></p>
+                    </div>
+                  </div>
+
+                  {/* About */}
+                  <div className="p-5 rounded-xl bg-white/5 border border-white/5">
+                    <h3 className="text-white/60 font-bold text-sm mb-2 uppercase tracking-wider">About This Game</h3>
+                    <p className="text-white/50 text-sm leading-relaxed">
+                      {selectedGame.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, defeat challenging enemies, and forge your own destiny.'}
+                    </p>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div>
+                    <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-cyan-400" />
+                      Recent Achievements
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { name: 'Dragon Slayer Supreme', icon: '🐉', rarity: 'Legendary', progress: 100 },
+                        { name: 'Master Thief', icon: '💰', rarity: 'Epic', progress: 75 },
+                        { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
+                        { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
+                      ].map((ach, i) => (
+                        <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-2xl">{ach.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium text-sm truncate">{ach.name}</p>
+                              <Badge className={`text-[9px] ${
+                                ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                                ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                                'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                              }`}>{ach.rarity}</Badge>
+                            </div>
+                          </div>
+                          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${ach.progress}%` }}
+                              transition={{ duration: 1, delay: i * 0.1 }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-white/30">
+              <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
+              <p>Select a game from the library</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Overlays */}
-      <RecentlyAchievedOverlay
-        isVisible={showRecentlyAchieved}
-        onClose={() => setShowRecentlyAchieved(false)}
-        gameTitle={selectedGame?.title}
-      />
-
-      {showAchievementsOverlay && selectedGame && (
-        <GameAchievementsOverlay
-          gameTitle={selectedGame.title}
-          onClose={() => setShowAchievementsOverlay(false)}
-        />
-      )}
-
-      {showGameDetailsOverlay && selectedGame && (
-        <OwnedGameOverlay
-          game={selectedGame}
-          onClose={() => setShowGameDetailsOverlay(false)}
-        />
-      )}
-
+      {/* Game Detail Overlay (slides from right, 90% width) */}
       <AnimatePresence>
-        {launchingGame && (
-          <GameLauncherOverlay 
-            game={launchingGame} 
-            onClose={() => setLaunchingGame(null)} 
-          />
+        {overlayGame && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[54]"
+              onClick={() => setOverlayGame(null)}
+            />
+            <LibraryGameOverlay
+              game={overlayGame}
+              onClose={() => setOverlayGame(null)}
+              onPlay={handleLaunchGame}
+              onStream={handleStreamGame}
+            />
+          </>
         )}
-        {streamingSession && (
-          <RemotePlayOverlay 
-            game={streamingSession.game}
-            session={streamingSession.session}
-            onClose={() => setStreamingSession(null)}
+      </AnimatePresence>
+
+      {/* Full Library Grid Overlay */}
+      <AnimatePresence>
+        {showFullLibrary && (
+          <LibraryFullGrid
+            games={ownedGames}
+            onSelectGame={(game) => {
+              setSelectedGame(game);
+              setOverlayGame(game);
+              setShowFullLibrary(false);
+            }}
+            onClose={() => setShowFullLibrary(false)}
           />
         )}
       </AnimatePresence>
 
-          </div>
+      {/* Launch & Stream Overlays */}
+      <AnimatePresence>
+        {launchingGame && (
+          <GameLauncherOverlay game={launchingGame} onClose={() => setLaunchingGame(null)} />
+        )}
+        {streamingSession && (
+          <RemotePlayOverlay game={streamingSession.game} session={streamingSession.session} onClose={() => setStreamingSession(null)} />
+        )}
+      </AnimatePresence>
+    </div>
     </GlassPageFrame>
     </PageErrorBoundary>
-        );
+  );
 }
