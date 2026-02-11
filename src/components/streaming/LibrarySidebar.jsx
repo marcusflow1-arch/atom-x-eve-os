@@ -82,7 +82,9 @@ export default function LibrarySidebar() {
   // or at least keeping it consistent. The user context implies they are on a page where this sidebar exists.
   // We'll keep existing logic but just note that if they want it "here", they are likely seeing it.
   
-  const shouldShow = !(isAura || isEntertainment || isLibraryPage || overlayActive);
+  const isGenreMastery = pathname.includes('/genremastery');
+  
+  const shouldShow = !(isAura || isEntertainment || isLibraryPage || isGenreMastery || overlayActive);
 
   // Close right-side overlay whenever the left pull-out tab closes
   useEffect(() => {
