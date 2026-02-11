@@ -54,8 +54,8 @@ export default function GenreGamesPanel({ isOpen, onClose, genre, allGames }) {
             <div
               className="h-full flex flex-col overflow-hidden"
               style={{
-                width: '380px',
-                minWidth: '380px',
+                width: selectedGame ? '340px' : '380px',
+                minWidth: selectedGame ? '340px' : '380px',
                 background: 'rgba(10, 14, 20, 0.88)',
                 backdropFilter: 'blur(40px) saturate(160%)',
                 WebkitBackdropFilter: 'blur(40px) saturate(160%)',
