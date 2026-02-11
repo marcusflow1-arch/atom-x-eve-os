@@ -561,28 +561,13 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [user, isAuthenticated]);
 
-  const getFilteredGames = () => {
-    let games = activeTab === 'installed' ? ownedGames.slice(0, Math.ceil(ownedGames.length / 2)) 
-              : activeTab === 'favorites' ? favoriteGames : ownedGames;
-    
-    // Sidebar Filters
-    if (selectedGenres.length > 0) {
-        games = games.filter(game => selectedGenres.includes(game.genre));
-    }
-    if (minRating > 0) {
-        games = games.filter(game => (game.rating || 0) >= minRating);
-    }
-
-    if (searchTerm) {
-      games = games.filter(game =>
-        game?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        game?.genre?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    return games;
-  };
-
-  const filteredGames = getFilteredGames();
+  const filteredGames = React.useMemo(() => {
+    if (!searchTerm) return ownedGames;
+    return ownedGames.filter(game =>
+      game?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      game?.genre?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [ownedGames, searchTerm]);
 
   if (!isAuthenticated && filteredGames.length <= 1) {
     return (
