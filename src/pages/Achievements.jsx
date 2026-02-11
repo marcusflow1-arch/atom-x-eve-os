@@ -6,13 +6,10 @@ import {
   Check, X, ArrowLeft, Gamepad2, Sparkles, Layers,
   ChevronDown, Mic as MicIcon, LayoutGrid, DollarSign, Hammer,
   MessageSquare, Users, Star, TrendingUp, SlidersHorizontal,
-  Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart } from
-'lucide-react';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+  Shield, Monitor, Car, Skull, Crosshair, Music, Zap, Heart,
+  Crown, Globe, Rocket, Map, Ghost, Scroll
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { allMockGames } from '../components/store/mockData';
 import AchievementDetailOverlay from '../components/achievements/AchievementDetailOverlay';
@@ -21,177 +18,66 @@ import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay
 import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
-import ReviewCard from '@/components/reviews/ReviewCard';
-import ReviewComposer from '@/components/reviews/ReviewComposer';
-import ReviewInsights from '@/components/reviews/ReviewInsights';
-import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
 import { base44 } from '@/api/base44Client';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
-// Icon mapping for genres
-const GENRE_ICONS = {
-  'Action': Crosshair,
-  'RPG': Shield,
-  'Strategy': Trophy,
-  'Simulation': Monitor,
-  'Sports': Trophy,
-  'Racing': Car,
-  'Horror': Skull,
-  'Shooter': Crosshair,
-  'Music': Music,
-  'Adventure': Gamepad2,
-  'Puzzle': Zap,
-  'Romance': Heart,
-  'Sci-Fi': Sparkles,
-};
+// Genre definitions (same as GenreMastery for consistency)
+const GENRES = [
+  { id: 'all', name: 'All', short: 'ALL', icon: LayoutGrid, color: 'from-cyan-500 to-blue-500', accent: 'text-cyan-400', matchGenres: [] },
+  { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', matchGenres: ['mmo', 'mmorpg'] },
+  { id: 'scifi', name: 'Sci-Fi', short: 'SCI', icon: Rocket, color: 'from-cyan-500 to-blue-600', accent: 'text-cyan-400', matchGenres: ['sci-fi', 'scifi', 'sci_fi'] },
+  { id: 'fantasy', name: 'Fantasy', short: 'FAN', icon: Crown, color: 'from-amber-400 to-orange-500', accent: 'text-amber-400', matchGenres: ['fantasy', 'rpg'] },
+  { id: 'action', name: 'Action', short: 'ACT', icon: Crosshair, color: 'from-red-500 to-rose-600', accent: 'text-red-400', matchGenres: ['action', 'fighting'] },
+  { id: 'shooter', name: 'Shooter', short: 'FPS', icon: Crosshair, color: 'from-emerald-500 to-green-600', accent: 'text-emerald-400', matchGenres: ['shooter', 'shooting', 'fps'] },
+  { id: 'adventure', name: 'Adventure', short: 'ADV', icon: Map, color: 'from-yellow-400 to-orange-400', accent: 'text-yellow-400', matchGenres: ['adventure', 'open_world'] },
+  { id: 'horror', name: 'Horror', short: 'HOR', icon: Ghost, color: 'from-slate-800 to-gray-900', accent: 'text-slate-400', matchGenres: ['horror', 'survival'] },
+  { id: 'simulation', name: 'Simulation', short: 'SIM', icon: Monitor, color: 'from-blue-400 to-indigo-400', accent: 'text-blue-400', matchGenres: ['simulation', 'strategy'] },
+  { id: 'racing', name: 'Racing', short: 'RAC', icon: Car, color: 'from-orange-500 to-red-500', accent: 'text-orange-400', matchGenres: ['racing'] },
+];
 
-// --- Shiny Sidebar Box Component ---
-const ShinySidebarBox = ({ children, className = "" }) => {
-  return (
-    <motion.div
-      className={`relative overflow-hidden rounded-2xl border shadow-2xl ${className}`}
-      style={{
-        background: 'rgba(100, 120, 140, 0.12)',
-        backdropFilter: 'blur(20px) saturate(130%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(130%)',
-        borderColor: 'rgba(255, 255, 255, 0.10)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
-      }}>
+// Genre scroll tabs (reused from GenreMastery)
+function GenreScrollTabs({ genres, selectedGenre, onSelect }) {
+  const scrollRef = useRef(null);
 
-        {children}
-    </motion.div>);
-
-};
-
-// --- Achievement Card (Trading Card Style) ---
-const AchievementCard = ({ achievement, onClick, isUnlocked }) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
-  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [20, -20]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-20, 20]);
-
-  function handleMouseMove(event) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    const mouseXPos = event.clientX - rect.left;
-    const mouseYPos = event.clientY - rect.top;
-    x.set(mouseXPos / width - 0.5);
-    y.set(mouseYPos / height - 0.5);
-  }
-
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-  }
-
-  const rarityColors = {
-    Common: "border-slate-600 shadow-slate-500/20",
-    Uncommon: "border-green-500 shadow-green-500/20",
-    Rare: "border-blue-500 shadow-blue-500/20",
-    Epic: "border-purple-500 shadow-purple-500/20",
-    Legendary: "border-orange-500 shadow-orange-500/20",
-    Mythic: "border-red-500 shadow-red-500/20",
-    Godlike: "border-yellow-400 shadow-yellow-500/40"
-  };
-
-  const rarityColor = rarityColors[achievement.rarity] || rarityColors.Common;
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleWheel = (e) => { e.preventDefault(); el.scrollLeft += e.deltaY > 0 ? 80 : -80; };
+    const handleKeyDown = (e) => {
+      if (!el.matches(':hover')) return;
+      if (e.key === 'd' || e.key === 'D') el.scrollLeft += 80;
+      if (e.key === 'a' || e.key === 'A') el.scrollLeft -= 80;
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+    return () => { el.removeEventListener('wheel', handleWheel); window.removeEventListener('keydown', handleKeyDown); };
+  }, []);
 
   return (
-    <motion.div
-      onClick={() => onClick(achievement)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d"
-      }}
-      whileHover={{ scale: 1.05 }}
-      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer group bg-slate-900 border-2 ${isUnlocked ? rarityColor : 'border-slate-800 grayscale opacity-60'}`}>
-
-      {/* Card Content */}
-      <div className="absolute inset-0 flex flex-col items-center p-4 transform-style-3d">
-        {/* Header */}
-        <div className="w-full flex justify-between items-start mb-2" style={{ transform: "translateZ(20px)" }}>
-          <Badge variant="outline" className="bg-black/50 border-white/10 text-[10px]">
-            {achievement.category || 'General'}
-          </Badge>
-          <div className="text-yellow-400 font-bold text-xs">{achievement.points} pts</div>
-        </div>
-
-        {/* Icon / Image Area */}
-        <div className="flex-1 flex items-center justify-center w-full my-2" style={{ transform: "translateZ(30px)" }}>
-          <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center text-5xl shadow-inner border border-white/10">
-            {achievement.icon || '🏆'}
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="w-full text-center mt-auto" style={{ transform: "translateZ(25px)" }}>
-          <h3 className="text-white font-bold text-lg leading-tight mb-1 line-clamp-2">{achievement.title}</h3>
-          <p className="text-slate-400 text-xs line-clamp-2">{achievement.description}</p>
-        </div>
-
-        {/* Rarity Label */}
-        <div className="mt-3 w-full border-t border-white/10 pt-2 flex justify-between items-center" style={{ transform: "translateZ(20px)" }}>
-          <span className={`text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'text-white' : 'text-slate-500'}`}>
-            {achievement.rarity}
-          </span>
-          {isUnlocked && <Check className="w-4 h-4 text-green-400" />}
-        </div>
+    <div className="flex-1 min-w-0 relative">
+      <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
+      <div ref={scrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2" style={{ scrollBehavior: 'smooth' }}>
+        {genres.map((g) => (
+          <button
+            key={g.id}
+            onClick={() => onSelect(g)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
+              selectedGenre?.id === g.id
+                ? 'bg-white/12 border-white/20 text-white'
+                : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
+            }`}
+          >
+            {g.icon && React.createElement(g.icon, { className: 'w-3.5 h-3.5' })}
+            <span>{g.name}</span>
+          </button>
+        ))}
       </div>
-
-      {/* Shine Effect */}
-      <motion.div
-        style={{
-          opacity: useTransform(rotateX, (val) => Math.abs(val) / 30 + 0.1),
-          background: "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.2) 55%, transparent 80%)",
-          transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-100%)", "translateX(100%)"])
-        }}
-        className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay" />
-
-
-      {/* Animated Blue Light Corners */}
-      <motion.div
-        className="absolute bottom-0 left-0 w-16 h-16 pointer-events-none"
-        animate={{
-          boxShadow: [
-          "0 0 0px rgba(59, 130, 246, 0)",
-          "0 0 20px rgba(59, 130, 246, 0.8)",
-          "0 0 0px rgba(59, 130, 246, 0)"]
-
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        style={{
-          borderLeft: "3px solid rgba(59, 130, 246, 0.6)",
-          borderBottom: "3px solid rgba(59, 130, 246, 0.6)",
-          borderBottomLeftRadius: "0.75rem"
-        }} />
-
-      <motion.div
-        className="absolute top-0 right-0 w-16 h-16 pointer-events-none"
-        animate={{
-          boxShadow: [
-          "0 0 0px rgba(59, 130, 246, 0)",
-          "0 0 20px rgba(59, 130, 246, 0.8)",
-          "0 0 0px rgba(59, 130, 246, 0)"]
-
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        style={{
-          borderRight: "3px solid rgba(59, 130, 246, 0.6)",
-          borderTop: "3px solid rgba(59, 130, 246, 0.6)",
-          borderTopRightRadius: "0.75rem"
-        }} />
-
-    </motion.div>);
-
-};
+    </div>
+  );
+}
 
 function AchievementsView({ onExitToLibrary, onClosePage }) {
   const { user, isAuthenticated, updateUserData } = useAuth();
@@ -202,140 +88,83 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [trackedAchievements, setTrackedAchievements] = useState([]);
   const [challengeModalOpen, setChallengeModalOpen] = useState(false);
   const [achievementToChallenge, setAchievementToChallenge] = useState(null);
-  const [showGridMenu, setShowGridMenu] = useState(false);
 
-  // View Mode: 'cross' (new Store-like) or 'classic' (old sidebar)
-  const [viewMode, setViewMode] = useState('cross');
-
-  // Skill Tree Mode toggle
+  // Modes
   const [skillTreeMode, setSkillTreeMode] = useState(false);
   const [skillTreeCard, setSkillTreeCard] = useState(null);
-
-  // Blacksmith Mode toggle
   const [blacksmithMode, setBlacksmithMode] = useState(false);
   const [blacksmithCard, setBlacksmithCard] = useState(null);
-
-  // Aftermarket Mode (Black Market Cards)
   const [aftermarketMode, setAftermarketMode] = useState(false);
-  const [aftermarketCards, setAftermarketCards] = useState([]);
-  const [aftermarketAll, setAftermarketAll] = useState(false);
 
-  // Cross Interface Navigation State
-  const [activeGameIndex, setActiveGameIndex] = useState(0);
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  // Genre filter
+  const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
 
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [activeGenre, setActiveGenre] = useState('All');
-  const [isGenreOpen, setIsGenreOpen] = useState(true);
-
-  // Calculate Total Score
-  const totalScore = useMemo(() => {
-    if (!user?.unlocked_achievements || !localAchievements) return 0;
-    let score = 0;
-    Object.values(localAchievements).flat().forEach((ach) => {
-      if (user.unlocked_achievements.includes(ach.id)) {
-        score += ach.points || 0;
-      }
-    });
-    // Add base score if new user or for demo
-    return score || 12450;
-  }, [user, localAchievements]);
-
-  // Fetch initial data
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      setError(null);
-
       try {
         let games = [];
         try {
           const gamesResponse = await base44.entities.Game.list();
           games = gamesResponse.data || gamesResponse;
-        } catch (err) {
-          console.error('Error fetching games:', err);
-        }
+        } catch (err) { console.error('Error fetching games:', err); }
 
         let achievements = [];
         try {
           const achievementsResponse = await base44.entities.Achievement.list();
           achievements = achievementsResponse.data || achievementsResponse;
-        } catch (err) {
-          console.error('Error fetching achievements:', err);
-        }
+        } catch (err) { console.error('Error fetching achievements:', err); }
 
         const ownedGameIds = new Set(user?.purchased_items || []);
         let userGames;
-
         if (isAuthenticated && ownedGameIds.size > 0) {
-          const dbOwnedGames = games.filter((g) => ownedGameIds.has(g.id));
-          const mockOwnedGames = Object.values(allMockGames).filter((g) => ownedGameIds.has(g.id));
-          const combined = [...dbOwnedGames, ...mockOwnedGames];
-          userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
+          const dbOwned = games.filter(g => ownedGameIds.has(g.id));
+          const mockOwned = Object.values(allMockGames).filter(g => ownedGameIds.has(g.id));
+          const combined = [...dbOwned, ...mockOwned];
+          userGames = Array.from(new Map(combined.map(g => [g.id, g])).values());
         } else {
-          // If no purchases, show all mock games + DB games
           const combined = [...games, ...Object.values(allMockGames)];
-          userGames = Array.from(new Map(combined.map((g) => [g.id, g])).values());
+          userGames = Array.from(new Map(combined.map(g => [g.id, g])).values());
         }
-
         setAllGames(userGames);
         if (userGames.length > 0) setSelectedGame(userGames[0]);
 
         const achievementsByGame = {};
-        achievements.forEach((ach) => {
-          if (!achievementsByGame[ach.game]) {
-            achievementsByGame[ach.game] = [];
-          }
+        achievements.forEach(ach => {
+          if (!achievementsByGame[ach.game]) achievementsByGame[ach.game] = [];
           achievementsByGame[ach.game].push(ach);
         });
         setLocalAchievements(achievementsByGame);
         setTrackedAchievements(user?.tracked_achievements || []);
-
       } catch (error) {
         console.error("Error fetching achievement data:", error);
-        setError(error.message);
-        setAllGames(Object.values(allMockGames)); // Fallback
+        setAllGames(Object.values(allMockGames));
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [user, isAuthenticated]);
 
   const handleTrackAchievement = useCallback(async (achievement) => {
     if (!isAuthenticated || !user) return;
-    try {
-      const isCurrentlyTracked = trackedAchievements.includes(achievement.id);
-      const newTracked = isCurrentlyTracked ?
-      trackedAchievements.filter((id) => id !== achievement.id) :
-      [...trackedAchievements, achievement.id];
-
-      setTrackedAchievements(newTracked);
-      await updateUserData({ tracked_achievements: newTracked });
-    } catch (err) {
-      console.error('Error tracking achievement:', err);
-    }
+    const isTracked = trackedAchievements.includes(achievement.id);
+    const newTracked = isTracked ? trackedAchievements.filter(id => id !== achievement.id) : [...trackedAchievements, achievement.id];
+    setTrackedAchievements(newTracked);
+    await updateUserData({ tracked_achievements: newTracked });
   }, [isAuthenticated, user, updateUserData, trackedAchievements]);
 
   const handleShareAchievement = async (achievement) => {
-    // Share logic preserved
     if (!user) return;
     try {
       const aiResponse = await base44.functions.invoke('communityAI', {
         action: 'generate_achievement_post',
-        data: {
-          achievement: achievement,
-          game: achievement.game,
-          user_name: user.username || user.full_name
-        }
+        data: { achievement, game: achievement.game, user_name: user.username || user.full_name }
       });
-
       await base44.entities.Post.create({
         title: `I unlocked ${achievement.title}!`,
         content: aiResponse.data.content,
@@ -347,10 +176,7 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
         is_ai_generated: true,
         score: 0
       });
-      alert("Shared to community feed!");
-    } catch (error) {
-      console.error("Error sharing achievement:", error);
-    }
+    } catch (error) { console.error("Error sharing achievement:", error); }
   };
 
   const handleChallenge = (achievement) => {
@@ -358,234 +184,65 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
     setChallengeModalOpen(true);
   };
 
+  // Filter games by selected genre
   const filteredGames = useMemo(() => {
     if (isLoading || !allGames) return [];
-    return allGames.filter((game) => {
-      const genreMatch = activeGenre === 'All' || !activeGenre || game.genre?.toLowerCase().includes(activeGenre.toLowerCase());
-      const searchMatch = searchTerm === '' || game.title.toLowerCase().includes(searchTerm.toLowerCase());
-      return genreMatch && searchMatch;
+    if (selectedGenre.id === 'all') return allGames;
+    return allGames.filter(game => {
+      const g = (game.genre || '').toLowerCase();
+      return selectedGenre.matchGenres?.some(mg => g.includes(mg));
     });
-  }, [allGames, activeGenre, searchTerm, isLoading]);
+  }, [allGames, selectedGenre, isLoading]);
 
-  const gameAchievements = useMemo(() => {
-    if (!selectedGame || !localAchievements[selectedGame.title]) return [];
-    return localAchievements[selectedGame.title];
-  }, [selectedGame, localAchievements]);
+  // Game data with stats
+  const gameData = useMemo(() => {
+    return filteredGames.map(game => ({
+      ...game,
+      questCount: Math.floor(Math.random() * 30) + 10,
+      achievementCards: Math.floor(Math.random() * 20) + 5,
+      completionRate: Math.floor(Math.random() * 60) + 10,
+    }));
+  }, [filteredGames]);
 
+  // User cards
   const [userCards, setUserCards] = useState([]);
-  const [gameReviews, setGameReviews] = useState([]);
-  const [userReactions, setUserReactions] = useState({});
-  const [showReviewPanel, setShowReviewPanel] = useState(false);
-
-  // Purchased counts per game (for Black Market mode indicators)
-  const [purchasedCountsByGame, setPurchasedCountsByGame] = useState({});
-  const purchasedTotalCount = useMemo(() => Object.values(purchasedCountsByGame || {}).reduce((a, b) => a + b, 0), [purchasedCountsByGame]);
-
-  // Hover zones to resolve competing scroll areas
-  const [hoverZone, setHoverZone] = useState(null); // 'cards' | 'games' | null
-  const cardsGridRef = useRef(null);
-  const gamesListRef = useRef(null);
-  const getCardsPerRow = useCallback(() => {
-    const w = window.innerWidth;
-    if (w >= 1280) return 6; // xl
-    if (w >= 1024) return 5; // lg
-    if (w >= 768) return 4;  // md
-    return 3;                // base
-  }, []);
-
   useEffect(() => {
     const fetchUserCards = async () => {
       if (!user || !selectedGame) return;
-
       try {
-        const cards = await base44.entities.UserCard.filter({
-          user_id: user.id,
-          game_name: selectedGame.title
-        });
+        const cards = await base44.entities.UserCard.filter({ user_id: user.id, game_name: selectedGame.title });
         setUserCards(cards);
-      } catch (error) {
-        console.error('Failed to fetch user cards:', error);
-      }
+      } catch (error) { console.error('Failed to fetch user cards:', error); }
     };
-
     fetchUserCards();
   }, [user, selectedGame]);
 
-  // Fetch reviews for selected game
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (!selectedGame) return;
-
-      try {
-        const reviews = await base44.entities.Post.filter({
-          type: 'game_review',
-          game_title: selectedGame.title
-        }, '-created_date');
-        setGameReviews(reviews);
-      } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-      }
-    };
-
-    fetchReviews();
-  }, [selectedGame]);
-
-  // Fetch aftermarket (Black Market) inventory: only the user's purchased marketplace cards
-  useEffect(() => {
-    if (!aftermarketMode) {
-      setAftermarketCards([]);
-      return;
-    }
-    const fetchPurchasedInventory = async () => {
-      try {
-        if (!user) { setAftermarketCards([]); return; }
-        let purchased = [];
-        if (aftermarketAll) {
-          purchased = await base44.entities.UserCard.filter({ user_id: user.id, acquisition_method: 'purchased' }, '-created_date');
-        } else if (selectedGame) {
-          purchased = await base44.entities.UserCard.filter({ user_id: user.id, game_name: selectedGame.title, acquisition_method: 'purchased' }, '-created_date');
-        } else {
-          setAftermarketCards([]);
-          return;
-        }
-        const mapped = (purchased || []).map((c) => ({
-          id: c.id,
-          title: c.card_name || c.title || 'Card',
-          series: c.game_name,
-          rarity: c.rarity || c.item_rarity || 'Common',
-          image: c.image_url || undefined,
-          description: c.description || c.item_description || 'Purchased card',
-          stats: c.stats || { power: c.item_power, level: c.item_level },
-          isPurchased: true
-        }));
-        setAftermarketCards(mapped);
-      } catch (e) {
-        console.error('Failed to fetch purchased inventory:', e);
-        setAftermarketCards([]);
-      }
-    };
-    fetchPurchasedInventory();
-  }, [aftermarketMode, aftermarketAll, selectedGame, user]);
-
-  // Fetch user reactions
-  useEffect(() => {
-    const fetchUserReactions = async () => {
-      if (!isAuthenticated || !user) return;
-      try {
-        const allUserReactions = await base44.entities.Reaction.filter({
-          created_by: user.email
-        });
-        const reactionsMap = {};
-        allUserReactions.forEach((r) => {
-          reactionsMap[r.target_id] = r.type;
-        });
-        setUserReactions(reactionsMap);
-      } catch (err) {
-        console.error('Failed to fetch reactions:', err);
-      }
-    };
-    fetchUserReactions();
-  }, [isAuthenticated, user]);
-
-  const handleReaction = async (reviewId, reactionType) => {
-    if (!isAuthenticated) return;
-
-    try {
-      const existingReactions = await base44.entities.Reaction.filter({
-        target_id: reviewId,
-        created_by: user.email
-      });
-
-      if (existingReactions.length > 0) {
-        const existingReaction = existingReactions[0];
-        if (existingReaction.type === reactionType) {
-          await base44.entities.Reaction.delete(existingReaction.id);
-        } else {
-          await base44.entities.Reaction.update(existingReaction.id, { type: reactionType });
-        }
-      } else {
-        await base44.entities.Reaction.create({
-          target_id: reviewId,
-          target_type: 'post',
-          type: reactionType
-        });
-      }
-
-      const allUserReactions = await base44.entities.Reaction.filter({
-        created_by: user.email
-      });
-      const reactionsMap = {};
-      allUserReactions.forEach((r) => {
-        reactionsMap[r.target_id] = r.type;
-      });
-      setUserReactions(reactionsMap);
-    } catch (err) {
-      console.error('Failed to react:', err);
-    }
-  };
-
-  const handleSubmitReview = async (reviewData) => {
-    if (!isAuthenticated || !selectedGame) return;
-
-    try {
-      await base44.entities.Post.create({
-        title: `Review: ${selectedGame.title}`,
-        content: reviewData.content,
-        type: 'game_review',
-        game_title: selectedGame.title,
-        genre: selectedGame.genre,
-        rating: reviewData.rating,
-        community: 'reviews'
-      });
-
-      // Refresh reviews
-      const reviews = await base44.entities.Post.filter({
-        type: 'game_review',
-        game_title: selectedGame.title
-      }, '-created_date');
-      setGameReviews(reviews);
-    } catch (err) {
-      console.error('Failed to submit review:', err);
-    }
-  };
-
+  // Trading cards for selected game
   const tradingCards = useMemo(() => {
-    if (!selectedGame) return [];
-
-    const gameAchievements = localAchievements[selectedGame.title] || [];
+    if (!selectedGame || !localAchievements[selectedGame.title]) return [];
+    const gameAchs = localAchievements[selectedGame.title] || [];
     const cards = [];
-
-    gameAchievements.forEach((achievement) => {
-      if (achievement.reward) {
-        const userCard = userCards.find((c) => c.card_name === achievement.reward.name);
-        const isUnlocked = user?.unlocked_achievements?.includes(achievement.id);
-
+    gameAchs.forEach(ach => {
+      if (ach.reward) {
+        const userCard = userCards.find(c => c.card_name === ach.reward.name);
+        const isUnlocked = user?.unlocked_achievements?.includes(ach.id);
         cards.push({
-          id: achievement.id,
-          title: achievement.reward.name || achievement.title,
+          id: ach.id,
+          title: ach.reward.name || ach.title,
           series: selectedGame.title,
-          rarity: achievement.rarity,
+          rarity: ach.rarity,
           image: selectedGame.cover_image || selectedGame.cover,
-          description: achievement.reward.description || achievement.description,
-          stats: achievement.reward.stats || {},
+          description: ach.reward.description || ach.description,
+          stats: ach.reward.stats || {},
           isPurchased: userCard?.acquisition_method === 'purchased',
-          isUnlocked: isUnlocked,
-          purchasePrice: userCard?.purchase_price
+          isUnlocked,
         });
       }
     });
-
     return cards;
   }, [selectedGame, localAchievements, userCards, user]);
 
-  const genres = useMemo(() => {
-    const g = new Set(allGames.map((game) => game.genre).filter(Boolean));
-    return ['All', ...Array.from(g)];
-  }, [allGames]);
-
-
-
-  // Helper to generate cards for a game
+  // Generate fallback cards
   const generateCardsForGame = useCallback((game) => {
     if (!game) return [];
     return Array.from({ length: 12 }, (_, i) => ({
@@ -595,980 +252,384 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
       rarity: ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'][Math.floor(Math.random() * 5)],
       image: game.cover_image || game.cover,
       description: `A collectible trading card from ${game.title}.`,
-      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) }
+      stats: { strength: Math.floor(Math.random() * 100), magic: Math.floor(Math.random() * 100) },
     }));
   }, []);
 
-  // Current game list (inject Black Market Store tile when aftermarketMode)
-  const displayGames = useMemo(() => (
-    aftermarketMode ? [{ id: 'aftermarket-store', title: 'Black Market Store', isAftermarket: true }, ...filteredGames] : filteredGames
-  ), [aftermarketMode, filteredGames]);
+  const displayCards = useMemo(() => {
+    if (!selectedGame) return [];
+    return tradingCards.length > 0 ? tradingCards : generateCardsForGame(selectedGame);
+  }, [selectedGame, tradingCards, generateCardsForGame]);
 
-  // Current game and cards for cross view
-  const currentCrossGame = displayGames[activeGameIndex];
-  const currentCrossCards = useMemo(
-    () => (aftermarketMode ? aftermarketCards : generateCardsForGame(currentCrossGame)),
-    [aftermarketMode, aftermarketCards, currentCrossGame, generateCardsForGame]
-  );
+  // Score
+  const totalScore = useMemo(() => {
+    if (!user?.unlocked_achievements || !localAchievements) return 12450;
+    let score = 0;
+    Object.values(localAchievements).flat().forEach(ach => {
+      if (user.unlocked_achievements.includes(ach.id)) score += ach.points || 0;
+    });
+    return score || 12450;
+  }, [user, localAchievements]);
+
+  // Reset selected game when genre changes
   useEffect(() => {
-  if (aftermarketMode) {
-    setAftermarketAll(true);
-    setActiveGameIndex(0); // snap to the first (Black Market Store) tile
-    setActiveCardIndex(0);
-  } else {
-    setAftermarketAll(false);
-  }
-}, [aftermarketMode]);
-  const activeCard = currentCrossCards[activeCardIndex];
+    setSelectedGame(null);
+  }, [selectedGenre]);
 
-  // Separate hover scrolling for games (left) and cards (right). WASD only for cards when hovered.
-  useEffect(() => {
-    if (viewMode !== 'cross' || isLoading || displayGames.length === 0) return;
-
-    const handleKeyDown = (e) => {
-      if (hoverZone !== 'cards') return; // only when hovering cards area
-      const key = e.key.toLowerCase();
-      if (!['w','a','s','d'].includes(key)) return; // WASD only
-      e.preventDefault();
-
-      const perRow = getCardsPerRow();
-      const currentGame = displayGames[activeGameIndex];
-      const total = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
-
-      setActiveCardIndex((prev) => {
-        let next = prev;
-        if (key === 'w') next = Math.max(prev - perRow, 0);
-        if (key === 's') next = Math.min(prev + perRow, total - 1);
-        if (key === 'a') next = Math.max(prev - 1, 0);
-        if (key === 'd') next = Math.min(prev + 1, total - 1);
-        return next;
-      });
-    };
-
-    let lastWheelTime = 0;
-    const WHEEL_COOLDOWN = 120;
-
-    const handleCardsWheel = (e) => {
-      if (hoverZone !== 'cards') return;
-      const now = Date.now();
-      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
-      e.preventDefault();
-      const perRow = getCardsPerRow();
-      const currentGame = displayGames[activeGameIndex];
-      const total = aftermarketMode ? currentCrossCards.length : generateCardsForGame(currentGame).length;
-      if (e.deltaY > 0) {
-        setActiveCardIndex((prev) => Math.min(prev + perRow, total - 1));
-      } else if (e.deltaY < 0) {
-        setActiveCardIndex((prev) => Math.max(prev - perRow, 0));
-      }
-      lastWheelTime = now;
-    };
-
-    const handleGamesWheel = (e) => {
-      if (hoverZone !== 'games') return;
-      const now = Date.now();
-      if (now - lastWheelTime < WHEEL_COOLDOWN) return;
-      e.preventDefault();
-      if (e.deltaY > 0) {
-        setActiveGameIndex((prev) => Math.min(prev + 1, displayGames.length - 1));
-        setActiveCardIndex(0);
-      } else if (e.deltaY < 0) {
-        setActiveGameIndex((prev) => Math.max(prev - 1, 0));
-        setActiveCardIndex(0);
-      }
-      lastWheelTime = now;
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    const cardsEl = cardsGridRef.current;
-    const gamesEl = gamesListRef.current;
-    if (cardsEl) cardsEl.addEventListener('wheel', handleCardsWheel, { passive: false });
-    if (gamesEl) gamesEl.addEventListener('wheel', handleGamesWheel, { passive: false });
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (cardsEl) cardsEl.removeEventListener('wheel', handleCardsWheel);
-      if (gamesEl) gamesEl.removeEventListener('wheel', handleGamesWheel);
-    };
-  }, [viewMode, isLoading, displayGames.length, activeGameIndex, aftermarketMode, currentCrossCards, generateCardsForGame, hoverZone, getCardsPerRow]);
-
-  // Constants for positioning
-  const ITEM_HEIGHT = 80;
-  const CROSS_Y_VH = 40;
-
-  // Layered Escape key handling - closes overlays first, then page
+  // Escape key handling
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        // Close in order: Blacksmith -> SkillTree -> CardEnhancement -> Achievement Detail -> Page
-        if (blacksmithCard) {
-          setBlacksmithCard(null);
-        } else if (skillTreeCard) {
-          setSkillTreeCard(null);
-        } else if (selectedCard) {
-          setSelectedCard(null);
-        } else if (selectedAchievement) {
-          setSelectedAchievement(null);
-        } else if (onClosePage) {
-          onClosePage();
-        } else {
-          navigate(createPageUrl('LunaTemplate'));
-        }
+        if (blacksmithCard) setBlacksmithCard(null);
+        else if (skillTreeCard) setSkillTreeCard(null);
+        else if (selectedCard) setSelectedCard(null);
+        else if (selectedAchievement) setSelectedAchievement(null);
+        else if (onClosePage) onClosePage();
+        else navigate(createPageUrl('LunaTemplate'));
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [blacksmithCard, skillTreeCard, selectedCard, selectedAchievement, onClosePage, navigate]);
 
   return (
     <GlassPageFrame>
-    <div className="h-screen w-full text-slate-200 overflow-hidden relative font-sans selection:bg-blue-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-      
-      <AnimatePresence mode="wait">
-        {viewMode === 'cross' ? (
-        /* CROSS INTERFACE VIEW */
-        <motion.div
-          key="cross-interface"
-          className="w-full h-full relative"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}>
+      <div className="h-screen w-full text-white font-sans overflow-hidden relative flex flex-col"
+        style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
+      >
+        {/* Ambient glow */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+        </div>
 
-            {/* Dynamic Background */}
-            <AnimatePresence mode="wait">
-              <motion.div
-              key={currentCrossGame?.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.6 }}
-              className="absolute inset-0 z-0">
+        {/* ═══ SUB-NAV BAR ═══ */}
+        <div className="relative z-10 flex-shrink-0 mt-16">
+          <div className="flex items-center px-6 py-2 gap-0"
+            style={{
+              background: 'rgba(8, 12, 18, 0.5)',
+              backdropFilter: 'blur(20px)',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {/* Left: Achievement Cards label */}
+            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
+              Achievement Cards
+            </span>
 
-                <div className="absolute inset-0 bg-transparent" />
-                {currentCrossGame?.cover_image &&
-              <>
-                    <img
-                  src={currentCrossGame.cover_image || currentCrossGame.cover}
-                  alt="bg"
-                  className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
+            {/* Fade divider left */}
+            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+            </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
-                  </>
-              }
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
-              </motion.div>
-            </AnimatePresence>
+            {/* Center: Scrollable genre tabs */}
+            <GenreScrollTabs
+              genres={GENRES}
+              selectedGenre={selectedGenre}
+              onSelect={setSelectedGenre}
+            />
 
-            {/* Interface Layer */}
-            <div className="relative z-10 w-full h-full">
+            {/* Fade divider right */}
+            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+            </div>
 
-              {/* Header */}
-
-
-              {/* HORIZONTAL GENRE FILTER (Top) */}
-              <div 
-                className="absolute top-20 left-0 right-0 z-40 h-14 flex items-center overflow-x-auto scrollbar-hide px-12 mask-fade-x"
-                onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+            {/* Right: Black Market + Skill Tree buttons */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
+                  aftermarketMode
+                    ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
               >
-                <div className="flex items-center gap-4">
-                  {/* All Games Option */}
+                <DollarSign className="w-4 h-4" />
+                <span>Black Market</span>
+              </button>
+
+              <button
+                onClick={() => { setSkillTreeMode(!skillTreeMode); setBlacksmithMode(false); setAftermarketMode(false); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
+                  skillTreeMode
+                    ? 'bg-purple-500/15 border-purple-400/30 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.1)]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <Layers className="w-4 h-4" />
+                <span>Skill Tree</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ MAIN CONTENT: Games List + Cards ═══ */}
+        <div className="flex-1 flex min-h-0 relative z-10">
+
+          {/* LEFT: Games List */}
+          <div
+            className="h-full flex flex-col overflow-hidden flex-shrink-0"
+            style={{
+              width: '320px',
+              minWidth: '320px',
+              background: 'rgba(10, 14, 20, 0.65)',
+              backdropFilter: 'blur(30px)',
+              borderRight: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            {/* List Header */}
+            <div className="p-4 border-b border-white/6 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center`}>
+                  <Gamepad2 className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-sm">{selectedGenre.id === 'all' ? 'All' : selectedGenre.name} Games</h2>
+                  <p className="text-white/35 text-[10px]">{gameData.length} game{gameData.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Games */}
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+                </div>
+              ) : gameData.length === 0 ? (
+                <div className="text-center py-12 text-white/25">
+                  <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                  <p className="text-xs">No games in this genre yet</p>
+                </div>
+              ) : (
+                gameData.map((game) => (
                   <motion.button
-                    onClick={() => { setActiveGenre('All'); setActiveGameIndex(0); setActiveCardIndex(0); }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`
-                      flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
-                      ${activeGenre === 'All' 
-                        ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
-                        : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
-                      }
-                    `}
+                    key={game.id}
+                    onClick={() => setSelectedGame(game)}
+                    whileHover={{ x: 2 }}
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
+                      selectedGame?.id === game.id
+                        ? 'bg-white/10 border-white/15'
+                        : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
+                    }`}
                   >
-                    <LayoutGrid className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">All</span>
-                  </motion.button>
-
-                  {/* Genre Options */}
-                  {genres.filter(g => g !== 'All').map((genre) => {
-                    const isActive = activeGenre === genre;
-                    const Icon = GENRE_ICONS[genre] || Gamepad2;
-                    return (
-                      <motion.button
-                        key={genre}
-                        onClick={() => { setActiveGenre(genre); setActiveGameIndex(0); setActiveCardIndex(0); }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`
-                          flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-300 whitespace-nowrap
-                          ${isActive 
-                            ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-100 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
-                            : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white'
-                          }
-                        `}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase tracking-wider">{genre}</span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </div>
-              
-              {/* Header with Controls (left) and Game Name (right) */}
-              <div className="absolute top-36 left-12 right-12 flex items-center justify-between z-30">
-                {/* Left: Control Buttons */}
-                <div className="flex items-center gap-3">
-                  {/* Aftermarket Mode Toggle */}
-                  <button
-                  onClick={() => setAftermarketMode(!aftermarketMode)}
-                  className={`pl-2 pr-3 py-1.5 rounded-lg border transition-all flex items-center gap-2 ${
-                    aftermarketMode
-                      ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-200'
-                      : 'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'
-                  }`}
-                  title={aftermarketMode ? 'Viewing Black Market Cards' : 'Show Black Market Cards'}>
-                    <DollarSign className="w-5 h-5" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider">Black Market Cards</span>
-                  </button>
-                  {aftermarketMode && (
-                    <Badge variant="outline" className="bg-white/5 border-white/10 text-white/70">
-                      {currentCrossCards.length > 0 ? `${currentCrossCards.length} cards` : 'Empty cards'}
-                    </Badge>
-                  )}
-
-                  {/* Skill Tree Mode Toggle */}
-                  <button
-                  onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);} }
-                  className={`p-2 rounded-lg border transition-all ${
-                  skillTreeMode ?
-                  'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                  'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                  }
-                  title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
-                    <Layers className="w-5 h-5" />
-                  </button>
-
-                  {/* Blacksmith Mode Toggle */}
-                  <button
-                  onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);} }
-                  className={`p-2 rounded-lg border transition-all ${
-                  blacksmithMode ?
-                  'bg-orange-500/30 border-orange-400/50 text-orange-300' :
-                  'bg-white/10 hover:bg-white/20 border-white/10 hover:border-white/30 text-white/80'}`
-                  }
-                  title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
-                    <Hammer className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Right: Game Name (large) */}
-                <h2 className="text-2xl font-black text-white/90 uppercase tracking-wider drop-shadow-lg truncate max-w-[50%] text-right">
-                  {currentCrossGame?.title || 'Select a Game'}
-                </h2>
-              </div>
-
-              {/* Faded Vertical Divider between games and cards */}
-              <div className="absolute top-[15%] bottom-[15%] left-[240px] w-px z-20 pointer-events-none" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
-
-              {/* VERTICAL AXIS (Games) */}
-              <div className="absolute top-0 bottom-0 left-16 w-48 flex flex-col items-center z-20 pointer-events-none">
-
-                <motion.div
-                ref={gamesListRef}
-                className="flex flex-col items-center gap-6 py-8 pointer-events-auto"
-                onMouseEnter={() => setHoverZone('games')}
-                onMouseLeave={() => setHoverZone(null)}
-                animate={{
-                  y: `calc(${CROSS_Y_VH}vh - ${activeGameIndex * (ITEM_HEIGHT + 24)}px - ${ITEM_HEIGHT / 2}px)`
-                }}
-                transition={{ type: "spring", stiffness: 250, damping: 25 }}>
-
-                  {displayGames.map((game, idx) => {
-                  const isActive = idx === activeGameIndex;
-                  return (
-                    <motion.div
-                      key={game.id}
-                      onClick={() => {
-                        setActiveGameIndex(idx);
-                        setActiveCardIndex(0);
-                        if (aftermarketMode) {
-                          if (game.isAftermarket) {
-                            setAftermarketAll(true);
-                          } else {
-                            setAftermarketAll(false);
-                          }
-                        }
-                      }}
-                      animate={{
-                        scale: isActive ? 1.2 : 0.9,
-                        opacity: isActive ? 1 : 0.3,
-                        x: isActive ? 20 : 0
-                      }}
-                      className="flex flex-col items-center gap-2 cursor-pointer w-32">
-
-                        <div className={`
-                          w-16 h-16 rounded-2xl overflow-hidden transition-all duration-300 relative
-                          ${isActive ?
-                      'shadow-[0_0_30px_rgba(255,255,255,0.2)] border-2 border-white/40' :
-                      'border border-white/10'}
-                        `
-                      }>
-                          {game.isAftermarket ? (
-                            <div className="w-full h-full flex items-center justify-center bg-black/50">
-                              <DollarSign className="w-8 h-8 text-emerald-300" />
-                            </div>
-                          ) : (
-                            <img
-                              src={game.cover_image || game.cover}
-                              alt={game.title}
-                              className="w-full h-full object-cover" />
-                          )}
-                          {aftermarketMode && (
-                            <div className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-full text-[9px] border backdrop-blur-md ${((game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0)) > 0) ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' : 'bg-white/10 text-white/60 border-white/20'}`}>
-                              {((game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0)) > 0)
-                                ? (game.isAftermarket ? purchasedTotalCount : (purchasedCountsByGame[game.title] || 0))
-                                : 'Empty'}
-                            </div>
-                          )}
+                    <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
+                      {game.cover_image || game.cover ? (
+                        <img src={game.cover_image || game.cover} alt={game.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
+                          <Gamepad2 className="w-4 h-4 text-white/25" />
                         </div>
-                        <span className={`text-xs font-bold uppercase tracking-widest text-center truncate w-full ${isActive ? 'text-white' : 'text-transparent'}`}>
-                          {game.title}
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-white/30 text-[10px]">{game.genre}</span>
+                        <span className="text-yellow-400/50 text-[10px] flex items-center gap-0.5">
+                          <Trophy className="w-2.5 h-2.5" />{game.achievementCards}
                         </span>
-                      </motion.div>);
-
-                })}
-                </motion.div>
-              </div>
-
-              {/* CARDS GRID (Vertical scroll) */}
-              <div className="absolute left-0 right-0 top-[48vh] -translate-y-1/2 h-[60vh] z-10 flex items-center pointer-events-none">
-                <div className="w-full h-full pl-64 pr-12 pointer-events-auto overflow-y-auto"
-                     ref={cardsGridRef}
-                     onMouseEnter={() => setHoverZone('cards')}
-                     onMouseLeave={() => setHoverZone(null)}
-                     >
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-
-                  {currentCrossCards.map((card, idx) => {
-                  const isActive = idx === activeCardIndex;
-                  return (
-                    <motion.div
-                      key={card.id}
-                      onClick={() => {
-                        setActiveCardIndex(idx);
-                        if (isActive) {
-                          if (skillTreeMode) {
-                            setSkillTreeCard(card);
-                          } else if (blacksmithMode) {
-                            setBlacksmithCard(card);
-                          } else {
-                            setSelectedCard(card);
-                          }
-                        }
-                      }}
-                      animate={{
-                        scale: isActive ? 1.1 : 0.9,
-                        opacity: isActive ? 1 : 0.4,
-                        y: isActive ? 0 : 20
-                      }}
-                      className={`
-                          w-[180px] aspect-[2.5/3.5] flex-shrink-0 rounded-xl relative overflow-hidden cursor-pointer
-                          border transition-all duration-300 shadow-2xl
-                          ${isActive ?
-                      'border-white/40 shadow-blue-500/20' :
-                      'border-white/5 bg-black/40'}
-                        `
-                      }>
-
-                        <ShinyCard index={idx}>
-                          <div className="absolute inset-0 flex flex-col p-3">
-                            <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                              <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                            </div>
-                            <div className="flex-1 flex flex-col justify-between">
-                              <div>
-                                <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                              card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                              'border-slate-500/50 text-slate-400'}`
-                              }>
-                                  {card.rarity}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </ShinyCard>
-                        {isActive &&
-                      <motion.div
-                        layoutId="card-active-border"
-                        className="absolute inset-0 border-4 border-white/60 rounded-xl z-20"
-                        transition={{ duration: 0.2 }} />
-
-                      }
-                      </motion.div>);
-
-                })}
-                  </div>
-                </div>
-              </div>
-
-              {/* ACTIVE CARD DETAILS */}
-              <div className="absolute bottom-16 left-64 max-w-2xl z-30 pointer-events-none">
-                <AnimatePresence mode="wait">
-                  {activeCard &&
-                <motion.div
-                  key={activeCard.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-4">
-
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-                          {currentCrossGame?.genre || 'adventure'}
-                        </Badge>
-                        <Badge className={`backdrop-blur-md border ${
-                    activeCard.rarity === 'Legendary' ? 'bg-orange-500/20 border-orange-500/40 text-orange-300' :
-                    activeCard.rarity === 'Epic' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' :
-                    activeCard.rarity === 'Rare' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' :
-                    activeCard.rarity === 'Mythic' ? 'bg-red-500/20 border-red-500/40 text-red-300' :
-                    'bg-slate-500/20 border-slate-500/40 text-slate-300'}`
-                    }>
-                          {activeCard.rarity}
-                        </Badge>
                       </div>
-                      <h1 className="text-5xl font-black text-white leading-tight drop-shadow-xl">
-                        {activeCard.title}
-                      </h1>
-                      <p className="text-lg text-white/70 line-clamp-3 max-w-xl drop-shadow-md">
-                        {activeCard.description}
-                      </p>
-                    </motion.div>
-                }
-                </AnimatePresence>
-              </div>
-            </div>
-          </motion.div>) : (
-
-        /* CLASSIC SIDEBAR VIEW */
-        <motion.div
-          key="classic-view"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="h-full w-full">
-
-            {/* Ambient Glow */}
-            <div className="absolute inset-0 z-0">
-              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-              <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
-            </div>
-
-            <div className="relative z-10 flex flex-col h-full p-6 md:p-8 pt-20">
-              
-              {/* Main Layout: 2 Columns */}
-              <div className="flex gap-8 h-full overflow-hidden">
-                
-                {/* Left Sidebar (Shiny Box) */}
-                <div className="w-[320px] flex-shrink-0 h-full flex flex-col gap-6">
-                  
-                  {/* Header */}
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-black tracking-tighter text-white">
-                      Achievements
-                    </h1>
-                    
-                    {/* Cross View Toggle - 4 small squares grid icon */}
-                    <motion.button
-                    onClick={() => setViewMode('cross')}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="ml-auto w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center border border-white/15"
-                    title="Switch to Cross View">
-
-                      <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                        <div className="bg-white/80 rounded-[2px]" />
-                      </div>
-                    </motion.button>
-
-                    {/* Skill Tree Mode Toggle */}
-                    <motion.button
-                    onClick={() => {setSkillTreeMode(!skillTreeMode);setBlacksmithMode(false);}}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                    skillTreeMode ?
-                    'bg-purple-500/30 border-purple-400/50 text-purple-300' :
-                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
-                    }
-                    title={skillTreeMode ? 'Exit Skill Tree Mode' : 'Enter Skill Tree Mode'}>
-
-                      <Layers className="w-4 h-4" />
-                    </motion.button>
-
-                    {/* Blacksmith Mode Toggle */}
-                    <motion.button
-                    onClick={() => {setBlacksmithMode(!blacksmithMode);setSkillTreeMode(false);}}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
-                    blacksmithMode ?
-                    'bg-orange-500/30 border-orange-400/50 text-orange-300' :
-                    'bg-white/10 hover:bg-white/20 border-white/15 text-white/80'}`
-                    }
-                    title={blacksmithMode ? 'Exit Blacksmith Mode' : 'Enter Blacksmith Mode'}>
-
-                      <Hammer className="w-4 h-4" />
-                    </motion.button>
-
-                    {/* Filter Drawer Trigger - New Feature */}
-                    <Sheet>
-                      <SheetTrigger asChild>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center border bg-blue-500/20 border-blue-400/30 text-blue-300 hover:bg-blue-500/30"
-                          title="Open Filters"
-                        >
-                          <SlidersHorizontal className="w-4 h-4" />
-                        </motion.button>
-                      </SheetTrigger>
-                      <SheetContent side="right" className="w-[300px] border-l border-white/10 bg-slate-950/95 backdrop-blur-xl text-white">
-                        <SheetHeader>
-                          <SheetTitle className="text-white">Filters & Options</SheetTitle>
-                        </SheetHeader>
-                        <div className="py-6 flex flex-col gap-6">
-                          
-                          {/* Search in Drawer */}
-                          <div className="space-y-2">
-                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Search</label>
-                            <div className="relative">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                              <Input
-                                placeholder="Search games..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="bg-white/5 border-white/10 pl-9 text-white placeholder:text-white/30"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Genre Filter in Drawer */}
-                          <div className="space-y-2">
-                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">Genre</label>
-                            <Select value={activeGenre} onValueChange={setActiveGenre}>
-                              <SelectTrigger className="bg-white/5 border-white/10 text-white">
-                                <SelectValue placeholder="Select Genre" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-slate-900 border-white/10 text-white">
-                                {genres.map((genre) => (
-                                  <SelectItem key={genre} value={genre} className="focus:bg-white/10 focus:text-white">
-                                    {genre}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Additional Options */}
-                          <div className="space-y-2">
-                            <label className="text-xs font-bold text-white/50 uppercase tracking-wider">View Mode</label>
-                            <div className="grid grid-cols-2 gap-2">
-                              <button 
-                                onClick={() => setViewMode('cross')}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all ${viewMode === 'cross' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
-                              >
-                                Cross View
-                              </button>
-                              <button 
-                                onClick={() => setViewMode('classic')}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'}`}
-                              >
-                                Grid View
-                              </button>
-                            </div>
-                          </div>
-
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex-1 h-0.5 rounded-full bg-white/5 overflow-hidden">
+                          <div className={`h-full rounded-full bg-gradient-to-r ${selectedGenre.color}`} style={{ width: `${game.completionRate}%` }} />
                         </div>
-                      </SheetContent>
-                    </Sheet>
-                  </div>
+                        <span className="text-white/20 text-[9px]">{game.completionRate}%</span>
+                      </div>
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </div>
 
-                  {/* Shiny Box Container */}
-                  <ShinySidebarBox className="flex-1 flex flex-col p-5">
-                    
-                    {/* Filters moved to seamless right-side menu */}
-
-                    {/* Game List */}
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                     {aftermarketMode && (
-                       <button
-                         onClick={() => { setAftermarketAll(true); }}
-                         className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${aftermarketAll ? 'shadow-lg border-emerald-400/30' : 'hover:border-emerald-400/20 border-transparent'}`}
-                         style={aftermarketAll ? { background: 'rgba(16, 185, 129, 0.12)', boxShadow: '0 0 12px rgba(16, 185, 129, 0.15)' } : { background: 'transparent' }}
-                       >
-                         <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors flex items-center justify-center">
-                           <DollarSign className="w-5 h-5 text-emerald-300" />
-                         </div>
-                         <div className="flex-1 text-left overflow-hidden">
-                           <h3 className={`font-bold text-sm truncate ${aftermarketAll ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>Black Market Cards</h3>
-                           <p className="text-xs text-slate-500 truncate">All purchased marketplace cards</p>
-                         </div>
-                         <div className="ml-auto text-right">
-                           <span className="text-[11px] text-white/60">{purchasedTotalCount > 0 ? `${purchasedTotalCount} owned` : 'Empty cards'}</span>
-                         </div>
-                       </button>
-                     )}
-                     {filteredGames.map((game) =>
-                    <motion.button
-                      key={game.id}
-                      onClick={() => {
-                        setSelectedGame(game);
-                        setSelectedAchievement(null);
-                        if (aftermarketMode) setAftermarketAll(false);
-                      }}
-                      className={`group w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border ${
-                      selectedGame?.id === game.id ?
-                      'shadow-lg border-cyan-400/30' :
-                      'hover:border-cyan-400/20 border-transparent'}`
-                      }
-                      style={selectedGame?.id === game.id ? {
-                        background: 'rgba(34, 211, 238, 0.12)',
-                        boxShadow: '0 0 12px rgba(34, 211, 238, 0.15)'
-                      } : {
-                        background: 'transparent'
-                      }}
-                      whileHover={{ x: 4 }}>
-
-                          {/* Small Box (Image) */}
-                          <div className="w-12 h-12 rounded-lg bg-black/50 overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-white/30 transition-colors">
-                            <img src={game.cover_image || game.cover} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          
-                          {/* Name */}
-                          <div className="flex-1 text-left overflow-hidden">
-                            <h3 className={`font-bold text-sm truncate ${selectedGame?.id === game.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
-                              {game.title}
-                            </h3>
-                            <p className="text-xs text-slate-500 truncate">{game.genre}</p>
-                          </div>
-                          {aftermarketMode && (
-                            <div className="ml-auto text-right">
-                              <span className="text-[11px] text-white/60">{(purchasedCountsByGame[game.title] || 0) > 0 ? `${purchasedCountsByGame[game.title]} owned` : 'Empty cards'}</span>
-                            </div>
-                          )}
-
-                          {selectedGame?.id === game.id &&
-                      <div className="w-1 h-8 bg-blue-500 rounded-full" />
-                      }
-                        </motion.button>
-                    )}
+          {/* RIGHT: Cards Grid */}
+          <div className="flex-1 h-full overflow-hidden"
+            style={{
+              background: 'rgba(8, 12, 18, 0.55)',
+              backdropFilter: 'blur(20px)',
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {selectedGame ? (
+                <motion.div
+                  key={`cards-${selectedGame.id}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  {/* Game Header */}
+                  <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
+                    <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+                      <img src={selectedGame.cover_image || selectedGame.cover} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
+                        <span className="text-white/30 text-xs">{displayCards.length} cards</span>
+                      </div>
                     </div>
 
-                  </ShinySidebarBox>
-                </div>
+                    {/* Mode indicators */}
+                    {skillTreeMode && <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30">Skill Tree Mode</Badge>}
+                    {blacksmithMode && <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30">Blacksmith Mode</Badge>}
+                    {aftermarketMode && <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30">Black Market</Badge>}
+                  </div>
 
-                {/* Faded Vertical Divider */}
-                <div className="w-px flex-shrink-0 self-stretch my-4" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, transparent 100%)' }} />
-
-                {/* Center Content: Achievements Grid (Cards) */}
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
-                  {selectedGame ?
-                <>
-                      {/* Tab Toggle: Cards / Peer Reviews */}
-                      <div className="flex items-center gap-3 mb-4">
-                        
-                        <button
-                      onClick={() => setShowReviewPanel(false)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      !showReviewPanel ?
-                      'bg-cyan-500/20 border border-cyan-400/30 text-cyan-300' :
-                      'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'}`
-                      }>
-
-                          <Layers className="w-4 h-4" />
-                          Card Collection
-                        </button>
-                        <button
-                      onClick={() => setShowReviewPanel(true)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      showReviewPanel ?
-                      'bg-purple-500/20 border border-purple-400/30 text-purple-300' :
-                      'bg-white/5 border border-white/10 text-white/50 hover:text-white/80'}`
-                      }>
-
-                          <MessageSquare className="w-4 h-4" />
-                          Peer Reviews
-                          {gameReviews.length > 0 &&
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full bg-white/10 text-[10px]">
-                              {gameReviews.length}
-                            </span>
-                      }
-                        </button>
-                      </div>
-
-                      <AnimatePresence mode="wait">
-                        {!showReviewPanel ?
-                    <motion.div
-                      key="cards"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="flex-1 overflow-y-auto pr-4 custom-scrollbar pb-20">
-
-                            {tradingCards.length > 0 ?
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                                    {tradingCards.map((card, i) =>
-                        <div key={card.id} className="aspect-[2.5/3.5]">
-                                            <ShinyCard index={i} onClick={() => {
-                            if (skillTreeMode) {
-                              setSkillTreeCard(card);
-                            } else if (blacksmithMode) {
-                              setBlacksmithCard(card);
-                            } else {
-                              setSelectedCard(card);
-                            }
-                          }}>
-                                               <div className="absolute inset-0 flex flex-col p-3">
-                                                   <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                                                       <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                                                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                       {card.isPurchased && !card.isUnlocked &&
-                                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-500/90 backdrop-blur-sm flex items-center justify-center border border-white/20 shadow-lg">
-                                                           <DollarSign className="w-4 h-4 text-white" />
-                                                         </div>
-                                }
-                                                   </div>
-                                                   <div className="flex-1 flex flex-col justify-between">
-                                                       <div>
-                                                           <h3 className="text-white font-bold text-xs leading-tight mb-1 line-clamp-2">{card.title}</h3>
-                                                           <div className="flex gap-1 flex-wrap">
-                                                               <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                                    card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                    card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                    card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                    card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
-                                    'border-slate-500/50 text-slate-400'}`
-                                    }>
-                                                                   {card.rarity}
-                                                               </Badge>
-                                                               {card.isPurchased &&
-                                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[9px] h-4 px-1">
-                                                                   BOUGHT
-                                                                 </Badge>
-                                    }
-                                                           </div>
-                                                       </div>
-                                                   </div>
-                                               </div>
-                                            </ShinyCard>
-                                        </div>
-                        )}
-                                </div> :
-
-                      <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                                    <Layers className="w-16 h-16 mb-4 opacity-20" />
-                                    <p className="text-lg font-medium">No trading cards found</p>
+                  {/* Cards Grid */}
+                  <div className="flex-1 overflow-y-auto p-5">
+                    {displayCards.length > 0 ? (
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                        {displayCards.map((card, i) => (
+                          <motion.div
+                            key={card.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.02 }}
+                            className="aspect-[2.5/3.5]"
+                          >
+                            <ShinyCard
+                              index={i}
+                              onClick={() => {
+                                if (skillTreeMode) setSkillTreeCard(card);
+                                else if (blacksmithMode) setBlacksmithCard(card);
+                                else setSelectedCard(card);
+                              }}
+                            >
+                              <div className="absolute inset-0 flex flex-col p-2">
+                                <div className="relative w-full h-3/5 rounded-md overflow-hidden mb-1.5 border border-white/10">
+                                  <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                  {card.isPurchased && !card.isUnlocked && (
+                                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-green-500/90 flex items-center justify-center border border-white/20">
+                                      <DollarSign className="w-2.5 h-2.5 text-white" />
+                                    </div>
+                                  )}
                                 </div>
-                      }
-                          </motion.div> :
-
-                    <motion.div
-                      key="reviews"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="flex-1 overflow-hidden flex gap-6">
-
-                            {/* Left: Review Composer + Insights */}
-                            <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar pb-20">
-                              {/* Game Review Header */}
-                              <div className="flex items-center gap-4 mb-2">
-                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
-                                  <img
-                              src={selectedGame.cover_image || selectedGame.cover}
-                              alt={selectedGame.title}
-                              className="w-full h-full object-cover" />
-
-                                </div>
-                                <div>
-                                  <h2 className="text-xl font-bold text-white">{selectedGame.title}</h2>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Badge className="bg-white/10 text-white/70 border-white/20">
-                                      {selectedGame.genre}
-                                    </Badge>
-                                    <div className="flex items-center gap-1 text-white/50 text-sm">
-                                      <Users className="w-3.5 h-3.5" />
-                                      <span>{gameReviews.length} reviews</span>
+                                <div className="flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <h3 className="text-white font-bold text-[10px] leading-tight mb-0.5 line-clamp-2">{card.title}</h3>
+                                    <div className="flex gap-1 flex-wrap">
+                                      <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${
+                                        card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                        card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                        card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                        card.rarity === 'Mythic' ? 'border-red-500/50 text-red-400' :
+                                        'border-slate-500/50 text-slate-400'
+                                      }`}>
+                                        {card.rarity}
+                                      </Badge>
+                                      {card.isPurchased && (
+                                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[8px] h-3.5 px-1">
+                                          BOUGHT
+                                        </Badge>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
                               </div>
-
-                              {/* Review Composer */}
-                              <ReviewComposer
-                          onSubmit={handleSubmitReview}
-                          isAuthenticated={isAuthenticated}
-                          user={user}
-                          userStats={{
-                            achievements: user?.unlocked_achievements?.length || 0,
-                            playTime: '24h'
-                          }} />
-
-
-                              {/* Review Insights */}
-                              <ReviewInsights reviews={gameReviews} />
-
-                              {/* Full Reviews List */}
-                              <div className="space-y-3">
-                                <h3 className="text-white font-medium text-sm flex items-center gap-2">
-                                  <TrendingUp className="w-4 h-4 text-cyan-400" />
-                                  All Reviews
-                                </h3>
-                                {gameReviews.length === 0 ?
-                          <div
-                            className="rounded-2xl p-8 text-center"
-                            style={{
-                              background: 'rgba(255, 255, 255, 0.02)',
-                              border: '1px solid rgba(255, 255, 255, 0.06)'
-                            }}>
-
-                                    <MessageSquare className="w-12 h-12 text-white/10 mx-auto mb-3" />
-                                    <p className="text-white/40 text-sm">No reviews yet for this game</p>
-                                    <p className="text-white/20 text-xs mt-1">Be the first to share your experience!</p>
-                                  </div> :
-
-                          gameReviews.map((review) =>
-                          <ReviewCard
-                            key={review.id}
-                            review={review}
-                            variant="default"
-                            onReact={handleReaction}
-                            userReaction={userReactions[review.id]}
-                            isAuthenticated={isAuthenticated} />
-
-                          )
-                          }
-                              </div>
-                            </div>
-
-                            {/* Right: Live Review Feed */}
-                            <div className="w-80 flex-shrink-0 h-full">
-                              <LiveReviewFeed
-                          reviews={gameReviews}
-                          onReact={handleReaction}
-                          userReactions={userReactions}
-                          isAuthenticated={isAuthenticated} />
-
-                            </div>
+                            </ShinyCard>
                           </motion.div>
-                    }
-                      </AnimatePresence>
-                    </> :
-
-                <div className="h-full flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
-                      <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
-                      <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                      <p className="max-w-md text-center">Choose a game from the sidebar to view your collection of achievements and trading cards.</p>
-                    </div>
-                }
-                </div>
-
-              </div>
-            </div>
-          </motion.div>)
-        }
-      </AnimatePresence>
-
-      {/* Detail Overlay */}
-      <AnimatePresence>
-        {selectedAchievement &&
-        <AchievementDetailOverlay
-          achievement={selectedAchievement}
-          onClose={() => setSelectedAchievement(null)}
-          onTrack={handleTrackAchievement}
-          isTracked={trackedAchievements.includes(selectedAchievement.id)}
-          onShare={handleShareAchievement}
-          onChallenge={handleChallenge} />
-
-        }
-      </AnimatePresence>
-
-      {/* Card Enhancement Overlay */}
-      <AnimatePresence>
-        {selectedCard && !skillTreeMode &&
-        <CardEnhancementOverlay
-          card={selectedCard}
-          onClose={() => setSelectedCard(null)} />
-
-        }
-      </AnimatePresence>
-
-      {/* Skill Tree Overlay */}
-      <AnimatePresence>
-        {skillTreeCard && skillTreeMode &&
-        <SkillTreeOverlay
-          card={skillTreeCard}
-          onClose={() => setSkillTreeCard(null)} />
-
-        }
-      </AnimatePresence>
-
-      {/* Blacksmith Overlay */}
-      <AnimatePresence>
-        {blacksmithCard && blacksmithMode &&
-        <BlacksmithOverlay
-          card={blacksmithCard}
-          onClose={() => setBlacksmithCard(null)} />
-
-        }
-      </AnimatePresence>
-
-      {/* Challenge Modal */}
-      {achievementToChallenge &&
-      <ChallengeFriendModal
-        achievement={achievementToChallenge}
-        isOpen={challengeModalOpen}
-        onClose={() => setChallengeModalOpen(false)} />
-
-      }
-
-      {/* Floating Score Display */}
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl">
-
-        <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
-          <Trophy className="w-5 h-5 text-yellow-400" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-64 flex flex-col items-center justify-center text-slate-500">
+                        <Layers className="w-12 h-12 mb-3 opacity-20" />
+                        <p className="text-sm font-medium">No trading cards found</p>
+                        <p className="text-xs text-white/20 mt-1">Unlock achievements to earn cards</p>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-full flex flex-col items-center justify-center text-center px-8"
+                >
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} opacity-20 flex items-center justify-center mb-6`}>
+                    <Gamepad2 className="w-10 h-10 text-white/40" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
+                  <p className="text-white/20 text-sm max-w-sm">
+                    Choose a game from the list to view its achievement cards and collection.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-        <div>
-          <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Total Score</div>
-          <div className="text-xl font-black text-white leading-none">{totalScore.toLocaleString()}</div>
-        </div>
-      </motion.div>
 
-    </div>
-    </GlassPageFrame>);
+        {/* Overlays */}
+        <AnimatePresence>
+          {selectedAchievement && (
+            <AchievementDetailOverlay
+              achievement={selectedAchievement}
+              onClose={() => setSelectedAchievement(null)}
+              onTrack={handleTrackAchievement}
+              isTracked={trackedAchievements.includes(selectedAchievement.id)}
+              onShare={handleShareAchievement}
+              onChallenge={handleChallenge}
+            />
+          )}
+        </AnimatePresence>
 
+        <AnimatePresence>
+          {selectedCard && !skillTreeMode && (
+            <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {skillTreeCard && skillTreeMode && (
+            <SkillTreeOverlay card={skillTreeCard} onClose={() => setSkillTreeCard(null)} />
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {blacksmithCard && blacksmithMode && (
+            <BlacksmithOverlay card={blacksmithCard} onClose={() => setBlacksmithCard(null)} />
+          )}
+        </AnimatePresence>
+
+        {achievementToChallenge && (
+          <ChallengeFriendModal
+            achievement={achievementToChallenge}
+            isOpen={challengeModalOpen}
+            onClose={() => setChallengeModalOpen(false)}
+          />
+        )}
+
+        {/* Floating Score */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl"
+        >
+          <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
+            <Trophy className="w-5 h-5 text-yellow-400" />
+          </div>
+          <div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Total Score</div>
+            <div className="text-xl font-black text-white leading-none">{totalScore.toLocaleString()}</div>
+          </div>
+        </motion.div>
+      </div>
+    </GlassPageFrame>
+  );
 }
 
 export default function Achievements({ onExitToLibrary, onClose, showCloseButton }) {
   return (
     <div className="h-screen w-full overflow-hidden relative">
       <AchievementsView onExitToLibrary={onExitToLibrary} onClosePage={onClose} />
-    </div>);
-
+    </div>
+  );
 }
