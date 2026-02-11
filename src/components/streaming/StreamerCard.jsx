@@ -1,73 +1,77 @@
-import React from "react";
-import { Users, Circle } from "lucide-react";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 
-export default function StreamerCard({ streamer, onClick }) {
-  const isLive = streamer.is_live;
+export default function StreamerCard({ name, avatar, game, isSelected, onClick }) {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMousePos({
+      x: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top) / rect.height,
+    });
+  };
+
+  const rotateX = isHovered ? (mousePos.y - 0.5) * -12 : 0;
+  const rotateY = isHovered ? (mousePos.x - 0.5) * 12 : 0;
+
   return (
-    <div
-      onClick={onClick}
-      className="relative rounded-xl overflow-hidden cursor-pointer group"
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        backdropFilter: "blur(24px) saturate(160%)",
-        WebkitBackdropFilter: "blur(24px) saturate(160%)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
-      }}
-    >
-      <div className="aspect-[3/4] relative">
-        {/* Cover / Avatar */}
+    <div className="flex flex-col items-center gap-2 flex-shrink-0 cursor-pointer" onClick={onClick}>
+      {/* Game name above card */}
+      <span className="text-[11px] font-bold uppercase tracking-wider text-white/50 truncate max-w-[140px] text-center">
+        {game || 'Offline'}
+      </span>
+
+      {/* Card */}
+      <motion.div
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+        animate={{
+          rotateX,
+          rotateY,
+          scale: isSelected ? 1.08 : isHovered ? 1.04 : 1,
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        style={{ perspective: 800, transformStyle: 'preserve-3d' }}
+        className={`relative w-[130px] h-[180px] rounded-2xl overflow-hidden border transition-colors duration-300 ${
+          isSelected
+            ? 'border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.15)]'
+            : 'border-white/10 hover:border-white/25'
+        }`}
+      >
+        {/* Background image */}
         <img
-          src={streamer.avatar_url}
-          alt={streamer.username}
+          src={avatar}
+          alt={name}
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/70" />
 
-        {/* Live badge */}
-        {isLive && (
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-[0.625rem] font-semibold"
-               style={{
-                 background: "linear-gradient(135deg, rgba(244,63,94,0.9), rgba(225,29,72,0.8))",
-                 border: "1px solid rgba(255,255,255,0.18)",
-               }}
-          >
-            <Circle className="w-3 h-3 text-white animate-pulse" fill="currentColor" />
-            <span className="text-white tracking-wide">LIVE</span>
-          </div>
+        {/* Dark gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+        {/* Shine effect */}
+        <div
+          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300 rounded-2xl"
+          style={{
+            opacity: isHovered ? 0.5 : 0,
+            background: `linear-gradient(105deg, transparent ${mousePos.x * 100 - 25}%, rgba(255,255,255,0.35) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 25}%)`,
+          }}
+        />
+
+        {/* Selected ring glow */}
+        {isSelected && (
+          <div className="absolute inset-0 rounded-2xl border-2 border-white/30 pointer-events-none z-20" />
         )}
 
-        {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3">
-          <div className="text-white text-sm font-semibold truncate">
-            {streamer.username}
-          </div>
-          <div className="text-white/70 text-[0.75rem] truncate">{streamer.tagline}</div>
-          <div className="mt-2 flex items-center justify-between text-white/70 text-[0.7rem]">
-            <div className="flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              <span>{new Intl.NumberFormat().format(streamer.followers || streamer.follower_count || 0)}</span>
-            </div>
-            {Array.isArray(streamer.tags) && streamer.tags.length > 0 && (
-              <div className="flex items-center gap-1 opacity-90">
-                {streamer.tags.slice(0, 2).map((t) => (
-                  <span
-                    key={t}
-                    className="px-1.5 py-0.5 rounded-full text-[0.65rem]"
-                    style={{
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                    }}
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Streamer name at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+          <h3 className="text-white font-bold text-sm text-center drop-shadow-lg leading-tight">
+            {name}
+          </h3>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
