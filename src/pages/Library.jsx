@@ -653,11 +653,15 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
           {/* Full Library Button */}
           <button
-            onClick={() => setShowFullLibrary(true)}
-            className="flex items-center justify-between w-full px-3 py-2 mb-3 rounded-lg bg-white/5 border border-white/8 hover:bg-white/10 hover:border-cyan-400/30 transition-all group"
+            onClick={() => setRightView(rightView === 'fullgrid' ? 'details' : 'fullgrid')}
+            className={`flex items-center justify-between w-full px-3 py-2 mb-3 rounded-lg border transition-all group ${
+              rightView === 'fullgrid' 
+                ? 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400'
+                : 'bg-white/5 border-white/8 hover:bg-white/10 hover:border-cyan-400/30'
+            }`}
           >
             <span className="text-[10px] font-medium text-cyan-400 uppercase tracking-wider">Full Library</span>
-            <LayoutGrid className="w-3.5 h-3.5 text-white/30 group-hover:text-cyan-400 transition-colors" />
+            <LayoutGrid className={`w-3.5 h-3.5 transition-colors ${rightView === 'fullgrid' ? 'text-cyan-400' : 'text-white/30 group-hover:text-cyan-400'}`} />
           </button>
 
           {/* Game List */}
@@ -677,174 +681,135 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
         {/* Faded Vertical Divider */}
         <div className="w-px flex-shrink-0 self-stretch my-8" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.10) 70%, transparent 100%)' }} />
 
-        {/* RIGHT CONTENT AREA (90%) - Overview */}
+        {/* RIGHT CONTENT AREA (90%) */}
         <div className="flex-1 h-full flex flex-col overflow-hidden px-8 pt-4 pb-4">
-          {selectedGame ? (
-            <>
-              {/* Game Overview Header */}
-              <div className="mb-6 flex-shrink-0">
-                <div className="flex items-end gap-6 mb-4">
-                  <div className="w-24 h-32 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10">
-                    <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">{selectedGame.genre}</Badge>
-                    <h1 className="text-3xl font-black text-white mb-2 tracking-tight truncate">{selectedGame.title}</h1>
-                    <div className="flex items-center gap-6 text-sm text-white/50 mb-3">
-                      <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /><span>12.5h played</span></div>
-                      <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-yellow-400" /><span>8/15 achievements</span></div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
-                        <Play className="w-4 h-4 mr-2 fill-current" /> Play
-                      </Button>
-                      <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                        <Radio className="w-4 h-4 mr-2" /> Stream
-                      </Button>
-                      <Button variant="outline" onClick={() => setOverlayGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
-                        <Eye className="w-4 h-4 mr-2" /> Full Details
-                      </Button>
-                    </div>
+          <AnimatePresence mode="wait">
+            {rightView === 'fullgrid' ? (
+              /* === FULL LIBRARY GRID VIEW === */
+              <motion.div
+                key="fullgrid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                  <div className="flex items-center gap-3">
+                    <LibraryIcon className="w-5 h-5 text-cyan-400" />
+                    <h2 className="text-xl font-bold text-white">Full Library</h2>
+                    <span className="text-white/40 text-sm">{ownedGames.length} titles</span>
                   </div>
                 </div>
-              </div>
-
-              {/* Overview Content (Scrollable) */}
-              <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-4 gap-4">
-                    {[
-                      { icon: Sparkles, value: '5/12', label: 'Cards Unlocked', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
-                      { icon: Zap, value: '3', label: 'Active Abilities', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-                      { icon: Trophy, value: '8/15', label: 'Achievements', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-                      { icon: Users, value: '2.4k', label: 'Players Online', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
-                    ].map((stat, i) => (
-                      <div key={i} className={`p-4 rounded-xl border ${stat.bg} text-center`}>
-                        <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
-                        <p className="text-xl font-bold text-white">{stat.value}</p>
-                        <p className="text-white/40 text-xs">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Rewards Summary */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 border border-cyan-500/20 p-4 rounded-xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-400"><Sparkles className="w-4 h-4" /></div>
-                        <h4 className="font-bold text-white text-sm">Progression</h4>
-                      </div>
-                      <p className="text-sm text-white/60">Unlocks <span className="text-white font-bold">3 Abilities</span> & <span className="text-white font-bold">5 Cards</span></p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400"><Bot className="w-4 h-4" /></div>
-                        <h4 className="font-bold text-white text-sm">AI Evolution</h4>
-                      </div>
-                      <p className="text-sm text-white/60">Trains <span className="text-white font-bold">Combat</span> & <span className="text-white font-bold">Stealth</span></p>
-                    </div>
-                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-500/20 rounded-lg text-green-400"><Shield className="w-4 h-4" /></div>
-                        <h4 className="font-bold text-white text-sm">Synergy</h4>
-                      </div>
-                      <p className="text-sm text-white/60">Compatible with <span className="text-white font-bold">RPG</span> & <span className="text-white font-bold">Sci-Fi</span></p>
-                    </div>
-                  </div>
-
-                  {/* About */}
-                  <div className="p-5 rounded-xl bg-white/5 border border-white/5">
-                    <h3 className="text-white/60 font-bold text-sm mb-2 uppercase tracking-wider">About This Game</h3>
-                    <p className="text-white/50 text-sm leading-relaxed">
-                      {selectedGame.description || 'An epic adventure awaits in this groundbreaking title that redefines the genre. Explore vast worlds, defeat challenging enemies, and forge your own destiny.'}
-                    </p>
-                  </div>
-
-                  {/* Recent Activity */}
-                  <div>
-                    <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                      <Star className="w-5 h-5 text-cyan-400" />
-                      Recent Achievements
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {[
-                        { name: 'Dragon Slayer Supreme', icon: '🐉', rarity: 'Legendary', progress: 100 },
-                        { name: 'Master Thief', icon: '💰', rarity: 'Epic', progress: 75 },
-                        { name: 'Arena Champion', icon: '⚔️', rarity: 'Epic', progress: 50 },
-                        { name: 'Legendary Explorer', icon: '🗺️', rarity: 'Rare', progress: 30 },
-                      ].map((ach, i) => (
-                        <div key={i} className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl">{ach.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium text-sm truncate">{ach.name}</p>
-                              <Badge className={`text-[9px] ${
-                                ach.rarity === 'Legendary' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
-                                ach.rarity === 'Epic' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
-                                'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                              }`}>{ach.rarity}</Badge>
-                            </div>
-                          </div>
-                          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${ach.progress}%` }}
-                              transition={{ duration: 1, delay: i * 0.1 }}
-                            />
+                <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                  <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-4">
+                    {ownedGames.map((game, i) => (
+                      <motion.div
+                        key={game.id || i}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.02 }}
+                        onClick={() => { setSelectedGame(game); setRightView('details'); }}
+                        className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border border-white/10 cursor-pointer transition-all duration-300 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:scale-[1.03]"
+                      >
+                        <img
+                          src={game.cover_image || game.cover || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                          alt={game.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                          <h4 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{game.title}</h4>
+                          <p className="text-white/50 text-xs capitalize">{game.genre}</p>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                </motion.div>
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-white/30">
-              <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
-              <p>Select a game from the library</p>
-            </div>
-          )}
+                </div>
+              </motion.div>
+            ) : (
+              /* === GAME DETAILS VIEW === */
+              <motion.div
+                key={`details-${selectedGame?.id || 'none'}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                {selectedGame ? (
+                  <>
+                    {/* Game Header with Play/Stream */}
+                    <div className="mb-4 flex-shrink-0">
+                      <div className="flex items-end gap-6 mb-4">
+                        <div className="w-24 h-32 rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10">
+                          <img src={selectedGame.cover_image || selectedGame.cover} alt={selectedGame.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Badge className="mb-2 bg-white/10 text-white border-white/20 backdrop-blur-md text-xs">{selectedGame.genre}</Badge>
+                          <h1 className="text-3xl font-black text-white mb-2 tracking-tight truncate">{selectedGame.title}</h1>
+                          <div className="flex items-center gap-6 text-sm text-white/50 mb-3">
+                            <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /><span>12.5h played</span></div>
+                            <div className="flex items-center gap-2"><Trophy className="w-4 h-4 text-yellow-400" /><span>8/15 achievements</span></div>
+                          </div>
+                          <div className="flex gap-3">
+                            <Button onClick={() => handleLaunchGame(selectedGame)} className="bg-white text-black hover:bg-white/90 font-bold">
+                              <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                            </Button>
+                            <Button variant="outline" onClick={() => handleStreamGame(selectedGame)} className="border-white/20 hover:bg-white/10 text-white">
+                              <Radio className="w-4 h-4 mr-2" /> Stream
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tab Navigation */}
+                      <div className="flex items-center gap-8 border-b border-white/10">
+                        {['Content', 'Community', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
+                          const id = tab.toLowerCase().replace(/ /g, '_');
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => setActiveDetailTab(id)}
+                              className={`pb-3 text-sm font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${
+                                activeDetailTab === id ? 'text-white' : 'text-white/40 hover:text-white'
+                              }`}
+                            >
+                              {tab}
+                              {activeDetailTab === id && (
+                                <motion.div layoutId="activeLibTabLine" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tab Content (Scrollable) */}
+                    <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+                      <AnimatePresence mode="wait">
+                        {activeDetailTab === 'content' && <GameContentTab key="content" game={selectedGame} />}
+                        {activeDetailTab === 'community' && <GameCommunityTab key="community" game={selectedGame} />}
+                        {activeDetailTab === 'discussion' && <GameDiscussionTab key="discussion" game={selectedGame} />}
+                        {activeDetailTab === 'streamer_affiliate' && <GameStreamerAffiliateTab key="streamer" game={selectedGame} />}
+                        {activeDetailTab === 'support' && <GameSupportTab key="support" game={selectedGame} />}
+                      </AnimatePresence>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-white/30">
+                    <Gamepad2 className="w-16 h-16 mb-4 opacity-50" />
+                    <p>Select a game from the library</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-
-      {/* Game Detail Overlay (slides from right, 90% width) */}
-      <AnimatePresence>
-        {overlayGame && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-[54]"
-              onClick={() => setOverlayGame(null)}
-            />
-            <LibraryGameOverlay
-              game={overlayGame}
-              onClose={() => setOverlayGame(null)}
-              onPlay={handleLaunchGame}
-              onStream={handleStreamGame}
-            />
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Full Library Grid Overlay */}
-      <AnimatePresence>
-        {showFullLibrary && (
-          <LibraryFullGrid
-            games={ownedGames}
-            onSelectGame={(game) => {
-              setSelectedGame(game);
-              setOverlayGame(game);
-              setShowFullLibrary(false);
-            }}
-            onClose={() => setShowFullLibrary(false)}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Launch & Stream Overlays */}
       <AnimatePresence>
