@@ -1773,6 +1773,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           {/* Right Column: System Status + Calendar */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
              <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+             {/* System Updates Box */}
+             <div className="mt-1">
+               <SystemUpdatesBox onOpenFullscreen={() => setShowUpdatesOverlay(true)} />
+             </div>
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
                <AIAttributesBox />
