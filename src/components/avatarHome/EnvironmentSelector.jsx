@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Lock, Check, Map, Globe, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Lock, Check, Globe, Loader2, ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
@@ -8,73 +8,62 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
   const { user } = useAuth();
   const [environments, setEnvironments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const init = async () => {
       try {
         setLoading(true);
-        
-        // 1. Fetch SceneLayouts from Admin Hub
         const sceneLayouts = await base44.entities.SceneLayout.list();
-        
-        // 2. Fetch User Achievements (for unlock logic placeholder)
-        // For now, we'll assume all layouts are unlocked or unlockable via future logic
-        // If we want to simulate unlocking, we can check for 'unlocked_scenes' on user or similar.
-        
-        // 3. Map SceneLayouts to Environment Objects
+
         const mapped = sceneLayouts.map((layout, index) => {
-          // Use a deterministic thumbnail based on index or layout ID
-          // For "Room 2", we use a specific sci-fi room image as requested
           let thumb = 'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80';
-          
           if (layout.name === 'Room 2') {
-             thumb = 'https://images.unsplash.com/photo-1555679427-1f6dfcce943b?w=400&q=80'; // Sci-fi room
+            thumb = 'https://images.unsplash.com/photo-1555679427-1f6dfcce943b?w=400&q=80';
           } else {
-             const placeholders = [
-                'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
-                'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
-                'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
-                'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
-                'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80'
-             ];
-             thumb = placeholders[index % placeholders.length];
+            const placeholders = [
+              'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+              'https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80',
+              'https://images.unsplash.com/photo-1599423300746-b62533397364?w=400&q=80',
+              'https://images.unsplash.com/photo-1614728853913-1e32005e3072?w=400&q=80',
+              'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=400&q=80'
+            ];
+            thumb = placeholders[index % placeholders.length];
           }
-          
+
           return {
             id: layout.id,
             name: layout.name || `Scene ${index + 1}`,
             description: layout.description || 'Custom 3D Environment',
             thumbnail: thumb,
             modelUrl: layout.environment_url,
-            // Pass full layout data for LunaTemplate to use
             layoutData: layout,
-            isLocked: false // Initially unlock all for demo, or implement logic later
+            isLocked: false
           };
         });
 
-        // Resolve Default Room Model
         let defaultRoomUrl = null;
         try {
-            const models = await base44.entities.Model3D.list();
-            const fbxs = await base44.entities.ModelFBX.list();
-            const allModels = [...(models || []), ...(fbxs || [])];
-            const found = allModels.find(m => (m.name || '').toLowerCase().includes('room 1') || (m.name || '').toLowerCase().includes('room1'));
-            if (found) defaultRoomUrl = found.file_url;
+          const models = await base44.entities.Model3D.list();
+          const fbxs = await base44.entities.ModelFBX.list();
+          const allModels = [...(models || []), ...(fbxs || [])];
+          const found = allModels.find(m => (m.name || '').toLowerCase().includes('room 1') || (m.name || '').toLowerCase().includes('room1'));
+          if (found) defaultRoomUrl = found.file_url;
         } catch (e) {}
 
-        // Always include Default Room as the first option
         const finalEnvironments = [
-           {
-             id: 'default_room',
-             name: 'Standard Quarters',
-             description: 'Default System Environment',
-             thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
-             modelUrl: defaultRoomUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf', // Fallback URL
-             isLocked: false
-           },
-           ...mapped
+          {
+            id: 'default_room',
+            name: 'Standard Quarters',
+            description: 'Default System Environment',
+            thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80',
+            modelUrl: defaultRoomUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf',
+            isLocked: false
+          },
+          ...mapped
         ];
-        
+
         setEnvironments(finalEnvironments);
       } catch (e) {
         console.error("EnvironmentSelector init failed", e);
@@ -82,91 +71,143 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
         setLoading(false);
       }
     };
-
     init();
   }, [user]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
 
   const handleSelect = (env) => {
     if (env.isLocked) return;
     onSelect(env);
+    setIsOpen(false);
   };
+
+  const activeEnv = environments.find(e => e.id === currentEnvId);
 
   if (loading) {
     return (
-      <div className="w-full h-48 flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">
-        <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+      <div className="w-full h-12 flex items-center justify-center rounded-2xl" style={{
+        background: 'rgba(200, 210, 220, 0.08)',
+        border: '1px solid rgba(255, 255, 255, 0.10)'
+      }}>
+        <Loader2 className="w-4 h-4 text-white/40 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="w-full mb-6 relative z-30 pointer-events-auto">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-white font-bold text-lg text-shadow-sm">3D Environments</h3>
+    <div className="w-full relative z-30 pointer-events-auto" ref={dropdownRef}>
+      {/* Trigger Button */}
+      <button
+        onClick={() => setIsOpen(v => !v)}
+        className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group"
+        style={{
+          background: isOpen ? 'rgba(200, 210, 220, 0.14)' : 'rgba(200, 210, 220, 0.08)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.10)'}`,
+          boxShadow: isOpen
+            ? '0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+            : 'inset 0 1px 0 rgba(255, 255, 255, 0.04)'
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <Globe className="w-4 h-4 text-[#A0A8B4]" />
+          <span className="text-[#CCCCCC] text-sm font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            {activeEnv?.name || '3D Environments'}
+          </span>
+          <span className="text-[10px] text-white/30 font-mono uppercase tracking-wider ml-2">
+            {environments.filter(e => !e.isLocked).length}/{environments.length}
+          </span>
         </div>
-        <span className="text-xs text-white/40 font-mono uppercase tracking-wider">
-          {environments.filter(e => !e.isLocked).length} / {environments.length} Unlocked
-        </span>
-      </div>
-      
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-        {environments.map(env => (
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+          <ChevronDown className="w-4 h-4 text-[#A0A8B4]" />
+        </motion.div>
+      </button>
+
+      {/* Dropdown Panel */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            key={env.id}
-            whileHover={!env.isLocked ? { scale: 1.02, y: -2 } : {}}
-            whileTap={!env.isLocked ? { scale: 0.98 } : {}}
-            onClick={() => handleSelect(env)}
-            className={`
-              relative flex-shrink-0 w-64 aspect-[16/9] rounded-xl overflow-hidden transition-all duration-300 border group
-              ${currentEnvId === env.id 
-                ? 'border-cyan-400 ring-2 ring-cyan-400/30' 
-                : 'border-white/10 hover:border-white/30'}
-              ${env.isLocked ? 'cursor-not-allowed grayscale opacity-60' : 'cursor-pointer'}
-            `}
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="overflow-hidden rounded-2xl"
+            style={{
+              background: 'rgba(180, 190, 200, 0.08)',
+              backdropFilter: 'blur(30px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+            }}
           >
-            {/* Background Image */}
-            <img 
-              src={env.thumbnail} 
-              alt={env.name} 
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-            />
-            
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+            <div className="p-3 max-h-[320px] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2">
+                {environments.map(env => (
+                  <motion.button
+                    key={env.id}
+                    whileHover={!env.isLocked ? { scale: 1.02 } : {}}
+                    whileTap={!env.isLocked ? { scale: 0.98 } : {}}
+                    onClick={() => handleSelect(env)}
+                    className={`
+                      relative w-full aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 border group text-left
+                      ${currentEnvId === env.id
+                        ? 'border-white/40 ring-1 ring-white/20'
+                        : 'border-white/[0.06] hover:border-white/20'}
+                      ${env.isLocked ? 'cursor-not-allowed grayscale opacity-50' : 'cursor-pointer'}
+                    `}
+                  >
+                    {/* Thumbnail */}
+                    <img
+                      src={env.thumbnail}
+                      alt={env.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
 
-            {/* Lock Overlay */}
-            {env.isLocked && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div className="bg-black/60 p-3 rounded-full border border-white/10">
-                  <Lock className="w-6 h-6 text-white/50" />
-                </div>
-              </div>
-            )}
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-            {/* Selected Indicator */}
-            {currentEnvId === env.id && (
-              <div className="absolute top-2 right-2 bg-cyan-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-lg shadow-cyan-500/20">
-                <Check className="w-3 h-3" /> ACTIVE
-              </div>
-            )}
+                    {/* Lock */}
+                    {env.isLocked && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                        <Lock className="w-5 h-5 text-white/40" />
+                      </div>
+                    )}
 
-            {/* Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className={`font-bold truncate pr-2 ${currentEnvId === env.id ? 'text-cyan-400' : 'text-white'}`}>
-                  {env.name}
-                </span>
+                    {/* Active Badge */}
+                    {currentEnvId === env.id && (
+                      <div className="absolute top-1.5 right-1.5 bg-white/90 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+                        <Check className="w-2.5 h-2.5" /> ACTIVE
+                      </div>
+                    )}
+
+                    {/* Label */}
+                    <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2 pt-4">
+                      <span className={`text-xs font-semibold truncate block ${currentEnvId === env.id ? 'text-white' : 'text-white/80'}`}>
+                        {env.name}
+                      </span>
+                      <span className="text-[9px] text-white/40 truncate block">
+                        {env.isLocked ? 'Locked' : env.description}
+                      </span>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
-              
-              <p className="text-[10px] text-white/60 line-clamp-1">
-                {env.isLocked ? `Unlock via ${env.achievementReq}` : env.description}
-              </p>
             </div>
           </motion.div>
-        ))}
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
