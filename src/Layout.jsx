@@ -770,6 +770,12 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.hidden = true;
         } else if (p.includes('/store')) {
           headerConfig.hidden = true;
+        } else if (p.includes('/gamedetail')) {
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/streaminghome')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
