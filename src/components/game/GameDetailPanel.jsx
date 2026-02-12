@@ -701,7 +701,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-20 p-8 flex justify-end items-start"
+        className="relative z-20 p-8 pt-20 flex justify-end items-start"
       >
         {/* Tabs Switcher */}
         <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
