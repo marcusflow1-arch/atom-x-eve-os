@@ -674,7 +674,96 @@ export default function Store() {
             style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
         >
             
-            {/* Store's own top nav removed - now handled by the global layout header */}
+            {/* Secondary Store Controls Bar - below global header */}
+            {storeSubView === 'games' && (
+            <div className="fixed top-16 left-0 right-0 z-40 flex items-center justify-between px-6 py-2" style={{
+                background: 'rgba(8, 12, 18, 0.5)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderBottom: '1px solid rgba(255,255,255,0.05)'
+            }}>
+                {/* Mode Tabs */}
+                <div className="flex items-center gap-2">
+                    <button 
+                        onClick={() => setStoreMode('store')}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
+                            storeMode === 'store'
+                                ? 'bg-white/15 border-white/25 text-white'
+                                : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        Store
+                    </button>
+                    <button 
+                        onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
+                            storeMode === 'marketplace'
+                                ? 'bg-white/15 border-white/25 text-white'
+                                : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        Marketplace
+                    </button>
+                    <button 
+                        onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
+                            storeMode === 'trading'
+                                ? 'bg-white/15 border-white/25 text-white'
+                                : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'
+                        }`}
+                    >
+                        Trading Post
+                    </button>
+                </div>
+
+                {/* Search & Controls */}
+                <div className="flex items-center gap-3">
+                    {storeMode === 'marketplace' ? (
+                        <div className="flex items-center gap-3 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full p-1.5 pr-4">
+                            <div className="flex items-center bg-black/20 rounded-full px-3 py-1 border border-white/5">
+                                <Search className="w-3.5 h-3.5 text-white/50 mr-2" />
+                                <input type="text" value={marketplaceSearchTerm} onChange={(e) => setMarketplaceSearchTerm(e.target.value)} placeholder="Search market..." className="bg-transparent border-none outline-none text-sm text-white placeholder:text-white/30 w-36 font-medium" />
+                            </div>
+                            <div className="flex items-center gap-1.5 text-white px-2">
+                                <span className="text-green-400 font-bold text-xs">A.S.P.</span>
+                                <span className="font-bold text-sm">{user?.balance || 0}</span>
+                            </div>
+                            <Link to={createPageUrl('Cart')} className="relative text-white/70 hover:text-white transition-colors">
+                                <ShoppingCart className="w-4 h-4" />
+                                {getCartCount() > 0 && <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
+                            </Link>
+                        </div>
+                    ) : storeMode === 'store' ? (
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 w-64 hover:bg-black/40 transition-all focus-within:bg-black/50 focus-within:border-white/30">
+                                    <Search className="w-3.5 h-3.5 text-white/50" />
+                                    <input type="text" placeholder={isRegularVoiceListening ? "Listening..." : "Search games..."} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full font-medium" />
+                                    {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/40 hover:text-white"><X className="w-3 h-3" /></button>}
+                                    <button onClick={() => setShowVoiceOptions(!showVoiceOptions)} className={`p-1 rounded-full transition-colors ${voiceSearchOpen || isRegularVoiceListening ? 'bg-purple-500/50 text-white' : 'text-white/40 hover:text-white'}`}><Mic className="w-3 h-3" /></button>
+                                </div>
+                                <AnimatePresence>
+                                    {showVoiceOptions && (
+                                        <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="absolute top-full right-0 mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 backdrop-blur-xl">
+                                            <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"><Sparkles className="w-4 h-4 text-purple-400" /><span className="text-sm font-medium text-white">AI Search</span></button>
+                                            <div className="h-px bg-white/10" />
+                                            <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 transition-colors"><Mic className="w-4 h-4 text-blue-400" /><span className="text-sm font-medium text-white">Voice Search</span></button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <AnimatePresence>
+                                    {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
+                                </AnimatePresence>
+                            </div>
+                            <Link to={createPageUrl('Cart')} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative backdrop-blur-md border border-white/10">
+                                <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
+                                {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
+                            </Link>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+            )}
 
             {/* App Drawer Overlay */}
             <AnimatePresence>
