@@ -1184,35 +1184,27 @@ function Large3DCard({ card, isActive }) {
   );
 }
 
-// Environment Hub Tile Component
-function EnvironmentHubTile({ onClick }) {
-  const [isHovered, setIsHovered] = useState(false);
-  
+// Environment Hub Tile Component - now a dropdown trigger
+function EnvironmentHubTile({ isOpen, onToggle }) {
   return (
-    <div 
+    <button 
       className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
       style={{
-        background: 'rgba(100, 120, 140, 0.08)',
+        background: isOpen ? 'rgba(200, 210, 220, 0.14)' : 'rgba(100, 120, 140, 0.08)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.10)'
+        border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.10)'}`,
+        transition: 'all 0.3s ease'
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onClick}
+      onClick={onToggle}
     >
-      {/* Banner Image - Abstract or specific for Environment Hub */}
       <img 
         src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
         alt="Environment Hub"
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-60"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
       />
-      
-      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-      
-      {/* Info */}
       <div className="absolute bottom-3 left-3 right-3">
         <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
           <Globe className="w-4 h-4 text-cyan-400" />
@@ -1220,24 +1212,7 @@ function EnvironmentHubTile({ onClick }) {
         </h4>
         <p className="text-white/50 text-[10px]">Change your 3D world</p>
       </div>
-      
-      {/* Hover Indicator */}
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
-          >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/20">
-              <Settings className="w-4 h-4 text-white/70" />
-              <span className="text-white/80 text-xs font-medium">Open Hub</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    </button>
   );
 }
 
