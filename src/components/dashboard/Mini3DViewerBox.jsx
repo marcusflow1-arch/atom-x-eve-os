@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 export default function Mini3DViewerBox() {
   const containerRef = useRef(null);
@@ -13,9 +14,9 @@ export default function Mini3DViewerBox() {
 
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
-    camera.position.set(1.8, 1.4, 1.8);
-    camera.lookAt(0, 0, 0);
+    const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
+    camera.position.set(0, 1.2, 2.5);
+    camera.lookAt(0, 0.8, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -25,41 +26,51 @@ export default function Mini3DViewerBox() {
     rendererRef.current = renderer;
 
     // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
     dir.position.set(3, 5, 4);
     scene.add(dir);
-    const rim = new THREE.PointLight(0x88ccff, 0.5, 10);
+    const rim = new THREE.PointLight(0x88ccff, 0.6, 10);
     rim.position.set(-2, 2, -2);
     scene.add(rim);
 
-    // White box with subtle edge wireframe
-    const geo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
-    const mat = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      roughness: 0.15,
-      metalness: 0.05,
-      clearcoat: 0.4,
-      clearcoatRoughness: 0.2,
-    });
-    const cube = new THREE.Mesh(geo, mat);
-    scene.add(cube);
+    // Load Y-Bot FBX
+    let mixer = null;
+    const loader = new FBXLoader();
+    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
 
-    // Wireframe edges
-    const edges = new THREE.EdgesGeometry(geo);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xaabbcc, transparent: true, opacity: 0.3 });
-    const wireframe = new THREE.LineSegments(edges, lineMat);
-    cube.add(wireframe);
+    loader.load(yBotUrl, (fbx) => {
+      fbx.scale.set(0.01, 0.01, 0.01);
+      fbx.position.set(0, -0.5, 0);
+      scene.add(fbx);
+
+      // Play idle animation if embedded
+      if (fbx.animations && fbx.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(fbx);
+        const action = mixer.clipAction(fbx.animations[0]);
+        action.play();
+      }
+
+      // Slow rotation
+      fbx.userData.rotateY = true;
+    });
 
     // Animate
     const clock = new THREE.Clock();
     let animId;
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-      cube.rotation.y = t * 0.4;
-      cube.rotation.x = Math.sin(t * 0.3) * 0.15;
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
+
+      // Rotate the model slowly
+      scene.traverse((child) => {
+        if (child.userData.rotateY) {
+          child.rotation.y += delta * 0.3;
+        }
+      });
+
       renderer.render(scene, camera);
     };
     animate();
@@ -78,9 +89,6 @@ export default function Mini3DViewerBox() {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
-      geo.dispose();
-      mat.dispose();
-      lineMat.dispose();
     };
   }, []);
 
