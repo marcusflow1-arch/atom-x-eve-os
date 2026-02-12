@@ -1415,65 +1415,67 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   return (
     <div className="flex flex-col items-start w-full">
       {/* Game Banner + Memories */}
-      <div className="flex items-stretch gap-4 w-full">
-        {/* Environment Hub Tile (dropdown trigger) */}
-        <div className="w-[368px] h-[60px] flex-shrink-0 relative" ref={envDropdownRef}>
-          <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
-        </div>
+      <div ref={envDropdownRef}>
+        <div className="flex items-stretch gap-4 w-full">
+          {/* Environment Hub Tile (dropdown trigger) */}
+          <div className="w-[368px] h-[60px] flex-shrink-0 relative">
+            <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+          </div>
 
-        {/* References Section (Memories) */}
-        <div 
-          ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto" 
-          style={{ scrollbarWidth: 'none' }}
-        >
-          <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
-          {references.map((ref) => (
-            <GameReference 
-              key={ref.id} 
-              reference={ref} 
-              onClick={handleReferenceClick}
-              isActive={activeReference?.id === ref.id}
-            />
-          ))}
-          {/* Home Button */}
-          <GameReference 
-            isHomeButton={true}
-            onClick={handleHomeClick}
-          />
-        </div>
-      </div>
-
-      {/* Environment Hub Dropdown */}
-      <AnimatePresence>
-        {showEnvDropdown && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="w-full overflow-hidden rounded-2xl"
-            style={{
-              background: 'rgba(180, 190, 200, 0.08)',
-              backdropFilter: 'blur(30px) saturate(140%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-            }}
+          {/* References Section (Memories) */}
+          <div 
+            ref={scrollRef}
+            className="flex items-center gap-2 overflow-x-auto" 
+            style={{ scrollbarWidth: 'none' }}
           >
-            <div className="p-4 max-h-[480px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-              <EnvironmentHub
-                currentEnvId={currentEnvId}
-                onSelectEnv={(env) => {
-                  onSelectEnv?.(env);
-                  setShowEnvDropdown(false);
-                }}
-                onClose={() => setShowEnvDropdown(false)}
+            <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
+            {references.map((ref) => (
+              <GameReference 
+                key={ref.id} 
+                reference={ref} 
+                onClick={handleReferenceClick}
+                isActive={activeReference?.id === ref.id}
               />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ))}
+            {/* Home Button */}
+            <GameReference 
+              isHomeButton={true}
+              onClick={handleHomeClick}
+            />
+          </div>
+        </div>
+
+        {/* Environment Hub Dropdown */}
+        <AnimatePresence>
+          {showEnvDropdown && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="w-full overflow-hidden rounded-2xl"
+              style={{
+                background: 'rgba(180, 190, 200, 0.08)',
+                backdropFilter: 'blur(30px) saturate(140%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+              }}
+            >
+              <div className="p-4 max-h-[480px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                <EnvironmentHub
+                  currentEnvId={currentEnvId}
+                  onSelectEnv={(env) => {
+                    onSelectEnv?.(env);
+                    setShowEnvDropdown(false);
+                  }}
+                  onClose={() => setShowEnvDropdown(false)}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
