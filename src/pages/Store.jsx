@@ -859,7 +859,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="w-full h-full pt-20 overflow-hidden"
+                        className="w-full h-full pt-16 overflow-hidden"
                     >
                         <Achievements onExitToLibrary={() => setStoreSubView('library')} />
                     </motion.div>
@@ -881,7 +881,7 @@ export default function Store() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="w-full h-full pt-20 pb-0 bg-transparent"
+                            className="w-full h-full pt-28 pb-0 bg-transparent"
                         >
                             {/* Dynamic Background */}
                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -1034,7 +1034,7 @@ export default function Store() {
                                 </AnimatePresence>
 
                                 {/* Interface Layer */}
-                                <div className="relative z-10 w-full h-full pt-20 px-6 flex gap-8">
+                                <div className="relative z-10 w-full h-full pt-28 px-6 flex gap-8">
                                     {/* LEFT: Crossroad Menu (Genres) */}
                                     <div className="w-[260px] flex-shrink-0 pt-32 hidden xl:flex flex-col" ref={genreScrollRef}>
                                         {/* Vertical genre list */}
