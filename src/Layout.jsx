@@ -967,91 +967,64 @@ function LayoutContent({ children, currentPageName }) {
                       </>
                     )}
 
-                    {showAchievementsHeader && (
+                    {showAchievementsHeader && (() => {
+                      const ap = location.pathname.toLowerCase();
+                      const achBtnClass = (match) => `px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border flex items-center gap-2 ${
+                        match ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                      }`;
+                      return (
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
-                          {location.pathname.toLowerCase().includes('/library') ? 'Atom X Eve Library' : 
-                           location.pathname.toLowerCase().includes('/genremastery') ? 'Atom X Eve Genre Progression' : 
-                           location.pathname.toLowerCase().includes('/aura') ? 'Atom X Eve Aura Stream' :
-                           location.pathname.toLowerCase().includes('/streaminghome') ? 'Atom X Eve Aura Home' :
-                           location.pathname.toLowerCase().includes('/discover') ? 'Atom X Eve Discover' :
-                           location.pathname.toLowerCase().includes('/aibattle') ? 'Atom X Eve AI Battle' :
-                           location.pathname.toLowerCase().includes('/leaderboard') ? 'Atom X Eve Leaderboard' :
-                           location.pathname.toLowerCase().includes('/seasonalpass') ? 'Atom X Eve Season Pass' :
+                          {ap.includes('/library') ? 'Atom X Eve Library' : 
+                           ap.includes('/genremastery') ? 'Atom X Eve Genre Progression' : 
+                           ap.includes('/aura') ? 'Atom X Eve Aura Stream' :
+                           ap.includes('/streaminghome') ? 'Atom X Eve Aura Home' :
+                           ap.includes('/discover') ? 'Atom X Eve Discover' :
+                           ap.includes('/aibattle') ? 'Atom X Eve AI Battle' :
+                           ap.includes('/leaderboard') ? 'Atom X Eve Leaderboard' :
+                           ap.includes('/seasonalpass') ? 'Atom X Eve Season Pass' :
                            'Atom X Eve Achievements'}
                         </span>
 
                         <div className="h-6 w-px bg-white/20 mx-4"></div>
 
                         <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => navigate(createPageUrl('LunaTemplate'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Home className="w-4 h-4" />
-                            Luna
+                          <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className={achBtnClass(false)}>
+                            <Home className="w-4 h-4" /> Luna
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('Library'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Gamepad2 className="w-4 h-4" />
-                            Library
+                          <button onClick={() => navigate(createPageUrl('Library'))} className={achBtnClass(ap.includes('/library'))}>
+                            <Gamepad2 className="w-4 h-4" /> Library
+                          </button>
+
+                          <button onClick={() => navigate(createPageUrl('Achievements'))} className={achBtnClass(ap.includes('/achievements') || ap.includes('/aiachievements'))}>
+                            <Trophy className="w-4 h-4" /> Achievements
                           </button>
 
                           <div className="h-6 w-px bg-white/10 mx-1"></div>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('GenreMastery'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Layers className="w-4 h-4" />
-                            Skill Tree
+                          <button onClick={() => navigate(createPageUrl('GenreMastery'))} className={achBtnClass(ap.includes('/genremastery'))}>
+                            <Layers className="w-4 h-4" /> Skill Tree
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('AIBattle'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Swords className="w-4 h-4" />
-                            AI Battle
+                          <button onClick={() => navigate(createPageUrl('AIBattle'))} className={achBtnClass(ap.includes('/aibattle'))}>
+                            <Swords className="w-4 h-4" /> AI Battle
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Rocket className="w-4 h-4" />
-                            Season Pass
+                          <button onClick={() => navigate(createPageUrl('SeasonalPass'))} className={achBtnClass(ap.includes('/seasonalpass'))}>
+                            <Rocket className="w-4 h-4" /> Season Pass
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('Leaderboard'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Crown className="w-4 h-4" />
-                            Leaderboard
+                          <button onClick={() => navigate(createPageUrl('Leaderboard'))} className={achBtnClass(ap.includes('/leaderboard'))}>
+                            <Crown className="w-4 h-4" /> Leaderboard
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('Friends'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Users className="w-4 h-4" />
-                            Friends
+                          <button onClick={() => navigate(createPageUrl('Friends'))} className={achBtnClass(ap.includes('/friends'))}>
+                            <Users className="w-4 h-4" /> Friends
                           </button>
 
-                          {/* Streaming (Renamed to Aura) */}
-                          <button
-                            onClick={() => navigate(createPageUrl('Aura'))}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border ${
-                              location.pathname.toLowerCase().includes('/aura')
-                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                            }`}
-                          >
-                            Aura
+                          <button onClick={() => navigate(createPageUrl('Aura'))} className={achBtnClass(ap.includes('/aura'))}>
+                            <Radio className="w-4 h-4" /> Aura
                           </button>
 
                           <a
@@ -1067,7 +1040,8 @@ function LayoutContent({ children, currentPageName }) {
                           </a>
                         </div>
                       </>
-                    )}
+                      );
+                    })()}
 
                     {showLunaHeaderBar && (
                       <>
