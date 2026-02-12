@@ -1689,19 +1689,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
         <div className="flex gap-6 items-start">
           {/* Left Column: Quick Actions + Stream Player */}
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative">
-            <div className="flex items-start gap-4">
-              <div className="w-[200px] flex-shrink-0">
-                <Mini3DViewerBox />
-              </div>
-              <div className="flex-1 min-w-0">
-                <QuickActionsBar 
-                  navigate={navigate} 
-                  onLiveClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }} 
-                  onStatsClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowStatsDropdown((v) => !v); }}
-                  onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
-                />
-              </div>
-            </div>
+            <QuickActionsBar 
+              navigate={navigate} 
+              onLiveClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }} 
+              onStatsClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowStatsDropdown((v) => !v); }}
+              onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
+            />
 
             <AnimatePresence>
               {showFriendsDropdown && (
