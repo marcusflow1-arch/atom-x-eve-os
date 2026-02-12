@@ -828,10 +828,6 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
-        } else if (p.includes('/genremastery')) {
-          headerConfig.title = "Adam - Marcus | Skill Tree";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
         } else if (p.includes('/lunatemplate')) {
           headerConfig.title = "ATOM - Marcus | Luna Dashboard";
           headerConfig.showLevel = true;
