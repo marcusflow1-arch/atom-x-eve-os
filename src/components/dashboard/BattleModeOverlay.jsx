@@ -4,7 +4,7 @@ import {
   Swords, Target, Flame, Zap, Shield, X, Map as MapIcon, 
   Crosshair, Trophy, Globe, ChevronLeft, Search, Navigation
 } from 'lucide-react';
-import PvPPlaystyleCards from '@/components/battle/PvPPlaystyleCards';
+import PvPConsole from '@/components/battle/PvPConsole';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -508,7 +508,7 @@ export default function BattleModeOverlay({ onClose }) {
 
   const renderContent = () => {
     switch (activeView) {
-      case 'pvp': return <PvPPlaystyleCards onBack={() => setActiveView('menu')} />;
+      case 'pvp': return <PvPConsole onBack={() => setActiveView('menu')} />;
       case 'pve': return <PvEView onBack={() => setActiveView('menu')} />;
       case 'tournaments': return <TournamentsView onBack={() => setActiveView('menu')} />;
       case 'world': return <WorldEventsView onBack={() => setActiveView('menu')} />;
