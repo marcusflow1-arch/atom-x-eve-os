@@ -27,6 +27,8 @@ import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalendarOverlay';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
+import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
+import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 
 import { useQuery } from '@tanstack/react-query';
 
