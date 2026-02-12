@@ -821,7 +821,11 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/leaderboard')) {
-          headerConfig.hidden = true;
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/genremastery')) {
           headerConfig.title = "Adam - Marcus | Skill Tree";
           headerConfig.showLevel = false;
@@ -832,7 +836,11 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
         } else if (p.includes('/seasonalpass')) {
-          headerConfig.hidden = true;
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         } else if (p.includes('/blacksmith')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
