@@ -21,11 +21,8 @@ export default function SeasonalPass() {
 
   return (
     <GlassPageFrame>
-    <div className="min-h-screen">
-      <MiniLunaNav title="Season Pass" />
-      <div className="mt-2 md:mt-4">
+    <div className="min-h-screen pt-20">
       <SeasonalPassContent />
-      </div>
     </div>
     </GlassPageFrame>
   );

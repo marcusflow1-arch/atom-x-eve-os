@@ -220,11 +220,7 @@ export default function Leaderboard() {
 
 
 
-      <div className="relative z-10 w-full px-6 py-8">
-        <MiniLunaNav title="Leaderboard" />
-        <div className="mt-1 mb-2">
-          <p className="text-white/50 text-sm">Compete with players worldwide</p>
-        </div>
+      <div className="relative z-10 w-full px-6 pt-20 pb-8">
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-6 pb-2" style={{ scrollbarWidth: 'none' }}>
