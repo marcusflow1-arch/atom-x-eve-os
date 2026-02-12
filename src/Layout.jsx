@@ -974,6 +974,8 @@ function LayoutContent({ children, currentPageName }) {
                            location.pathname.toLowerCase().includes('/streaminghome') ? 'Atom X Eve Aura Home' :
                            location.pathname.toLowerCase().includes('/discover') ? 'Atom X Eve Discover' :
                            location.pathname.toLowerCase().includes('/aibattle') ? 'Atom X Eve AI Battle' :
+                           location.pathname.toLowerCase().includes('/leaderboard') ? 'Atom X Eve Leaderboard' :
+                           location.pathname.toLowerCase().includes('/seasonalpass') ? 'Atom X Eve Season Pass' :
                            'Atom X Eve Achievements'}
                         </span>
 
@@ -1157,7 +1159,7 @@ function LayoutContent({ children, currentPageName }) {
       {/* Floating View Mode Toggle for pages with hidden headers */}
       {(() => {
         const p = location.pathname.toLowerCase();
-        const hiddenHeaderPages = ['/leaderboard', '/friends', '/worldevents', '/blanktransition', '/seasonalpass'];
+        const hiddenHeaderPages = ['/friends', '/worldevents', '/blanktransition'];
         const isHiddenHeader = hiddenHeaderPages.some(s => p.includes(s));
         if (!isHiddenHeader) return null;
         return (
