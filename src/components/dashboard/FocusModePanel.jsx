@@ -1341,10 +1341,23 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
 export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, onSelectEnv }) {
-  const [showEnvPicker, setShowEnvPicker] = useState(false);
+  const [showEnvDropdown, setShowEnvDropdown] = useState(false);
+  const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
   const scrollRef = useRef(null);
+
+  // Close env dropdown on outside click
+  useEffect(() => {
+    if (!showEnvDropdown) return;
+    const handler = (e) => {
+      if (envDropdownRef.current && !envDropdownRef.current.contains(e.target)) {
+        setShowEnvDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showEnvDropdown]);
 
   useEffect(() => {
     const fetchBackgrounds = async () => {
