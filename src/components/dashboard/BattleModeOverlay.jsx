@@ -586,15 +586,7 @@ export default function BattleModeOverlay({ onClose }) {
         <X className="w-5 h-5" />
       </button>
 
-      {/* Back Button (if not on menu) */}
-      {activeView !== 'menu' && (
-        <button 
-          onClick={() => setActiveView('menu')}
-          className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 hover:border-white/20 rounded-full text-white/80 hover:text-white transition-all duration-300 text-sm tracking-widest uppercase shadow-lg"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back
-        </button>
-      )}
+
 
       {/* Content Container */}
       <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto">
