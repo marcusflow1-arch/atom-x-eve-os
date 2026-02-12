@@ -61,6 +61,9 @@ export default function Mini3DViewerBox() {
       fbx.position.sub(center.multiplyScalar(scale));
       fbx.position.y += (size.y * scale) / 2;
 
+      // Face the camera (rotate 180°)
+      fbx.rotation.y = Math.PI;
+
       // Fix materials
       fbx.traverse((node) => {
         if (node.isMesh && node.material) {
