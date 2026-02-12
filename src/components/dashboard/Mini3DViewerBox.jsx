@@ -2,6 +2,9 @@ import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
+const MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
+
 export default function Mini3DViewerBox() {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
@@ -15,62 +18,79 @@ export default function Mini3DViewerBox() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
-    camera.position.set(0, 1.2, 2.5);
-    camera.lookAt(0, 0.8, 0);
+    camera.position.set(0, 1.2, 2.8);
+    camera.lookAt(0, 0.85, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambient);
-    const dir = new THREE.DirectionalLight(0xffffff, 1.5);
-    dir.position.set(3, 5, 4);
-    scene.add(dir);
-    const rim = new THREE.PointLight(0x88ccff, 0.6, 10);
-    rim.position.set(-2, 2, -2);
-    scene.add(rim);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    keyLight.position.set(2, 3, 2);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    fillLight.position.set(-2, 2, -1);
+    scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    rimLight.position.set(0, 1.5, -3);
+    scene.add(rimLight);
 
-    // Load Y-Bot FBX
+    // Load Y-Bot model, then load idle animation separately
     let mixer = null;
     const loader = new FBXLoader();
-    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-
-    loader.load(yBotUrl, (fbx) => {
-      fbx.scale.set(0.01, 0.01, 0.01);
-      fbx.position.set(0, -0.5, 0);
-      scene.add(fbx);
-
-      // Play idle animation if embedded
-      if (fbx.animations && fbx.animations.length > 0) {
-        mixer = new THREE.AnimationMixer(fbx);
-        const action = mixer.clipAction(fbx.animations[0]);
-        action.play();
-      }
-
-      // Slow rotation
-      fbx.userData.rotateY = true;
-    });
-
-    // Animate
     const clock = new THREE.Clock();
     let animId;
+
+    loader.load(MODEL_URL, (fbx) => {
+      // Auto-scale like Admin preview
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2 / maxDim;
+      fbx.scale.setScalar(scale);
+
+      const center = box.getCenter(new THREE.Vector3());
+      fbx.position.sub(center.multiplyScalar(scale));
+      fbx.position.y += (size.y * scale) / 2;
+
+      // Fix materials
+      fbx.traverse((node) => {
+        if (node.isMesh && node.material) {
+          const mats = Array.isArray(node.material) ? node.material : [node.material];
+          mats.forEach(mat => {
+            mat.side = THREE.DoubleSide;
+            mat.envMapIntensity = 1.2;
+            mat.needsUpdate = true;
+          });
+        }
+      });
+
+      scene.add(fbx);
+      mixer = new THREE.AnimationMixer(fbx);
+
+      // Load the separate idle animation FBX
+      loader.load(IDLE_URL, (idleFbx) => {
+        if (idleFbx.animations && idleFbx.animations.length > 0) {
+          const clip = idleFbx.animations[0];
+          const action = mixer.clipAction(clip);
+          action.play();
+        }
+      });
+    });
+
+    // Render loop
     const animate = () => {
       animId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (mixer) mixer.update(delta);
-
-      // Rotate the model slowly
-      scene.traverse((child) => {
-        if (child.userData.rotateY) {
-          child.rotation.y += delta * 0.3;
-        }
-      });
-
       renderer.render(scene, camera);
     };
     animate();
