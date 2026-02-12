@@ -29,6 +29,7 @@ import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
+import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 
 import { useQuery } from '@tanstack/react-query';
 
