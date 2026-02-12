@@ -18,8 +18,8 @@ export default function Mini3DViewerBox() {
     const scene = new THREE.Scene();
 
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
-    camera.position.set(0, 1.2, 2.8);
-    camera.lookAt(0, 0.85, 0);
+    camera.position.set(0, 1.85, 1.4);
+    camera.lookAt(0, 1.7, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
