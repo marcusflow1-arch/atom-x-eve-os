@@ -1416,9 +1416,9 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
     <div className="flex flex-col items-start w-full">
       {/* Game Banner + Memories */}
       <div className="flex items-stretch gap-4 w-full">
-        {/* Environment Hub Tile */}
-        <div className="w-[368px] h-[60px] flex-shrink-0">
-          <EnvironmentHubTile onClick={() => setShowEnvPicker(true)} />
+        {/* Environment Hub Tile (dropdown trigger) */}
+        <div className="w-[368px] h-[60px] flex-shrink-0 relative" ref={envDropdownRef}>
+          <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
         </div>
 
         {/* References Section (Memories) */}
@@ -1444,43 +1444,33 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
         </div>
       </div>
 
-      {/* Environment Picker Modal */}
+      {/* Environment Hub Dropdown */}
       <AnimatePresence>
-        {showEnvPicker && (
+        {showEnvDropdown && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowEnvPicker(false)}
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-full overflow-hidden rounded-2xl"
+            style={{
+              background: 'rgba(180, 190, 200, 0.08)',
+              backdropFilter: 'blur(30px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+            }}
           >
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl rounded-2xl p-5"
-              style={{
-                background: 'rgba(8, 10, 16, 0.92)',
-                backdropFilter: 'blur(40px) saturate(160%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(160%)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.04)'
-              }}
-            >
-              <div className="min-h-[420px]">
-                <EnvironmentHub
-                  currentEnvId={currentEnvId}
-                  onSelectEnv={(env) => {
-                    onSelectEnv?.(env);
-                    setShowEnvPicker(false);
-                  }}
-                  onClose={() => setShowEnvPicker(false)}
-                />
-              </div>
-            </motion.div>
+            <div className="p-4 max-h-[480px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+              <EnvironmentHub
+                currentEnvId={currentEnvId}
+                onSelectEnv={(env) => {
+                  onSelectEnv?.(env);
+                  setShowEnvDropdown(false);
+                }}
+                onClose={() => setShowEnvDropdown(false)}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
