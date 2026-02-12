@@ -897,7 +897,7 @@ function LayoutContent({ children, currentPageName }) {
                     </button>
 
 
-                    {showStoreHeader && !showAchievementsHeader && !showLunaHeaderBar && (
+                    {showStoreHeader && (
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           {location.pathname.toLowerCase().includes('/gamedetail') ? 'Atom X Eve Store' : 'Atom X Eve Store'}
