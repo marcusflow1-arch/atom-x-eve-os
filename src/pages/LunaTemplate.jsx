@@ -1195,6 +1195,13 @@ export default function LunaTemplate() {
 
 
 
+      {/* Mini 3D Viewer Box - positioned below the dashboard title, left column */}
+      {!showConsoleMode && !showAchievements && !uiVisible && (
+        <div className="fixed z-20 pointer-events-auto" style={{ left: '32px', top: '80px', width: '200px' }}>
+          <Mini3DViewerBox />
+        </div>
+      )}
+
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
