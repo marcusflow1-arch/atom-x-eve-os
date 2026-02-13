@@ -194,7 +194,7 @@ export default function SystemUpdatesOverlay({ onClose }) {
             </AnimatePresence>
           </div>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
