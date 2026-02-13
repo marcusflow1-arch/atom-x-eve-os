@@ -1738,8 +1738,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight - below Environment Hub area */}
-            <div className="mt-4 pointer-events-auto">
+            {/* Developer Spotlight - aligned with AI Attributes bottom */}
+            <div className="mt-16 pointer-events-auto">
               <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
