@@ -126,10 +126,10 @@ export default function Mini3DViewerBox() {
   const birthday = user?.birthday || '—';
 
   return (
-    <div className="pointer-events-auto">
+    <div className="pointer-events-auto flex items-start gap-3">
       {/* 3D Viewer - Original Size */}
       <div
-        className="rounded-2xl overflow-hidden"
+        className="rounded-2xl overflow-hidden flex-shrink-0"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
@@ -137,14 +137,14 @@ export default function Mini3DViewerBox() {
           border: '1px solid rgba(255, 255, 255, 0.12)',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
           height: '280px',
-          width: '100%',
+          width: '200px',
         }}
       >
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      {/* Info - Clean underlined text, no box */}
-      <div className="mt-3 space-y-1.5 px-1" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400 }}>
+      {/* Info - Clean underlined text to the right */}
+      <div className="space-y-2 pt-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400 }}>
         <p className="text-white/90 text-xs underline">{displayName}</p>
         <p className="text-white/90 text-xs underline">Rank: {userRank} · Lvl {userLevel}</p>
         <p className="text-white/90 text-xs underline">Birthday: {birthday}</p>
