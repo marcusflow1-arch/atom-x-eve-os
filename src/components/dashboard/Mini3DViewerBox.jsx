@@ -126,10 +126,10 @@ export default function Mini3DViewerBox() {
   const birthday = user?.birthday || '—';
 
   return (
-    <div className="flex gap-3 pointer-events-auto">
-      {/* 3D Viewer */}
+    <div className="pointer-events-auto">
+      {/* 3D Viewer - Original Size */}
       <div
-        className="rounded-2xl overflow-hidden flex-shrink-0"
+        className="rounded-2xl overflow-hidden"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
@@ -137,73 +137,19 @@ export default function Mini3DViewerBox() {
           border: '1px solid rgba(255, 255, 255, 0.12)',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
           height: '280px',
-          width: '160px',
+          width: '100%',
         }}
       >
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      {/* Info Panel */}
-      <div
-        className="rounded-2xl overflow-hidden flex flex-col justify-center px-4 py-3 gap-2.5"
-        style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-          height: '280px',
-          width: '170px',
-        }}
-      >
-        {/* Name */}
-        <div>
-          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Name</p>
-          <p className="text-white font-bold text-sm truncate leading-tight">{displayName}</p>
-        </div>
-
-        {/* Level & Rank */}
-        <div className="flex items-center gap-2">
-          <div className="flex-1">
-            <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Rank</p>
-            <div className="flex items-center gap-1">
-              <Shield className="w-3 h-3 text-cyan-400" />
-              <p className="text-cyan-300 font-semibold text-xs">{userRank}</p>
-            </div>
-          </div>
-          <div className="w-px h-6 bg-white/10" />
-          <div>
-            <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Lvl</p>
-            <p className="text-white font-bold text-sm">{userLevel}</p>
-          </div>
-        </div>
-
-        {/* Birthday */}
-        <div>
-          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Birthday</p>
-          <div className="flex items-center gap-1">
-            <Calendar className="w-3 h-3 text-purple-400" />
-            <p className="text-white/70 text-xs">{birthday}</p>
-          </div>
-        </div>
-
-        {/* Achievement Score */}
-        <div>
-          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Achievement Score</p>
-          <div className="flex items-center gap-1">
-            <Trophy className="w-3 h-3 text-yellow-400" />
-            <p className="text-yellow-300 font-bold text-sm">{achievementScore.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* AI Achievement Points */}
-        <div>
-          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">AI Points</p>
-          <div className="flex items-center gap-1">
-            <Zap className="w-3 h-3 text-emerald-400" />
-            <p className="text-emerald-300 font-bold text-sm">{aiPoints.toLocaleString()}</p>
-          </div>
-        </div>
+      {/* Info - Clean underlined text, no box */}
+      <div className="mt-3 space-y-1.5 px-1" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400 }}>
+        <p className="text-white/90 text-xs underline">{displayName}</p>
+        <p className="text-white/90 text-xs underline">Rank: {userRank} · Lvl {userLevel}</p>
+        <p className="text-white/90 text-xs underline">Birthday: {birthday}</p>
+        <p className="text-white/90 text-xs underline">Achievement Score: {achievementScore.toLocaleString()}</p>
+        <p className="text-white/90 text-xs underline">AI Points: {aiPoints.toLocaleString()}</p>
       </div>
     </div>
   );
