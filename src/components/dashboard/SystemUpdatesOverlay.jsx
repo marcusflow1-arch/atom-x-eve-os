@@ -115,7 +115,7 @@ export default function SystemUpdatesOverlay({ onClose }) {
         {/* Body */}
         <div className="flex-1 flex min-h-0 overflow-hidden">
           {/* Updates List */}
-          <div className="w-1/2 border-r border-white/8 overflow-y-auto p-4 space-y-2" style={{ scrollbarWidth: 'none' }}>
+          <div className="w-1/2 border-r border-white/8 overflow-y-auto p-4 space-y-2 flex-shrink-0" style={{ scrollbarWidth: 'none' }}>
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="w-8 h-8 border-2 border-white/15 border-t-cyan-400 rounded-full animate-spin" />
