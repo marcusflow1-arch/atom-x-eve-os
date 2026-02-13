@@ -3,26 +3,28 @@ import { Badge } from '@/components/ui/badge';
 import {
   Gamepad2, Sparkles, Layers, DollarSign, Trophy, X,
   LayoutGrid, Globe, Rocket, Crown, Crosshair, Map, Ghost, Monitor, Car,
-  ShoppingCart, Star, Zap, BookOpen, Users
+  ShoppingCart, Star, Zap, BookOpen, Users, Search, ChevronLeft, Clock,
+  TrendingUp, Bell, ArrowRight
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
-import CardEnhancementOverlay from '../profile/CardEnhancementOverlay';
 
-// Developer tabs (mirrors genre tabs from Achievements)
-const DEV_TABS = [
+// Genre tabs for filtering developers/games
+const GENRE_TABS = [
   { id: 'all', name: 'All', icon: LayoutGrid },
-  ...DEV_SPOTLIGHT_DATA.map(dev => ({
-    id: dev.id,
-    name: dev.name,
-    icon: Users,
-    logo: dev.logo
-  }))
+  { id: 'action-rpg', name: 'Action RPG', icon: Crosshair },
+  { id: 'mmo', name: 'MMO', icon: Globe },
+  { id: 'space-sim', name: 'Space Sim', icon: Rocket },
+  { id: 'roguelike', name: 'Roguelike', icon: Layers },
+  { id: 'fps', name: 'FPS', icon: Crosshair },
+  { id: 'horror', name: 'Horror', icon: Ghost },
+  { id: 'racing', name: 'Racing', icon: Car },
+  { id: 'strategy', name: 'Strategy', icon: Map },
+  { id: 'simulation', name: 'Simulation', icon: Monitor },
 ];
 
-function DevScrollTabs({ tabs, selectedTab, onSelect }) {
+function GenreScrollTabs({ tabs, selectedTab, onSelect }) {
   const scrollRef = useRef(null);
-
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -35,7 +37,7 @@ function DevScrollTabs({ tabs, selectedTab, onSelect }) {
     <div className="flex-1 min-w-0 relative">
       <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
       <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
-      <div ref={scrollRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2" style={{ scrollBehavior: 'smooth' }}>
+      <div ref={scrollRef} className="flex items-center gap-1.5 overflow-x-auto px-2" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none' }}>
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -46,11 +48,7 @@ function DevScrollTabs({ tabs, selectedTab, onSelect }) {
                 : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
             }`}
           >
-            {t.logo ? (
-              <img src={t.logo} alt="" className="w-4 h-4 rounded-full" />
-            ) : (
-              React.createElement(t.icon, { className: 'w-3.5 h-3.5' })
-            )}
+            {React.createElement(t.icon, { className: 'w-3.5 h-3.5' })}
             <span>{t.name}</span>
           </button>
         ))}
@@ -59,55 +57,218 @@ function DevScrollTabs({ tabs, selectedTab, onSelect }) {
   );
 }
 
+// Developer Card for the listing view
+function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02, y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onClick(dev)}
+      className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all border border-transparent hover:border-white/10 hover:bg-white/5 group"
+    >
+      <img src={dev.logo} alt={dev.name} className="w-12 h-12 rounded-xl border border-white/15 shadow-lg flex-shrink-0" />
+      <div className="flex-1 min-w-0">
+        <h3 className="text-white font-bold text-sm truncate group-hover:text-cyan-300 transition-colors">{dev.name}</h3>
+        <p className="text-white/35 text-[10px] line-clamp-1 mt-0.5">{dev.description}</p>
+        <div className="flex items-center gap-3 mt-1.5">
+          <span className="text-white/30 text-[10px] flex items-center gap-1">
+            <Gamepad2 className="w-3 h-3" /> {gameCount} game{gameCount !== 1 ? 's' : ''}
+          </span>
+          <span className="text-cyan-400/50 text-[10px] flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> {cardCount} cards
+          </span>
+        </div>
+      </div>
+      <ArrowRight className="w-4 h-4 text-white/15 group-hover:text-white/40 transition-colors flex-shrink-0" />
+    </motion.button>
+  );
+}
+
+// Recently Visited / Top Visited / New section
+function QuickAccessSection({ recentGames, allGames, onSelectGame }) {
+  const [activeQuickTab, setActiveQuickTab] = useState('recent');
+  const quickTabs = [
+    { id: 'recent', label: 'Recently Visited', icon: Clock },
+    { id: 'top', label: 'Top Visited', icon: TrendingUp },
+    { id: 'new', label: 'New Cards', icon: Bell },
+  ];
+
+  const topGames = useMemo(() => {
+    return [...allGames].sort((a, b) => (b.cardCount || 0) - (a.cardCount || 0)).slice(0, 6);
+  }, [allGames]);
+
+  const newCardGames = useMemo(() => {
+    return allGames.filter(g => g.cards?.some(c => c.tag === 'New' || c.tag === 'New Release')).slice(0, 6);
+  }, [allGames]);
+
+  const displayGames = activeQuickTab === 'recent' ? recentGames : activeQuickTab === 'top' ? topGames : newCardGames;
+
+  return (
+    <div className="border-t border-white/6 p-3 flex-shrink-0">
+      <div className="flex items-center gap-1 mb-2">
+        {quickTabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveQuickTab(tab.id)}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[9px] font-semibold transition-all ${
+              activeQuickTab === tab.id
+                ? 'bg-white/10 text-white border border-white/15'
+                : 'text-white/30 hover:text-white/60 border border-transparent'
+            }`}
+          >
+            <tab.icon className="w-2.5 h-2.5" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-0.5 max-h-[140px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        {displayGames.length === 0 ? (
+          <p className="text-white/20 text-[10px] text-center py-3">
+            {activeQuickTab === 'recent' ? 'No recently visited games yet' : activeQuickTab === 'top' ? 'No data yet' : 'No new cards this week'}
+          </p>
+        ) : (
+          displayGames.map(game => (
+            <motion.button
+              key={game.id}
+              whileHover={{ x: 2 }}
+              onClick={() => onSelectGame(game)}
+              className="w-full flex items-center gap-2.5 p-2 rounded-lg text-left hover:bg-white/5 transition-all"
+            >
+              <div className="w-8 h-10 rounded-md overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
+                <img src={game.cover} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[10px] font-semibold truncate">{game.title}</p>
+                <p className="text-white/25 text-[9px] truncate">{game.developerName} • {game.cardCount} cards</p>
+              </div>
+            </motion.button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function DevSpotlightOverlay({ onClose }) {
-  const [selectedTab, setSelectedTab] = useState(DEV_TABS[0]);
+  const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
+  const [selectedDev, setSelectedDev] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [recentGames, setRecentGames] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dev_spotlight_recent');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
-  // Flatten all games from all developers, or filter by selected dev
-  const allGames = useMemo(() => {
+  // Flatten all games with developer info
+  const allGamesFlat = useMemo(() => {
     let games = [];
-    const devs = selectedTab.id === 'all' ? DEV_SPOTLIGHT_DATA : DEV_SPOTLIGHT_DATA.filter(d => d.id === selectedTab.id);
-    devs.forEach(dev => {
+    DEV_SPOTLIGHT_DATA.forEach(dev => {
       dev.games.forEach(game => {
         games.push({
           ...game,
           developerName: dev.name,
           developerLogo: dev.logo,
+          developerId: dev.id,
           cardCount: game.cards.length
         });
       });
     });
     return games;
-  }, [selectedTab]);
+  }, []);
 
-  // Auto-select first game when tab changes
-  useEffect(() => {
-    if (allGames.length > 0) {
-      setSelectedGame(allGames[0]);
-    } else {
-      setSelectedGame(null);
+  // Filter developers by genre and search
+  const filteredDevs = useMemo(() => {
+    let devs = DEV_SPOTLIGHT_DATA.map(dev => {
+      const gameCount = dev.games.length;
+      const cardCount = dev.games.reduce((sum, g) => sum + g.cards.length, 0);
+      return { ...dev, gameCount, cardCount };
+    });
+
+    if (selectedGenre.id !== 'all') {
+      devs = devs.filter(dev =>
+        dev.games.some(g => g.genre.toLowerCase().replace(/\s+/g, '-').includes(selectedGenre.id))
+      );
     }
-    setSelectedCard(null);
-  }, [selectedTab]);
 
-  // Get cards for the selected game
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      devs = devs.filter(dev =>
+        dev.name.toLowerCase().includes(q) ||
+        dev.description.toLowerCase().includes(q) ||
+        dev.games.some(g => g.title.toLowerCase().includes(q))
+      );
+    }
+
+    return devs;
+  }, [selectedGenre, searchQuery]);
+
+  // Games for the selected developer
+  const devGames = useMemo(() => {
+    if (!selectedDev) return [];
+    return selectedDev.games.map(game => ({
+      ...game,
+      developerName: selectedDev.name,
+      developerLogo: selectedDev.logo,
+      developerId: selectedDev.id,
+      cardCount: game.cards.length
+    }));
+  }, [selectedDev]);
+
+  // Cards for the selected game
   const displayCards = useMemo(() => {
     if (!selectedGame) return [];
     return selectedGame.cards || [];
   }, [selectedGame]);
+
+  // Track recently visited games
+  const trackRecentGame = useCallback((game) => {
+    setRecentGames(prev => {
+      const filtered = prev.filter(g => g.id !== game.id);
+      const updated = [game, ...filtered].slice(0, 8);
+      localStorage.setItem('dev_spotlight_recent', JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const handleSelectDev = (dev) => {
+    setSelectedDev(dev);
+    setSelectedGame(null);
+    setSelectedCard(null);
+  };
+
+  const handleSelectGame = (game) => {
+    setSelectedGame(game);
+    setSelectedCard(null);
+    trackRecentGame(game);
+    // If we don't have a dev selected yet, find the dev
+    if (!selectedDev) {
+      const dev = DEV_SPOTLIGHT_DATA.find(d => d.id === game.developerId);
+      if (dev) setSelectedDev(dev);
+    }
+  };
+
+  const handleBackToDevs = () => {
+    setSelectedDev(null);
+    setSelectedGame(null);
+    setSelectedCard(null);
+  };
 
   // Escape key handling
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
         if (selectedCard) setSelectedCard(null);
+        else if (selectedGame) setSelectedGame(null);
+        else if (selectedDev) handleBackToDevs();
         else onClose();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedCard, onClose]);
+  }, [selectedCard, selectedGame, selectedDev, onClose]);
 
   return (
     <motion.div
@@ -134,61 +295,45 @@ export default function DevSpotlightOverlay({ onClose }) {
               borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            {/* Left: Developer Cards label */}
             <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
               Developer Cards
             </span>
 
-            {/* Fade divider left */}
             <div className="flex-shrink-0 w-px h-8 mx-3 relative">
               <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
             </div>
 
-            {/* Center: Scrollable developer tabs */}
-            <DevScrollTabs
-              tabs={DEV_TABS}
-              selectedTab={selectedTab}
-              onSelect={setSelectedTab}
+            {/* Genre tabs (replacing developer tabs) */}
+            <GenreScrollTabs
+              tabs={GENRE_TABS}
+              selectedTab={selectedGenre}
+              onSelect={(t) => { setSelectedGenre(t); handleBackToDevs(); }}
             />
 
-            {/* Fade divider right */}
             <div className="flex-shrink-0 w-px h-8 mx-3 relative">
               <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
             </div>
 
-            {/* Right: Black Market + Skill Tree buttons (non-functional) */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
+              <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15" style={{ backdropFilter: 'blur(12px)' }}>
                 <DollarSign className="w-4 h-4" />
                 <span>Black Market</span>
               </button>
-
-              <button
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
+              <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15" style={{ backdropFilter: 'blur(12px)' }}>
                 <Layers className="w-4 h-4" />
                 <span>Skill Tree</span>
               </button>
-
-              {/* Close button */}
-              <button
-                onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/40 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/20"
-              >
+              <button onClick={onClose} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/40 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/20">
                 <X className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* ═══ MAIN CONTENT: Games List + Cards ═══ */}
+        {/* ═══ MAIN CONTENT ═══ */}
         <div className="flex-1 flex min-h-0 relative z-10">
 
-          {/* LEFT: Games List */}
+          {/* LEFT PANEL */}
           <div
             className="h-full flex flex-col overflow-hidden flex-shrink-0"
             style={{
@@ -199,56 +344,133 @@ export default function DevSpotlightOverlay({ onClose }) {
               borderRight: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            {/* List Header */}
-            <div className="p-4 border-b border-white/6 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                  <Gamepad2 className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-white font-bold text-sm">All Games</h2>
-                  <p className="text-white/35 text-[10px]">{allGames.length} game{allGames.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Games */}
-            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
-              {allGames.length === 0 ? (
-                <div className="text-center py-12 text-white/25">
-                  <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-xs">No games from this developer</p>
-                </div>
-              ) : (
-                allGames.map((game) => (
-                  <motion.button
-                    key={game.id}
-                    onClick={() => { setSelectedGame(game); setSelectedCard(null); }}
-                    whileHover={{ x: 2 }}
-                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
-                      selectedGame?.id === game.id
-                        ? 'bg-white/10 border-white/15'
-                        : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
-                    }`}
-                  >
-                    <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
-                      <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-white/30 text-[10px]">{game.genre}</span>
-                        <span className="text-cyan-400/50 text-[10px] flex items-center gap-0.5">
-                          <Sparkles className="w-2.5 h-2.5" />{game.cardCount}
-                        </span>
+            <AnimatePresence mode="wait">
+              {!selectedDev ? (
+                /* Developer Listing View */
+                <motion.div
+                  key="dev-list"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  {/* Header with search */}
+                  <div className="p-4 border-b border-white/6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                          <Users className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-white font-bold text-sm">Studios</h2>
+                          <p className="text-white/35 text-[10px]">{filteredDevs.length} developer{filteredDevs.length !== 1 ? 's' : ''}</p>
+                        </div>
                       </div>
-                      {/* Developer name sub-line */}
-                      <p className="text-white/20 text-[9px] mt-0.5 truncate">{game.developerName}</p>
                     </div>
-                  </motion.button>
-                ))
+                    {/* Search bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search studios or games..."
+                        className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 focus:bg-white/8 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Developer list */}
+                  <div className="flex-1 overflow-y-auto p-2" style={{ scrollbarWidth: 'none' }}>
+                    {filteredDevs.length === 0 ? (
+                      <div className="text-center py-12 text-white/25">
+                        <Users className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-xs">No studios found</p>
+                      </div>
+                    ) : (
+                      filteredDevs.map(dev => (
+                        <DeveloperCard
+                          key={dev.id}
+                          dev={dev}
+                          onClick={handleSelectDev}
+                          gameCount={dev.gameCount}
+                          cardCount={dev.cardCount}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  {/* Quick Access Section */}
+                  <QuickAccessSection
+                    recentGames={recentGames}
+                    allGames={allGamesFlat}
+                    onSelectGame={handleSelectGame}
+                  />
+                </motion.div>
+              ) : (
+                /* Developer Games View */
+                <motion.div
+                  key="dev-games"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full flex flex-col"
+                >
+                  {/* Header with back button */}
+                  <div className="p-4 border-b border-white/6">
+                    <div className="flex items-center gap-3 mb-3">
+                      <button onClick={handleBackToDevs} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/8">
+                        <ChevronLeft className="w-4 h-4 text-white/60" />
+                      </button>
+                      <img src={selectedDev.logo} alt="" className="w-9 h-9 rounded-lg border border-white/15" />
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-white font-bold text-sm truncate">{selectedDev.name}</h2>
+                        <p className="text-white/35 text-[10px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Games list for this developer */}
+                  <div className="flex-1 overflow-y-auto p-2.5 space-y-1" style={{ scrollbarWidth: 'none' }}>
+                    {devGames.map((game) => (
+                      <motion.button
+                        key={game.id}
+                        onClick={() => handleSelectGame(game)}
+                        whileHover={{ x: 2 }}
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
+                          selectedGame?.id === game.id
+                            ? 'bg-white/10 border-white/15'
+                            : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/6'
+                        }`}
+                      >
+                        <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-white/8 bg-black/30">
+                          <img src={game.cover} alt={game.title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-white/30 text-[10px]">{game.genre}</span>
+                            <span className="text-cyan-400/50 text-[10px] flex items-center gap-0.5">
+                              <Sparkles className="w-2.5 h-2.5" />{game.cardCount}
+                            </span>
+                          </div>
+                          <p className="text-white/20 text-[9px] mt-0.5">{game.year}</p>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {/* Quick Access */}
+                  <QuickAccessSection
+                    recentGames={recentGames}
+                    allGames={allGamesFlat}
+                    onSelectGame={handleSelectGame}
+                  />
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
 
           {/* RIGHT: Cards Grid */}
@@ -278,7 +500,6 @@ export default function DevSpotlightOverlay({ onClose }) {
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
                         <span className="text-white/30 text-xs">{displayCards.length} cards</span>
-                        {/* Divider */}
                         <div className="w-px h-3 bg-white/15" />
                         <span className="text-white/25 text-[10px]">{selectedGame.developerName}</span>
                       </div>
@@ -306,12 +527,10 @@ export default function DevSpotlightOverlay({ onClose }) {
                               whileHover={{ scale: 1.05, y: -4 }}
                               className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-cyan-500/10"
                             >
-                              {/* Card image */}
                               <div className="relative w-full h-3/5 overflow-hidden">
                                 <img src={card.image || selectedGame.cover} alt={card.name} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
                               </div>
-                              {/* Card info */}
                               <div className="p-2 flex flex-col gap-1">
                                 <h3 className="text-white font-bold text-[10px] leading-tight line-clamp-2">{card.name}</h3>
                                 <div className="flex gap-1 flex-wrap">
@@ -339,6 +558,19 @@ export default function DevSpotlightOverlay({ onClose }) {
                     )}
                   </div>
                 </motion.div>
+              ) : selectedDev ? (
+                <motion.div
+                  key="dev-info"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-full flex flex-col items-center justify-center text-center px-8"
+                >
+                  <img src={selectedDev.logo} alt="" className="w-20 h-20 rounded-2xl border border-white/15 shadow-2xl mb-6" />
+                  <h2 className="text-xl font-bold text-white/60 mb-2">{selectedDev.name}</h2>
+                  <p className="text-white/30 text-sm max-w-sm mb-4">{selectedDev.description}</p>
+                  <p className="text-white/20 text-xs">Select a game from the left to view its cards</p>
+                </motion.div>
               ) : (
                 <motion.div
                   key="empty"
@@ -348,11 +580,11 @@ export default function DevSpotlightOverlay({ onClose }) {
                   className="h-full flex flex-col items-center justify-center text-center px-8"
                 >
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 opacity-20 flex items-center justify-center mb-6">
-                    <Gamepad2 className="w-10 h-10 text-white/40" />
+                    <Users className="w-10 h-10 text-white/40" />
                   </div>
-                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Game</h2>
+                  <h2 className="text-xl font-bold text-white/30 mb-2">Select a Studio</h2>
                   <p className="text-white/20 text-sm max-w-sm">
-                    Choose a game from the list to view developer released cards.
+                    Choose a developer studio from the list to browse their games and cards.
                   </p>
                 </motion.div>
               )}
@@ -415,7 +647,6 @@ function DevCardDetailOverlay({ card, game, onClose }) {
           boxShadow: `0 25px 80px rgba(0,0,0,0.6), 0 0 60px ${glowColor}`
         }}
       >
-        {/* Top glow bar */}
         <div className={`h-1 ${
           card.rarity === 'Legendary' ? 'bg-gradient-to-r from-transparent via-amber-400 to-transparent' :
           card.rarity === 'Epic' ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' :
@@ -431,7 +662,6 @@ function DevCardDetailOverlay({ card, game, onClose }) {
 
         <div className="p-8">
           <div className="flex gap-8">
-            {/* Card Preview */}
             <div className="flex-shrink-0 flex flex-col items-center">
               <div className="w-36 h-48 rounded-xl overflow-hidden border-2 border-white/15 shadow-2xl">
                 <img src={card.image || game?.cover} alt={card.name} className="w-full h-full object-cover" />
@@ -443,7 +673,6 @@ function DevCardDetailOverlay({ card, game, onClose }) {
               </div>
             </div>
 
-            {/* Details */}
             <div className="flex-1 min-w-0">
               <h2 className={`text-2xl font-black ${rarityColor}`}>{card.name}</h2>
 
