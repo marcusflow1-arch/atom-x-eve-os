@@ -117,7 +117,7 @@ export default function Mini3DViewerBox() {
   }, []);
 
   return (
-    <div className="pointer-events-auto flex items-start gap-3">
+    <div className="pointer-events-auto flex items-start gap-0">
       {/* 3D Viewer - Original Size */}
       <div
         className="rounded-2xl overflow-hidden flex-shrink-0"
