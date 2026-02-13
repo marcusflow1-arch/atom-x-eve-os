@@ -139,7 +139,7 @@ export default function SystemUpdatesOverlay({ onClose }) {
           </div>
 
           {/* Detail Panel */}
-          <div className="w-1/2 overflow-y-auto p-6" style={{ scrollbarWidth: 'none' }}>
+          <div className="w-1/2 overflow-y-auto p-6 flex-shrink-0" style={{ scrollbarWidth: 'none' }}>
             <AnimatePresence mode="wait">
               {selectedUpdate ? (
                 <motion.div
