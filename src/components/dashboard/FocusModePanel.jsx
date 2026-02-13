@@ -1860,10 +1860,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           />
         </div>
 
-        {/* Right: Card Collection Browser with genre scroll */}
-        <div className="w-[280px] flex-shrink-0">
-          <CardCollectionBrowser />
-        </div>
+
       </div>
 
 
