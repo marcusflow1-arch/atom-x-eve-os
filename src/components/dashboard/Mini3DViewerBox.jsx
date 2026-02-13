@@ -116,13 +116,6 @@ export default function Mini3DViewerBox() {
     };
   }, []);
 
-  const displayName = user?.username || user?.full_name || 'Unknown';
-  const userLevel = user?.level || 1;
-  const userRank = user?.rank || 'Recruit';
-  const achievementScore = user?.gamer_score || 0;
-  const aiPoints = user?.ai_achievement_points || 0;
-  const birthday = user?.birthday || '—';
-
   return (
     <div className="pointer-events-auto flex items-start gap-3">
       {/* 3D Viewer - Original Size */}
@@ -141,14 +134,8 @@ export default function Mini3DViewerBox() {
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      {/* Info - Clean underlined text to the right */}
-      <div className="space-y-2 pt-2" style={{ fontFamily: 'system-ui, -apple-system, sans-serif', fontWeight: 400 }}>
-        <p className="text-white/90 text-xs underline">{displayName}</p>
-        <p className="text-white/90 text-xs underline">Rank: {userRank} · Lvl {userLevel}</p>
-        <p className="text-white/90 text-xs underline">Birthday: {birthday}</p>
-        <p className="text-white/90 text-xs underline">Achievement Score: {achievementScore.toLocaleString()}</p>
-        <p className="text-white/90 text-xs underline">AI Points: {aiPoints.toLocaleString()}</p>
-      </div>
+      {/* Avatar Stats Card */}
+      <AvatarStatCard />
     </div>
   );
 }
