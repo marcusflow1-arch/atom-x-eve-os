@@ -1738,8 +1738,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight - aligned with AI Attributes bottom */}
-            <div className="mt-16 pointer-events-auto">
+            {/* Developer Spotlight - pinned to bottom of initial viewport */}
+            <div className="pointer-events-auto" style={{ marginTop: 'auto', paddingTop: '24px' }}>
               <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
