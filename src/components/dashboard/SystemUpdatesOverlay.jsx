@@ -78,16 +78,11 @@ export default function SystemUpdatesOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed z-[39] flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[45] flex flex-col overflow-hidden"
       style={{
-        top: '64px',
-        left: 0,
-        right: 0,
-        bottom: 0,
         background: 'rgba(8, 12, 18, 0.97)',
         backdropFilter: 'blur(40px) saturate(150%)',
         WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
       }}
     >
       {/* Header */}
