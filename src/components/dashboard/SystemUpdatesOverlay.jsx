@@ -94,7 +94,7 @@ export default function SystemUpdatesOverlay({ onClose }) {
       <div className="relative w-full h-full flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-5 border-b border-white/8">
+        <div className="flex items-center justify-between px-8 py-4 border-b border-white/8 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
               <Shield className="w-5 h-5 text-cyan-400" />
@@ -106,9 +106,9 @@ export default function SystemUpdatesOverlay({ onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10"
+            className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 hover:border-white/20"
           >
-            <X className="w-5 h-5 text-white/60" />
+            <X className="w-5 h-5 text-white/60 hover:text-white" />
           </button>
         </div>
 
