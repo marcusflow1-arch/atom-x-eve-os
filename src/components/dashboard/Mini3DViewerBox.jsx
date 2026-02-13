@@ -118,20 +118,93 @@ export default function Mini3DViewerBox() {
     };
   }, []);
 
+  const displayName = user?.username || user?.full_name || 'Unknown';
+  const userLevel = user?.level || 1;
+  const userRank = user?.rank || 'Recruit';
+  const achievementScore = user?.gamer_score || 0;
+  const aiPoints = user?.ai_achievement_points || 0;
+  const birthday = user?.birthday || '—';
+
   return (
-    <div
-      className="rounded-2xl overflow-hidden pointer-events-auto"
-      style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-        height: '280px',
-        width: '100%',
-      }}
-    >
-      <div ref={containerRef} className="w-full h-full" />
+    <div className="flex gap-3 pointer-events-auto">
+      {/* 3D Viewer */}
+      <div
+        className="rounded-2xl overflow-hidden flex-shrink-0"
+        style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
+          height: '280px',
+          width: '160px',
+        }}
+      >
+        <div ref={containerRef} className="w-full h-full" />
+      </div>
+
+      {/* Info Panel */}
+      <div
+        className="rounded-2xl overflow-hidden flex flex-col justify-center px-4 py-3 gap-2.5"
+        style={{
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
+          height: '280px',
+          width: '170px',
+        }}
+      >
+        {/* Name */}
+        <div>
+          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Name</p>
+          <p className="text-white font-bold text-sm truncate leading-tight">{displayName}</p>
+        </div>
+
+        {/* Level & Rank */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Rank</p>
+            <div className="flex items-center gap-1">
+              <Shield className="w-3 h-3 text-cyan-400" />
+              <p className="text-cyan-300 font-semibold text-xs">{userRank}</p>
+            </div>
+          </div>
+          <div className="w-px h-6 bg-white/10" />
+          <div>
+            <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Lvl</p>
+            <p className="text-white font-bold text-sm">{userLevel}</p>
+          </div>
+        </div>
+
+        {/* Birthday */}
+        <div>
+          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Birthday</p>
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-purple-400" />
+            <p className="text-white/70 text-xs">{birthday}</p>
+          </div>
+        </div>
+
+        {/* Achievement Score */}
+        <div>
+          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">Achievement Score</p>
+          <div className="flex items-center gap-1">
+            <Trophy className="w-3 h-3 text-yellow-400" />
+            <p className="text-yellow-300 font-bold text-sm">{achievementScore.toLocaleString()}</p>
+          </div>
+        </div>
+
+        {/* AI Achievement Points */}
+        <div>
+          <p className="text-white/40 text-[9px] uppercase tracking-widest font-semibold">AI Points</p>
+          <div className="flex items-center gap-1">
+            <Zap className="w-3 h-3 text-emerald-400" />
+            <p className="text-emerald-300 font-bold text-sm">{aiPoints.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
