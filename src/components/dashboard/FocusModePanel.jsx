@@ -1738,6 +1738,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
+            {/* Developer Spotlight - below Environment Hub area */}
+            <div className="mt-4 pointer-events-auto">
+              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+            </div>
+
             <AnimatePresence>
               {showLiveDropdown && (
                 <motion.div
@@ -1783,10 +1788,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
              <div className="mt-1">
                 <AIAttributesBox />
               </div>
-             {/* Developer Spotlight */}
-             <div className="mt-2">
-                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-             </div>
              </div>
         </div>
       </div>
