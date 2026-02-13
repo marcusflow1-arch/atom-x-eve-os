@@ -30,7 +30,6 @@ import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
-import DeveloperSpotlightRibbon from '@/components/dashboard/DeveloperSpotlightRibbon';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1580,7 +1579,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpdatesOverlay, setShowUpdatesOverlay] = useState(false);
-  const [showDevSpotlightOverlay, setShowDevSpotlightOverlay] = useState(false);
 
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
@@ -1739,11 +1737,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight Ribbon (Passive) */}
-            <div className="mt-4 pointer-events-auto">
-              <DeveloperSpotlightRibbon onOpenOverlay={() => setShowDevSpotlightOverlay(true)} />
-            </div>
-
             <AnimatePresence>
               {showLiveDropdown && (
                 <motion.div
@@ -1802,18 +1795,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
       <AnimatePresence>
         {showUpdatesOverlay && (
           <SystemUpdatesOverlay onClose={() => setShowUpdatesOverlay(false)} />
-        )}
-      </AnimatePresence>
-
-      {/* Developer Spotlight Overlay (from ribbon "View All") */}
-      <AnimatePresence>
-        {showDevSpotlightOverlay && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[46] pointer-events-auto"
-          >
-            {(() => { const DeveloperSpotlightOverlay = React.lazy(() => import('@/components/dashboard/DeveloperSpotlightOverlay')); return <React.Suspense fallback={null}><DeveloperSpotlightOverlay onClose={() => setShowDevSpotlightOverlay(false)} /></React.Suspense>; })()}
-          </motion.div>
         )}
       </AnimatePresence>
 

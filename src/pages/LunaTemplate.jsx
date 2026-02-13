@@ -59,7 +59,6 @@ import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
-import DeveloperSpotlightOverlay from '../components/dashboard/DeveloperSpotlightOverlay';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
@@ -914,7 +913,6 @@ export default function LunaTemplate() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
-  const [showDevSpotlight, setShowDevSpotlight] = useState(false); // Toggle with 'P' key
   const [currentEnvId, setCurrentEnvId] = useState('default_room');
 
   const { mode } = useDashboardMode();
@@ -1114,14 +1112,12 @@ export default function LunaTemplate() {
           setUiVisible((v) => !v);
         }
       }
-      if (key === 'p') {
-        setShowDevSpotlight((v) => !v);
-      }
+      // 'o' key binding removed for stats as requested
+      // if (key === 'o') { setShowStats((v) => !v); }
       if (key === '0') {
         setHideUI((v) => !v);
       }
       if (key === 'escape') {
-        if (showDevSpotlight) { setShowDevSpotlight(false); return; }
         if (hideUI) setHideUI(false);
         if (showAvatarProgression) setShowAvatarProgression(false);
         if (showForumOverlay) setShowForumOverlay(false);
@@ -1258,16 +1254,9 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Developer Spotlight Overlay (P key) */}
-      <AnimatePresence>
-        {showDevSpotlight && (
-          <DeveloperSpotlightOverlay onClose={() => setShowDevSpotlight(false)} />
-        )}
-      </AnimatePresence>
-
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !showDevSpotlight &&
+        {!uiVisible && !showConsoleMode &&
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -2477,7 +2466,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && !showDevSpotlight && (
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && (
         // SideAccessMenu stays visible even when hideUI is true, per user request:
         // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
         // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
