@@ -10,6 +10,7 @@ const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
 export default function Mini3DViewerBox() {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!containerRef.current) return;
