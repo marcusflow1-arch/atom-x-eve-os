@@ -1739,9 +1739,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Card Collection Browser (far left) + Developer Spotlight (right) - same row */}
-            <div className="pointer-events-auto flex items-start gap-4" style={{ marginTop: 'auto', paddingTop: '24px', marginLeft: '-24px' }}>
-              <div className="w-[280px] flex-shrink-0 self-center">
+            {/* Card Collection Browser (far left of page) + Developer Spotlight (right) - same row */}
+            <div className="pointer-events-auto flex items-center gap-4" style={{ marginTop: 'auto', paddingTop: '24px', marginLeft: '-420px' }}>
+              <div className="w-[280px] flex-shrink-0">
                 <CardCollectionBrowser />
               </div>
               <div className="flex-1 min-w-0">
