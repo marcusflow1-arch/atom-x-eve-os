@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Sparkles, Flame, Star, Zap, Users } from 'lucide-react';
+import { ChevronRight, Sparkles } from 'lucide-react';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
 
 function FeaturedDevCard({ dev, game, card, onClick }) {
@@ -46,24 +46,6 @@ function FeaturedDevCard({ dev, game, card, onClick }) {
         </span>
       </div>
     </motion.div>
-  );
-}
-
-function DevLogoChip({ dev, isActive, onClick }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={() => onClick(dev)}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-full flex-shrink-0 border transition-all ${
-        isActive
-          ? 'bg-white/10 border-white/20 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
-          : 'bg-transparent border-transparent hover:bg-white/5'
-      }`}
-    >
-      <img src={dev.logo} alt={dev.name} className="w-5 h-5 rounded-full border border-white/15" />
-      <span className={`text-[10px] font-semibold ${isActive ? 'text-white' : 'text-white/40'}`}>{dev.name}</span>
-    </motion.button>
   );
 }
 
