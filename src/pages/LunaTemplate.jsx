@@ -60,6 +60,7 @@ import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
 import DevSpotlightOverlay from '../components/dashboard/DevSpotlightOverlay';
+import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
@@ -1199,10 +1200,13 @@ export default function LunaTemplate() {
 
 
 
-      {/* Mini 3D Viewer Box - positioned below the dashboard title, left column */}
+      {/* Mini 3D Viewer Box + Card Collection Browser - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
-        <div className="fixed z-20 pointer-events-auto" style={{ left: '32px', top: '80px', width: '200px' }}>
+        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '280px' }}>
           <Mini3DViewerBox />
+          <div className="w-full">
+            <CardCollectionBrowser />
+          </div>
         </div>
       )}
 
