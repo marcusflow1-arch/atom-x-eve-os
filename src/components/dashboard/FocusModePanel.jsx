@@ -1738,11 +1738,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight Ribbon */}
-            <div className="mt-4 pointer-events-auto">
-              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-            </div>
-
             <AnimatePresence>
               {showLiveDropdown && (
                 <motion.div
@@ -1869,6 +1864,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             <LunaCardScroll />
           </div>
         </div>
+      </div>
+
+      {/* Developer Spotlight - Bottom of page */}
+      <div className="mt-8 w-full pointer-events-auto">
+        <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
       </div>
 
 
