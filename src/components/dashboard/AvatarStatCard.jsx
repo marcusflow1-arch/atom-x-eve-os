@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Shield, Zap, Trophy, Swords, Star, Heart, Brain, Flame } from 'lucide-react';
+import { Zap, Trophy, Star, Gamepad2, Users, TrendingUp } from 'lucide-react';
 
 function StatLine({ icon, label, value, color = 'text-white/70' }) {
   return (
-    <div className="flex items-center justify-between py-1">
+    <div className="flex items-center justify-between py-[3px]">
       <div className="flex items-center gap-2">
         <span className={color}>{icon}</span>
         <span className="text-white/50 text-[11px]">{label}</span>
@@ -43,8 +43,8 @@ export default function AvatarStatCard() {
   const gamerScore = user?.gamer_score || 0;
   const aiPoints = user?.ai_achievement_points || 0;
   const socialInfluence = avatar?.social_influence || 0;
-
-  const stats = progression?.stats || { hp: 100, strength: 10, intelligence: 10, will: 10, tenacity: 10 };
+  const gamesPlayed = user?.games_played || 0;
+  const achievementsCount = user?.achievements_count || 0;
 
   // Top genre
   const topGenre = progression?.genres
@@ -53,17 +53,19 @@ export default function AvatarStatCard() {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden w-[210px] flex-shrink-0"
+      className="rounded-2xl overflow-hidden flex-shrink-0 flex flex-col"
       style={{
         background: 'rgba(22, 27, 38, 0.85)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        height: '280px',
+        width: '190px',
       }}
     >
       {/* Name & Rank Header */}
-      <div className="px-3.5 pt-3 pb-2 border-b border-white/6">
-        <p className="text-white font-bold text-sm truncate leading-tight">{displayName}</p>
-        <div className="flex items-center gap-2 mt-0.5">
+      <div className="px-3 pt-3 pb-2 border-b border-white/6">
+        <p className="text-white font-bold text-[13px] truncate leading-tight">{displayName}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
           <span className="text-cyan-400 text-[10px] font-semibold">{rank}</span>
           <span className="text-white/20 text-[10px]">·</span>
           <span className="text-white/40 text-[10px]">Lvl {globalLevel}</span>
@@ -72,34 +74,27 @@ export default function AvatarStatCard() {
         </div>
       </div>
 
-      {/* Core Stats */}
-      <div className="px-3.5 py-2 border-b border-white/6">
-        <p className="text-white/25 text-[9px] font-bold uppercase tracking-widest mb-1">Attributes</p>
-        <StatLine icon={<Heart className="w-3 h-3" />} label="HP" value={stats.hp} color="text-red-400" />
-        <StatLine icon={<Swords className="w-3 h-3" />} label="Strength" value={stats.strength} color="text-orange-400" />
-        <StatLine icon={<Brain className="w-3 h-3" />} label="Intelligence" value={stats.intelligence} color="text-blue-400" />
-        <StatLine icon={<Shield className="w-3 h-3" />} label="Will" value={stats.will} color="text-purple-400" />
-        <StatLine icon={<Flame className="w-3 h-3" />} label="Tenacity" value={stats.tenacity} color="text-yellow-400" />
-      </div>
-
-      {/* Scores */}
-      <div className="px-3.5 py-2 border-b border-white/6">
-        <p className="text-white/25 text-[9px] font-bold uppercase tracking-widest mb-1">Scores</p>
-        <StatLine icon={<Trophy className="w-3 h-3" />} label="Gamer Score" value={gamerScore.toLocaleString()} color="text-amber-400" />
-        <StatLine icon={<Zap className="w-3 h-3" />} label="AI Points" value={aiPoints.toLocaleString()} color="text-cyan-400" />
-        <StatLine icon={<Star className="w-3 h-3" />} label="Influence" value={socialInfluence.toLocaleString()} color="text-pink-400" />
-      </div>
-
-      {/* Top Genre */}
-      {topGenre && (
-        <div className="px-3.5 py-2">
-          <p className="text-white/25 text-[9px] font-bold uppercase tracking-widest mb-1">Top Genre</p>
-          <div className="flex items-center justify-between">
-            <span className="text-white/60 text-[11px]">{topGenre.name}</span>
-            <span className="text-cyan-300 text-[11px] font-bold">Lv. {topGenre.level || 1}</span>
-          </div>
+      {/* Scores & Profile Info */}
+      <div className="px-3 py-2 flex-1 flex flex-col justify-between">
+        <div>
+          <StatLine icon={<Trophy className="w-3 h-3" />} label="Gamer Score" value={gamerScore.toLocaleString()} color="text-amber-400" />
+          <StatLine icon={<Zap className="w-3 h-3" />} label="AI Points" value={aiPoints.toLocaleString()} color="text-cyan-400" />
+          <StatLine icon={<Star className="w-3 h-3" />} label="Influence" value={socialInfluence.toLocaleString()} color="text-pink-400" />
+          <StatLine icon={<Gamepad2 className="w-3 h-3" />} label="Games Played" value={gamesPlayed} color="text-green-400" />
+          <StatLine icon={<TrendingUp className="w-3 h-3" />} label="Achievements" value={achievementsCount} color="text-purple-400" />
         </div>
-      )}
+
+        {/* Top Genre Footer */}
+        {topGenre && (
+          <div className="pt-2 mt-auto border-t border-white/6">
+            <div className="flex items-center justify-between">
+              <span className="text-white/30 text-[9px] uppercase tracking-wider font-bold">Top Genre</span>
+              <span className="text-cyan-300 text-[10px] font-bold">Lv. {topGenre.level || 1}</span>
+            </div>
+            <p className="text-white/60 text-[11px] font-medium">{topGenre.name}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
