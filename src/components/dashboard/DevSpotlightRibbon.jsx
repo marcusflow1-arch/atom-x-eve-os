@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
@@ -50,7 +50,6 @@ function FeaturedDevCard({ dev, game, card, onClick }) {
 }
 
 export default function DevSpotlightRibbon({ onOpenOverlay }) {
-  const scrollRef = useRef(null);
   const [activeDev, setActiveDev] = useState(null);
 
   // Build featured cards - one highlight per developer or filtered by activeDev
