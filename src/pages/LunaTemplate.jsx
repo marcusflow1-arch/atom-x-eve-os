@@ -1289,7 +1289,8 @@ export default function LunaTemplate() {
                  onToggleStats={() => setShowStats((v) => !v)}
                  currentEnvId={currentEnvId}
                  onSelectEnv={handleEnvSelect}
-               />
+                 onOpenDevSpotlight={() => setShowDevSpotlight(true)}
+                />
             </div>
           </motion.div>
         }
