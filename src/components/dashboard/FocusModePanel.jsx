@@ -1781,9 +1781,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
              </div>
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
-               <AIAttributesBox />
+                <AIAttributesBox />
+              </div>
+             {/* Developer Spotlight */}
+             <div className="mt-2">
+                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
              </div>
-          </div>
+             </div>
         </div>
       </div>
 
@@ -1866,10 +1870,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
         </div>
       </div>
 
-      {/* Developer Spotlight - Bottom of page */}
-      <div className="mt-8 w-full pointer-events-auto">
-        <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-      </div>
+
 
 
     </div>
