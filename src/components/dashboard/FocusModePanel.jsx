@@ -30,6 +30,7 @@ import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
+import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1570,7 +1571,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1735,6 +1736,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 currentEnvId={currentEnvId}
                 onSelectEnv={onSelectEnv}
               />
+            </div>
+
+            {/* Developer Spotlight Ribbon */}
+            <div className="mt-4 pointer-events-auto">
+              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
             <AnimatePresence>
