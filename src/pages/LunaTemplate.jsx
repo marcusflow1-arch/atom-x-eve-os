@@ -1197,7 +1197,7 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
-        <div className="fixed z-20 pointer-events-auto" style={{ left: '32px', top: '80px', width: '200px' }}>
+        <div className="fixed z-20 pointer-events-auto" style={{ left: '32px', top: '80px', width: '340px' }}>
           <Mini3DViewerBox />
         </div>
       )}
