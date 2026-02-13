@@ -78,26 +78,21 @@ export default function SystemUpdatesOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] flex items-center justify-center"
+      className="fixed z-[55] flex flex-col overflow-hidden"
+      style={{
+        top: '64px',
+        left: '60px',
+        right: 0,
+        bottom: 0,
+        background: 'rgba(8, 12, 18, 0.92)',
+        backdropFilter: 'blur(40px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+      }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
+      {/* Full-page panel below header, offset left for SideAccessMenu */}
+      <div className="relative w-full h-full flex flex-col overflow-hidden">
 
-      {/* Modal */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="relative w-full max-w-4xl max-h-[85vh] rounded-2xl overflow-hidden flex flex-col"
-        style={{
-          background: 'rgba(100, 120, 140, 0.08)',
-          backdropFilter: 'blur(40px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 25px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
-        }}
-      >
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-5 border-b border-white/8">
           <div className="flex items-center gap-3">
