@@ -1738,25 +1738,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight + Card Collection - pinned to bottom of initial viewport */}
-            <div className="pointer-events-auto flex items-end gap-4" style={{ marginTop: 'auto', paddingTop: '24px' }}>
-              <div className="w-[280px] flex-shrink-0">
-                <h3 
-                    className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full" 
-                    style={{ 
-                      background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-                      textAlign: 'center'
-                    }}>
-                  Card Collection
-                </h3>
-                <LunaCardScroll />
-              </div>
-              <div className="flex-1 min-w-0">
-                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-              </div>
+            {/* Developer Spotlight - pinned to bottom of initial viewport */}
+            <div className="pointer-events-auto" style={{ marginTop: 'auto', paddingTop: '24px' }}>
+              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
             <AnimatePresence>
@@ -1868,7 +1852,23 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           />
         </div>
 
-
+        {/* Card Collection - Fixed width aligned with Calendar (280px), pushed to bottom right */}
+        <div className="w-[280px] flex-shrink-0 flex flex-col justify-end pt-8 mt-8" style={{ marginTop: 'auto' }}>
+          <div className="w-full">
+            <h3 
+                className="text-base font-extrabold uppercase tracking-widest mb-4 text-center w-full" 
+                style={{ 
+                  background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                  textAlign: 'center'
+                }}>
+              Card Collection
+            </h3>
+            <LunaCardScroll />
+          </div>
+        </div>
       </div>
 
 
