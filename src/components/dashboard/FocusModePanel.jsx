@@ -1739,8 +1739,15 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Developer Spotlight - pinned to bottom of initial viewport */}
-            <div className="pointer-events-auto" style={{ marginTop: 'auto', paddingTop: '24px' }}>
+            {/* Card Collection Browser - centered above Developer Spotlight */}
+            <div className="pointer-events-auto flex justify-center" style={{ marginTop: 'auto', paddingTop: '24px' }}>
+              <div className="w-[280px]">
+                <CardCollectionBrowser />
+              </div>
+            </div>
+
+            {/* Developer Spotlight */}
+            <div className="pointer-events-auto" style={{ paddingTop: '16px' }}>
               <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
