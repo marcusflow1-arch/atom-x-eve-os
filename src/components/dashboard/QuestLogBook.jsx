@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen } from 'lucide-react';
 
-// All quest pages — each "spread" is a pair [left, right]
 const ALL_PAGES = [
   [
     { id: 1, title: 'Dragon Slayer', desc: 'Defeat 3 dragons in RPG games', progress: 2, total: 3, rarity: 'Legendary', icon: '🐉' },
@@ -60,7 +59,7 @@ function QuestEntry({ quest }) {
   );
 }
 
-function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
+function BookPage({ quests, tiltDirection }) {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -75,31 +74,20 @@ function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
   const baseTilt = tiltDirection === 'left' ? 14 : -14;
   const hoverTilt = tiltDirection === 'left' ? 9 : -9;
 
-  // Flip animation: page flips from the spine edge
-  const enterFrom = flipDirection === 'forward'
-    ? (tiltDirection === 'left' ? { rotateY: -90, opacity: 0 } : { rotateY: 90, opacity: 0 })
-    : (tiltDirection === 'left' ? { rotateY: 90, opacity: 0 } : { rotateY: -90, opacity: 0 });
-
   return (
     <motion.div
-      key={quests.map(q => q.id).join('-')}
-      initial={enterFrom}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      onMouseMove={handleMouseMove}
       animate={{
         rotateY: isHovered ? hoverTilt : baseTilt,
         rotateX: isHovered ? (mousePos.y - 0.5) * 6 : 0,
         scale: isHovered ? 1.03 : 1,
-        opacity: 1,
       }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      onMouseMove={handleMouseMove}
-      onClick={onClick}
+      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       className="flex-1 min-w-0 rounded-xl overflow-hidden relative cursor-pointer"
       style={{
         transformStyle: 'preserve-3d',
-        transformOrigin: tiltDirection === 'left' ? 'right center' : 'left center',
         perspective: '800px',
         background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 40%, rgba(180, 190, 210, 0.07) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
@@ -111,7 +99,6 @@ function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
         transition: 'box-shadow 0.3s ease, border-color 0.3s ease'
       }}
     >
-      {/* Silver glass shine */}
       <div
         className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300"
         style={{
@@ -128,12 +115,10 @@ function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
         />
       )}
 
-      {/* Book page spine edge */}
       <div className={`absolute top-0 bottom-0 w-[2px] ${tiltDirection === 'left' ? 'right-0' : 'left-0'}`}
         style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
       />
 
-      {/* Content */}
       <div className="relative z-20 p-3 flex flex-col gap-1 h-full">
         {quests.map(q => <QuestEntry key={q.id} quest={q} />)}
       </div>
@@ -142,28 +127,42 @@ function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
 }
 
 export default function QuestLogBook() {
-  // leftIdx and rightIdx track which page from ALL_PAGES is shown on each side
   const [leftIdx, setLeftIdx] = useState(0);
   const [rightIdx, setRightIdx] = useState(1);
-  const [flipDirection, setFlipDirection] = useState('forward');
+  const [visible, setVisible] = useState(true);
+  const [pending, setPending] = useState(null); // 'forward' | 'backward'
 
   const totalPages = ALL_PAGES.length;
 
-  // Click RIGHT page → right content moves to left, new content appears on right
-  const turnForward = useCallback(() => {
-    setFlipDirection('forward');
-    setLeftIdx(rightIdx);
-    setRightIdx((rightIdx + 1) % totalPages);
-  }, [rightIdx, totalPages]);
+  const handleClickRight = () => {
+    if (!visible) return;
+    setPending('forward');
+    setVisible(false);
+  };
 
-  // Click LEFT page → left content moves to right, new content appears on left
-  const turnBackward = useCallback(() => {
-    setFlipDirection('backward');
-    setRightIdx(leftIdx);
-    setLeftIdx((leftIdx - 1 + totalPages) % totalPages);
-  }, [leftIdx, totalPages]);
+  const handleClickLeft = () => {
+    if (!visible) return;
+    setPending('backward');
+    setVisible(false);
+  };
 
-  const pageLabel = `${leftIdx + 1}-${rightIdx + 1} / ${totalPages}`;
+  const handleFadeOutComplete = () => {
+    if (pending === 'forward') {
+      // Right content → left, new content → right
+      const newLeft = rightIdx;
+      const newRight = (rightIdx + 1) % totalPages;
+      setLeftIdx(newLeft);
+      setRightIdx(newRight);
+    } else if (pending === 'backward') {
+      // Left content → right, new content → left
+      const newRight = leftIdx;
+      const newLeft = (leftIdx - 1 + totalPages) % totalPages;
+      setLeftIdx(newLeft);
+      setRightIdx(newRight);
+    }
+    setPending(null);
+    setVisible(true);
+  };
 
   return (
     <div className="w-full flex flex-col items-center" style={{ perspective: '1000px' }}>
@@ -183,34 +182,36 @@ export default function QuestLogBook() {
         </h3>
       </div>
 
-      {/* Book — two pages side by side */}
+      {/* Book — two pages side by side, both fade together */}
       <div className="w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
-        <AnimatePresence mode="popLayout">
-          <BookPage
-            key={`left-${leftIdx}`}
-            quests={ALL_PAGES[leftIdx]}
-            tiltDirection="left"
-            onClick={turnBackward}
-            flipDirection={flipDirection}
-          />
-        </AnimatePresence>
-        <AnimatePresence mode="popLayout">
-          <BookPage
-            key={`right-${rightIdx}`}
-            quests={ALL_PAGES[rightIdx]}
-            tiltDirection="right"
-            onClick={turnForward}
-            flipDirection={flipDirection}
-          />
+        <AnimatePresence mode="wait" onExitComplete={!visible ? handleFadeOutComplete : undefined}>
+          {visible && (
+            <motion.div
+              key={`spread-${leftIdx}-${rightIdx}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="w-full flex gap-1"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div className="flex-1 min-w-0" onClick={handleClickLeft}>
+                <BookPage quests={ALL_PAGES[leftIdx]} tiltDirection="left" />
+              </div>
+              <div className="flex-1 min-w-0" onClick={handleClickRight}>
+                <BookPage quests={ALL_PAGES[rightIdx]} tiltDirection="right" />
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
-      {/* Page indicator */}
+      {/* Page indicator dots */}
       <div className="mt-2 flex items-center gap-1">
         {ALL_PAGES.map((_, i) => (
           <div
             key={i}
-            className={`w-1 h-1 rounded-full transition-all ${i === leftIdx || i === rightIdx ? 'bg-white/40 w-1.5 h-1.5' : 'bg-white/12'}`}
+            className={`rounded-full transition-all ${i === leftIdx || i === rightIdx ? 'bg-white/40 w-1.5 h-1.5' : 'bg-white/12 w-1 h-1'}`}
           />
         ))}
       </div>
