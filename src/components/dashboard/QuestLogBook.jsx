@@ -104,36 +104,35 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
 }
 
 export default function QuestLogBook() {
-  const [leftIdx, setLeftIdx] = useState(0);
-  const [rightIdx, setRightIdx] = useState(1);
+  // Each spread is a pair: [leftIdx, rightIdx]. We step by 2 through the pages.
+  const [spreadIdx, setSpreadIdx] = useState(0);
   const [contentVisible, setContentVisible] = useState(true);
   const [turning, setTurning] = useState(false);
 
   const totalPages = ALL_PAGES.length;
+  // Build spreads of 2 pages each
+  const totalSpreads = Math.ceil(totalPages / 2);
 
-  const handleClickRight = () => {
+  const leftIdx = (spreadIdx * 2) % totalPages;
+  const rightIdx = (spreadIdx * 2 + 1) % totalPages;
+
+  const turnPage = (direction) => {
     if (turning) return;
     setTurning(true);
     setContentVisible(false);
     setTimeout(() => {
-      setLeftIdx(rightIdx);
-      setRightIdx((rightIdx + 1) % totalPages);
+      if (direction === 'forward') {
+        setSpreadIdx((spreadIdx + 1) % totalSpreads);
+      } else {
+        setSpreadIdx((spreadIdx - 1 + totalSpreads) % totalSpreads);
+      }
       setContentVisible(true);
       setTurning(false);
     }, 220);
   };
 
-  const handleClickLeft = () => {
-    if (turning) return;
-    setTurning(true);
-    setContentVisible(false);
-    setTimeout(() => {
-      setRightIdx(leftIdx);
-      setLeftIdx((leftIdx - 1 + totalPages) % totalPages);
-      setContentVisible(true);
-      setTurning(false);
-    }, 220);
-  };
+  const handleClickRight = () => turnPage('forward');
+  const handleClickLeft = () => turnPage('backward');
 
   return (
     <div className="w-full flex flex-col items-center" style={{ perspective: '1000px' }}>
@@ -202,15 +201,7 @@ export default function QuestLogBook() {
         </div>
       </div>
 
-      {/* Page indicator dots */}
-      <div className="mt-2 flex items-center gap-1">
-        {ALL_PAGES.map((_, i) => (
-          <div
-            key={i}
-            className={`rounded-full transition-all ${i === leftIdx || i === rightIdx ? 'bg-white/40 w-1.5 h-1.5' : 'bg-white/12 w-1 h-1'}`}
-          />
-        ))}
-      </div>
+
     </div>
   );
 }
