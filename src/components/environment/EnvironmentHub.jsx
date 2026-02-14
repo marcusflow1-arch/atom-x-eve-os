@@ -107,11 +107,48 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         <AnimatePresence mode="wait">
           {activeTab === 'environments' && (
             <motion.div key="envs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-              {environments.length === 0 ? (
+              {/* 3D Room Environments from Admin */}
+              {roomModels.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {roomModels.map(model => (
+                    <button
+                      key={model.id}
+                      onClick={() => setSelectedEnv(model)}
+                      className={`relative group rounded-xl overflow-hidden border transition-all text-left ${
+                        selectedEnv?.id === model.id
+                          ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
+                          : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
+                      }`}
+                    >
+                      <div className="aspect-video w-full bg-black/30 overflow-hidden">
+                        {model.thumbnail_url ? (
+                          <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Globe className="w-8 h-8 text-white/10" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-bold text-white truncate">{model.name}</h4>
+                        {model.description && (
+                          <p className="text-[10px] text-white/40 mt-0.5 line-clamp-1">{model.description}</p>
+                        )}
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 font-semibold">3D Environment</span>
+                          {model.file_type && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 border border-white/10 uppercase font-mono">{model.file_type}</span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : environments.length === 0 ? (
                 <div className="text-center py-16">
                   <Globe className="w-10 h-10 mx-auto mb-3 text-white/10" />
                   <p className="text-white/30 text-sm font-medium">No environments yet</p>
-                  <p className="text-white/15 text-xs mt-1">Earn achievements or use the 3D Viewer to get started.</p>
+                  <p className="text-white/15 text-xs mt-1">Add 3D models with "Room" in their name from the Admin page.</p>
                 </div>
               ) : (
                 <>
