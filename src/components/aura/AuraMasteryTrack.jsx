@@ -117,9 +117,11 @@ export default function AuraMasteryTrack() {
       {/* Horizontal track */}
       <div
         ref={scrollerRef}
-        className="relative flex gap-4 overflow-x-auto pb-8 pt-4 px-2 rounded-2xl scrollbar-hide"
+        className="relative flex items-center gap-4 overflow-x-auto pb-8 pt-4 px-2 rounded-2xl scrollbar-hide"
         style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.06)', scrollBehavior: 'smooth' }}
       >
+        {/* Centered connecting line */}
+        <div className="absolute left-0 right-0 h-[2px] bg-white/10 pointer-events-none" style={{ top: '50%' }} />
         {levels.map((lv) => (
           <LevelNode key={lv.level} data={lv} active={lv.level === active} onClick={(d) => setActive(d.level)} />
         ))}
