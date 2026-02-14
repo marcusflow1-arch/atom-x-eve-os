@@ -233,7 +233,211 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     loadEnvironment.current(scene, initialEnvUrl);
 
     // --- CHARACTER (Y-Bot) ---
-...
+    const loader = new FBXLoader();
+    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+    
+    loader.load(yBotUrl, async (fbx) => {
+      const model = fbx;
+      model.scale.set(0.001, 0.001, 0.001); 
+      model.position.set(0, -0.5, 0);
+      
+      model.traverse((child) => {
+          if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+          }
+      });
+      
+      modelRef.current = model;
+      scene.add(model);
+
+      const mixer = new THREE.AnimationMixer(model);
+      mixerRef.current = mixer;
+      mixer.timeScale = 1.2;
+
+      const loadAnimations = async () => {          
+          if (!adminAnimations || adminAnimations.length === 0) return;
+          
+          const fbxLoader = new FBXLoader();
+          for (const anim of adminAnimations) {
+            try {
+              const animAsset = await fbxLoader.loadAsync(anim.file_url);
+              if (animAsset.animations.length === 0) continue;
+              
+              const clip = animAsset.animations[0];
+              const action = mixer.clipAction(clip);
+              const name = (anim.name || '').toLowerCase().trim();
+
+              if (name === 'idle') {
+                actionsRef.current['idle'] = action;
+              } else if (name === 'running') {
+                actionsRef.current['running'] = action;
+              } else if (name === 'jumping') {
+                actionsRef.current['jumping'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              } else if (name === 'hurricane kick') {
+                actionsRef.current['hurricane_kick'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              } else if (name === 'sprinting forward roll') {
+                actionsRef.current['sprinting'] = action;
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              }
+              
+              actionsRef.current[name] = action;
+            } catch (e) {
+              console.error("Failed to load animation:", anim.name, e);
+            }
+          }
+          
+          if (actionsRef.current['idle']) {
+            actionsRef.current['idle'].reset().play();
+            activeActionRef.current = actionsRef.current['idle'];
+            currentActionNameRef.current = 'idle';
+          }
+      };
+      await loadAnimations();
+
+      const fadeToAction = (name, duration = 0.2) => {
+        const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
+        if (!nextAction || activeActionRef.current === nextAction) return;
+        if (activeActionRef.current) activeActionRef.current.fadeOut(duration);
+        nextAction.reset().fadeIn(duration).play();
+        activeActionRef.current = nextAction;
+      };
+
+      const play = (name) => {
+          if (oneShotPlayingRef.current) return;
+          const key = name.toLowerCase();
+          if (currentActionNameRef.current === name) return;
+          currentActionNameRef.current = name;
+          fadeToAction(key, 0.2);
+      };
+
+      const playOneShot = (actionName) => {
+        const action = actionsRef.current[actionName];
+        if (!action || oneShotPlayingRef.current) return;
+        
+        oneShotPlayingRef.current = actionName;
+        currentActionNameRef.current = actionName;
+        
+        if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
+        action.reset().fadeIn(0.15).play();
+        activeActionRef.current = action;
+
+        const onFinished = (e) => {
+          if (e.action === action) {
+            oneShotPlayingRef.current = null;
+            currentActionNameRef.current = '';
+            mixer.removeEventListener('finished', onFinished);
+          }
+        };
+        mixer.addEventListener('finished', onFinished);
+      };
+
+      // --- GAME LOOP ---
+      const animate = () => {
+        requestAnimationFrame(animate);
+        const delta = clockRef.current.getDelta();
+        if (mixer) mixer.update(delta);
+
+        const isOneShotActive = !!oneShotPlayingRef.current;
+
+        const moveSpeed = 0.6;
+        let isMoving = false;
+        
+        const moveVector = new THREE.Vector3(0, 0, 0);
+        const camYaw = cameraOrbitRef.current.yaw;
+        const forwardX = -Math.sin(camYaw);
+        const forwardZ = -Math.cos(camYaw);
+        const rightX = -Math.cos(camYaw);
+        const rightZ = Math.sin(camYaw);
+        
+        if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; }
+        if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; }
+        if (keysPressed.current['a']) { moveVector.x += rightX; moveVector.z += rightZ; }
+        if (keysPressed.current['d']) { moveVector.x -= rightX; moveVector.z -= rightZ; }
+
+        if (moveVector.lengthSq() > 0) {
+            moveVector.normalize();
+            isMoving = true;
+
+            const angle = Math.atan2(moveVector.x, moveVector.z);
+            const targetQuat = new THREE.Quaternion();
+            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
+            model.quaternion.slerp(targetQuat, 0.2);
+
+            model.position.x += moveVector.x * moveSpeed * delta;
+            model.position.z += moveVector.z * moveSpeed * delta;
+        }
+
+        // --- CAMERA ---
+        const orbit = cameraOrbitRef.current;
+        const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
+        const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
+        const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
+        camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
+        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
+
+        // PHYSICS — clamp to floor, no falling through
+        const gravity = -25;
+        const jumpForce = 5;
+        const floorY = -0.5;
+        
+        if (keysPressed.current[' '] && isGroundedRef.current) {
+            verticalVelocityRef.current = jumpForce;
+            isGroundedRef.current = false;
+        }
+        verticalVelocityRef.current += gravity * delta;
+        model.position.y += verticalVelocityRef.current * delta;
+        
+        if (model.position.y <= floorY) {
+            model.position.y = floorY;
+            verticalVelocityRef.current = 0;
+            isGroundedRef.current = true;
+        } else {
+            isGroundedRef.current = false;
+        }
+
+        if (!isOneShotActive) {
+          if (!isGroundedRef.current) {
+              play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
+          } else if (isMoving) {
+              play("Running");
+          } else {
+              play("Idle");
+          }
+        }
+
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      const onSpecialKey = (e) => {
+        if (e.key === '1') playOneShot('hurricane_kick');
+        if (e.key === 'c' || e.key === 'C') playOneShot('hurricane_kick');
+        if (e.key === 'r' || e.key === 'R') playOneShot('sprinting');
+      };
+      window.addEventListener('keydown', onSpecialKey);
+      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onSpecialKey);
+
+    }, undefined, (err) => console.error('Error loading Y-Bot:', err));
+
+    const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
+    const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
