@@ -121,6 +121,8 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                           modelUrl: model.file_url,
                           thumbnail: model.thumbnail_url,
                           description: model.description,
+                          playerSpawn: model.player_spawn || { x: 0, y: -0.5, z: 0 },
+                          useMeshCollision: model.use_mesh_collision || false,
                         });
                       }}
                       className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
