@@ -64,7 +64,7 @@ import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser
 import QuestLogBook from '../components/dashboard/QuestLogBook';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -77,6 +77,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const keysPressed = useRef({});
   const envRef = useRef(null); // Track current environment object for swapping
   const loadedEnvUrlRef = useRef(null); // Track which URL is currently loaded to avoid duplicate loads
+  const playerSpawnRef = useRef(playerSpawn || { x: 0, y: -0.5, z: 0 });
+  const useMeshCollisionRef = useRef(useMeshCollision || false);
+  const envCollidersRef = useRef([]); // Meshes to raycast against for collision
+  const raycasterRef = useRef(new THREE.Raycaster());
   
   // Player Controller State
   const isSprintingRef = useRef(false);
