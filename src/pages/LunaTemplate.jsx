@@ -77,6 +77,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const keysPressed = useRef({});
   const envRef = useRef(null); // Track current environment object for swapping
   const loadedEnvUrlRef = useRef(null); // Track which URL is currently loaded to avoid duplicate loads
+  const floorYRef = useRef(-0.5); // Dynamic floor height, updated per environment
+  const fallbackGroundRef = useRef(null); // Invisible fallback ground plane
   
   // Player Controller State
   const isSprintingRef = useRef(false);
