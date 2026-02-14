@@ -60,61 +60,23 @@ function QuestEntry({ quest }) {
 }
 
 function BookPage({ quests, tiltDirection, contentVisible }) {
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMousePos({
-      x: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top) / rect.height
-    });
-  };
-
-  const baseTilt = tiltDirection === 'left' ? 14 : -14;
-  const hoverTilt = tiltDirection === 'left' ? 9 : -9;
+  // Left page tilts right (positive rotateY), right page tilts left (negative rotateY) — like an open book
+  const tiltAngle = tiltDirection === 'left' ? 8 : -8;
 
   return (
-    <motion.div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      onMouseMove={handleMouseMove}
-      animate={{
-        rotateY: isHovered ? hoverTilt : baseTilt,
-        rotateX: isHovered ? (mousePos.y - 0.5) * 6 : 0,
-        scale: isHovered ? 1.03 : 1,
-      }}
-      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+    <div
       className="flex-1 min-w-0 rounded-xl overflow-hidden relative cursor-pointer"
       style={{
-        transformStyle: 'preserve-3d',
-        perspective: '800px',
-        background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.55) 0%, rgba(20, 30, 45, 0.50) 40%, rgba(25, 35, 50, 0.52) 100%)',
+        transform: `perspective(800px) rotateY(${tiltAngle}deg)`,
+        transformOrigin: tiltDirection === 'left' ? 'right center' : 'left center',
+        background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 40%, rgba(180, 190, 210, 0.07) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-        border: `1px solid ${isHovered ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.10)'}`,
-        boxShadow: isHovered
-          ? '0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(255,255,255,0.03)'
-          : '0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)',
-        transition: 'box-shadow 0.3s ease, border-color 0.3s ease'
+        border: '1px solid rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
-      <div
-        className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300"
-        style={{
-          opacity: isHovered ? 0.7 : 0.3,
-          background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.06) 0%, transparent 60%)`
-        }}
-      />
-      {isHovered && (
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background: `linear-gradient(${110 + (mousePos.x - 0.5) * 40}deg, transparent ${mousePos.x * 100 - 18}%, rgba(255,255,255,0.05) ${mousePos.x * 100}%, transparent ${mousePos.x * 100 + 18}%)`
-          }}
-        />
-      )}
-
+      {/* Spine edge highlight */}
       <div className={`absolute top-0 bottom-0 w-[2px] ${tiltDirection === 'left' ? 'right-0' : 'left-0'}`}
         style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
       />
@@ -126,7 +88,7 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
       >
         {quests.map(q => <QuestEntry key={q.id} quest={q} />)}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
