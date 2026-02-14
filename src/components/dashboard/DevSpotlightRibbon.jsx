@@ -17,7 +17,7 @@ function MysteryBox() {
       whileHover={{ y: -2, scale: 1.04 }}
       className="flex-1 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden"
       style={{
-        height: '56px',
+        height: '84px',
         background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',

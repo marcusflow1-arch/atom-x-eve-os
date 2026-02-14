@@ -89,7 +89,7 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
       style={{
         transformStyle: 'preserve-3d',
         perspective: '800px',
-        background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 40%, rgba(180, 190, 210, 0.07) 100%)',
+        background: 'linear-gradient(135deg, rgba(30, 40, 55, 0.55) 0%, rgba(20, 30, 45, 0.50) 40%, rgba(25, 35, 50, 0.52) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',
         border: `1px solid ${isHovered ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.10)'}`,
