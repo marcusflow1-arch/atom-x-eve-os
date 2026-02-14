@@ -1,19 +1,35 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { BookOpen, Star, Swords, Target, Clock } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { BookOpen } from 'lucide-react';
 
-const MOCK_QUESTS = {
-  left: [
+// All quest pages — each "spread" is a pair [left, right]
+const ALL_PAGES = [
+  [
     { id: 1, title: 'Dragon Slayer', desc: 'Defeat 3 dragons in RPG games', progress: 2, total: 3, rarity: 'Legendary', icon: '🐉' },
     { id: 2, title: 'Speed Runner', desc: 'Complete a race under 2 min', progress: 0, total: 1, rarity: 'Rare', icon: '⚡' },
     { id: 3, title: 'Social Butterfly', desc: 'Join 2 clan events', progress: 1, total: 2, rarity: 'Common', icon: '🦋' },
   ],
-  right: [
+  [
     { id: 4, title: 'Card Collector', desc: 'Collect 10 Epic+ cards', progress: 7, total: 10, rarity: 'Epic', icon: '🃏' },
     { id: 5, title: 'Arena Victor', desc: 'Win 5 PvP battles', progress: 3, total: 5, rarity: 'Rare', icon: '⚔️' },
     { id: 6, title: 'Explorer', desc: 'Visit 4 environments', progress: 4, total: 4, rarity: 'Common', icon: '🗺️', complete: true },
   ],
-};
+  [
+    { id: 7, title: 'Loot Hoarder', desc: 'Open 20 loot chests', progress: 14, total: 20, rarity: 'Epic', icon: '📦' },
+    { id: 8, title: 'Sharpshooter', desc: '50 headshots in FPS games', progress: 32, total: 50, rarity: 'Rare', icon: '🎯' },
+    { id: 9, title: 'Night Owl', desc: 'Play 10 sessions after midnight', progress: 6, total: 10, rarity: 'Common', icon: '🦉' },
+  ],
+  [
+    { id: 10, title: 'Forge Master', desc: 'Craft 5 Legendary items', progress: 1, total: 5, rarity: 'Legendary', icon: '🔨' },
+    { id: 11, title: 'Diplomancer', desc: 'Trade with 8 unique players', progress: 5, total: 8, rarity: 'Epic', icon: '🤝' },
+    { id: 12, title: 'Speedster', desc: 'Win 3 races in a row', progress: 3, total: 3, rarity: 'Rare', icon: '🏎️', complete: true },
+  ],
+  [
+    { id: 13, title: 'World Walker', desc: 'Visit all 6 biomes', progress: 4, total: 6, rarity: 'Epic', icon: '🌍' },
+    { id: 14, title: 'Perfectionist', desc: '100% a game', progress: 0, total: 1, rarity: 'Legendary', icon: '💯' },
+    { id: 15, title: 'First Blood', desc: 'Get first kill in 5 matches', progress: 5, total: 5, rarity: 'Common', icon: '🩸', complete: true },
+  ],
+];
 
 const RARITY_COLOR = {
   Legendary: 'text-amber-300',
@@ -44,7 +60,7 @@ function QuestEntry({ quest }) {
   );
 }
 
-function BookPage({ quests, tiltDirection }) {
+function BookPage({ quests, tiltDirection, onClick, flipDirection }) {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -56,34 +72,43 @@ function BookPage({ quests, tiltDirection }) {
     });
   };
 
-  // Left page tilts right (rotateY positive), right page tilts left (rotateY negative)
-  // +15% more tilt on each side
   const baseTilt = tiltDirection === 'left' ? 14 : -14;
   const hoverTilt = tiltDirection === 'left' ? 9 : -9;
 
+  // Flip animation: page flips from the spine edge
+  const enterFrom = flipDirection === 'forward'
+    ? (tiltDirection === 'left' ? { rotateY: -90, opacity: 0 } : { rotateY: 90, opacity: 0 })
+    : (tiltDirection === 'left' ? { rotateY: 90, opacity: 0 } : { rotateY: -90, opacity: 0 });
+
   return (
     <motion.div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
-      onMouseMove={handleMouseMove}
+      key={quests.map(q => q.id).join('-')}
+      initial={enterFrom}
       animate={{
         rotateY: isHovered ? hoverTilt : baseTilt,
         rotateX: isHovered ? (mousePos.y - 0.5) * 6 : 0,
         scale: isHovered ? 1.03 : 1,
+        opacity: 1,
       }}
-      transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="flex-1 min-w-0 rounded-xl overflow-hidden relative"
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+      className="flex-1 min-w-0 rounded-xl overflow-hidden relative cursor-pointer"
       style={{
         transformStyle: 'preserve-3d',
+        transformOrigin: tiltDirection === 'left' ? 'right center' : 'left center',
         perspective: '800px',
         background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 40%, rgba(180, 190, 210, 0.07) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-        border: '1px solid rgba(255, 255, 255, 0.10)',
+        border: `1px solid ${isHovered ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.10)'}`,
         boxShadow: isHovered
           ? '0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(255,255,255,0.03)'
           : '0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)',
-        transition: 'box-shadow 0.3s ease'
+        transition: 'box-shadow 0.3s ease, border-color 0.3s ease'
       }}
     >
       {/* Silver glass shine */}
@@ -117,6 +142,29 @@ function BookPage({ quests, tiltDirection }) {
 }
 
 export default function QuestLogBook() {
+  // leftIdx and rightIdx track which page from ALL_PAGES is shown on each side
+  const [leftIdx, setLeftIdx] = useState(0);
+  const [rightIdx, setRightIdx] = useState(1);
+  const [flipDirection, setFlipDirection] = useState('forward');
+
+  const totalPages = ALL_PAGES.length;
+
+  // Click RIGHT page → right content moves to left, new content appears on right
+  const turnForward = useCallback(() => {
+    setFlipDirection('forward');
+    setLeftIdx(rightIdx);
+    setRightIdx((rightIdx + 1) % totalPages);
+  }, [rightIdx, totalPages]);
+
+  // Click LEFT page → left content moves to right, new content appears on left
+  const turnBackward = useCallback(() => {
+    setFlipDirection('backward');
+    setRightIdx(leftIdx);
+    setLeftIdx((leftIdx - 1 + totalPages) % totalPages);
+  }, [leftIdx, totalPages]);
+
+  const pageLabel = `${leftIdx + 1}-${rightIdx + 1} / ${totalPages}`;
+
   return (
     <div className="w-full flex flex-col items-center" style={{ perspective: '1000px' }}>
       {/* Title */}
@@ -137,8 +185,34 @@ export default function QuestLogBook() {
 
       {/* Book — two pages side by side */}
       <div className="w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
-        <BookPage quests={MOCK_QUESTS.left} tiltDirection="left" />
-        <BookPage quests={MOCK_QUESTS.right} tiltDirection="right" />
+        <AnimatePresence mode="popLayout">
+          <BookPage
+            key={`left-${leftIdx}`}
+            quests={ALL_PAGES[leftIdx]}
+            tiltDirection="left"
+            onClick={turnBackward}
+            flipDirection={flipDirection}
+          />
+        </AnimatePresence>
+        <AnimatePresence mode="popLayout">
+          <BookPage
+            key={`right-${rightIdx}`}
+            quests={ALL_PAGES[rightIdx]}
+            tiltDirection="right"
+            onClick={turnForward}
+            flipDirection={flipDirection}
+          />
+        </AnimatePresence>
+      </div>
+
+      {/* Page indicator */}
+      <div className="mt-2 flex items-center gap-1">
+        {ALL_PAGES.map((_, i) => (
+          <div
+            key={i}
+            className={`w-1 h-1 rounded-full transition-all ${i === leftIdx || i === rightIdx ? 'bg-white/40 w-1.5 h-1.5' : 'bg-white/12'}`}
+          />
+        ))}
       </div>
     </div>
   );

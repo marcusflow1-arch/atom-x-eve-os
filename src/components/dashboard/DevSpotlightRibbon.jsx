@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, HelpCircle } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 function MysteryBox() {
   const [isHovered, setIsHovered] = useState(false);
@@ -15,8 +15,9 @@ function MysteryBox() {
         setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
       }}
       whileHover={{ y: -2, scale: 1.04 }}
-      className="w-14 h-14 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden flex-shrink-0"
+      className="flex-1 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden"
       style={{
+        height: '56px',
         background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 100%)',
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',
@@ -33,7 +34,7 @@ function MysteryBox() {
           background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.06) 0%, transparent 60%)`
         }}
       />
-      <span className="text-white/20 text-lg font-bold relative z-10">?</span>
+      <span className="text-white/20 text-xl font-bold relative z-10">?</span>
     </motion.div>
   );
 }
@@ -51,15 +52,15 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="w-full flex flex-col gap-2">
-      {/* Title above */}
-      <div className="flex items-center gap-2 px-1">
+    <div className="w-full flex flex-col items-center gap-2">
+      {/* Title above — centered */}
+      <div className="flex items-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Developer Spotlight</span>
       </div>
 
-      {/* Row: Spotlight box + 3 mystery boxes */}
-      <div className="flex items-center gap-2">
+      {/* Row: Spotlight box + 3 mystery boxes — centered, evenly spaced */}
+      <div className="w-full flex items-center gap-2">
         {/* Spotlight box - compact */}
         <motion.div
           onClick={onOpenOverlay}
@@ -68,9 +69,8 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
           onMouseMove={handleMouseMove}
           whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="relative rounded-xl overflow-hidden cursor-pointer flex-shrink-0"
+          className="relative rounded-xl overflow-hidden cursor-pointer flex-1"
           style={{
-            width: '140px',
             height: '56px',
             background: 'linear-gradient(135deg, rgba(180, 195, 215, 0.10) 0%, rgba(140, 160, 185, 0.07) 40%, rgba(200, 210, 225, 0.09) 100%)',
             backdropFilter: 'blur(28px) saturate(160%)',
@@ -99,7 +99,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
           <div className="absolute bottom-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
         </motion.div>
 
-        {/* 3 Mystery boxes */}
+        {/* 3 Mystery boxes — same flex-1 sizing as spotlight */}
         <MysteryBox />
         <MysteryBox />
         <MysteryBox />
