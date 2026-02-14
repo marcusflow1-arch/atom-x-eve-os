@@ -138,7 +138,7 @@ export default function QuestLogBook() {
             filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
           }}
         >
-          Quest Log
+          Quest Book
         </h3>
       </div>
 
