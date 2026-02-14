@@ -157,6 +157,57 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         envRef.current = obj;
         sceneRef.current.add(obj);
         console.log('[ENV] New environment loaded and added to scene');
+
+        // Step 3: Detect ground height via raycasting downward
+        const raycaster = new THREE.Raycaster();
+        const rayOrigin = new THREE.Vector3(0, 50, 0); // high above center
+        const rayDir = new THREE.Vector3(0, -1, 0);
+        raycaster.set(rayOrigin, rayDir);
+
+        // Collect all meshes from the new environment
+        const envMeshes = [];
+        obj.traverse((child) => {
+          if (child.isMesh) envMeshes.push(child);
+        });
+
+        const hits = raycaster.intersectObjects(envMeshes, false);
+        if (hits.length > 0) {
+          // Highest ground hit point = where the character should stand
+          const groundY = hits[0].point.y;
+          floorYRef.current = groundY;
+          console.log('[ENV] Ground detected at Y:', groundY);
+
+          // Remove fallback ground if it exists since we found real ground
+          if (fallbackGroundRef.current && sceneRef.current) {
+            sceneRef.current.remove(fallbackGroundRef.current);
+            fallbackGroundRef.current.geometry?.dispose();
+            fallbackGroundRef.current.material?.dispose();
+            fallbackGroundRef.current = null;
+          }
+        } else {
+          // No ground detected — create invisible fallback plane at -0.5
+          console.warn('[ENV] No ground mesh detected, creating fallback ground');
+          floorYRef.current = -0.5;
+
+          if (!fallbackGroundRef.current && sceneRef.current) {
+            const geo = new THREE.PlaneGeometry(200, 200);
+            const mat = new THREE.MeshBasicMaterial({ visible: false });
+            const plane = new THREE.Mesh(geo, mat);
+            plane.rotation.x = -Math.PI / 2;
+            plane.position.y = -0.5;
+            plane.name = 'FallbackGround';
+            sceneRef.current.add(plane);
+            fallbackGroundRef.current = plane;
+          }
+        }
+
+        // Snap character to new floor if it exists
+        if (modelRef.current) {
+          modelRef.current.position.y = floorYRef.current;
+          verticalVelocityRef.current = 0;
+          isGroundedRef.current = true;
+          console.log('[ENV] Character snapped to floor Y:', floorYRef.current);
+        }
       }
     };
 
