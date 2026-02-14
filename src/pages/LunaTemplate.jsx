@@ -1038,7 +1038,12 @@ export default function LunaTemplate() {
                 const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
                 const selectedAsset = room2Fbx || room2Any || room1Asset;
                 
-                if (selectedAsset?.file_url) setRoomModelUrl(selectedAsset.file_url);
+                if (selectedAsset?.file_url) {
+                  setRoomModelUrl(selectedAsset.file_url);
+                  // Apply per-environment spawn & collision settings
+                  if (selectedAsset.player_spawn) setPlayerSpawn(selectedAsset.player_spawn);
+                  if (selectedAsset.use_mesh_collision) setUseMeshCollision(true);
+                }
                 else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
             }
         } catch (e) {
