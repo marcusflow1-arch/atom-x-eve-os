@@ -1716,17 +1716,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
             <AnimatePresence>
               {showStatsDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden pointer-events-auto"
-                >
-                  <div className="w-full">
-                      <StatsDropdown activeTab={statsActiveTab} onTabChange={setStatsActiveTab} />
-                    </div>
-                </motion.div>
+                <StatsPopupOverlay
+                  activeTab={statsActiveTab}
+                  onTabChange={setStatsActiveTab}
+                  onClose={() => setShowStatsDropdown(false)}
+                />
               )}
             </AnimatePresence>
 
