@@ -109,12 +109,21 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             <motion.div key="envs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
               {/* 3D Room Environments from Admin */}
               {roomModels.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   {roomModels.map(model => (
                     <button
                       key={model.id}
-                      onClick={() => setSelectedEnv(model)}
-                      className={`relative group rounded-xl overflow-hidden border transition-all text-left ${
+                      onClick={() => {
+                        setSelectedEnv(model);
+                        onSelectEnv?.({
+                          id: model.id,
+                          name: model.name,
+                          modelUrl: model.file_url,
+                          thumbnail: model.thumbnail_url,
+                          description: model.description,
+                        });
+                      }}
+                      className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
                         selectedEnv?.id === model.id
                           ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
                           : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
@@ -125,19 +134,16 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                           <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Globe className="w-8 h-8 text-white/10" />
+                            <Globe className="w-5 h-5 text-white/10" />
                           </div>
                         )}
                       </div>
-                      <div className="p-3">
-                        <h4 className="text-xs font-bold text-white truncate">{model.name}</h4>
-                        {model.description && (
-                          <p className="text-[10px] text-white/40 mt-0.5 line-clamp-1">{model.description}</p>
-                        )}
-                        <div className="flex items-center gap-1.5 mt-1.5">
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 font-semibold">3D Environment</span>
+                      <div className="p-1.5">
+                        <h4 className="text-[10px] font-bold text-white truncate">{model.name}</h4>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="text-[8px] px-1 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 font-semibold">3D</span>
                           {model.file_type && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 border border-white/10 uppercase font-mono">{model.file_type}</span>
+                            <span className="text-[8px] px-1 py-0.5 rounded bg-white/5 text-white/30 border border-white/10 uppercase font-mono">{model.file_type}</span>
                           )}
                         </div>
                       </div>
