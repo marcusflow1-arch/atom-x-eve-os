@@ -274,9 +274,6 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
          </div>
       </div>
 
-      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 
-        ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}
-      `} />
     </motion.div>
   );
 };
@@ -357,13 +354,15 @@ export default function ViewerSeasonalPass({ currentTier = 12, maxTier = 20 }) {
       {/* Horizontal Scroll Track */}
       <div 
         ref={scrollContainerRef}
-        className="relative flex gap-4 overflow-x-auto pb-8 pt-4 px-4 rounded-xl scrollbar-hide snap-x"
+        className="relative flex items-center gap-4 overflow-x-auto pb-8 pt-4 px-4 rounded-xl scrollbar-hide snap-x"
         style={{ 
             scrollBehavior: 'smooth',
             background: 'rgba(0, 0, 0, 0.2)',
             border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
       >
+        {/* Centered connecting line */}
+        <div className="absolute left-0 right-0 h-[2px] bg-white/10 pointer-events-none" style={{ top: '50%' }} />
         {levels.map((level) => (
             <LevelNode 
                 key={level.level}
