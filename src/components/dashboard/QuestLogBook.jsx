@@ -133,39 +133,33 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
 export default function QuestLogBook() {
   const [leftIdx, setLeftIdx] = useState(0);
   const [rightIdx, setRightIdx] = useState(1);
-  const [visible, setVisible] = useState(true);
-  const [pending, setPending] = useState(null); // 'forward' | 'backward'
+  const [contentVisible, setContentVisible] = useState(true);
+  const [turning, setTurning] = useState(false);
 
   const totalPages = ALL_PAGES.length;
 
   const handleClickRight = () => {
-    if (!visible) return;
-    setPending('forward');
-    setVisible(false);
+    if (turning) return;
+    setTurning(true);
+    setContentVisible(false);
+    setTimeout(() => {
+      setLeftIdx(rightIdx);
+      setRightIdx((rightIdx + 1) % totalPages);
+      setContentVisible(true);
+      setTurning(false);
+    }, 220);
   };
 
   const handleClickLeft = () => {
-    if (!visible) return;
-    setPending('backward');
-    setVisible(false);
-  };
-
-  const handleFadeOutComplete = () => {
-    if (pending === 'forward') {
-      // Right content → left, new content → right
-      const newLeft = rightIdx;
-      const newRight = (rightIdx + 1) % totalPages;
-      setLeftIdx(newLeft);
-      setRightIdx(newRight);
-    } else if (pending === 'backward') {
-      // Left content → right, new content → left
-      const newRight = leftIdx;
-      const newLeft = (leftIdx - 1 + totalPages) % totalPages;
-      setLeftIdx(newLeft);
-      setRightIdx(newRight);
-    }
-    setPending(null);
-    setVisible(true);
+    if (turning) return;
+    setTurning(true);
+    setContentVisible(false);
+    setTimeout(() => {
+      setRightIdx(leftIdx);
+      setLeftIdx((leftIdx - 1 + totalPages) % totalPages);
+      setContentVisible(true);
+      setTurning(false);
+    }, 220);
   };
 
   return (
@@ -186,28 +180,14 @@ export default function QuestLogBook() {
         </h3>
       </div>
 
-      {/* Book — two pages side by side, both fade together */}
+      {/* Book — glass shells stay, only inner content fades */}
       <div className="w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
-        <AnimatePresence mode="wait" onExitComplete={!visible ? handleFadeOutComplete : undefined}>
-          {visible && (
-            <motion.div
-              key={`spread-${leftIdx}-${rightIdx}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="w-full flex gap-1"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
-              <div className="flex-1 min-w-0" onClick={handleClickLeft}>
-                <BookPage quests={ALL_PAGES[leftIdx]} tiltDirection="left" />
-              </div>
-              <div className="flex-1 min-w-0" onClick={handleClickRight}>
-                <BookPage quests={ALL_PAGES[rightIdx]} tiltDirection="right" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="flex-1 min-w-0" onClick={handleClickLeft}>
+          <BookPage quests={ALL_PAGES[leftIdx]} tiltDirection="left" contentVisible={contentVisible} />
+        </div>
+        <div className="flex-1 min-w-0" onClick={handleClickRight}>
+          <BookPage quests={ALL_PAGES[rightIdx]} tiltDirection="right" contentVisible={contentVisible} />
+        </div>
       </div>
 
       {/* Page indicator dots */}
