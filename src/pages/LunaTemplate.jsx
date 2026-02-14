@@ -77,8 +77,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const keysPressed = useRef({});
   const envRef = useRef(null); // Track current environment object for swapping
   const loadedEnvUrlRef = useRef(null); // Track which URL is currently loaded to avoid duplicate loads
-  const floorYRef = useRef(-0.5); // Dynamic floor height, updated per environment
-  const fallbackGroundRef = useRef(null); // Invisible fallback ground plane
   
   // Player Controller State
   const isSprintingRef = useRef(false);
@@ -157,84 +155,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         envRef.current = obj;
         sceneRef.current.add(obj);
         console.log('[ENV] New environment loaded and added to scene');
-
-        // Wait one frame for transforms to settle, then raycast for ground
-        requestAnimationFrame(() => {
-          if (!sceneRef.current || !envRef.current) return;
-
-          // Force world matrix update on all env children
-          envRef.current.updateMatrixWorld(true);
-
-          // Collect ALL meshes from the environment
-          const envMeshes = [];
-          envRef.current.traverse((child) => {
-            if (child.isMesh) envMeshes.push(child);
-          });
-
-          // Cast multiple rays in a grid pattern to find ground reliably
-          const raycaster = new THREE.Raycaster();
-          const rayDir = new THREE.Vector3(0, -1, 0);
-          let bestGroundY = null;
-
-          const testPositions = [
-            new THREE.Vector3(0, 100, 0),
-            new THREE.Vector3(1, 100, 1),
-            new THREE.Vector3(-1, 100, -1),
-            new THREE.Vector3(0, 100, 2),
-            new THREE.Vector3(2, 100, 0),
-          ];
-
-          for (const origin of testPositions) {
-            raycaster.set(origin, rayDir);
-            const hits = raycaster.intersectObjects(envMeshes, true);
-            if (hits.length > 0) {
-              // Pick the highest hit (topmost ground surface)
-              const topHitY = hits[0].point.y;
-              if (bestGroundY === null || topHitY > bestGroundY) {
-                bestGroundY = topHitY;
-              }
-            }
-          }
-
-          if (bestGroundY !== null) {
-            floorYRef.current = bestGroundY;
-            console.log('[ENV] Ground detected at Y:', bestGroundY);
-
-            // Remove fallback ground
-            if (fallbackGroundRef.current && sceneRef.current) {
-              sceneRef.current.remove(fallbackGroundRef.current);
-              fallbackGroundRef.current.geometry?.dispose();
-              fallbackGroundRef.current.material?.dispose();
-              fallbackGroundRef.current = null;
-            }
-          } else {
-            // No ground detected — use env bounding box bottom as fallback
-            const envBox = new THREE.Box3().setFromObject(envRef.current);
-            const envMinY = envBox.min.y;
-            floorYRef.current = isFinite(envMinY) ? envMinY : -0.5;
-            console.warn('[ENV] No ground mesh hit, using env bottom Y:', floorYRef.current);
-
-            // Create invisible fallback ground plane
-            if (!fallbackGroundRef.current && sceneRef.current) {
-              const geo = new THREE.PlaneGeometry(200, 200);
-              const mat = new THREE.MeshBasicMaterial({ visible: false });
-              const plane = new THREE.Mesh(geo, mat);
-              plane.rotation.x = -Math.PI / 2;
-              plane.position.y = floorYRef.current;
-              plane.name = 'FallbackGround';
-              sceneRef.current.add(plane);
-              fallbackGroundRef.current = plane;
-            }
-          }
-
-          // Snap character to detected floor + reset velocity
-          if (modelRef.current) {
-            modelRef.current.position.set(0, floorYRef.current, 0);
-            verticalVelocityRef.current = 0;
-            isGroundedRef.current = true;
-            console.log('[ENV] Character snapped to floor Y:', floorYRef.current);
-          }
-        });
       }
     };
 
@@ -476,10 +396,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
         camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
 
-        // PHYSICS — clamp to dynamic floor, no falling through
+        // PHYSICS — clamp to floor, no falling through
         const gravity = -25;
         const jumpForce = 5;
-        const currentFloorY = floorYRef.current;
+        const floorY = -0.5;
         
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
@@ -488,8 +408,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
         
-        if (model.position.y <= currentFloorY) {
-            model.position.y = currentFloorY;
+        if (model.position.y <= floorY) {
+            model.position.y = floorY;
             verticalVelocityRef.current = 0;
             isGroundedRef.current = true;
         } else {
