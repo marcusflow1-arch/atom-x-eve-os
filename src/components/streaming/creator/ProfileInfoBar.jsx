@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, Plus } from 'lucide-react';
+import { Gamepad2, Plus, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
@@ -10,7 +10,8 @@ export default function ProfileInfoBar({
   isLive, 
   updateEditProfile, 
   activeTab, 
-  setActiveTab 
+  setActiveTab,
+  onEnterEdit 
 }) {
   const displayName = activeProfile?.display_name || activeProfile?.full_name || 'My Channel';
   const tagline = activeProfile?.tagline || '';
@@ -109,12 +110,21 @@ export default function ProfileInfoBar({
         </div>
       </div>
 
-      {/* Right: Stats */}
+      {/* Right: Stats + Edit Gear */}
       <div className="flex items-center gap-4">
         <div className="text-right hidden sm:block">
           <div className="text-xs text-white/40 uppercase font-bold">Total Views</div>
           <div className="text-lg font-mono font-bold text-white">42.5K</div>
         </div>
+        {!isEditMode && onEnterEdit && (
+          <button
+            onClick={onEnterEdit}
+            className="w-9 h-9 rounded-full bg-white/8 hover:bg-white/15 border border-white/10 hover:border-white/20 flex items-center justify-center transition-all hover:scale-110"
+            title="Edit Profile"
+          >
+            <Settings className="w-4 h-4 text-white/50 hover:text-white/80" />
+          </button>
+        )}
       </div>
     </div>
   );
