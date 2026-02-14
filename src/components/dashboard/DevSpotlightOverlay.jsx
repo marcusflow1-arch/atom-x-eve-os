@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
+import { useCart } from '@/components/CartContext';
 
 const GENRE_TABS = [
   { id: 'all', name: 'All', icon: LayoutGrid },
@@ -188,6 +189,7 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
 }
 
 export default function DevSpotlightOverlay({ onClose }) {
+  const { addToCart } = useCart();
   const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [selectedDev, setSelectedDev] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -380,7 +382,16 @@ export default function DevSpotlightOverlay({ onClose }) {
                         {displayCards.map((card, i) => {
                           const rarityColor = card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' : card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' : card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' : 'border-slate-500/50 text-slate-400';
                           return (
-                            <motion.div key={card.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }} onClick={() => setSelectedCard(card)} whileHover={{ scale: 1.05, y: -4 }}
+                            <motion.div key={card.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }} onClick={() => {
+                              const priceNum = parseFloat(String(card.price || '0').replace(/[^0-9.]/g, '')) || 4.99;
+                              addToCart({
+                                id: `dev-card-${card.id}`,
+                                title: card.name,
+                                image: card.image || selectedGame.cover,
+                                price: priceNum,
+                                type: 'card',
+                              });
+                            }} whileHover={{ scale: 1.05, y: -4 }}
                               className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-cyan-500/10">
                               <div className="relative w-full h-3/5 overflow-hidden">
                                 <img src={card.image || selectedGame.cover} alt={card.name} className="w-full h-full object-cover" />
@@ -464,10 +475,7 @@ export default function DevSpotlightOverlay({ onClose }) {
           </div>
         </div>
 
-        {/* Card Detail Overlay */}
-        <AnimatePresence>
-          {selectedCard && <DevCardDetailOverlay card={selectedCard} game={selectedGame} onClose={() => setSelectedCard(null)} />}
-        </AnimatePresence>
+        {/* Card detail overlay removed — cards now add directly to cart */}
       </div>
     </motion.div>
   );
