@@ -390,6 +390,18 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const delta = clockRef.current.getDelta();
         if (mixer) mixer.update(delta);
 
+        // Update companion mixer
+        if (companionMixerRef.current) companionMixerRef.current.update(delta);
+
+        // Keep companion following the player (offset to the left)
+        if (companionRef.current && model) {
+          const targetX = model.position.x - 0.6;
+          const targetZ = model.position.z + 0.3;
+          companionRef.current.position.x += (targetX - companionRef.current.position.x) * 0.05;
+          companionRef.current.position.z += (targetZ - companionRef.current.position.z) * 0.05;
+          companionRef.current.position.y = model.position.y;
+        }
+
         const isOneShotActive = !!oneShotPlayingRef.current;
 
         const moveSpeed = 0.6;
