@@ -167,6 +167,24 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         envRef.current = obj;
         sceneRef.current.add(obj);
         console.log('[ENV] New environment loaded and added to scene');
+
+        // Collect walkable meshes for collision
+        envCollidersRef.current = [];
+        obj.traverse((child) => {
+          if (child.isMesh) {
+            envCollidersRef.current.push(child);
+          }
+        });
+        console.log('[ENV] Collision meshes collected:', envCollidersRef.current.length);
+
+        // Move character to this environment's spawn point
+        if (modelRef.current) {
+          const sp = playerSpawnRef.current;
+          modelRef.current.position.set(sp.x, sp.y, sp.z);
+          verticalVelocityRef.current = 0;
+          isGroundedRef.current = true;
+          console.log('[ENV] Player repositioned to spawn:', sp);
+        }
       }
     };
 
