@@ -105,6 +105,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     staleTime: Infinity
   });
 
+  // Keep spawn/collision refs in sync with props
+  useEffect(() => {
+    playerSpawnRef.current = playerSpawn || { x: 0, y: -0.5, z: 0 };
+  }, [playerSpawn]);
+  useEffect(() => {
+    useMeshCollisionRef.current = useMeshCollision || false;
+  }, [useMeshCollision]);
+
   // Standalone function to swap ONLY the environment mesh in the existing scene.
   // Does NOT touch engine, renderer, canvas, camera, character, lights, or render loop.
   const swapEnvironment = (url) => {
