@@ -105,6 +105,7 @@ export default function StreamingHome() {
               updateEditProfile={updateEditProfile}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              onEnterEdit={enterEditMode}
             />
 
             <div className="w-full h-px bg-white/10 mb-6" />
