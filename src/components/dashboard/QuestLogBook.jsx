@@ -81,6 +81,17 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
         style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
       />
 
+      {/* Inner bend shadow — simulates the page curving into the spine */}
+      <div
+        className={`absolute top-0 bottom-0 pointer-events-none z-10 ${tiltDirection === 'left' ? 'right-0 w-8' : 'left-0 w-8'}`}
+        style={{
+          background: tiltDirection === 'left'
+            ? 'linear-gradient(to left, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)'
+            : 'linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)',
+          borderRadius: tiltDirection === 'left' ? '0 12px 12px 0' : '12px 0 0 12px',
+        }}
+      />
+
       {/* Content fades in/out while the glass shell stays */}
       <div
         className="relative z-20 p-3 flex flex-col gap-1 h-full transition-opacity duration-200"
@@ -173,10 +184,10 @@ export default function QuestLogBook() {
 
         {/* Center spine / binding strip — connects the two pages */}
         <div
-          className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-3 rounded-sm pointer-events-none z-10"
+          className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-5 rounded-sm pointer-events-none z-30"
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.04) 70%, rgba(255,255,255,0.06) 100%)',
-            boxShadow: 'inset 1px 0 2px rgba(255,255,255,0.06), inset -1px 0 2px rgba(255,255,255,0.06), 0 0 10px rgba(0,0,0,0.3)',
+            background: 'linear-gradient(90deg, rgba(0,0,0,0.25) 0%, rgba(255,255,255,0.06) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.06) 65%, rgba(0,0,0,0.25) 100%)',
+            boxShadow: 'inset 2px 0 4px rgba(0,0,0,0.3), inset -2px 0 4px rgba(0,0,0,0.3), 0 0 12px rgba(0,0,0,0.4)',
           }}
         />
 
