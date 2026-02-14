@@ -449,10 +449,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
         camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
 
-        // PHYSICS — clamp to floor, no falling through
+        // PHYSICS — clamp to dynamic floor, no falling through
         const gravity = -25;
         const jumpForce = 5;
-        const floorY = -0.5;
+        const currentFloorY = floorYRef.current;
         
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
@@ -461,8 +461,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
         
-        if (model.position.y <= floorY) {
-            model.position.y = floorY;
+        if (model.position.y <= currentFloorY) {
+            model.position.y = currentFloorY;
             verticalVelocityRef.current = 0;
             isGroundedRef.current = true;
         } else {
