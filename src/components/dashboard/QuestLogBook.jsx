@@ -59,7 +59,7 @@ function QuestEntry({ quest }) {
   );
 }
 
-function BookPage({ quests, tiltDirection }) {
+function BookPage({ quests, tiltDirection, contentVisible }) {
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
   const [isHovered, setIsHovered] = useState(false);
 
@@ -119,7 +119,11 @@ function BookPage({ quests, tiltDirection }) {
         style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
       />
 
-      <div className="relative z-20 p-3 flex flex-col gap-1 h-full">
+      {/* Content fades in/out while the glass shell stays */}
+      <div
+        className="relative z-20 p-3 flex flex-col gap-1 h-full transition-opacity duration-200"
+        style={{ opacity: contentVisible ? 1 : 0 }}
+      >
         {quests.map(q => <QuestEntry key={q.id} quest={q} />)}
       </div>
     </motion.div>
