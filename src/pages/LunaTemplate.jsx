@@ -245,7 +245,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     // --- ENVIRONMENT (load initial from roomModelUrl prop or fallback) ---
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
-    loadEnvironment.current(scene, initialEnvUrl);
+    swapEnvironment(initialEnvUrl);
 
     // --- CHARACTER (Y-Bot) ---
     const loader = new FBXLoader();
