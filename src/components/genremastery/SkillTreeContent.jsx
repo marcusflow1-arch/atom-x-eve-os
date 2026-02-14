@@ -43,17 +43,17 @@ const generateProgressionLevels = (genreId, genreName) => {
   return levels;
 };
 
-const LevelNode = ({ levelData, onClick, isActive }) => {
+const LevelNode = ({ levelData, onClick }) => {
   const { level, isUnlocked, cardReward } = levelData;
   const rarity = rarityColors[cardReward.rarity];
   const isElite = ['Legendary', 'Mythical', 'Godlike'].includes(cardReward.rarity);
   return (
-    <motion.div onClick={() => onClick(levelData)} className={`relative flex-shrink-0 group cursor-pointer transition-all duration-500 ${isActive ? 'w-44 -translate-y-4' : 'w-28'}`}>
-      <div className="flex flex-col items-center gap-3 transition-all duration-300">
-        <div className={`text-center transition-all duration-300 ${isActive ? 'opacity-100 scale-110' : 'opacity-40 group-hover:opacity-100'}`}>
+    <motion.div onClick={() => onClick(levelData)} className="relative flex-shrink-0 cursor-pointer w-28">
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-center opacity-40">
           <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Lvl {level}</div>
         </div>
-        <div className={`relative rounded-2xl transition-all duration-300 flex items-center justify-center ${isActive ? `w-32 h-32 bg-white/10 border-2 ${rarity.border} shadow-[0_0_30px_rgba(255,255,255,0.1)] z-20 backdrop-blur-md` : `w-20 h-20 bg-white/5 border border-white/10 hover:bg-white/10 hover:w-24 hover:h-24 hover:border-white/30 z-10 backdrop-blur-sm`}`}>
+        <div className="relative rounded-2xl w-20 h-20 bg-white/5 border border-white/10 z-10 backdrop-blur-sm flex items-center justify-center">
           <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${rarity.bg} opacity-10`} />
           <div className={`relative w-full h-full p-2 flex items-center justify-center ${isUnlocked ? '' : 'grayscale opacity-30'}`}>
             <img src={cardReward.image} alt="Reward" className="w-full h-full object-contain drop-shadow-lg" />
@@ -65,10 +65,9 @@ const LevelNode = ({ levelData, onClick, isActive }) => {
               <div className="w-4 h-4 rounded-full bg-black/50 border border-white/10 flex items-center justify-center backdrop-blur-md"><Lock className="w-2.5 h-2.5 text-white/40" /></div>
             )}
           </div>
-          {isElite && isActive && <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />}
+          {isElite && <div className="absolute -inset-4 bg-gradient-to-t from-white/20 to-transparent blur-xl -z-10 animate-pulse" />}
         </div>
       </div>
-      <div className={`absolute bottom-[20%] left-1/2 w-[200%] h-[2px] -z-10 ${isUnlocked ? 'bg-gradient-to-r from-white/50 to-white/20' : 'bg-white/5'}`} />
     </motion.div>
   );
 };
@@ -172,9 +171,11 @@ export default function SkillTreeContent({ genre, onClose }) {
             <div className="flex-1 text-center text-xs text-slate-400 font-medium">20 Levels of {genre.name} Mastery</div>
             <Button variant="ghost" size="icon" className="bg-white/5 hover:bg-white/10 text-white h-8 w-8" onClick={() => scroll('right')}><ChevronRight className="w-4 h-4" /></Button>
           </div>
-          <div ref={scrollContainerRef} onMouseDown={onTrackMouseDown} onMouseMove={onTrackMouseMove} onMouseUp={onTrackMouseUp} onMouseLeave={onTrackMouseUp} className="relative flex gap-4 overflow-x-auto pb-10 pt-4 px-4 rounded-2xl scrollbar-hide cursor-grab active:cursor-grabbing select-none" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+          <div ref={scrollContainerRef} onMouseDown={onTrackMouseDown} onMouseMove={onTrackMouseMove} onMouseUp={onTrackMouseUp} onMouseLeave={onTrackMouseUp} className="relative flex items-center gap-4 overflow-x-auto pb-10 pt-4 px-4 rounded-2xl scrollbar-hide cursor-grab active:cursor-grabbing select-none" style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* Connecting line through the center of boxes */}
+            <div className="absolute left-0 right-0 h-[2px] pointer-events-none z-0" style={{ top: 'calc(50% + 6px)', background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 5%, rgba(255,255,255,0.15) 95%, transparent 100%)' }} />
             {progressionData.map((level) => (
-              <LevelNode key={level.level} levelData={level} isActive={false} onClick={() => setViewingLevel(level)} />
+              <LevelNode key={level.level} levelData={level} onClick={() => setViewingLevel(level)} />
             ))}
           </div>
         </div>
