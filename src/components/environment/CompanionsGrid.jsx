@@ -12,7 +12,7 @@ export default function CompanionsGrid() {
     const fetch = async () => {
       try {
         const allModels = await base44.entities.Model3D.list();
-        const matched = allModels.filter(m => m.name && m.name.toLowerCase().includes('companion'));
+        const matched = allModels.filter(m => m.name && (m.name.toLowerCase().includes('companion') || m.name.toLowerCase().includes('conpanion')));
         setCompanions(matched);
       } catch (e) {
         console.error('Failed to load companions:', e);
