@@ -75,6 +75,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const activeActionRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
   const keysPressed = useRef({});
+  const envRef = useRef(null); // Track current environment object for swapping
   
   // Player Controller State
   const isSprintingRef = useRef(false);
@@ -90,7 +91,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
   // One-shot animation locks
-  const oneShotPlayingRef = useRef(null); // tracks which one-shot is active: 'hurricane_kick', 'sprinting', 'c_action', or null
+  const oneShotPlayingRef = useRef(null);
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
@@ -98,6 +99,68 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     queryFn: () => base44.entities.AnimationFBX.list(),
     staleTime: Infinity
   });
+
+  // Helper: load an environment model into the scene, removing the previous one
+  const loadEnvironment = useRef((scene, url) => {
+    // Remove old environment
+    if (envRef.current) {
+      scene.remove(envRef.current);
+      envRef.current.traverse((child) => {
+        if (child.isMesh) {
+          child.geometry?.dispose();
+          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+          else child.material?.dispose();
+        }
+      });
+      envRef.current = null;
+    }
+    if (!url) return;
+
+    const isFbx = url.toLowerCase().endsWith('.fbx');
+    const isGltf = url.toLowerCase().endsWith('.glb') || url.toLowerCase().endsWith('.gltf');
+
+    const onLoaded = (obj) => {
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      if (maxDim > 0) {
+        const targetSize = 10;
+        const s = targetSize / maxDim;
+        obj.scale.setScalar(s);
+      }
+      // Center horizontally, place on floor
+      const box2 = new THREE.Box3().setFromObject(obj);
+      const center = box2.getCenter(new THREE.Vector3());
+      const minY = box2.min.y;
+      obj.position.set(-center.x, -minY - 0.5, -center.z);
+
+      obj.traverse((child) => {
+        if (child.isMesh) {
+          child.receiveShadow = true;
+          child.castShadow = true;
+        }
+      });
+      envRef.current = obj;
+      scene.add(obj);
+    };
+
+    if (isFbx) {
+      new FBXLoader().load(url, onLoaded, undefined, (err) => console.error('Env FBX load error:', err));
+    } else if (isGltf) {
+      new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('Env GLTF load error:', err));
+    } else {
+      // Try FBX first, fallback to GLTF
+      new FBXLoader().load(url, onLoaded, undefined, () => {
+        new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('Env load error:', err));
+      });
+    }
+  });
+
+  // React to roomModelUrl changes — swap environment without recreating the whole scene
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    loadEnvironment.current(sceneRef.current, roomModelUrl);
+  }, [roomModelUrl]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -165,244 +228,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     el.addEventListener('wheel', onWheel, { passive: false });
     el.addEventListener('contextmenu', onContextMenu);
 
-    // --- ENVIRONMENT ---
-    const envUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
-    const envLoader = new FBXLoader();
-    envLoader.load(envUrl, (env) => {
-        env.scale.set(0.05, 0.05, 0.05); 
-        env.position.set(0, -0.5, 0);
-        env.traverse((child) => {
-            if (child.isMesh) {
-                child.receiveShadow = true;
-                child.castShadow = true;
-            }
-        });
-        scene.add(env);
-    });
+    // --- ENVIRONMENT (load initial from roomModelUrl prop or fallback) ---
+    const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
+    loadEnvironment.current(scene, initialEnvUrl);
 
     // --- CHARACTER (Y-Bot) ---
-    const loader = new FBXLoader();
-    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
-    
-    loader.load(yBotUrl, async (fbx) => {
-      const model = fbx;
-      // Y-Bot Scaling - 50% smaller than previous 0.002
-      model.scale.set(0.001, 0.001, 0.001); 
-      model.position.set(0, -0.5, 0);
-      
-      model.traverse((child) => {
-          if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-          }
-      });
-      
-      modelRef.current = model;
-      scene.add(model);
-
-      const mixer = new THREE.AnimationMixer(model);
-      mixerRef.current = mixer;
-      mixer.timeScale = 1.2;
-
-      // Load Admin Animations by NAME (animation_type in DB is unreliable)
-      const loadAnimations = async () => {          
-          if (!adminAnimations || adminAnimations.length === 0) return;
-          
-          const fbxLoader = new FBXLoader();
-          for (const anim of adminAnimations) {
-            try {
-              const animAsset = await fbxLoader.loadAsync(anim.file_url);
-              if (animAsset.animations.length === 0) continue;
-              
-              const clip = animAsset.animations[0];
-              const action = mixer.clipAction(clip);
-              const name = (anim.name || '').toLowerCase().trim();
-
-              // Map strictly by name
-              if (name === 'idle') {
-                actionsRef.current['idle'] = action;
-              } else if (name === 'running') {
-                actionsRef.current['running'] = action;
-              } else if (name === 'jumping') {
-                actionsRef.current['jumping'] = action;
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
-              } else if (name === 'hurricane kick') {
-                actionsRef.current['hurricane_kick'] = action;
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
-              } else if (name === 'sprinting forward roll') {
-                actionsRef.current['sprinting'] = action;
-                action.setLoop(THREE.LoopOnce, 1);
-                action.clampWhenFinished = true;
-              }
-              
-              // Also store raw name
-              actionsRef.current[name] = action;
-            } catch (e) {
-              console.error("Failed to load animation:", anim.name, e);
-            }
-          }
-          
-          // Start idle
-          if (actionsRef.current['idle']) {
-            actionsRef.current['idle'].reset().play();
-            activeActionRef.current = actionsRef.current['idle'];
-            currentActionNameRef.current = 'idle';
-          }
-      };
-      await loadAnimations();
-
-      const fadeToAction = (name, duration = 0.2) => {
-        const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
-        if (!nextAction || activeActionRef.current === nextAction) return;
-        if (activeActionRef.current) activeActionRef.current.fadeOut(duration);
-        nextAction.reset().fadeIn(duration).play();
-        activeActionRef.current = nextAction;
-      };
-
-      const play = (name) => {
-          // Block normal locomotion changes while a one-shot animation is playing
-          if (oneShotPlayingRef.current) return;
-          const key = name.toLowerCase();
-          if (currentActionNameRef.current === name) return;
-          currentActionNameRef.current = name;
-          fadeToAction(key, 0.2);
-      };
-
-      // Generic one-shot player: plays an animation once, then returns to current locomotion state
-      const playOneShot = (actionName) => {
-        const action = actionsRef.current[actionName];
-        if (!action || oneShotPlayingRef.current) return; // block if any one-shot is already playing
-        
-        oneShotPlayingRef.current = actionName;
-        currentActionNameRef.current = actionName;
-        
-        if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
-        action.reset().fadeIn(0.15).play();
-        activeActionRef.current = action;
-
-        const onFinished = (e) => {
-          if (e.action === action) {
-            oneShotPlayingRef.current = null;
-            currentActionNameRef.current = '';
-            mixer.removeEventListener('finished', onFinished);
-            // Immediately resume the correct locomotion state
-            // (the game loop will pick up the right anim on next frame)
-          }
-        };
-        mixer.addEventListener('finished', onFinished);
-      };
-
-      // --- GAME LOOP ---
-      const animate = () => {
-        requestAnimationFrame(animate);
-        const delta = clockRef.current.getDelta();
-        if (mixer) mixer.update(delta);
-
-        // During one-shot animations, still update camera + physics but skip locomotion anim changes
-        const isOneShotActive = !!oneShotPlayingRef.current;
-
-        // MOVEMENT
-        const moveSpeed = 0.6;
-        const rotSpeed = 8.0; 
-        let isMoving = false;
-        
-        const moveVector = new THREE.Vector3(0, 0, 0);
-        // Camera-relative movement: use camera yaw to determine forward/right
-        const camYaw = cameraOrbitRef.current.yaw;
-        const forwardX = -Math.sin(camYaw);
-        const forwardZ = -Math.cos(camYaw);
-        const rightX = -Math.cos(camYaw);
-        const rightZ = Math.sin(camYaw);
-        
-        if (keysPressed.current['w']) { moveVector.x += forwardX; moveVector.z += forwardZ; } // Forward
-        if (keysPressed.current['s']) { moveVector.x -= forwardX; moveVector.z -= forwardZ; } // Backward
-        if (keysPressed.current['a']) { moveVector.x += rightX; moveVector.z += rightZ; }     // Right
-        if (keysPressed.current['d']) { moveVector.x -= rightX; moveVector.z -= rightZ; }     // Left
-
-        if (moveVector.lengthSq() > 0) {
-            moveVector.normalize();
-            isMoving = true;
-
-            // Rotate character to face the direction of movement
-            const angle = Math.atan2(moveVector.x, moveVector.z);
-            const targetQuat = new THREE.Quaternion();
-            targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
-            model.quaternion.slerp(targetQuat, 0.2);
-
-            model.position.x += moveVector.x * moveSpeed * delta;
-            model.position.z += moveVector.z * moveSpeed * delta;
-        }
-
-        // --- CAMERA (Orbit with right-click, follows character) ---
-        const orbit = cameraOrbitRef.current;
-        const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
-        const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
-        const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
-        camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
-
-        // PHYSICS
-        const gravity = -25;
-        const jumpForce = 5;
-        const floorY = -0.5;
-        
-        if (keysPressed.current[' '] && isGroundedRef.current) {
-            verticalVelocityRef.current = jumpForce;
-            isGroundedRef.current = false;
-        }
-        verticalVelocityRef.current += gravity * delta;
-        model.position.y += verticalVelocityRef.current * delta;
-        
-        if (model.position.y <= floorY) {
-            model.position.y = floorY;
-            verticalVelocityRef.current = 0;
-            isGroundedRef.current = true;
-        } else {
-            isGroundedRef.current = false;
-        }
-
-        // ANIMATION STATE (only update locomotion if no one-shot is active)
-        if (!isOneShotActive) {
-          if (!isGroundedRef.current) {
-              play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
-          } else if (isMoving) {
-              play("Running");
-          } else {
-              play("Idle");
-          }
-        }
-
-        renderer.render(scene, camera);
-      };
-      animate();
-
-      // Special key listeners (must be set after model loads)
-      const onSpecialKey = (e) => {
-        if (e.key === '1') playOneShot('hurricane_kick');
-        if (e.key === 'c' || e.key === 'C') playOneShot('hurricane_kick');
-        if (e.key === 'r' || e.key === 'R') playOneShot('sprinting'); // sprinting forward roll
-      };
-      window.addEventListener('keydown', onSpecialKey);
-      // Store for cleanup
-      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onSpecialKey);
-
-    }, undefined, (err) => console.error('Error loading Y-Bot:', err));
-
-    const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
-    const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
-
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
-
+...
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
