@@ -1341,6 +1341,8 @@ export default function LunaTemplate() {
             roomModelUrl={roomModelUrl} 
             activeScene={activeScene}
             isStatsOpen={showStats}
+            playerSpawn={playerSpawn}
+            useMeshCollision={useMeshCollision}
           />
         </div>
       }
