@@ -486,6 +486,103 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
+    // --- COMPANION SYSTEM ---
+    const loadCompanion = (detail) => {
+      const scene = sceneRef.current;
+      if (!scene) return;
+
+      // Remove old companion
+      if (companionRef.current) {
+        scene.remove(companionRef.current);
+        companionRef.current.traverse((child) => {
+          if (child.isMesh) {
+            child.geometry?.dispose();
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach(m => m?.dispose());
+          }
+        });
+        companionRef.current = null;
+      }
+      if (companionMixerRef.current) {
+        companionMixerRef.current.stopAllAction();
+        companionMixerRef.current = null;
+      }
+
+      if (!detail?.fileUrl) return;
+
+      const onLoaded = (obj) => {
+        // Scale companion to be small (about 0.4 units tall)
+        const box = new THREE.Box3().setFromObject(obj);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+          const s = 0.4 / maxDim;
+          obj.scale.setScalar(s);
+        }
+
+        // Place to the left of the Y-Bot, close to the white bar area
+        const sp = playerSpawnRef.current;
+        obj.position.set(sp.x - 0.6, sp.y, sp.z + 0.3);
+
+        obj.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        companionRef.current = obj;
+        scene.add(obj);
+
+        // Play animation if any
+        const anims = obj.animations || [];
+        if (anims.length > 0) {
+          const mixer = new THREE.AnimationMixer(obj);
+          companionMixerRef.current = mixer;
+          const action = mixer.clipAction(anims[0]);
+          action.play();
+        }
+      };
+
+      const url = detail.fileUrl;
+      const lower = url.toLowerCase();
+      if (lower.endsWith('.fbx')) {
+        new FBXLoader().load(url, onLoaded, undefined, (err) => console.error('[Companion] FBX load error:', err));
+      } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+        new GLTFLoader().load(url, (gltf) => {
+          const obj = gltf.scene;
+          obj.animations = gltf.animations || [];
+          onLoaded(obj);
+        }, undefined, (err) => console.error('[Companion] GLTF load error:', err));
+      } else {
+        // Try FBX first
+        new FBXLoader().load(url, onLoaded, undefined, () => {
+          new GLTFLoader().load(url, (gltf) => {
+            const obj = gltf.scene;
+            obj.animations = gltf.animations || [];
+            onLoaded(obj);
+          });
+        });
+      }
+    };
+
+    const dismissCompanion = () => {
+      const scene = sceneRef.current;
+      if (companionRef.current && scene) {
+        scene.remove(companionRef.current);
+        companionRef.current = null;
+      }
+      if (companionMixerRef.current) {
+        companionMixerRef.current.stopAllAction();
+        companionMixerRef.current = null;
+      }
+    };
+
+    const onCompanionSummon = (e) => loadCompanion(e.detail);
+    const onCompanionDismiss = () => dismissCompanion();
+    window.addEventListener('companionSummon', onCompanionSummon);
+    window.addEventListener('companionDismiss', onCompanionDismiss);
+
     const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
     const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
     window.addEventListener('keydown', onKeyDown);
