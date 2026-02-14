@@ -426,10 +426,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
         camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
 
-        // PHYSICS — clamp to floor, no falling through
+        // PHYSICS — clamp to floor or environment mesh collision
         const gravity = -25;
         const jumpForce = 5;
-        const floorY = -0.5;
+        const spawnY = playerSpawnRef.current.y;
         
         if (keysPressed.current[' '] && isGroundedRef.current) {
             verticalVelocityRef.current = jumpForce;
@@ -437,7 +437,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
         verticalVelocityRef.current += gravity * delta;
         model.position.y += verticalVelocityRef.current * delta;
-        
+
+        // Determine floor height — either via mesh raycast or flat floor
+        let floorY = spawnY;
+        if (useMeshCollisionRef.current && envCollidersRef.current.length > 0) {
+          // Cast ray downward from above the character
+          const rayOrigin = new THREE.Vector3(model.position.x, model.position.y + 5, model.position.z);
+          raycasterRef.current.set(rayOrigin, new THREE.Vector3(0, -1, 0));
+          raycasterRef.current.far = 20;
+          const hits = raycasterRef.current.intersectObjects(envCollidersRef.current, true);
+          if (hits.length > 0) {
+            // Convert hit point Y to model-space floor (character origin offset)
+            floorY = hits[0].point.y;
+          }
+        }
+
         if (model.position.y <= floorY) {
             model.position.y = floorY;
             verticalVelocityRef.current = 0;
