@@ -1108,6 +1108,14 @@ export default function LunaTemplate() {
   const handleEnvSelect = async (env) => {
     setCurrentEnvId(env.id);
     
+    // Update player spawn and collision from environment data
+    if (env.playerSpawn) {
+      setPlayerSpawn(env.playerSpawn);
+    } else {
+      setPlayerSpawn({ x: 0, y: -0.5, z: 0 });
+    }
+    setUseMeshCollision(env.useMeshCollision || false);
+    
     // Check if it's a full SceneLayout
     if (env.layoutData) {
         console.log("Switching to Scene Layout:", env.layoutData.name);
