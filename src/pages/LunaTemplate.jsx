@@ -81,6 +81,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const useMeshCollisionRef = useRef(useMeshCollision || false);
   const envCollidersRef = useRef([]); // Meshes to raycast against for collision
   const raycasterRef = useRef(new THREE.Raycaster());
+  const companionRef = useRef(null);
+  const companionMixerRef = useRef(null);
   
   // Player Controller State
   const isSprintingRef = useRef(false);
