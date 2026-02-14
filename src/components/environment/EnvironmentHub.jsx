@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, Map, Gift, Loader2 } from 'lucide-react';
+import { Globe, X, Map, Gift, Loader2, Bot } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import HubProgressionHeader from './HubProgressionHeader';
@@ -8,6 +8,7 @@ import EnvironmentInstanceCard from './EnvironmentInstanceCard';
 import EnvironmentDetailPanel from './EnvironmentDetailPanel';
 import FeatureUnlockGrid from './FeatureUnlockGrid';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
+import CompanionsGrid from './CompanionsGrid';
 
 export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const { user } = useAuth();
@@ -56,7 +57,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const tabs = [
     { id: 'environments', label: 'Environments', icon: Map },
     { id: 'features', label: 'Features', icon: Gift },
-    { id: 'selector', label: '3D Viewer', icon: Globe },
+    { id: 'companions', label: 'Companions', icon: Bot },
   ];
 
   if (loading) {
@@ -198,12 +199,9 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             </motion.div>
           )}
 
-          {activeTab === 'selector' && (
-            <motion.div key="sel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <EnvironmentSelector
-                currentEnvId={currentEnvId}
-                onSelect={(env) => onSelectEnv?.(env)}
-              />
+          {activeTab === 'companions' && (
+            <motion.div key="companions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <CompanionsGrid />
             </motion.div>
           )}
         </AnimatePresence>
