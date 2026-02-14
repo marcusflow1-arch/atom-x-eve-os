@@ -17,6 +17,8 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const [hubProgression, setHubProgression] = useState(null);
   const [environments, setEnvironments] = useState([]);
 
+  const [roomModels, setRoomModels] = useState([]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -32,10 +34,16 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
           envList = await base44.entities.EnvironmentInstance.filter({ owner_id: user.id });
         }
         setEnvironments(envList);
+
+        // Fetch Model3D records whose name contains "room"
+        const allModels = await base44.entities.Model3D.list();
+        const rooms = allModels.filter(m => m.name && m.name.toLowerCase().includes('room'));
+        setRoomModels(rooms);
       } catch (e) {
         console.error('EnvironmentHub fetch error:', e);
         setHubProgression({ global_hub_level: 1, global_hub_xp: 0, unlocked_features: [], mastery_badges: [] });
         setEnvironments([]);
+        setRoomModels([]);
       } finally {
         setLoading(false);
       }
