@@ -142,13 +142,52 @@ export default function QuestLogBook() {
         </h3>
       </div>
 
-      {/* Book — glass shells stay, only inner content fades */}
-      <div className="w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
-        <div className="flex-1 min-w-0" onClick={handleClickLeft}>
-          <BookPage quests={ALL_PAGES[leftIdx]} tiltDirection="left" contentVisible={contentVisible} />
-        </div>
-        <div className="flex-1 min-w-0" onClick={handleClickRight}>
-          <BookPage quests={ALL_PAGES[rightIdx]} tiltDirection="right" contentVisible={contentVisible} />
+      {/* Book — layered backing for depth, then glass pages on top */}
+      <div className="w-full relative" style={{ transformStyle: 'preserve-3d' }}>
+
+        {/* Back layer 2 — outermost "page stack" edge */}
+        <div
+          className="absolute inset-x-2 rounded-xl pointer-events-none"
+          style={{
+            top: '6px',
+            bottom: '-6px',
+            transform: 'perspective(800px) translateZ(-12px)',
+            background: 'linear-gradient(135deg, rgba(100, 115, 135, 0.08) 0%, rgba(80, 95, 115, 0.06) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+          }}
+        />
+
+        {/* Back layer 1 — inner "page stack" edge */}
+        <div
+          className="absolute inset-x-1 rounded-xl pointer-events-none"
+          style={{
+            top: '3px',
+            bottom: '-3px',
+            transform: 'perspective(800px) translateZ(-6px)',
+            background: 'linear-gradient(135deg, rgba(130, 145, 165, 0.09) 0%, rgba(110, 125, 145, 0.07) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.07)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+          }}
+        />
+
+        {/* Center spine / binding strip — connects the two pages */}
+        <div
+          className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-3 rounded-sm pointer-events-none z-10"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.04) 70%, rgba(255,255,255,0.06) 100%)',
+            boxShadow: 'inset 1px 0 2px rgba(255,255,255,0.06), inset -1px 0 2px rgba(255,255,255,0.06), 0 0 10px rgba(0,0,0,0.3)',
+          }}
+        />
+
+        {/* The actual book pages */}
+        <div className="relative z-20 w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
+          <div className="flex-1 min-w-0" onClick={handleClickLeft}>
+            <BookPage quests={ALL_PAGES[leftIdx]} tiltDirection="left" contentVisible={contentVisible} />
+          </div>
+          <div className="flex-1 min-w-0" onClick={handleClickRight}>
+            <BookPage quests={ALL_PAGES[rightIdx]} tiltDirection="right" contentVisible={contentVisible} />
+          </div>
         </div>
       </div>
 
