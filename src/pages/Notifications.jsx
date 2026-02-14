@@ -159,7 +159,10 @@ export default function Notifications() {
               <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-cyan-400" />
               </div>
-              <span className="text-lg font-bold tracking-wider text-white/90">Atom X Eve Updates</span>
+              <div>
+                <span className="text-sm font-bold tracking-wider text-white/90 block">System Version Updates</span>
+                <span className="text-[10px] text-white/30 font-mono tracking-widest">v2.5.0</span>
+              </div>
             </div>
 
             {/* Divider */}
