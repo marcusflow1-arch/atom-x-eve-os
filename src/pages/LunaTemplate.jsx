@@ -61,6 +61,7 @@ import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
 import DevSpotlightOverlay from '../components/dashboard/DevSpotlightOverlay';
 import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser';
+import QuestLogBook from '../components/dashboard/QuestLogBook';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen }) {
