@@ -76,6 +76,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const clockRef = useRef(new THREE.Clock());
   const keysPressed = useRef({});
   const envRef = useRef(null); // Track current environment object for swapping
+  const loadedEnvUrlRef = useRef(null); // Track which URL is currently loaded to avoid duplicate loads
   
   // Player Controller State
   const isSprintingRef = useRef(false);
@@ -100,35 +101,43 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     staleTime: Infinity
   });
 
-  // Helper: load an environment model into the scene, removing the previous one
-  const loadEnvironment = useRef((scene, url) => {
-    // Remove old environment
+  // Standalone function to swap ONLY the environment mesh in the existing scene.
+  // Does NOT touch engine, renderer, canvas, camera, character, lights, or render loop.
+  const swapEnvironment = (url) => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    if (url === loadedEnvUrlRef.current) return; // Already loaded this URL
+
+    console.log('[ENV] Swapping environment to:', url);
+
+    // Step 1: Dispose old environment meshes only (not lights, camera, or character)
     if (envRef.current) {
       scene.remove(envRef.current);
       envRef.current.traverse((child) => {
         if (child.isMesh) {
           child.geometry?.dispose();
-          if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-          else child.material?.dispose();
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach(m => m?.dispose());
         }
       });
       envRef.current = null;
+      console.log('[ENV] Old environment disposed');
     }
+
+    loadedEnvUrlRef.current = url;
     if (!url) return;
 
-    const isFbx = url.toLowerCase().endsWith('.fbx');
-    const isGltf = url.toLowerCase().endsWith('.glb') || url.toLowerCase().endsWith('.gltf');
-
+    // Step 2: Load new environment into the SAME scene
     const onLoaded = (obj) => {
+      // Auto-scale to fit
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
       if (maxDim > 0) {
-        const targetSize = 10;
-        const s = targetSize / maxDim;
+        const s = 10 / maxDim;
         obj.scale.setScalar(s);
       }
-      // Center horizontally, place on floor
+      // Center horizontally, sit on floor at y=-0.5
       const box2 = new THREE.Box3().setFromObject(obj);
       const center = box2.getCenter(new THREE.Vector3());
       const minY = box2.min.y;
@@ -140,26 +149,32 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           child.castShadow = true;
         }
       });
-      envRef.current = obj;
-      scene.add(obj);
+
+      // Only add if scene still exists and URL hasn't changed mid-load
+      if (sceneRef.current && loadedEnvUrlRef.current === url) {
+        envRef.current = obj;
+        sceneRef.current.add(obj);
+        console.log('[ENV] New environment loaded and added to scene');
+      }
     };
 
-    if (isFbx) {
-      new FBXLoader().load(url, onLoaded, undefined, (err) => console.error('Env FBX load error:', err));
-    } else if (isGltf) {
-      new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('Env GLTF load error:', err));
+    const lower = url.toLowerCase();
+    if (lower.endsWith('.fbx')) {
+      new FBXLoader().load(url, onLoaded, undefined, (err) => console.error('[ENV] FBX load error:', err));
+    } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+      new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('[ENV] GLTF load error:', err));
     } else {
-      // Try FBX first, fallback to GLTF
+      // Unknown extension: try FBX first, then GLTF
       new FBXLoader().load(url, onLoaded, undefined, () => {
-        new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('Env load error:', err));
+        new GLTFLoader().load(url, (gltf) => onLoaded(gltf.scene), undefined, (err) => console.error('[ENV] load error:', err));
       });
     }
-  });
+  };
 
-  // React to roomModelUrl changes — swap environment without recreating the whole scene
+  // React to roomModelUrl prop changes — hot-swap environment without touching anything else
   useEffect(() => {
-    if (!sceneRef.current) return;
-    loadEnvironment.current(sceneRef.current, roomModelUrl);
+    if (!sceneRef.current || !roomModelUrl) return;
+    swapEnvironment(roomModelUrl);
   }, [roomModelUrl]);
 
   useEffect(() => {
