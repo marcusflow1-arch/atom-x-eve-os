@@ -22,9 +22,9 @@ export default function StatsPopupOverlay({ activeTab = 'stats', onTabChange, on
       className="fixed z-[55] pointer-events-auto flex flex-col overflow-hidden rounded-2xl"
       style={{
         top: '80px',
-        left: '440px',
-        right: '8px',
-        bottom: '8px',
+        right: '296px',
+        width: '400px',
+        bottom: '56px',
         background: 'rgba(6, 8, 14, 0.88)',
         backdropFilter: 'blur(40px) saturate(150%)',
         WebkitBackdropFilter: 'blur(40px) saturate(150%)',
