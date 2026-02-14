@@ -851,6 +851,12 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
           headerConfig.discordSmall = true;
+        } else if (p.includes('/notifications')) {
+          headerConfig.hidden = false;
+          headerConfig.showMenu = true;
+          headerConfig.title = "";
+          headerConfig.showLevel = false;
+          headerConfig.showDiscord = false;
         }
 
         if (headerConfig.hidden) return null;
