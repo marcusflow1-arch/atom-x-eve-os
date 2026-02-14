@@ -612,11 +612,14 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('companionSummon', onCompanionSummon);
+      window.removeEventListener('companionDismiss', onCompanionDismiss);
       el.removeEventListener('mousedown', onMouseDown);
       el.removeEventListener('mouseup', onMouseUp);
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('contextmenu', onContextMenu);
+      dismissCompanion();
       if (modelRef.current?.userData?._hurricaneCleanup) modelRef.current.userData._hurricaneCleanup();
       renderer.dispose();
     };
