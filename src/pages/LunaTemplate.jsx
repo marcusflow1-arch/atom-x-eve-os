@@ -1201,12 +1201,15 @@ export default function LunaTemplate() {
 
 
 
-      {/* Mini 3D Viewer Box + Quest Log Book - positioned below the dashboard title, left column */}
+      {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
-        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '280px' }}>
+        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '322px' }}>
           <Mini3DViewerBox />
-          <div className="w-full">
+          <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
             <QuestLogBook />
+          </div>
+          <div className="w-full" style={{ marginTop: '24px' }}>
+            <CardCollectionBrowser />
           </div>
         </div>
       )}

@@ -1739,14 +1739,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               />
             </div>
 
-            {/* Card Collection + Developer Spotlight side by side */}
+            {/* Developer Spotlight + Mystery Boxes row */}
             <div className="pointer-events-auto flex items-end gap-3" style={{ marginTop: 'auto', paddingTop: '24px', transform: 'translateY(-76px)' }}>
-              <div className="w-[280px] flex-shrink-0">
-                <CardCollectionBrowser />
-              </div>
-              <div className="flex-1 min-w-0">
-                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-              </div>
+              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
             <AnimatePresence>

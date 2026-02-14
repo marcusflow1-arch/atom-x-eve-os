@@ -57,8 +57,9 @@ function BookPage({ quests, tiltDirection }) {
   };
 
   // Left page tilts right (rotateY positive), right page tilts left (rotateY negative)
-  const baseTilt = tiltDirection === 'left' ? 12 : -12;
-  const hoverTilt = tiltDirection === 'left' ? 8 : -8;
+  // +15% more tilt on each side
+  const baseTilt = tiltDirection === 'left' ? 14 : -14;
+  const hoverTilt = tiltDirection === 'left' ? 9 : -9;
 
   return (
     <motion.div
