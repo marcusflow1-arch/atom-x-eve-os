@@ -983,6 +983,8 @@ export default function LunaTemplate() {
   const [roomModelUrl, setRoomModelUrl] = useState(null);
   const [activeScene, setActiveScene] = useState(null);
   const [bannerBackgroundUrl, setBannerBackgroundUrl] = useState(null);
+  const [playerSpawn, setPlayerSpawn] = useState({ x: 0, y: -0.5, z: 0 });
+  const [useMeshCollision, setUseMeshCollision] = useState(false);
 
   // Auto-select model: Y-Bot (Xbot.glb)
   useEffect(() => {
