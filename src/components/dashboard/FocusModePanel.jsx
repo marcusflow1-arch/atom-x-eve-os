@@ -1740,7 +1740,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             </div>
 
             {/* Developer Spotlight - full width */}
-            <div className="pointer-events-auto" style={{ marginTop: 'auto', paddingTop: '24px' }}>
+            <div className="pointer-events-auto" style={{ marginTop: 'auto', paddingTop: '24px', transform: 'translateY(-76px)' }}>
               <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
             </div>
 
