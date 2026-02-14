@@ -144,7 +144,7 @@ export default function Notifications() {
     <GlassPageFrame>
       <div className="w-full h-screen flex flex-col text-white font-sans overflow-hidden">
 
-        {/* ─── Sub-header: Title + Nav ─── */}
+        {/* ─── Sub-header: Version label ─── */}
         <div
           className="flex-shrink-0 mt-16"
           style={{
@@ -153,38 +153,15 @@ export default function Notifications() {
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div className="flex items-center px-6 py-2.5 gap-4">
-            {/* Title */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center justify-between px-6 py-2.5">
+            <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-cyan-400" />
               </div>
               <div>
                 <span className="text-sm font-bold tracking-wider text-white/90 block">System Version Updates</span>
-                <span className="text-[10px] text-white/30 font-mono tracking-widest">v2.5.0</span>
+                <span className="text-[10px] text-white/30 font-mono tracking-widest">v2.5.0 • {updates.length} update{updates.length !== 1 ? 's' : ''} available</span>
               </div>
-            </div>
-
-            {/* Divider */}
-            <div className="w-px h-7 bg-white/10 flex-shrink-0" />
-
-            {/* Nav links */}
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide flex-1 min-w-0">
-              {SUB_NAV.map(item => (
-                <button
-                  key={item.label}
-                  onClick={() => navigate(createPageUrl(item.page))}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium text-white/45 hover:text-white/80 hover:bg-white/5 transition-all whitespace-nowrap flex-shrink-0"
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Update count badge */}
-            <div className="flex-shrink-0">
-              <span className="text-white/30 text-xs">{updates.length} update{updates.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
         </div>
