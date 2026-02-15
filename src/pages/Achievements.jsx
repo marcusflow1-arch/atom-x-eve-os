@@ -345,7 +345,20 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             {/* Right: Black Market + Skill Tree buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); }}
+                onClick={() => { setSkillTreePanelMode(!skillTreePanelMode); setAftermarketMode(false); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
+                  skillTreePanelMode
+                    ? 'bg-purple-500/15 border-purple-400/30 text-purple-300 shadow-[0_0_12px_rgba(168,85,247,0.1)]'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <Layers className="w-4 h-4" />
+                <span>Skill Tree</span>
+              </button>
+
+              <button
+                onClick={() => { setAftermarketMode(!aftermarketMode); setSkillTreeMode(false); setBlacksmithMode(false); setSkillTreePanelMode(false); }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
                   aftermarketMode
                     ? 'bg-emerald-500/15 border-emerald-400/30 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
@@ -356,8 +369,6 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
                 <DollarSign className="w-4 h-4" />
                 <span>Black Market</span>
               </button>
-
-
             </div>
           </div>
         </div>
