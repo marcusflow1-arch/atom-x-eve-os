@@ -259,6 +259,7 @@ export default function GenreMastery({ onClose }) {
                   <motion.button
                     key={game.id}
                     onClick={() => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
+
                     whileHover={{ x: 2 }}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
                       selectedGame?.id === game.id && rightPanel === 'games'
