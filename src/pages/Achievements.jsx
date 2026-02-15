@@ -461,7 +461,18 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
             }}
           >
             <AnimatePresence mode="wait">
-              {selectedGame ? (
+              {skillTreePanelMode ? (
+                <motion.div
+                  key="skilltree-panel"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <SkillTreeContent genre={selectedGenre} />
+                </motion.div>
+              ) : selectedGame ? (
                 <motion.div
                   key={`cards-${selectedGame.id}`}
                   initial={{ opacity: 0, x: 20 }}
