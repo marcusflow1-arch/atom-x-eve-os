@@ -498,10 +498,10 @@ export default function DevSpotlightOverlay({ onClose }) {
               )}
             </AnimatePresence>
           </div>
-        </div>
-
           </>
           )}
+        </div>
+
         {/* Card detail overlay removed — cards now add directly to cart */}
       </div>
     </motion.div>
