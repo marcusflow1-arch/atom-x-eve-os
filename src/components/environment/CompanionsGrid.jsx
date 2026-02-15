@@ -99,7 +99,7 @@ export default function CompanionsGrid() {
               key={c.id}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              onClick={() => handleSelect(c)}
+              onClick={() => { handleSelect(c); handleSummon(c); }}
               className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
                 isActive
                   ? 'border-purple-400/50 bg-purple-500/10 ring-1 ring-purple-400/20'
