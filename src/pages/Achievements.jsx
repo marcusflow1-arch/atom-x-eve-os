@@ -100,6 +100,9 @@ function AchievementsView({ onExitToLibrary, onClosePage }) {
   const [blacksmithCard, setBlacksmithCard] = useState(null);
   const [aftermarketMode, setAftermarketMode] = useState(false);
 
+  // Skill tree panel toggle
+  const [skillTreePanelMode, setSkillTreePanelMode] = useState(false);
+
   // Genre filter
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
 
