@@ -462,7 +462,11 @@ export default function ClanFormsZone({ game, clan, user }) {
             onChange={(e) => setMessageGeneral(e.target.value)}
             disabled={!selectedTopicGeneral}
           />
-          <Button onClick={async () => { await sendMessageTo(selectedTopicGeneral?.id, generalChannel?.id, messageGeneral); setMessageGeneral(''); }} disabled={!selectedTopicGeneral || !messageGeneral.trim()} className="gap-2">
+          <Button onClick={async () => { 
+            await sendMessageTo(selectedTopicGeneral?.id, generalChannel?.id, messageGeneral); 
+            setMessageGeneral(''); 
+            qc.invalidateQueries({ queryKey: ['clanFormMessages', 'general', generalChannel?.id] });
+          }} disabled={!selectedTopicGeneral || !messageGeneral.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
