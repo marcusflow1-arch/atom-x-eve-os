@@ -314,15 +314,7 @@ export default function ClanFormsZone({ game, clan, user }) {
 
   const sendMessageTo = async (topicId, channelId, content) => {
     if ((!topicId && !channelId) || !content?.trim()) return;
-    
-    // If sending to "All" (no topicId), we might want to block or send to a default topic.
-    // Assuming for now we require a topicId to send.
     if (!topicId) return;
-
-    // We need channel_id in the message for "All" filtering to work efficiently if using filter({channel_id})
-    // Fetch topic to get channel_id if not provided? Or pass it.
-    // Actually, ClanFormMessage schema doesn't strictly enforce channel_id but we used it in the query.
-    // Let's ensure we save channel_id.
     
     await base44.entities.ClanFormMessage.create({
       topic_id: topicId,
@@ -333,8 +325,9 @@ export default function ClanFormsZone({ game, clan, user }) {
       username: user?.full_name || user?.email?.split('@')[0] || 'User',
       content: content.trim(),
     });
-    qc.invalidateQueries({ queryKey: ['clanFormMessages', topicId] });
-    if (channelId) qc.invalidateQueries({ queryKey: ['clanFormMessages', channelId, 'All'] });
+    // Only invalidate the specific channel's messages, not both
+    qc.invalidateQueries({ queryKey: ['clanFormMessages', channelId, selectedTopicTitleGeneral === 'All' ? 'All' : undefined] });
+    qc.invalidateQueries({ queryKey: ['clanFormMessages', channelId] });
   };
 
   return (
