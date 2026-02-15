@@ -302,7 +302,23 @@ export default function GenreMastery({ onClose }) {
             }}
           >
             <AnimatePresence mode="wait">
-              {rightPanel === 'skilltree' ? (
+              {rightPanel === 'achievements' ? (
+                <motion.div
+                  key="achievements"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <AchievementsContent
+                    genre={selectedGenre}
+                    selectedGame={selectedGame}
+                    onSelectGame={(game) => { setSelectedGame(game); setRightPanel('achievements'); }}
+                    games={gameData}
+                  />
+                </motion.div>
+              ) : rightPanel === 'skilltree' ? (
                 <motion.div
                   key="skilltree"
                   initial={{ opacity: 0, x: 20 }}
