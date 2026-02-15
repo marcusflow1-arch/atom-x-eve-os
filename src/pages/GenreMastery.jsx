@@ -85,7 +85,7 @@ export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [rightPanel, setRightPanel] = useState('games'); // 'games' or 'skilltree'
+  const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
