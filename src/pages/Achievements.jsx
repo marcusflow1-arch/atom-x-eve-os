@@ -22,6 +22,7 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 
 // Genre definitions (same as GenreMastery for consistency)
 const GENRES = [
