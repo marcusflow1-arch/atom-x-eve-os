@@ -149,36 +149,39 @@ export default function ClanFormsZone({ game, clan, user }) {
     }
   }, [topicTitlesLeader, selectedTopicTitleLeader]);
 
-  // Messages for both chats
+  // Messages for Clan Chat - ONLY from generalChannel, never from leaderChannel
   const { data: messagesGeneral = [] } = useQuery({
-    queryKey: ['clanFormMessages', generalChannel?.id, selectedTopicTitleGeneral],
+    queryKey: ['clanFormMessages', 'general', generalChannel?.id, selectedTopicTitleGeneral],
     queryFn: async () => {
-      if (selectedTopicTitleGeneral === 'All' && generalChannel?.id) {
-        // Fetch all messages for the channel
+      if (!generalChannel?.id) return [];
+      if (selectedTopicTitleGeneral === 'All') {
         const res = await base44.entities.ClanFormMessage.filter({ channel_id: generalChannel.id, game_id: game.id }, 'created_date', 200);
         return res || [];
       }
       if (!selectedTopicGeneral?.id) return [];
-      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id, game_id: game.id }, 'created_date', 200);
+      // Filter by both topic AND channel to ensure no leader messages leak
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicGeneral.id, channel_id: generalChannel.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
-    enabled: (selectedTopicTitleGeneral === 'All' && !!generalChannel?.id) || !!selectedTopicGeneral?.id,
+    enabled: !!generalChannel?.id && (selectedTopicTitleGeneral === 'All' || !!selectedTopicGeneral?.id),
     initialData: [],
   });
 
+  // Messages for Leader Chat - ONLY from leaderChannel, completely separate
   const { data: messagesLeader = [] } = useQuery({
-    queryKey: ['clanFormMessages', leaderChannel?.id, selectedTopicTitleLeader],
+    queryKey: ['clanFormMessages', 'leader', leaderChannel?.id, selectedTopicTitleLeader],
     queryFn: async () => {
-      if (selectedTopicTitleLeader === 'All' && leaderChannel?.id) {
-        // Fetch all messages for the channel
+      if (!leaderChannel?.id) return [];
+      if (selectedTopicTitleLeader === 'All') {
         const res = await base44.entities.ClanFormMessage.filter({ channel_id: leaderChannel.id, game_id: game.id }, 'created_date', 200);
         return res || [];
       }
       if (!selectedTopicLeader?.id) return [];
-      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id, game_id: game.id }, 'created_date', 200);
+      // Filter by both topic AND channel to ensure no clan messages leak
+      const res = await base44.entities.ClanFormMessage.filter({ topic_id: selectedTopicLeader.id, channel_id: leaderChannel.id, game_id: game.id }, 'created_date', 200);
       return res || [];
     },
-    enabled: (selectedTopicTitleLeader === 'All' && !!leaderChannel?.id) || !!selectedTopicLeader?.id,
+    enabled: !!leaderChannel?.id && (selectedTopicTitleLeader === 'All' || !!selectedTopicLeader?.id),
     initialData: [],
   });
 
