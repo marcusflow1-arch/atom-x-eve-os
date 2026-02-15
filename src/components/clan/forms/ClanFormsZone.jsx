@@ -185,20 +185,27 @@ export default function ClanFormsZone({ game, clan, user }) {
     initialData: [],
   });
 
-  // Realtime updates
+  // Realtime updates - ensure channel-scoped invalidation for strict separation
   React.useEffect(() => {
     const unsubs = [];
     unsubs.push(base44.entities.ClanFormChannel.subscribe((e) => {
       if (e.data?.game_id === game.id) qc.invalidateQueries({ queryKey: ['clanFormChannels', game.id] });
     }));
     unsubs.push(base44.entities.ClanFormTopic.subscribe((e) => {
-      if (e.data?.channel_id === selectedChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', selectedChannel.id] });
+      if (e.data?.channel_id === generalChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', generalChannel.id] });
+      if (e.data?.channel_id === leaderChannel?.id) qc.invalidateQueries({ queryKey: ['clanFormTopics', leaderChannel.id] });
     }));
     unsubs.push(base44.entities.ClanFormMessage.subscribe((e) => {
-      if (e.data?.topic_id === selectedTopic?.id) qc.invalidateQueries({ queryKey: ['clanFormMessages', selectedTopic.id] });
+      // Only invalidate the specific channel where the message belongs
+      if (e.data?.channel_id === generalChannel?.id) {
+        qc.invalidateQueries({ queryKey: ['clanFormMessages', 'general', generalChannel.id] });
+      }
+      if (e.data?.channel_id === leaderChannel?.id) {
+        qc.invalidateQueries({ queryKey: ['clanFormMessages', 'leader', leaderChannel.id] });
+      }
     }));
     return () => unsubs.forEach((u) => { try { u(); } catch {} });
-  }, [game.id, selectedChannel?.id, selectedTopic?.id, qc]);
+  }, [game.id, generalChannel?.id, leaderChannel?.id, qc]);
 
   const createChannel = async () => {
     if (!channelName.trim()) return;
