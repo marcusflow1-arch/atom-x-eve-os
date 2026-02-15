@@ -607,7 +607,11 @@ export default function ClanFormsZone({ game, clan, user }) {
             onChange={(e) => setMessageLeader(e.target.value)}
             disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin')}
           />
-          <Button onClick={async () => { await sendMessageTo(selectedTopicLeader?.id, leaderChannel?.id, messageLeader); setMessageLeader(''); }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
+          <Button onClick={async () => { 
+            await sendMessageTo(selectedTopicLeader?.id, leaderChannel?.id, messageLeader); 
+            setMessageLeader(''); 
+            qc.invalidateQueries({ queryKey: ['clanFormMessages', 'leader', leaderChannel?.id] });
+          }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
