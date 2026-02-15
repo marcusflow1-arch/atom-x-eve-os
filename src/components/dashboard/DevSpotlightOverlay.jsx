@@ -336,7 +336,6 @@ export default function DevSpotlightOverlay({ onClose }) {
           <>
           {/* LEFT PANEL: Quick Access (Recently Visited / Top / New) — OR Games list when a dev is selected */}
           <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-...
             style={{ width: '300px', minWidth: '300px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
             <AnimatePresence mode="wait">
               {!selectedDev ? (
