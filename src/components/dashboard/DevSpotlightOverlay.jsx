@@ -9,6 +9,8 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
 import { useCart } from '@/components/CartContext';
+import BlackMarketContent from './BlackMarketContent';
+import TradingPostOverlayContent from './TradingPostOverlayContent';
 
 const GENRE_TABS = [
   { id: 'all', name: 'All', icon: LayoutGrid },
@@ -190,6 +192,7 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
 
 export default function DevSpotlightOverlay({ onClose }) {
   const { addToCart } = useCart();
+  const [activeView, setActiveView] = useState('developer'); // 'developer' | 'blackmarket' | 'tradingpost'
   const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [selectedDev, setSelectedDev] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -293,11 +296,27 @@ export default function DevSpotlightOverlay({ onClose }) {
             <GenreScrollTabs tabs={GENRE_TABS} selectedTab={selectedGenre} onSelect={(t) => { setSelectedGenre(t); handleBackToDevs(); }} />
             <div className="flex-shrink-0 w-px h-8 mx-3 relative"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15" style={{ backdropFilter: 'blur(12px)' }}>
+              <button
+                onClick={() => setActiveView(activeView === 'blackmarket' ? 'developer' : 'blackmarket')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
+                  activeView === 'blackmarket'
+                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
                 <DollarSign className="w-4 h-4" /><span>Black Market</span>
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15" style={{ backdropFilter: 'blur(12px)' }}>
-                <Layers className="w-4 h-4" /><span>Skill Tree</span>
+              <button
+                onClick={() => setActiveView(activeView === 'tradingpost' ? 'developer' : 'tradingpost')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
+                  activeView === 'tradingpost'
+                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <Layers className="w-4 h-4" /><span>Trading Post</span>
               </button>
               <button onClick={onClose} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/40 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/20">
                 <X className="w-4 h-4" />
@@ -309,8 +328,15 @@ export default function DevSpotlightOverlay({ onClose }) {
         {/* ═══ MAIN CONTENT ═══ */}
         <div className="flex-1 flex min-h-0 relative z-10">
 
+          {activeView === 'blackmarket' ? (
+            <BlackMarketContent />
+          ) : activeView === 'tradingpost' ? (
+            <TradingPostOverlayContent />
+          ) : (
+          <>
           {/* LEFT PANEL: Quick Access (Recently Visited / Top / New) — OR Games list when a dev is selected */}
           <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
+...
             style={{ width: '300px', minWidth: '300px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
             <AnimatePresence mode="wait">
               {!selectedDev ? (
@@ -475,6 +501,8 @@ export default function DevSpotlightOverlay({ onClose }) {
           </div>
         </div>
 
+          </>
+          )}
         {/* Card detail overlay removed — cards now add directly to cart */}
       </div>
     </motion.div>
