@@ -396,17 +396,71 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           fadeToAction(key, 0.2);
       };
 
-      // --- KEYBIND SEQUENCE SYSTEM ---
-      // Plays an ordered array of animation clips. No looping. No replay. Input-driven only.
-      const playSequence = (sequence) => {
-        if (sequenceLockRef.current) return; // Already playing a sequence
+      // --- ADVANCED KEYBIND ANIMATION STATE CONTROLLER ---
+      // Supports: tap (play once), hold (sustain while pressed), toggle (on/off)
+      // Per-animation: movement behavior, snap behavior, return state, interruptibility
+
+      const holdActiveRef = useRef(null);       // Currently active hold keybind (null if none)
+      const toggleActiveRef = useRef(null);     // Currently active toggle keybind (null if none)
+      const previousActionNameRef = useRef('idle');
+      const preAnimPositionRef = useRef(new THREE.Vector3());
+
+      const playSequence = (sequence, keybindMeta = {}) => {
+        // Interruptibility check: if a non-interruptible keybind is active, block
+        if (sequenceLockRef.current && holdActiveRef.current && holdActiveRef.current.interruptible === false) return;
+        if (sequenceLockRef.current && toggleActiveRef.current && toggleActiveRef.current.interruptible === false) return;
+
         if (!sequence || sequence.length === 0) return;
+
+        // Store previous state for "return to previous"
+        previousActionNameRef.current = currentActionNameRef.current || 'idle';
+
+        // Store pre-animation position for snap-back
+        const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+        if (activeModel) preAnimPositionRef.current.copy(activeModel.position);
 
         sequenceQueueRef.current = sequence;
         sequenceIndexRef.current = 0;
         sequenceLockRef.current = true;
 
         playSequenceStep();
+      };
+
+      const resolveReturnState = (entry) => {
+        const isYBot = activeCharacterRef.current === 'ybot';
+        const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
+        const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
+        const activeModel = isYBot ? model : c1ModelRef.current;
+        const returnState = entry.returnState || 'idle';
+
+        // Handle snap behavior first
+        const snapBehavior = entry.snapBehavior || 'maintain_end';
+        if (snapBehavior === 'snap_to_origin' && activeModel) {
+          activeModel.position.copy(preAnimPositionRef.current);
+        } else if (snapBehavior === 'blend_to_idle_pos' && activeModel) {
+          // Lerp back over a few frames — approximate with immediate for now
+          activeModel.position.copy(preAnimPositionRef.current);
+        }
+        // 'maintain_end' = do nothing, character stays where animation left them
+
+        // Determine which animation to transition to
+        let targetName = 'idle';
+        if (returnState === 'previous') {
+          targetName = previousActionNameRef.current || 'idle';
+        } else if (returnState === 'freeze') {
+          // Don't transition — clamp on final frame
+          return;
+        } else if (returnState === 'specific' && entry.returnAnimationName) {
+          targetName = entry.returnAnimationName.toLowerCase().trim();
+        }
+
+        const targetAction = actions[targetName] || actions['idle'];
+        if (targetAction && activeRef.current !== targetAction) {
+          if (activeRef.current) activeRef.current.fadeOut(0.2);
+          targetAction.reset().fadeIn(0.2).play();
+          activeRef.current = targetAction;
+        }
+        currentActionNameRef.current = targetName;
       };
 
       const playSequenceStep = () => {
@@ -418,15 +472,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const activeMixer = isYBot ? mixer : c1MixerRef.current;
 
         if (idx < 0 || idx >= queue.length) {
+          // Sequence complete — resolve return state from the last played entry
           sequenceLockRef.current = false;
           sequenceIndexRef.current = -1;
+          const lastEntry = queue.length > 0 ? queue[queue.length - 1] : null;
           sequenceQueueRef.current = [];
-          currentActionNameRef.current = '';
-          const idleAction = actions['idle'];
-          if (idleAction && activeRef.current !== idleAction) {
-            if (activeRef.current) activeRef.current.fadeOut(0.2);
-            idleAction.reset().fadeIn(0.2).play();
-            activeRef.current = idleAction;
+
+          if (lastEntry) {
+            resolveReturnState(lastEntry);
+          } else {
+            currentActionNameRef.current = '';
+            const idleAction = actions['idle'];
+            if (idleAction && activeRef.current !== idleAction) {
+              if (activeRef.current) activeRef.current.fadeOut(0.2);
+              idleAction.reset().fadeIn(0.2).play();
+              activeRef.current = idleAction;
+            }
           }
           return;
         }
@@ -436,7 +497,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const action = actions[actionName];
 
         if (!action) {
-          // Skip missing animation, advance to next
           console.warn('[Keybind] Animation not found:', actionName, '— skipping');
           sequenceIndexRef.current = idx + 1;
           playSequenceStep();
@@ -468,7 +528,37 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           };
           activeMixer.addEventListener('finished', onFinished);
         }
-        // If looping, the sequence stops here until another key press interrupts
+      };
+
+      // --- HOLD / TOGGLE RELEASE HANDLER ---
+      const stopHoldOrToggle = () => {
+        if (holdActiveRef.current) {
+          holdActiveRef.current = null;
+        }
+        if (sequenceLockRef.current) {
+          // Force-end the sequence and return to idle
+          const isYBot = activeCharacterRef.current === 'ybot';
+          const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
+          const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
+
+          const lastEntry = sequenceQueueRef.current.length > 0 ? sequenceQueueRef.current[sequenceQueueRef.current.length - 1] : null;
+
+          sequenceLockRef.current = false;
+          sequenceIndexRef.current = -1;
+          sequenceQueueRef.current = [];
+
+          if (lastEntry) {
+            resolveReturnState(lastEntry);
+          } else {
+            const idleAction = actions['idle'];
+            if (idleAction && activeRef.current !== idleAction) {
+              if (activeRef.current) activeRef.current.fadeOut(0.2);
+              idleAction.reset().fadeIn(0.2).play();
+              activeRef.current = idleAction;
+            }
+            currentActionNameRef.current = 'idle';
+          }
+        }
       };
 
       // --- GAME LOOP ---
