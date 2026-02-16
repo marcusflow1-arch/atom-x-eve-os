@@ -659,6 +659,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         // State-based animation — drives whichever character is active
+        // When a hold/toggle is active, don't override with movement state
         if (!sequenceLockRef.current) {
           if (!isGroundedRef.current) {
               play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
@@ -666,6 +667,17 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
               play("Running");
           } else {
               play("Idle");
+          }
+        }
+
+        // If in-place movement behavior is active, lock position during sequence
+        if (sequenceLockRef.current && sequenceQueueRef.current.length > 0) {
+          const currentSeqIdx = sequenceIndexRef.current;
+          const currentEntry = currentSeqIdx >= 0 && currentSeqIdx < sequenceQueueRef.current.length
+            ? sequenceQueueRef.current[currentSeqIdx] : null;
+          if (currentEntry && (currentEntry.movementBehavior === 'in_place') && preAnimPositionRef.current && activeModel) {
+            activeModel.position.x = preAnimPositionRef.current.x;
+            activeModel.position.z = preAnimPositionRef.current.z;
           }
         }
 
