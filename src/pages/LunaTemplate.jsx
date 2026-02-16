@@ -670,33 +670,62 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       animate();
 
       // --- KEYBIND-DRIVEN INPUT HANDLER ---
-      // Looks up the pressed key in the keybinds database for the ACTIVE character.
-      const onSpecialKey = (e) => {
-        if (sequenceLockRef.current) return;
-
-        const keyCode = e.code;
+      const findKeybindForKey = (keyCode) => {
+        if (!keybinds || keybinds.length === 0) return null;
         const isYBot = activeCharacterRef.current === 'ybot';
-        
-        // Check keybinds for this key — match against active character
-        if (keybinds && keybinds.length > 0) {
-          const matchedKeybind = keybinds.find(kb => {
-            const keyMatch = kb.key === keyCode;
-            if (!keyMatch) return false;
-            const modelName = (kb.modelName || '').toLowerCase();
-            if (isYBot) {
-              return modelName.includes('y bot') || modelName.includes('y-bot') || modelName.includes('ybot');
-            } else {
-              return modelName.includes('c1') || modelName.includes('erika') || modelName.includes('archer');
-            }
-          });
+        return keybinds.find(kb => {
+          if (kb.key !== keyCode) return false;
+          const modelName = (kb.modelName || '').toLowerCase();
+          if (isYBot) return modelName.includes('y bot') || modelName.includes('y-bot') || modelName.includes('ybot');
+          return modelName.includes('c1') || modelName.includes('erika') || modelName.includes('archer');
+        });
+      };
 
-          if (matchedKeybind && matchedKeybind.animationSequence && matchedKeybind.animationSequence.length > 0) {
-            playSequence(matchedKeybind.animationSequence);
+      const onSpecialKeyDown = (e) => {
+        const keyCode = e.code;
+        const matchedKeybind = findKeybindForKey(keyCode);
+
+        if (matchedKeybind && matchedKeybind.animationSequence && matchedKeybind.animationSequence.length > 0) {
+          const playbackType = matchedKeybind.playbackType || 'tap';
+
+          // If a non-interruptible action is active, block all input
+          if (sequenceLockRef.current) {
+            const activeHold = holdActiveRef.current;
+            const activeToggle = toggleActiveRef.current;
+            if ((activeHold && activeHold.interruptible === false) || (activeToggle && activeToggle.interruptible === false)) {
+              return;
+            }
+          }
+
+          if (playbackType === 'hold') {
+            // Don't re-trigger if already holding this keybind
+            if (holdActiveRef.current && holdActiveRef.current.key === matchedKeybind.key) return;
+            holdActiveRef.current = matchedKeybind;
+            playSequence(matchedKeybind.animationSequence, matchedKeybind);
             return;
           }
+
+          if (playbackType === 'toggle') {
+            if (toggleActiveRef.current && toggleActiveRef.current.key === matchedKeybind.key) {
+              // Deactivate toggle
+              toggleActiveRef.current = null;
+              stopHoldOrToggle();
+              return;
+            }
+            toggleActiveRef.current = matchedKeybind;
+            playSequence(matchedKeybind.animationSequence, matchedKeybind);
+            return;
+          }
+
+          // Default: tap
+          if (sequenceLockRef.current) return;
+          playSequence(matchedKeybind.animationSequence, matchedKeybind);
+          return;
         }
 
         // Legacy fallback
+        if (sequenceLockRef.current) return;
+        const isYBot = activeCharacterRef.current === 'ybot';
         const currentActions = isYBot ? actionsRef.current : c1ActionsRef.current;
         if (e.key === '1' || e.key === 'c' || e.key === 'C') {
           const action = currentActions['hurricane_kick'];
@@ -715,8 +744,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         }
       };
-      window.addEventListener('keydown', onSpecialKey);
-      model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onSpecialKey);
+
+      // HOLD release: when the held key is released, stop the hold animation
+      const onSpecialKeyUp = (e) => {
+        const keyCode = e.code;
+        if (holdActiveRef.current && holdActiveRef.current.key === keyCode) {
+          stopHoldOrToggle();
+        }
+      };
+
+      window.addEventListener('keydown', onSpecialKeyDown);
+      window.addEventListener('keyup', onSpecialKeyUp);
+      model.userData._hurricaneCleanup = () => {
+        window.removeEventListener('keydown', onSpecialKeyDown);
+        window.removeEventListener('keyup', onSpecialKeyUp);
+      };
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
