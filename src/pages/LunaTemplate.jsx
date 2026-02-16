@@ -550,10 +550,47 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
       animate();
 
+      // --- KEYBIND-DRIVEN INPUT HANDLER ---
+      // Looks up the pressed key in the keybinds database for Y-Bot and plays the sequence.
       const onSpecialKey = (e) => {
-        if (e.key === '1') playOneShot('hurricane_kick');
-        if (e.key === 'c' || e.key === 'C') playOneShot('hurricane_kick');
-        if (e.key === 'r' || e.key === 'R') playOneShot('sprinting');
+        if (sequenceLockRef.current) return; // Don't accept input during active sequence
+
+        const keyCode = e.code; // e.g. "Space", "KeyC", "ShiftLeft"
+        
+        // Check keybinds for this key
+        if (keybinds && keybinds.length > 0) {
+          // Find keybinds for Y-Bot (match by name containing 'y-bot' or 'ybot' or by the Y-Bot model ID)
+          const yBotKeybind = keybinds.find(kb => {
+            const keyMatch = kb.key === keyCode;
+            if (!keyMatch) return false;
+            // Match Y-Bot by name (flexible)
+            const modelName = (kb.modelName || '').toLowerCase();
+            return modelName.includes('y bot') || modelName.includes('y-bot') || modelName.includes('ybot');
+          });
+
+          if (yBotKeybind && yBotKeybind.animationSequence && yBotKeybind.animationSequence.length > 0) {
+            playSequence(yBotKeybind.animationSequence);
+            return; // Keybind handled, don't fall through to legacy
+          }
+        }
+
+        // Legacy fallback for unbound keys (backwards compatible)
+        if (e.key === '1' || e.key === 'c' || e.key === 'C') {
+          const action = actionsRef.current['hurricane_kick'];
+          if (action) {
+            action.setLoop(THREE.LoopOnce, 1);
+            action.clampWhenFinished = true;
+            playSequence([{ animationName: 'hurricane_kick', loop: false }]);
+          }
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          const action = actionsRef.current['sprinting'];
+          if (action) {
+            action.setLoop(THREE.LoopOnce, 1);
+            action.clampWhenFinished = true;
+            playSequence([{ animationName: 'sprinting', loop: false }]);
+          }
+        }
       };
       window.addEventListener('keydown', onSpecialKey);
       model.userData._hurricaneCleanup = () => window.removeEventListener('keydown', onSpecialKey);
