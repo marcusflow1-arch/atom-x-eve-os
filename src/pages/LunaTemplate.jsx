@@ -1043,7 +1043,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       if (modelRef.current?.userData?._hurricaneCleanup) modelRef.current.userData._hurricaneCleanup();
       renderer.dispose();
     };
-  }, [adminAnimations, keybinds]);
+  }, [adminAnimations, keybinds, spawnableAIModels]);
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
