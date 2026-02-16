@@ -384,6 +384,7 @@ export default function KeybindManager() {
                 onMoveAnim={(i, d) => moveInSequence(i, d, true)}
                 onToggleLoop={(i) => toggleLoop(i, true)}
                 isSaving={updateMutation.isPending}
+                allAnimationNames={allAnimationNames}
               />
             ))}
           </div>
