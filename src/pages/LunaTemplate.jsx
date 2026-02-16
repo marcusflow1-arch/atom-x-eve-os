@@ -134,6 +134,25 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     staleTime: Infinity
   });
 
+  // 3. Fetch all Model3D entities for AI spawning
+  const { data: all3DModels = [] } = useQuery({
+    queryKey: ['all3DModels'],
+    queryFn: () => base44.entities.Model3D.list(),
+    staleTime: Infinity,
+  });
+
+  const spawnableAIModels = useMemo(() => {
+    const map = new Map();
+    all3DModels.forEach(model => {
+      if (model.ai_enabled && model.spawn_key) {
+        map.set(model.spawn_key, model);
+      }
+    });
+    return map;
+  }, [all3DModels]);
+
+  const spawnedAIModelsRef = useRef(new Map());
+
   // Listen for character switch events to update React state for the label
   useEffect(() => {
     const handler = (e) => setActiveCharLabel(e.detail.active);
