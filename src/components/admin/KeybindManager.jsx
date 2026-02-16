@@ -568,8 +568,10 @@ function SequenceBuilder({ sequence, animationsByFolder, onAdd, onRemove, onMove
                 <Film className="w-4 h-4 text-slate-500" />
                 <span className="text-white text-sm flex-1 truncate">{entry.animationName}</span>
                 {/* Movement badge */}
-                {entry.movementBehavior && entry.movementBehavior !== 'in_place' && (
-                  <Badge className="text-[9px] bg-purple-900/30 text-purple-300 border-purple-500/30">{entry.movementBehavior}</Badge>
+                {entry.movementBehavior === 'root_motion' && (
+                  <Badge className="text-[9px] bg-purple-900/30 text-purple-300 border-purple-500/30">
+                    Root Motion{entry.snapBehavior === 'maintain_end' ? ' → Keep Pos' : entry.snapBehavior === 'snap_to_origin' ? ' → Snap Back' : entry.snapBehavior === 'blend_to_idle_pos' ? ' → Blend Back' : ''}
+                  </Badge>
                 )}
                 <div className="flex items-center gap-1 text-[10px] text-slate-400">
                   <span>Loop</span>
