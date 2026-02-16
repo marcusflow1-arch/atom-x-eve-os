@@ -87,12 +87,54 @@ export default function KeybindManager() {
     setCapturingKey(false);
   };
 
+  // All animation names for "specific return" dropdown
+  const allAnimationNames = useMemo(() => animations.map(a => a.name), [animations]);
+
+  // Validation: check for conflicts
+  const validateKeybind = (data, existingKeybinds, currentId = null) => {
+    const errors = [];
+    if (!data) return errors;
+    const playbackType = data.playbackType || 'tap';
+
+    // Check for two Hold keybinds on the same key
+    if (playbackType === 'hold') {
+      const conflicting = existingKeybinds.find(kb =>
+        kb.id !== currentId &&
+        kb.key === data.key &&
+        kb.modelId === (data.modelId || selectedModelId) &&
+        (kb.playbackType || 'tap') === 'hold'
+      );
+      if (conflicting) {
+        errors.push(`Another Hold keybind already uses key "${data.key}" on this model (${conflicting.label || conflicting.key}).`);
+      }
+    }
+
+    // Check for Hold + Tap conflict on same key
+    if (playbackType === 'hold' || playbackType === 'tap') {
+      const conflicting = existingKeybinds.find(kb =>
+        kb.id !== currentId &&
+        kb.key === data.key &&
+        kb.modelId === (data.modelId || selectedModelId) &&
+        (kb.playbackType || 'tap') !== playbackType
+      );
+      if (conflicting) {
+        errors.push(`Key "${data.key}" has a ${conflicting.playbackType || 'tap'} keybind — mixing Hold and Tap on the same key can cause conflicts.`);
+      }
+    }
+
+    return errors;
+  };
+
   const addAnimationToSequence = (anim, isEdit = false) => {
     const entry = {
       animationId: anim.id,
       animationName: anim.name,
       fileUrl: anim.file_url,
       loop: false,
+      movementBehavior: 'in_place',
+      snapBehavior: 'maintain_end',
+      returnState: 'idle',
+      returnAnimationName: '',
     };
     if (isEdit && editData) {
       setEditData({ ...editData, animationSequence: [...editData.animationSequence, entry] });
