@@ -113,6 +113,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const sequenceIndexRef = useRef(-1);   // Current index in the sequence (-1 = not playing)
   const sequenceLockRef = useRef(false); // Lock input during sequence playback
 
+  // Advanced animation state controller refs
+  const holdActiveRef = useRef(null);       // Currently active hold keybind
+  const toggleActiveRef = useRef(null);     // Currently active toggle keybind
+  const previousActionNameRef = useRef('idle');
+  const preAnimPositionRef = useRef(null);  // Set to THREE.Vector3 once scene is ready
+
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
     queryKey: ['adminAnimations'],
