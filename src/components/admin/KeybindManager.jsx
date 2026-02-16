@@ -181,24 +181,39 @@ export default function KeybindManager() {
 
   const handleSaveNew = () => {
     if (!selectedModelId || !newKeybind.key || newKeybind.animationSequence.length === 0) return;
+    const errors = validateKeybind(newKeybind, keybinds);
+    setValidationErrors(errors);
+    if (errors.length > 0) return;
     const model = models.find(m => m.id === selectedModelId);
     createMutation.mutate({
       modelId: selectedModelId,
       modelName: model?.name || 'Unknown',
       key: newKeybind.key,
       label: newKeybind.label || newKeybind.key,
+      playbackType: newKeybind.playbackType || 'tap',
+      interruptible: newKeybind.interruptible !== false,
       animationSequence: newKeybind.animationSequence,
     });
   };
 
   const handleSaveEdit = () => {
     if (!editData || !editingId) return;
+    const errors = validateKeybind(editData, keybinds, editingId);
+    setValidationErrors(errors);
+    if (errors.length > 0) return;
     updateMutation.mutate({ id: editingId, data: editData });
   };
 
   const startEdit = (kb) => {
     setEditingId(kb.id);
-    setEditData({ key: kb.key, label: kb.label, animationSequence: [...kb.animationSequence] });
+    setEditData({
+      key: kb.key,
+      label: kb.label,
+      playbackType: kb.playbackType || 'tap',
+      interruptible: kb.interruptible !== false,
+      animationSequence: [...(kb.animationSequence || [])],
+    });
+    setValidationErrors([]);
   };
 
   const selectedModel = models.find(m => m.id === selectedModelId);
