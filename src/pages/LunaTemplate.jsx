@@ -151,7 +151,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     return map;
   }, [all3DModels]);
 
+  // Map<uniqueInstanceId, { instanceId, assetId, modelMesh, mixer, actions, activeAction, stats, role, aiProfile, spawnTime }>
   const spawnedAIModelsRef = useRef(new Map());
+  const aiInstanceCounterRef = useRef(0); // Auto-incrementing unique ID
 
   // Listen for character switch events to update React state for the label
   useEffect(() => {
