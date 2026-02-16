@@ -463,8 +463,6 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           companionRef.current.position.y = model.position.y;
         }
 
-        const isOneShotActive = !!oneShotPlayingRef.current;
-
         const moveSpeed = 0.6;
         let isMoving = false;
         
