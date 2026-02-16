@@ -404,25 +404,28 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const playSequenceStep = () => {
         const idx = sequenceIndexRef.current;
         const queue = sequenceQueueRef.current;
+        const isYBot = activeCharacterRef.current === 'ybot';
+        const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
+        const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
+        const activeMixer = isYBot ? mixer : c1MixerRef.current;
+
         if (idx < 0 || idx >= queue.length) {
-          // Sequence complete — return to idle, unlock input
           sequenceLockRef.current = false;
           sequenceIndexRef.current = -1;
           sequenceQueueRef.current = [];
           currentActionNameRef.current = '';
-          // Fade back to idle
-          const idleAction = actionsRef.current['idle'];
-          if (idleAction && activeActionRef.current !== idleAction) {
-            if (activeActionRef.current) activeActionRef.current.fadeOut(0.2);
+          const idleAction = actions['idle'];
+          if (idleAction && activeRef.current !== idleAction) {
+            if (activeRef.current) activeRef.current.fadeOut(0.2);
             idleAction.reset().fadeIn(0.2).play();
-            activeActionRef.current = idleAction;
+            activeRef.current = idleAction;
           }
           return;
         }
 
         const entry = queue[idx];
         const actionName = (entry.animationName || '').toLowerCase().trim();
-        const action = actionsRef.current[actionName];
+        const action = actions[actionName];
 
         if (!action) {
           // Skip missing animation, advance to next
