@@ -92,6 +92,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const c1ActionsRef = useRef({});       // C1 animation actions map
   const c1ActiveActionRef = useRef(null);
   const activeCharacterRef = useRef('ybot'); // 'ybot' or 'c1'
+  const [activeCharLabel, setActiveCharLabel] = useState('ybot'); // For UI display
   const switchingRef = useRef(false);     // Prevent double-switch
 
   // Player Controller State
