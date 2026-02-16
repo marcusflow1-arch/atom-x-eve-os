@@ -406,10 +406,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       // Supports: tap (play once), hold (sustain while pressed), toggle (on/off)
       // Per-animation: movement behavior, snap behavior, return state, interruptibility
 
-      const holdActiveRef = useRef(null);       // Currently active hold keybind (null if none)
-      const toggleActiveRef = useRef(null);     // Currently active toggle keybind (null if none)
-      const previousActionNameRef = useRef('idle');
-      const preAnimPositionRef = useRef(new THREE.Vector3());
+      // Initialize preAnimPosition vector (refs declared outside closure)
+      if (!preAnimPositionRef.current) preAnimPositionRef.current = new THREE.Vector3();
 
       const playSequence = (sequence, keybindMeta = {}) => {
         // Interruptibility check: if a non-interruptible keybind is active, block
