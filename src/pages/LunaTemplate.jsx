@@ -75,11 +75,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const activeActionRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
   const keysPressed = useRef({});
-  const envRef = useRef(null); // Track current environment object for swapping
-  const loadedEnvUrlRef = useRef(null); // Track which URL is currently loaded to avoid duplicate loads
+  const envRef = useRef(null);
+  const loadedEnvUrlRef = useRef(null);
   const playerSpawnRef = useRef(playerSpawn || { x: 0, y: -0.5, z: 0 });
   const useMeshCollisionRef = useRef(useMeshCollision || false);
-  const envCollidersRef = useRef([]); // Meshes to raycast against for collision
+  const envCollidersRef = useRef([]);
   const raycasterRef = useRef(new THREE.Raycaster());
   const companionRef = useRef(null);
   const companionMixerRef = useRef(null);
@@ -97,13 +97,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
-  // One-shot animation locks
-  const oneShotPlayingRef = useRef(null);
+  // Keybind-driven animation queue refs
+  const sequenceQueueRef = useRef([]);  // Current animation sequence being played
+  const sequenceIndexRef = useRef(-1);  // Current index in the sequence (-1 = not playing)
+  const sequenceLockRef = useRef(false); // Lock input during sequence playback
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
     queryKey: ['adminAnimations'],
     queryFn: () => base44.entities.AnimationFBX.list(),
+    staleTime: Infinity
+  });
+
+  // 2. Fetch Keybinds from Admin
+  const { data: keybinds } = useQuery({
+    queryKey: ['animationKeybinds'],
+    queryFn: () => base44.entities.AnimationKeybind.list(),
     staleTime: Infinity
   });
 
