@@ -547,9 +547,10 @@ function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCan
   );
 }
 
-function SequenceBuilder({ sequence, animationsByFolder, onAdd, onRemove, onMove, onToggleLoop }) {
+function SequenceBuilder({ sequence, animationsByFolder, onAdd, onRemove, onMove, onToggleLoop, onUpdateEntry, allAnimationNames = [] }) {
   const [showPicker, setShowPicker] = useState(false);
   const [expandedFolder, setExpandedFolder] = useState(null);
+  const [expandedBehavior, setExpandedBehavior] = useState(null);
 
   return (
     <div>
@@ -561,23 +562,54 @@ function SequenceBuilder({ sequence, animationsByFolder, onAdd, onRemove, onMove
       {sequence.length > 0 && (
         <div className="space-y-2 mb-4">
           {sequence.map((entry, i) => (
-            <div key={i} className="flex items-center gap-3 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2">
-              <span className="text-cyan-400 font-mono text-xs w-6 text-center">{i + 1}</span>
-              <Film className="w-4 h-4 text-slate-500" />
-              <span className="text-white text-sm flex-1 truncate">{entry.animationName}</span>
-              <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                <span>Loop</span>
-                <Switch checked={entry.loop} onCheckedChange={() => onToggleLoop(i)} />
+            <div key={i}>
+              <div className="flex items-center gap-3 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-2">
+                <span className="text-cyan-400 font-mono text-xs w-6 text-center">{i + 1}</span>
+                <Film className="w-4 h-4 text-slate-500" />
+                <span className="text-white text-sm flex-1 truncate">{entry.animationName}</span>
+                {/* Movement badge */}
+                {entry.movementBehavior && entry.movementBehavior !== 'in_place' && (
+                  <Badge className="text-[9px] bg-purple-900/30 text-purple-300 border-purple-500/30">{entry.movementBehavior}</Badge>
+                )}
+                <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span>Loop</span>
+                  <Switch checked={entry.loop} onCheckedChange={() => onToggleLoop(i)} />
+                </div>
+                <button
+                  onClick={() => setExpandedBehavior(expandedBehavior === i ? null : i)}
+                  className={`p-1 text-xs transition-colors ${expandedBehavior === i ? 'text-cyan-400' : 'text-slate-500 hover:text-white'}`}
+                  title="Behavior Controls"
+                >
+                  <Shield className="w-3 h-3" />
+                </button>
+                <button onClick={() => onMove(i, -1)} disabled={i === 0} className="p-1 text-slate-500 hover:text-white disabled:opacity-30">
+                  <ChevronUp className="w-3 h-3" />
+                </button>
+                <button onClick={() => onMove(i, 1)} disabled={i === sequence.length - 1} className="p-1 text-slate-500 hover:text-white disabled:opacity-30">
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                <button onClick={() => onRemove(i)} className="p-1 text-red-400 hover:text-red-300">
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
-              <button onClick={() => onMove(i, -1)} disabled={i === 0} className="p-1 text-slate-500 hover:text-white disabled:opacity-30">
-                <ChevronUp className="w-3 h-3" />
-              </button>
-              <button onClick={() => onMove(i, 1)} disabled={i === sequence.length - 1} className="p-1 text-slate-500 hover:text-white disabled:opacity-30">
-                <ChevronDown className="w-3 h-3" />
-              </button>
-              <button onClick={() => onRemove(i)} className="p-1 text-red-400 hover:text-red-300">
-                <Trash2 className="w-3 h-3" />
-              </button>
+              {/* Expanded Behavior Controls */}
+              <AnimatePresence>
+                {expandedBehavior === i && onUpdateEntry && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <AnimationBehaviorControls
+                      entry={entry}
+                      index={i}
+                      onChange={(idx, updated) => onUpdateEntry(idx, updated)}
+                      allAnimationNames={allAnimationNames}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ))}
         </div>
