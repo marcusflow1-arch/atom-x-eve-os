@@ -535,7 +535,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
 
-        if (!isOneShotActive) {
+        // State-based animation — only runs if no keybind sequence is active
+        if (!sequenceLockRef.current) {
           if (!isGroundedRef.current) {
               play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
           } else if (isMoving) {
