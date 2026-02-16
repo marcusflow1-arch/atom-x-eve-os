@@ -250,6 +250,18 @@ export default function KeybindManager() {
         </select>
       </div>
 
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <div className="mb-4 p-3 bg-red-900/30 border border-red-500/40 rounded-lg">
+          {validationErrors.map((err, i) => (
+            <div key={i} className="flex items-start gap-2 text-red-300 text-sm">
+              <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>{err}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* New Keybind Creator */}
       {selectedModelId && (
         <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-8">
@@ -307,6 +319,14 @@ export default function KeybindManager() {
             </Button>
           </div>
 
+          {/* Playback Type + Interruptible */}
+          <PlaybackTypeSelector
+            playbackType={newKeybind.playbackType || 'tap'}
+            interruptible={newKeybind.interruptible !== false}
+            onChangeType={(v) => setNewKeybind({ ...newKeybind, playbackType: v })}
+            onChangeInterruptible={(v) => setNewKeybind({ ...newKeybind, interruptible: v })}
+          />
+
           {/* Animation Sequence Builder */}
           <SequenceBuilder
             sequence={newKeybind.animationSequence}
@@ -315,6 +335,12 @@ export default function KeybindManager() {
             onRemove={(i) => removeFromSequence(i, false)}
             onMove={(i, d) => moveInSequence(i, d, false)}
             onToggleLoop={(i) => toggleLoop(i, false)}
+            onUpdateEntry={(i, entry) => {
+              const seq = [...newKeybind.animationSequence];
+              seq[i] = entry;
+              setNewKeybind({ ...newKeybind, animationSequence: seq });
+            }}
+            allAnimationNames={allAnimationNames}
           />
         </div>
       )}
