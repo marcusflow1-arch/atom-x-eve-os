@@ -915,6 +915,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const lower = fileUrl.toLowerCase();
         let loadedAsset;
 
+        // Load the model fresh (do NOT clone — cloning FBX breaks skeleton bindings)
         if (lower.endsWith('.fbx')) {
           loadedAsset = await fbxLoader.loadAsync(fileUrl);
         } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
@@ -926,39 +927,29 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           return;
         }
 
-        // Clone the loaded asset so each instance is independent
-        const modelMesh = loadedAsset.clone ? loadedAsset.clone() : loadedAsset;
+        // Use the freshly loaded asset directly (not a clone) to preserve skeleton
+        const modelMesh = loadedAsset;
 
-        // Normalize AI model to match the player's actual rendered height.
-        // The player (Y-Bot FBX) uses scale 0.001. FBX models from Mixamo are
-        // typically in centimetre units (~170 cm tall) so at scale 1 they are
-        // enormous. We must measure at a neutral scale, then compute the exact
-        // multiplier to match the player's world-space height.
+        // ========== SCALING: Match AI model height to player height ==========
+        // Both FBX Mixamo characters are in cm units (~170 cm raw).
+        // The player uses scale 0.001 to convert cm → meters.
+        // We simply copy the player's scale — same source units = same result.
+        const playerScale = playerModel.scale.x; // typically 0.001
+        modelMesh.scale.set(playerScale, playerScale, playerScale);
+        modelMesh.updateMatrixWorld(true);
 
-        // Step 1: Measure player height in world units
+        // Verify heights match (diagnostic logging)
         const playerBox = new THREE.Box3().setFromObject(playerModel);
         const playerHeight = playerBox.max.y - playerBox.min.y;
-        console.log('[AI Scale] Player height:', playerHeight, 'Player scale:', playerModel.scale.x);
-
-        // Step 2: Reset AI model to a tiny known scale so Box3 can measure proportions
-        // Use the same base scale as the player (0.001) as our measurement reference
-        const refScale = playerModel.scale.x; // typically 0.001 for FBX characters
-        modelMesh.scale.set(refScale, refScale, refScale);
-        modelMesh.updateMatrixWorld(true);
         const aiBox = new THREE.Box3().setFromObject(modelMesh);
-        const aiHeightAtRef = aiBox.max.y - aiBox.min.y;
-        console.log('[AI Scale] AI height at refScale', refScale, ':', aiHeightAtRef);
+        const aiHeight = aiBox.max.y - aiBox.min.y;
+        console.log(`[AI Scale] Player height: ${playerHeight.toFixed(4)}, AI height: ${aiHeight.toFixed(4)}, scale: ${playerScale}`);
 
-        // Step 3: Compute corrected scale so AI height == player height
-        if (aiHeightAtRef > 0 && playerHeight > 0) {
-          const correctionFactor = playerHeight / aiHeightAtRef;
-          const finalScale = refScale * correctionFactor;
-          modelMesh.scale.set(finalScale, finalScale, finalScale);
-          console.log('[AI Scale] Final scale:', finalScale, 'correction:', correctionFactor);
-        } else {
-          // Fallback: just copy the player's scale directly
-          modelMesh.scale.copy(playerModel.scale);
-          console.log('[AI Scale] Fallback — copied player scale:', playerModel.scale.x);
+        // If heights differ significantly (different raw unit sizes), correct
+        if (aiHeight > 0 && playerHeight > 0 && Math.abs(aiHeight - playerHeight) / playerHeight > 0.15) {
+          const correctedScale = playerScale * (playerHeight / aiHeight);
+          modelMesh.scale.set(correctedScale, correctedScale, correctedScale);
+          console.log(`[AI Scale] Corrected to ${correctedScale.toFixed(6)} (ratio: ${(playerHeight / aiHeight).toFixed(3)})`);
         }
 
         // Position near player with slight random offset
@@ -976,51 +967,72 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         sceneRef.current.add(modelMesh);
 
-        // Create independent mixer for this instance
+        // ========== ANIMATION SYSTEM ==========
+        // Create independent mixer bound to the FRESH model (skeleton intact)
         const instanceMixer = new THREE.AnimationMixer(modelMesh);
         instanceMixer.timeScale = 1.0;
         const instanceActions = {};
 
-        // Load AI-assigned animations (from ai_profile, NOT player keybinds)
-        // The AI panel stores animation IDs mapped to role types (idle, walk, run, attack, etc.)
+        // Load AI-assigned animations from admin panel
         const aiAnims = aiModelDef.ai_profile?.animations || {};
         if (Object.keys(aiAnims).length > 0 && adminAnimations) {
-          for (const animType in aiAnims) {
+          for (const animType of Object.keys(aiAnims)) {
             const animId = aiAnims[animType];
             if (!animId) continue;
-            // Match by ID first, then by name as fallback
             const animData = adminAnimations.find(a => a.id === animId) || adminAnimations.find(a => (a.name || '').toLowerCase().trim() === (animId || '').toLowerCase().trim());
             if (animData) {
               const animAsset = await fbxLoader.loadAsync(animData.file_url);
               if (animAsset.animations.length > 0) {
-                const action = instanceMixer.clipAction(animAsset.animations[0]);
+                const clip = animAsset.animations[0];
+                const action = instanceMixer.clipAction(clip);
+                // Configure looping based on animation type
+                if (['attack', 'hit', 'death'].includes(animType)) {
+                  action.setLoop(THREE.LoopOnce, 1);
+                  action.clampWhenFinished = true;
+                } else {
+                  action.setLoop(THREE.LoopRepeat);
+                }
                 instanceActions[animType] = action;
-                console.log(`[AI Spawn] Loaded animation "${animType}" from "${animData.name}"`);
+                console.log(`[AI Spawn] ✓ Loaded "${animType}" from "${animData.name}"`);
               }
             } else {
-              console.warn(`[AI Spawn] Could not find animation for type "${animType}" with id/name "${animId}"`);
+              console.warn(`[AI Spawn] ✗ Animation not found for type "${animType}" id/name "${animId}"`);
             }
           }
         }
 
-        // Fallback: if no AI animations assigned, load ALL admin animations onto this instance
+        // Fallback: load ALL admin animations if none assigned
         if (Object.keys(instanceActions).length === 0 && adminAnimations && adminAnimations.length > 0) {
           for (const anim of adminAnimations) {
             const animAsset = await fbxLoader.loadAsync(anim.file_url);
             if (animAsset.animations.length > 0) {
-              const action = instanceMixer.clipAction(animAsset.animations[0]);
+              const clip = animAsset.animations[0];
+              const action = instanceMixer.clipAction(clip);
               const name = (anim.name || '').toLowerCase().trim();
+              if (['attack', 'hit', 'death', 'hurricane kick', 'sprinting forward roll'].includes(name)) {
+                action.setLoop(THREE.LoopOnce, 1);
+                action.clampWhenFinished = true;
+              }
               instanceActions[name] = action;
             }
           }
-          console.log(`[AI Spawn] Fallback: loaded ${Object.keys(instanceActions).length} animations from admin library`);
+          console.log(`[AI Spawn] Fallback: loaded ${Object.keys(instanceActions).length} animations`);
         }
 
-        // Play idle if available
+        // ========== AUTO-PLAY IDLE ON SPAWN ==========
         let activeAction = null;
         if (instanceActions['idle']) {
-          instanceActions['idle'].reset().play();
+          instanceActions['idle'].reset().fadeIn(0.1).play();
           activeAction = instanceActions['idle'];
+          console.log('[AI Spawn] ✓ Idle animation auto-playing');
+        } else if (Object.keys(instanceActions).length > 0) {
+          // Play the first available animation as fallback
+          const firstKey = Object.keys(instanceActions)[0];
+          instanceActions[firstKey].reset().fadeIn(0.1).play();
+          activeAction = instanceActions[firstKey];
+          console.log(`[AI Spawn] ✓ Fallback: playing "${firstKey}" (no idle found)`);
+        } else {
+          console.warn('[AI Spawn] ✗ No animations available — model will be static');
         }
 
         // Generate unique instance ID
