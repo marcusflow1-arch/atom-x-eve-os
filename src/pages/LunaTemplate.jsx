@@ -874,7 +874,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           border: '1px solid rgba(255,255,255,0.15)',
           color: 'rgba(255,255,255,0.7)'
         }}>
-        {activeCharacterRef.current === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \ ⟩
+        {activeCharLabel === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \ ⟩
       </div>
     </div>
   );
