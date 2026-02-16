@@ -127,6 +127,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     staleTime: Infinity
   });
 
+  // Listen for character switch events to update React state for the label
+  useEffect(() => {
+    const handler = (e) => setActiveCharLabel(e.detail.active);
+    window.addEventListener('characterSwitched', handler);
+    return () => window.removeEventListener('characterSwitched', handler);
+  }, []);
+
   // Keep spawn/collision refs in sync with props
   useEffect(() => {
     playerSpawnRef.current = playerSpawn || { x: 0, y: -0.5, z: 0 };
