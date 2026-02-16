@@ -905,8 +905,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Clone the loaded asset so each instance is independent
         const modelMesh = loadedAsset.clone ? loadedAsset.clone() : loadedAsset;
 
-        // Match the player's scale exactly (same size as player controller)
-        modelMesh.scale.copy(playerModel.scale);
+        // Normalize AI model to match the player's actual rendered height.
+        // Step 1: Measure player height in world units
+        const playerBox = new THREE.Box3().setFromObject(playerModel);
+        const playerHeight = playerBox.max.y - playerBox.min.y;
+
+        // Step 2: Measure AI model height at scale (1,1,1) to get its raw size
+        modelMesh.scale.set(1, 1, 1);
+        modelMesh.updateMatrixWorld(true);
+        const aiBox = new THREE.Box3().setFromObject(modelMesh);
+        const aiRawHeight = aiBox.max.y - aiBox.min.y;
+
+        // Step 3: Compute uniform scale so AI height == player height
+        const targetScale = aiRawHeight > 0 ? playerHeight / aiRawHeight : 0.001;
+        modelMesh.scale.set(targetScale, targetScale, targetScale);
 
         // Position near player with slight random offset
         const angle = Math.random() * Math.PI * 2;
