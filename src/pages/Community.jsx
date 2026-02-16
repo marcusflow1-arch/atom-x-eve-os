@@ -509,6 +509,16 @@ export default function CommunityPage() {
                                             {activeSection === 'all' ? 'All Posts' : TOPIC_TYPES.find(t => t.id === activeSection)?.label}
                                         </h2>
 
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => navigate(createPageUrl('Farm') + `?gameId=${activeGame?.id || ''}`)}
+                                            className="rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white h-8 px-3 text-xs whitespace-nowrap"
+                                        >
+                                            <Wheat className="w-3.5 h-3.5 mr-1.5" />
+                                            Farm Hub
+                                        </Button>
+
                                         <div className="relative w-full max-w-md">
                                             <input 
                                                 type="text" 
