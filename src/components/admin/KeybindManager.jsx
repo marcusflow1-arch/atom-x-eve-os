@@ -393,7 +393,48 @@ export default function KeybindManager() {
   );
 }
 
-function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCancelEdit, onSaveEdit, onDelete, onStartCapture, onKeyCapture, onStopCapture, setEditData, animationsByFolder, onAddAnim, onRemoveAnim, onMoveAnim, onToggleLoop, isSaving }) {
+function PlaybackTypeSelector({ playbackType, interruptible, onChangeType, onChangeInterruptible }) {
+  const types = [
+    { value: 'tap', label: 'Tap (Play Once)', desc: 'Plays once, no loop, no replay' },
+    { value: 'hold', label: 'Hold (Sustain)', desc: 'Active while key is held, stops on release' },
+    { value: 'toggle', label: 'Toggle', desc: 'Press to activate, press again to deactivate' },
+  ];
+
+  return (
+    <div className="mb-4 p-4 bg-slate-900/40 border border-slate-700/50 rounded-lg space-y-3">
+      <div>
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block flex items-center gap-1">
+          <Shield className="w-3 h-3" /> Playback Type
+        </label>
+        <div className="flex gap-2">
+          {types.map(t => (
+            <button
+              key={t.value}
+              onClick={() => onChangeType(t.value)}
+              className={`flex-1 p-2.5 rounded-lg text-xs font-medium transition-all border text-left ${
+                playbackType === t.value
+                  ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
+              }`}
+              title={t.desc}
+            >
+              <div className="font-semibold">{t.label}</div>
+              <div className="text-[10px] mt-0.5 opacity-70">{t.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Switch checked={interruptible} onCheckedChange={onChangeInterruptible} />
+        <span className="text-xs text-slate-400">
+          {interruptible ? 'Interruptible — other animations can override' : 'Non-Interruptible — locked until finished / released'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCancelEdit, onSaveEdit, onDelete, onStartCapture, onKeyCapture, onStopCapture, setEditData, animationsByFolder, onAddAnim, onRemoveAnim, onMoveAnim, onToggleLoop, isSaving, allAnimationNames }) {
   return (
     <div className={`bg-slate-800/50 border rounded-xl overflow-hidden transition-colors ${isEditing ? 'border-cyan-500/50' : 'border-slate-700'}`}>
       <div className="p-4 flex items-center justify-between">
@@ -402,7 +443,11 @@ function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCan
             {isEditing ? editData?.key || kb.key : kb.key}
           </kbd>
           <div>
-            <div className="text-white font-semibold">{isEditing ? editData?.label || kb.label : kb.label || kb.key}</div>
+            <div className="text-white font-semibold flex items-center gap-2">
+              {isEditing ? editData?.label || kb.label : kb.label || kb.key}
+              <Badge className="text-[9px] bg-slate-700 text-slate-300 ml-1">{(kb.playbackType || 'tap').toUpperCase()}</Badge>
+              {!(kb.interruptible !== false) && <Badge className="text-[9px] bg-red-900/30 text-red-400 border-red-500/30">LOCKED</Badge>}
+            </div>
             <div className="text-slate-400 text-xs">{kb.modelName} · {kb.animationSequence?.length || 0} animation(s)</div>
           </div>
         </div>
