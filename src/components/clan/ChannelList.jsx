@@ -28,11 +28,12 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 
-export default function ChannelList({ clan, activeChannelId, onSelectChannel, onSelectSpecial }) {
+export default function ChannelList({ clan, activeChannelId, onSelectChannel, onSelectSpecial, myRole }) {
     const queryClient = useQueryClient();
     const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
     const [newChannelName, setNewChannelName] = useState('');
     const [newChannelType, setNewChannelType] = useState('text');
+    const [newChannelRoleRestriction, setNewChannelRoleRestriction] = useState('none');
 
     const { data: channels } = useQuery({
         queryKey: ['clanChannels', clan.id],
@@ -75,8 +76,17 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
 
     const memberCount = members?.length || 0;
 
-    const textChannels = channels?.filter(c => c.type === 'text') || [];
-    const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
+    // Filter channels based on user's role and channel role_restriction
+    const canAccessChannel = (ch) => {
+        const restriction = ch.role_restriction || 'none';
+        if (restriction === 'none') return true;
+        if (restriction === 'officer') return myRole === 'officer' || myRole === 'leader';
+        if (restriction === 'leader') return myRole === 'leader';
+        return true;
+    };
+
+    const textChannels = (channels?.filter(c => c.type === 'text') || []).filter(canAccessChannel);
+    const voiceChannels = (channels?.filter(c => c.type === 'voice') || []).filter(canAccessChannel);
 
     // Guild Features Section
     const renderGuildHall = () => (
@@ -322,11 +332,38 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                 placeholder="new-channel"
                              />
                          </div>
+                         <div>
+                             <label className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 block">Access Restriction</label>
+                             <div className="space-y-2">
+                                 {[
+                                     { value: 'none', label: 'Everyone', desc: 'All members can view and chat' },
+                                     { value: 'officer', label: 'Officers & Leaders Only', desc: 'Regular members cannot see this channel' },
+                                     { value: 'leader', label: 'Leaders Only', desc: 'Only clan leaders can access' },
+                                 ].map(opt => (
+                                     <div
+                                         key={opt.value}
+                                         className={`p-3 rounded-xl cursor-pointer flex items-center justify-between border transition-all ${newChannelRoleRestriction === opt.value ? 'bg-blue-500/20 border-blue-500/50' : 'bg-white/5 border-white/10 hover:border-white/20'}`}
+                                         onClick={() => setNewChannelRoleRestriction(opt.value)}
+                                     >
+                                         <div>
+                                             <div className="font-bold text-white text-sm flex items-center gap-2">
+                                                 {opt.value === 'leader' && <Crown className="w-3.5 h-3.5 text-amber-400" />}
+                                                 {opt.label}
+                                             </div>
+                                             <div className="text-[11px] text-white/40">{opt.desc}</div>
+                                         </div>
+                                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${newChannelRoleRestriction === opt.value ? 'border-blue-400' : 'border-white/30'}`}>
+                                             {newChannelRoleRestriction === opt.value && <div className="w-2 h-2 rounded-full bg-blue-400" />}
+                                         </div>
+                                     </div>
+                                 ))}
+                             </div>
+                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setIsCreateChannelOpen(false)} className="text-white/60 hover:bg-white/10 hover:text-white">Cancel</Button>
                         <Button 
-                            onClick={() => createChannelMutation.mutate({ name: newChannelName, type: newChannelType })}
+                            onClick={() => createChannelMutation.mutate({ name: newChannelName, type: newChannelType, role_restriction: newChannelRoleRestriction })}
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
                             disabled={!newChannelName}
                         >
