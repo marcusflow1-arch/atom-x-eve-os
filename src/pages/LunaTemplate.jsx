@@ -989,6 +989,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Build instance record with independent stats
         const stats = aiModelDef.stats ? { ...aiModelDef.stats } : { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100 };
         const aiProfile = aiModelDef.ai_profile || {};
+        // Combat: use prototype values — maxHP=2, kickDamage=1, so 2 kicks = death
+        const combatMaxHP = 2;
         const instanceRecord = {
           instanceId,
           assetId: aiModelDef.id,
@@ -1002,12 +1004,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           aiProfile,
           spawnTime: Date.now(),
           // AI runtime state
-          aiState: 'idle', // idle, wander, chase, attack, return
+          aiState: 'idle', // idle, wander, chase, attack, hit, death
           aiTarget: null,
           aiWanderDir: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize(),
           aiWanderTimer: 0,
           aiSpawnPos: modelMesh.position.clone(),
           aiAttackCooldown: 0,
+          // --- COMBAT STATE ---
+          isAlive: true,
+          maxHP: combatMaxHP,
+          currentHP: combatMaxHP,
+          attackPower: stats.attack || 10,
+          hitCooldown: 0,       // prevents multi-hit from single attack
+          deathTimer: -1,       // countdown after death anim starts; -1 = not dying
+          hitReactTimer: -1,    // countdown for hit reaction anim
         };
 
         spawnedAIModelsRef.current.set(instanceId, instanceRecord);
