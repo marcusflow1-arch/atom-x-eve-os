@@ -704,6 +704,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
       // Update active character ref
       activeCharacterRef.current = isYBot ? 'c1' : 'ybot';
+      // We can't call setActiveCharLabel here since it's inside the Three.js setup closure,
+      // but we dispatch a custom event the React component can listen to
+      window.dispatchEvent(new CustomEvent('characterSwitched', { detail: { active: activeCharacterRef.current } }));
 
       // Reset animation state on new active model to idle
       const idleAction = toActions['idle'];
