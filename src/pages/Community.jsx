@@ -15,6 +15,7 @@ import {
     Video, Image, Palette, Newspaper, Book, Wheat
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../components/auth/AuthContext';
 import { base44 } from '@/api/base44Client';
