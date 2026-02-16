@@ -16,6 +16,7 @@ export default function KeybindManager() {
   const [newKeybind, setNewKeybind] = useState({ key: '', label: '', animationSequence: [] });
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   // Fetch models
   const { data: models = [] } = useQuery({
