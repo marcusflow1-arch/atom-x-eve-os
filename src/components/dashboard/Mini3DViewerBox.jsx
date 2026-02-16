@@ -1,26 +1,52 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import AvatarStatCard from './AvatarStatCard';
 
-const MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
 export default function Mini3DViewerBox() {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
+  const cameraRef = useRef(null);
+  const mixerRef = useRef(null);
+  const modelRef = useRef(null);
+  const clockRef = useRef(new THREE.Clock());
+  const animIdRef = useRef(null);
+  const [activeChar, setActiveChar] = useState('ybot');
 
+  // Listen for character switch events from the main 3D viewer
+  useEffect(() => {
+    const handler = (e) => setActiveChar(e.detail.active);
+    window.addEventListener('characterSwitched', handler);
+    return () => window.removeEventListener('characterSwitched', handler);
+  }, []);
+
+  // Rebuild the mini 3D scene whenever activeChar changes
   useEffect(() => {
     if (!containerRef.current) return;
+
+    // Cleanup previous scene
+    if (animIdRef.current) cancelAnimationFrame(animIdRef.current);
+    if (rendererRef.current) {
+      rendererRef.current.dispose();
+      rendererRef.current.domElement?.remove();
+      rendererRef.current = null;
+    }
 
     const w = containerRef.current.clientWidth;
     const h = containerRef.current.clientHeight;
 
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(30, w / h, 0.1, 100);
     camera.position.set(0, 1.85, -1.4);
     camera.lookAt(0, 1.7, 0);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -32,8 +58,7 @@ export default function Mini3DViewerBox() {
     rendererRef.current = renderer;
 
     // Lighting
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
     keyLight.position.set(2, 3, 2);
     scene.add(keyLight);
@@ -44,14 +69,13 @@ export default function Mini3DViewerBox() {
     rimLight.position.set(0, 1.5, -3);
     scene.add(rimLight);
 
-    // Load Y-Bot model, then load idle animation separately
+    const modelUrl = activeChar === 'ybot' ? YBOT_URL : C1_URL;
     let mixer = null;
     const loader = new FBXLoader();
-    const clock = new THREE.Clock();
-    let animId;
+    clockRef.current = new THREE.Clock();
 
-    loader.load(MODEL_URL, (fbx) => {
-      // Auto-scale like Admin preview
+    loader.load(modelUrl, (fbx) => {
+      // Auto-scale
       const box = new THREE.Box3().setFromObject(fbx);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
@@ -62,7 +86,7 @@ export default function Mini3DViewerBox() {
       fbx.position.sub(center.multiplyScalar(scale));
       fbx.position.y += (size.y * scale) / 2;
 
-      // Face the camera (rotate 180°)
+      // Face the camera
       fbx.rotation.y = Math.PI;
 
       // Fix materials
@@ -78,23 +102,24 @@ export default function Mini3DViewerBox() {
       });
 
       scene.add(fbx);
+      modelRef.current = fbx;
       mixer = new THREE.AnimationMixer(fbx);
+      mixerRef.current = mixer;
 
-      // Load the separate idle animation FBX
+      // Load idle animation
       loader.load(IDLE_URL, (idleFbx) => {
         if (idleFbx.animations && idleFbx.animations.length > 0) {
           const clip = idleFbx.animations[0];
-          const action = mixer.clipAction(clip);
-          action.play();
+          mixer.clipAction(clip).play();
         }
       });
     });
 
     // Render loop
     const animate = () => {
-      animId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
+      animIdRef.current = requestAnimationFrame(animate);
+      const delta = clockRef.current.getDelta();
+      if (mixerRef.current) mixerRef.current.update(delta);
       renderer.render(scene, camera);
     };
     animate();
@@ -110,11 +135,11 @@ export default function Mini3DViewerBox() {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      cancelAnimationFrame(animId);
+      cancelAnimationFrame(animIdRef.current);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
     };
-  }, []);
+  }, [activeChar]);
 
   return (
     <div className="pointer-events-auto flex items-start gap-0">
