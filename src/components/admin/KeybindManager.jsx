@@ -516,6 +516,14 @@ function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCan
                 )}
               </div>
 
+              {/* Playback Type + Interruptible */}
+              <PlaybackTypeSelector
+                playbackType={editData.playbackType || 'tap'}
+                interruptible={editData.interruptible !== false}
+                onChangeType={(v) => setEditData({ ...editData, playbackType: v })}
+                onChangeInterruptible={(v) => setEditData({ ...editData, interruptible: v })}
+              />
+
               <SequenceBuilder
                 sequence={editData.animationSequence}
                 animationsByFolder={animationsByFolder}
@@ -523,6 +531,12 @@ function KeybindCard({ kb, isEditing, editData, capturingKey, onStartEdit, onCan
                 onRemove={onRemoveAnim}
                 onMove={onMoveAnim}
                 onToggleLoop={onToggleLoop}
+                onUpdateEntry={(i, entry) => {
+                  const seq = [...editData.animationSequence];
+                  seq[i] = entry;
+                  setEditData({ ...editData, animationSequence: seq });
+                }}
+                allAnimationNames={allAnimationNames}
               />
             </div>
           </motion.div>
