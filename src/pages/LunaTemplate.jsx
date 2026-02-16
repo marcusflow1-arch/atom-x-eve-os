@@ -445,20 +445,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
 
         currentActionNameRef.current = actionName;
-        if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
+        if (activeRef.current) activeRef.current.fadeOut(0.15);
         action.reset().fadeIn(0.15).play();
-        activeActionRef.current = action;
+        activeRef.current = action;
 
         // If not looping, listen for finish to advance
-        if (!entry.loop) {
+        if (!entry.loop && activeMixer) {
           const onFinished = (e) => {
             if (e.action === action) {
-              mixer.removeEventListener('finished', onFinished);
+              activeMixer.removeEventListener('finished', onFinished);
               sequenceIndexRef.current = idx + 1;
               playSequenceStep();
             }
           };
-          mixer.addEventListener('finished', onFinished);
+          activeMixer.addEventListener('finished', onFinished);
         }
         // If looping, the sequence stops here until another key press interrupts
       };
