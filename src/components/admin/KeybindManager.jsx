@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Keyboard, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Loader2, Save, Film, Layers } from 'lucide-react';
+import { Keyboard, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Loader2, Save, Film, Layers, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import AnimationBehaviorControls from './AnimationBehaviorControls';
 
 export default function KeybindManager() {
   const queryClient = useQueryClient();
