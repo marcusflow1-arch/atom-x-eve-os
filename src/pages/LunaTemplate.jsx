@@ -84,6 +84,16 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const companionRef = useRef(null);
   const companionMixerRef = useRef(null);
   
+  // --- DUAL CHARACTER SYSTEM ---
+  // Both models are loaded. Only one is visible/active at a time.
+  // The `\` key toggles between them.
+  const c1ModelRef = useRef(null);       // C1 (ErikaArcher) model object
+  const c1MixerRef = useRef(null);       // C1 animation mixer
+  const c1ActionsRef = useRef({});       // C1 animation actions map
+  const c1ActiveActionRef = useRef(null);
+  const activeCharacterRef = useRef('ybot'); // 'ybot' or 'c1'
+  const switchingRef = useRef(false);     // Prevent double-switch
+
   // Player Controller State
   const isSprintingRef = useRef(false);
   const sprintTimerRef = useRef(0);
