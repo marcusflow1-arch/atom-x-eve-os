@@ -15,6 +15,7 @@ import Model3DManager from '../components/admin/Model3DManager';
 import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
+import KeybindManager from '../components/admin/KeybindManager';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -446,7 +447,7 @@ export default function Admin() {
             <TabsTrigger value="animations">FBX Animations</TabsTrigger>
             <TabsTrigger value="fbx-models">FBX Models</TabsTrigger>
             <TabsTrigger value="scripts">3D Scripts</TabsTrigger>
-
+            <TabsTrigger value="keybinds">Keybind Manager</TabsTrigger>
 
           </TabsList>
 
@@ -923,8 +924,9 @@ export default function Admin() {
             <Model3DScriptManager />
           </TabsContent>
 
-
-
+          <TabsContent value="keybinds">
+            <KeybindManager />
+          </TabsContent>
 
                     </Tabs>
       </div>
