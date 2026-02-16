@@ -609,9 +609,137 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Update companion mixer
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
-        // Update ALL spawned AI instance mixers
+        // Update ALL spawned AI instance mixers + run AI behavior
         spawnedAIModelsRef.current.forEach(ai => {
           if (ai.mixer) ai.mixer.update(delta);
+
+          // --- AI BEHAVIOR LOOP ---
+          if (!ai.modelMesh || !ai.aiProfile) return;
+          const behavior = ai.aiProfile.behavior_type || 'idle_loop';
+          const aiSpeed = (ai.stats?.speed || 1.0) * 0.4 * delta;
+          const detRange = ai.aiProfile.detection_range || 10;
+          const atkRange = ai.aiProfile.attack_range || 2;
+          const wanderRadius = ai.aiProfile.wander_radius || 5;
+          const aiPos = ai.modelMesh.position;
+
+          // Helper: fade to a named action on this AI instance
+          const aiFadeToAction = (name) => {
+            const action = ai.actions[name];
+            if (!action || ai.activeAction === action) return;
+            if (ai.activeAction) ai.activeAction.fadeOut(0.2);
+            action.reset().fadeIn(0.2).play();
+            ai.activeAction = action;
+          };
+
+          // Clamp AI to floor
+          const spawnFloor = playerSpawnRef.current.y;
+          if (aiPos.y < spawnFloor) aiPos.y = spawnFloor;
+
+          if (behavior === 'idle_loop') {
+            // Just play idle, do nothing
+            if (ai.aiState !== 'idle') { ai.aiState = 'idle'; aiFadeToAction('idle'); }
+
+          } else if (behavior === 'passive_wander') {
+            ai.aiWanderTimer -= delta;
+            const distFromSpawn = aiPos.distanceTo(ai.aiSpawnPos);
+            if (distFromSpawn > wanderRadius) {
+              // Return toward spawn
+              const returnDir = ai.aiSpawnPos.clone().sub(aiPos).normalize();
+              aiPos.x += returnDir.x * aiSpeed;
+              aiPos.z += returnDir.z * aiSpeed;
+              ai.modelMesh.lookAt(ai.aiSpawnPos.clone().setY(aiPos.y));
+              if (ai.aiState !== 'wander') { ai.aiState = 'wander'; aiFadeToAction(ai.actions['walk'] ? 'walk' : 'run'); }
+            } else if (ai.aiWanderTimer <= 0) {
+              // Pick new random direction
+              ai.aiWanderDir = new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
+              ai.aiWanderTimer = 2 + Math.random() * 3;
+              if (Math.random() < 0.3) { ai.aiState = 'idle'; aiFadeToAction('idle'); }
+              else { ai.aiState = 'wander'; aiFadeToAction(ai.actions['walk'] ? 'walk' : 'run'); }
+            } else if (ai.aiState === 'wander') {
+              aiPos.x += ai.aiWanderDir.x * aiSpeed * 0.5;
+              aiPos.z += ai.aiWanderDir.z * aiSpeed * 0.5;
+              const lookTarget = aiPos.clone().add(ai.aiWanderDir);
+              ai.modelMesh.lookAt(lookTarget.setY(aiPos.y));
+            }
+
+          } else if (behavior === 'aggressive' || behavior === 'defensive') {
+            const playerPos = activeModel ? activeModel.position : null;
+            if (!playerPos) return;
+            const distToPlayer = aiPos.distanceTo(playerPos);
+
+            if (distToPlayer < atkRange) {
+              // Attack range
+              ai.modelMesh.lookAt(playerPos.clone().setY(aiPos.y));
+              ai.aiAttackCooldown -= delta;
+              if (ai.aiAttackCooldown <= 0 && ai.actions['attack']) {
+                ai.aiState = 'attack';
+                aiFadeToAction('attack');
+                ai.aiAttackCooldown = 1.5 + Math.random();
+              } else if (ai.aiState !== 'attack') {
+                aiFadeToAction('idle');
+              }
+            } else if (distToPlayer < detRange) {
+              // Chase
+              const chaseDir = playerPos.clone().sub(aiPos).normalize();
+              aiPos.x += chaseDir.x * aiSpeed;
+              aiPos.z += chaseDir.z * aiSpeed;
+              ai.modelMesh.lookAt(playerPos.clone().setY(aiPos.y));
+              if (ai.aiState !== 'chase') { ai.aiState = 'chase'; aiFadeToAction(ai.actions['run'] ? 'run' : (ai.actions['walk'] ? 'walk' : 'running')); }
+            } else {
+              // Wander near spawn
+              ai.aiWanderTimer -= delta;
+              if (ai.aiWanderTimer <= 0) {
+                ai.aiWanderDir = new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
+                ai.aiWanderTimer = 2 + Math.random() * 4;
+              }
+              const distFromSpawn2 = aiPos.distanceTo(ai.aiSpawnPos);
+              if (distFromSpawn2 > wanderRadius) {
+                const ret = ai.aiSpawnPos.clone().sub(aiPos).normalize();
+                aiPos.x += ret.x * aiSpeed * 0.5;
+                aiPos.z += ret.z * aiSpeed * 0.5;
+              } else {
+                aiPos.x += ai.aiWanderDir.x * aiSpeed * 0.3;
+                aiPos.z += ai.aiWanderDir.z * aiSpeed * 0.3;
+              }
+              if (ai.aiState !== 'idle') { ai.aiState = 'idle'; aiFadeToAction(ai.actions['walk'] ? 'walk' : 'idle'); }
+            }
+
+          } else if (behavior === 'follower') {
+            const playerPos2 = activeModel ? activeModel.position : null;
+            if (!playerPos2) return;
+            const distToPlayer2 = aiPos.distanceTo(playerPos2);
+            const followDist = 1.0;
+            if (distToPlayer2 > followDist + 0.3) {
+              const followDir = playerPos2.clone().sub(aiPos).normalize();
+              aiPos.x += followDir.x * aiSpeed;
+              aiPos.z += followDir.z * aiSpeed;
+              ai.modelMesh.lookAt(playerPos2.clone().setY(aiPos.y));
+              if (ai.aiState !== 'follow') { ai.aiState = 'follow'; aiFadeToAction(ai.actions['run'] ? 'run' : (ai.actions['walk'] ? 'walk' : 'running')); }
+            } else {
+              ai.modelMesh.lookAt(playerPos2.clone().setY(aiPos.y));
+              if (ai.aiState !== 'idle') { ai.aiState = 'idle'; aiFadeToAction('idle'); }
+            }
+
+          } else if (behavior === 'patrol_route') {
+            const points = ai.aiProfile.patrol_points || [];
+            if (points.length === 0) {
+              if (ai.aiState !== 'idle') { ai.aiState = 'idle'; aiFadeToAction('idle'); }
+            } else {
+              if (!ai.patrolIndex) ai.patrolIndex = 0;
+              const target = points[ai.patrolIndex];
+              const tgt = new THREE.Vector3(target.x, aiPos.y, target.z);
+              const dist = aiPos.distanceTo(tgt);
+              if (dist < 0.2) {
+                ai.patrolIndex = (ai.patrolIndex + 1) % points.length;
+              } else {
+                const dir = tgt.clone().sub(aiPos).normalize();
+                aiPos.x += dir.x * aiSpeed * 0.6;
+                aiPos.z += dir.z * aiSpeed * 0.6;
+                ai.modelMesh.lookAt(tgt.setY(aiPos.y));
+                if (ai.aiState !== 'patrol') { ai.aiState = 'patrol'; aiFadeToAction(ai.actions['walk'] ? 'walk' : 'run'); }
+              }
+            }
+          }
         });
 
         // Determine the currently active model for movement/camera
