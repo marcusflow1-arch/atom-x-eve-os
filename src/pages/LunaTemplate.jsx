@@ -609,6 +609,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Update companion mixer
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
+        // Update ALL spawned AI instance mixers
+        spawnedAIModelsRef.current.forEach(ai => {
+          if (ai.mixer) ai.mixer.update(delta);
+        });
+
         // Determine the currently active model for movement/camera
         const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
         if (!activeModel) { renderer.render(scene, camera); return; }
