@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { showSuccess, showError } from '@/components/error/ErrorToast';
 import AIAnimationAssigner from './AIAnimationAssigner';
 import AICombatSettings from './AICombatSettings';
+import AISpawnKeybind from './AISpawnKeybind';
 
 const BEHAVIOR_TYPES = [
   { value: 'passive_wander', label: 'Passive Wander', desc: 'Wanders randomly within radius, occasional idle', icon: Move },
@@ -53,6 +54,7 @@ export default function AIModelController() {
       setEditState({
         role: model.role || 'player',
         ai_enabled: model.ai_enabled || false,
+        spawn_key: model.spawn_key || '',
         stats: { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100, ...(model.stats || {}) },
         stats_per_level: { hp: 10, attack: 2, defense: 1, speed: 0.05, stamina: 5, ...(model.stats_per_level || {}) },
         ai_profile: {
@@ -251,6 +253,14 @@ export default function AIModelController() {
                 Behavior "{editState.ai_profile.behavior_type}" requires: {missingAnims.join(', ')}. Assign them below.
               </p>
             </div>
+          )}
+
+          {/* Spawn Keybind */}
+          {editState.ai_enabled && (
+            <AISpawnKeybind
+              spawnKey={editState.spawn_key || ''}
+              onChange={(key) => updateField('spawn_key', key)}
+            />
           )}
 
           {/* AI Animation Assignment */}
