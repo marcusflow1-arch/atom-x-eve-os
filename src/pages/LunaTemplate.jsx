@@ -97,9 +97,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const isRightMouseDownRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
-  // Keybind-driven animation queue refs
-  const sequenceQueueRef = useRef([]);  // Current animation sequence being played
-  const sequenceIndexRef = useRef(-1);  // Current index in the sequence (-1 = not playing)
+  // Keybind-driven animation queue (replaces old one-shot system)
+  const sequenceQueueRef = useRef([]);   // Current animation sequence being played
+  const sequenceIndexRef = useRef(-1);   // Current index in the sequence (-1 = not playing)
   const sequenceLockRef = useRef(false); // Lock input during sequence playback
 
   // 1. Fetch Animations from Admin
