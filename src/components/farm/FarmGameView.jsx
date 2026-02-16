@@ -6,6 +6,8 @@ import {
     Hash, Shield, Trophy, Target, Sparkles, AlertCircle, Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 // Component Imports
