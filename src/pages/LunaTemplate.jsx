@@ -605,6 +605,109 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
+    // --- C1 MODEL (ErikaArcher) ---
+    const c1Url = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+    new FBXLoader().load(c1Url, async (c1fbx) => {
+      const c1 = c1fbx;
+      c1.scale.set(0.001, 0.001, 0.001);
+      c1.position.set(0, -0.5, 0);
+      c1.visible = false; // Hidden by default — Y-Bot is active first
+
+      c1.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+
+      c1ModelRef.current = c1;
+      scene.add(c1);
+
+      const c1Mixer = new THREE.AnimationMixer(c1);
+      c1MixerRef.current = c1Mixer;
+      c1Mixer.timeScale = 1.2;
+
+      // Load same admin animations onto C1's skeleton
+      if (adminAnimations && adminAnimations.length > 0) {
+        const fbxLoader = new FBXLoader();
+        for (const anim of adminAnimations) {
+          try {
+            const animAsset = await fbxLoader.loadAsync(anim.file_url);
+            if (animAsset.animations.length === 0) continue;
+            const clip = animAsset.animations[0];
+            const action = c1Mixer.clipAction(clip);
+            const name = (anim.name || '').toLowerCase().trim();
+
+            if (name === 'jumping' || name === 'hurricane kick' || name === 'sprinting forward roll') {
+              action.setLoop(THREE.LoopOnce, 1);
+              action.clampWhenFinished = true;
+            }
+
+            // Store with same key mapping as Y-Bot
+            if (name === 'hurricane kick') c1ActionsRef.current['hurricane_kick'] = action;
+            else if (name === 'sprinting forward roll') c1ActionsRef.current['sprinting'] = action;
+            c1ActionsRef.current[name] = action;
+          } catch (e) {
+            console.error("[C1] Failed to load animation:", anim.name, e);
+          }
+        }
+
+        // Start C1 in idle (but it's hidden so it won't render)
+        if (c1ActionsRef.current['idle']) {
+          c1ActionsRef.current['idle'].reset().play();
+          c1ActiveActionRef.current = c1ActionsRef.current['idle'];
+        }
+      }
+
+      console.log('[C1] ErikaArcher loaded and ready (hidden)');
+    }, undefined, (err) => console.error('Error loading C1:', err));
+
+    // --- CHARACTER SWITCH HANDLER ( \ key) ---
+    const onSwitchCharacter = (e) => {
+      if (e.key !== '\\') return;
+      if (switchingRef.current) return;
+      if (!modelRef.current || !c1ModelRef.current) return;
+
+      switchingRef.current = true;
+      const isYBot = activeCharacterRef.current === 'ybot';
+      const fromModel = isYBot ? modelRef.current : c1ModelRef.current;
+      const toModel = isYBot ? c1ModelRef.current : modelRef.current;
+      const toMixer = isYBot ? c1MixerRef.current : mixerRef.current;
+      const toActions = isYBot ? c1ActionsRef.current : actionsRef.current;
+      const toActiveAction = isYBot ? c1ActiveActionRef : activeActionRef;
+
+      // Transfer position and rotation
+      toModel.position.copy(fromModel.position);
+      toModel.quaternion.copy(fromModel.quaternion);
+
+      // Swap visibility
+      fromModel.visible = false;
+      toModel.visible = true;
+
+      // Update active character ref
+      activeCharacterRef.current = isYBot ? 'c1' : 'ybot';
+
+      // Reset animation state on new active model to idle
+      const idleAction = toActions['idle'];
+      if (idleAction) {
+        if (toActiveAction.current && toActiveAction.current !== idleAction) {
+          toActiveAction.current.fadeOut(0.2);
+        }
+        idleAction.reset().fadeIn(0.2).play();
+        toActiveAction.current = idleAction;
+      }
+      currentActionNameRef.current = 'idle';
+
+      // Clear any active sequence lock
+      sequenceLockRef.current = false;
+      sequenceQueueRef.current = [];
+      sequenceIndexRef.current = -1;
+
+      console.log('[Switch] Now active:', activeCharacterRef.current);
+      setTimeout(() => { switchingRef.current = false; }, 200);
+    };
+    window.addEventListener('keydown', onSwitchCharacter);
+
     // --- COMPANION SYSTEM ---
     const loadCompanion = (detail) => {
       const scene = sceneRef.current;
