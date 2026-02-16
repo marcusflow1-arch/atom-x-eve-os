@@ -930,19 +930,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const modelMesh = loadedAsset.clone ? loadedAsset.clone() : loadedAsset;
 
         // Normalize AI model to match the player's actual rendered height.
+        // The player (Y-Bot FBX) uses scale 0.001. FBX models from Mixamo are
+        // typically in centimetre units (~170 cm tall) so at scale 1 they are
+        // enormous. We must measure at a neutral scale, then compute the exact
+        // multiplier to match the player's world-space height.
+
         // Step 1: Measure player height in world units
         const playerBox = new THREE.Box3().setFromObject(playerModel);
         const playerHeight = playerBox.max.y - playerBox.min.y;
+        console.log('[AI Scale] Player height:', playerHeight, 'Player scale:', playerModel.scale.x);
 
-        // Step 2: Measure AI model height at scale (1,1,1) to get its raw size
-        modelMesh.scale.set(1, 1, 1);
+        // Step 2: Reset AI model to a tiny known scale so Box3 can measure proportions
+        // Use the same base scale as the player (0.001) as our measurement reference
+        const refScale = playerModel.scale.x; // typically 0.001 for FBX characters
+        modelMesh.scale.set(refScale, refScale, refScale);
         modelMesh.updateMatrixWorld(true);
         const aiBox = new THREE.Box3().setFromObject(modelMesh);
-        const aiRawHeight = aiBox.max.y - aiBox.min.y;
+        const aiHeightAtRef = aiBox.max.y - aiBox.min.y;
+        console.log('[AI Scale] AI height at refScale', refScale, ':', aiHeightAtRef);
 
-        // Step 3: Compute uniform scale so AI height == player height
-        const targetScale = aiRawHeight > 0 ? playerHeight / aiRawHeight : 0.001;
-        modelMesh.scale.set(targetScale, targetScale, targetScale);
+        // Step 3: Compute corrected scale so AI height == player height
+        if (aiHeightAtRef > 0 && playerHeight > 0) {
+          const correctionFactor = playerHeight / aiHeightAtRef;
+          const finalScale = refScale * correctionFactor;
+          modelMesh.scale.set(finalScale, finalScale, finalScale);
+          console.log('[AI Scale] Final scale:', finalScale, 'correction:', correctionFactor);
+        } else {
+          // Fallback: just copy the player's scale directly
+          modelMesh.scale.copy(playerModel.scale);
+          console.log('[AI Scale] Fallback — copied player scale:', playerModel.scale.x);
+        }
 
         // Position near player with slight random offset
         const angle = Math.random() * Math.PI * 2;
