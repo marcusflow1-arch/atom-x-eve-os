@@ -1,15 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Hash, Volume2, PlusCircle, Gift, Sticker, Smile, Send } from 'lucide-react';
+import { Hash, Volume2, PlusCircle, Gift, Sticker, Smile, Send, Shield } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthContext';
 import { format } from 'date-fns';
 
-export default function ChatArea({ channel, clan }) {
+export default function ChatArea({ channel, clan, myRole }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef(null);
+
+    // Check if user can post in this channel based on role_restriction
+    const channelRestriction = channel?.role_restriction || 'none';
+    const effectiveRole = myRole || 'member';
+    const canPostInChannel = (() => {
+        if (channelRestriction === 'none') return true;
+        if (channelRestriction === 'officer') return effectiveRole === 'officer' || effectiveRole === 'leader';
+        if (channelRestriction === 'leader') return effectiveRole === 'leader';
+        return true;
+    })();
 
     const { data: messages } = useQuery({
         queryKey: ['channelMessages', channel?.id],
@@ -109,23 +119,30 @@ export default function ChatArea({ channel, clan }) {
 
             {/* Input */}
             <div className="px-4 pb-6 pt-2">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 flex items-center gap-3 relative border border-white/10 transition-all focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20">
-                    <button className="text-white/40 hover:text-white transition-colors bg-white/10 rounded-full p-1.5 hover:bg-white/20">
-                        <PlusCircle className="w-5 h-5" />
-                    </button>
-                    <input 
-                        className="bg-transparent border-none outline-none text-white placeholder:text-white/40 flex-1 h-full py-2 font-medium"
-                        placeholder={`Message #${channel.name}`}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                    />
-                    <div className="flex items-center gap-2 mr-1">
-                        <Gift className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
-                        <Sticker className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
-                        <Smile className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                {canPostInChannel ? (
+                    <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 flex items-center gap-3 relative border border-white/10 transition-all focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/20">
+                        <button className="text-white/40 hover:text-white transition-colors bg-white/10 rounded-full p-1.5 hover:bg-white/20">
+                            <PlusCircle className="w-5 h-5" />
+                        </button>
+                        <input 
+                            className="bg-transparent border-none outline-none text-white placeholder:text-white/40 flex-1 h-full py-2 font-medium"
+                            placeholder={`Message #${channel.name}`}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                        <div className="flex items-center gap-2 mr-1">
+                            <Gift className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                            <Sticker className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                            <Smile className="w-6 h-6 text-white/40 hover:text-white cursor-pointer p-1 rounded hover:bg-white/10 transition-all" />
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex items-center justify-center gap-2 py-4 text-white/30 text-sm bg-white/5 rounded-xl border border-white/10">
+                        <Shield className="w-4 h-4" />
+                        <span>You do not have permission to send messages in this channel.</span>
+                    </div>
+                )}
             </div>
         </div>
     );
