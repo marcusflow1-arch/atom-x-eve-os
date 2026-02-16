@@ -609,18 +609,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Update companion mixer
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
-        // Update ALL spawned AI instance mixers + run AI behavior
-        spawnedAIModelsRef.current.forEach(ai => {
+        // Update ALL spawned AI instance mixers + run COMBAT-AWARE AI behavior
+        const deadInstances = [];
+        spawnedAIModelsRef.current.forEach((ai, instId) => {
           if (ai.mixer) ai.mixer.update(delta);
-
-          // --- AI BEHAVIOR LOOP ---
           if (!ai.modelMesh || !ai.aiProfile) return;
-          const behavior = ai.aiProfile.behavior_type || 'idle_loop';
-          const aiSpeed = (ai.stats?.speed || 1.0) * 0.4 * delta;
-          const detRange = ai.aiProfile.detection_range || 10;
-          const atkRange = ai.aiProfile.attack_range || 2;
-          const wanderRadius = ai.aiProfile.wander_radius || 5;
-          const aiPos = ai.modelMesh.position;
 
           // Helper: fade to a named action on this AI instance
           const aiFadeToAction = (name) => {
@@ -631,26 +624,57 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             ai.activeAction = action;
           };
 
+          // --- DEATH TIMER: count down then mark for removal ---
+          if (!ai.isAlive) {
+            if (ai.deathTimer >= 0) {
+              ai.deathTimer -= delta;
+              if (ai.deathTimer <= 0) {
+                deadInstances.push(instId);
+              }
+            }
+            return; // Skip all behavior for dead AI
+          }
+
+          // --- HIT REACTION TIMER ---
+          if (ai.hitReactTimer > 0) {
+            ai.hitReactTimer -= delta;
+            if (ai.hitReactTimer <= 0) {
+              ai.aiState = 'idle';
+              aiFadeToAction('idle');
+            }
+            ai.hitCooldown -= delta;
+            return; // Skip movement during hit reaction
+          }
+
+          ai.hitCooldown -= delta;
+
+          const behavior = ai.aiProfile.behavior_type || 'idle_loop';
+          const aiSpeed = (ai.stats?.speed || 1.0) * 0.4 * delta;
+          const detRange = ai.aiProfile.detection_range || 10;
+          const atkRange = ai.aiProfile.attack_range || 2;
+          const wanderRadius = ai.aiProfile.wander_radius || 5;
+          const aiPos = ai.modelMesh.position;
+
           // Clamp AI to floor
           const spawnFloor = playerSpawnRef.current.y;
           if (aiPos.y < spawnFloor) aiPos.y = spawnFloor;
 
+          // Get active player model for targeting
+          const playerTarget = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+
           if (behavior === 'idle_loop') {
-            // Just play idle, do nothing
             if (ai.aiState !== 'idle') { ai.aiState = 'idle'; aiFadeToAction('idle'); }
 
           } else if (behavior === 'passive_wander') {
             ai.aiWanderTimer -= delta;
             const distFromSpawn = aiPos.distanceTo(ai.aiSpawnPos);
             if (distFromSpawn > wanderRadius) {
-              // Return toward spawn
               const returnDir = ai.aiSpawnPos.clone().sub(aiPos).normalize();
               aiPos.x += returnDir.x * aiSpeed;
               aiPos.z += returnDir.z * aiSpeed;
               ai.modelMesh.lookAt(ai.aiSpawnPos.clone().setY(aiPos.y));
               if (ai.aiState !== 'wander') { ai.aiState = 'wander'; aiFadeToAction(ai.actions['walk'] ? 'walk' : 'run'); }
             } else if (ai.aiWanderTimer <= 0) {
-              // Pick new random direction
               ai.aiWanderDir = new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
               ai.aiWanderTimer = 2 + Math.random() * 3;
               if (Math.random() < 0.3) { ai.aiState = 'idle'; aiFadeToAction('idle'); }
@@ -663,12 +687,11 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
 
           } else if (behavior === 'aggressive' || behavior === 'defensive') {
-            const playerPos = activeModel ? activeModel.position : null;
-            if (!playerPos) return;
+            if (!playerTarget) return;
+            const playerPos = playerTarget.position;
             const distToPlayer = aiPos.distanceTo(playerPos);
 
             if (distToPlayer < atkRange) {
-              // Attack range
               ai.modelMesh.lookAt(playerPos.clone().setY(aiPos.y));
               ai.aiAttackCooldown -= delta;
               if (ai.aiAttackCooldown <= 0 && ai.actions['attack']) {
@@ -679,14 +702,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                 aiFadeToAction('idle');
               }
             } else if (distToPlayer < detRange) {
-              // Chase
               const chaseDir = playerPos.clone().sub(aiPos).normalize();
               aiPos.x += chaseDir.x * aiSpeed;
               aiPos.z += chaseDir.z * aiSpeed;
               ai.modelMesh.lookAt(playerPos.clone().setY(aiPos.y));
               if (ai.aiState !== 'chase') { ai.aiState = 'chase'; aiFadeToAction(ai.actions['run'] ? 'run' : (ai.actions['walk'] ? 'walk' : 'running')); }
             } else {
-              // Wander near spawn
               ai.aiWanderTimer -= delta;
               if (ai.aiWanderTimer <= 0) {
                 ai.aiWanderDir = new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize();
@@ -705,8 +726,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
 
           } else if (behavior === 'follower') {
-            const playerPos2 = activeModel ? activeModel.position : null;
-            if (!playerPos2) return;
+            if (!playerTarget) return;
+            const playerPos2 = playerTarget.position;
             const distToPlayer2 = aiPos.distanceTo(playerPos2);
             const followDist = 1.0;
             if (distToPlayer2 > followDist + 0.3) {
@@ -741,6 +762,9 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             }
           }
         });
+
+        // Remove dead AI instances after death animation
+        deadInstances.forEach(id => despawnAIInstance(id));
 
         // Determine the currently active model for movement/camera
         const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
