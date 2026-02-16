@@ -226,53 +226,60 @@ export default function ClanChat({ clan, channel, myRole }) {
                     borderTop: '1px solid rgba(255, 255, 255, 0.05)' 
                 }}
             >
-                <form onSubmit={handleSend} className="relative flex flex-col gap-2">
-                    {canModerate && (
-                        <div className="flex items-center gap-2 px-1">
-                            <button
-                                type="button"
-                                onClick={() => setIsAnnouncement(!isAnnouncement)}
-                                className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full transition-all ${
-                                    isAnnouncement 
-                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20' 
-                                        : 'bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 border border-white/5'
-                                }`}
+                {canPostInChannel ? (
+                    <form onSubmit={handleSend} className="relative flex flex-col gap-2">
+                        {canModerate && (
+                            <div className="flex items-center gap-2 px-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAnnouncement(!isAnnouncement)}
+                                    className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full transition-all ${
+                                        isAnnouncement 
+                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black shadow-lg shadow-amber-500/20' 
+                                            : 'bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 border border-white/5'
+                                    }`}
+                                >
+                                    <Megaphone className="w-3 h-3" /> Announcement
+                                </button>
+                            </div>
+                        )}
+                        <div className="relative group">
+                            <Input
+                                value={message}
+                                onChange={e => setMessage(e.target.value)}
+                                placeholder={isAnnouncement ? "Broadcast announcement..." : `Message #${channel.name}`}
+                                className={`
+                                    h-14 rounded-2xl pl-5 pr-14 text-white transition-all
+                                    ${isAnnouncement 
+                                        ? 'bg-amber-950/20 border-amber-500/30 focus:border-amber-500/50 placeholder:text-amber-500/30' 
+                                        : 'bg-black/40 border-white/10 focus:border-blue-500/40 focus:bg-black/60 placeholder:text-white/20'
+                                    }
+                                    backdrop-blur-md shadow-inner
+                                `}
+                            />
+                            <Button 
+                                type="submit" 
+                                size="icon"
+                                className={`
+                                    absolute right-2 top-2 h-10 w-10 rounded-xl transition-all shadow-lg
+                                    ${isAnnouncement 
+                                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:brightness-110' 
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:brightness-110'
+                                    }
+                                    ${!message.trim() ? 'opacity-50 grayscale' : 'opacity-100'}
+                                `}
+                                disabled={!message.trim()}
                             >
-                                <Megaphone className="w-3 h-3" /> Announcement
-                            </button>
+                                <Send className="w-4 h-4" />
+                            </Button>
                         </div>
-                    )}
-                    <div className="relative group">
-                        <Input
-                            value={message}
-                            onChange={e => setMessage(e.target.value)}
-                            placeholder={isAnnouncement ? "Broadcast announcement..." : `Message #${channel.name}`}
-                            className={`
-                                h-14 rounded-2xl pl-5 pr-14 text-white transition-all
-                                ${isAnnouncement 
-                                    ? 'bg-amber-950/20 border-amber-500/30 focus:border-amber-500/50 placeholder:text-amber-500/30' 
-                                    : 'bg-black/40 border-white/10 focus:border-blue-500/40 focus:bg-black/60 placeholder:text-white/20'
-                                }
-                                backdrop-blur-md shadow-inner
-                            `}
-                        />
-                        <Button 
-                            type="submit" 
-                            size="icon"
-                            className={`
-                                absolute right-2 top-2 h-10 w-10 rounded-xl transition-all shadow-lg
-                                ${isAnnouncement 
-                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-black hover:brightness-110' 
-                                    : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:brightness-110'
-                                }
-                                ${!message.trim() ? 'opacity-50 grayscale' : 'opacity-100'}
-                            `}
-                            disabled={!message.trim()}
-                        >
-                            <Send className="w-4 h-4" />
-                        </Button>
+                    </form>
+                ) : (
+                    <div className="flex items-center justify-center gap-2 py-4 text-white/30 text-sm">
+                        <Shield className="w-4 h-4" />
+                        <span>You do not have permission to send messages in this channel.</span>
                     </div>
-                </form>
+                )}
             </div>
         </div>
     );
