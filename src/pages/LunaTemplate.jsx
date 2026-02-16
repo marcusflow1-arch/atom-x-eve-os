@@ -776,11 +776,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         // Clone the loaded asset so each instance is independent
         const modelMesh = loadedAsset.clone ? loadedAsset.clone() : loadedAsset;
-        modelMesh.scale.set(0.001, 0.001, 0.001);
+
+        // Match the player's scale exactly (same size as player controller)
+        modelMesh.scale.copy(playerModel.scale);
 
         // Position near player with slight random offset
         const angle = Math.random() * Math.PI * 2;
-        const dist = 0.4 + Math.random() * 0.3;
+        const dist = 0.6 + Math.random() * 0.4;
         const offset = new THREE.Vector3(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
         modelMesh.position.copy(playerModel.position).add(offset);
 
@@ -799,26 +801,38 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const instanceActions = {};
 
         // Load AI-assigned animations (from ai_profile, NOT player keybinds)
+        // The AI panel stores animation IDs mapped to role types (idle, walk, run, attack, etc.)
         const aiAnims = aiModelDef.ai_profile?.animations || {};
         if (Object.keys(aiAnims).length > 0 && adminAnimations) {
           for (const animType in aiAnims) {
             const animId = aiAnims[animType];
-            const animData = adminAnimations.find(a => a.id === animId);
+            if (!animId) continue;
+            // Match by ID first, then by name as fallback
+            const animData = adminAnimations.find(a => a.id === animId) || adminAnimations.find(a => (a.name || '').toLowerCase().trim() === (animId || '').toLowerCase().trim());
             if (animData) {
               const animAsset = await fbxLoader.loadAsync(animData.file_url);
               if (animAsset.animations.length > 0) {
                 const action = instanceMixer.clipAction(animAsset.animations[0]);
                 instanceActions[animType] = action;
+                console.log(`[AI Spawn] Loaded animation "${animType}" from "${animData.name}"`);
               }
+            } else {
+              console.warn(`[AI Spawn] Could not find animation for type "${animType}" with id/name "${animId}"`);
             }
           }
-        } else if (loadedAsset.animations && loadedAsset.animations.length > 0) {
-          // Fallback: use embedded animations
-          loadedAsset.animations.forEach((clip, i) => {
-            const action = instanceMixer.clipAction(clip);
-            if (i === 0) instanceActions['idle'] = action;
-            instanceActions[clip.name?.toLowerCase() || `clip_${i}`] = action;
-          });
+        }
+
+        // Fallback: if no AI animations assigned, load ALL admin animations onto this instance
+        if (Object.keys(instanceActions).length === 0 && adminAnimations && adminAnimations.length > 0) {
+          for (const anim of adminAnimations) {
+            const animAsset = await fbxLoader.loadAsync(anim.file_url);
+            if (animAsset.animations.length > 0) {
+              const action = instanceMixer.clipAction(animAsset.animations[0]);
+              const name = (anim.name || '').toLowerCase().trim();
+              instanceActions[name] = action;
+            }
+          }
+          console.log(`[AI Spawn] Fallback: loaded ${Object.keys(instanceActions).length} animations from admin library`);
         }
 
         // Play idle if available
@@ -834,6 +848,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
 
         // Build instance record with independent stats
         const stats = aiModelDef.stats ? { ...aiModelDef.stats } : { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100 };
+        const aiProfile = aiModelDef.ai_profile || {};
         const instanceRecord = {
           instanceId,
           assetId: aiModelDef.id,
@@ -844,12 +859,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           activeAction,
           stats,
           role: aiModelDef.role || 'enemy',
-          aiProfile: aiModelDef.ai_profile || {},
+          aiProfile,
           spawnTime: Date.now(),
+          // AI runtime state
+          aiState: 'idle', // idle, wander, chase, attack, return
+          aiTarget: null,
+          aiWanderDir: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize(),
+          aiWanderTimer: 0,
+          aiSpawnPos: modelMesh.position.clone(),
+          aiAttackCooldown: 0,
         };
 
         spawnedAIModelsRef.current.set(instanceId, instanceRecord);
-        console.log(`[AI Spawn] Created instance ${instanceId} (${aiModelDef.name}) role=${instanceRecord.role} HP=${stats.hp}`);
+        console.log(`[AI Spawn] Created instance ${instanceId} (${aiModelDef.name}) role=${instanceRecord.role} HP=${stats.hp} behavior=${aiProfile.behavior_type || 'idle_loop'}`);
         return instanceId;
       };
 
