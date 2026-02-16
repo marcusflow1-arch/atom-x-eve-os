@@ -459,18 +459,25 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const animate = () => {
         requestAnimationFrame(animate);
         const delta = clockRef.current.getDelta();
+
+        // Update BOTH mixers (active one drives visible model, inactive keeps state)
         if (mixer) mixer.update(delta);
+        if (c1MixerRef.current) c1MixerRef.current.update(delta);
 
         // Update companion mixer
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
-        // Keep companion following the player (offset to the left)
-        if (companionRef.current && model) {
-          const targetX = model.position.x - 0.6;
-          const targetZ = model.position.z + 0.3;
+        // Determine the currently active model for movement/camera
+        const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+        if (!activeModel) { renderer.render(scene, camera); return; }
+
+        // Keep companion following the active player
+        if (companionRef.current && activeModel) {
+          const targetX = activeModel.position.x - 0.6;
+          const targetZ = activeModel.position.z + 0.3;
           companionRef.current.position.x += (targetX - companionRef.current.position.x) * 0.05;
           companionRef.current.position.z += (targetZ - companionRef.current.position.z) * 0.05;
-          companionRef.current.position.y = model.position.y;
+          companionRef.current.position.y = activeModel.position.y;
         }
 
         const moveSpeed = 0.6;
@@ -495,19 +502,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             const angle = Math.atan2(moveVector.x, moveVector.z);
             const targetQuat = new THREE.Quaternion();
             targetQuat.setFromAxisAngle(new THREE.Vector3(0,1,0), angle);
-            model.quaternion.slerp(targetQuat, 0.2);
+            activeModel.quaternion.slerp(targetQuat, 0.2);
 
-            model.position.x += moveVector.x * moveSpeed * delta;
-            model.position.z += moveVector.z * moveSpeed * delta;
+            activeModel.position.x += moveVector.x * moveSpeed * delta;
+            activeModel.position.z += moveVector.z * moveSpeed * delta;
         }
 
         // --- CAMERA ---
         const orbit = cameraOrbitRef.current;
-        const camX = model.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
-        const camY = model.position.y + orbit.distance * Math.sin(orbit.pitch);
-        const camZ = model.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
+        const camX = activeModel.position.x + orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
+        const camY = activeModel.position.y + orbit.distance * Math.sin(orbit.pitch);
+        const camZ = activeModel.position.z + orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
         camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
-        camera.lookAt(model.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
+        camera.lookAt(activeModel.position.clone().add(new THREE.Vector3(0, 0.15, 0)));
 
         // PHYSICS — clamp to floor or environment mesh collision
         const gravity = -25;
@@ -519,31 +526,29 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             isGroundedRef.current = false;
         }
         verticalVelocityRef.current += gravity * delta;
-        model.position.y += verticalVelocityRef.current * delta;
+        activeModel.position.y += verticalVelocityRef.current * delta;
 
         // Determine floor height — either via mesh raycast or flat floor
         let floorY = spawnY;
         if (useMeshCollisionRef.current && envCollidersRef.current.length > 0) {
-          // Cast ray downward from above the character
-          const rayOrigin = new THREE.Vector3(model.position.x, model.position.y + 5, model.position.z);
+          const rayOrigin = new THREE.Vector3(activeModel.position.x, activeModel.position.y + 5, activeModel.position.z);
           raycasterRef.current.set(rayOrigin, new THREE.Vector3(0, -1, 0));
           raycasterRef.current.far = 20;
           const hits = raycasterRef.current.intersectObjects(envCollidersRef.current, true);
           if (hits.length > 0) {
-            // Convert hit point Y to model-space floor (character origin offset)
             floorY = hits[0].point.y;
           }
         }
 
-        if (model.position.y <= floorY) {
-            model.position.y = floorY;
+        if (activeModel.position.y <= floorY) {
+            activeModel.position.y = floorY;
             verticalVelocityRef.current = 0;
             isGroundedRef.current = true;
         } else {
             isGroundedRef.current = false;
         }
 
-        // State-based animation — only runs if no keybind sequence is active
+        // State-based animation — drives whichever character is active
         if (!sequenceLockRef.current) {
           if (!isGroundedRef.current) {
               play(verticalVelocityRef.current > 0 ? "Jumping" : "Falling");
