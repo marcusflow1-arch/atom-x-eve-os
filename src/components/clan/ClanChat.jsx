@@ -10,24 +10,34 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ClanChat({ clan, channel }) {
+export default function ClanChat({ clan, channel, myRole }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [message, setMessage] = useState('');
     const [isAnnouncement, setIsAnnouncement] = useState(false);
     const scrollRef = useRef(null);
 
-    // Fetch My Member Role
+    // Fetch My Member Role (fallback if myRole not passed)
     const { data: myMember } = useQuery({
         queryKey: ['myClanMemberRole', clan.id, user.id],
         queryFn: async () => {
             const members = await base44.entities.ClanMember.filter({ divisionId: clan.id, userId: user.id });
             return members[0];
         },
-        enabled: !!clan.id && !!user.id
+        enabled: !!clan.id && !!user.id && !myRole
     });
 
-    const canModerate = myMember?.role === 'leader' || myMember?.role === 'officer';
+    const effectiveRole = myRole || myMember?.role || 'member';
+    const canModerate = effectiveRole === 'leader' || effectiveRole === 'officer';
+
+    // Check if user can post in this channel based on role_restriction
+    const channelRestriction = channel?.role_restriction || 'none';
+    const canPostInChannel = (() => {
+        if (channelRestriction === 'none') return true;
+        if (channelRestriction === 'officer') return effectiveRole === 'officer' || effectiveRole === 'leader';
+        if (channelRestriction === 'leader') return effectiveRole === 'leader';
+        return true;
+    })();
 
     // Fetch Messages
     const { data: messages } = useQuery({
