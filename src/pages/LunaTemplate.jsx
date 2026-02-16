@@ -437,16 +437,26 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
         const activeModel = isYBot ? model : c1ModelRef.current;
         const returnState = entry.returnState || 'idle';
+        const movementBehavior = entry.movementBehavior || 'in_place';
 
-        // Handle snap behavior first
-        const snapBehavior = entry.snapBehavior || 'maintain_end';
-        if (snapBehavior === 'snap_to_origin' && activeModel) {
-          activeModel.position.copy(preAnimPositionRef.current);
-        } else if (snapBehavior === 'blend_to_idle_pos' && activeModel) {
-          // Lerp back over a few frames — approximate with immediate for now
-          activeModel.position.copy(preAnimPositionRef.current);
+        // Handle position after completion based on movementBehavior + snapBehavior
+        // Only apply snap logic if the animation was set to root_motion
+        if (movementBehavior === 'root_motion' && activeModel && preAnimPositionRef.current) {
+          const snapBehavior = entry.snapBehavior || 'maintain_end';
+          if (snapBehavior === 'snap_to_origin') {
+            // Instant teleport back to cached start position
+            activeModel.position.copy(preAnimPositionRef.current);
+          } else if (snapBehavior === 'blend_to_idle_pos') {
+            // Start a smooth lerp back over ~0.3s
+            blendBackRef.current = {
+              target: preAnimPositionRef.current.clone(),
+              progress: 0,
+              duration: 0.3,
+            };
+          }
+          // 'maintain_end' = do absolutely nothing — character stays at animation end position
         }
-        // 'maintain_end' = do nothing, character stays where animation left them
+        // For 'in_place' movementBehavior: position was already locked during playback, no action needed
 
         // Determine which animation to transition to
         let targetName = 'idle';
