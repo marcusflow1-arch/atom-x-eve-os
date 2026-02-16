@@ -20,6 +20,7 @@ import ActiveVoiceControls from './voice/ActiveVoiceControls';
 import { toast } from 'sonner';
 
 export default function FarmGameView({ game, onBack }) {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTopic = searchParams.get('topic');
     const [selectedRoom, setSelectedRoom] = useState(null); // For preview modal
