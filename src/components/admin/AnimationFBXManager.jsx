@@ -467,7 +467,7 @@ export default function AnimationFBXManager() {
           </div>
 
           {/* Animations Grid */}
-          {isLoading ? (
+          {isLoading || foldersLoading ? (
             <div className="text-center py-12 text-slate-500">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
               Loading animation library...
