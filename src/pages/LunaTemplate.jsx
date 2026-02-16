@@ -118,6 +118,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
   const toggleActiveRef = useRef(null);
   const previousActionNameRef = useRef('idle');
   const preAnimPositionRef = useRef(null);  // Set to THREE.Vector3 once scene is ready
+  const blendBackRef = useRef(null);        // { target: Vector3, progress: 0, duration: 0.3 } for smooth blend-back
 
   // 1. Fetch Animations from Admin
   const { data: adminAnimations } = useQuery({
