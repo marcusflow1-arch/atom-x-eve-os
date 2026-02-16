@@ -366,16 +366,21 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
       await loadAnimations();
 
+      // Dual-character aware fade/play helpers
       const fadeToAction = (name, duration = 0.2) => {
-        const nextAction = actionsRef.current[name] || actionsRef.current['idle'];
-        if (!nextAction || activeActionRef.current === nextAction) return;
-        if (activeActionRef.current) activeActionRef.current.fadeOut(duration);
+        // Determine which actions map / active action ref to use
+        const isYBot = activeCharacterRef.current === 'ybot';
+        const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
+        const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
+
+        const nextAction = actions[name] || actions['idle'];
+        if (!nextAction || activeRef.current === nextAction) return;
+        if (activeRef.current) activeRef.current.fadeOut(duration);
         nextAction.reset().fadeIn(duration).play();
-        activeActionRef.current = nextAction;
+        activeRef.current = nextAction;
       };
 
       const play = (name) => {
-          // If a keybind sequence is playing, do NOT override with state-based animations
           if (sequenceLockRef.current) return;
           const key = name.toLowerCase();
           if (currentActionNameRef.current === name) return;
