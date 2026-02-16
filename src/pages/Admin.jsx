@@ -16,6 +16,8 @@ import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
 import KeybindManager from '../components/admin/KeybindManager';
+import AIModelController from '../components/admin/AIModelController';
+import ExpProgressionAdmin from '../components/admin/ExpProgressionAdmin';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -448,7 +450,8 @@ export default function Admin() {
             <TabsTrigger value="fbx-models">FBX Models</TabsTrigger>
             <TabsTrigger value="scripts">3D Scripts</TabsTrigger>
             <TabsTrigger value="keybinds">Keybind Manager</TabsTrigger>
-
+            <TabsTrigger value="ai-models">3D Model AI</TabsTrigger>
+            <TabsTrigger value="exp-progression">EXP & Leveling</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -926,6 +929,14 @@ export default function Admin() {
 
           <TabsContent value="keybinds">
             <KeybindManager />
+          </TabsContent>
+
+          <TabsContent value="ai-models">
+            <AIModelController />
+          </TabsContent>
+
+          <TabsContent value="exp-progression">
+            <ExpProgressionAdmin />
           </TabsContent>
 
                     </Tabs>
