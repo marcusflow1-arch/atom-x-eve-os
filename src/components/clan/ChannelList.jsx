@@ -190,17 +190,19 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                         }`}
                                     >
                                         <div className="flex items-center">
-                                            <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
-                                            <span className="text-sm truncate">{channel.name}</span>
+                                           <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
+                                           <span className="text-sm truncate">{channel.name}</span>
+                                           {channel.role_restriction === 'officer' && <Badge className="ml-1.5 h-4 px-1 bg-blue-500/15 text-blue-300/70 border-blue-500/20 text-[9px]">Officers</Badge>}
+                                           {channel.role_restriction === 'leader' && <Badge className="ml-1.5 h-4 px-1 bg-amber-500/15 text-amber-300/70 border-amber-500/20 text-[9px]"><Crown className="w-2.5 h-2.5 mr-0.5" />Leaders</Badge>}
                                         </div>
                                         <X 
-                                            className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if(confirm(`Delete #${channel.name}?`)) {
-                                                    deleteChannelMutation.mutate(channel.id);
-                                                }
-                                            }}
+                                           className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
+                                           onClick={(e) => {
+                                               e.stopPropagation();
+                                               if(confirm(`Delete #${channel.name}?`)) {
+                                                   deleteChannelMutation.mutate(channel.id);
+                                               }
+                                           }}
                                         />
                                     </button>
                                 </ContextMenuTrigger>
