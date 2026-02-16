@@ -1145,12 +1145,76 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
             playSequence([{ animationName: 'hurricane_kick', loop: false }]);
           }
         }
+        // --- R KEY: KICK ATTACK WITH HIT DETECTION ---
         if (e.key === 'r' || e.key === 'R') {
+          // Play the kick/sprinting animation
           const action = currentActions['sprinting'];
           if (action) {
             action.setLoop(THREE.LoopOnce, 1);
             action.clampWhenFinished = true;
             playSequence([{ animationName: 'sprinting', loop: false }]);
+          }
+
+          // After a short impact delay, perform hit detection against all living AI
+          const currentActiveModel = isYBot ? model : c1ModelRef.current;
+          if (currentActiveModel) {
+            const KICK_DAMAGE = 1;      // Prototype: 1 damage per kick
+            const HIT_RANGE = 2.0;       // Units
+            const IMPACT_DELAY_MS = 200;  // ms into animation for impact
+            const DEATH_LINGER_S = 2.0;   // seconds to show death anim before despawn
+
+            setTimeout(() => {
+              if (!currentActiveModel) return;
+              const playerForward = new THREE.Vector3();
+              currentActiveModel.getWorldDirection(playerForward);
+
+              spawnedAIModelsRef.current.forEach(ai => {
+                if (!ai.isAlive) return;              // skip dead
+                if (ai.hitCooldown > 0) return;       // prevent multi-hit from same attack
+                if (ai.role === 'companion') return;   // don't hit companions
+
+                const dist = currentActiveModel.position.distanceTo(ai.modelMesh.position);
+                if (dist > HIT_RANGE) return;
+
+                // Facing check: is enemy roughly in front of player?
+                const toEnemy = ai.modelMesh.position.clone().sub(currentActiveModel.position).normalize();
+                const dot = playerForward.dot(toEnemy);
+                if (dot < 0.3) return; // Must be somewhat in front
+
+                // --- APPLY DAMAGE ---
+                ai.currentHP -= KICK_DAMAGE;
+                ai.hitCooldown = 0.5; // 500ms invulnerability after hit
+                console.log(`[Combat] Hit ${ai.assetName} (${ai.instanceId}) for ${KICK_DAMAGE} dmg. HP: ${ai.currentHP}/${ai.maxHP}`);
+
+                if (ai.currentHP <= 0) {
+                  // --- DEATH ---
+                  ai.isAlive = false;
+                  ai.aiState = 'death';
+                  ai.mixer.stopAllAction();
+                  if (ai.actions['death']) {
+                    const deathAction = ai.actions['death'];
+                    deathAction.setLoop(THREE.LoopOnce, 1);
+                    deathAction.clampWhenFinished = true;
+                    deathAction.reset().fadeIn(0.15).play();
+                    ai.activeAction = deathAction;
+                  }
+                  ai.deathTimer = DEATH_LINGER_S;
+                  console.log(`[Combat] ${ai.assetName} KILLED!`);
+                } else {
+                  // --- HIT REACTION ---
+                  ai.aiState = 'hit';
+                  if (ai.actions['hit']) {
+                    ai.mixer.stopAllAction();
+                    const hitAction = ai.actions['hit'];
+                    hitAction.setLoop(THREE.LoopOnce, 1);
+                    hitAction.clampWhenFinished = true;
+                    hitAction.reset().fadeIn(0.1).play();
+                    ai.activeAction = hitAction;
+                  }
+                  ai.hitReactTimer = 0.5; // 500ms hit stun
+                }
+              });
+            }, IMPACT_DELAY_MS);
           }
         }
       };
