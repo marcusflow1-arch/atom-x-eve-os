@@ -155,6 +155,13 @@ export default function FarmGameView({ game, onBack }) {
                             className="flex items-center gap-3 mb-2"
                         >
                             <Button 
+                                onClick={() => navigate(createPageUrl('Community'), { state: { selectedGame: { id: game.id, title: game.title, genre: game.genre, cover_image: game.image, banner_image: game.image } } })}
+                                className="rounded-full border bg-white/5 hover:bg-white/10 text-white border-white/10"
+                            >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Forum
+                            </Button>
+                            <Button 
                                 onClick={() => handleAction('join voice')}
                                 className={`rounded-full border ${isOwned ? 'bg-white/5 hover:bg-white/10 text-white border-white/10' : 'bg-white/5 text-white/40 border-white/5 cursor-not-allowed'}`}
                             >
