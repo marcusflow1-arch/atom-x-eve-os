@@ -365,32 +365,84 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       };
 
       const play = (name) => {
-          if (oneShotPlayingRef.current) return;
+          // If a keybind sequence is playing, do NOT override with state-based animations
+          if (sequenceLockRef.current) return;
           const key = name.toLowerCase();
           if (currentActionNameRef.current === name) return;
           currentActionNameRef.current = name;
           fadeToAction(key, 0.2);
       };
 
-      const playOneShot = (actionName) => {
+      // --- KEYBIND SEQUENCE SYSTEM ---
+      // Plays an ordered array of animation clips. No looping. No replay. Input-driven only.
+      const playSequence = (sequence) => {
+        if (sequenceLockRef.current) return; // Already playing a sequence
+        if (!sequence || sequence.length === 0) return;
+
+        sequenceQueueRef.current = sequence;
+        sequenceIndexRef.current = 0;
+        sequenceLockRef.current = true;
+
+        playSequenceStep();
+      };
+
+      const playSequenceStep = () => {
+        const idx = sequenceIndexRef.current;
+        const queue = sequenceQueueRef.current;
+        if (idx < 0 || idx >= queue.length) {
+          // Sequence complete — return to idle, unlock input
+          sequenceLockRef.current = false;
+          sequenceIndexRef.current = -1;
+          sequenceQueueRef.current = [];
+          currentActionNameRef.current = '';
+          // Fade back to idle
+          const idleAction = actionsRef.current['idle'];
+          if (idleAction && activeActionRef.current !== idleAction) {
+            if (activeActionRef.current) activeActionRef.current.fadeOut(0.2);
+            idleAction.reset().fadeIn(0.2).play();
+            activeActionRef.current = idleAction;
+          }
+          return;
+        }
+
+        const entry = queue[idx];
+        const actionName = (entry.animationName || '').toLowerCase().trim();
         const action = actionsRef.current[actionName];
-        if (!action || oneShotPlayingRef.current) return;
-        
-        oneShotPlayingRef.current = actionName;
+
+        if (!action) {
+          // Skip missing animation, advance to next
+          console.warn('[Keybind] Animation not found:', actionName, '— skipping');
+          sequenceIndexRef.current = idx + 1;
+          playSequenceStep();
+          return;
+        }
+
+        // Configure loop based on entry
+        if (entry.loop) {
+          action.setLoop(THREE.LoopRepeat);
+          action.clampWhenFinished = false;
+        } else {
+          action.setLoop(THREE.LoopOnce, 1);
+          action.clampWhenFinished = true;
+        }
+
         currentActionNameRef.current = actionName;
-        
         if (activeActionRef.current) activeActionRef.current.fadeOut(0.15);
         action.reset().fadeIn(0.15).play();
         activeActionRef.current = action;
 
-        const onFinished = (e) => {
-          if (e.action === action) {
-            oneShotPlayingRef.current = null;
-            currentActionNameRef.current = '';
-            mixer.removeEventListener('finished', onFinished);
-          }
-        };
-        mixer.addEventListener('finished', onFinished);
+        // If not looping, listen for finish to advance
+        if (!entry.loop) {
+          const onFinished = (e) => {
+            if (e.action === action) {
+              mixer.removeEventListener('finished', onFinished);
+              sequenceIndexRef.current = idx + 1;
+              playSequenceStep();
+            }
+          };
+          mixer.addEventListener('finished', onFinished);
+        }
+        // If looping, the sequence stops here until another key press interrupts
       };
 
       // --- GAME LOOP ---
