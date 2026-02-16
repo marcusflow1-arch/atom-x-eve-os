@@ -874,10 +874,12 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
       currentActionNameRef.current = 'idle';
 
-      // Clear any active sequence lock
+      // Clear any active sequence lock and hold/toggle states
       sequenceLockRef.current = false;
       sequenceQueueRef.current = [];
       sequenceIndexRef.current = -1;
+      holdActiveRef.current = null;
+      toggleActiveRef.current = null;
 
       console.log('[Switch] Now active:', activeCharacterRef.current);
       setTimeout(() => { switchingRef.current = false; }, 200);
