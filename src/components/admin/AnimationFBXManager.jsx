@@ -46,14 +46,21 @@ export default function AnimationFBXManager() {
     queryFn: () => base44.entities.AnimationFBX.list('-created_date'),
   });
 
-  // Derive folders from animation data
+  // Load persisted folders from database
+  const { data: folderRecords = [], isLoading: foldersLoading } = useQuery({
+    queryKey: ['animationFolders'],
+    queryFn: () => base44.entities.AnimationFolder.list('name'),
+  });
+
+  // Merge: persisted folder names + any folder names on animations (for safety)
   const folders = useMemo(() => {
     const folderSet = new Set();
+    folderRecords.forEach(f => folderSet.add(f.name));
     animations.forEach(a => {
       if (a.folder) folderSet.add(a.folder);
     });
     return Array.from(folderSet).sort();
-  }, [animations]);
+  }, [animations, folderRecords]);
 
   // Filter animations by active folder
   const filteredAnimations = useMemo(() => {
@@ -153,15 +160,20 @@ export default function AnimationFBXManager() {
     }
   };
 
-  const handleCreateFolder = () => {
+  const createFolderMutation = useMutation({
+    mutationFn: (data) => base44.entities.AnimationFolder.create(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['animationFolders'] }),
+  });
+
+  const handleCreateFolder = async () => {
     const name = newFolderName.trim();
     if (!name) return;
     if (folders.includes(name)) { alert('A folder with that name already exists.'); return; }
-    // "Create" a folder by moving to it — folders are derived from data
+    // Persist the folder to the database
+    await createFolderMutation.mutateAsync({ name });
     setActiveFolder(name);
     setNewFolderName('');
     setShowNewFolder(false);
-    // Pre-fill upload form with folder
     setNewAnimation(prev => ({ ...prev, folder: name }));
   };
 
@@ -170,11 +182,18 @@ export default function AnimationFBXManager() {
     if (!newName || newName === oldName) { setRenamingFolder(null); return; }
     if (folders.includes(newName)) { alert('A folder with that name already exists.'); return; }
 
+    // Rename all animations in this folder
     const animsInFolder = animations.filter(a => a.folder === oldName);
     for (const anim of animsInFolder) {
       await base44.entities.AnimationFBX.update(anim.id, { folder: newName });
     }
+    // Update the folder record itself
+    const folderRecord = folderRecords.find(f => f.name === oldName);
+    if (folderRecord) {
+      await base44.entities.AnimationFolder.update(folderRecord.id, { name: newName });
+    }
     queryClient.invalidateQueries({ queryKey: ['animationFBX'] });
+    queryClient.invalidateQueries({ queryKey: ['animationFolders'] });
     if (activeFolder === oldName) setActiveFolder(newName);
     setRenamingFolder(null);
   };
@@ -183,10 +202,17 @@ export default function AnimationFBXManager() {
     const animsInFolder = animations.filter(a => a.folder === folderName);
     if (!confirm(`Move ${animsInFolder.length} animation(s) to Unsorted and delete folder "${folderName}"?`)) return;
 
+    // Move animations to unsorted
     for (const anim of animsInFolder) {
       await base44.entities.AnimationFBX.update(anim.id, { folder: '' });
     }
+    // Delete the folder record
+    const folderRecord = folderRecords.find(f => f.name === folderName);
+    if (folderRecord) {
+      await base44.entities.AnimationFolder.delete(folderRecord.id);
+    }
     queryClient.invalidateQueries({ queryKey: ['animationFBX'] });
+    queryClient.invalidateQueries({ queryKey: ['animationFolders'] });
     if (activeFolder === folderName) setActiveFolder(null);
   };
 
