@@ -681,14 +681,33 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         }
 
-        // If in-place movement behavior is active, lock position during sequence
+        // Position control during active sequence
         if (sequenceLockRef.current && sequenceQueueRef.current.length > 0) {
           const currentSeqIdx = sequenceIndexRef.current;
           const currentEntry = currentSeqIdx >= 0 && currentSeqIdx < sequenceQueueRef.current.length
             ? sequenceQueueRef.current[currentSeqIdx] : null;
-          if (currentEntry && (currentEntry.movementBehavior === 'in_place') && preAnimPositionRef.current && activeModel) {
-            activeModel.position.x = preAnimPositionRef.current.x;
-            activeModel.position.z = preAnimPositionRef.current.z;
+          if (currentEntry && preAnimPositionRef.current && activeModel) {
+            const moveBehavior = currentEntry.movementBehavior || 'in_place';
+            if (moveBehavior === 'in_place') {
+              // Lock position — animation plays but character doesn't move
+              activeModel.position.x = preAnimPositionRef.current.x;
+              activeModel.position.z = preAnimPositionRef.current.z;
+            }
+            // 'root_motion' = do NOT lock position, let animation's root motion move the character freely
+          }
+        }
+
+        // Blend-back smooth lerp (after root_motion animation with blend_to_idle_pos)
+        if (blendBackRef.current && activeModel) {
+          const bb = blendBackRef.current;
+          bb.progress += delta / bb.duration;
+          if (bb.progress >= 1) {
+            activeModel.position.x = bb.target.x;
+            activeModel.position.z = bb.target.z;
+            blendBackRef.current = null;
+          } else {
+            activeModel.position.x += (bb.target.x - activeModel.position.x) * Math.min(bb.progress * 3, 1);
+            activeModel.position.z += (bb.target.z - activeModel.position.z) * Math.min(bb.progress * 3, 1);
           }
         }
 
