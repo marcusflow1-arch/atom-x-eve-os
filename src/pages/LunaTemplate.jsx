@@ -753,8 +753,150 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         });
       };
 
-      const onSpecialKeyDown = (e) => {
+      // --- AI SPAWN SYSTEM: Creates independent runtime instances ---
+      const spawnAIInstance = async (aiModelDef, playerModel) => {
+        if (!playerModel || !sceneRef.current) return;
+        const fbxLoader = new FBXLoader();
+        const gltfLoader = new GLTFLoader();
+
+        const fileUrl = aiModelDef.file_url;
+        const lower = fileUrl.toLowerCase();
+        let loadedAsset;
+
+        if (lower.endsWith('.fbx')) {
+          loadedAsset = await fbxLoader.loadAsync(fileUrl);
+        } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+          const gltf = await gltfLoader.loadAsync(fileUrl);
+          loadedAsset = gltf.scene;
+          loadedAsset.animations = gltf.animations || [];
+        } else {
+          console.warn('[AI Spawn] Unsupported format:', fileUrl);
+          return;
+        }
+
+        // Clone the loaded asset so each instance is independent
+        const modelMesh = loadedAsset.clone ? loadedAsset.clone() : loadedAsset;
+        modelMesh.scale.set(0.001, 0.001, 0.001);
+
+        // Position near player with slight random offset
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 0.4 + Math.random() * 0.3;
+        const offset = new THREE.Vector3(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+        modelMesh.position.copy(playerModel.position).add(offset);
+
+        // Face toward the player
+        modelMesh.lookAt(playerModel.position.clone().setY(modelMesh.position.y));
+
+        modelMesh.traverse(child => {
+          if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+        });
+
+        sceneRef.current.add(modelMesh);
+
+        // Create independent mixer for this instance
+        const instanceMixer = new THREE.AnimationMixer(modelMesh);
+        instanceMixer.timeScale = 1.0;
+        const instanceActions = {};
+
+        // Load AI-assigned animations (from ai_profile, NOT player keybinds)
+        const aiAnims = aiModelDef.ai_profile?.animations || {};
+        if (Object.keys(aiAnims).length > 0 && adminAnimations) {
+          for (const animType in aiAnims) {
+            const animId = aiAnims[animType];
+            const animData = adminAnimations.find(a => a.id === animId);
+            if (animData) {
+              const animAsset = await fbxLoader.loadAsync(animData.file_url);
+              if (animAsset.animations.length > 0) {
+                const action = instanceMixer.clipAction(animAsset.animations[0]);
+                instanceActions[animType] = action;
+              }
+            }
+          }
+        } else if (loadedAsset.animations && loadedAsset.animations.length > 0) {
+          // Fallback: use embedded animations
+          loadedAsset.animations.forEach((clip, i) => {
+            const action = instanceMixer.clipAction(clip);
+            if (i === 0) instanceActions['idle'] = action;
+            instanceActions[clip.name?.toLowerCase() || `clip_${i}`] = action;
+          });
+        }
+
+        // Play idle if available
+        let activeAction = null;
+        if (instanceActions['idle']) {
+          instanceActions['idle'].reset().play();
+          activeAction = instanceActions['idle'];
+        }
+
+        // Generate unique instance ID
+        aiInstanceCounterRef.current += 1;
+        const instanceId = `${aiModelDef.id}_AI_${String(aiInstanceCounterRef.current).padStart(3, '0')}`;
+
+        // Build instance record with independent stats
+        const stats = aiModelDef.stats ? { ...aiModelDef.stats } : { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100 };
+        const instanceRecord = {
+          instanceId,
+          assetId: aiModelDef.id,
+          assetName: aiModelDef.name,
+          modelMesh,
+          mixer: instanceMixer,
+          actions: instanceActions,
+          activeAction,
+          stats,
+          role: aiModelDef.role || 'enemy',
+          aiProfile: aiModelDef.ai_profile || {},
+          spawnTime: Date.now(),
+        };
+
+        spawnedAIModelsRef.current.set(instanceId, instanceRecord);
+        console.log(`[AI Spawn] Created instance ${instanceId} (${aiModelDef.name}) role=${instanceRecord.role} HP=${stats.hp}`);
+        return instanceId;
+      };
+
+      const despawnAIInstance = (instanceId) => {
+        const inst = spawnedAIModelsRef.current.get(instanceId);
+        if (!inst) return;
+        if (inst.mixer) inst.mixer.stopAllAction();
+        if (inst.modelMesh && sceneRef.current) sceneRef.current.remove(inst.modelMesh);
+        spawnedAIModelsRef.current.delete(instanceId);
+        console.log(`[AI Spawn] Despawned ${instanceId}`);
+      };
+
+      const despawnAllForAsset = (assetId) => {
+        const toRemove = [];
+        spawnedAIModelsRef.current.forEach((inst, id) => {
+          if (inst.assetId === assetId) toRemove.push(id);
+        });
+        toRemove.forEach(id => despawnAIInstance(id));
+      };
+
+      const onSpecialKeyDown = async (e) => {
         const keyCode = e.code;
+
+        // --- AI SPAWN KEY CHECK (before animation keybinds) ---
+        const aiModelDef = spawnableAIModels.get(keyCode);
+        if (aiModelDef) {
+          e.preventDefault();
+          const currentActiveModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+          if (!currentActiveModel) return;
+
+          // Count existing instances of this asset
+          let existingCount = 0;
+          spawnedAIModelsRef.current.forEach(inst => {
+            if (inst.assetId === aiModelDef.id) existingCount++;
+          });
+
+          // If instances exist and key pressed again, despawn all of this type
+          if (existingCount > 0) {
+            despawnAllForAsset(aiModelDef.id);
+          } else {
+            // Spawn a new independent instance
+            await spawnAIInstance(aiModelDef, currentActiveModel);
+          }
+          return;
+        }
+
+        // --- EXISTING ANIMATION KEYBIND SYSTEM ---
         const matchedKeybind = findKeybindForKey(keyCode);
 
         if (matchedKeybind && matchedKeybind.animationSequence && matchedKeybind.animationSequence.length > 0) {
