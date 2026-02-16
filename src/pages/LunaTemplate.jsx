@@ -572,32 +572,36 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       animate();
 
       // --- KEYBIND-DRIVEN INPUT HANDLER ---
-      // Looks up the pressed key in the keybinds database for Y-Bot and plays the sequence.
+      // Looks up the pressed key in the keybinds database for the ACTIVE character.
       const onSpecialKey = (e) => {
-        if (sequenceLockRef.current) return; // Don't accept input during active sequence
+        if (sequenceLockRef.current) return;
 
-        const keyCode = e.code; // e.g. "Space", "KeyC", "ShiftLeft"
+        const keyCode = e.code;
+        const isYBot = activeCharacterRef.current === 'ybot';
         
-        // Check keybinds for this key
+        // Check keybinds for this key — match against active character
         if (keybinds && keybinds.length > 0) {
-          // Find keybinds for Y-Bot (match by name containing 'y-bot' or 'ybot' or by the Y-Bot model ID)
-          const yBotKeybind = keybinds.find(kb => {
+          const matchedKeybind = keybinds.find(kb => {
             const keyMatch = kb.key === keyCode;
             if (!keyMatch) return false;
-            // Match Y-Bot by name (flexible)
             const modelName = (kb.modelName || '').toLowerCase();
-            return modelName.includes('y bot') || modelName.includes('y-bot') || modelName.includes('ybot');
+            if (isYBot) {
+              return modelName.includes('y bot') || modelName.includes('y-bot') || modelName.includes('ybot');
+            } else {
+              return modelName.includes('c1') || modelName.includes('erika') || modelName.includes('archer');
+            }
           });
 
-          if (yBotKeybind && yBotKeybind.animationSequence && yBotKeybind.animationSequence.length > 0) {
-            playSequence(yBotKeybind.animationSequence);
-            return; // Keybind handled, don't fall through to legacy
+          if (matchedKeybind && matchedKeybind.animationSequence && matchedKeybind.animationSequence.length > 0) {
+            playSequence(matchedKeybind.animationSequence);
+            return;
           }
         }
 
-        // Legacy fallback for unbound keys (backwards compatible)
+        // Legacy fallback
+        const currentActions = isYBot ? actionsRef.current : c1ActionsRef.current;
         if (e.key === '1' || e.key === 'c' || e.key === 'C') {
-          const action = actionsRef.current['hurricane_kick'];
+          const action = currentActions['hurricane_kick'];
           if (action) {
             action.setLoop(THREE.LoopOnce, 1);
             action.clampWhenFinished = true;
@@ -605,7 +609,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
         }
         if (e.key === 'r' || e.key === 'R') {
-          const action = actionsRef.current['sprinting'];
+          const action = currentActions['sprinting'];
           if (action) {
             action.setLoop(THREE.LoopOnce, 1);
             action.clampWhenFinished = true;
