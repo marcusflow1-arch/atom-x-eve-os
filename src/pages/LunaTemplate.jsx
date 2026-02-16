@@ -853,7 +853,20 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
   }, [adminAnimations, keybinds]);
 
-  return <div ref={containerRef} className="w-full h-full relative" />;
+  return (
+    <div ref={containerRef} className="w-full h-full relative">
+      {/* Active Character Indicator */}
+      <div className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase pointer-events-none"
+        style={{
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          color: 'rgba(255,255,255,0.7)'
+        }}>
+        {activeCharacterRef.current === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \ ⟩
+      </div>
+    </div>
+  );
 }
 
 
