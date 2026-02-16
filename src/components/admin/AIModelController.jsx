@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Bot, Shield, Swords, Heart, Zap, Eye, Move, Target, AlertTriangle, Save, Loader2 } from 'lucide-react';
+import { Bot, Shield, Swords, Heart, Zap, Eye, Move, Target, AlertTriangle, Save, Loader2, BookmarkPlus, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { showSuccess, showError } from '@/components/error/ErrorToast';
 import AIAnimationAssigner from './AIAnimationAssigner';
 import AICombatSettings from './AICombatSettings';
 import AISpawnKeybind from './AISpawnKeybind';
+import AIProfileBrowser from './AIProfileBrowser';
 
 const BEHAVIOR_TYPES = [
   { value: 'passive_wander', label: 'Passive Wander', desc: 'Wanders randomly within radius, occasional idle', icon: Move },
@@ -31,6 +32,10 @@ export default function AIModelController() {
   const queryClient = useQueryClient();
   const [selectedModelId, setSelectedModelId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileName, setProfileName] = useState('');
+  const [profileDesc, setProfileDesc] = useState('');
+  const [showSaveProfileForm, setShowSaveProfileForm] = useState(false);
 
   const { data: models = [] } = useQuery({
     queryKey: ['ai-models'],
@@ -71,6 +76,7 @@ export default function AIModelController() {
     } else {
       setEditState(null);
     }
+    setShowSaveProfileForm(false);
   };
 
   const handleSave = async () => {
@@ -79,11 +85,80 @@ export default function AIModelController() {
     try {
       await base44.entities.Model3D.update(selectedModelId, editState);
       queryClient.invalidateQueries({ queryKey: ['ai-models'] });
-      showSuccess('AI profile saved');
+      showSuccess('AI profile saved to model');
     } catch (e) {
       showError(e, 'Save AI Profile');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Save current config as a reusable AIBehaviorProfile
+  const handleSaveAsProfile = async () => {
+    if (!editState || !profileName.trim()) {
+      showError('Please enter a profile name');
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      await base44.entities.AIBehaviorProfile.create({
+        name: profileName.trim(),
+        description: profileDesc.trim(),
+        source_model_id: selectedModelId || '',
+        source_model_name: selectedModel?.name || '',
+        role: editState.role,
+        ai_enabled: editState.ai_enabled,
+        spawn_key: editState.spawn_key,
+        stats: editState.stats,
+        stats_per_level: editState.stats_per_level,
+        ai_profile: editState.ai_profile,
+      });
+      queryClient.invalidateQueries({ queryKey: ['ai-behavior-profiles'] });
+      showSuccess(`Profile "${profileName}" saved!`);
+      setProfileName('');
+      setProfileDesc('');
+      setShowSaveProfileForm(false);
+    } catch (e) {
+      showError(e, 'Save Profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // Load a saved profile into the editor (overrides current editState)
+  const handleLoadProfile = (profile) => {
+    if (!selectedModelId) {
+      showError('Select a model first before loading a profile');
+      return;
+    }
+    setEditState({
+      role: profile.role || 'enemy',
+      ai_enabled: profile.ai_enabled ?? true,
+      spawn_key: profile.spawn_key || '',
+      stats: { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100, ...(profile.stats || {}) },
+      stats_per_level: { hp: 10, attack: 2, defense: 1, speed: 0.05, stamina: 5, ...(profile.stats_per_level || {}) },
+      ai_profile: {
+        behavior_type: 'idle_loop',
+        detection_range: 10,
+        attack_range: 2,
+        aggression_level: 5,
+        wander_radius: 5,
+        patrol_points: [],
+        animations: {},
+        ...(profile.ai_profile || {}),
+      },
+    });
+    showSuccess(`Loaded profile "${profile.name}" — remember to Save to apply it to the model`);
+  };
+
+  // Duplicate a profile (pre-fill the save form)
+  const handleDuplicateProfile = (profile) => {
+    setProfileName(profile.name + ' (Copy)');
+    setProfileDesc(profile.description || '');
+    setShowSaveProfileForm(true);
+    // Also load its data into editor if a model is selected
+    if (selectedModelId) {
+      handleLoadProfile(profile);
     }
   };
 
@@ -122,7 +197,7 @@ export default function AIModelController() {
             3D Model AI Controller
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            Assign AI behavior, combat stats, and animation sets to 3D models. All settings execute at runtime.
+            Assign AI behavior, combat stats, and animation sets to 3D models. Save as reusable profiles.
           </p>
         </div>
       </div>
@@ -280,13 +355,71 @@ export default function AIModelController() {
             onPerLevelChange={(s) => updateField('stats_per_level', s)}
           />
 
-          {/* Save Button */}
-          <Button onClick={handleSave} disabled={saving} className="w-full bg-purple-600 hover:bg-purple-700 py-3 text-base">
-            {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            Save AI Profile &amp; Stats for {selectedModel.name}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {/* Save to Model */}
+            <Button onClick={handleSave} disabled={saving} className="flex-1 bg-purple-600 hover:bg-purple-700 py-3 text-base">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              Save to Model ({selectedModel.name})
+            </Button>
+
+            {/* Save as Profile */}
+            <Button
+              onClick={() => setShowSaveProfileForm(!showSaveProfileForm)}
+              variant="outline"
+              className="py-3 border-purple-500/40 text-purple-300 hover:bg-purple-500/10"
+            >
+              <BookmarkPlus className="w-4 h-4 mr-2" />
+              Save as Profile
+            </Button>
+          </div>
+
+          {/* Save as Profile Form */}
+          {showSaveProfileForm && (
+            <div className="p-4 bg-purple-900/15 border border-purple-500/30 rounded-xl space-y-3">
+              <label className="text-xs font-bold text-purple-300 uppercase tracking-wider block">
+                Save Current Config as Reusable Profile
+              </label>
+              <p className="text-purple-200/60 text-xs">
+                This saves the current behavior, stats, animations, and role as a separate reusable file. You can later load it onto any model.
+              </p>
+              <Input
+                placeholder="Profile name (e.g. 'Aggressive Guard', 'Passive NPC')"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className="bg-slate-900 border-slate-700"
+              />
+              <Input
+                placeholder="Description (optional)"
+                value={profileDesc}
+                onChange={(e) => setProfileDesc(e.target.value)}
+                className="bg-slate-900 border-slate-700"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveAsProfile}
+                  disabled={savingProfile || !profileName.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {savingProfile ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <BookmarkPlus className="w-4 h-4 mr-2" />}
+                  Create Profile
+                </Button>
+                <Button variant="ghost" onClick={() => setShowSaveProfileForm(false)} className="text-slate-400">
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Saved Profiles Browser */}
+      <div className="mt-8 pt-6 border-t border-slate-800">
+        <AIProfileBrowser
+          onLoadProfile={handleLoadProfile}
+          onDuplicate={handleDuplicateProfile}
+        />
+      </div>
     </section>
   );
 }
