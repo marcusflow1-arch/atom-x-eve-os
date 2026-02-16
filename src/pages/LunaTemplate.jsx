@@ -834,6 +834,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('keydown', onSwitchCharacter);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('companionSummon', onCompanionSummon);
       window.removeEventListener('companionDismiss', onCompanionDismiss);
