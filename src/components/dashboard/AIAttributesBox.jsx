@@ -34,65 +34,183 @@ export default function AIAttributesBox() {
   ];
 
   return (
-    <div className="relative group">
-      {/* === OUTER FRAME — beveled console picture-frame === */}
+    <div className="relative group" style={{ margin: '14px' }}>
+
+      {/* ========= LAYER 1: OUTERMOST DROP SHADOW HALO ========= */}
       <div
-        className="absolute -inset-[6px] rounded-[20px] pointer-events-none z-0"
+        className="absolute -inset-[12px] rounded-[26px] pointer-events-none z-0"
         style={{
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 30%, rgba(0,0,0,0.15) 70%, rgba(255,255,255,0.08) 100%)',
+          background: 'transparent',
           boxShadow: `
-            inset 0 1px 0 rgba(255,255,255,0.15),
+            0 0 40px rgba(80, 140, 255, 0.06),
+            0 0 80px rgba(80, 140, 255, 0.03),
+            0 8px 32px rgba(0, 0, 0, 0.5)
+          `,
+        }}
+      />
+
+      {/* ========= LAYER 2: OUTER RIDGE — the wide console bezel ========= */}
+      <div
+        className="absolute -inset-[10px] rounded-[24px] pointer-events-none z-[1]"
+        style={{
+          background: `
+            linear-gradient(170deg, 
+              rgba(255,255,255,0.14) 0%, 
+              rgba(140,160,200,0.08) 15%,
+              rgba(20,25,35,0.7) 40%, 
+              rgba(10,14,20,0.85) 60%,
+              rgba(140,160,200,0.06) 85%,
+              rgba(255,255,255,0.10) 100%
+            )
+          `,
+          boxShadow: `
+            inset 0 2px 0 rgba(255,255,255,0.12),
+            inset 0 -2px 0 rgba(0,0,0,0.4),
+            inset 2px 0 0 rgba(255,255,255,0.06),
+            inset -2px 0 0 rgba(255,255,255,0.06),
+            0 0 0 1px rgba(255,255,255,0.05)
+          `,
+        }}
+      />
+
+      {/* ========= LAYER 3: ENGRAVED CHANNEL — inset groove between outer & inner ========= */}
+      <div
+        className="absolute -inset-[7px] rounded-[21px] pointer-events-none z-[2]"
+        style={{
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(10,14,22,0.5) 50%, rgba(0,0,0,0.2) 100%)',
+          boxShadow: `
+            inset 0 1px 3px rgba(0,0,0,0.6),
+            inset 0 -1px 2px rgba(255,255,255,0.06),
+            0 0 0 1px rgba(255,255,255,0.04)
+          `,
+        }}
+      />
+
+      {/* ========= LAYER 4: INNER BEVEL — raised lip before content ========= */}
+      <div
+        className="absolute -inset-[4px] rounded-[18px] pointer-events-none z-[3]"
+        style={{
+          background: `
+            linear-gradient(170deg,
+              rgba(255,255,255,0.10) 0%,
+              rgba(60,80,120,0.08) 20%,
+              rgba(15,20,30,0.5) 50%,
+              rgba(60,80,120,0.06) 80%,
+              rgba(255,255,255,0.07) 100%
+            )
+          `,
+          boxShadow: `
+            inset 0 1px 0 rgba(255,255,255,0.14),
             inset 0 -1px 0 rgba(0,0,0,0.3),
-            0 0 0 1px rgba(255,255,255,0.06),
-            0 4px 20px rgba(0,0,0,0.4)
+            inset 1px 0 0 rgba(255,255,255,0.08),
+            inset -1px 0 0 rgba(255,255,255,0.08)
           `,
         }}
       />
 
-      {/* === INNER BEVEL — the step-in ledge === */}
-      <div
-        className="absolute -inset-[3px] rounded-[17px] pointer-events-none z-[1]"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(15,20,25,0.6) 50%, rgba(255,255,255,0.04) 100%)',
-          boxShadow: `
-            inset 0 1px 0 rgba(255,255,255,0.10),
-            inset 0 -1px 0 rgba(255,255,255,0.05),
-            inset 1px 0 0 rgba(255,255,255,0.06),
-            inset -1px 0 0 rgba(255,255,255,0.06)
-          `,
-        }}
-      />
-
-      {/* === CORNER ACCENTS — console rivets === */}
+      {/* ========= CORNER BRACKETS — L-shaped decorative corners ========= */}
       {[
-        'top-[-8px] left-[-8px]',
-        'top-[-8px] right-[-8px]',
-        'bottom-[-8px] left-[-8px]',
-        'bottom-[-8px] right-[-8px]',
-      ].map((pos, i) => (
+        { top: '-12px', left: '-12px', borderW: '2px 0 0 2px', radius: '6px 0 0 0' },
+        { top: '-12px', right: '-12px', borderW: '2px 2px 0 0', radius: '0 6px 0 0' },
+        { bottom: '-12px', left: '-12px', borderW: '0 0 2px 2px', radius: '0 0 0 6px' },
+        { bottom: '-12px', right: '-12px', borderW: '0 2px 2px 0', radius: '0 0 6px 0' },
+      ].map((corner, i) => (
         <div
-          key={i}
-          className={`absolute ${pos} w-[10px] h-[10px] rounded-full z-[3] pointer-events-none`}
+          key={`bracket-${i}`}
+          className="absolute w-[18px] h-[18px] pointer-events-none z-[5]"
           style={{
-            background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.04) 60%, transparent 100%)',
-            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.12), 0 1px 3px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            ...corner,
+            borderWidth: corner.borderW,
+            borderStyle: 'solid',
+            borderColor: 'rgba(120, 170, 255, 0.25)',
+            borderRadius: corner.radius,
+            filter: 'drop-shadow(0 0 3px rgba(100, 160, 255, 0.15))',
           }}
         />
       ))}
 
-      {/* === EDGE ACCENT LINES — top & bottom trim === */}
+      {/* ========= CORNER DOTS — jewel rivets at each bracket ========= */}
+      {[
+        'top-[-14px] left-[-14px]',
+        'top-[-14px] right-[-14px]',
+        'bottom-[-14px] left-[-14px]',
+        'bottom-[-14px] right-[-14px]',
+      ].map((pos, i) => (
+        <div
+          key={`rivet-${i}`}
+          className={`absolute ${pos} w-[6px] h-[6px] rounded-full z-[6] pointer-events-none`}
+          style={{
+            background: 'radial-gradient(circle, rgba(130,180,255,0.5) 0%, rgba(130,180,255,0.15) 50%, transparent 100%)',
+            boxShadow: '0 0 6px rgba(100,160,255,0.3), inset 0 0.5px 1px rgba(255,255,255,0.3)',
+          }}
+        />
+      ))}
+
+      {/* ========= SIDE NOTCHES — horizontal accent cuts on left & right ========= */}
+      {['left', 'right'].map((side) => (
+        <React.Fragment key={side}>
+          {[30, 55, 80].map((pct) => (
+            <div
+              key={`${side}-notch-${pct}`}
+              className="absolute pointer-events-none z-[4]"
+              style={{
+                top: `${pct}%`,
+                [side]: '-11px',
+                width: '5px',
+                height: '1px',
+                background: 'linear-gradient(90deg, rgba(120,170,255,0.0), rgba(120,170,255,0.2), rgba(120,170,255,0.0))',
+              }}
+            />
+          ))}
+        </React.Fragment>
+      ))}
+
+      {/* ========= TOP TRIM — glowing engraved line ========= */}
       <div
-        className="absolute -top-[6px] left-[20px] right-[20px] h-[1px] z-[2] pointer-events-none"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(120,180,255,0.15), rgba(120,180,255,0.25), rgba(120,180,255,0.15), transparent)' }}
+        className="absolute -top-[10px] left-[28px] right-[28px] h-[1px] z-[4] pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(100,160,255,0.08) 15%, rgba(100,170,255,0.3) 50%, rgba(100,160,255,0.08) 85%, transparent 100%)',
+          boxShadow: '0 0 6px rgba(100,160,255,0.12)',
+        }}
       />
+      {/* Top secondary accent */}
       <div
-        className="absolute -bottom-[6px] left-[20px] right-[20px] h-[1px] z-[2] pointer-events-none"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(120,180,255,0.10), rgba(120,180,255,0.18), rgba(120,180,255,0.10), transparent)' }}
+        className="absolute -top-[8px] left-[40px] right-[40px] h-[1px] z-[4] pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), rgba(255,255,255,0.12), rgba(255,255,255,0.06), transparent)',
+        }}
       />
 
-      {/* === MAIN CARD CONTENT === */}
-      <div className="relative z-[2] rounded-2xl border border-white/10 overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)' }}>
+      {/* ========= BOTTOM TRIM — dual glow lines ========= */}
+      <div
+        className="absolute -bottom-[10px] left-[28px] right-[28px] h-[1px] z-[4] pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(100,160,255,0.06) 15%, rgba(100,170,255,0.22) 50%, rgba(100,160,255,0.06) 85%, transparent 100%)',
+          boxShadow: '0 0 4px rgba(100,160,255,0.08)',
+        }}
+      />
+      <div
+        className="absolute -bottom-[8px] left-[40px] right-[40px] h-[1px] z-[4] pointer-events-none"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.04), rgba(255,255,255,0.09), rgba(255,255,255,0.04), transparent)',
+        }}
+      />
+
+      {/* ========= TOP CENTER BADGE — small decorative diamond ========= */}
+      <div
+        className="absolute -top-[14px] left-1/2 -translate-x-1/2 z-[6] pointer-events-none"
+        style={{
+          width: '8px',
+          height: '8px',
+          transform: 'translateX(-50%) rotate(45deg)',
+          background: 'linear-gradient(135deg, rgba(130,180,255,0.35), rgba(80,120,200,0.15))',
+          border: '1px solid rgba(130,180,255,0.25)',
+          boxShadow: '0 0 8px rgba(100,160,255,0.2), inset 0 0.5px 1px rgba(255,255,255,0.2)',
+        }}
+      />
+
+      {/* ========= MAIN CARD CONTENT ========= */}
+      <div className="relative z-[5] rounded-2xl border border-white/10 overflow-hidden" style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(16px)' }}>
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
