@@ -19,6 +19,8 @@ export default function FarmGameView({ game, onBack }) {
   const activeTopic = searchParams.get('topic');
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeVoiceRoom, setActiveVoiceRoom] = useState(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef(null);
 
   const setActiveTopic = (topic) => {
     setSearchParams(prev => {
