@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic2, MessageSquare, Plus, ArrowLeft, Shield } from 'lucide-react';
+import { Mic2, MessageSquare, Plus, ArrowLeft, Shield, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
