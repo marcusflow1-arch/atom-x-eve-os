@@ -1,61 +1,50 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-    Trophy, Users, Shield, Hash, Target, Calendar, MessageSquare, AlertCircle 
-} from 'lucide-react';
+import { Trophy, Users, Target, Calendar, AlertCircle, Video, UserPlus, MessageSquare } from 'lucide-react';
 
 const TOPICS = [
-    { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'text-yellow-400' },
-    { id: 'farming', label: 'Farming / Co-op', icon: Target, color: 'text-green-400' },
-    { id: 'recruitment', label: 'Recruitment', icon: Users, color: 'text-blue-400' },
-    { id: 'bugs', label: 'Bugs & Issues', icon: AlertCircle, color: 'text-red-400' },
-    { id: 'events', label: 'Events', icon: Calendar, color: 'text-purple-400' },
-    { id: 'general', label: 'General', icon: MessageSquare, color: 'text-slate-400' },
+  { id: 'achievements', label: 'Achievements', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  { id: 'farming', label: 'Farm Queues', icon: Target, color: 'text-green-400', bg: 'bg-green-500/10' },
+  { id: 'recruitment', label: 'Recruit', icon: UserPlus, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  { id: 'bugs', label: 'Bugs & Issues', icon: AlertCircle, color: 'text-red-400', bg: 'bg-red-500/10' },
+  { id: 'events', label: 'Events', icon: Calendar, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { id: 'content', label: 'Videos & Guides', icon: Video, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
 ];
 
+export { TOPICS };
+
 export default function FarmTopicSelector({ activeTopic, onSelect }) {
-    return (
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2">
-            {!activeTopic && (
-                 <div className="text-white/30 text-xs font-medium uppercase tracking-wider mr-2 animate-pulse">
-                    Select a topic to begin
-                </div>
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      {TOPICS.map((topic) => {
+        const isActive = activeTopic === topic.id;
+        return (
+          <button
+            key={topic.id}
+            onClick={() => onSelect(isActive ? null : topic.id)}
+            className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap ${
+              isActive
+                ? 'text-white border border-white/15'
+                : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04] border border-transparent'
+            }`}
+            style={isActive ? {
+              background: 'rgba(255,255,255,0.08)',
+              boxShadow: '0 0 12px rgba(255,255,255,0.04)',
+            } : {}}
+          >
+            <topic.icon className={`w-3.5 h-3.5 ${isActive ? topic.color : ''}`} />
+            <span className="text-xs font-semibold tracking-wide">{topic.label}</span>
+            {isActive && (
+              <motion.div
+                layoutId="farmTopicPill"
+                className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-cyan-400"
+                initial={false}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              />
             )}
-            
-            {TOPICS.map((topic) => {
-                const isActive = activeTopic === topic.id;
-                
-                return (
-                    <button
-                        key={topic.id}
-                        onClick={() => onSelect(topic.id)}
-                        className={`
-                            relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:bg-white/10
-                            ${isActive 
-                                ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)] ring-1 ring-white/20' 
-                                : 'bg-transparent text-white/40 hover:text-white/80 hover:bg-white/5'
-                            }
-                        `}
-                    >
-                        <topic.icon 
-                            className={`w-4 h-4 transition-colors ${isActive ? topic.color : 'currentColor'}`} 
-                        />
-                        <span className="text-sm font-bold tracking-wide whitespace-nowrap">
-                            {topic.label}
-                        </span>
-                        
-                        {isActive && (
-                            <motion.div
-                                layoutId="activeTabIndicator"
-                                className="absolute bottom-0 left-2 right-2 h-[2px] bg-blue-500 rounded-full"
-                                initial={false}
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            />
-                        )}
-                    </button>
-                );
-            })}
-        </div>
-    );
+          </button>
+        );
+      })}
+    </div>
+  );
 }
