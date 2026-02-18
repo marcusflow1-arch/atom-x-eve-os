@@ -20,6 +20,7 @@ import AIModelController from '../components/admin/AIModelController';
 import ExpProgressionAdmin from '../components/admin/ExpProgressionAdmin';
 import GameFileAnalyzer from '../components/admin/GameFileAnalyzer';
 import InfrastructurePanel from '../components/admin/InfrastructurePanel';
+import ReactorEditor from '../components/admin/ReactorEditor';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -456,6 +457,7 @@ export default function Admin() {
             <TabsTrigger value="exp-progression">EXP & Leveling</TabsTrigger>
             <TabsTrigger value="game-files">Game Files</TabsTrigger>
             <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+            <TabsTrigger value="reactor">Reactor Editor</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -949,6 +951,10 @@ export default function Admin() {
 
           <TabsContent value="infrastructure" forceMount className="data-[state=inactive]:hidden">
             <InfrastructurePanel />
+          </TabsContent>
+
+          <TabsContent value="reactor" forceMount className="data-[state=inactive]:hidden">
+            <ReactorEditor />
           </TabsContent>
 
                     </Tabs>
