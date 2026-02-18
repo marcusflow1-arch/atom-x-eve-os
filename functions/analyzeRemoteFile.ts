@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
         if (folderLabel && folderLabel.startsWith('🎮')) knowledgeDomain = 'game_reference';
 
         // AI Analysis
-        const analysis = await base44.integrations.InvokeLLM({
+        const analysis = await base44.integrations.Core.InvokeLLM({
           prompt: `You are an EXHAUSTIVE knowledge extraction engine. Extract ALL useful knowledge from this file.
 
 FILE: "${label}" (${category}, from URL: ${url})
