@@ -984,14 +984,8 @@ function LayoutContent({ children, currentPageName }) {
                             <Gamepad2 className="w-4 h-4" /> Library
                           </button>
 
-                          <button onClick={() => navigate(createPageUrl('Achievements'))} className={achBtnClass(ap.includes('/achievements') || ap.includes('/aiachievements'))}>
-                            <Trophy className="w-4 h-4" /> Achievements
-                          </button>
-
-                          <div className="h-6 w-px bg-white/10 mx-1"></div>
-
                           <button onClick={() => navigate(createPageUrl('GenreMastery'))} className={achBtnClass(ap.includes('/genremastery'))}>
-                            <Layers className="w-4 h-4" /> Skill Tree
+                            <Trophy className="w-4 h-4" /> Cards
                           </button>
 
                           <button onClick={() => navigate(createPageUrl('AIBattle'))} className={achBtnClass(ap.includes('/aibattle'))}>
