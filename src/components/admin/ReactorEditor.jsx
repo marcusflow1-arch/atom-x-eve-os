@@ -380,8 +380,16 @@ export default function ReactorEditor() {
         <div className="flex items-center justify-center py-24 text-slate-600">
           <div className="text-center">
             <Zap className="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p className="font-medium">Select a character model above to start</p>
-            <p className="text-xs mt-1">Click bones directly in the 3D viewport to select them</p>
+            <p className="font-medium">
+              {sceneModels.length > 0
+                ? 'Select a model from the Luna 3D Viewer above'
+                : 'Open the Luna Dashboard to load 3D models into the scene'}
+            </p>
+            <p className="text-xs mt-1">
+              {sceneModels.length > 0
+                ? `${sceneModels.length} model${sceneModels.length > 1 ? 's' : ''} detected in the live viewer`
+                : 'Models in the 3D viewer will automatically appear in the dropdown'}
+            </p>
           </div>
         </div>
       ) : (
