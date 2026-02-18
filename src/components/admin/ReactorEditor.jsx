@@ -316,6 +316,7 @@ export default function ReactorEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Primary model picker: Luna 3D Viewer scene models */}
           <select
             value={selectedModelId || ''}
             onChange={(e) => {
@@ -327,11 +328,31 @@ export default function ReactorEditor() {
               setAnimTime(0);
               setIsPlaying(false);
             }}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white min-w-[200px]"
+            className="bg-emerald-900/40 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-xs text-emerald-300 min-w-[220px]"
+            title="Select a model from the live Luna 3D Viewer"
           >
-            <option value="">Select Character Model...</option>
-            {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.file_type})</option>)}
+            <option value="">{sceneModels.length > 0 ? '⚡ Select from Luna 3D Viewer...' : '⏳ Open Luna Dashboard to load scene models...'}</option>
+            {sceneModels.map(sm => (
+              <option key={sm.id} value={sm.id}>🎮 {sm.name} ({sm.type})</option>
+            ))}
+            {/* Fallback: DB models not in scene */}
+            {models.filter(m => !sceneModels.some(sm => sm.id === m.id)).length > 0 && (
+              <option disabled>── DB Models (not in scene) ──</option>
+            )}
+            {models.filter(m => !sceneModels.some(sm => sm.id === m.id)).map(m => (
+              <option key={m.id} value={m.id}>{m.name} ({m.file_type})</option>
+            ))}
           </select>
+          {sceneModels.length > 0 && (
+            <Badge className="bg-emerald-500/20 text-emerald-300 text-[8px] border border-emerald-500/30">
+              {sceneModels.length} in scene
+            </Badge>
+          )}
+          {sceneModels.length === 0 && (
+            <Badge className="bg-amber-500/20 text-amber-300 text-[8px] border border-amber-500/30 animate-pulse">
+              No scene — open Luna Dashboard
+            </Badge>
+          )}
           <Badge variant="outline" className="text-slate-400 text-[9px]">{reactors.length} reactors</Badge>
           {/* Live Sync Toggle */}
           <button
@@ -346,31 +367,6 @@ export default function ReactorEditor() {
             <Monitor className="w-3 h-3" />
             {liveSync ? 'Luna Sync ON' : 'Luna Sync OFF'}
           </button>
-          {/* Scene model picker from Luna viewer */}
-          {sceneModels.length > 0 && (
-            <select
-              value={selectedModelId || ''}
-              onChange={(e) => {
-                const sm = sceneModels.find(m => m.id === e.target.value);
-                if (sm) {
-                  setSelectedModelId(sm.id);
-                  setSelectedBone(null);
-                  setEditingReactor(null);
-                  setAnimationUrl(null);
-                  setAnimName(null);
-                  setAnimTime(0);
-                  setIsPlaying(false);
-                }
-              }}
-              className="bg-emerald-900/40 border border-emerald-500/30 rounded-lg px-2 py-1 text-[10px] text-emerald-300 max-w-[160px]"
-              title="Pick a model from the live Luna scene"
-            >
-              <option value="">Luna Scene Models...</option>
-              {sceneModels.map(sm => (
-                <option key={sm.id} value={sm.id}>{sm.name} ({sm.type})</option>
-              ))}
-            </select>
-          )}
           {activeFXDrag && (
             <Badge className="bg-amber-500/20 text-amber-300 text-[9px] border border-amber-500/30 animate-pulse">
               FX: {activeFXDrag.name} — click bone to place
