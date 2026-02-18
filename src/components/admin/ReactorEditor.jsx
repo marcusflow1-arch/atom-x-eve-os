@@ -283,6 +283,14 @@ export default function ReactorEditor() {
     setEditingReactor({ ...r });
     setSelectedBone(r.bone_name);
     setRightTab('properties');
+    // If the reactor has an animation, auto-load it for preview
+    if (r.animation_name && r.animation_name !== animName) {
+      const anim = animations.find(a => a.name === r.animation_name);
+      if (anim?.file_url) {
+        setAnimationUrl(anim.file_url);
+        setAnimName(anim.name);
+      }
+    }
   };
 
   // FX panel: click to assign to current reactor
