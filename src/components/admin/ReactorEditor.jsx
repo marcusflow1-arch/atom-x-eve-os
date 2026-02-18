@@ -58,42 +58,7 @@ export default function ReactorEditor() {
     return unsub;
   }, []);
 
-  // Sync editor state → Luna viewer via bridge
-  useEffect(() => {
-    if (!liveSync || !selectedModelId) return;
-    ReactorBridge.setActiveModel(selectedModelId, selectedModel?.name);
-  }, [selectedModelId, selectedModel?.name, liveSync]);
-
-  useEffect(() => {
-    if (!liveSync) return;
-    ReactorBridge.setReactors(reactors);
-  }, [reactors, liveSync]);
-
-  useEffect(() => {
-    if (!liveSync) return;
-    ReactorBridge.setPlayState(isPlaying);
-  }, [isPlaying, liveSync]);
-
-  useEffect(() => {
-    if (!liveSync) return;
-    ReactorBridge.setAnimTime(animTime);
-    // Check if any reactor is active at this time
-    const firing = reactors.find(r =>
-      animTime >= (r.trigger_time || 0) && animTime <= (r.trigger_end_time || r.trigger_time + 0.1)
-    );
-    if (firing) {
-      ReactorBridge.fireReactor(firing.id, firing.bone_name, firing.damage_type, firing.fx_name);
-    } else {
-      ReactorBridge.clearFiring();
-    }
-  }, [animTime, reactors, liveSync]);
-
-  useEffect(() => {
-    if (!liveSync || !animationUrl) return;
-    ReactorBridge.setPreviewAnimation(animationUrl, animName);
-  }, [animationUrl, animName, liveSync]);
-
-  // Fetch data
+  // Fetch data (must be before hooks that reference their results)
   const { data: models = [] } = useQuery({
     queryKey: ['models3d-reactor'],
     queryFn: () => base44.entities.Model3D.list('-created_date', 50),
