@@ -106,6 +106,40 @@ export default function ReactorEditor() {
 
   const selectedModel = models.find(m => m.id === selectedModelId);
 
+  // Sync editor state → Luna viewer via bridge
+  useEffect(() => {
+    if (!liveSync || !selectedModelId) return;
+    ReactorBridge.setActiveModel(selectedModelId, selectedModel?.name);
+  }, [selectedModelId, selectedModel?.name, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setReactors(reactors);
+  }, [reactors, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setPlayState(isPlaying);
+  }, [isPlaying, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setAnimTime(animTime);
+    const firing = reactors.find(r =>
+      animTime >= (r.trigger_time || 0) && animTime <= (r.trigger_end_time || r.trigger_time + 0.1)
+    );
+    if (firing) {
+      ReactorBridge.fireReactor(firing.id, firing.bone_name, firing.damage_type, firing.fx_name);
+    } else {
+      ReactorBridge.clearFiring();
+    }
+  }, [animTime, reactors, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync || !animationUrl) return;
+    ReactorBridge.setPreviewAnimation(animationUrl, animName);
+  }, [animationUrl, animName, liveSync]);
+
   // Bone click from viewport (click-to-select)
   const handleBoneClick = useCallback((bone) => {
     setSelectedBone(bone);
