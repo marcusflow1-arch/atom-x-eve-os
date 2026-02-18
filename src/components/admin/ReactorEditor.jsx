@@ -384,24 +384,30 @@ export default function ReactorEditor() {
 
   // ── Save / Load timeline ──
   const handleSaveTimeline = useCallback(() => {
-    if (!selectedModelId || !animName) {
-      showError('Select a model and animation first');
+    if (!selectedModelId) {
+      showError('Select a model first');
+      return;
+    }
+    if (!animName) {
+      showError('Select an animation first');
       return;
     }
     setTimelineSaving(true);
+    const matchedAnim = animations.find(a => a.name === animName);
     const payload = {
       model_id: selectedModelId,
       model_name: selectedModel?.name || '',
       animation_name: animName,
-      animation_id: animations.find(a => a.name === animName)?.id || '',
-      animation_url: animationUrl || '',
-      animation_duration: animDuration,
+      animation_id: matchedAnim?.id || '',
+      animation_url: animationUrl || matchedAnim?.file_url || '',
+      animation_duration: animDuration || 0,
       fx_blocks: fxBlocks,
       is_active: true,
     };
     if (activeTimelineId) {
       payload.id = activeTimelineId;
     }
+    console.log('[Timeline Save]', payload.animation_name, 'FX blocks:', payload.fx_blocks.length, 'Duration:', payload.animation_duration);
     saveTimelineMutation.mutate(payload);
   }, [selectedModelId, selectedModel, animName, animationUrl, animDuration, fxBlocks, activeTimelineId, animations]);
 
