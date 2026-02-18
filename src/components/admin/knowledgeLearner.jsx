@@ -75,7 +75,7 @@ async function _clearAllContentIDB() {
 
 // ─── State ──────────────────────────────────────────
 let _state = {
-  queue: [],           // { id, name, size, category, content, rawFile, needsUpload, status:'queued' }
+  queue: [],           // { id, name, size, category, content, rawFile, needsUpload, status:'queued', knowledgeDomain }
   completed: [],       // IDs of successfully learned files
   failed: [],          // { id, name, error }
   skipped: [],         // { id, name } — duplicates that were skipped
@@ -563,6 +563,27 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
   const summaryMatch = analysis.match(/##\s*Summary\s*\n([\s\S]*?)(?:\n##|$)/i);
   const summary = summaryMatch ? summaryMatch[1].trim().substring(0, 500) : pf.name;
 
+  // Determine knowledge domain: game_reference (studying existing games) vs engine_building (building tools/systems) vs general
+  let knowledgeDomain = pf.knowledgeDomain || 'general';
+  if (!pf.knowledgeDomain) {
+    // Auto-detect: if the folder name starts with the game emoji, it's a game reference
+    const folderName = _state.folderName || '';
+    if (folderName.startsWith('🎮')) {
+      knowledgeDomain = 'game_reference';
+    } else {
+      // Check file content for game engine indicators
+      const lowerContent = (pf.content || '').toLowerCase();
+      const lowerName = pf.name.toLowerCase();
+      const gameEngineIndicators = ['unreal', 'unity', 'godot', 'ue4', 'ue5', 'uproject', 'uasset', 'blueprint', 'gamemode', 'pawn', 'actor', 'playercontroller'];
+      const engineBuildIndicators = ['three.js', 'threejs', 'react-three', 'webgl', 'shader', 'glsl', 'scene.add', 'mesh', 'renderer'];
+      if (gameEngineIndicators.some(i => lowerName.includes(i) || lowerContent.substring(0, 2000).includes(i))) {
+        knowledgeDomain = 'game_reference';
+      } else if (engineBuildIndicators.some(i => lowerName.includes(i) || lowerContent.substring(0, 2000).includes(i))) {
+        knowledgeDomain = 'engine_building';
+      }
+    }
+  }
+
   await base44.entities.KnowledgeEntry.create({
     source_filename: pf.name,
     file_type: pf.name.split('.').pop()?.toLowerCase() || 'unknown',
@@ -572,6 +593,7 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
     extracted_code: codeBlocks.join('\n\n// ───────────────────\n\n'),
     tags,
     category: pf.category || classifyFile(pf.name),
+    knowledge_domain: knowledgeDomain,
     is_pinned: false,
   });
 }

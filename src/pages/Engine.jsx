@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight, Bot, Sparkles, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -8,16 +8,18 @@ import EngineViewport from '../components/engine/EngineViewport';
 import EngineToolbar from '../components/engine/EngineToolbar';
 import GameStudyPanel from '../components/engine/GameStudyPanel';
 import KnowledgeConnectionPanel from '../components/engine/KnowledgeConnectionPanel';
+import EngineAIChat from '../components/engine/EngineAIChat';
+import BlueprintPanel from '../components/engine/BlueprintPanel';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 
 export default function Engine() {
   const navigate = useNavigate();
   const [sceneApi, setSceneApi] = useState(null);
-  const [leftPanel, setLeftPanel] = useState('study'); // 'study' | 'tools'
+  const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints'
   const [rightPanel, setRightPanel] = useState('knowledge'); // 'knowledge'
   const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(true); // Start collapsed — AI chat is the primary interface
 
   useEffect(() => {
     const onKey = (e) => {
@@ -39,38 +41,46 @@ export default function Engine() {
               </div>
               <div>
                 <h1 className="text-white font-bold text-sm tracking-wider">ATOM×EVE ENGINE</h1>
-                <p className="text-white/40 text-[9px]">3D World Builder • Powered by Knowledge Bank</p>
+                <p className="text-white/40 text-[9px]">AI-Powered Builder • Knowledge-Driven • Blueprint System</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Panel toggle buttons */}
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" variant={leftPanel === 'ai' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('ai'); setLeftCollapsed(false); }}
+                className={`h-7 text-[10px] ${leftPanel === 'ai' ? 'bg-cyan-600 hover:bg-cyan-700' : ''}`}>
+                <Bot className="w-3 h-3 mr-1" /> AI Builder
+              </Button>
+              <Button size="sm" variant={leftPanel === 'blueprints' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('blueprints'); setLeftCollapsed(false); }}
+                className={`h-7 text-[10px] ${leftPanel === 'blueprints' ? 'bg-purple-600 hover:bg-purple-700' : ''}`}>
+                <Sparkles className="w-3 h-3 mr-1" /> Blueprints
+              </Button>
               <Button size="sm" variant={leftPanel === 'study' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('study'); setLeftCollapsed(false); }} className="h-7 text-[10px]">
                 <Gamepad2 className="w-3 h-3 mr-1" /> Game Study
               </Button>
               <Button size="sm" variant={leftPanel === 'tools' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('tools'); setLeftCollapsed(false); }} className="h-7 text-[10px]">
                 <Wrench className="w-3 h-3 mr-1" /> Tools
               </Button>
-              <div className="w-px h-5 bg-white/10 mx-1" />
-              <Button size="sm" variant="ghost" onClick={() => setRightCollapsed(!rightCollapsed)} className="h-7 text-[10px]">
+              <div className="w-px h-5 bg-white/10 mx-0.5" />
+              <Button size="sm" variant={!rightCollapsed ? 'default' : 'ghost'} onClick={() => setRightCollapsed(!rightCollapsed)} className="h-7 text-[10px]">
                 <Brain className="w-3 h-3 mr-1" /> Knowledge
               </Button>
             </div>
           </div>
 
-          {/* Main Layout: Left Panel + Viewport + Right Panel */}
+          {/* Main Layout */}
           <div className="flex-1 flex min-h-0">
             {/* Left Panel */}
             {!leftCollapsed && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 320, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+              <div
                 className="h-full border-r border-white/10 flex-shrink-0 overflow-hidden"
-                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: 320 }}
+                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: leftPanel === 'ai' ? 380 : 320 }}
               >
                 <div className="h-full flex flex-col">
-                  {leftPanel === 'study' ? (
+                  {leftPanel === 'ai' ? (
+                    <EngineAIChat sceneApi={sceneApi} />
+                  ) : leftPanel === 'blueprints' ? (
+                    <BlueprintPanel />
+                  ) : leftPanel === 'study' ? (
                     <GameStudyPanel />
                   ) : (
                     <div className="p-3">
@@ -78,35 +88,32 @@ export default function Engine() {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             )}
 
-            {/* Collapse/Expand Left */}
+            {/* Collapse Left */}
             <button onClick={() => setLeftCollapsed(!leftCollapsed)} className="w-4 flex-shrink-0 flex items-center justify-center hover:bg-white/5 transition-colors border-r border-white/5">
               {leftCollapsed ? <ChevronRight className="w-3 h-3 text-white/30" /> : <ChevronLeft className="w-3 h-3 text-white/30" />}
             </button>
 
-            {/* 3D Viewport - Takes remaining space (roughly 50%) */}
+            {/* 3D Viewport */}
             <div className="flex-1 min-w-0 p-2">
               <EngineViewport onSceneReady={setSceneApi} />
             </div>
 
-            {/* Collapse/Expand Right */}
+            {/* Collapse Right */}
             <button onClick={() => setRightCollapsed(!rightCollapsed)} className="w-4 flex-shrink-0 flex items-center justify-center hover:bg-white/5 transition-colors border-l border-white/5">
               {rightCollapsed ? <ChevronLeft className="w-3 h-3 text-white/30" /> : <ChevronRight className="w-3 h-3 text-white/30" />}
             </button>
 
-            {/* Right Panel - Knowledge Connection */}
+            {/* Right Panel */}
             {!rightCollapsed && (
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 280, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+              <div
                 className="h-full border-l border-white/10 flex-shrink-0 overflow-hidden"
                 style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: 280 }}
               >
                 <KnowledgeConnectionPanel />
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
