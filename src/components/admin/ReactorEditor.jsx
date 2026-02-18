@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles, Monitor } from 'lucide-react';
+import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles, Monitor, FolderOpen, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
@@ -48,6 +48,10 @@ export default function ReactorEditor() {
   const [selectedFXBlockId, setSelectedFXBlockId] = useState(null);
   let fxBlockCounter = useRef(0);
 
+  // Saved timeline management
+  const [activeTimelineId, setActiveTimelineId] = useState(null);
+  const [timelineSaving, setTimelineSaving] = useState(false);
+
   // Live scene models from Luna viewer
   const [sceneModels, setSceneModels] = useState([]);
   const [liveSync, setLiveSync] = useState(true); // sync editor → Luna viewer
@@ -72,6 +76,35 @@ export default function ReactorEditor() {
   const { data: animations = [] } = useQuery({
     queryKey: ['animations-reactor'],
     queryFn: () => base44.entities.AnimationFBX.list('-created_date', 200),
+  });
+
+  // Saved timelines for the selected model + animation
+  const { data: savedTimelines = [] } = useQuery({
+    queryKey: ['anim-timelines', selectedModelId, animName],
+    queryFn: () => {
+      const filter = { model_id: selectedModelId };
+      if (animName) filter.animation_name = animName;
+      return base44.entities.AnimationTimeline.filter(filter, '-updated_date', 50);
+    },
+    enabled: !!selectedModelId,
+  });
+
+  const saveTimelineMutation = useMutation({
+    mutationFn: async (payload) => {
+      if (payload.id) {
+        const { id, created_date, updated_date, created_by, ...data } = payload;
+        return base44.entities.AnimationTimeline.update(id, data);
+      } else {
+        return base44.entities.AnimationTimeline.create(payload);
+      }
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['anim-timelines'] });
+      setTimelineSaving(false);
+      if (result?.id) setActiveTimelineId(result.id);
+      showSuccess('Timeline saved');
+    },
+    onError: () => setTimelineSaving(false),
   });
 
   const { data: reactors = [] } = useQuery({
@@ -326,9 +359,56 @@ export default function ReactorEditor() {
     setSelectedFXBlockId(block._id);
   }, []);
 
+  // ── Save / Load timeline ──
+  const handleSaveTimeline = useCallback(() => {
+    if (!selectedModelId || !animName) {
+      showError('Select a model and animation first');
+      return;
+    }
+    setTimelineSaving(true);
+    const payload = {
+      model_id: selectedModelId,
+      model_name: selectedModel?.name || '',
+      animation_name: animName,
+      animation_id: animations.find(a => a.name === animName)?.id || '',
+      animation_url: animationUrl || '',
+      animation_duration: animDuration,
+      fx_blocks: fxBlocks,
+      is_active: true,
+    };
+    if (activeTimelineId) {
+      payload.id = activeTimelineId;
+    }
+    saveTimelineMutation.mutate(payload);
+  }, [selectedModelId, selectedModel, animName, animationUrl, animDuration, fxBlocks, activeTimelineId, animations]);
+
+  const handleLoadTimeline = useCallback((timeline) => {
+    setFxBlocks(timeline.fx_blocks || []);
+    setActiveTimelineId(timeline.id);
+    setSelectedFXBlockId(null);
+    if (timeline.animation_url && timeline.animation_url !== animationUrl) {
+      setAnimationUrl(timeline.animation_url);
+      setAnimName(timeline.animation_name);
+    }
+    showSuccess(`Loaded timeline for "${timeline.animation_name}"`);
+  }, [animationUrl]);
+
+  // Auto-load saved timeline when animation changes
+  useEffect(() => {
+    if (!animName || !selectedModelId || savedTimelines.length === 0) return;
+    const match = savedTimelines.find(t => t.animation_name === animName && t.model_id === selectedModelId);
+    if (match && match.id !== activeTimelineId) {
+      setFxBlocks(match.fx_blocks || []);
+      setActiveTimelineId(match.id);
+    }
+  }, [animName, selectedModelId, savedTimelines]);
+
   const handleSelectAnimation = (anim) => {
     setAnimationUrl(anim.file_url);
     setAnimName(anim.name);
+    setFxBlocks([]); // clear FX blocks; will auto-load from saved timeline
+    setActiveTimelineId(null);
+    setSelectedFXBlockId(null);
     // Also set on editing reactor if one is active
     if (editingReactor) {
       setEditingReactor(prev => ({ ...prev, animation_name: anim.name, animation_id: anim.id }));
