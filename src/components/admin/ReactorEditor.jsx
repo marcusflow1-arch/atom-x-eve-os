@@ -8,7 +8,7 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactorViewport from './reactor/ReactorViewport';
 import ReactorBoneSelector from './reactor/ReactorBoneSelector';
 import ReactorPropertiesPanel from './reactor/ReactorPropertiesPanel';
-import ReactorTimeline from './reactor/ReactorTimeline';
+import SequencerTimeline from './reactor/SequencerTimeline';
 import FXUploadManager from './reactor/FXUploadManager';
 import AnimationPlaybackBar from './reactor/AnimationPlaybackBar';
 import ReactorBridge from './reactor/ReactorBridge';
@@ -42,6 +42,11 @@ export default function ReactorEditor() {
 
   // FX drag state
   const [activeFXDrag, setActiveFXDrag] = useState(null);
+
+  // FX timeline blocks (independent FX events on the timeline, not tied 1:1 to reactors)
+  const [fxBlocks, setFxBlocks] = useState([]);
+  const [selectedFXBlockId, setSelectedFXBlockId] = useState(null);
+  let fxBlockCounter = useRef(0);
 
   // Live scene models from Luna viewer
   const [sceneModels, setSceneModels] = useState([]);
@@ -126,15 +131,34 @@ export default function ReactorEditor() {
   useEffect(() => {
     if (!liveSync) return;
     ReactorBridge.setAnimTime(animTime);
-    const firing = reactors.find(r =>
+
+    // Check damage reactors
+    const firingReactor = reactors.find(r =>
       animTime >= (r.trigger_time || 0) && animTime <= (r.trigger_end_time || r.trigger_time + 0.1)
     );
-    if (firing) {
-      ReactorBridge.fireReactor(firing.id, firing.bone_name, firing.damage_type, firing.fx_name);
+
+    // Check FX blocks
+    const activeFX = fxBlocks.find(fx =>
+      animTime >= (fx.start_time || 0) && animTime <= (fx.start_time || 0) + (fx.duration_norm || 0.1)
+    );
+
+    if (firingReactor) {
+      ReactorBridge.fireReactor(firingReactor.id, firingReactor.bone_name, firingReactor.damage_type, firingReactor.fx_name);
+    } else if (activeFX) {
+      ReactorBridge.fireReactor(activeFX._id, activeFX.bone || '', '', activeFX.fx_name);
     } else {
       ReactorBridge.clearFiring();
     }
-  }, [animTime, reactors, liveSync]);
+
+    // Broadcast active FX blocks for viewport preview
+    ReactorBridge.emit('fxBlocksState', {
+      activeFXBlocks: fxBlocks.filter(fx =>
+        animTime >= (fx.start_time || 0) && animTime <= (fx.start_time || 0) + (fx.duration_norm || 0.1)
+      ),
+      allFXBlocks: fxBlocks,
+      animTime,
+    });
+  }, [animTime, reactors, fxBlocks, liveSync]);
 
   useEffect(() => {
     if (!liveSync || !animationUrl) return;
@@ -260,33 +284,47 @@ export default function ReactorEditor() {
     updateMutation.mutate({ id: reactorId, data: { trigger_time: newStart, trigger_end_time: newEnd } });
   }, [editingReactor, updateMutation]);
 
-  // Timeline: FX dropped at a specific time → create a new reactor at that point
+  // Timeline: FX dropped at a specific time → create an FX block on the FX track
   const handleDropFXAtTime = useCallback((fx, normalizedTime) => {
-    if (!selectedBone && !editingReactor) {
-      showError('Select a bone first, then drop FX on the timeline');
-      setActiveFXDrag(null);
-      return;
-    }
     const bone = selectedBone || editingReactor?.bone_name || '';
-    const fxDuration = (fx.duration || 0.5) / (animDuration || 3); // normalize FX duration
+    const fxDurNorm = Math.min((fx.duration || 0.5) / (animDuration || 3), 0.25); // normalize FX duration
     const startTime = Math.round(normalizedTime * 100) / 100;
-    const endTime = Math.min(1, Math.round((normalizedTime + Math.min(fxDuration, 0.2)) * 100) / 100);
 
-    setEditingReactor({
-      ...DEFAULT_REACTOR,
-      character_model_id: selectedModelId,
-      character_name: selectedModel?.name || '',
-      bone_name: bone,
-      animation_name: animName || '',
-      trigger_time: startTime,
-      trigger_end_time: endTime,
+    fxBlockCounter.current += 1;
+    const newBlock = {
+      _id: `fxb_${Date.now()}_${fxBlockCounter.current}`,
       fx_id: fx.id,
       fx_name: fx.name,
-    });
-    setRightTab('properties');
+      effect_type: fx.effect_type || 'burst',
+      color: fx.color || '#ff8800',
+      start_time: startTime,
+      duration_norm: Math.round(fxDurNorm * 100) / 100,
+      bone: bone,
+      is_looping: fx.is_looping || false,
+      linked_reactor_id: null,
+    };
+
+    setFxBlocks(prev => [...prev, newBlock]);
+    setSelectedFXBlockId(newBlock._id);
     setActiveFXDrag(null);
-    showSuccess(`FX "${fx.name}" placed at ${startTime.toFixed(2)} on ${bone}`);
-  }, [selectedBone, editingReactor, selectedModelId, selectedModel, animName, animDuration]);
+    showSuccess(`FX "${fx.name}" placed at ${startTime.toFixed(2)}`);
+  }, [selectedBone, editingReactor, animDuration]);
+
+  // Update an FX block's properties (move, resize)
+  const handleUpdateFXBlock = useCallback((blockId, updates) => {
+    setFxBlocks(prev => prev.map(b => b._id === blockId ? { ...b, ...updates } : b));
+  }, []);
+
+  // Remove an FX block
+  const handleRemoveFXBlock = useCallback((blockId) => {
+    setFxBlocks(prev => prev.filter(b => b._id !== blockId));
+    if (selectedFXBlockId === blockId) setSelectedFXBlockId(null);
+  }, [selectedFXBlockId]);
+
+  // Select an FX block
+  const handleSelectFXBlock = useCallback((block) => {
+    setSelectedFXBlockId(block._id);
+  }, []);
 
   const handleSelectAnimation = (anim) => {
     setAnimationUrl(anim.file_url);
@@ -439,28 +477,53 @@ export default function ReactorEditor() {
               />
             </div>
 
-            {/* Animation Playback Bar */}
-            <AnimationPlaybackBar
-              isPlaying={isPlaying}
-              onTogglePlay={() => setIsPlaying(!isPlaying)}
-              animTime={animTime}
-              onScrub={handleScrub}
-              animName={animName}
-              animDuration={animDuration}
-              onAnimationUploaded={handleAnimationUploaded}
-              animations={animations}
-              onSelectAnimation={handleSelectAnimation}
-            />
-
-            {/* Timeline */}
-            <div className="h-48 border-t border-slate-800 bg-slate-950/50">
-              <ReactorTimeline
-                reactors={reactors}
-                selectedReactorId={selectedReactorId}
-                onSelect={handleSelectReactor}
+            {/* Animation selector bar (compact) */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border-t border-slate-800">
+              <select
+                value={animName || ''}
+                onChange={(e) => {
+                  const anim = animations.find(a => a.name === e.target.value);
+                  if (anim?.file_url) handleSelectAnimation(anim);
+                }}
+                className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-[10px] text-white max-w-[180px]"
+                title="Select animation"
+              >
+                <option value="">Embedded Anim</option>
+                {animations.map(a => (
+                  <option key={a.id} value={a.name}>{a.name}</option>
+                ))}
+              </select>
+              <AnimationPlaybackBar
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying(!isPlaying)}
                 animTime={animTime}
                 onScrub={handleScrub}
+                animName={animName}
+                animDuration={animDuration}
+                onAnimationUploaded={handleAnimationUploaded}
+                animations={animations}
+                onSelectAnimation={handleSelectAnimation}
+              />
+            </div>
+
+            {/* Sequencer Timeline */}
+            <div className="border-t border-slate-800 bg-slate-950" style={{ height: '220px' }}>
+              <SequencerTimeline
+                reactors={reactors}
+                fxBlocks={fxBlocks}
+                selectedReactorId={selectedReactorId}
+                selectedFXBlockId={selectedFXBlockId}
+                onSelectReactor={handleSelectReactor}
+                onSelectFXBlock={handleSelectFXBlock}
+                animTime={animTime}
+                animDuration={animDuration}
+                animName={animName}
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying(!isPlaying)}
+                onScrub={handleScrub}
                 onUpdateReactorTime={handleUpdateReactorTime}
+                onUpdateFXBlock={handleUpdateFXBlock}
+                onRemoveFXBlock={handleRemoveFXBlock}
                 onDropFXAtTime={handleDropFXAtTime}
                 activeFXDrag={activeFXDrag}
               />
