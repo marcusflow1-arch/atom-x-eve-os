@@ -554,11 +554,12 @@ export default function ReactorEditor() {
                 onAnimLoaded={handleAnimLoaded}
                 activeFXDrag={activeFXDrag}
                 onFXDropOnBone={handleFXDropOnBone}
+                fxBlocks={fxBlocks}
               />
             </div>
 
             {/* Animation selector bar (compact) */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border-t border-slate-800">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/80 border-t border-slate-800 flex-wrap">
               <select
                 value={animName || ''}
                 onChange={(e) => {
@@ -573,6 +574,42 @@ export default function ReactorEditor() {
                   <option key={a.id} value={a.name}>{a.name}</option>
                 ))}
               </select>
+
+              {/* Save Timeline */}
+              <Button
+                size="sm"
+                onClick={handleSaveTimeline}
+                disabled={timelineSaving || !animName}
+                className="h-6 text-[9px] bg-green-600/80 hover:bg-green-600 text-white px-2"
+                title="Save FX timeline for this animation"
+              >
+                {timelineSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 mr-0.5" /> Save</>}
+              </Button>
+
+              {/* Load saved */}
+              {savedTimelines.length > 0 && (
+                <select
+                  value={activeTimelineId || ''}
+                  onChange={(e) => {
+                    const tl = savedTimelines.find(t => t.id === e.target.value);
+                    if (tl) handleLoadTimeline(tl);
+                  }}
+                  className="bg-slate-800 border border-slate-700 rounded-lg px-1.5 py-1 text-[9px] text-amber-300 max-w-[140px]"
+                  title="Load saved timeline"
+                >
+                  <option value="">Load saved...</option>
+                  {savedTimelines.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.animation_name} ({t.fx_blocks?.length || 0} FX)
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {activeTimelineId && (
+                <Badge className="bg-green-500/20 text-green-300 text-[7px] border border-green-500/30">Saved ✓</Badge>
+              )}
+
               <AnimationPlaybackBar
                 isPlaying={isPlaying}
                 onTogglePlay={() => setIsPlaying(!isPlaying)}
