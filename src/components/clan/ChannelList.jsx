@@ -147,17 +147,25 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-60 bg-slate-800/95 backdrop-blur-xl border-white/10 text-slate-300 rounded-xl p-1 shadow-2xl">
                     <DropdownMenuLabel className="text-xs uppercase text-slate-500 tracking-widest px-2 py-2">Division Settings</DropdownMenuLabel>
-                    <DropdownMenuItem className="hover:bg-white/10 hover:text-white cursor-pointer rounded-lg mb-1 focus:bg-white/10 focus:text-white" onClick={() => setIsCreateChannelOpen(true)}>
-                        <Plus className="w-4 h-4 mr-2" /> Create Channel
-                    </DropdownMenuItem>
+                    {(myRole === 'leader' || myRole === 'officer') ? (
+                        <DropdownMenuItem className="hover:bg-white/10 hover:text-white cursor-pointer rounded-lg mb-1 focus:bg-white/10 focus:text-white" onClick={() => setIsCreateChannelOpen(true)}>
+                            <Plus className="w-4 h-4 mr-2" /> Create Channel
+                        </DropdownMenuItem>
+                    ) : (
+                        <DropdownMenuItem disabled className="text-white/30 cursor-not-allowed rounded-lg mb-1">
+                            <Plus className="w-4 h-4 mr-2" /> Create Channel (Officers+)
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator className="bg-white/10" />
-                    <DropdownMenuItem className="text-red-400 hover:bg-red-500/20 hover:text-red-300 cursor-pointer rounded-lg focus:bg-red-500/20 focus:text-red-300" onClick={() => {
-                        if(confirm('Are you sure you want to delete this division? This action cannot be undone.')) {
-                            deleteClanMutation.mutate();
-                        }
-                    }}>
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete Division
-                    </DropdownMenuItem>
+                    {myRole === 'leader' && (
+                        <DropdownMenuItem className="text-red-400 hover:bg-red-500/20 hover:text-red-300 cursor-pointer rounded-lg focus:bg-red-500/20 focus:text-red-300" onClick={() => {
+                            if(confirm('Are you sure you want to delete this division? This action cannot be undone.')) {
+                                deleteClanMutation.mutate();
+                            }
+                        }}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete Division
+                        </DropdownMenuItem>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
 
@@ -172,10 +180,12 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                         <div className="flex items-center text-[10px] font-black uppercase tracking-widest">
                             <ChevronDown className="w-3 h-3 mr-1" /> Text Channels
                         </div>
-                        <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
-                            setNewChannelType('text');
-                            setIsCreateChannelOpen(true);
-                        }} />
+                        {(myRole === 'leader' || myRole === 'officer') && (
+                            <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
+                                setNewChannelType('text');
+                                setIsCreateChannelOpen(true);
+                            }} />
+                        )}
                     </div>
                     <div className="space-y-[2px]">
                         {textChannels.map(channel => (
@@ -195,29 +205,37 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                            {channel.role_restriction === 'officer' && <Badge className="ml-1.5 h-4 px-1 bg-blue-500/15 text-blue-300/70 border-blue-500/20 text-[9px]">Officers</Badge>}
                                            {channel.role_restriction === 'leader' && <Badge className="ml-1.5 h-4 px-1 bg-amber-500/15 text-amber-300/70 border-amber-500/20 text-[9px]"><Crown className="w-2.5 h-2.5 mr-0.5" />Leaders</Badge>}
                                         </div>
-                                        <X 
-                                           className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
-                                           onClick={(e) => {
-                                               e.stopPropagation();
-                                               if(confirm(`Delete #${channel.name}?`)) {
-                                                   deleteChannelMutation.mutate(channel.id);
-                                               }
-                                           }}
-                                        />
+                                        {myRole === 'leader' && (
+                                            <X 
+                                               className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
+                                               onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   if(confirm(`Delete #${channel.name}?`)) {
+                                                       deleteChannelMutation.mutate(channel.id);
+                                                   }
+                                               }}
+                                            />
+                                        )}
                                     </button>
                                 </ContextMenuTrigger>
                                 <ContextMenuContent className="bg-slate-800/95 backdrop-blur-xl border-white/10 rounded-lg shadow-xl">
-                                    <ContextMenuItem 
-                                        className="text-red-400 hover:bg-red-500/20 cursor-pointer"
-                                        onClick={() => {
-                                            if(confirm(`Delete #${channel.name}?`)) {
-                                                deleteChannelMutation.mutate(channel.id);
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Channel
-                                    </ContextMenuItem>
+                                    {myRole === 'leader' ? (
+                                        <ContextMenuItem 
+                                            className="text-red-400 hover:bg-red-500/20 cursor-pointer"
+                                            onClick={() => {
+                                                if(confirm(`Delete #${channel.name}?`)) {
+                                                    deleteChannelMutation.mutate(channel.id);
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Channel
+                                        </ContextMenuItem>
+                                    ) : (
+                                        <ContextMenuItem disabled className="text-white/30">
+                                            Only leaders can delete channels
+                                        </ContextMenuItem>
+                                    )}
                                 </ContextMenuContent>
                             </ContextMenu>
                         ))}
@@ -230,10 +248,12 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                         <div className="flex items-center text-[10px] font-black uppercase tracking-widest">
                             <ChevronDown className="w-3 h-3 mr-1" /> Voice Channels
                         </div>
-                        <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
-                            setNewChannelType('voice');
-                            setIsCreateChannelOpen(true);
-                        }} />
+                        {(myRole === 'leader' || myRole === 'officer') && (
+                            <Plus className="w-3 h-3 hover:text-blue-400" onClick={() => {
+                                setNewChannelType('voice');
+                                setIsCreateChannelOpen(true);
+                            }} />
+                        )}
                     </div>
                     <div className="space-y-[2px]">
                         {voiceChannels.map(channel => (
@@ -251,29 +271,37 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                             <Volume2 className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
                                             <span className="text-sm truncate">{channel.name}</span>
                                         </div>
-                                        <X 
-                                            className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
+                                        {myRole === 'leader' && (
+                                            <X 
+                                                className="w-3 h-3 text-white/30 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all" 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if(confirm(`Delete ${channel.name}?`)) {
+                                                        deleteChannelMutation.mutate(channel.id);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </button>
+                                </ContextMenuTrigger>
+                                <ContextMenuContent className="bg-slate-800/95 backdrop-blur-xl border-white/10 rounded-lg shadow-xl">
+                                    {myRole === 'leader' ? (
+                                        <ContextMenuItem 
+                                            className="text-red-400 hover:bg-red-500/20 cursor-pointer"
+                                            onClick={() => {
                                                 if(confirm(`Delete ${channel.name}?`)) {
                                                     deleteChannelMutation.mutate(channel.id);
                                                 }
                                             }}
-                                        />
-                                    </button>
-                                </ContextMenuTrigger>
-                                <ContextMenuContent className="bg-slate-800/95 backdrop-blur-xl border-white/10 rounded-lg shadow-xl">
-                                    <ContextMenuItem 
-                                        className="text-red-400 hover:bg-red-500/20 cursor-pointer"
-                                        onClick={() => {
-                                            if(confirm(`Delete ${channel.name}?`)) {
-                                                deleteChannelMutation.mutate(channel.id);
-                                            }
-                                        }}
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Channel
-                                    </ContextMenuItem>
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-2" />
+                                            Delete Channel
+                                        </ContextMenuItem>
+                                    ) : (
+                                        <ContextMenuItem disabled className="text-white/30">
+                                            Only leaders can delete channels
+                                        </ContextMenuItem>
+                                    )}
                                 </ContextMenuContent>
                             </ContextMenu>
                         ))}
