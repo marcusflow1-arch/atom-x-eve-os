@@ -249,6 +249,44 @@ export default function ReactorEditor() {
     setIsPlaying(false);
   };
 
+  // Timeline: drag reactor bar edges or body to update trigger times
+  const handleUpdateReactorTime = useCallback((reactorId, newStart, newEnd) => {
+    // Update locally in editingReactor if it matches
+    if (editingReactor?.id === reactorId) {
+      setEditingReactor(prev => ({ ...prev, trigger_time: newStart, trigger_end_time: newEnd }));
+    }
+    // Persist to DB
+    updateMutation.mutate({ id: reactorId, data: { trigger_time: newStart, trigger_end_time: newEnd } });
+  }, [editingReactor, updateMutation]);
+
+  // Timeline: FX dropped at a specific time → create a new reactor at that point
+  const handleDropFXAtTime = useCallback((fx, normalizedTime) => {
+    if (!selectedBone && !editingReactor) {
+      showError('Select a bone first, then drop FX on the timeline');
+      setActiveFXDrag(null);
+      return;
+    }
+    const bone = selectedBone || editingReactor?.bone_name || '';
+    const fxDuration = (fx.duration || 0.5) / (animDuration || 3); // normalize FX duration
+    const startTime = Math.round(normalizedTime * 100) / 100;
+    const endTime = Math.min(1, Math.round((normalizedTime + Math.min(fxDuration, 0.2)) * 100) / 100);
+
+    setEditingReactor({
+      ...DEFAULT_REACTOR,
+      character_model_id: selectedModelId,
+      character_name: selectedModel?.name || '',
+      bone_name: bone,
+      animation_name: animName || '',
+      trigger_time: startTime,
+      trigger_end_time: endTime,
+      fx_id: fx.id,
+      fx_name: fx.name,
+    });
+    setRightTab('properties');
+    setActiveFXDrag(null);
+    showSuccess(`FX "${fx.name}" placed at ${startTime.toFixed(2)} on ${bone}`);
+  }, [selectedBone, editingReactor, selectedModelId, selectedModel, animName, animDuration]);
+
   const handleSelectAnimation = (anim) => {
     setAnimationUrl(anim.file_url);
     setAnimName(anim.name);
