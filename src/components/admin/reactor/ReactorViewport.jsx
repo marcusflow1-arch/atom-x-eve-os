@@ -6,6 +6,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, SkipBack, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createFXGroup, updateFXGroup, createReactorFiringGlow } from './FXVisualRenderer';
+import ReactorBridge from './ReactorBridge';
 
 const VIEW_PRESETS = {
   perspective: { pos: [0, 1.5, 4], label: 'Perspective' },
@@ -24,6 +26,7 @@ const ReactorViewport = forwardRef(({
   modelUrl, selectedBone, reactors = [], onBoneClick,
   animationUrl, isPlaying, animTime, onAnimTimeChange, onAnimLoaded,
   activeFXDrag, onFXDropOnBone,
+  fxBlocks = [],
 }, ref) => {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -45,6 +48,9 @@ const ReactorViewport = forwardRef(({
   const [animDuration, setAnimDuration] = useState(0);
   const [localPlaying, setLocalPlaying] = useState(false);
   const animFrameRef = useRef(null);
+  const activeFXMeshesRef = useRef(new Map()); // fxBlockId -> { group, type }
+  const firingGlowRef = useRef(null);
+  const timeAccRef = useRef(0);
 
   useImperativeHandle(ref, () => ({
     getBones: () => bones,
@@ -155,6 +161,7 @@ const ReactorViewport = forwardRef(({
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
+      timeAccRef.current += delta;
 
       if (mixerRef.current && activeActionRef.current) {
         if (!activeActionRef.current.paused) {
@@ -176,6 +183,18 @@ const ReactorViewport = forwardRef(({
             }
           });
         }
+      }
+
+      // Update active FX meshes animation
+      activeFXMeshesRef.current.forEach(({ group, type }) => {
+        updateFXGroup(group, timeAccRef.current, type);
+      });
+
+      // Update firing glow animation
+      if (firingGlowRef.current) {
+        const pulse = Math.sin(timeAccRef.current * 8) * 0.3 + 1;
+        firingGlowRef.current.scale.setScalar(pulse);
+        firingGlowRef.current.rotation.y += 0.03;
       }
 
       controls.update();
