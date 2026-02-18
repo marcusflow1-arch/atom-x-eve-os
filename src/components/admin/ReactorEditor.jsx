@@ -43,6 +43,56 @@ export default function ReactorEditor() {
   // FX drag state
   const [activeFXDrag, setActiveFXDrag] = useState(null);
 
+  // Live scene models from Luna viewer
+  const [sceneModels, setSceneModels] = useState([]);
+  const [liveSync, setLiveSync] = useState(true); // sync editor → Luna viewer
+
+  // Listen for scene models from the Luna 3D viewer
+  useEffect(() => {
+    const unsub = ReactorBridge.on('sceneModelsUpdated', ({ models }) => {
+      setSceneModels(models);
+    });
+    // Also check if already populated
+    const existing = ReactorBridge.getState().sceneModels;
+    if (existing?.length) setSceneModels(existing);
+    return unsub;
+  }, []);
+
+  // Sync editor state → Luna viewer via bridge
+  useEffect(() => {
+    if (!liveSync || !selectedModelId) return;
+    ReactorBridge.setActiveModel(selectedModelId, selectedModel?.name);
+  }, [selectedModelId, selectedModel?.name, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setReactors(reactors);
+  }, [reactors, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setPlayState(isPlaying);
+  }, [isPlaying, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.setAnimTime(animTime);
+    // Check if any reactor is active at this time
+    const firing = reactors.find(r =>
+      animTime >= (r.trigger_time || 0) && animTime <= (r.trigger_end_time || r.trigger_time + 0.1)
+    );
+    if (firing) {
+      ReactorBridge.fireReactor(firing.id, firing.bone_name, firing.damage_type, firing.fx_name);
+    } else {
+      ReactorBridge.clearFiring();
+    }
+  }, [animTime, reactors, liveSync]);
+
+  useEffect(() => {
+    if (!liveSync || !animationUrl) return;
+    ReactorBridge.setPreviewAnimation(animationUrl, animName);
+  }, [animationUrl, animName, liveSync]);
+
   // Fetch data
   const { data: models = [] } = useQuery({
     queryKey: ['models3d-reactor'],
