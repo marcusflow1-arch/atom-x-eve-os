@@ -256,8 +256,18 @@ export default function ReactorEditor() {
   };
 
   const handleSaveReactor = () => {
-    if (!editingReactor?.bone_name || !editingReactor?.animation_name) {
-      showError('Bone and animation are required');
+    if (!editingReactor?.bone_name) {
+      showError('Bone is required — click a bone in the viewport');
+      return;
+    }
+    // Auto-fill animation_name from current selection if missing
+    if (!editingReactor.animation_name && animName) {
+      editingReactor.animation_name = animName;
+      const currentAnim = animations.find(a => a.name === animName);
+      if (currentAnim) editingReactor.animation_id = currentAnim.id;
+    }
+    if (!editingReactor.animation_name) {
+      showError('Select an animation first');
       return;
     }
     if (editingReactor.id) {
