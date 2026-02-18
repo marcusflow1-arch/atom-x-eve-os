@@ -456,7 +456,7 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
   const tagMatch = analysis.match(/##\s*Tags\s*\n([\s\S]*?)(?:\n##|$)/i);
   let tags = [];
   if (tagMatch) {
-    tags = tagMatch[1].match(/[\w.-]+/g)?.filter(t => t.length > 1 && t.length < 30).slice(0, 10) || [];
+    tags = tagMatch[1].match(/[\w.-]+/g)?.filter(t => t.length > 1 && t.length < 30).slice(0, 25) || [];
   }
 
   const codeBlocks = [];
