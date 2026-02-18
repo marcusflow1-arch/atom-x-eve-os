@@ -163,6 +163,48 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     return () => window.removeEventListener('characterSwitched', handler);
   }, []);
 
+  // --- REACTOR BRIDGE: Register scene models + listen for editor events ---
+  useEffect(() => {
+    // Build scene model list from loaded characters + AI spawns
+    const buildSceneModels = () => {
+      const models = [];
+      if (modelRef.current) {
+        models.push({ id: 'ybot', name: 'Y-Bot', type: 'ybot', file_url: 'ybot' });
+      }
+      if (c1ModelRef.current) {
+        models.push({ id: 'c1', name: 'C1 (Erika)', type: 'c1', file_url: 'c1' });
+      }
+      // Add spawned AI
+      spawnedAIModelsRef.current.forEach((inst) => {
+        models.push({ id: inst.assetId, name: inst.assetName || inst.instanceId, type: 'ai', file_url: '' });
+      });
+      // Add all DB models (so editor can pick any)
+      if (all3DModels?.length) {
+        all3DModels.forEach(m => {
+          if (!models.find(sm => sm.id === m.id)) {
+            models.push({ id: m.id, name: m.name, type: 'model3d', file_url: m.file_url });
+          }
+        });
+      }
+      ReactorBridge.registerSceneModels(models);
+    };
+
+    // Rebuild periodically as AI spawns change
+    const interval = setInterval(buildSceneModels, 3000);
+    buildSceneModels();
+
+    // Listen for reactor fired events from editor → show visual feedback in Luna viewer
+    const unsubFired = ReactorBridge.on('reactorFired', ({ bone, damageType }) => {
+      // Flash the active character's bone area (visual cue)
+      console.log(`[Luna Reactor] Reactor fired on bone: ${bone}, type: ${damageType}`);
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsubFired();
+    };
+  }, [all3DModels]);
+
   // Keep spawn/collision refs in sync with props
   useEffect(() => {
     playerSpawnRef.current = playerSpawn || { x: 0, y: -0.5, z: 0 };
