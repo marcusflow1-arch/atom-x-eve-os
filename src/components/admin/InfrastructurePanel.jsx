@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, Loader2, Brain, Trash2, Database, Globe, Sparkles, 
-  Copy, Check, ChevronDown, Settings2, Zap 
+  Copy, Check, ChevronDown, Settings2, Zap, Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { showSuccess, showError } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
 import { infraChat } from '@/functions/infraChat';
+import AIProviderConfig, { getActiveProvider, getSavedKeys } from '@/components/ai/AIProviderConfig';
+import { invokeAI, getActiveProviderLabel } from '@/components/ai/useAIChat';
 
 const AI_MODELS = [
   { id: 'default', label: 'Auto (Best Available)', icon: Sparkles, color: 'text-cyan-400' },
@@ -104,6 +106,7 @@ export default function InfrastructurePanel() {
   const [selectedModel, setSelectedModel] = useState('default');
   const [showModelPicker, setShowModelPicker] = useState(false);
   const [useKnowledge, setUseKnowledge] = useState(true);
+  const [showProviderConfig, setShowProviderConfig] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -146,13 +149,54 @@ export default function InfrastructurePanel() {
       });
       queryClient.invalidateQueries({ queryKey: ['infra-chat', sessionId] });
 
-      // Call backend
-      const res = await infraChat({
-        message: msg,
-        sessionId,
-        useKnowledge,
-        model: selectedModel,
-      });
+      const activeProvider = getActiveProvider();
+      const hasOwnKey = activeProvider !== 'base44' && getSavedKeys()[activeProvider]?.apiKey;
+
+      if (hasOwnKey) {
+        // ─── OFFLINE MODE: Use user's own API key directly from browser ───
+        let knowledgeContext = '';
+        let knowledgeIds = [];
+        if (useKnowledge) {
+          try {
+            const allKnowledge = await base44.entities.KnowledgeEntry.list('-created_date', 50);
+            const msgLower = msg.toLowerCase();
+            const words = msgLower.split(/\s+/).filter(w => w.length > 3);
+            const scored = allKnowledge.map(entry => {
+              let score = 0;
+              const searchable = `${entry.source_filename} ${entry.summary} ${(entry.tags || []).join(' ')}`.toLowerCase();
+              for (const word of words) { if (searchable.includes(word)) score += 1; }
+              if (entry.is_pinned) score += 3;
+              return { entry, score };
+            }).filter(s => s.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
+            knowledgeIds = scored.map(s => s.entry.id);
+            knowledgeContext = scored.map(s => `[${s.entry.category}] ${s.entry.source_filename}: ${(s.entry.summary || '').substring(0, 500)}`).join('\n');
+          } catch { /* knowledge unavailable offline */ }
+        }
+
+        const systemPrompt = `You are the INFRASTRUCTURE AI for the Atom×Eve game platform.
+You help analyze, build, and modify the project (React + Tailwind + Three.js + shadcn/ui).
+${knowledgeContext ? `\nKNOWLEDGE BANK:\n${knowledgeContext}\n` : ''}
+Be specific and actionable. Provide code when relevant.`;
+
+        const reply = await invokeAI({ systemPrompt, userMessage: msg });
+
+        await base44.entities.InfraChat.create({
+          role: 'assistant',
+          content: reply,
+          session_id: sessionId,
+          model_used: getActiveProviderLabel(),
+          knowledge_context: knowledgeIds,
+          actions_taken: [],
+        });
+      } else {
+        // ─── ONLINE MODE: Use Base44 backend function ───
+        await infraChat({
+          message: msg,
+          sessionId,
+          useKnowledge,
+          model: selectedModel,
+        });
+      }
 
       queryClient.invalidateQueries({ queryKey: ['infra-chat', sessionId] });
     } catch (err) {
@@ -241,12 +285,28 @@ export default function InfrastructurePanel() {
             </AnimatePresence>
           </div>
 
+          {/* API Keys */}
+          <Button size="sm" variant="ghost" onClick={() => setShowProviderConfig(!showProviderConfig)} className="text-slate-500 hover:text-white h-7 text-[10px]">
+            <Key className="w-3 h-3 mr-1" /> {showProviderConfig ? 'Hide Keys' : 'API Keys'}
+          </Button>
+
           {/* Clear */}
           <Button size="sm" variant="ghost" onClick={clearSession} className="text-slate-500 hover:text-white h-7 text-[10px]">
             <Trash2 className="w-3 h-3 mr-1" /> New Session
           </Button>
         </div>
       </div>
+
+      {/* Provider Config Panel */}
+      <AnimatePresence>
+        {showProviderConfig && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-b border-slate-800">
+            <div className="p-4 bg-slate-900/60 max-h-[400px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              <AIProviderConfig />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'thin' }}>
@@ -320,7 +380,7 @@ export default function InfrastructurePanel() {
           </Button>
         </div>
         <div className="flex items-center gap-3 mt-2 text-[9px] text-slate-600">
-          <span>Model: <span className={modelInfo.color}>{modelInfo.label}</span></span>
+          <span>Provider: <span className="text-cyan-400">{getActiveProviderLabel()}</span></span>
           <span>•</span>
           <span>Knowledge: {useKnowledge ? '✓ Enabled' : '✗ Disabled'}</span>
           <span>•</span>
