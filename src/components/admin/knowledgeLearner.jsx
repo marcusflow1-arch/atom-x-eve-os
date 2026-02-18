@@ -2,12 +2,76 @@
  * Knowledge Learner Engine — Module-level singleton
  * 
  * Runs analysis jobs in the background. Survives React re-renders and tab switches.
- * Persists queue to localStorage so interrupted sessions can resume.
- * Checks for duplicates before saving knowledge.
+ * 
+ * REFRESH-RESILIENT: File content (text) is persisted to IndexedDB alongside the queue.
+ * On page refresh, the engine auto-resumes processing without user intervention.
+ * Binary/asset files that need upload store a flag and are re-uploaded from cached content.
  */
 import { base44 } from '@/api/base44Client';
 
 const STORAGE_KEY = 'knowledge_learner_queue';
+const IDB_NAME = 'knowledge_learner_content';
+const IDB_VERSION = 1;
+const IDB_STORE = 'file_contents';
+
+// ─── IndexedDB for large content persistence ────────
+function _openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function _saveContentToIDB(id, content) {
+  try {
+    const db = await _openIDB();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put({ id, content });
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close();
+  } catch (e) { console.warn('[KnowledgeLearner] IDB save failed:', e); }
+}
+
+async function _getContentFromIDB(id) {
+  try {
+    const db = await _openIDB();
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const result = await new Promise((res) => {
+      const req = tx.objectStore(IDB_STORE).get(id);
+      req.onsuccess = () => res(req.result?.content || null);
+      req.onerror = () => res(null);
+    });
+    db.close();
+    return result;
+  } catch { return null; }
+}
+
+async function _deleteContentFromIDB(id) {
+  try {
+    const db = await _openIDB();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(id);
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close();
+  } catch {}
+}
+
+async function _clearAllContentIDB() {
+  try {
+    const db = await _openIDB();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).clear();
+    await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    db.close();
+  } catch {}
+}
 
 // ─── State ──────────────────────────────────────────
 let _state = {
@@ -39,10 +103,7 @@ function _notify() {
   _listeners.forEach(fn => fn(snapshot));
 }
 
-// ─── LocalStorage persistence ───────────────────────
-// We persist a lightweight version of the queue (no rawFile/content — those can't serialize).
-// On resume, we mark items that lost their content as "needs re-read" so the UI can prompt.
-
+// ─── LocalStorage persistence (metadata only) ───────
 function _persistQueue() {
   try {
     const serializable = _state.queue.map(f => ({
@@ -51,13 +112,14 @@ function _persistQueue() {
       size: f.size,
       category: f.category,
       needsUpload: f.needsUpload,
-      // content and rawFile are NOT serializable — mark as needing re-read
-      hasContent: !!f.content,
     }));
     const payload = {
       queue: serializable,
       folderName: _state.folderName,
       progress: _state.progress,
+      completed: _state.completed,
+      failed: _state.failed,
+      skipped: _state.skipped,
       timestamp: Date.now(),
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -69,8 +131,8 @@ function _loadPersistedQueue() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    // Discard if older than 24 hours (stale)
-    if (Date.now() - (data.timestamp || 0) > 24 * 60 * 60 * 1000) {
+    // Discard if older than 48 hours (stale)
+    if (Date.now() - (data.timestamp || 0) > 48 * 60 * 60 * 1000) {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
@@ -80,6 +142,7 @@ function _loadPersistedQueue() {
 
 function _clearPersisted() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  _clearAllContentIDB();
 }
 
 // ─── Duplicate cache ────────────────────────────────
@@ -101,7 +164,6 @@ async function _loadExistingKnowledge() {
   return _existingKnowledgeCache;
 }
 
-// Invalidate cache so next enqueue re-fetches
 export function invalidateKnowledgeCache() {
   _existingKnowledgeCache = null;
 }
@@ -127,10 +189,10 @@ export function getState() {
 
 /**
  * Enqueue files for learning. Automatically deduplicates against existing knowledge.
+ * Content is persisted to IndexedDB so it survives page refreshes.
  * Starts processing automatically.
  */
 export async function enqueueFiles(files, folderName) {
-  // Load existing knowledge for dedup
   const existing = await _loadExistingKnowledge();
 
   let added = 0;
@@ -138,18 +200,22 @@ export async function enqueueFiles(files, folderName) {
   for (const file of files) {
     const key = _makeKey(file.name, file.size);
     if (existing.has(key)) {
-      // Already learned — skip
       _state.skipped.push({ id: file.id, name: file.name });
       _state.progress.total += 1;
       _state.progress.done += 1;
       dupes++;
       continue;
     }
-    // Also check if already in queue
     if (_state.queue.some(q => q.name === file.name && q.size === file.size)) {
       dupes++;
       continue;
     }
+
+    // Persist content to IndexedDB so it survives refresh
+    if (file.content) {
+      await _saveContentToIDB(file.id, file.content);
+    }
+
     _state.queue.push(file);
     _state.progress.total += 1;
     added++;
@@ -159,7 +225,6 @@ export async function enqueueFiles(files, folderName) {
   _persistQueue();
   _notify();
 
-  // Auto-start if not already running
   if (!_state.isRunning && _state.queue.length > 0) {
     _processQueue();
   }
@@ -168,13 +233,11 @@ export async function enqueueFiles(files, folderName) {
 }
 
 /**
- * Check for an interrupted session and return info about it.
- * Does NOT auto-resume — the UI calls resumeInterrupted() to do that.
+ * Check for an interrupted session. Returns info or null.
  */
 export function getInterruptedSession() {
   const data = _loadPersistedQueue();
   if (!data || !data.queue || data.queue.length === 0) return null;
-  // If engine is already running, no need to resume
   if (_state.isRunning) return null;
   return {
     fileCount: data.queue.length,
@@ -185,10 +248,8 @@ export function getInterruptedSession() {
 }
 
 /**
- * Resume an interrupted session. Files that lost their content (because the browser
- * was closed) are skipped — only binary-type files that need re-upload are affected.
- * Text files we can't re-read without the user re-selecting them, so we skip those
- * and inform the user.
+ * Resume an interrupted session. Since content is stored in IndexedDB,
+ * most files can be resumed automatically without re-selecting the folder.
  */
 export async function resumeInterrupted() {
   const data = _loadPersistedQueue();
@@ -196,36 +257,53 @@ export async function resumeInterrupted() {
 
   const existing = await _loadExistingKnowledge();
 
+  // Restore completed/failed/skipped counters from persisted state
+  if (data.completed) _state.completed = data.completed;
+  if (data.failed) _state.failed = data.failed;
+  if (data.skipped) _state.skipped = data.skipped;
+  if (data.progress) _state.progress = { ...data.progress };
+
   let resumed = 0;
   let needsReselect = 0;
 
   for (const item of data.queue) {
     const key = _makeKey(item.name, item.size);
-    // Skip if already learned (maybe it was saved before the crash)
-    if (existing.has(key)) continue;
-    // Skip if already in current queue
+    if (existing.has(key)) {
+      _state.progress.done = (_state.progress.done || 0) + 1;
+      continue;
+    }
     if (_state.queue.some(q => q.name === item.name && q.size === item.size)) continue;
 
-    // We lost the file content on browser close — mark it
-    // The user will need to re-select the folder for these
-    _state.queue.push({
-      ...item,
-      content: null,
-      rawFile: null,
-      needsReread: true, // flag: content lost
-      status: 'queued',
-    });
-    needsReselect++;
-    _state.progress.total += 1;
-    resumed++;
+    // Try to recover content from IndexedDB
+    const savedContent = await _getContentFromIDB(item.id);
+
+    if (savedContent) {
+      // Content recovered — can process immediately
+      _state.queue.push({
+        ...item,
+        content: savedContent,
+        rawFile: null,
+        needsReread: false,
+        status: 'queued',
+      });
+      resumed++;
+    } else {
+      // Content lost — needs re-select
+      _state.queue.push({
+        ...item,
+        content: null,
+        rawFile: null,
+        needsReread: true,
+        status: 'queued',
+      });
+      needsReselect++;
+    }
   }
 
   if (data.folderName) _state.folderName = data.folderName;
   _notify();
 
-  // We can't actually process items without content, so we just show them in the UI
-  // and prompt the user to re-select the folder. BUT — if some items somehow still have
-  // content (shouldn't happen after browser close), start processing those.
+  // Auto-start processing items that have content
   if (!_state.isRunning && _state.queue.some(q => !q.needsReread)) {
     _processQueue();
   }
@@ -256,18 +334,20 @@ export async function refillContentFromFiles(files) {
           });
         } catch { content = '[Could not read]'; }
       }
+      const truncated = content.substring(0, 50000);
       _state.queue[idx] = {
         ..._state.queue[idx],
-        content: content.substring(0, 50000),
+        content: truncated,
         rawFile: file,
         needsReread: false,
       };
+      // Also persist the new content to IDB
+      await _saveContentToIDB(_state.queue[idx].id, truncated);
       matched++;
     }
   }
   _notify();
 
-  // Now start processing if we have items ready
   if (!_state.isRunning && _state.queue.some(q => !q.needsReread)) {
     _processQueue();
   }
@@ -290,6 +370,7 @@ export function removeFromQueue(id) {
   if (_state.currentId === id) return;
   _state.queue = _state.queue.filter(f => f.id !== id);
   _state.progress.total = Math.max(0, _state.progress.total - 1);
+  _deleteContentFromIDB(id);
   _persistQueue();
   _notify();
 }
@@ -301,22 +382,34 @@ async function _processQueue() {
   _notify();
 
   while (_state.queue.length > 0) {
-    // Find the first item that's ready (has content or is binary with rawFile)
     const readyIdx = _state.queue.findIndex(q => !q.needsReread);
     if (readyIdx === -1) {
-      // All remaining items need re-read — stop and wait for user to re-select folder
       _state.lastLog = `Paused: ${_state.queue.length} file(s) need re-selecting the folder to resume.`;
       break;
     }
 
     const item = _state.queue[readyIdx];
+
+    // If content is missing from memory but might be in IDB (e.g. after hot-reload)
+    if (!item.content && !item.needsUpload) {
+      const idbContent = await _getContentFromIDB(item.id);
+      if (idbContent) {
+        item.content = idbContent;
+      } else {
+        // Can't process without content — mark as needing re-read
+        item.needsReread = true;
+        _persistQueue();
+        _notify();
+        continue;
+      }
+    }
+
     _state.currentId = item.id;
     _state.lastLog = `Analyzing: ${item.name}`;
     _persistQueue();
     _notify();
 
     try {
-      // Final dedup check right before analyzing (in case another tab created it)
       const existing = await _loadExistingKnowledge();
       const key = _makeKey(item.name, item.size);
       if (existing.has(key)) {
@@ -328,7 +421,6 @@ async function _processQueue() {
         _state.completed.push(item.id);
         _state.progress.done += 1;
         _state.lastLog = `Learned: ${item.name}`;
-        // Update cache so subsequent files in same batch don't duplicate
         existing.set(key, true);
       }
     } catch (err) {
@@ -338,8 +430,10 @@ async function _processQueue() {
       _state.lastLog = `Failed: ${item.name} — ${err?.message || 'unknown error'}`;
     }
 
+    // Clean up processed item from queue and IDB
     _state.queue = _state.queue.filter(f => f.id !== item.id);
     _state.currentId = null;
+    _deleteContentFromIDB(item.id);
     _persistQueue();
     _notify();
   }
@@ -481,3 +575,20 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
     is_pinned: false,
   });
 }
+
+// ─── AUTO-RESUME ON MODULE LOAD ─────────────────────
+// When this module is first imported (e.g. after page refresh),
+// automatically check for and resume any interrupted session.
+(async function _autoResumeOnLoad() {
+  // Small delay to let the app initialize auth etc.
+  await new Promise(r => setTimeout(r, 2000));
+  
+  const data = _loadPersistedQueue();
+  if (!data || !data.queue || data.queue.length === 0) return;
+  if (_state.isRunning) return;
+  
+  console.log(`[KnowledgeLearner] Found interrupted session with ${data.queue.length} files — auto-resuming...`);
+  
+  const result = await resumeInterrupted();
+  console.log(`[KnowledgeLearner] Auto-resume: ${result.resumed} files resumed, ${result.needsReselect} need folder re-select`);
+})();
