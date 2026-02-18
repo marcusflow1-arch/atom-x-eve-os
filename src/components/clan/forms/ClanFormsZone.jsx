@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Minus, Send, FolderPlus, MessageSquarePlus, ChevronDown } from 'lucide-react';
+import { Plus, Minus, Send, FolderPlus, MessageSquarePlus, ChevronDown, Shield } from 'lucide-react';
 import StrategyUpload from '@/components/clan/strategy/StrategyUpload';
 import StrategyCard from '@/components/clan/strategy/StrategyCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
