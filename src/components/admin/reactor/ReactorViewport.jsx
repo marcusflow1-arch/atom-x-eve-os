@@ -1,9 +1,11 @@
-import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Badge } from '@/components/ui/badge';
+import { Play, Pause, SkipBack, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const VIEW_PRESETS = {
   perspective: { pos: [0, 1.5, 4], label: 'Perspective' },
@@ -12,7 +14,17 @@ const VIEW_PRESETS = {
   top: { pos: [0, 6, 0.01], label: 'Top' },
 };
 
-const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onBoneClick }, ref) => {
+const DAMAGE_TYPE_COLORS = {
+  physical: 0x94a3b8, energy: 0xfacc15, lightning: 0x60a5fa,
+  fire: 0xf97316, ice: 0x22d3ee, true_damage: 0xef4444,
+  poison: 0x22c55e, holy: 0xfbbf24,
+};
+
+const ReactorViewport = forwardRef(({
+  modelUrl, selectedBone, reactors = [], onBoneClick,
+  animationUrl, isPlaying, animTime, onAnimTimeChange, onAnimLoaded,
+  activeFXDrag, onFXDropOnBone,
+}, ref) => {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
@@ -20,17 +32,28 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
   const controlsRef = useRef(null);
   const modelRef = useRef(null);
   const mixerRef = useRef(null);
-  const boneHelpersRef = useRef([]);
+  const activeActionRef = useRef(null);
+  const clockRef = useRef(new THREE.Clock());
   const reactorMeshesRef = useRef([]);
+  const boneSphereMapRef = useRef(new Map()); // bone name -> sphere mesh
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const mouseRef = useRef(new THREE.Vector2());
   const [viewMode, setViewMode] = useState('perspective');
   const [bones, setBones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredBone, setHoveredBone] = useState(null);
+  const [animDuration, setAnimDuration] = useState(0);
+  const [localPlaying, setLocalPlaying] = useState(false);
+  const animFrameRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     getBones: () => bones,
     setView: (mode) => setViewMode(mode),
+    getAnimDuration: () => animDuration,
+    loadAnimation: (url) => loadAnimationClip(url),
   }));
 
+  // Load model
   useEffect(() => {
     if (!containerRef.current || !modelUrl) return;
     setLoading(true);
@@ -39,22 +62,18 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
     const w = container.clientWidth;
     const h = container.clientHeight;
 
-    // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0e14);
     sceneRef.current = scene;
 
-    // Grid
     const grid = new THREE.GridHelper(20, 20, 0x1a1f2e, 0x111827);
     scene.add(grid);
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 1000);
     const vp = VIEW_PRESETS[viewMode];
     camera.position.set(...vp.pos);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -62,13 +81,11 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.target.set(0, 1, 0);
     controlsRef.current = controls;
 
-    // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
     const dir = new THREE.DirectionalLight(0xffffff, 1.2);
     dir.position.set(3, 5, 4);
@@ -77,13 +94,11 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
     back.position.set(-3, 3, -4);
     scene.add(back);
 
-    // Load model
     const isFbx = modelUrl.toLowerCase().includes('.fbx');
     const loader = isFbx ? new FBXLoader() : new GLTFLoader();
     loader.load(modelUrl, (asset) => {
       const model = isFbx ? asset : asset.scene;
-      
-      // Scale and center
+
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
@@ -96,38 +111,73 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
       scene.add(model);
       modelRef.current = model;
 
-      // Extract bones
+      // Extract bones & create clickable bone spheres
       const foundBones = [];
+      const boneMap = new Map();
       model.traverse((node) => {
         if (node.isBone) {
           foundBones.push(node.name);
+          // Create a small sphere at each bone for raycasting
+          const geo = new THREE.SphereGeometry(0.04, 8, 8);
+          const mat = new THREE.MeshBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.3 });
+          const sphere = new THREE.Mesh(geo, mat);
+          sphere.userData.boneName = node.name;
+          sphere.userData.boneRef = node;
+          scene.add(sphere);
+          boneMap.set(node.name, sphere);
         }
       });
       setBones(foundBones);
+      boneSphereMapRef.current = boneMap;
 
       // Skeleton helper
       const skeletonHelper = new THREE.SkeletonHelper(model);
       skeletonHelper.material.linewidth = 2;
       scene.add(skeletonHelper);
 
-      // Animation
+      // Model's embedded animation
       const anims = isFbx ? asset.animations : asset.animations;
       if (anims?.length > 0) {
         const mixer = new THREE.AnimationMixer(model);
-        mixer.clipAction(anims[0]).play();
         mixerRef.current = mixer;
+        const action = mixer.clipAction(anims[0]);
+        action.play();
+        action.paused = true; // start paused so user controls it
+        activeActionRef.current = action;
+        setAnimDuration(anims[0].duration);
+        onAnimLoaded?.(anims[0].duration, anims[0].name);
       }
 
       setLoading(false);
     }, undefined, () => setLoading(false));
 
     // Render loop
-    const clock = new THREE.Clock();
-    let reqId;
     const animate = () => {
-      reqId = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixerRef.current) mixerRef.current.update(delta);
+      animFrameRef.current = requestAnimationFrame(animate);
+      const delta = clockRef.current.getDelta();
+
+      if (mixerRef.current && activeActionRef.current) {
+        if (!activeActionRef.current.paused) {
+          mixerRef.current.update(delta);
+          // Report time back
+          const t = activeActionRef.current.time;
+          const dur = activeActionRef.current.getClip().duration;
+          onAnimTimeChange?.(dur > 0 ? t / dur : 0);
+        }
+
+        // Update bone sphere positions
+        if (modelRef.current) {
+          boneSphereMapRef.current.forEach((sphere, boneName) => {
+            let bone = sphere.userData.boneRef;
+            if (bone) {
+              const wp = new THREE.Vector3();
+              bone.getWorldPosition(wp);
+              sphere.position.copy(wp);
+            }
+          });
+        }
+      }
+
       controls.update();
       renderer.render(scene, camera);
     };
@@ -143,14 +193,62 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
     window.addEventListener('resize', handleResize);
 
     return () => {
-      cancelAnimationFrame(reqId);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
       container.innerHTML = '';
     };
   }, [modelUrl]);
 
-  // Update camera on view mode change
+  // Play/Pause control from parent
+  useEffect(() => {
+    if (!activeActionRef.current) return;
+    activeActionRef.current.paused = !isPlaying;
+    setLocalPlaying(isPlaying);
+  }, [isPlaying]);
+
+  // Scrub to specific time from parent
+  useEffect(() => {
+    if (!activeActionRef.current || animTime === undefined || animTime === null) return;
+    const dur = activeActionRef.current.getClip().duration;
+    if (dur > 0 && activeActionRef.current.paused) {
+      activeActionRef.current.time = animTime * dur;
+      mixerRef.current?.update(0);
+    }
+  }, [animTime]);
+
+  // Load external animation FBX onto the model
+  const loadAnimationClip = useCallback((url) => {
+    if (!modelRef.current || !url) return;
+    const isFbx = url.toLowerCase().includes('.fbx');
+    const loader = isFbx ? new FBXLoader() : new GLTFLoader();
+    loader.load(url, (asset) => {
+      const anims = isFbx ? asset.animations : asset.animations;
+      if (!anims?.length) return;
+
+      if (!mixerRef.current) {
+        mixerRef.current = new THREE.AnimationMixer(modelRef.current);
+      }
+      // Stop old action
+      if (activeActionRef.current) {
+        activeActionRef.current.stop();
+      }
+      const action = mixerRef.current.clipAction(anims[0]);
+      action.play();
+      action.paused = true;
+      activeActionRef.current = action;
+      const dur = anims[0].duration;
+      setAnimDuration(dur);
+      onAnimLoaded?.(dur, anims[0].name || url.split('/').pop());
+    });
+  }, [onAnimLoaded]);
+
+  // Load animation when animationUrl prop changes
+  useEffect(() => {
+    if (animationUrl) loadAnimationClip(animationUrl);
+  }, [animationUrl, loadAnimationClip]);
+
+  // View mode change
   useEffect(() => {
     if (!cameraRef.current) return;
     const vp = VIEW_PRESETS[viewMode];
@@ -159,58 +257,100 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
     controlsRef.current?.update();
   }, [viewMode]);
 
-  // Update reactor visualization spheres
+  // Update reactor visualization (runs every frame via bone sphere update, but static meshes here)
   useEffect(() => {
     if (!sceneRef.current || !modelRef.current) return;
 
-    // Remove old reactor meshes
     reactorMeshesRef.current.forEach(m => sceneRef.current.remove(m));
     reactorMeshesRef.current = [];
 
-    // Add reactor spheres at bone positions
+    // Highlight selected bone
+    boneSphereMapRef.current.forEach((sphere, boneName) => {
+      if (boneName === selectedBone) {
+        sphere.material.color.setHex(0x00ffff);
+        sphere.material.opacity = 0.8;
+        sphere.scale.setScalar(2.5);
+      } else if (boneName === hoveredBone) {
+        sphere.material.color.setHex(0x88aaff);
+        sphere.material.opacity = 0.5;
+        sphere.scale.setScalar(1.8);
+      } else {
+        sphere.material.color.setHex(0x445566);
+        sphere.material.opacity = 0.3;
+        sphere.scale.setScalar(1);
+      }
+    });
+
+    // Reactor collider spheres
     reactors.forEach(r => {
-      let targetBone = null;
-      modelRef.current.traverse(node => {
-        if (node.isBone && node.name === r.bone_name) targetBone = node;
-      });
-      if (!targetBone) return;
+      const boneSphere = boneSphereMapRef.current.get(r.bone_name);
+      if (!boneSphere) return;
 
       const geo = new THREE.SphereGeometry(r.collider_radius * 0.1, 16, 16);
-      const color = r.damage_type === 'lightning' ? 0x4488ff : r.damage_type === 'fire' ? 0xff4400 : r.damage_type === 'energy' ? 0xffcc00 : 0x00ffcc;
-      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.35, wireframe: true });
+      const color = DAMAGE_TYPE_COLORS[r.damage_type] || 0x00ffcc;
+      const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.25, wireframe: true });
       const mesh = new THREE.Mesh(geo, mat);
-
-      const worldPos = new THREE.Vector3();
-      targetBone.getWorldPosition(worldPos);
+      mesh.position.copy(boneSphere.position);
       const offset = r.collider_offset || { x: 0, y: 0, z: 0 };
-      mesh.position.set(worldPos.x + offset.x * 0.1, worldPos.y + offset.y * 0.1, worldPos.z + offset.z * 0.1);
+      mesh.position.x += offset.x * 0.1;
+      mesh.position.y += offset.y * 0.1;
+      mesh.position.z += offset.z * 0.1;
 
       sceneRef.current.add(mesh);
       reactorMeshesRef.current.push(mesh);
     });
+  }, [reactors, selectedBone, hoveredBone]);
 
-    // Highlight selected bone
-    if (selectedBone && modelRef.current) {
-      let bone = null;
-      modelRef.current.traverse(node => {
-        if (node.isBone && node.name === selectedBone) bone = node;
-      });
-      if (bone) {
-        const geo = new THREE.SphereGeometry(0.06, 12, 12);
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.6 });
-        const marker = new THREE.Mesh(geo, mat);
-        const wp = new THREE.Vector3();
-        bone.getWorldPosition(wp);
-        marker.position.copy(wp);
-        sceneRef.current.add(marker);
-        reactorMeshesRef.current.push(marker);
+  // Click handler for bone picking
+  const handleClick = useCallback((e) => {
+    if (!rendererRef.current || !cameraRef.current || !sceneRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    mouseRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+
+    const spheres = Array.from(boneSphereMapRef.current.values());
+    const intersects = raycasterRef.current.intersectObjects(spheres);
+    if (intersects.length > 0) {
+      const boneName = intersects[0].object.userData.boneName;
+      if (boneName) {
+        // If we have an active FX drag, drop it on this bone
+        if (activeFXDrag) {
+          onFXDropOnBone?.(boneName, activeFXDrag);
+        } else {
+          onBoneClick?.(boneName);
+        }
       }
     }
-  }, [reactors, selectedBone]);
+  }, [onBoneClick, activeFXDrag, onFXDropOnBone]);
+
+  // Hover handler for bone highlighting
+  const handleMouseMove = useCallback((e) => {
+    if (!rendererRef.current || !cameraRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    mouseRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+    const spheres = Array.from(boneSphereMapRef.current.values());
+    const intersects = raycasterRef.current.intersectObjects(spheres);
+    if (intersects.length > 0) {
+      setHoveredBone(intersects[0].object.userData.boneName);
+    } else {
+      setHoveredBone(null);
+    }
+  }, []);
 
   return (
     <div className="relative w-full h-full min-h-[400px] bg-slate-950 rounded-xl overflow-hidden border border-slate-800">
-      <div ref={containerRef} className="w-full h-full" />
+      <div
+        ref={containerRef}
+        className="w-full h-full"
+        onClick={handleClick}
+        onMouseMove={handleMouseMove}
+        style={{ cursor: hoveredBone ? (activeFXDrag ? 'copy' : 'pointer') : 'default' }}
+      />
 
       {/* View Mode Buttons */}
       <div className="absolute top-3 left-3 flex gap-1">
@@ -229,8 +369,13 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
         ))}
       </div>
 
-      {/* Bone count */}
-      <div className="absolute top-3 right-3">
+      {/* Bone count + hovered bone */}
+      <div className="absolute top-3 right-3 flex items-center gap-2">
+        {hoveredBone && (
+          <Badge className="bg-blue-500/20 text-blue-300 text-[9px] border border-blue-500/30">
+            {activeFXDrag ? `Drop FX → ${hoveredBone}` : hoveredBone}
+          </Badge>
+        )}
         <Badge className="bg-slate-900/80 text-slate-400 text-[9px]">{bones.length} bones</Badge>
       </div>
 
@@ -242,7 +387,7 @@ const ReactorViewport = forwardRef(({ modelUrl, selectedBone, reactors = [], onB
 
       {/* Controls hint */}
       <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-[9px] text-slate-500">
-        LMB: Rotate • RMB: Pan • Scroll: Zoom
+        Click bone to select{activeFXDrag ? ' (FX drop mode)' : ''} • LMB: Rotate • RMB: Pan • Scroll: Zoom
       </div>
     </div>
   );

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +10,7 @@ import ReactorBoneSelector from './reactor/ReactorBoneSelector';
 import ReactorPropertiesPanel from './reactor/ReactorPropertiesPanel';
 import ReactorTimeline from './reactor/ReactorTimeline';
 import FXUploadManager from './reactor/FXUploadManager';
+import AnimationPlaybackBar from './reactor/AnimationPlaybackBar';
 
 const DEFAULT_REACTOR = {
   bone_name: '', animation_name: '', trigger_time: 0.5, trigger_end_time: 0.6,
@@ -30,7 +30,17 @@ export default function ReactorEditor() {
   const [selectedReactorId, setSelectedReactorId] = useState(null);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
-  const [rightTab, setRightTab] = useState('properties'); // properties | fx
+  const [rightTab, setRightTab] = useState('properties');
+
+  // Animation playback state
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [animTime, setAnimTime] = useState(0);
+  const [animName, setAnimName] = useState(null);
+  const [animDuration, setAnimDuration] = useState(0);
+  const [animationUrl, setAnimationUrl] = useState(null);
+
+  // FX drag state
+  const [activeFXDrag, setActiveFXDrag] = useState(null);
 
   // Fetch data
   const { data: models = [] } = useQuery({
@@ -43,7 +53,7 @@ export default function ReactorEditor() {
     queryFn: () => base44.entities.AnimationFBX.list('-created_date', 200),
   });
 
-  const { data: reactors = [], isLoading: reactorsLoading } = useQuery({
+  const { data: reactors = [] } = useQuery({
     queryKey: ['damage-reactors', selectedModelId],
     queryFn: () => selectedModelId
       ? base44.entities.DamageReactor.filter({ character_model_id: selectedModelId }, '-created_date', 100)
@@ -80,20 +90,46 @@ export default function ReactorEditor() {
 
   const selectedModel = models.find(m => m.id === selectedModelId);
 
-  const handleBoneSelect = (bone) => {
+  // Bone click from viewport (click-to-select)
+  const handleBoneClick = useCallback((bone) => {
     setSelectedBone(bone);
     if (editingReactor) {
-      setEditingReactor({ ...editingReactor, bone_name: bone });
+      setEditingReactor(prev => ({ ...prev, bone_name: bone }));
     }
-  };
+  }, [editingReactor]);
+
+  // FX drop on bone from viewport click
+  const handleFXDropOnBone = useCallback((boneName, fx) => {
+    if (editingReactor) {
+      setEditingReactor(prev => ({ ...prev, bone_name: boneName, fx_id: fx.id, fx_name: fx.name }));
+      showSuccess(`FX "${fx.name}" → ${boneName}`);
+    } else {
+      // Auto-create a new reactor with this FX on this bone
+      setEditingReactor({
+        ...DEFAULT_REACTOR,
+        character_model_id: selectedModelId,
+        character_name: selectedModel?.name || '',
+        bone_name: boneName,
+        fx_id: fx.id,
+        fx_name: fx.name,
+      });
+      setSelectedBone(boneName);
+      setRightTab('properties');
+      showSuccess(`New reactor on ${boneName} with FX "${fx.name}"`);
+    }
+    setActiveFXDrag(null);
+  }, [editingReactor, selectedModelId, selectedModel]);
 
   const handleAddReactor = () => {
-    if (!selectedBone) { showError('Select a bone first'); return; }
+    if (!selectedBone) { showError('Click a bone in the 3D viewport first'); return; }
+    // Pre-fill trigger_time to current scrub position
     setEditingReactor({
       ...DEFAULT_REACTOR,
       character_model_id: selectedModelId,
       character_name: selectedModel?.name || '',
       bone_name: selectedBone,
+      trigger_time: Math.round(animTime * 100) / 100,
+      trigger_end_time: Math.min(1, Math.round((animTime + 0.1) * 100) / 100),
     });
     setRightTab('properties');
   };
@@ -118,12 +154,64 @@ export default function ReactorEditor() {
     setRightTab('properties');
   };
 
+  // FX panel: click to assign to current reactor
   const handleSelectFX = (fx) => {
     if (editingReactor) {
       setEditingReactor({ ...editingReactor, fx_id: fx.id, fx_name: fx.name });
       setRightTab('properties');
-      showSuccess(`FX "${fx.name}" assigned to reactor`);
+      showSuccess(`FX "${fx.name}" assigned`);
+    } else {
+      // Start FX drag mode — next bone click in viewport will assign
+      setActiveFXDrag(fx);
+      showSuccess(`Click a bone in the viewport to place "${fx.name}"`);
     }
+  };
+
+  // FX drag start
+  const handleStartDragFX = (fx) => {
+    setActiveFXDrag(fx);
+  };
+
+  // Cancel FX drag on escape
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && activeFXDrag) {
+        setActiveFXDrag(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeFXDrag]);
+
+  // Animation callbacks
+  const handleAnimLoaded = useCallback((duration, name) => {
+    setAnimDuration(duration);
+    setAnimName(name);
+    setAnimTime(0);
+  }, []);
+
+  const handleAnimTimeChange = useCallback((t) => {
+    setAnimTime(t);
+  }, []);
+
+  const handleScrub = (t) => {
+    setAnimTime(t);
+    setIsPlaying(false);
+  };
+
+  const handleSelectAnimation = (anim) => {
+    setAnimationUrl(anim.file_url);
+    setAnimName(anim.name);
+    // Also set on editing reactor if one is active
+    if (editingReactor) {
+      setEditingReactor(prev => ({ ...prev, animation_name: anim.name, animation_id: anim.id }));
+    }
+  };
+
+  const handleAnimationUploaded = (url, name) => {
+    queryClient.invalidateQueries({ queryKey: ['animations-reactor'] });
+    setAnimationUrl(url);
+    setAnimName(name);
   };
 
   return (
@@ -136,20 +224,33 @@ export default function ReactorEditor() {
           </div>
           <div>
             <h2 className="text-white font-bold text-sm">Damage Reactor Editor</h2>
-            <p className="text-slate-500 text-[10px]">Attach combat reactors to bones • Animation-synced damage • FX binding</p>
+            <p className="text-slate-500 text-[10px]">Click bones in viewport • Play/pause/scrub animation • Drag FX to bones</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Model Selector */}
           <select
             value={selectedModelId || ''}
-            onChange={(e) => { setSelectedModelId(e.target.value || null); setSelectedBone(null); setEditingReactor(null); }}
+            onChange={(e) => {
+              setSelectedModelId(e.target.value || null);
+              setSelectedBone(null);
+              setEditingReactor(null);
+              setAnimationUrl(null);
+              setAnimName(null);
+              setAnimTime(0);
+              setIsPlaying(false);
+            }}
             className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white min-w-[200px]"
           >
             <option value="">Select Character Model...</option>
             {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.file_type})</option>)}
           </select>
           <Badge variant="outline" className="text-slate-400 text-[9px]">{reactors.length} reactors</Badge>
+          {activeFXDrag && (
+            <Badge className="bg-amber-500/20 text-amber-300 text-[9px] border border-amber-500/30 animate-pulse">
+              FX: {activeFXDrag.name} — click bone to place
+              <button onClick={() => setActiveFXDrag(null)} className="ml-1 text-amber-400 hover:text-white">×</button>
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -158,7 +259,7 @@ export default function ReactorEditor() {
           <div className="text-center">
             <Zap className="w-12 h-12 mx-auto mb-3 opacity-20" />
             <p className="font-medium">Select a character model above to start</p>
-            <p className="text-xs mt-1">Supports C1, White Bot, or any imported rigged FBX/GLB</p>
+            <p className="text-xs mt-1">Click bones directly in the 3D viewport to select them</p>
           </div>
         </div>
       ) : (
@@ -175,36 +276,58 @@ export default function ReactorEditor() {
                 </div>
                 <ReactorBoneSelector
                   selectedBone={selectedBone}
-                  onSelect={handleBoneSelect}
+                  onSelect={handleBoneClick}
                   rigBones={viewportRef.current?.getBones?.() || []}
                 />
                 {selectedBone && (
                   <Button size="sm" onClick={handleAddReactor} className="w-full mt-3 bg-red-600 hover:bg-red-700 text-white h-7 text-[10px]">
-                    <Plus className="w-3 h-3 mr-1" /> Add Reactor to {selectedBone}
+                    <Plus className="w-3 h-3 mr-1" /> Add Reactor @ {animTime.toFixed(2)}
                   </Button>
                 )}
               </div>
             )}
           </div>
 
-          {/* CENTER: 3D Viewport + Timeline */}
+          {/* CENTER: Viewport + Playback + Timeline */}
           <div className="flex-1 flex flex-col min-w-0">
-            {/* Viewport */}
+            {/* 3D Viewport */}
             <div className="flex-1">
               <ReactorViewport
                 ref={viewportRef}
                 modelUrl={selectedModel?.file_url}
                 selectedBone={selectedBone}
                 reactors={reactors}
-                onBoneClick={handleBoneSelect}
+                onBoneClick={handleBoneClick}
+                animationUrl={animationUrl}
+                isPlaying={isPlaying}
+                animTime={animTime}
+                onAnimTimeChange={handleAnimTimeChange}
+                onAnimLoaded={handleAnimLoaded}
+                activeFXDrag={activeFXDrag}
+                onFXDropOnBone={handleFXDropOnBone}
               />
             </div>
+
+            {/* Animation Playback Bar */}
+            <AnimationPlaybackBar
+              isPlaying={isPlaying}
+              onTogglePlay={() => setIsPlaying(!isPlaying)}
+              animTime={animTime}
+              onScrub={handleScrub}
+              animName={animName}
+              animDuration={animDuration}
+              onAnimationUploaded={handleAnimationUploaded}
+              animations={animations}
+              onSelectAnimation={handleSelectAnimation}
+            />
+
             {/* Timeline */}
             <div className="h-36 border-t border-slate-800 bg-slate-950/50">
               <ReactorTimeline
                 reactors={reactors}
                 selectedReactorId={selectedReactorId}
                 onSelect={handleSelectReactor}
+                animTime={animTime}
               />
             </div>
           </div>
@@ -239,12 +362,23 @@ export default function ReactorEditor() {
                           onChange={(e) => {
                             const anim = animations.find(a => a.name === e.target.value);
                             setEditingReactor({ ...editingReactor, animation_name: e.target.value, animation_id: anim?.id || '' });
+                            if (anim?.file_url) handleSelectAnimation(anim);
                           }}
                           className="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white"
                         >
                           <option value="">Select animation...</option>
                           {animations.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
                         </select>
+                      </div>
+
+                      {/* Set trigger from playhead */}
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => setEditingReactor({ ...editingReactor, trigger_time: Math.round(animTime * 100) / 100 })} className="flex-1 h-6 text-[9px]">
+                          Set Start → {animTime.toFixed(2)}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingReactor({ ...editingReactor, trigger_end_time: Math.round(animTime * 100) / 100 })} className="flex-1 h-6 text-[9px]">
+                          Set End → {animTime.toFixed(2)}
+                        </Button>
                       </div>
 
                       {/* FX display */}
@@ -272,12 +406,12 @@ export default function ReactorEditor() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-slate-600 text-xs">
-                      <p>Select a reactor from the timeline</p>
-                      <p className="mt-1">or add one to a bone</p>
+                      <p>Click a bone in the 3D viewport</p>
+                      <p className="mt-1">then "Add Reactor" or select one from the timeline</p>
                     </div>
                   )
                 ) : (
-                  <FXUploadManager onSelectFX={handleSelectFX} />
+                  <FXUploadManager onSelectFX={handleSelectFX} onStartDragFX={handleStartDragFX} />
                 )}
               </div>
             )}

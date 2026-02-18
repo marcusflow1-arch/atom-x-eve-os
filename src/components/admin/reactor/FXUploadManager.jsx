@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Trash2, Loader2, Sparkles, Search, Eye, Palette } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, Trash2, Loader2, Sparkles, Search, Palette, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +17,20 @@ const EFFECT_COLORS = {
   impact: 'text-red-400 bg-red-500/10 border-red-500/20',
 };
 
-export default function FXUploadManager({ onSelectFX }) {
+const DEFAULT_FX = [
+  { name: 'Fire Burst', effect_type: 'burst', color: '#ff6600', duration: 0.6, scale: 1.2, is_looping: false, tags: ['fire', 'default'] },
+  { name: 'Lightning Strike', effect_type: 'impact', color: '#4488ff', duration: 0.4, scale: 1.0, is_looping: false, tags: ['lightning', 'default'] },
+  { name: 'Ice Shatter', effect_type: 'burst', color: '#00ccff', duration: 0.5, scale: 1.0, is_looping: false, tags: ['ice', 'default'] },
+  { name: 'Poison Cloud', effect_type: 'aura', color: '#22cc44', duration: 2.0, scale: 1.5, is_looping: true, tags: ['poison', 'default'] },
+  { name: 'Holy Smite', effect_type: 'beam', color: '#ffcc00', duration: 0.8, scale: 1.0, is_looping: false, tags: ['holy', 'default'] },
+  { name: 'Slash Trail', effect_type: 'trail', color: '#ffffff', duration: 0.3, scale: 1.0, is_looping: false, tags: ['physical', 'default'] },
+  { name: 'Energy Explosion', effect_type: 'burst', color: '#ffee00', duration: 0.7, scale: 2.0, is_looping: false, tags: ['energy', 'default'] },
+  { name: 'Bleed Wound', effect_type: 'impact', color: '#cc0000', duration: 1.5, scale: 0.5, is_looping: true, tags: ['bleed', 'default'] },
+  { name: 'Stun Stars', effect_type: 'aura', color: '#ffdd55', duration: 2.0, scale: 0.8, is_looping: true, tags: ['stun', 'default'] },
+  { name: 'Projectile Bolt', effect_type: 'projectile', color: '#8855ff', duration: 0.5, scale: 1.0, is_looping: false, tags: ['energy', 'default'] },
+];
+
+export default function FXUploadManager({ onSelectFX, onStartDragFX }) {
   const queryClient = useQueryClient();
   const fileRef = useRef(null);
   const textureRef = useRef(null);
@@ -29,6 +41,7 @@ export default function FXUploadManager({ onSelectFX }) {
   });
   const [pendingFileUrl, setPendingFileUrl] = useState('');
   const [pendingTextureUrl, setPendingTextureUrl] = useState('');
+  const [seeding, setSeeding] = useState(false);
 
   const { data: fxList = [], isLoading } = useQuery({
     queryKey: ['reactor-fx'],
@@ -58,7 +71,6 @@ export default function FXUploadManager({ onSelectFX }) {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setPendingFileUrl(file_url);
-      const ext = file.name.split('.').pop().toLowerCase();
       if (!newFX.name) setNewFX(prev => ({ ...prev, name: file.name.replace(/\.\w+$/, '') }));
     } catch (err) { showError(err); }
     setUploading(false);
@@ -85,10 +97,35 @@ export default function FXUploadManager({ onSelectFX }) {
     });
   };
 
+  const handleSeedDefaults = async () => {
+    setSeeding(true);
+    try {
+      const existingNames = fxList.map(f => f.name.toLowerCase());
+      let created = 0;
+      for (const fx of DEFAULT_FX) {
+        if (!existingNames.includes(fx.name.toLowerCase())) {
+          await base44.entities.ReactorFX.create({ ...fx, file_type: 'particle_json' });
+          created++;
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ['reactor-fx'] });
+      showSuccess(`Seeded ${created} default FX effects`);
+    } catch (err) { showError(err); }
+    setSeeding(false);
+  };
+
   const filtered = fxList.filter(fx => !search || fx.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-4">
+      {/* Seed defaults button */}
+      {fxList.length === 0 && !isLoading && (
+        <Button size="sm" onClick={handleSeedDefaults} disabled={seeding} className="w-full bg-amber-600 hover:bg-amber-700 text-white h-8 text-xs">
+          {seeding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
+          Load Default FX Library ({DEFAULT_FX.length} effects)
+        </Button>
+      )}
+
       {/* Upload form */}
       <div className="bg-slate-800/40 border border-slate-700 rounded-xl p-4 space-y-3">
         <h4 className="text-white font-bold text-xs flex items-center gap-2">
@@ -117,11 +154,11 @@ export default function FXUploadManager({ onSelectFX }) {
         <div className="flex gap-2">
           <input ref={fileRef} type="file" accept=".fbx,.glb,.gltf,.json" onChange={handleUploadFile} className="hidden" />
           <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="text-xs h-7 flex-1">
-            {pendingFileUrl ? '✓ FBX/GLB Uploaded' : <><Upload className="w-3 h-3 mr-1" /> FBX / GLB</>}
+            {pendingFileUrl ? '✓ FBX/GLB' : <><Upload className="w-3 h-3 mr-1" /> FBX / GLB</>}
           </Button>
           <input ref={textureRef} type="file" accept=".png,.jpg,.jpeg,.webp" onChange={handleUploadTexture} className="hidden" />
           <Button size="sm" variant="outline" onClick={() => textureRef.current?.click()} disabled={uploading} className="text-xs h-7 flex-1">
-            {pendingTextureUrl ? '✓ Texture Uploaded' : <><Palette className="w-3 h-3 mr-1" /> Texture</>}
+            {pendingTextureUrl ? '✓ Texture' : <><Palette className="w-3 h-3 mr-1" /> Texture</>}
           </Button>
         </div>
         <div className="flex items-center gap-2">
@@ -136,11 +173,22 @@ export default function FXUploadManager({ onSelectFX }) {
         </div>
       </div>
 
+      {/* Seed defaults if there's already some FX */}
+      {fxList.length > 0 && fxList.length < DEFAULT_FX.length && (
+        <Button size="sm" variant="outline" onClick={handleSeedDefaults} disabled={seeding} className="w-full h-7 text-[10px] text-slate-400">
+          {seeding ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
+          Add Missing Default FX
+        </Button>
+      )}
+
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
         <Input placeholder="Search effects..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-slate-900/50 border-slate-700 pl-8 h-8 text-xs" />
       </div>
+
+      {/* Drag hint */}
+      <p className="text-[9px] text-slate-600 text-center">Click an FX to assign • or click then click a bone in the viewport</p>
 
       {/* FX List */}
       {isLoading ? (
@@ -148,17 +196,22 @@ export default function FXUploadManager({ onSelectFX }) {
       ) : filtered.length === 0 ? (
         <div className="text-center py-6 text-slate-600 text-xs">No FX effects yet</div>
       ) : (
-        <div className="space-y-2 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+        <div className="space-y-1.5 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
           {filtered.map(fx => (
-            <div key={fx.id} className={`flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer hover:bg-white/[0.03] ${EFFECT_COLORS[fx.effect_type] || 'border-slate-700'}`}
-              onClick={() => onSelectFX?.(fx)}>
-              <div className="w-6 h-6 rounded-full" style={{ background: fx.color || '#fff', opacity: 0.6 }} />
+            <div
+              key={fx.id}
+              className={`flex items-center gap-2.5 p-2 rounded-lg border transition-all cursor-pointer hover:bg-white/[0.03] ${EFFECT_COLORS[fx.effect_type] || 'border-slate-700'}`}
+              onClick={() => onSelectFX?.(fx)}
+              onMouseDown={() => onStartDragFX?.(fx)}
+            >
+              <GripVertical className="w-3 h-3 text-slate-600 flex-shrink-0" />
+              <div className="w-5 h-5 rounded-full flex-shrink-0 border border-white/10" style={{ background: fx.color || '#fff', opacity: 0.7 }} />
               <div className="flex-1 min-w-0">
-                <span className="text-white text-xs font-bold truncate block">{fx.name}</span>
-                <span className="text-slate-500 text-[9px]">{fx.effect_type} • {fx.duration}s{fx.is_looping ? ' • loop' : ''}</span>
+                <span className="text-white text-[10px] font-bold truncate block">{fx.name}</span>
+                <span className="text-slate-500 text-[8px]">{fx.effect_type} • {fx.duration}s{fx.is_looping ? ' • loop' : ''}</span>
               </div>
-              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(fx.id); }} className="h-6 w-6 text-red-400/50 hover:text-red-400">
-                <Trash2 className="w-3 h-3" />
+              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(fx.id); }} className="h-5 w-5 text-red-400/40 hover:text-red-400">
+                <Trash2 className="w-2.5 h-2.5" />
               </Button>
             </div>
           ))}
