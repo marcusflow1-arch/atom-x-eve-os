@@ -4,7 +4,7 @@ import {
   Upload, FileText, Trash2, Loader2, Sparkles, Copy, Check, 
   FileCode, FileJson, FileSpreadsheet, File, Eye, EyeOff, X,
   Zap, Brain, Search, Pin, PinOff, BookOpen,
-  FolderOpen, AlertTriangle, CheckCircle2, XCircle, Clock
+  FolderOpen, AlertTriangle, CheckCircle2, XCircle, Clock, RotateCcw, SkipForward
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
-import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue } from './knowledgeLearner';
+import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue, getInterruptedSession, resumeInterrupted, refillContentFromFiles, invalidateKnowledgeCache } from './knowledgeLearner';
 
 // ─── Helpers ────────────────────────────────────────
 const FILE_ICONS = {
@@ -141,9 +141,10 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
 }
 
 // ─── Live Progress Dashboard ────────────────────────
-function LearnerDashboard({ learner, onRefreshKnowledge }) {
-  const { queue, completed, failed, currentId, isRunning, progress, folderName, lastLog } = learner;
+function LearnerDashboard({ learner, onRefreshKnowledge, onReselectFolder }) {
+  const { queue, completed, failed, skipped, currentId, isRunning, progress, folderName, lastLog } = learner;
   const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+  const needsReread = queue.filter(q => q.needsReread).length;
 
   // Auto-refresh knowledge bank when items complete
   const prevDone = useRef(progress.done);
@@ -154,7 +155,7 @@ function LearnerDashboard({ learner, onRefreshKnowledge }) {
     }
   }, [progress.done, onRefreshKnowledge]);
 
-  if (!isRunning && progress.total === 0 && completed.length === 0 && failed.length === 0) return null;
+  if (!isRunning && progress.total === 0 && completed.length === 0 && failed.length === 0 && skipped.length === 0) return null;
 
   return (
     <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-500/5 overflow-hidden">
@@ -163,18 +164,25 @@ function LearnerDashboard({ learner, onRefreshKnowledge }) {
         <div className="flex items-center gap-3">
           {isRunning ? (
             <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+          ) : needsReread > 0 ? (
+            <RotateCcw className="w-5 h-5 text-amber-400" />
           ) : progress.total > 0 ? (
             <CheckCircle2 className="w-5 h-5 text-green-400" />
           ) : null}
           <div>
             <span className="text-white font-bold text-sm">
-              {isRunning ? 'Learning in progress...' : 'Learning complete'}
+              {isRunning ? 'Learning in progress...' : needsReread > 0 ? `${needsReread} files need folder re-select to resume` : 'Learning complete'}
             </span>
             {folderName && <span className="text-purple-300/60 text-xs ml-2">from {folderName}/</span>}
           </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-purple-300 text-xs font-mono">{progress.done}/{progress.total}</span>
+          {needsReread > 0 && !isRunning && (
+            <Button size="sm" onClick={onReselectFolder} className="bg-amber-600 hover:bg-amber-700 text-white h-7 text-xs">
+              <FolderOpen className="w-3 h-3 mr-1" /> Re-select Folder
+            </Button>
+          )}
           {!isRunning && (
             <Button size="sm" variant="ghost" onClick={clearAll} className="text-slate-400 hover:text-white h-7 text-xs">
               Dismiss
@@ -208,10 +216,15 @@ function LearnerDashboard({ learner, onRefreshKnowledge }) {
         })()}
 
         {/* Stats row */}
-        <div className="flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-4 text-xs flex-wrap">
           {completed.length > 0 && (
             <span className="flex items-center gap-1 text-green-400">
               <CheckCircle2 className="w-3 h-3" /> {completed.length} learned
+            </span>
+          )}
+          {skipped.length > 0 && (
+            <span className="flex items-center gap-1 text-slate-400">
+              <SkipForward className="w-3 h-3" /> {skipped.length} skipped (duplicates)
             </span>
           )}
           {failed.length > 0 && (
@@ -219,19 +232,17 @@ function LearnerDashboard({ learner, onRefreshKnowledge }) {
               <XCircle className="w-3 h-3" /> {failed.length} failed
             </span>
           )}
-          {queue.length > 0 && !isRunning && (
-            <span className="flex items-center gap-1 text-slate-400">
-              <Clock className="w-3 h-3" /> {queue.length} queued
-            </span>
-          )}
           {isRunning && queue.length > 1 && (
             <span className="text-slate-500">{queue.length - 1} remaining in queue</span>
+          )}
+          {needsReread > 0 && !isRunning && (
+            <span className="text-amber-400">{needsReread} waiting for folder re-select</span>
           )}
         </div>
 
         {/* Failed files details */}
         {failed.length > 0 && (
-          <div className="mt-3 space-y-1">
+          <div className="mt-3 space-y-1 max-h-32 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
             {failed.map(f => (
               <div key={f.id} className="flex items-center gap-2 text-xs text-red-400/70 px-2">
                 <AlertTriangle className="w-3 h-3 flex-shrink-0" />
@@ -250,12 +261,21 @@ export default function GameFileAnalyzer() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
+  const resumeFolderInputRef = useRef(null);
   const [readingFolder, setReadingFolder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCat, setFilterCat] = useState('all');
+  const [interruptedSession, setInterruptedSession] = useState(null);
+  const [resuming, setResuming] = useState(false);
 
   // Subscribe to the global learner engine (persists across tab switches)
   const learner = useLearnerState();
+
+  // On mount, check for interrupted session
+  useEffect(() => {
+    const session = getInterruptedSession();
+    if (session) setInterruptedSession(session);
+  }, []);
 
   // Knowledge bank from DB
   const { data: knowledgeEntries = [], isLoading } = useQuery({
@@ -265,6 +285,7 @@ export default function GameFileAnalyzer() {
 
   const refreshKnowledge = React.useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] });
+    invalidateKnowledgeCache();
   }, [queryClient]);
 
   const deleteMutation = useMutation({
@@ -319,9 +340,9 @@ export default function GameFileAnalyzer() {
     const selected = Array.from(e.target.files || []);
     if (!selected.length) return;
     const items = await processFileList(selected, false);
-    enqueueFiles(items, null);
+    const { added, dupes } = await enqueueFiles(items, null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    showSuccess(`Queued ${items.length} file(s) for learning`);
+    showSuccess(dupes > 0 ? `Queued ${added} file(s), ${dupes} duplicate(s) skipped` : `Queued ${added} file(s) for learning`);
   };
 
   // Folder picker — THE MAIN FEATURE
@@ -340,10 +361,14 @@ export default function GameFileAnalyzer() {
       return;
     }
 
-    // Enqueue everything — the engine takes over from here, even if you switch tabs
-    enqueueFiles(items, folderName);
+    // Enqueue everything — engine deduplicates automatically and keeps running across tab switches
+    const { added, dupes } = await enqueueFiles(items, folderName);
     if (folderInputRef.current) folderInputRef.current.value = '';
-    showSuccess(`Queued ${items.length} files from "${folderName}" — learning will continue even if you switch tabs`);
+    setInterruptedSession(null); // clear any old interrupted session banner
+    const msg = dupes > 0
+      ? `Queued ${added} new files from "${folderName}" (${dupes} duplicates skipped)`
+      : `Queued ${added} files from "${folderName}" — learning continues even if you switch tabs`;
+    showSuccess(msg);
   };
 
   // Filter knowledge
@@ -378,6 +403,51 @@ export default function GameFileAnalyzer() {
           {knowledgeEntries.length} Entries
         </Badge>
       </div>
+
+      {/* ─── INTERRUPTED SESSION BANNER ─── */}
+      {interruptedSession && !learner.isRunning && learner.queue.length === 0 && (
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <RotateCcw className="w-5 h-5 text-amber-400" />
+              <div>
+                <p className="text-white font-bold text-sm">Interrupted session found</p>
+                <p className="text-amber-300/60 text-xs mt-0.5">
+                  {interruptedSession.fileCount} file{interruptedSession.fileCount !== 1 ? 's' : ''} from
+                  {interruptedSession.folderName ? ` "${interruptedSession.folderName}/"` : ' a previous session'} were not finished.
+                  Re-select the same folder to resume where you left off.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button size="sm" onClick={async () => {
+                setResuming(true);
+                await resumeInterrupted();
+                setInterruptedSession(null);
+                setResuming(false);
+                // The queue now has items with needsReread=true, prompt user to re-select folder
+              }} disabled={resuming} className="bg-amber-600 hover:bg-amber-700 text-white">
+                {resuming ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <RotateCcw className="w-3.5 h-3.5 mr-1" />}
+                Resume
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => { clearAll(); setInterruptedSession(null); }} className="text-slate-400 hover:text-white">
+                Discard
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden input for re-selecting folder to refill content */}
+      <input ref={resumeFolderInputRef} type="file" webkitdirectory="" directory="" multiple className="hidden"
+        onChange={async (e) => {
+          const files = Array.from(e.target.files || []);
+          if (!files.length) return;
+          const matched = await refillContentFromFiles(files);
+          if (resumeFolderInputRef.current) resumeFolderInputRef.current.value = '';
+          showSuccess(matched > 0 ? `Matched ${matched} file(s) — resuming learning!` : 'No matching files found. Make sure you selected the same folder.');
+        }}
+      />
 
       {/* ─── FOLDER / FILE PICKER ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -425,7 +495,7 @@ export default function GameFileAnalyzer() {
       </div>
 
       {/* ─── LIVE PROGRESS DASHBOARD ─── */}
-      <LearnerDashboard learner={learner} onRefreshKnowledge={refreshKnowledge} />
+      <LearnerDashboard learner={learner} onRefreshKnowledge={refreshKnowledge} onReselectFolder={() => resumeFolderInputRef.current?.click()} />
 
       {/* ─── KNOWLEDGE BANK ─── */}
       <div className="mb-4 flex items-center gap-3 flex-wrap">
