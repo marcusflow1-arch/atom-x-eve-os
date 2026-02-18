@@ -295,7 +295,7 @@ function LayoutContent({ children, currentPageName }) {
   const [pendingRoute, setPendingRoute] = useState(null);
   const p_lower = location.pathname.toLowerCase();
   // Achievements header takes priority for these routes (no duplicates)
-  const showAchievementsHeader = ['/achievements', '/aiachievements', '/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle', '/leaderboard', '/seasonalpass'].some(s => p_lower.includes(s));
+  const showAchievementsHeader = ['/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle', '/leaderboard', '/seasonalpass'].some(s => p_lower.includes(s));
   const showStoreHeader = !showAchievementsHeader && ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showAchievementsHeader && !showStoreHeader && p_lower.includes('/notifications');
   const showLunaHeaderBar = !showAchievementsHeader && !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/blacksmith','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory']
@@ -963,14 +963,14 @@ function LayoutContent({ children, currentPageName }) {
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           {ap.includes('/library') ? 'Atom X Eve Library' : 
-                           ap.includes('/genremastery') ? 'Atom X Eve Genre Progression' : 
+                           ap.includes('/genremastery') ? 'Atom X Eve Cards' : 
                            ap.includes('/aura') ? 'Atom X Eve Aura Stream' :
                            ap.includes('/streaminghome') ? 'Atom X Eve Aura Home' :
                            ap.includes('/discover') ? 'Atom X Eve Discover' :
                            ap.includes('/aibattle') ? 'Atom X Eve AI Battle' :
                            ap.includes('/leaderboard') ? 'Atom X Eve Leaderboard' :
                            ap.includes('/seasonalpass') ? 'Atom X Eve Season Pass' :
-                           'Atom X Eve Achievements'}
+                           'Atom X Eve Cards'}
                         </span>
 
                         <div className="h-6 w-px bg-white/20 mx-4"></div>
