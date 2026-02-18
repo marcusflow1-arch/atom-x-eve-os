@@ -103,6 +103,7 @@ import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import YBotTest from './pages/YBotTest';
+import Engine from './pages/Engine';
 import __Layout from './Layout.jsx';
 
 
@@ -163,6 +164,7 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "YBotTest": YBotTest,
+    "Engine": Engine,
 }
 
 export const pagesConfig = {
