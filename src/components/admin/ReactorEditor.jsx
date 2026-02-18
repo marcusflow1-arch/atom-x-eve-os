@@ -240,12 +240,15 @@ export default function ReactorEditor() {
 
   const handleAddReactor = () => {
     if (!selectedBone) { showError('Click a bone in the 3D viewport first'); return; }
-    // Pre-fill trigger_time to current scrub position
+    // Pre-fill trigger_time to current scrub position AND auto-fill animation_name
+    const currentAnim = animations.find(a => a.name === animName);
     setEditingReactor({
       ...DEFAULT_REACTOR,
       character_model_id: selectedModelId,
       character_name: selectedModel?.name || '',
       bone_name: selectedBone,
+      animation_name: animName || '',
+      animation_id: currentAnim?.id || '',
       trigger_time: Math.round(animTime * 100) / 100,
       trigger_end_time: Math.min(1, Math.round((animTime + 0.1) * 100) / 100),
     });
