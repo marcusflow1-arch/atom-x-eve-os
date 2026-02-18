@@ -409,12 +409,20 @@ export default function ReactorEditor() {
     setFxBlocks(timeline.fx_blocks || []);
     setActiveTimelineId(timeline.id);
     setSelectedFXBlockId(null);
-    if (timeline.animation_url && timeline.animation_url !== animationUrl) {
-      setAnimationUrl(timeline.animation_url);
+    // Always restore animation state from the timeline
+    if (timeline.animation_name) {
       setAnimName(timeline.animation_name);
     }
+    if (timeline.animation_url) {
+      setAnimationUrl(timeline.animation_url);
+    }
+    if (timeline.animation_duration) {
+      setAnimDuration(timeline.animation_duration);
+    }
+    setAnimTime(0);
+    setIsPlaying(false);
     showSuccess(`Loaded timeline for "${timeline.animation_name}"`);
-  }, [animationUrl]);
+  }, []);
 
   // Auto-load saved timeline when animation changes
   useEffect(() => {
