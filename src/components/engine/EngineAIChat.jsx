@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
+import { invokeAI, getActiveProviderLabel } from '@/components/ai/useAIChat';
+import AIProviderConfig from '@/components/ai/AIProviderConfig';
 
 // ─── AI Model Definitions ───────────────────────────
 const AI_MODELS = [
@@ -270,9 +272,7 @@ ACTION TYPES: add_primitive ({shape}), add_model ({url}), create_blueprint ({nam
 
 Use game knowledge to inform builds. If knowledge is missing, suggest what to upload. ALWAYS valid JSON.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
+      const jsonSchema = {
           type: 'object',
           properties: {
             message: { type: 'string' },
@@ -282,7 +282,12 @@ Use game knowledge to inform builds. If knowledge is missing, suggest what to up
             knowledge_references: { type: 'array', items: { type: 'string' } }
           },
           required: ['message']
-        }
+        };
+
+      const response = await invokeAI({
+        systemPrompt: prompt.split('\nUSER:')[0],
+        userMessage: text,
+        jsonSchema,
       });
 
       const actions = response.actions || [];
@@ -336,6 +341,7 @@ Use game knowledge to inform builds. If knowledge is missing, suggest what to up
   const currentModel = AI_MODELS.find(m => m.id === selectedModel);
   const gameRefCount = knowledgeEntries.filter(e => e.knowledge_domain === 'game_reference').length;
   const engineBuildCount = knowledgeEntries.filter(e => e.knowledge_domain === 'engine_building').length;
+  const [showProviderConfig, setShowProviderConfig] = useState(false);
 
   return (
     <div className="flex flex-col h-full">
@@ -400,6 +406,23 @@ Use game knowledge to inform builds. If knowledge is missing, suggest what to up
             )}
           </AnimatePresence>
         </div>
+
+        {/* AI Provider indicator + config toggle */}
+        <div className="flex items-center justify-between mb-2">
+          <AIProviderConfig compact />
+          <button onClick={() => setShowProviderConfig(!showProviderConfig)} className="text-[9px] text-slate-500 hover:text-white transition-colors">
+            {showProviderConfig ? 'Hide Keys' : 'API Keys'}
+          </button>
+        </div>
+        <AnimatePresence>
+          {showProviderConfig && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-2">
+              <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-700 max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                <AIProviderConfig />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Knowledge Stats */}
         <div className="flex gap-1 flex-wrap">
