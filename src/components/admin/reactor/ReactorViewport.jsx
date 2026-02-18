@@ -146,12 +146,20 @@ const ReactorViewport = forwardRef(({
       if (anims?.length > 0) {
         const mixer = new THREE.AnimationMixer(model);
         mixerRef.current = mixer;
-        const action = mixer.clipAction(anims[0]);
+        const clip = anims[0];
+        const action = mixer.clipAction(clip);
+        action.reset();
+        action.setLoop(THREE.LoopRepeat);
+        action.clampWhenFinished = false;
+        action.enabled = true;
+        action.setEffectiveWeight(1);
         action.play();
         action.paused = true; // start paused so user controls it
+        action.time = 0;
         activeActionRef.current = action;
-        setAnimDuration(anims[0].duration);
-        onAnimLoaded?.(anims[0].duration, anims[0].name);
+        setAnimDuration(clip.duration);
+        console.log(`[ReactorViewport] Embedded animation: "${clip.name}" duration=${clip.duration.toFixed(2)}s`);
+        onAnimLoaded?.(clip.duration, clip.name);
       }
 
       setLoading(false);
