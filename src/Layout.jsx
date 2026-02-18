@@ -1008,6 +1008,10 @@ function LayoutContent({ children, currentPageName }) {
                             <Radio className="w-4 h-4" /> Aura
                           </button>
 
+                          <button onClick={() => navigate(createPageUrl('Engine'))} className={achBtnClass(ap.includes('/engine'))}>
+                            <Rocket className="w-4 h-4" /> Engine
+                          </button>
+
                           <a
                             href="https://discord.gg/awFvGxC5"
                             target="_blank"
