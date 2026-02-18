@@ -328,10 +328,10 @@ function LayoutContent({ children, currentPageName }) {
       const saved = localStorage.getItem('nav_order');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.filter(id => id !== 'entertainment');
+        return parsed.filter(id => id !== 'entertainment' && id !== 'settings');
       }
     } catch(e) {}
-    return ['home', 'library', 'clan', 'forum', 'settings', 'aura'];
+    return ['home', 'library', 'clan', 'forum', 'aura'];
   });
 
   const onNavDragEnd = (result) => {
@@ -1140,8 +1140,21 @@ function LayoutContent({ children, currentPageName }) {
 
             </div>
 
-            {/* View Mode Toggle - right side */}
-            <div className="flex items-center">
+            {/* Settings + View Mode Toggle - right side */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                style={{
+                  background: 'rgba(10, 14, 20, 0.85)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                }}
+                title="Settings"
+              >
+                <Settings className="w-3.5 h-3.5 text-white/60" />
+              </button>
               <ViewModeToggle />
             </div>
             </div>
