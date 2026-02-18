@@ -320,6 +320,88 @@ const ReactorViewport = forwardRef(({
     });
   }, [reactors, selectedBone, hoveredBone]);
 
+  // ── FX Block visualization in viewport ──
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const scene = sceneRef.current;
+    const currentTime = animTime;
+
+    // Determine which FX blocks are active
+    const activeBlockIds = new Set();
+    fxBlocks.forEach(fx => {
+      const start = fx.start_time || 0;
+      const end = start + (fx.duration_norm || 0.1);
+      if (currentTime >= start && currentTime <= end) {
+        activeBlockIds.add(fx._id);
+      }
+    });
+
+    // Remove FX meshes that are no longer active
+    activeFXMeshesRef.current.forEach(({ group }, id) => {
+      if (!activeBlockIds.has(id)) {
+        scene.remove(group);
+        activeFXMeshesRef.current.delete(id);
+      }
+    });
+
+    // Add new active FX meshes
+    activeBlockIds.forEach(id => {
+      if (activeFXMeshesRef.current.has(id)) {
+        // Already exists, update position
+        const { group } = activeFXMeshesRef.current.get(id);
+        const fx = fxBlocks.find(f => f._id === id);
+        if (fx?.bone) {
+          const boneSphere = boneSphereMapRef.current.get(fx.bone);
+          if (boneSphere) group.position.copy(boneSphere.position);
+        }
+        return;
+      }
+
+      const fx = fxBlocks.find(f => f._id === id);
+      if (!fx) return;
+
+      const group = createFXGroup(fx, fx.color);
+      
+      // Position at bone
+      if (fx.bone) {
+        const boneSphere = boneSphereMapRef.current.get(fx.bone);
+        if (boneSphere) group.position.copy(boneSphere.position);
+      }
+
+      scene.add(group);
+      activeFXMeshesRef.current.set(id, { group, type: fx.effect_type || 'burst' });
+    });
+  }, [animTime, fxBlocks]);
+
+  // ── Reactor firing glow visualization ──
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const scene = sceneRef.current;
+
+    // Check for firing reactors
+    const firingReactor = reactors.find(r =>
+      animTime >= (r.trigger_time || 0) && animTime <= (r.trigger_end_time || r.trigger_time + 0.1)
+    );
+
+    if (firingReactor) {
+      if (!firingGlowRef.current) {
+        const glow = createReactorFiringGlow(firingReactor.damage_type);
+        scene.add(glow);
+        firingGlowRef.current = glow;
+      }
+      // Position at bone
+      const boneSphere = boneSphereMapRef.current.get(firingReactor.bone_name);
+      if (boneSphere && firingGlowRef.current) {
+        firingGlowRef.current.position.copy(boneSphere.position);
+      }
+    } else {
+      if (firingGlowRef.current) {
+        scene.remove(firingGlowRef.current);
+        firingGlowRef.current = null;
+      }
+    }
+  }, [animTime, reactors]);
+
   // Click handler for bone picking
   const handleClick = useCallback((e) => {
     if (!rendererRef.current || !cameraRef.current || !sceneRef.current) return;
