@@ -446,11 +446,15 @@ export default function ReactorEditor() {
   }, [animName, selectedModelId, savedTimelines]);
 
   const handleSelectAnimation = (anim) => {
+    console.log('[ReactorEditor] Selecting animation:', anim.name, anim.file_url);
     setAnimationUrl(anim.file_url);
     setAnimName(anim.name);
-    setFxBlocks([]); // clear FX blocks; will auto-load from saved timeline
+    setAnimTime(0);
+    setIsPlaying(false);
+    // Don't clear FX blocks here — the auto-load effect will restore them from saved timeline
     setActiveTimelineId(null);
     setSelectedFXBlockId(null);
+    setFxBlocks([]); // Clear, then auto-load will repopulate from saved timelines
     // Also set on editing reactor if one is active
     if (editingReactor) {
       setEditingReactor(prev => ({ ...prev, animation_name: anim.name, animation_id: anim.id }));
