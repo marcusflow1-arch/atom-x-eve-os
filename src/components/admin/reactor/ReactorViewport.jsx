@@ -226,6 +226,18 @@ const ReactorViewport = forwardRef(({
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('resize', handleResize);
+      // Clean up FX meshes
+      activeFXMeshesRef.current.forEach(({ group }) => scene.remove(group));
+      activeFXMeshesRef.current.clear();
+      if (firingGlowRef.current) {
+        scene.remove(firingGlowRef.current);
+        firingGlowRef.current = null;
+      }
+      if (mixerRef.current) {
+        mixerRef.current.stopAllAction();
+        mixerRef.current = null;
+      }
+      activeActionRef.current = null;
       renderer.dispose();
       container.innerHTML = '';
     };
