@@ -15,6 +15,9 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
 import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue, getInterruptedSession, resumeInterrupted, refillContentFromFiles, invalidateKnowledgeCache } from './knowledgeLearner';
 
+// Note: Content is now persisted to IndexedDB by the learner engine,
+// so learning survives page refreshes automatically.
+
 // ─── Helpers ────────────────────────────────────────
 const FILE_ICONS = {
   json: FileJson, js: FileCode, jsx: FileCode, ts: FileCode, tsx: FileCode,
