@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
@@ -11,6 +11,7 @@ import ReactorPropertiesPanel from './reactor/ReactorPropertiesPanel';
 import ReactorTimeline from './reactor/ReactorTimeline';
 import FXUploadManager from './reactor/FXUploadManager';
 import AnimationPlaybackBar from './reactor/AnimationPlaybackBar';
+import ReactorBridge from './reactor/ReactorBridge';
 
 const DEFAULT_REACTOR = {
   bone_name: '', animation_name: '', trigger_time: 0.5, trigger_end_time: 0.6,
