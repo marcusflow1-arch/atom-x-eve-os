@@ -941,7 +941,7 @@ export default function Admin() {
             <ExpProgressionAdmin />
           </TabsContent>
 
-          <TabsContent value="game-files">
+          <TabsContent value="game-files" forceMount className="data-[state=inactive]:hidden">
             <GameFileAnalyzer />
           </TabsContent>
 
