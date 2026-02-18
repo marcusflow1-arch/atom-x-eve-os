@@ -222,17 +222,44 @@ const ReactorViewport = forwardRef(({
   // Play/Pause control from parent
   useEffect(() => {
     if (!activeActionRef.current) return;
-    activeActionRef.current.paused = !isPlaying;
+    const action = activeActionRef.current;
+    action.paused = !isPlaying;
+    // If we're starting playback, ensure the action is enabled and not stuck
+    if (isPlaying) {
+      action.enabled = true;
+      action.setEffectiveWeight(1);
+      // If at the very end, restart from beginning
+      const dur = action.getClip().duration;
+      if (dur > 0 && action.time >= dur - 0.01) {
+        action.time = 0;
+      }
+    }
     setLocalPlaying(isPlaying);
   }, [isPlaying]);
 
   // Scrub to specific time from parent
   useEffect(() => {
     if (!activeActionRef.current || animTime === undefined || animTime === null) return;
-    const dur = activeActionRef.current.getClip().duration;
-    if (dur > 0 && activeActionRef.current.paused) {
-      activeActionRef.current.time = animTime * dur;
+    const action = activeActionRef.current;
+    const dur = action.getClip().duration;
+    // Only scrub when paused — otherwise the mixer drives the time
+    if (dur > 0 && action.paused) {
+      action.time = animTime * dur;
+      action.enabled = true;
+      action.setEffectiveWeight(1);
       mixerRef.current?.update(0);
+      
+      // Force bone sphere position update after scrub
+      if (modelRef.current) {
+        boneSphereMapRef.current.forEach((sphere) => {
+          const bone = sphere.userData.boneRef;
+          if (bone) {
+            const wp = new THREE.Vector3();
+            bone.getWorldPosition(wp);
+            sphere.position.copy(wp);
+          }
+        });
+      }
     }
   }, [animTime]);
 
@@ -243,22 +270,35 @@ const ReactorViewport = forwardRef(({
     const loader = isFbx ? new FBXLoader() : new GLTFLoader();
     loader.load(url, (asset) => {
       const anims = isFbx ? asset.animations : asset.animations;
-      if (!anims?.length) return;
+      if (!anims?.length) {
+        console.warn('[ReactorViewport] No animations found in file:', url);
+        return;
+      }
 
       if (!mixerRef.current) {
         mixerRef.current = new THREE.AnimationMixer(modelRef.current);
       }
-      // Stop old action
-      if (activeActionRef.current) {
-        activeActionRef.current.stop();
-      }
-      const action = mixerRef.current.clipAction(anims[0]);
+      // Stop ALL existing actions on the mixer to avoid conflicts
+      mixerRef.current.stopAllAction();
+
+      const clip = anims[0];
+      const action = mixerRef.current.clipAction(clip);
+      action.reset();
+      action.setLoop(THREE.LoopRepeat);
+      action.clampWhenFinished = false;
+      action.enabled = true;
+      action.setEffectiveWeight(1);
       action.play();
-      action.paused = true;
+      action.paused = true; // Start paused — user presses play
+      action.time = 0;
       activeActionRef.current = action;
-      const dur = anims[0].duration;
+
+      const dur = clip.duration;
       setAnimDuration(dur);
-      onAnimLoaded?.(dur, anims[0].name || url.split('/').pop());
+      console.log(`[ReactorViewport] Animation loaded: "${clip.name || url.split('/').pop()}" duration=${dur.toFixed(2)}s`);
+      onAnimLoaded?.(dur, clip.name || url.split('/').pop());
+    }, undefined, (err) => {
+      console.error('[ReactorViewport] Failed to load animation:', url, err);
     });
   }, [onAnimLoaded]);
 
