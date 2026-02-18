@@ -51,6 +51,8 @@ const ReactorViewport = forwardRef(({
   const activeFXMeshesRef = useRef(new Map()); // fxBlockId -> { group, type }
   const firingGlowRef = useRef(null);
   const timeAccRef = useRef(0);
+  const onAnimTimeChangeRef = useRef(onAnimTimeChange);
+  onAnimTimeChangeRef.current = onAnimTimeChange;
 
   useImperativeHandle(ref, () => ({
     getBones: () => bones,
@@ -174,10 +176,12 @@ const ReactorViewport = forwardRef(({
       if (mixerRef.current && activeActionRef.current) {
         if (!activeActionRef.current.paused) {
           mixerRef.current.update(delta);
-          // Report time back
+          // Report normalized time back to parent
           const t = activeActionRef.current.time;
           const dur = activeActionRef.current.getClip().duration;
-          onAnimTimeChange?.(dur > 0 ? t / dur : 0);
+          if (dur > 0) {
+            onAnimTimeChangeRef.current?.(t / dur);
+          }
         }
 
         // Update bone sphere positions
