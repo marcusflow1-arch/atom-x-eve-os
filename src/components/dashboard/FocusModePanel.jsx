@@ -32,6 +32,7 @@ import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
+import KnowledgeLearnerPanel from '@/components/dashboard/KnowledgeLearnerPanel';
 
 import { useQuery } from '@tanstack/react-query';
 
@@ -1770,7 +1771,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             </AnimatePresence>
           </div>
           
-          {/* Right Column: System Status + Calendar */}
+          {/* Right Column: System Status + Calendar + Knowledge Learner */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
              <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
 
@@ -1778,6 +1779,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
              <div className="mt-1">
                 <AIAttributesBox />
               </div>
+
+             {/* Knowledge Learner Settings Panel */}
+             <div className="mt-1 rounded-xl overflow-hidden border border-white/10" style={{
+               background: 'rgba(100, 120, 140, 0.08)',
+               backdropFilter: 'blur(20px) saturate(150%)',
+               WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+               maxHeight: '500px',
+             }}>
+               <KnowledgeLearnerPanel />
+             </div>
              </div>
         </div>
       </div>
