@@ -194,14 +194,71 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     buildSceneModels();
 
     // Listen for reactor fired events from editor → show visual feedback in Luna viewer
-    const unsubFired = ReactorBridge.on('reactorFired', ({ bone, damageType }) => {
-      // Flash the active character's bone area (visual cue)
-      console.log(`[Luna Reactor] Reactor fired on bone: ${bone}, type: ${damageType}`);
+    const unsubFired = ReactorBridge.on('reactorFired', ({ bone, damageType, fx }) => {
+      console.log(`[Luna Reactor] Fired on bone: ${bone}, type: ${damageType}, fx: ${fx}`);
+      // Visual glow on active character
+      const activeModel = activeCharacterRef.current === 'ybot' ? modelRef.current : c1ModelRef.current;
+      if (activeModel && sceneRef.current) {
+        // Create a temporary glow at the model's position
+        const color = {
+          physical: 0x94a3b8, energy: 0xfacc15, lightning: 0x60a5fa,
+          fire: 0xf97316, ice: 0x22d3ee, true_damage: 0xef4444,
+          poison: 0x22c55e, holy: 0xfbbf24,
+        }[damageType] || 0x00ffcc;
+
+        const light = new THREE.PointLight(color, 3, 5);
+        light.position.copy(activeModel.position);
+        light.position.y += 0.5;
+        sceneRef.current.add(light);
+
+        // Fade out and remove after 300ms
+        setTimeout(() => {
+          if (sceneRef.current) sceneRef.current.remove(light);
+        }, 300);
+      }
+    });
+
+    // Listen for FX blocks state → render active FX in the Luna 3D scene
+    const unsubFXBlocks = ReactorBridge.on('fxBlocksState', ({ activeFXBlocks }) => {
+      const scene = sceneRef.current;
+      if (!scene) return;
+      const activeModel = activeCharacterRef.current === 'ybot' ? modelRef.current : c1ModelRef.current;
+      if (!activeModel) return;
+
+      // Clean up old FX lights (tagged with _lunaFX)
+      const toRemove = [];
+      scene.traverse(child => {
+        if (child.userData._lunaFX) toRemove.push(child);
+      });
+      toRemove.forEach(c => scene.remove(c));
+
+      // Add lights for each active FX block
+      activeFXBlocks.forEach(fx => {
+        const fxColor = {
+          projectile: 0x3b82f6, burst: 0xf97316, aura: 0xa855f7,
+          beam: 0x22d3ee, trail: 0x22c55e, impact: 0xef4444,
+        }[fx.effect_type] || 0xf59e0b;
+
+        const light = new THREE.PointLight(fxColor, 2.5, 4);
+        light.position.copy(activeModel.position);
+        light.position.y += 0.5;
+        light.userData._lunaFX = true;
+        scene.add(light);
+
+        // Small glowing sphere
+        const geo = new THREE.SphereGeometry(0.08, 12, 12);
+        const mat = new THREE.MeshBasicMaterial({ color: fxColor, transparent: true, opacity: 0.6 });
+        const sphere = new THREE.Mesh(geo, mat);
+        sphere.position.copy(light.position);
+        sphere.userData._lunaFX = true;
+        scene.add(sphere);
+      });
     });
 
     return () => {
       clearInterval(interval);
       unsubFired();
+      unsubFXBlocks();
     };
   }, [all3DModels]);
 
