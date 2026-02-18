@@ -34,6 +34,10 @@ let _state = {
   activeFXBlocks: [],
   allFXBlocks: [],
 
+  // Full FX blocks list for the current animation (for viewport rendering)
+  currentFXBlocks: [],
+  currentAnimName: null,
+
   // Live scene model list (populated by Luna viewer)
   sceneModels: [], // [{ id, name, type:'ybot'|'c1'|'ai', file_url }]
 };
