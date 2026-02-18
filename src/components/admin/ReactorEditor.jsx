@@ -296,6 +296,44 @@ export default function ReactorEditor() {
             {models.map(m => <option key={m.id} value={m.id}>{m.name} ({m.file_type})</option>)}
           </select>
           <Badge variant="outline" className="text-slate-400 text-[9px]">{reactors.length} reactors</Badge>
+          {/* Live Sync Toggle */}
+          <button
+            onClick={() => setLiveSync(!liveSync)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+              liveSync
+                ? 'bg-green-500/20 text-green-300 border-green-500/30'
+                : 'bg-slate-800 text-slate-500 border-slate-700'
+            }`}
+            title="Sync changes live to Luna Dashboard 3D viewer"
+          >
+            <Monitor className="w-3 h-3" />
+            {liveSync ? 'Luna Sync ON' : 'Luna Sync OFF'}
+          </button>
+          {/* Scene model picker from Luna viewer */}
+          {sceneModels.length > 0 && (
+            <select
+              value={selectedModelId || ''}
+              onChange={(e) => {
+                const sm = sceneModels.find(m => m.id === e.target.value);
+                if (sm) {
+                  setSelectedModelId(sm.id);
+                  setSelectedBone(null);
+                  setEditingReactor(null);
+                  setAnimationUrl(null);
+                  setAnimName(null);
+                  setAnimTime(0);
+                  setIsPlaying(false);
+                }
+              }}
+              className="bg-emerald-900/40 border border-emerald-500/30 rounded-lg px-2 py-1 text-[10px] text-emerald-300 max-w-[160px]"
+              title="Pick a model from the live Luna scene"
+            >
+              <option value="">Luna Scene Models...</option>
+              {sceneModels.map(sm => (
+                <option key={sm.id} value={sm.id}>{sm.name} ({sm.type})</option>
+              ))}
+            </select>
+          )}
           {activeFXDrag && (
             <Badge className="bg-amber-500/20 text-amber-300 text-[9px] border border-amber-500/30 animate-pulse">
               FX: {activeFXDrag.name} — click bone to place
