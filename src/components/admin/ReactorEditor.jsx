@@ -435,8 +435,13 @@ export default function ReactorEditor() {
     if (!animName || !selectedModelId || savedTimelines.length === 0) return;
     const match = savedTimelines.find(t => t.animation_name === animName && t.model_id === selectedModelId);
     if (match && match.id !== activeTimelineId) {
+      console.log('[Timeline Auto-Load]', match.animation_name, 'FX blocks:', (match.fx_blocks || []).length);
       setFxBlocks(match.fx_blocks || []);
       setActiveTimelineId(match.id);
+      // Restore duration if saved
+      if (match.animation_duration && match.animation_duration > 0) {
+        setAnimDuration(match.animation_duration);
+      }
     }
   }, [animName, selectedModelId, savedTimelines]);
 
