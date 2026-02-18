@@ -814,10 +814,10 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = false;
         } else if (p.includes('/blanktransition')) {
                                                                 headerConfig.hidden = true;
-                                                              } else if (p.includes('/achievements') || p.includes('/aiachievements') || p.includes('/library')) {
+                                                              } else if (p.includes('/library')) {
           headerConfig.hidden = false;
           headerConfig.showMenu = true;
-          headerConfig.title = "Achievement Cards";
+          headerConfig.title = "Cards";
           headerConfig.showLevel = false;
           headerConfig.showDiscord = false;
         } else if (p.includes('/aibattle')) {
@@ -943,11 +943,11 @@ function LayoutContent({ children, currentPageName }) {
                           <div className="h-6 w-px bg-white/10 mx-1"></div>
 
                           <button
-                            onClick={() => navigate(createPageUrl('Achievements'))}
+                            onClick={() => navigate(createPageUrl('GenreMastery'))}
                             className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
                           >
                             <Trophy className="w-4 h-4" />
-                            Achievements
+                            Cards
                           </button>
 
                         </div>
@@ -1042,8 +1042,8 @@ function LayoutContent({ children, currentPageName }) {
                           <button onClick={() => navigate(createPageUrl('Library'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
                             <Gamepad2 className="w-4 h-4" /> Library
                           </button>
-                          <button onClick={() => navigate(createPageUrl('Achievements'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                            <Trophy className="w-4 h-4" /> Achievements
+                          <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <Trophy className="w-4 h-4" /> Cards
                           </button>
                           <button onClick={() => navigate(createPageUrl('Community'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
                             <MessageSquare className="w-4 h-4" /> Community
