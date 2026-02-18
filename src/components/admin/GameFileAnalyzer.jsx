@@ -1,156 +1,143 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, FileText, Trash2, Loader2, Sparkles, Copy, Check, 
-  FileCode, FileJson, FileSpreadsheet, File, Eye, X, Download,
-  Zap, Brain, Code, Layers
+  FileCode, FileJson, FileSpreadsheet, File, Eye, EyeOff, X,
+  Zap, Brain, Layers, Search, Pin, PinOff, BookOpen, Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
+import ReactMarkdown from 'react-markdown';
 
+// ─── Helpers ────────────────────────────────────────
 const FILE_ICONS = {
-  json: FileJson,
-  js: FileCode,
-  jsx: FileCode,
-  ts: FileCode,
-  tsx: FileCode,
-  css: FileCode,
-  html: FileCode,
-  csv: FileSpreadsheet,
-  xlsx: FileSpreadsheet,
-  txt: FileText,
-  md: FileText,
-  pdf: FileText,
-  png: File,
-  jpg: File,
-  jpeg: File,
+  json: FileJson, js: FileCode, jsx: FileCode, ts: FileCode, tsx: FileCode,
+  css: FileCode, html: FileCode, csv: FileSpreadsheet, xlsx: FileSpreadsheet,
+  txt: FileText, md: FileText, pdf: FileText, png: File, jpg: File, jpeg: File,
 };
 
-function getFileIcon(filename) {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  return FILE_ICONS[ext] || File;
+function getFileIcon(name) { return FILE_ICONS[name.split('.').pop()?.toLowerCase()] || File; }
+
+function classifyFile(name) {
+  const ext = name.split('.').pop()?.toLowerCase();
+  if (['json','yaml','yml','env','config','toml'].includes(ext)) return 'config';
+  if (['js','jsx','ts','tsx','py','cs','cpp','c','java','rb','go','rs'].includes(ext)) return 'code';
+  if (['csv','xlsx','xls','tsv'].includes(ext)) return 'data';
+  if (['md','txt','doc','docx','pdf'].includes(ext)) return 'documentation';
+  if (['png','jpg','jpeg','gif','webp','svg','glb','gltf','fbx','obj'].includes(ext)) return 'asset';
+  if (['psd','ai','fig','sketch','xd'].includes(ext)) return 'design';
+  return 'other';
 }
 
-function getFileType(filename) {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  if (['json'].includes(ext)) return 'json';
-  if (['js', 'jsx', 'ts', 'tsx'].includes(ext)) return 'code';
-  if (['css', 'html', 'xml', 'svg'].includes(ext)) return 'markup';
-  if (['csv', 'xlsx', 'xls'].includes(ext)) return 'spreadsheet';
-  if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return 'image';
-  if (['pdf'].includes(ext)) return 'pdf';
-  if (['md', 'txt'].includes(ext)) return 'text';
-  return 'unknown';
+const CATEGORY_COLORS = {
+  code: 'bg-blue-500/15 text-blue-400 border-blue-500/25',
+  data: 'bg-green-500/15 text-green-400 border-green-500/25',
+  config: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25',
+  asset: 'bg-pink-500/15 text-pink-400 border-pink-500/25',
+  documentation: 'bg-slate-500/15 text-slate-400 border-slate-500/25',
+  design: 'bg-purple-500/15 text-purple-400 border-purple-500/25',
+  other: 'bg-slate-500/15 text-slate-400 border-slate-500/25',
+};
+
+// Read text-based files directly in the browser (no upload needed)
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
 }
 
-function AnalysisResult({ analysis, onCopy }) {
+// ─── Knowledge Card (saved entry from DB) ───────────
+function KnowledgeCard({ entry, onDelete, onTogglePin }) {
+  const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const Icon = getFileIcon(entry.source_filename);
+  const catColor = CATEGORY_COLORS[entry.category] || CATEGORY_COLORS.other;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(analysis);
+    navigator.clipboard.writeText(entry.full_analysis + (entry.extracted_code ? '\n\n--- CODE ---\n' + entry.extracted_code : ''));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    onCopy?.();
-  };
-
-  return (
-    <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 bg-cyan-500/10 border-b border-cyan-500/20">
-        <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
-          <Brain className="w-4 h-4" />
-          AI Analysis
-        </div>
-        <Button size="sm" variant="ghost" onClick={handleCopy} className="text-cyan-400 hover:text-cyan-300 h-7 px-2">
-          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-        </Button>
-      </div>
-      <div className="p-4 text-sm text-slate-300 leading-relaxed whitespace-pre-wrap font-mono max-h-[500px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-        {analysis}
-      </div>
-    </div>
-  );
-}
-
-function UploadedFileCard({ file, onAnalyze, onRemove, isAnalyzing }) {
-  const [showAnalysis, setShowAnalysis] = useState(!!file.analysis);
-  const Icon = getFileIcon(file.name);
-  const fileType = getFileType(file.name);
-
-  const typeColors = {
-    code: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
-    json: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20',
-    markup: 'text-orange-400 bg-orange-500/10 border-orange-500/20',
-    spreadsheet: 'text-green-400 bg-green-500/10 border-green-500/20',
-    image: 'text-pink-400 bg-pink-500/10 border-pink-500/20',
-    pdf: 'text-red-400 bg-red-500/10 border-red-500/20',
-    text: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
-    unknown: 'text-slate-400 bg-slate-500/10 border-slate-500/20',
   };
 
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="bg-slate-800/50 border border-slate-700 rounded-xl overflow-hidden"
+      exit={{ opacity: 0, scale: 0.95 }}
+      className={`bg-slate-800/50 border rounded-xl overflow-hidden ${entry.is_pinned ? 'border-amber-500/40' : 'border-slate-700'}`}
     >
-      <div className="flex items-center gap-4 p-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${typeColors[fileType]}`}>
-          <Icon className="w-6 h-6" />
+      <div className="flex items-center gap-3 p-4">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${catColor}`}>
+          <Icon className="w-5 h-5" />
         </div>
-        
         <div className="flex-1 min-w-0">
-          <h4 className="text-white font-semibold text-sm truncate">{file.name}</h4>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge variant="outline" className="text-[10px] py-0">{file.name.split('.').pop()?.toUpperCase()}</Badge>
-            <span className="text-slate-500 text-xs">{(file.size / 1024).toFixed(1)} KB</span>
-            {file.analysis && (
-              <Badge className="bg-cyan-500/20 text-cyan-400 text-[10px] py-0">Analyzed</Badge>
-            )}
+          <div className="flex items-center gap-2">
+            <h4 className="text-white font-semibold text-sm truncate">{entry.source_filename}</h4>
+            {entry.is_pinned && <Pin className="w-3 h-3 text-amber-400 flex-shrink-0" />}
+          </div>
+          <p className="text-slate-500 text-xs truncate mt-0.5">{entry.summary || 'Knowledge entry'}</p>
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <Badge variant="outline" className={`text-[9px] py-0 ${catColor}`}>{entry.category}</Badge>
+            {entry.tags?.slice(0, 4).map(tag => (
+              <Badge key={tag} variant="outline" className="text-[9px] py-0 text-slate-500 border-slate-700">{tag}</Badge>
+            ))}
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {file.analysis && (
-            <Button size="sm" variant="ghost" onClick={() => setShowAnalysis(!showAnalysis)} className="text-cyan-400 hover:text-cyan-300">
-              <Eye className="w-4 h-4" />
-            </Button>
-          )}
-          <Button 
-            size="sm" 
-            onClick={() => onAnalyze(file)}
-            disabled={isAnalyzing}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white"
-          >
-            {isAnalyzing ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                {file.analysis ? 'Re-Analyze' : 'Analyze'}
-              </>
-            )}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button size="icon" variant="ghost" onClick={() => onTogglePin(entry)} className="h-7 w-7 text-amber-400/60 hover:text-amber-400">
+            {entry.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
           </Button>
-          <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8" onClick={() => onRemove(file.id)}>
-            <Trash2 className="w-4 h-4" />
+          <Button size="icon" variant="ghost" onClick={handleCopy} className="h-7 w-7 text-cyan-400/60 hover:text-cyan-400">
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => setExpanded(!expanded)} className="h-7 w-7 text-slate-400 hover:text-white">
+            {expanded ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </Button>
+          <Button size="icon" variant="ghost" onClick={() => onDelete(entry.id)} className="h-7 w-7 text-red-400/60 hover:text-red-400">
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
       </div>
 
       <AnimatePresence>
-        {showAnalysis && file.analysis && (
+        {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden border-t border-slate-700"
+            className="overflow-hidden"
           >
-            <div className="p-4">
-              <AnalysisResult analysis={file.analysis} onCopy={() => showSuccess('Analysis copied to clipboard')} />
+            <div className="border-t border-slate-700 p-4 space-y-4">
+              {/* Analysis */}
+              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
+                <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3">
+                  <Brain className="w-3.5 h-3.5" /> Full Analysis
+                </div>
+                <div className="text-sm text-slate-300 leading-relaxed prose prose-invert prose-sm max-w-none max-h-[400px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                  <ReactMarkdown>{entry.full_analysis}</ReactMarkdown>
+                </div>
+              </div>
+
+              {/* Extracted Code */}
+              {entry.extracted_code && (
+                <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
+                  <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-wider mb-3">
+                    <FileCode className="w-3.5 h-3.5" /> Extracted Code / Data
+                  </div>
+                  <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap max-h-[300px] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                    {entry.extracted_code}
+                  </pre>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -159,213 +146,294 @@ function UploadedFileCard({ file, onAnalyze, onRemove, isAnalyzing }) {
   );
 }
 
+// ─── Main Component ─────────────────────────────────
 export default function GameFileAnalyzer() {
-  const [files, setFiles] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [analyzingId, setAnalyzingId] = useState(null);
-  const [customPrompt, setCustomPrompt] = useState('');
+  const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
+  const [pendingFiles, setPendingFiles] = useState([]); // files selected but not yet learned
+  const [learningId, setLearningId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCat, setFilterCat] = useState('all');
 
-  const handleUpload = async (e) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (selectedFiles.length === 0) return;
+  // Load all knowledge from DB
+  const { data: knowledgeEntries = [], isLoading } = useQuery({
+    queryKey: ['knowledge-entries'],
+    queryFn: () => base44.entities.KnowledgeEntry.list('-created_date', 100),
+  });
 
-    setUploading(true);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.KnowledgeEntry.delete(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] }); showSuccess('Knowledge removed'); },
+  });
 
-    for (const file of selectedFiles) {
-      try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        
-        setFiles(prev => [...prev, {
-          id: Date.now() + '_' + file.name,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: file_url,
-          analysis: null,
-          uploadedAt: new Date().toISOString(),
-        }]);
-      } catch (error) {
-        showError(error, `Upload ${file.name}`);
+  const togglePinMutation = useMutation({
+    mutationFn: (entry) => base44.entities.KnowledgeEntry.update(entry.id, { is_pinned: !entry.is_pinned }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] }),
+  });
+
+  // When user picks files, read them client-side (no upload to storage)
+  const handleFilePick = async (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+
+    const newPending = [];
+    for (const file of selected) {
+      let content = '';
+      const fileType = classifyFile(file.name);
+      const isTextBased = !['asset', 'design'].includes(fileType) && file.size < 2 * 1024 * 1024;
+
+      if (isTextBased) {
+        try { content = await readFileAsText(file); } catch { content = '[Could not read file as text]'; }
       }
+
+      newPending.push({
+        id: Date.now() + '_' + file.name,
+        name: file.name,
+        size: file.size,
+        category: fileType,
+        content: content.substring(0, 50000), // cap at 50k chars
+        rawFile: file, // keep reference for images/PDFs that need upload
+        needsUpload: !isTextBased,
+      });
     }
 
-    setUploading(false);
+    setPendingFiles(prev => [...prev, ...newPending]);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    showSuccess(`${selectedFiles.length} file(s) uploaded`);
   };
 
-  const handleAnalyze = async (file) => {
-    setAnalyzingId(file.id);
-    
+  // Learn a single file: analyze content with AI, then save knowledge to DB
+  const learnFile = async (pf) => {
+    setLearningId(pf.id);
+
     try {
-      const fileType = getFileType(file.name);
-      const ext = file.name.split('.').pop()?.toLowerCase();
-      
-      let analysisPrompt = customPrompt || '';
-      
-      // Build a smart analysis prompt based on file type
-      const basePrompt = `You are a senior game developer and software architect. Analyze this uploaded file thoroughly and provide actionable insights.
+      let contentForAI = pf.content;
+      let fileUrls = [];
 
-File: "${file.name}" (${ext} file, ${(file.size / 1024).toFixed(1)} KB)
-
-${analysisPrompt ? `Additional context from the user: "${analysisPrompt}"\n\n` : ''}Provide a comprehensive breakdown including:
-
-1. **FILE OVERVIEW**: What this file is, its purpose, and structure
-2. **KEY DATA/CODE BREAKDOWN**: Important elements, schemas, patterns, functions, configurations, or data points found
-3. **INTEGRATION OPPORTUNITIES**: How this file's content could be integrated into a React + Three.js gaming platform (entities, components, 3D models, UI features, game mechanics)
-4. **CODE SNIPPETS**: If relevant, provide ready-to-use code snippets that leverage this file's data
-5. **RECOMMENDATIONS**: Best practices for using this data, potential pitfalls, and optimization tips
-
-Be specific, technical, and practical. Format your response clearly with headers and bullet points.`;
-
-      let result;
-
-      if (['image', 'pdf'].includes(fileType)) {
-        // Use file_urls for images and PDFs
-        result = await base44.integrations.Core.InvokeLLM({
-          prompt: basePrompt,
-          file_urls: [file.url],
-        });
-      } else {
-        // For code/text/data files, extract data first then analyze
-        const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-          file_url: file.url,
-          json_schema: {
-            type: 'object',
-            properties: {
-              raw_content: { type: 'string' },
-              structure_summary: { type: 'string' },
-              key_elements: { type: 'array', items: { type: 'string' } },
-            }
-          }
-        });
-
-        const extractedContent = extractResult?.output 
-          ? JSON.stringify(extractResult.output, null, 2).substring(0, 8000)
-          : 'Could not extract structured data - analyzing file directly.';
-
-        result = await base44.integrations.Core.InvokeLLM({
-          prompt: `${basePrompt}\n\n--- EXTRACTED FILE CONTENT ---\n${extractedContent}`,
-          file_urls: [file.url],
-        });
+      // For binary files (images, PDFs, 3D), upload temporarily so AI can see them
+      if (pf.needsUpload) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file: pf.rawFile });
+        fileUrls = [file_url];
+        contentForAI = `[Binary file - sent as attachment for visual analysis]`;
       }
 
-      setFiles(prev => prev.map(f => 
-        f.id === file.id ? { ...f, analysis: result } : f
-      ));
+      // Ask AI to deeply analyze and extract all knowledge
+      const analysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `You are a knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS).
 
-      showSuccess('Analysis complete!');
+A developer has given you a file to LEARN from. Your job is to extract EVERY piece of useful knowledge from this file and present it in a way that can be referenced later for building features.
+
+FILE: "${pf.name}" (${pf.category} file, ${(pf.size/1024).toFixed(1)} KB)
+
+${contentForAI ? `--- FILE CONTENT ---\n${contentForAI.substring(0, 30000)}\n--- END ---\n\n` : ''}
+
+Provide your analysis in this EXACT structure:
+
+## Summary
+One paragraph explaining what this file is and what it contains.
+
+## Key Knowledge Extracted
+- Every important piece of data, pattern, function, config, schema, endpoint, or concept found
+- Be exhaustive — list everything useful
+
+## Code Patterns & Snippets
+Any reusable code patterns, component structures, API calls, schemas, or configurations found. Write them as code blocks.
+
+## Integration Guide
+How this knowledge can be practically used in a React + Three.js + TailwindCSS gaming platform. Be specific with component names, entity schemas, and implementation steps.
+
+## Tags
+List 5-10 single-word tags that categorize this knowledge (e.g., "react", "animation", "api", "three.js", "game-data", "shader", "ui", "config")`,
+        file_urls: fileUrls.length > 0 ? fileUrls : undefined,
+      });
+
+      // Extract tags from the analysis
+      const tagMatch = analysis.match(/##\s*Tags\s*\n([\s\S]*?)(?:\n##|$)/i);
+      let tags = [];
+      if (tagMatch) {
+        tags = tagMatch[1].match(/[\w.-]+/g)?.filter(t => t.length > 1 && t.length < 30).slice(0, 10) || [];
+      }
+
+      // Extract code blocks
+      const codeBlocks = [];
+      const codeRegex = /```[\w]*\n([\s\S]*?)```/g;
+      let match;
+      while ((match = codeRegex.exec(analysis)) !== null) {
+        codeBlocks.push(match[1].trim());
+      }
+
+      // Extract summary
+      const summaryMatch = analysis.match(/##\s*Summary\s*\n([\s\S]*?)(?:\n##|$)/i);
+      const summary = summaryMatch ? summaryMatch[1].trim().substring(0, 500) : pf.name;
+
+      // Save to database — this is the "knowledge bank"
+      await base44.entities.KnowledgeEntry.create({
+        source_filename: pf.name,
+        file_type: pf.name.split('.').pop()?.toLowerCase() || 'unknown',
+        file_size: pf.size,
+        summary,
+        full_analysis: analysis,
+        extracted_code: codeBlocks.join('\n\n// ───────────────────\n\n'),
+        tags,
+        category: pf.category,
+        is_pinned: false,
+      });
+
+      // Remove from pending
+      setPendingFiles(prev => prev.filter(f => f.id !== pf.id));
+      queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] });
+      showSuccess(`Learned from "${pf.name}" — knowledge saved!`);
     } catch (error) {
-      showError(error, 'Analyze File');
+      showError(error, 'Learn File');
     } finally {
-      setAnalyzingId(null);
+      setLearningId(null);
     }
   };
 
-  const handleRemove = (fileId) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
-  };
-
-  const handleAnalyzeAll = async () => {
-    const unanalyzed = files.filter(f => !f.analysis);
-    for (const file of unanalyzed) {
-      await handleAnalyze(file);
+  const learnAll = async () => {
+    for (const pf of pendingFiles) {
+      await learnFile(pf);
     }
   };
+
+  // Filter knowledge entries
+  const filtered = knowledgeEntries
+    .filter(e => filterCat === 'all' || e.category === filterCat)
+    .filter(e => {
+      if (!searchTerm) return true;
+      const q = searchTerm.toLowerCase();
+      return e.source_filename?.toLowerCase().includes(q) ||
+             e.summary?.toLowerCase().includes(q) ||
+             e.tags?.some(t => t.toLowerCase().includes(q));
+    })
+    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+
+  const categories = ['all', 'code', 'data', 'config', 'asset', 'documentation', 'design', 'other'];
 
   return (
     <section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Layers className="w-6 h-6 text-cyan-500" />
-            Game File Analyzer
+            <Brain className="w-6 h-6 text-cyan-500" />
+            Knowledge Bank
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            Upload any file — code, configs, data, images — and AI will analyze it for integration into your project
+            Select files to learn from — AI extracts all knowledge and stores it permanently for future use
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {files.length > 0 && files.some(f => !f.analysis) && (
-            <Button onClick={handleAnalyzeAll} disabled={!!analyzingId} className="bg-purple-600 hover:bg-purple-700">
-              <Zap className="w-4 h-4 mr-2" />
-              Analyze All
-            </Button>
-          )}
-          <Badge variant="outline" className="text-slate-400">
-            {files.length} File{files.length !== 1 ? 's' : ''}
-          </Badge>
+        <Badge variant="outline" className="text-slate-400">
+          <BookOpen className="w-3 h-3 mr-1" />
+          {knowledgeEntries.length} Entries
+        </Badge>
+      </div>
+
+      {/* ─── FILE PICKER ─── */}
+      <div 
+        className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-6 mb-6 text-center transition-colors cursor-pointer group"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <input ref={fileInputRef} type="file" multiple onChange={handleFilePick} className="hidden" />
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
+            <Upload className="w-7 h-7 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+          </div>
+          <p className="text-white font-semibold">Select files to learn from</p>
+          <p className="text-slate-500 text-xs">Files are read locally — only the extracted knowledge is stored, not the file itself</p>
         </div>
       </div>
 
-      {/* Upload Zone */}
-      <div 
-        className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-8 mb-6 text-center transition-colors cursor-pointer group"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleUpload}
-          className="hidden"
-          accept=".js,.jsx,.ts,.tsx,.json,.css,.html,.csv,.xlsx,.xls,.txt,.md,.pdf,.png,.jpg,.jpeg,.gif,.webp,.xml,.svg,.yaml,.yml,.env,.config,.glb,.gltf,.fbx"
-        />
-        {uploading ? (
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
-            <p className="text-slate-400">Uploading files...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
-              <Upload className="w-8 h-8 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+      {/* ─── PENDING FILES (not yet learned) ─── */}
+      {pendingFiles.length > 0 && (
+        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold">
+              <Sparkles className="w-4 h-4" />
+              {pendingFiles.length} file{pendingFiles.length > 1 ? 's' : ''} ready to learn
             </div>
-            <div>
-              <p className="text-white font-semibold">Drop files here or click to upload</p>
-              <p className="text-slate-500 text-sm mt-1">
-                Supports: JS, JSON, CSS, HTML, CSV, Excel, PDF, Images, Text, 3D Models, and more
-              </p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setPendingFiles([])} className="text-slate-400 hover:text-white">
+                Clear
+              </Button>
+              <Button size="sm" onClick={learnAll} disabled={!!learningId} className="bg-amber-600 hover:bg-amber-700 text-white">
+                <Zap className="w-3.5 h-3.5 mr-1.5" />
+                Learn All
+              </Button>
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Custom Analysis Prompt */}
-      {files.length > 0 && (
-        <div className="mb-6">
-          <label className="text-sm text-slate-400 mb-2 block">Custom Analysis Instructions (optional)</label>
-          <Textarea
-            placeholder="e.g., 'Focus on how I can use this data for my card trading system' or 'Extract all API endpoints and show me how to integrate them'..."
-            value={customPrompt}
-            onChange={(e) => setCustomPrompt(e.target.value)}
-            className="bg-slate-800/50 border-slate-700 h-20"
-          />
+          <div className="space-y-2">
+            {pendingFiles.map(pf => {
+              const Icon = getFileIcon(pf.name);
+              const isLearning = learningId === pf.id;
+              return (
+                <div key={pf.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700">
+                  <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">{pf.name}</p>
+                    <p className="text-slate-500 text-xs">{(pf.size / 1024).toFixed(1)} KB • {pf.category} • {pf.content ? `${pf.content.length.toLocaleString()} chars read` : 'binary'}</p>
+                  </div>
+                  <Button size="sm" onClick={() => learnFile(pf)} disabled={!!learningId} className="bg-cyan-600 hover:bg-cyan-700 text-white">
+                    {isLearning ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Brain className="w-3.5 h-3.5 mr-1.5" />Learn</>}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500 hover:text-white" onClick={() => setPendingFiles(prev => prev.filter(f => f.id !== pf.id))}>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* File List */}
-      <div className="space-y-3">
-        <AnimatePresence>
-          {files.map((file) => (
-            <UploadedFileCard
-              key={file.id}
-              file={file}
-              onAnalyze={handleAnalyze}
-              onRemove={handleRemove}
-              isAnalyzing={analyzingId === file.id}
-            />
+      {/* ─── KNOWLEDGE BANK (saved entries) ─── */}
+      <div className="mb-4 flex items-center gap-3 flex-wrap">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <Input
+            placeholder="Search knowledge..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="bg-slate-800/50 border-slate-700 pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-1.5 overflow-x-auto">
+          {categories.map(cat => (
+            <Button
+              key={cat}
+              size="sm"
+              variant={filterCat === cat ? 'default' : 'ghost'}
+              onClick={() => setFilterCat(cat)}
+              className={`text-xs capitalize ${filterCat === cat ? '' : 'text-slate-500'}`}
+            >
+              {cat === 'all' ? 'All' : cat}
+            </Button>
           ))}
-        </AnimatePresence>
+        </div>
       </div>
 
-      {/* Empty State */}
-      {files.length === 0 && (
+      {isLoading ? (
+        <div className="text-center py-12 text-slate-500">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+          Loading knowledge bank...
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-slate-500 border border-slate-800 rounded-xl bg-slate-900/30">
-          <FileCode className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No files uploaded yet</p>
-          <p className="text-sm mt-1">Upload game files, configs, data files, or code to get AI-powered analysis</p>
+          <Brain className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="font-medium">{knowledgeEntries.length === 0 ? 'Knowledge bank is empty' : 'No matches found'}</p>
+          <p className="text-sm mt-1">{knowledgeEntries.length === 0 ? 'Select files above to start building your knowledge base' : 'Try a different search or category'}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <AnimatePresence>
+            {filtered.map(entry => (
+              <KnowledgeCard
+                key={entry.id}
+                entry={entry}
+                onDelete={(id) => deleteMutation.mutate(id)}
+                onTogglePin={(e) => togglePinMutation.mutate(e)}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </section>
