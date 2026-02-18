@@ -32,7 +32,6 @@ Deno.serve(async (req) => {
       idle: 'great sword idle',
       walk: 'great sword walk',
       run: 'great sword run',
-      jump: 'great sword jump',
       crouch: 'great sword crouching',
       block: 'great sword blocking',
       draw: 'draw a great sword 1',
@@ -135,12 +134,11 @@ Deno.serve(async (req) => {
 
     if (grounded && this.keys.space && !this.isBlocking) {
       this.controller.jump?.();
-      this._play('jump');
       return;
     }
 
     if (!grounded) {
-      this._play('jump');
+      // Jump animation handled by keybind — no animation override here
     } else if (this.isBlocking) {
       this.controller.speed = this.speeds.block;
       this._play('block');
