@@ -2,7 +2,7 @@ import {
     LayoutGrid, ShoppingBag, Trophy, User, Gavel, Users, Bot, Library, 
     Download, Mail, Bell, MessageSquare, LogIn, LogOut, Heart, Hammer, 
     Clapperboard, ArrowLeftRight, Radio, Gamepad2, Settings, Home, 
-    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp
+    Lightbulb, Rocket, Swords, Layers, Crown, Target, Plus, Globe, TrendingUp, Cpu
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -38,6 +38,12 @@ export const NAV_HIERARCHY = [
         name: 'Aura',
         icon: Radio,
         path: createPageUrl('Aura'),
+        subPages: []
+    },
+    {
+        name: 'Engine',
+        icon: Cpu,
+        path: createPageUrl('Engine'),
         subPages: []
     },
 ];
