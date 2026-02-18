@@ -326,9 +326,12 @@ function LayoutContent({ children, currentPageName }) {
   const [navOrder, setNavOrder] = useState(() => {
     try {
       const saved = localStorage.getItem('nav_order');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.filter(id => id !== 'entertainment');
+      }
     } catch(e) {}
-    return ['home', 'library', 'clan', 'forum', 'settings', 'entertainment', 'aura'];
+    return ['home', 'library', 'clan', 'forum', 'settings', 'aura'];
   });
 
   const onNavDragEnd = (result) => {
