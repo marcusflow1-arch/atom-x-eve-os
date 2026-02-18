@@ -104,7 +104,8 @@ export default function ReactorEditor() {
     },
   });
 
-  const selectedModel = models.find(m => m.id === selectedModelId);
+  // Resolve selected model from scene models first, then fall back to DB models
+  const selectedModel = sceneModels.find(m => m.id === selectedModelId) || models.find(m => m.id === selectedModelId);
 
   // Sync editor state → Luna viewer via bridge
   useEffect(() => {
