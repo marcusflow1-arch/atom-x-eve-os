@@ -448,12 +448,16 @@ export default function ReactorEditor() {
             />
 
             {/* Timeline */}
-            <div className="h-36 border-t border-slate-800 bg-slate-950/50">
+            <div className="h-48 border-t border-slate-800 bg-slate-950/50">
               <ReactorTimeline
                 reactors={reactors}
                 selectedReactorId={selectedReactorId}
                 onSelect={handleSelectReactor}
                 animTime={animTime}
+                onScrub={handleScrub}
+                onUpdateReactorTime={handleUpdateReactorTime}
+                onDropFXAtTime={handleDropFXAtTime}
+                activeFXDrag={activeFXDrag}
               />
             </div>
           </div>
