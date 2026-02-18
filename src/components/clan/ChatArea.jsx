@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Hash, Volume2, PlusCircle, Gift, Sticker, Smile, Send, Shield } from 'lucide-react';
+import { Hash, Volume2, PlusCircle, Gift, Sticker, Smile, Send, Shield, Crown, ShieldAlert } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/auth/AuthContext';
 import { format } from 'date-fns';
 
@@ -29,8 +30,19 @@ export default function ChatArea({ channel, clan, myRole }) {
             return msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
         },
         enabled: !!channel,
-        refetchInterval: 3000
+        refetchInterval: 4000
     });
+
+    // Real-time subscription
+    useEffect(() => {
+        if (!channel?.id || !clan?.id) return;
+        const unsub = base44.entities.ClanMessage.subscribe((event) => {
+            if (event.data?.channelId === channel.id && event.data?.divisionId === clan.id) {
+                queryClient.invalidateQueries({ queryKey: ['channelMessages', channel.id] });
+            }
+        });
+        return unsub;
+    }, [channel?.id, clan?.id, queryClient]);
 
     const sendMessageMutation = useMutation({
         mutationFn: (content) => base44.entities.ClanMessage.create({
@@ -109,6 +121,8 @@ export default function ChatArea({ channel, clan, myRole }) {
                                 {!isSameAuthor && (
                                     <div className="flex items-center gap-2 mb-1">
                                         <span className="font-bold text-white hover:underline cursor-pointer text-sm">{msg.author}</span>
+                                        {msg.role === 'leader' && <Crown className="w-3 h-3 text-amber-400" />}
+                                        {msg.role === 'officer' && <ShieldAlert className="w-3 h-3 text-blue-400" />}
                                         <span className="text-[10px] text-white/40 font-medium">{format(new Date(msg.created_date), 'MM/dd/yyyy h:mm a')}</span>
                                     </div>
                                 )}
