@@ -1,19 +1,19 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, FileText, Trash2, Loader2, Sparkles, Copy, Check, 
   FileCode, FileJson, FileSpreadsheet, File, Eye, EyeOff, X,
-  Zap, Brain, Layers, Search, Pin, PinOff, BookOpen, Tag,
-  FolderOpen, FolderTree
+  Zap, Brain, Search, Pin, PinOff, BookOpen,
+  FolderOpen, AlertTriangle, CheckCircle2, XCircle, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
+import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue } from './knowledgeLearner';
 
 // ─── Helpers ────────────────────────────────────────
 const FILE_ICONS = {
@@ -21,7 +21,6 @@ const FILE_ICONS = {
   css: FileCode, html: FileCode, csv: FileSpreadsheet, xlsx: FileSpreadsheet,
   txt: FileText, md: FileText, pdf: FileText, png: File, jpg: File, jpeg: File,
 };
-
 function getFileIcon(name) { return FILE_ICONS[name.split('.').pop()?.toLowerCase()] || File; }
 
 function classifyFile(name) {
@@ -45,7 +44,6 @@ const CATEGORY_COLORS = {
   other: 'bg-slate-500/15 text-slate-400 border-slate-500/25',
 };
 
-// Read text-based files directly in the browser (no upload needed)
 function readFileAsText(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -55,7 +53,14 @@ function readFileAsText(file) {
   });
 }
 
-// ─── Knowledge Card (saved entry from DB) ───────────
+// ─── Hook into global learner engine ────────────────
+function useLearnerState() {
+  const [state, setState] = useState(getState);
+  useEffect(() => subscribe(setState), []);
+  return state;
+}
+
+// ─── Knowledge Card ─────────────────────────────────
 function KnowledgeCard({ entry, onDelete, onTogglePin }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -69,11 +74,7 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
       className={`bg-slate-800/50 border rounded-xl overflow-hidden ${entry.is_pinned ? 'border-amber-500/40' : 'border-slate-700'}`}
     >
       <div className="flex items-center gap-3 p-4">
@@ -111,14 +112,8 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
 
       <AnimatePresence>
         {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
-          >
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="border-t border-slate-700 p-4 space-y-4">
-              {/* Analysis */}
               <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
                 <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold uppercase tracking-wider mb-3">
                   <Brain className="w-3.5 h-3.5" /> Full Analysis
@@ -127,8 +122,6 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
                   <ReactMarkdown>{entry.full_analysis}</ReactMarkdown>
                 </div>
               </div>
-
-              {/* Extracted Code */}
               {entry.extracted_code && (
                 <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-4">
                   <div className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-wider mb-3">
@@ -147,184 +140,213 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
   );
 }
 
+// ─── Live Progress Dashboard ────────────────────────
+function LearnerDashboard({ learner, onRefreshKnowledge }) {
+  const { queue, completed, failed, currentId, isRunning, progress, folderName, lastLog } = learner;
+  const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  // Auto-refresh knowledge bank when items complete
+  const prevDone = useRef(progress.done);
+  useEffect(() => {
+    if (progress.done > prevDone.current) {
+      onRefreshKnowledge();
+      prevDone.current = progress.done;
+    }
+  }, [progress.done, onRefreshKnowledge]);
+
+  if (!isRunning && progress.total === 0 && completed.length === 0 && failed.length === 0) return null;
+
+  return (
+    <div className="mb-6 rounded-xl border border-purple-500/30 bg-purple-500/5 overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-4 py-3 bg-purple-500/10 border-b border-purple-500/20">
+        <div className="flex items-center gap-3">
+          {isRunning ? (
+            <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
+          ) : progress.total > 0 ? (
+            <CheckCircle2 className="w-5 h-5 text-green-400" />
+          ) : null}
+          <div>
+            <span className="text-white font-bold text-sm">
+              {isRunning ? 'Learning in progress...' : 'Learning complete'}
+            </span>
+            {folderName && <span className="text-purple-300/60 text-xs ml-2">from {folderName}/</span>}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-purple-300 text-xs font-mono">{progress.done}/{progress.total}</span>
+          {!isRunning && (
+            <Button size="sm" variant="ghost" onClick={clearAll} className="text-slate-400 hover:text-white h-7 text-xs">
+              Dismiss
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 bg-purple-900/40">
+        <motion.div
+          className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+        />
+      </div>
+
+      {/* Live status */}
+      <div className="px-4 py-3">
+        {/* Current file being analyzed */}
+        {isRunning && currentId && (() => {
+          const current = queue.find(f => f.id === currentId) || { name: '...' };
+          return (
+            <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-slate-800/60 border border-slate-700">
+              <Loader2 className="w-4 h-4 text-cyan-400 animate-spin flex-shrink-0" />
+              <span className="text-cyan-300 text-xs font-medium truncate flex-1">{current.name}</span>
+              <Badge className="bg-cyan-500/20 text-cyan-400 text-[9px]">Analyzing</Badge>
+            </div>
+          );
+        })()}
+
+        {/* Stats row */}
+        <div className="flex items-center gap-4 text-xs">
+          {completed.length > 0 && (
+            <span className="flex items-center gap-1 text-green-400">
+              <CheckCircle2 className="w-3 h-3" /> {completed.length} learned
+            </span>
+          )}
+          {failed.length > 0 && (
+            <span className="flex items-center gap-1 text-red-400">
+              <XCircle className="w-3 h-3" /> {failed.length} failed
+            </span>
+          )}
+          {queue.length > 0 && !isRunning && (
+            <span className="flex items-center gap-1 text-slate-400">
+              <Clock className="w-3 h-3" /> {queue.length} queued
+            </span>
+          )}
+          {isRunning && queue.length > 1 && (
+            <span className="text-slate-500">{queue.length - 1} remaining in queue</span>
+          )}
+        </div>
+
+        {/* Failed files details */}
+        {failed.length > 0 && (
+          <div className="mt-3 space-y-1">
+            {failed.map(f => (
+              <div key={f.id} className="flex items-center gap-2 text-xs text-red-400/70 px-2">
+                <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{f.name}: {f.error}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ─────────────────────────────────
 export default function GameFileAnalyzer() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
   const folderInputRef = useRef(null);
-  const [pendingFiles, setPendingFiles] = useState([]); // files selected but not yet learned
-  const [learningId, setLearningId] = useState(null);
+  const [readingFolder, setReadingFolder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCat, setFilterCat] = useState('all');
-  const [readingFolder, setReadingFolder] = useState(false);
 
-  // Load all knowledge from DB
+  // Subscribe to the global learner engine (persists across tab switches)
+  const learner = useLearnerState();
+
+  // Knowledge bank from DB
   const { data: knowledgeEntries = [], isLoading } = useQuery({
     queryKey: ['knowledge-entries'],
     queryFn: () => base44.entities.KnowledgeEntry.list('-created_date', 100),
   });
 
+  const refreshKnowledge = React.useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] });
+  }, [queryClient]);
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.KnowledgeEntry.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] }); showSuccess('Knowledge removed'); },
+    onSuccess: () => { refreshKnowledge(); showSuccess('Knowledge removed'); },
   });
 
   const togglePinMutation = useMutation({
     mutationFn: (entry) => base44.entities.KnowledgeEntry.update(entry.id, { is_pinned: !entry.is_pinned }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] }),
+    onSuccess: refreshKnowledge,
   });
 
-  // Shared logic to read a list of File objects into pending items
-  const processFiles = async (fileList, isFolder = false) => {
-    const newPending = [];
+  // ─── Read files from filesystem into items ────────
+  const processFileList = async (fileList, isFolder) => {
+    const items = [];
     for (const file of fileList) {
-      // Use webkitRelativePath for folder uploads (gives "folder/sub/file.js"), fall back to name
       const displayName = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
 
-      // Skip hidden files, node_modules, .git, etc.
-      if (displayName.includes('node_modules/') || displayName.includes('.git/') || displayName.startsWith('.')) continue;
+      // Skip junk
+      if (displayName.includes('node_modules/') || displayName.includes('.git/') ||
+          displayName.includes('__pycache__/') || displayName.includes('.DS_Store') ||
+          displayName.includes('dist/') || displayName.includes('build/') ||
+          file.name.startsWith('.')) continue;
+
+      // Skip very large files (over 2MB)
+      if (file.size > 2 * 1024 * 1024) continue;
+
+      const category = classifyFile(file.name);
+      const isTextBased = !['asset', 'design'].includes(category);
 
       let content = '';
-      const fileType = classifyFile(file.name);
-      const isTextBased = !['asset', 'design'].includes(fileType) && file.size < 2 * 1024 * 1024;
-
       if (isTextBased) {
-        try { content = await readFileAsText(file); } catch { content = '[Could not read file as text]'; }
+        try { content = await readFileAsText(file); } catch { content = '[Could not read]'; }
       }
 
-      newPending.push({
-        id: Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + file.name,
+      items.push({
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + file.name,
         name: displayName,
         size: file.size,
-        category: fileType,
+        category,
         content: content.substring(0, 50000),
         rawFile: file,
         needsUpload: !isTextBased,
+        status: 'queued',
       });
     }
-    return newPending;
+    return items;
   };
 
-  // When user picks individual files
+  // Individual file picker
   const handleFilePick = async (e) => {
     const selected = Array.from(e.target.files || []);
     if (!selected.length) return;
-    const newPending = await processFiles(selected, false);
-    setPendingFiles(prev => [...prev, ...newPending]);
+    const items = await processFileList(selected, false);
+    enqueueFiles(items, null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    showSuccess(`Queued ${items.length} file(s) for learning`);
   };
 
-  // When user picks a folder
+  // Folder picker — THE MAIN FEATURE
   const handleFolderPick = async (e) => {
     const selected = Array.from(e.target.files || []);
     if (!selected.length) return;
     setReadingFolder(true);
 
-    // Get folder name from the first file's relative path
     const folderName = selected[0]?.webkitRelativePath?.split('/')[0] || 'folder';
+    const items = await processFileList(selected, true);
 
-    const newPending = await processFiles(selected, true);
-    setPendingFiles(prev => [...prev, ...newPending]);
-    if (folderInputRef.current) folderInputRef.current.value = '';
     setReadingFolder(false);
-    showSuccess(`Read ${newPending.length} files from "${folderName}"`);
-  };
 
-  // Learn a single file: analyze content with AI, then save knowledge to DB
-  const learnFile = async (pf) => {
-    setLearningId(pf.id);
-
-    try {
-      let contentForAI = pf.content;
-      let fileUrls = [];
-
-      // For binary files (images, PDFs, 3D), upload temporarily so AI can see them
-      if (pf.needsUpload) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file: pf.rawFile });
-        fileUrls = [file_url];
-        contentForAI = `[Binary file - sent as attachment for visual analysis]`;
-      }
-
-      // Ask AI to deeply analyze and extract all knowledge
-      const analysis = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS).
-
-A developer has given you a file to LEARN from. Your job is to extract EVERY piece of useful knowledge from this file and present it in a way that can be referenced later for building features.
-
-FILE: "${pf.name}" (${pf.category} file, ${(pf.size/1024).toFixed(1)} KB)
-
-${contentForAI ? `--- FILE CONTENT ---\n${contentForAI.substring(0, 30000)}\n--- END ---\n\n` : ''}
-
-Provide your analysis in this EXACT structure:
-
-## Summary
-One paragraph explaining what this file is and what it contains.
-
-## Key Knowledge Extracted
-- Every important piece of data, pattern, function, config, schema, endpoint, or concept found
-- Be exhaustive — list everything useful
-
-## Code Patterns & Snippets
-Any reusable code patterns, component structures, API calls, schemas, or configurations found. Write them as code blocks.
-
-## Integration Guide
-How this knowledge can be practically used in a React + Three.js + TailwindCSS gaming platform. Be specific with component names, entity schemas, and implementation steps.
-
-## Tags
-List 5-10 single-word tags that categorize this knowledge (e.g., "react", "animation", "api", "three.js", "game-data", "shader", "ui", "config")`,
-        file_urls: fileUrls.length > 0 ? fileUrls : undefined,
-      });
-
-      // Extract tags from the analysis
-      const tagMatch = analysis.match(/##\s*Tags\s*\n([\s\S]*?)(?:\n##|$)/i);
-      let tags = [];
-      if (tagMatch) {
-        tags = tagMatch[1].match(/[\w.-]+/g)?.filter(t => t.length > 1 && t.length < 30).slice(0, 10) || [];
-      }
-
-      // Extract code blocks
-      const codeBlocks = [];
-      const codeRegex = /```[\w]*\n([\s\S]*?)```/g;
-      let match;
-      while ((match = codeRegex.exec(analysis)) !== null) {
-        codeBlocks.push(match[1].trim());
-      }
-
-      // Extract summary
-      const summaryMatch = analysis.match(/##\s*Summary\s*\n([\s\S]*?)(?:\n##|$)/i);
-      const summary = summaryMatch ? summaryMatch[1].trim().substring(0, 500) : pf.name;
-
-      // Save to database — this is the "knowledge bank"
-      await base44.entities.KnowledgeEntry.create({
-        source_filename: pf.name,
-        file_type: pf.name.split('.').pop()?.toLowerCase() || 'unknown',
-        file_size: pf.size,
-        summary,
-        full_analysis: analysis,
-        extracted_code: codeBlocks.join('\n\n// ───────────────────\n\n'),
-        tags,
-        category: pf.category,
-        is_pinned: false,
-      });
-
-      // Remove from pending
-      setPendingFiles(prev => prev.filter(f => f.id !== pf.id));
-      queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] });
-      showSuccess(`Learned from "${pf.name}" — knowledge saved!`);
-    } catch (error) {
-      showError(error, 'Learn File');
-    } finally {
-      setLearningId(null);
+    if (items.length === 0) {
+      showError('No readable files found in that folder');
+      return;
     }
+
+    // Enqueue everything — the engine takes over from here, even if you switch tabs
+    enqueueFiles(items, folderName);
+    if (folderInputRef.current) folderInputRef.current.value = '';
+    showSuccess(`Queued ${items.length} files from "${folderName}" — learning will continue even if you switch tabs`);
   };
 
-  const learnAll = async () => {
-    for (const pf of pendingFiles) {
-      await learnFile(pf);
-    }
-  };
-
-  // Filter knowledge entries
+  // Filter knowledge
   const filtered = knowledgeEntries
     .filter(e => filterCat === 'all' || e.category === filterCat)
     .filter(e => {
@@ -348,7 +370,7 @@ List 5-10 single-word tags that categorize this knowledge (e.g., "react", "anima
             Knowledge Bank
           </h2>
           <p className="text-slate-400 text-sm mt-1">
-            Select files to learn from — AI extracts all knowledge and stores it permanently for future use
+            Select a folder from your PC — AI reads every file locally, extracts knowledge, and stores it permanently
           </p>
         </div>
         <Badge variant="outline" className="text-slate-400">
@@ -357,109 +379,63 @@ List 5-10 single-word tags that categorize this knowledge (e.g., "react", "anima
         </Badge>
       </div>
 
-      {/* ─── FILE / FOLDER PICKER ─── */}
+      {/* ─── FOLDER / FILE PICKER ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Individual Files */}
+        {/* PRIMARY: Folder Picker */}
         <div 
-          className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-6 text-center transition-colors cursor-pointer group"
-          onClick={() => fileInputRef.current?.click()}
+          className="border-2 border-dashed border-purple-500/30 hover:border-purple-400/60 rounded-xl p-8 text-center transition-all cursor-pointer group bg-purple-500/[0.03] hover:bg-purple-500/[0.06] md:col-span-1"
+          onClick={() => !readingFolder && folderInputRef.current?.click()}
         >
-          <input ref={fileInputRef} type="file" multiple onChange={handleFilePick} className="hidden" />
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
-              <Upload className="w-7 h-7 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+          <input ref={folderInputRef} type="file" webkitdirectory="" directory="" multiple onChange={handleFolderPick} className="hidden" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 group-hover:border-purple-400/40 flex items-center justify-center transition-colors">
+              {readingFolder 
+                ? <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                : <FolderOpen className="w-8 h-8 text-purple-400 group-hover:text-purple-300 transition-colors" />
+              }
             </div>
-            <p className="text-white font-semibold">Select Files</p>
-            <p className="text-slate-500 text-xs">Pick individual files to learn from</p>
+            <div>
+              <p className="text-white font-bold text-lg">Select Folder</p>
+              <p className="text-slate-400 text-xs mt-1 max-w-[260px] mx-auto">
+                Opens your file explorer — select any project folder. Every file inside is read locally, analyzed by AI, and stored as knowledge.
+              </p>
+              <p className="text-purple-400/60 text-[10px] mt-2 font-mono">
+                Continues running even if you switch tabs
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Entire Folder */}
+        {/* SECONDARY: Individual Files */}
         <div 
-          className="border-2 border-dashed border-slate-700 hover:border-purple-500/50 rounded-xl p-6 text-center transition-colors cursor-pointer group"
-          onClick={() => folderInputRef.current?.click()}
+          className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-8 text-center transition-colors cursor-pointer group"
+          onClick={() => fileInputRef.current?.click()}
         >
-          {/* webkitdirectory allows selecting an entire folder */}
-          <input ref={folderInputRef} type="file" webkitdirectory="" directory="" multiple onChange={handleFolderPick} className="hidden" />
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-purple-500/30 flex items-center justify-center transition-colors">
-              {readingFolder 
-                ? <Loader2 className="w-7 h-7 text-purple-400 animate-spin" />
-                : <FolderOpen className="w-7 h-7 text-slate-500 group-hover:text-purple-400 transition-colors" />
-              }
+          <input ref={fileInputRef} type="file" multiple onChange={handleFilePick} className="hidden" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
+              <Upload className="w-8 h-8 text-slate-500 group-hover:text-cyan-400 transition-colors" />
             </div>
-            <p className="text-white font-semibold">Select Folder</p>
-            <p className="text-slate-500 text-xs">Upload an entire folder — all files inside will be read & broken down</p>
+            <div>
+              <p className="text-white font-semibold">Select Individual Files</p>
+              <p className="text-slate-500 text-xs mt-1">Pick specific files instead of a whole folder</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── PENDING FILES (not yet learned) ─── */}
-      {pendingFiles.length > 0 && (
-        <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold">
-              <Sparkles className="w-4 h-4" />
-              {pendingFiles.length} file{pendingFiles.length > 1 ? 's' : ''} ready to learn
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" onClick={() => setPendingFiles([])} className="text-slate-400 hover:text-white">
-                Clear
-              </Button>
-              <Button size="sm" onClick={learnAll} disabled={!!learningId} className="bg-amber-600 hover:bg-amber-700 text-white">
-                <Zap className="w-3.5 h-3.5 mr-1.5" />
-                Learn All
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {pendingFiles.map(pf => {
-              const Icon = getFileIcon(pf.name);
-              const isLearning = learningId === pf.id;
-              return (
-                <div key={pf.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700">
-                  <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate" title={pf.name}>
-                      {pf.name.includes('/') ? (
-                        <><span className="text-slate-500">{pf.name.substring(0, pf.name.lastIndexOf('/') + 1)}</span>{pf.name.substring(pf.name.lastIndexOf('/') + 1)}</>
-                      ) : pf.name}
-                    </p>
-                    <p className="text-slate-500 text-xs">{(pf.size / 1024).toFixed(1)} KB • {pf.category} • {pf.content ? `${pf.content.length.toLocaleString()} chars read` : 'binary'}</p>
-                  </div>
-                  <Button size="sm" onClick={() => learnFile(pf)} disabled={!!learningId} className="bg-cyan-600 hover:bg-cyan-700 text-white">
-                    {isLearning ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Brain className="w-3.5 h-3.5 mr-1.5" />Learn</>}
-                  </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-500 hover:text-white" onClick={() => setPendingFiles(prev => prev.filter(f => f.id !== pf.id))}>
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* ─── LIVE PROGRESS DASHBOARD ─── */}
+      <LearnerDashboard learner={learner} onRefreshKnowledge={refreshKnowledge} />
 
-      {/* ─── KNOWLEDGE BANK (saved entries) ─── */}
+      {/* ─── KNOWLEDGE BANK ─── */}
       <div className="mb-4 flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <Input
-            placeholder="Search knowledge..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-slate-800/50 border-slate-700 pl-10"
-          />
+          <Input placeholder="Search knowledge..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-slate-800/50 border-slate-700 pl-10" />
         </div>
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {categories.map(cat => (
-            <Button
-              key={cat}
-              size="sm"
-              variant={filterCat === cat ? 'default' : 'ghost'}
-              onClick={() => setFilterCat(cat)}
-              className={`text-xs capitalize ${filterCat === cat ? '' : 'text-slate-500'}`}
-            >
+            <Button key={cat} size="sm" variant={filterCat === cat ? 'default' : 'ghost'} onClick={() => setFilterCat(cat)} className={`text-xs capitalize ${filterCat === cat ? '' : 'text-slate-500'}`}>
               {cat === 'all' ? 'All' : cat}
             </Button>
           ))}
@@ -475,18 +451,13 @@ List 5-10 single-word tags that categorize this knowledge (e.g., "react", "anima
         <div className="text-center py-12 text-slate-500 border border-slate-800 rounded-xl bg-slate-900/30">
           <Brain className="w-12 h-12 mx-auto mb-3 opacity-30" />
           <p className="font-medium">{knowledgeEntries.length === 0 ? 'Knowledge bank is empty' : 'No matches found'}</p>
-          <p className="text-sm mt-1">{knowledgeEntries.length === 0 ? 'Select files above to start building your knowledge base' : 'Try a different search or category'}</p>
+          <p className="text-sm mt-1">{knowledgeEntries.length === 0 ? 'Select a folder above to start building your knowledge base' : 'Try a different search or category'}</p>
         </div>
       ) : (
         <div className="space-y-3">
           <AnimatePresence>
             {filtered.map(entry => (
-              <KnowledgeCard
-                key={entry.id}
-                entry={entry}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                onTogglePin={(e) => togglePinMutation.mutate(e)}
-              />
+              <KnowledgeCard key={entry.id} entry={entry} onDelete={(id) => deleteMutation.mutate(id)} onTogglePin={(e) => togglePinMutation.mutate(e)} />
             ))}
           </AnimatePresence>
         </div>
