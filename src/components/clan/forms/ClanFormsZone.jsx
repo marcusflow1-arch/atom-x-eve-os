@@ -42,6 +42,15 @@ export default function ClanFormsZone({ game, clan, user }) {
   // Strategies panel mode: 'list' or 'create'
           const [strategiesMode, setStrategiesMode] = React.useState('list');
           const isLeaderUser = (clan?.leaderId === user?.id) || (user?.role === 'admin');
+          // Check if user is officer or leader (for leader chat access)
+          const [myRole, setMyRole] = React.useState(null);
+          React.useEffect(() => {
+            if (!user?.id || !clan?.id) return;
+            base44.entities.ClanMember.filter({ clan_id: clan.id, user_id: user.id }).then(members => {
+              if (members?.[0]) setMyRole(members[0].role);
+            });
+          }, [user?.id, clan?.id]);
+          const canAccessLeaderChat = myRole === 'leader' || myRole === 'officer';
 
   // Channels for this game (cross-clan)
   const { data: channels = [] } = useQuery({
@@ -556,8 +565,16 @@ export default function ClanFormsZone({ game, clan, user }) {
         </div>
       </div>
 
-      {/* Right Chat - Clan Leader Chat */}
+      {/* Right Chat - Clan Leader Chat (Officers & Leaders Only) */}
       <div className="col-span-4 col-start-5 row-start-1 h-full flex flex-col min-h-0 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm overflow-hidden" aria-label="Clan Leader chat window">
+        {!canAccessLeaderChat ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-6">
+            <Shield className="w-10 h-10 text-amber-500/30 mb-3" />
+            <h4 className="text-white/60 font-medium mb-1">Leader & Officer Chat</h4>
+            <p className="text-white/30 text-xs">This channel is restricted to clan leaders and officers.</p>
+          </div>
+        ) : (
+        <>
         <div className="h-12 flex items-center justify-between px-4 border-b border-white/10 bg-black/20">
           <div>
             <p className="text-sm font-semibold text-white">Clan Leader Chat</p>
@@ -611,10 +628,12 @@ export default function ClanFormsZone({ game, clan, user }) {
             await sendMessageTo(selectedTopicLeader?.id, leaderChannel?.id, messageLeader); 
             setMessageLeader(''); 
             qc.invalidateQueries({ queryKey: ['clanFormMessages', 'leader', leaderChannel?.id] });
-          }} disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin') || !messageLeader.trim()} className="gap-2">
+          }} disabled={!selectedTopicLeader || !canAccessLeaderChat || !messageLeader.trim()} className="gap-2">
             <Send className="w-4 h-4" /> Send
           </Button>
         </div>
+        </>
+        )}
       </div>
 
       {/* Bottom Topics (shared) */}
