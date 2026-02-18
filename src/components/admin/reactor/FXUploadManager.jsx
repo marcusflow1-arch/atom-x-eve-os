@@ -188,7 +188,7 @@ export default function FXUploadManager({ onSelectFX, onStartDragFX }) {
       </div>
 
       {/* Drag hint */}
-      <p className="text-[9px] text-slate-600 text-center">Click an FX to assign • or click then click a bone in the viewport</p>
+      <p className="text-[9px] text-slate-600 text-center">Click to assign • Drag to timeline • or click then click a bone</p>
 
       {/* FX List */}
       {isLoading ? (
