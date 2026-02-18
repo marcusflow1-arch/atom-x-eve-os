@@ -327,9 +327,13 @@ const ReactorViewport = forwardRef(({
   }, [onAnimLoaded]);
 
   // Load animation when animationUrl prop changes
+  // Use animationUrl as sole dep — loadAnimationClip is stable via useCallback
   useEffect(() => {
-    if (animationUrl) loadAnimationClip(animationUrl);
-  }, [animationUrl, loadAnimationClip]);
+    if (animationUrl && modelRef.current) {
+      console.log('[ReactorViewport] animationUrl changed, loading:', animationUrl);
+      loadAnimationClip(animationUrl);
+    }
+  }, [animationUrl]);
 
   // View mode change
   useEffect(() => {
