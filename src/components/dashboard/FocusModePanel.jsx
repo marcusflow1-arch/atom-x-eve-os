@@ -1296,7 +1296,6 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
   const quickActions = [
     { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onFriendsClick },
     { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
-    { id: 'settings', label: 'Settings', icon: Settings, color: 'from-slate-500/20 to-gray-500/20', borderColor: 'border-slate-500/30', onClick: () => console.log('Settings clicked') },
     { id: 'skill-tree', label: 'Skill Tree', icon: Layers, color: 'from-purple-500/20 to-pink-500/20', borderColor: 'border-purple-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
     { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
     { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
