@@ -593,7 +593,7 @@ export default function ClanFormsZone({ game, clan, user }) {
                 )}
               </SelectContent>
             </Select>
-            {(clan?.leaderId === user?.id || user?.role === 'admin') && (
+            {canAccessLeaderChat && (
               <Button size="sm" variant="outline" onClick={() => setNewTopicOpen((v) => !v)}>New Topic</Button>
             )}
             <Badge variant="outline" className="text-[10px] border-white/15 text-white/60">Leaders Only</Badge>
@@ -622,7 +622,7 @@ export default function ClanFormsZone({ game, clan, user }) {
             placeholder={selectedTopicLeader ? 'Write a message…' : 'Select a topic to start messaging'}
             value={messageLeader}
             onChange={(e) => setMessageLeader(e.target.value)}
-            disabled={!selectedTopicLeader || !(clan?.leaderId === user?.id || user?.role === 'admin')}
+            disabled={!selectedTopicLeader || !canAccessLeaderChat}
           />
           <Button onClick={async () => { 
             await sendMessageTo(selectedTopicLeader?.id, leaderChannel?.id, messageLeader); 
