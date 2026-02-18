@@ -378,31 +378,78 @@ async function _learnSingleFile(pf) {
   }
 
   const analysis = await base44.integrations.Core.InvokeLLM({
-    prompt: `You are a knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS, Base44).
+    prompt: `You are an EXHAUSTIVE knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS, Base44).
 
-A developer has given you a file to LEARN from. Extract EVERY piece of useful knowledge.
+A developer has given you a file to LEARN from. Your job is to extract EVERY SINGLE piece of useful knowledge with MAXIMUM DEPTH AND DETAIL. Leave nothing out. This analysis will be the permanent reference for this file — it must be comprehensive enough to reconstruct the file's purpose, logic, and patterns from your analysis alone.
 
 FILE: "${pf.name}" (${pf.category} file, ${(pf.size / 1024).toFixed(1)} KB)
 
-${contentForAI ? `--- FILE CONTENT ---\n${contentForAI.substring(0, 30000)}\n--- END ---\n\n` : ''}
+${contentForAI ? `--- FILE CONTENT ---\n${contentForAI.substring(0, 50000)}\n--- END ---\n\n` : ''}
 
-Respond with this structure:
+Respond with ALL of the following sections. Be EXTREMELY thorough in every section:
 
 ## Summary
-One paragraph — what this file is and what it contains.
+A detailed 3-5 paragraph summary covering: what this file is, its purpose in the project, its relationship to other systems, key design decisions visible in the code, and any notable patterns or anti-patterns.
+
+## Architecture & Structure
+- File organization and module structure
+- Dependencies and imports (list every one with purpose)
+- Export structure (what is exported and why)
+- Class/function hierarchy
+- State management patterns used
+- Component lifecycle and data flow
 
 ## Key Knowledge Extracted
-- Every important data point, pattern, function, config, schema, endpoint, or concept
-- Be exhaustive
+- EVERY function, class, method, and variable with its purpose
+- All constants, configurations, and magic numbers with explanations
+- Every API endpoint, route, or external service interaction
+- All data structures, schemas, types, and interfaces
+- Business logic rules and conditions
+- Error handling strategies
+- Performance optimizations present
+- Security considerations
+
+## Data Models & Schemas
+- All data structures with field-by-field documentation
+- Relationships between data models
+- Validation rules and constraints
+- Default values and their reasoning
 
 ## Code Patterns & Snippets
-Any reusable patterns, component structures, API calls, schemas, configs found. Use code blocks.
+Extract EVERY reusable pattern found. For each one provide:
+- The complete code snippet in a code block
+- An explanation of what it does and when to use it
+- Any gotchas or edge cases
+
+## API & Integration Points
+- Every external API call with method, URL, headers, body format
+- WebSocket connections and event handlers
+- Third-party library usage patterns
+- Database queries and operations
+- Authentication and authorization flows
+
+## UI/UX Patterns (if applicable)
+- Component composition patterns
+- Styling approaches and theme usage
+- Animation and transition patterns
+- Responsive design breakpoints
+- Accessibility features
 
 ## Integration Guide
-How to practically use this in React + Three.js + TailwindCSS + Base44. Be specific.
+Step-by-step guide on how to use this knowledge in a React + Three.js + TailwindCSS + Base44 project. Include:
+- Prerequisites and setup
+- Import statements needed
+- Configuration required
+- Example usage code
+- Common pitfalls to avoid
+
+## Cross-References
+- What other files/modules this likely connects to
+- What systems depend on this
+- Related patterns in the broader codebase
 
 ## Tags
-5-10 single-word tags (e.g., "react", "animation", "api", "three.js", "game-data")`,
+15-25 single-word tags covering technology, domain, patterns, and concepts (e.g., "react", "three.js", "animation", "state-management", "api", "game-data", "shader", "physics", "ui-component")`,
     file_urls: fileUrls.length > 0 ? fileUrls : undefined,
   });
 
