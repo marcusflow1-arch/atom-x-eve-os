@@ -30,6 +30,10 @@ let _state = {
   // FX being previewed
   previewFX: null, // { id, name, color, bone, effect_type }
 
+  // FX blocks active state (from sequencer timeline)
+  activeFXBlocks: [],
+  allFXBlocks: [],
+
   // Live scene model list (populated by Luna viewer)
   sceneModels: [], // [{ id, name, type:'ybot'|'c1'|'ai', file_url }]
 };
@@ -101,6 +105,12 @@ function previewFX(fx) {
   emit('fxPreview', fx);
 }
 
+function setFXBlocksState(activeFXBlocks, allFXBlocks, animTime) {
+  _state.activeFXBlocks = activeFXBlocks;
+  _state.allFXBlocks = allFXBlocks;
+  emit('fxBlocksState', { activeFXBlocks, allFXBlocks, animTime });
+}
+
 // ─── Viewer → Editor info ───
 
 function registerSceneModels(models) {
@@ -125,6 +135,7 @@ const ReactorBridge = {
   fireReactor,
   clearFiring,
   previewFX,
+  setFXBlocksState,
   // Viewer side
   registerSceneModels,
 };
