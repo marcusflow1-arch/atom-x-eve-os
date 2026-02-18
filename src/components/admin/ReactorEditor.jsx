@@ -156,6 +156,16 @@ export default function ReactorEditor() {
     ReactorBridge.setReactors(reactors);
   }, [reactors, liveSync]);
 
+  // Broadcast FX blocks to Luna viewer
+  useEffect(() => {
+    if (!liveSync) return;
+    ReactorBridge.emit('fxBlocksUpdated', { 
+      fxBlocks, 
+      modelId: selectedModelId, 
+      animName 
+    });
+  }, [fxBlocks, liveSync, selectedModelId, animName]);
+
   useEffect(() => {
     if (!liveSync) return;
     ReactorBridge.setPlayState(isPlaying);
