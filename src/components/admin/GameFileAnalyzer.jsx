@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, FileText, Trash2, Loader2, Sparkles, Copy, Check, 
   FileCode, FileJson, FileSpreadsheet, File, Eye, EyeOff, X,
-  Zap, Brain, Layers, Search, Pin, PinOff, BookOpen, Tag
+  Zap, Brain, Layers, Search, Pin, PinOff, BookOpen, Tag,
+  FolderOpen, FolderTree
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,10 +151,12 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
 export default function GameFileAnalyzer() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
   const [pendingFiles, setPendingFiles] = useState([]); // files selected but not yet learned
   const [learningId, setLearningId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCat, setFilterCat] = useState('all');
+  const [readingFolder, setReadingFolder] = useState(false);
 
   // Load all knowledge from DB
   const { data: knowledgeEntries = [], isLoading } = useQuery({
@@ -171,13 +174,16 @@ export default function GameFileAnalyzer() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['knowledge-entries'] }),
   });
 
-  // When user picks files, read them client-side (no upload to storage)
-  const handleFilePick = async (e) => {
-    const selected = Array.from(e.target.files || []);
-    if (!selected.length) return;
-
+  // Shared logic to read a list of File objects into pending items
+  const processFiles = async (fileList, isFolder = false) => {
     const newPending = [];
-    for (const file of selected) {
+    for (const file of fileList) {
+      // Use webkitRelativePath for folder uploads (gives "folder/sub/file.js"), fall back to name
+      const displayName = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
+
+      // Skip hidden files, node_modules, .git, etc.
+      if (displayName.includes('node_modules/') || displayName.includes('.git/') || displayName.startsWith('.')) continue;
+
       let content = '';
       const fileType = classifyFile(file.name);
       const isTextBased = !['asset', 'design'].includes(fileType) && file.size < 2 * 1024 * 1024;
@@ -187,18 +193,41 @@ export default function GameFileAnalyzer() {
       }
 
       newPending.push({
-        id: Date.now() + '_' + file.name,
-        name: file.name,
+        id: Date.now() + '_' + Math.random().toString(36).slice(2) + '_' + file.name,
+        name: displayName,
         size: file.size,
         category: fileType,
-        content: content.substring(0, 50000), // cap at 50k chars
-        rawFile: file, // keep reference for images/PDFs that need upload
+        content: content.substring(0, 50000),
+        rawFile: file,
         needsUpload: !isTextBased,
       });
     }
+    return newPending;
+  };
 
+  // When user picks individual files
+  const handleFilePick = async (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+    const newPending = await processFiles(selected, false);
     setPendingFiles(prev => [...prev, ...newPending]);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // When user picks a folder
+  const handleFolderPick = async (e) => {
+    const selected = Array.from(e.target.files || []);
+    if (!selected.length) return;
+    setReadingFolder(true);
+
+    // Get folder name from the first file's relative path
+    const folderName = selected[0]?.webkitRelativePath?.split('/')[0] || 'folder';
+
+    const newPending = await processFiles(selected, true);
+    setPendingFiles(prev => [...prev, ...newPending]);
+    if (folderInputRef.current) folderInputRef.current.value = '';
+    setReadingFolder(false);
+    showSuccess(`Read ${newPending.length} files from "${folderName}"`);
   };
 
   // Learn a single file: analyze content with AI, then save knowledge to DB
@@ -328,18 +357,40 @@ List 5-10 single-word tags that categorize this knowledge (e.g., "react", "anima
         </Badge>
       </div>
 
-      {/* ─── FILE PICKER ─── */}
-      <div 
-        className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-6 mb-6 text-center transition-colors cursor-pointer group"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input ref={fileInputRef} type="file" multiple onChange={handleFilePick} className="hidden" />
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
-            <Upload className="w-7 h-7 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+      {/* ─── FILE / FOLDER PICKER ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Individual Files */}
+        <div 
+          className="border-2 border-dashed border-slate-700 hover:border-cyan-500/50 rounded-xl p-6 text-center transition-colors cursor-pointer group"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <input ref={fileInputRef} type="file" multiple onChange={handleFilePick} className="hidden" />
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-cyan-500/30 flex items-center justify-center transition-colors">
+              <Upload className="w-7 h-7 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+            </div>
+            <p className="text-white font-semibold">Select Files</p>
+            <p className="text-slate-500 text-xs">Pick individual files to learn from</p>
           </div>
-          <p className="text-white font-semibold">Select files to learn from</p>
-          <p className="text-slate-500 text-xs">Files are read locally — only the extracted knowledge is stored, not the file itself</p>
+        </div>
+
+        {/* Entire Folder */}
+        <div 
+          className="border-2 border-dashed border-slate-700 hover:border-purple-500/50 rounded-xl p-6 text-center transition-colors cursor-pointer group"
+          onClick={() => folderInputRef.current?.click()}
+        >
+          {/* webkitdirectory allows selecting an entire folder */}
+          <input ref={folderInputRef} type="file" webkitdirectory="" directory="" multiple onChange={handleFolderPick} className="hidden" />
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 group-hover:border-purple-500/30 flex items-center justify-center transition-colors">
+              {readingFolder 
+                ? <Loader2 className="w-7 h-7 text-purple-400 animate-spin" />
+                : <FolderOpen className="w-7 h-7 text-slate-500 group-hover:text-purple-400 transition-colors" />
+              }
+            </div>
+            <p className="text-white font-semibold">Select Folder</p>
+            <p className="text-slate-500 text-xs">Upload an entire folder — all files inside will be read & broken down</p>
+          </div>
         </div>
       </div>
 
@@ -369,7 +420,11 @@ List 5-10 single-word tags that categorize this knowledge (e.g., "react", "anima
                 <div key={pf.id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700">
                   <Icon className="w-5 h-5 text-slate-400 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{pf.name}</p>
+                    <p className="text-white text-sm font-medium truncate" title={pf.name}>
+                      {pf.name.includes('/') ? (
+                        <><span className="text-slate-500">{pf.name.substring(0, pf.name.lastIndexOf('/') + 1)}</span>{pf.name.substring(pf.name.lastIndexOf('/') + 1)}</>
+                      ) : pf.name}
+                    </p>
                     <p className="text-slate-500 text-xs">{(pf.size / 1024).toFixed(1)} KB • {pf.category} • {pf.content ? `${pf.content.length.toLocaleString()} chars read` : 'binary'}</p>
                   </div>
                   <Button size="sm" onClick={() => learnFile(pf)} disabled={!!learningId} className="bg-cyan-600 hover:bg-cyan-700 text-white">
