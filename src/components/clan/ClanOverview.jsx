@@ -71,7 +71,7 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
     // Activity Identity (Badges)
     const guildSpecialties = [
         { id: 'pve', label: 'PvE Raiders', icon: Sword, level: 5, color: 'text-orange-400', bg: 'bg-orange-500/10' },
-        { id: 'farm', label: 'Resource Ops', icon: Pickaxe, level: 3, color: 'text-green-400', bg: 'bg-green-500/10' },
+        { id: 'farm', label: 'Resource Ops', icon: Hammer, level: 3, color: 'text-green-400', bg: 'bg-green-500/10' },
         { id: 'tech', label: 'Tech Crafting', icon: Cpu, level: 4, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
         { id: 'ach', label: 'Completionists', icon: Trophy, level: 2, color: 'text-purple-400', bg: 'bg-purple-500/10' }
     ];
@@ -390,4 +390,4 @@ export default function ClanOverview({ clan, activeVoiceRooms, onChangeTab }) {
 }
 
 // Additional Icon Imports needed for the new UI
-import { Box, Truck, Crosshair, Pickaxe, Cpu } from 'lucide-react';
+import { Box, Truck, Crosshair, Hammer, Cpu } from 'lucide-react';

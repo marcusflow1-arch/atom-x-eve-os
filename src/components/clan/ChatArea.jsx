@@ -36,9 +36,11 @@ export default function ChatArea({ channel, clan, myRole }) {
         mutationFn: (content) => base44.entities.ClanMessage.create({
             divisionId: clan.id,
             channelId: channel.id,
-            author: user.username || 'Unknown',
+            author: user.full_name || user.username || user.email?.split('@')[0] || 'Unknown',
             authorAvatar: user.avatar_url,
             content,
+            userId: user.id,
+            role: myRole || 'member',
             isAnnouncement: false,
             isPinned: false
         }),
