@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
 import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue, getInterruptedSession, resumeInterrupted, refillContentFromFiles, invalidateKnowledgeCache } from './knowledgeLearner';
+import CloudKnowledgeImporter from './CloudKnowledgeImporter';
 
 // Note: Content is now persisted to IndexedDB by the learner engine,
 // so learning survives page refreshes automatically.
@@ -452,7 +453,12 @@ export default function GameFileAnalyzer() {
         }}
       />
 
-      {/* ─── FOLDER / FILE PICKER ─── */}
+      {/* ─── CLOUD / URL IMPORT (server-side — no refresh issues) ─── */}
+      <div className="mb-6">
+        <CloudKnowledgeImporter onComplete={refreshKnowledge} />
+      </div>
+
+      {/* ─── FOLDER / FILE PICKER (local — can be interrupted by refresh) ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* PRIMARY: Folder Picker */}
         <div 
