@@ -2879,13 +2879,13 @@ export default function LunaTemplate() {
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
               </ConsoleTile>
 
-              {/* Achievements */}
+              {/* Cards */}
               <ConsoleTile
-                onClick={() => navigate(createPageUrl('Achievements'))}
+                onClick={() => navigate(createPageUrl('GenreMastery'))}
                 className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
               >
                 <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Achievements</span>
+                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Cards</span>
               </ConsoleTile>
 
               {/* Leaderboard */}

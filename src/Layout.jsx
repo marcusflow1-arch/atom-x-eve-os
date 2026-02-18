@@ -869,7 +869,7 @@ function LayoutContent({ children, currentPageName }) {
         const isEditorMode = window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview');
 
         const DOCK_ITEMS_LEFT = [
-          { id: 'achievements', label: 'Achievements', icon: Trophy, route: 'Achievements' },
+          { id: 'cards', label: 'Cards', icon: Trophy, route: 'GenreMastery' },
           { id: 'community', label: 'Community', icon: MessageSquare, route: 'Community' },
         ];
 
