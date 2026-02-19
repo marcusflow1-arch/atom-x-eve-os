@@ -250,6 +250,13 @@ function LearnerDashboard({ learner, onRefreshKnowledge, onReselectFolder }) {
           )}
         </div>
 
+        {/* Last log message */}
+        {lastLog && (
+          <div className="mt-2 text-[11px] text-slate-500 font-mono truncate px-1">
+            {lastLog}
+          </div>
+        )}
+
         {/* Failed files details */}
         {failed.length > 0 && (
           <div className="mt-3 space-y-1 max-h-32 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
