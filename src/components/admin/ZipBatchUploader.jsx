@@ -82,20 +82,66 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       showError(`${nonArchives} non-archive file(s) were ignored.`);
     }
 
-    const newItems = archiveFiles.map(f => ({
-      id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-      file: f,
-      name: f.name,
-      size: f.size,
-      status: 'queued', // queued | extracting | analyzing | done | failed
-      fileCount: null,
-      enqueuedCount: 0,
-      error: null,
-    }));
+    // Group multi-part archives together: .z01, .z02, ... belong to the .zip with same base name
+    const grouped = {};
+    for (const f of archiveFiles) {
+      const name = f.name;
+      const ext = name.split('.').pop().toLowerCase();
+      // Determine base name (strip .zip, .z01, etc.)
+      let baseName;
+      if (ext === 'zip') {
+        baseName = name.slice(0, -(ext.length + 1));
+      } else if (/^z\d{1,2}$/.test(ext)) {
+        baseName = name.slice(0, -(ext.length + 1));
+      } else {
+        baseName = name.slice(0, -(ext.length + 1));
+      }
+
+      if (!grouped[baseName]) grouped[baseName] = { parts: [], mainZip: null, allFiles: [] };
+      grouped[baseName].allFiles.push(f);
+
+      if (ext === 'zip') {
+        grouped[baseName].mainZip = f;
+      } else if (/^z\d{1,2}$/.test(ext)) {
+        grouped[baseName].parts.push(f);
+      } else {
+        // rar, 7z — treat as standalone
+        grouped[baseName].mainZip = f;
+      }
+    }
+
+    const newItems = Object.entries(grouped).map(([baseName, group]) => {
+      // Sort parts numerically
+      group.parts.sort((a, b) => {
+        const numA = parseInt(a.name.split('.').pop().replace('z', ''));
+        const numB = parseInt(b.name.split('.').pop().replace('z', ''));
+        return numA - numB;
+      });
+
+      const totalSize = group.allFiles.reduce((sum, f) => sum + f.size, 0);
+      const partCount = group.parts.length;
+      const displayName = partCount > 0
+        ? `${baseName}.zip (${partCount + 1} parts, ${(totalSize / (1024 * 1024)).toFixed(0)} MB total)`
+        : (group.mainZip?.name || group.allFiles[0]?.name);
+
+      return {
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+        file: group.mainZip || group.allFiles[0],
+        parts: group.parts,
+        allFiles: group.allFiles,
+        name: displayName,
+        size: totalSize,
+        isMultiPart: partCount > 0,
+        status: 'queued',
+        fileCount: null,
+        enqueuedCount: 0,
+        error: null,
+      };
+    });
 
     setZipQueue(prev => [...prev, ...newItems]);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    showSuccess(`Added ${zips.length} ZIP file(s) to queue`);
+    showSuccess(`Added ${newItems.length} archive(s) to queue`);
   };
 
   const removeFromQueue = (id) => {
