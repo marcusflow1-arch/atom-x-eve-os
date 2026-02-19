@@ -18,12 +18,24 @@ Deno.serve(async (req) => {
     console.log('Downloading RAR from:', file_url);
 
     // Download the RAR file
-    const fileResp = await fetch(file_url);
+    let fileResp;
+    try {
+      fileResp = await fetch(file_url);
+    } catch (fetchErr) {
+      console.error('Fetch error:', fetchErr);
+      return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, error: 'Failed to download file' });
+    }
     if (!fileResp.ok) {
-      return Response.json({ error: `Failed to download file: ${fileResp.status}` }, { status: 400 });
+      return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, error: `Download failed: ${fileResp.status}` });
     }
 
-    const arrayBuffer = await fileResp.arrayBuffer();
+    let arrayBuffer;
+    try {
+      arrayBuffer = await fileResp.arrayBuffer();
+    } catch (bufErr) {
+      console.error('Buffer read error:', bufErr);
+      return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, error: 'File too large for server memory' });
+    }
     console.log('Downloaded RAR, size:', arrayBuffer.byteLength);
 
     const buffer = new Uint8Array(arrayBuffer);
@@ -33,14 +45,8 @@ Deno.serve(async (req) => {
       extractor = await createExtractorFromData({ data: buffer });
     } catch (e) {
       console.error('Failed to create RAR extractor:', e);
-      // For multi-part RARs, each part is a valid RAR volume but may fail to extract
-      // if it references data from other parts. Return empty result instead of error.
-      const isMultiPart = /\.part\d+\.rar$/i.test(body.file_url || '');
-      if (isMultiPart) {
-        console.log('Multi-part RAR volume could not be opened individually — returning empty result');
-        return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, note: 'This RAR part could not be opened individually. Its contents may be split across other parts.' });
-      }
-      return Response.json({ error: 'Failed to open RAR archive. File may be corrupted or password-protected.' }, { status: 400 });
+      // Multi-part RARs or corrupted files — return empty instead of error status
+      return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, note: 'Could not open this RAR archive. If multi-part, individual parts cannot be extracted separately.' });
     }
 
     const fileList = extractor.getFileList();
