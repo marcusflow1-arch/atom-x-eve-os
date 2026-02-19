@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-
-// Server-side archive extraction using node-unrar-js (pure JS RAR decompressor)
-// This avoids browser CORS/worker issues with libarchive.js
+import { createExtractorFromData } from 'npm:node-unrar-js@2.0.0';
 
 Deno.serve(async (req) => {
   try {
@@ -11,10 +9,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { file_url } = await req.json();
+    const body = await req.json();
+    const file_url = body?.file_url;
     if (!file_url) {
       return Response.json({ error: 'file_url is required' }, { status: 400 });
     }
+
+    console.log('Downloading RAR from:', file_url);
 
     // Download the RAR file
     const fileResp = await fetch(file_url);
@@ -23,16 +24,22 @@ Deno.serve(async (req) => {
     }
 
     const arrayBuffer = await fileResp.arrayBuffer();
+    console.log('Downloaded RAR, size:', arrayBuffer.byteLength);
+
     const buffer = new Uint8Array(arrayBuffer);
 
-    // Use unrar.js (pure JavaScript RAR extractor)
-    const { createExtractorFromData } = await import('npm:node-unrar-js@2.0.0');
-    
-    const extractor = await createExtractorFromData({ data: buffer });
+    let extractor;
+    try {
+      extractor = await createExtractorFromData({ data: buffer });
+    } catch (e) {
+      console.error('Failed to create RAR extractor:', e);
+      return Response.json({ error: 'Failed to open RAR archive. File may be corrupted, a multi-part RAR that requires all parts, or password-protected.' }, { status: 400 });
+    }
+
     const fileList = extractor.getFileList();
     const fileHeaders = [...fileList.fileHeaders];
+    console.log('RAR file headers count:', fileHeaders.length);
 
-    // Classify which files to extract (text-based, not junk)
     const skipPatterns = [
       'node_modules/', '.git/', '__pycache__/', '.ds_store', 'thumbs.db',
       'dist/', 'build/', '.vs/', '.idea/', '__macosx/', '.egstore/',
@@ -61,11 +68,12 @@ Deno.serve(async (req) => {
       if (h.flags?.directory) return false;
       if (shouldSkip(h.name)) return false;
       if (!isTextFile(h.name)) return false;
-      if (h.unpSize > 2 * 1024 * 1024) return false; // skip > 2MB
+      if (h.unpSize > 2 * 1024 * 1024) return false;
       return true;
     });
 
-    // Extract only text files
+    console.log('Extractable text files:', extractableFiles.length);
+
     const extracted = extractor.extract({ 
       files: extractableFiles.map(h => h.name) 
     });
@@ -73,19 +81,15 @@ Deno.serve(async (req) => {
     const files = [];
     for (const file of extracted.files) {
       if (file.fileHeader.flags?.directory) continue;
-      
-      // file.extraction is a Uint8Array
       const bytes = file.extraction;
       if (!bytes || bytes.length === 0) continue;
 
-      // Convert to text
       let content = '';
       try {
         content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
       } catch {
         continue;
       }
-
       if (!content || content.length < 5) continue;
 
       files.push({
@@ -94,6 +98,8 @@ Deno.serve(async (req) => {
         size: bytes.length,
       });
     }
+
+    console.log('Extracted files:', files.length);
 
     return Response.json({ 
       files,
