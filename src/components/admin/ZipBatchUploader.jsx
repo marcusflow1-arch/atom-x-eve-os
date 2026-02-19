@@ -273,7 +273,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
           <div>
             <h3 className="text-white font-bold text-sm">Archive Batch Upload</h3>
             <p className="text-slate-400 text-xs mt-0.5">
-              Select multiple .zip or .rar files (up to 50MB each) — processed one at a time
+              Select multiple .zip or .rar files — supports split archives (part001, part002, etc.)
             </p>
           </div>
         </div>
