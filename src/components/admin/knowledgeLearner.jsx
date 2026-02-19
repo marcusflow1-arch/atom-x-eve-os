@@ -482,7 +482,8 @@ async function _learnSingleFile(pf) {
     contentForAI = `[Binary file - sent as attachment for visual analysis]`;
   }
 
-  const analysis = await base44.integrations.Core.InvokeLLM({
+  // Add a 3-minute timeout to prevent silent stalling
+  const llmPromise = base44.integrations.Core.InvokeLLM({
     prompt: `You are an EXHAUSTIVE knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS, Base44).
 
 A developer has given you a file to LEARN from. Your job is to extract EVERY SINGLE piece of useful knowledge with MAXIMUM DEPTH AND DETAIL. Leave nothing out. This analysis will be the permanent reference for this file — it must be comprehensive enough to reconstruct the file's purpose, logic, and patterns from your analysis alone.
@@ -557,6 +558,12 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
 15-25 single-word tags covering technology, domain, patterns, and concepts (e.g., "react", "three.js", "animation", "state-management", "api", "game-data", "shader", "physics", "ui-component")`,
     file_urls: fileUrls.length > 0 ? fileUrls : undefined,
   });
+
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error('LLM analysis timed out after 3 minutes')), 180000)
+  );
+
+  const analysis = await Promise.race([llmPromise, timeoutPromise]);
 
   const tagMatch = analysis.match(/##\s*Tags\s*\n([\s\S]*?)(?:\n##|$)/i);
   let tags = [];
