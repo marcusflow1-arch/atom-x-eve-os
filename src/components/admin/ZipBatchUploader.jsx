@@ -165,14 +165,14 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     console.log(`[RAR] Uploaded to: ${file_url}`);
 
     // Call backend function to extract RAR contents
-    const { extractRarArchive } = await import('@/functions/extractRarArchive');
-    console.log('[RAR] Calling extractRarArchive backend...');
     let result;
     try {
+      const { extractRarArchive } = await import('@/functions/extractRarArchive');
+      console.log('[RAR] Calling extractRarArchive backend...');
       const response = await extractRarArchive({ file_url });
       result = response?.data || response;
     } catch (apiErr) {
-      console.warn('[RAR] Backend call failed:', apiErr.message);
+      console.warn('[RAR] Backend call failed (likely too large for server):', apiErr?.response?.status, apiErr.message);
       // Return empty result so the queue continues to the next part
       return { items: [], fileCount: 0 };
     }
