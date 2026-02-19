@@ -27,66 +27,43 @@ Deno.serve(async (req) => {
     const gdriveFolderMatch = url.match(/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([a-zA-Z0-9_-]+)/);
     if (gdriveFolderMatch) {
       const folderId = gdriveFolderMatch[1];
+      const folderName = folderLabel || label || `Folder: ${folderId}`;
 
-      // Get OAuth access token from the authorized Google Drive connector
-      let accessToken;
-      try {
-        accessToken = await base44.asServiceRole.connectors.getAccessToken("googledrive");
-      } catch (e) {
-        console.log('No Google Drive connector token, falling back to public API');
-      }
+      // Scrape the public Google Drive folder page to extract file/folder entries
+      const items = await scrapePublicDriveFolder(folderId);
 
-      let files = [];
-      let nextPageToken = null;
-
-      // Try with OAuth token first, then fall back to public
-      const headers = accessToken
-        ? { 'Authorization': `Bearer ${accessToken}` }
-        : {};
-
-      do {
-        const params = new URLSearchParams({
-          q: `'${folderId}' in parents and trashed=false`,
-          fields: 'nextPageToken,files(id,name,mimeType,size)',
-          pageSize: '100',
-        });
-        if (nextPageToken) params.set('pageToken', nextPageToken);
-
-        const listUrl = `https://www.googleapis.com/drive/v3/files?${params}`;
-        const listResp = await fetch(listUrl, { headers });
-
-        if (!listResp.ok) {
-          const errText = await listResp.text();
-          console.log('Drive API error:', listResp.status, errText);
-          break;
-        }
-
-        const listData = await listResp.json();
-        files = files.concat(listData.files || []);
-        nextPageToken = listData.nextPageToken || null;
-      } while (nextPageToken);
-
-      if (files.length === 0) {
+      if (items.length === 0) {
         await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
           status: 'failed',
-          error_message: 'Could not list folder contents. The Google Drive connector may not have access to this folder. Try sharing the folder with your connected Google account, or make it publicly viewable.',
+          error_message: 'Could not list folder contents. Make sure the folder is set to "Anyone with the link can view".',
         });
         return Response.json({ error: 'Cannot list folder' }, { status: 400 });
       }
 
-      // Skip sub-folders, only process files
-      const processableFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
+      // Separate folders and files
+      const subFolders = items.filter(i => i.isFolder);
+      const files = items.filter(i => !i.isFolder);
 
-      // Queue each file as a separate PendingKnowledgeURL
+      // Queue each file as a PendingKnowledgeURL
       let queued = 0;
-      for (const file of processableFiles.slice(0, 50)) {
+      for (const file of files.slice(0, 100)) {
         const fileUrl = `https://drive.google.com/file/d/${file.id}/view`;
-        const fileLabel = file.name || `file_${file.id}`;
-
         await base44.asServiceRole.entities.PendingKnowledgeURL.create({
           url: fileUrl,
-          label: fileLabel,
-          folder_label: folderLabel || label || `Folder: ${folderId}`,
+          label: file.name || `file_${file.id}`,
+          folder_label: folderName,
+          status: 'pending',
+        });
+        queued++;
+      }
+
+      // Queue each subfolder as a PendingKnowledgeURL (recursive crawl)
+      for (const sub of subFolders) {
+        const subUrl = `https://drive.google.com/drive/folders/${sub.id}`;
+        await base44.asServiceRole.entities.PendingKnowledgeURL.create({
+          url: subUrl,
+          label: sub.name || `subfolder_${sub.id}`,
+          folder_label: folderName + ' > ' + (sub.name || sub.id),
           status: 'pending',
         });
         queued++;
@@ -95,10 +72,10 @@ Deno.serve(async (req) => {
       // Mark the folder entry as completed
       await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
         status: 'completed',
-        error_message: `Folder scanned: found ${processableFiles.length} files, queued ${queued} for analysis.`,
+        error_message: `Folder scanned: found ${files.length} files + ${subFolders.length} subfolders, queued ${queued} total for analysis.`,
       });
 
-      return Response.json({ success: true, folder: true, files_found: processableFiles.length, queued });
+      return Response.json({ success: true, folder: true, files: files.length, subfolders: subFolders.length, queued });
     }
 
     // ─── Single file processing (original logic) ───
@@ -132,7 +109,7 @@ Deno.serve(async (req) => {
     const gdriveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
     let driveFileToken = null;
     if (gdriveFileMatch) {
-      // Use Drive API with OAuth for file download
+      // Try OAuth first for private files, fall back to public export for public files
       try {
         driveFileToken = await base44.asServiceRole.connectors.getAccessToken("googledrive");
         fetchUrl = `https://www.googleapis.com/drive/v3/files/${gdriveFileMatch[1]}?alt=media`;
@@ -287,3 +264,112 @@ How could this knowledge be applied in a React + Three.js web game engine?
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
+
+// ─── Scrape a public Google Drive folder page to get items ───
+async function scrapePublicDriveFolder(folderId) {
+  const items = [];
+
+  try {
+    // Fetch the public Drive folder HTML page
+    const pageUrl = `https://drive.google.com/drive/folders/${folderId}`;
+    const resp = await fetch(pageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      redirect: 'follow',
+    });
+
+    if (!resp.ok) {
+      console.log('Drive page fetch failed:', resp.status);
+      return items;
+    }
+
+    const html = await resp.text();
+
+    // Method 1: Extract from the embedded JSON data in the page
+    // Google Drive embeds file data in a JS variable/data structure
+    // Look for patterns like: data-id="FILEID" and data-target="FILEID"
+    
+    // Extract file IDs and names from the page data
+    // Pattern: ["FILE_ID","FILE_NAME",... where the mimeType follows
+    const dataPattern = /\["([a-zA-Z0-9_-]{20,})","([^"]*?)","https:\/\/drive\.google\.com/g;
+    let match;
+    const seenIds = new Set();
+    while ((match = dataPattern.exec(html)) !== null) {
+      const id = match[1];
+      const name = match[2];
+      if (!seenIds.has(id) && id !== folderId) {
+        seenIds.add(id);
+        items.push({ id, name, isFolder: false });
+      }
+    }
+
+    // Also look for folder pattern in the data
+    // Folders have mimeType "application/vnd.google-apps.folder"
+    const folderPattern = /application\/vnd\.google-apps\.folder[^"]*"[^"]*"[^"]*"([a-zA-Z0-9_-]{20,})"/g;
+    while ((match = folderPattern.exec(html)) !== null) {
+      const id = match[1];
+      const existing = items.find(i => i.id === id);
+      if (existing) existing.isFolder = true;
+    }
+
+    // Method 2: Parse the structured data blob that Google Drive embeds
+    // Look for the key data structure pattern
+    const keyDataPattern = /\[null,null,null,"([a-zA-Z0-9_-]{25,})","([^"]+?)"/g;
+    while ((match = keyDataPattern.exec(html)) !== null) {
+      const id = match[1];
+      const name = match[2];
+      if (!seenIds.has(id) && id !== folderId) {
+        seenIds.add(id);
+        items.push({ id, name, isFolder: false });
+      }
+    }
+
+    // Method 3: Look for the wiz data structure entries
+    // Pattern: ,"ID","NAME","MIMETYPE"
+    const wizPattern = /,"([a-zA-Z0-9_-]{20,})","([^"]{1,200})","(application\/[^"]+|text\/[^"]+|image\/[^"]+|video\/[^"]+|audio\/[^"]+)"/g;
+    while ((match = wizPattern.exec(html)) !== null) {
+      const id = match[1];
+      const name = match[2];
+      const mimeType = match[3];
+      if (!seenIds.has(id) && id !== folderId) {
+        seenIds.add(id);
+        const isFolder = mimeType === 'application/vnd.google-apps.folder';
+        items.push({ id, name, isFolder });
+      }
+    }
+
+    // Method 4: Simple ID extraction as fallback - look for any 33-char IDs that appear in context
+    if (items.length === 0) {
+      // Try to find IDs near known patterns
+      const simplePattern = /\["([a-zA-Z0-9_-]{25,44})"/g;
+      while ((match = simplePattern.exec(html)) !== null) {
+        const id = match[1];
+        if (!seenIds.has(id) && id !== folderId && id.length <= 44) {
+          seenIds.add(id);
+          items.push({ id, name: `item_${id.substring(0, 8)}`, isFolder: false });
+        }
+      }
+    }
+
+    console.log(`Scraped ${items.length} items from public Drive folder ${folderId}`);
+    
+    // Detect folders by checking if any item name looks like a folder (no extension)
+    for (const item of items) {
+      if (item.name && !item.isFolder) {
+        const hasExtension = /\.[a-zA-Z0-9]{1,10}$/.test(item.name);
+        if (!hasExtension && item.name !== `item_${item.id.substring(0, 8)}`) {
+          // Likely a folder - names without extensions
+          // But could also be a doc. Mark as potential folder
+        }
+      }
+    }
+
+  } catch (error) {
+    console.log('Scrape error:', error.message);
+  }
+
+  return items;
+}
