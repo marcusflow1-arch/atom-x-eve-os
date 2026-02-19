@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     // Download the RAR file
     const fileResp = await fetch(file_url);
     if (!fileResp.ok) {
-      return Response.json({ error: `Failed to download file: ${fileResp.status}` }, { status: 500 });
+      return Response.json({ error: `Failed to download file: ${fileResp.status}` }, { status: 400 });
     }
 
     const arrayBuffer = await fileResp.arrayBuffer();
@@ -128,6 +128,13 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('RAR extraction error:', error);
-    return Response.json({ error: error.message || 'Unknown extraction error' }, { status: 500 });
+    // Return graceful empty result instead of 500 so the frontend can continue processing other parts
+    return Response.json({ 
+      files: [], 
+      total_in_archive: 0, 
+      extracted_count: 0, 
+      error: error.message || 'Unknown extraction error',
+      note: 'Extraction failed for this archive part. It may require other parts to be complete.'
+    });
   }
 });
