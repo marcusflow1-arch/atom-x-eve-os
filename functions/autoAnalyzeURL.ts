@@ -130,15 +130,27 @@ Deno.serve(async (req) => {
     if (gsheetMatch) fetchUrl = `https://docs.google.com/spreadsheets/d/${gsheetMatch[1]}/export?format=csv`;
 
     const gdriveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (gdriveFileMatch) fetchUrl = `https://drive.google.com/uc?export=download&id=${gdriveFileMatch[1]}`;
+    let driveFileToken = null;
+    if (gdriveFileMatch) {
+      // Use Drive API with OAuth for file download
+      try {
+        driveFileToken = await base44.asServiceRole.connectors.getAccessToken("googledrive");
+        fetchUrl = `https://www.googleapis.com/drive/v3/files/${gdriveFileMatch[1]}?alt=media`;
+      } catch {
+        fetchUrl = `https://drive.google.com/uc?export=download&id=${gdriveFileMatch[1]}`;
+      }
+    }
 
     if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
       fetchUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
     }
 
     // Fetch the file content
+    const fetchHeaders = { 'User-Agent': 'AtomEve-Engine/1.0' };
+    if (driveFileToken) fetchHeaders['Authorization'] = `Bearer ${driveFileToken}`;
+    
     const response = await fetch(fetchUrl, {
-      headers: { 'User-Agent': 'AtomEve-Engine/1.0' },
+      headers: fetchHeaders,
       redirect: 'follow',
     });
 
