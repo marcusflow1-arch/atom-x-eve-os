@@ -150,13 +150,18 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     // Upload the RAR file to the server, then extract server-side
     setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
+    console.log(`[RAR] Uploading ${zipItem.name} (${(zipItem.size / (1024*1024)).toFixed(1)} MB)...`);
+
     // Upload file first
     const { file_url } = await base44.integrations.Core.UploadFile({ file: zipItem.file });
+    console.log(`[RAR] Uploaded to: ${file_url}`);
 
     // Call backend function to extract RAR contents
     const { extractRarArchive } = await import('@/functions/extractRarArchive');
+    console.log('[RAR] Calling extractRarArchive backend...');
     const response = await extractRarArchive({ file_url });
-    const result = response.data || response;
+    const result = response?.data || response;
+    console.log('[RAR] Backend response:', { files: result?.files?.length, error: result?.error });
 
     if (result.error) throw new Error(result.error);
 
