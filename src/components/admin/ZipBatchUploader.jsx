@@ -267,7 +267,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
             {pendingCount > 0 && !isProcessing && (
               <Button size="sm" onClick={processAllZips} className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs">
                 <Play className="w-3 h-3 mr-1" />
-                Process {pendingCount} ZIP{pendingCount > 1 ? 's' : ''}
+                Process {pendingCount} file{pendingCount > 1 ? 's' : ''}
               </Button>
             )}
           </div>
