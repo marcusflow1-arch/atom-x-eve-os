@@ -15,6 +15,7 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
 import { subscribe, getState, enqueueFiles, clearAll, removeFromQueue, getInterruptedSession, resumeInterrupted, refillContentFromFiles, invalidateKnowledgeCache } from './knowledgeLearner';
 import CloudKnowledgeImporter from './CloudKnowledgeImporter';
+import ZipBatchUploader from './ZipBatchUploader';
 
 // Note: Content is now persisted to IndexedDB by the learner engine,
 // so learning survives page refreshes automatically.
