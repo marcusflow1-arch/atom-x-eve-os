@@ -594,6 +594,7 @@ Step-by-step guide on how to use this knowledge in a React + Three.js + Tailwind
     tags,
     category: pf.category || classifyFile(pf.name),
     knowledge_domain: knowledgeDomain,
+    analyzed_date: new Date().toISOString(),
     is_pinned: false,
   });
 }
