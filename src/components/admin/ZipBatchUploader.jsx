@@ -328,7 +328,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
             {isProcessing ? 'Processing in progress...' : 'Click to select ZIP files'}
           </p>
           <p className="text-slate-500 text-xs max-w-sm">
-            Select as many ZIP files as you want. Each can be up to 50MB. They'll be queued and processed sequentially.
+            Select .zip files or multi-part archives (.z01, .z02 + .zip). Each part can be up to 50MB. They'll be queued and processed sequentially.
           </p>
         </div>
       </div>
