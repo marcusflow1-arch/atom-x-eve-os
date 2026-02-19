@@ -454,6 +454,11 @@ export default function GameFileAnalyzer() {
         }}
       />
 
+      {/* ─── ZIP BATCH UPLOAD ─── */}
+      <div className="mb-6">
+        <ZipBatchUploader onRefreshKnowledge={refreshKnowledge} />
+      </div>
+
       {/* ─── CLOUD / URL IMPORT (server-side — no refresh issues) ─── */}
       <div className="mb-6">
         <CloudKnowledgeImporter onComplete={refreshKnowledge} />
