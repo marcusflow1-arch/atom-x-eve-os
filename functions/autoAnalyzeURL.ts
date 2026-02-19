@@ -1,11 +1,14 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
+  const reqClone = req.clone();
+  let base44;
+
   try {
-    const base44 = createClientFromRequest(req);
+    base44 = createClientFromRequest(req);
 
     // This is called by entity automation on PendingKnowledgeURL create
-    const body = await req.json();
+    const body = await reqClone.json();
     const entityId = body?.event?.entity_id;
     const record = body?.data;
 
@@ -20,6 +23,83 @@ Deno.serve(async (req) => {
     const label = record.label || url.split('/').pop() || 'file';
     const folderLabel = record.folder_label || '';
 
+    // ─── Google Drive FOLDER detection ───
+    const gdriveFolderMatch = url.match(/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([a-zA-Z0-9_-]+)/);
+    if (gdriveFolderMatch) {
+      // This is a folder link — we need to list files inside it and queue each one
+      const folderId = gdriveFolderMatch[1];
+      const listUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,size)&pageSize=100&key=AIzaSyBIlG-LB9VPXfcfmyTmPUlEFYRkbWHWqKk`;
+
+      let files = [];
+      try {
+        // Try public listing first (works if folder is shared publicly)
+        const listResp = await fetch(listUrl);
+        if (listResp.ok) {
+          const listData = await listResp.json();
+          files = listData.files || [];
+        }
+      } catch {}
+
+      if (files.length === 0) {
+        // Fallback: try scraping the folder page for file links
+        try {
+          const pageResp = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+            redirect: 'follow',
+          });
+          if (pageResp.ok) {
+            const html = await pageResp.text();
+            // Extract file IDs from the HTML
+            const fileIdRegex = /\/file\/d\/([a-zA-Z0-9_-]{20,})/g;
+            const foundIds = new Set();
+            let match;
+            while ((match = fileIdRegex.exec(html)) !== null) {
+              foundIds.add(match[1]);
+            }
+            for (const fileId of foundIds) {
+              files.push({ id: fileId, name: `file_${fileId}`, mimeType: 'application/octet-stream' });
+            }
+          }
+        } catch {}
+      }
+
+      if (files.length === 0) {
+        await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+          status: 'failed',
+          error_message: 'Could not list folder contents. Make sure the folder is shared as "Anyone with the link can view" and contains files. Google Drive folders require public sharing.',
+        });
+        return Response.json({ error: 'Cannot list folder' }, { status: 400 });
+      }
+
+      // Skip sub-folders, only process files
+      const processableFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
+
+      // Queue each file as a separate PendingKnowledgeURL
+      let queued = 0;
+      for (const file of processableFiles.slice(0, 50)) {
+        const fileUrl = `https://drive.google.com/file/d/${file.id}/view`;
+        const fileLabel = file.name || `file_${file.id}`;
+
+        await base44.asServiceRole.entities.PendingKnowledgeURL.create({
+          url: fileUrl,
+          label: fileLabel,
+          folder_label: folderLabel || label || `Folder: ${folderId}`,
+          status: 'pending',
+        });
+        queued++;
+      }
+
+      // Mark the folder entry as completed
+      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+        status: 'completed',
+        error_message: `Folder scanned: found ${processableFiles.length} files, queued ${queued} for analysis.`,
+      });
+
+      return Response.json({ success: true, folder: true, files_found: processableFiles.length, queued });
+    }
+
+    // ─── Single file processing (original logic) ───
+
     // Check existing knowledge to deduplicate
     let existingNames;
     try {
@@ -30,9 +110,9 @@ Deno.serve(async (req) => {
     }
 
     if (existingNames.has(label)) {
-      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, { 
-        status: 'completed', 
-        error_message: 'Skipped — duplicate label already exists in knowledge bank' 
+      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+        status: 'completed',
+        error_message: 'Skipped — duplicate label already exists in knowledge bank',
       });
       return Response.json({ status: 'skipped', reason: 'duplicate' });
     }
@@ -46,8 +126,8 @@ Deno.serve(async (req) => {
     const gsheetMatch = url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
     if (gsheetMatch) fetchUrl = `https://docs.google.com/spreadsheets/d/${gsheetMatch[1]}/export?format=csv`;
 
-    const gdriveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (gdriveMatch) fetchUrl = `https://drive.google.com/uc?export=download&id=${gdriveMatch[1]}`;
+    const gdriveFileMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (gdriveFileMatch) fetchUrl = `https://drive.google.com/uc?export=download&id=${gdriveFileMatch[1]}`;
 
     if (url.includes('github.com') && !url.includes('raw.githubusercontent.com')) {
       fetchUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
@@ -60,9 +140,9 @@ Deno.serve(async (req) => {
     });
 
     if (!response.ok) {
-      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, { 
-        status: 'failed', 
-        error_message: `Fetch failed: HTTP ${response.status}` 
+      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+        status: 'failed',
+        error_message: `Fetch failed: HTTP ${response.status}`,
       });
       return Response.json({ error: `HTTP ${response.status}` }, { status: 502 });
     }
@@ -89,7 +169,6 @@ Deno.serve(async (req) => {
     else if (['md','txt','doc','docx','pdf','rst'].includes(ext)) category = 'documentation';
     else if (['png','jpg','jpeg','gif','webp','svg','glb','gltf','fbx','obj'].includes(ext)) category = 'asset';
 
-    // If it's a Google Doc/Sheet with no file extension, detect from content
     if (gdocMatch || gsheetMatch) {
       category = gsheetMatch ? 'data' : 'documentation';
     }
@@ -104,7 +183,7 @@ Deno.serve(async (req) => {
     else if (engineIndicators.some(i => lowerLabel.includes(i) || lowerContent.includes(i))) knowledgeDomain = 'engine_building';
     if (folderLabel && folderLabel.startsWith('🎮')) knowledgeDomain = 'game_reference';
 
-    // AI Analysis — pull EVERYTHING: code, structure, patterns, architecture
+    // AI Analysis
     const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are an EXHAUSTIVE knowledge extraction engine for a game development platform. 
 Your job is to extract EVERY piece of useful information from this file — leave nothing behind.
@@ -122,19 +201,19 @@ Extract and organize ALL of the following:
 3-5 detailed paragraphs about what this file is, what it does, and why it matters.
 
 ## Architecture & Structure
-How is this code/data organized? What design patterns are used? Class hierarchies? Module structure?
+How is this code/data organized? What design patterns are used?
 
 ## Key Knowledge Extracted
-Every function, class, method, constant, API endpoint, data schema, config value — enumerate them ALL.
+Every function, class, method, constant, API endpoint, data schema, config value.
 
 ## Code Patterns & Snippets
-Extract the most important code blocks verbatim in fenced code blocks. Include function signatures, class definitions, key algorithms.
+Extract the most important code blocks verbatim in fenced code blocks.
 
 ## Data Structures & Schemas
-Any JSON schemas, data models, type definitions, database structures, config formats.
+Any JSON schemas, data models, type definitions.
 
 ## Dependencies & Integrations
-What external libraries, APIs, services does this reference? Version numbers if visible.
+What external libraries, APIs, services does this reference?
 
 ## Integration Guide
 How could this knowledge be applied in a React + Three.js web game engine?
@@ -171,10 +250,10 @@ How could this knowledge be applied in a React + Three.js web game engine?
       is_pinned: false,
     });
 
-    // Mark as completed with the knowledge entry ID
-    await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, { 
-      status: 'completed', 
-      knowledge_entry_id: entry.id 
+    // Mark as completed
+    await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+      status: 'completed',
+      knowledge_entry_id: entry.id,
     });
 
     return Response.json({ success: true, knowledge_entry_id: entry.id });
@@ -183,11 +262,10 @@ How could this knowledge be applied in a React + Three.js web game engine?
     try {
       const body2 = await req.clone().json().catch(() => ({}));
       const eid = body2?.event?.entity_id;
-      if (eid) {
-        const base44f = createClientFromRequest(req);
-        await base44f.asServiceRole.entities.PendingKnowledgeURL.update(eid, { 
-          status: 'failed', 
-          error_message: error.message 
+      if (eid && base44) {
+        await base44.asServiceRole.entities.PendingKnowledgeURL.update(eid, {
+          status: 'failed',
+          error_message: error.message || String(error),
         });
       }
     } catch {}
