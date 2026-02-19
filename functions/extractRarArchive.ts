@@ -33,7 +33,14 @@ Deno.serve(async (req) => {
       extractor = await createExtractorFromData({ data: buffer });
     } catch (e) {
       console.error('Failed to create RAR extractor:', e);
-      return Response.json({ error: 'Failed to open RAR archive. File may be corrupted, a multi-part RAR that requires all parts, or password-protected.' }, { status: 400 });
+      // For multi-part RARs, each part is a valid RAR volume but may fail to extract
+      // if it references data from other parts. Return empty result instead of error.
+      const isMultiPart = /\.part\d+\.rar$/i.test(body.file_url || '');
+      if (isMultiPart) {
+        console.log('Multi-part RAR volume could not be opened individually — returning empty result');
+        return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, note: 'This RAR part could not be opened individually. Its contents may be split across other parts.' });
+      }
+      return Response.json({ error: 'Failed to open RAR archive. File may be corrupted or password-protected.' }, { status: 400 });
     }
 
     const fileList = extractor.getFileList();
@@ -74,29 +81,41 @@ Deno.serve(async (req) => {
 
     console.log('Extractable text files:', extractableFiles.length);
 
-    const extracted = extractor.extract({ 
-      files: extractableFiles.map(h => h.name) 
-    });
+    let extracted;
+    try {
+      extracted = extractor.extract({ 
+        files: extractableFiles.map(h => h.name) 
+      });
+    } catch (e) {
+      console.error('Extraction failed (may be incomplete multi-part):', e);
+      return Response.json({ files: [], total_in_archive: fileHeaders.length, extracted_count: 0, note: 'Extraction failed — this part may not contain complete files.' });
+    }
 
     const files = [];
     for (const file of extracted.files) {
-      if (file.fileHeader.flags?.directory) continue;
-      const bytes = file.extraction;
-      if (!bytes || bytes.length === 0) continue;
-
-      let content = '';
       try {
-        content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
-      } catch {
+        if (file.fileHeader.flags?.directory) continue;
+        const bytes = file.extraction;
+        if (!bytes || bytes.length === 0) continue;
+
+        let content = '';
+        try {
+          content = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+        } catch {
+          continue;
+        }
+        if (!content || content.length < 5) continue;
+
+        files.push({
+          path: file.fileHeader.name,
+          content: content.substring(0, 50000),
+          size: bytes.length,
+        });
+      } catch (fileErr) {
+        // Individual file extraction failed — skip and continue
+        console.warn('Skipping file:', file?.fileHeader?.name, fileErr.message);
         continue;
       }
-      if (!content || content.length < 5) continue;
-
-      files.push({
-        path: file.fileHeader.name,
-        content: content.substring(0, 50000),
-        size: bytes.length,
-      });
     }
 
     console.log('Extracted files:', files.length);
