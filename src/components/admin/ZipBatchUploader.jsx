@@ -211,6 +211,11 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
         let items, fileCount;
 
+        // Warn about multi-part RAR files
+        if (ext === 'rar' && /\.part\d+\.rar$/i.test(zipItem.name)) {
+          throw new Error('Multi-part RAR detected. Please combine all parts into a single .rar or .zip file first (using WinRAR or 7-Zip), then upload the combined file.');
+        }
+
         if (ext === 'rar') {
           // RAR files are extracted server-side
           ({ items, fileCount } = await processRarFile(zipItem, newStats));
