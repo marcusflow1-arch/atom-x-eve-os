@@ -59,22 +59,30 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const zips = files.filter(f => {
-      const ext = f.name.split('.').pop()?.toLowerCase();
-      return ['zip', 'rar', '7z'].includes(ext) || f.type === 'application/zip' || f.type === 'application/x-zip-compressed';
+    // Accept .zip and multi-part zip archives (.z01, .z02, etc.)
+    const archiveFiles = files.filter(f => {
+      const name = f.name.toLowerCase();
+      const ext = name.split('.').pop();
+      // .zip files
+      if (ext === 'zip' || f.type === 'application/zip' || f.type === 'application/x-zip-compressed') return true;
+      // Multi-part zip: .z01, .z02, ... .z99
+      if (/^z\d{1,2}$/.test(ext)) return true;
+      // 7z and rar — accept for queuing but warn
+      if (['rar', '7z'].includes(ext)) return true;
+      return false;
     });
 
-    if (zips.length === 0) {
-      showError('Please select ZIP files (.zip). RAR and 7z are not yet supported — please convert to ZIP.');
+    if (archiveFiles.length === 0) {
+      showError('No archive files detected. Supported: .zip, .z01-.z99, .rar, .7z');
       return;
     }
 
-    const nonZips = files.length - zips.length;
-    if (nonZips > 0) {
-      showError(`${nonZips} non-ZIP file(s) were ignored. Only .zip files are supported.`);
+    const nonArchives = files.length - archiveFiles.length;
+    if (nonArchives > 0) {
+      showError(`${nonArchives} non-archive file(s) were ignored.`);
     }
 
-    const newItems = zips.map(f => ({
+    const newItems = archiveFiles.map(f => ({
       id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
       file: f,
       name: f.name,
