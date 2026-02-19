@@ -59,10 +59,11 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    // Accept .zip and .rar files — each file is treated as its own independent archive
+    // Accept .zip and .rar files — each file is treated as its own independent archive part
     const archiveFiles = files.filter(f => {
-      const ext = f.name.split('.').pop()?.toLowerCase();
-      return ext === 'zip' || ext === 'rar' || f.type === 'application/zip' || f.type === 'application/x-zip-compressed';
+      const name = f.name.toLowerCase();
+      return name.endsWith('.zip') || name.endsWith('.rar') || 
+             f.type === 'application/zip' || f.type === 'application/x-zip-compressed';
     });
 
     if (archiveFiles.length === 0) {
@@ -211,11 +212,6 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
         let items, fileCount;
 
-        // Warn about multi-part RAR files
-        if (ext === 'rar' && /\.part\d+\.rar$/i.test(zipItem.name)) {
-          throw new Error('Multi-part RAR detected. Please combine all parts into a single .rar or .zip file first (using WinRAR or 7-Zip), then upload the combined file.');
-        }
-
         if (ext === 'rar') {
           // RAR files are extracted server-side
           ({ items, fileCount } = await processRarFile(zipItem, newStats));
@@ -291,10 +287,10 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         <div className="flex flex-col items-center gap-2">
           <FileArchive className="w-10 h-10 text-orange-400/60 group-hover:text-orange-300 transition-colors" />
           <p className="text-white font-semibold text-sm">
-            {isProcessing ? 'Processing in progress...' : 'Click to select archive files (.zip, .rar)'}
+          {isProcessing ? 'Processing in progress...' : 'Click to select archive files (.zip, .rar) — multi-part supported'}
           </p>
           <p className="text-slate-500 text-xs max-w-sm">
-            Select any number of .zip or .rar files (up to 50MB each). They'll be processed one at a time, sequentially.
+          Select any number of .zip or .rar files. Multi-part archives (part001, part002...) are processed individually — each part extracts whatever files it contains.
           </p>
         </div>
       </div>
