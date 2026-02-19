@@ -49,8 +49,14 @@ Deno.serve(async (req) => {
       return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, note: 'Could not open this RAR archive. If multi-part, individual parts cannot be extracted separately.' });
     }
 
-    const fileList = extractor.getFileList();
-    const fileHeaders = [...fileList.fileHeaders];
+    let fileHeaders;
+    try {
+      const fileList = extractor.getFileList();
+      fileHeaders = [...fileList.fileHeaders];
+    } catch (listErr) {
+      console.error('Failed to list RAR contents (multi-part read error):', listErr.message);
+      return Response.json({ files: [], total_in_archive: 0, extracted_count: 0, note: 'Could not read file list — this is likely a multi-part RAR that requires all parts together.' });
+    }
     console.log('RAR file headers count:', fileHeaders.length);
 
     const skipPatterns = [
