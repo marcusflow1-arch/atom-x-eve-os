@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Archive, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle,
@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import { enqueueFiles, invalidateKnowledgeCache } from './knowledgeLearner';
+
+const UPLOADER_STORAGE_KEY = 'zip_batch_uploader_state';
 
 // JSZip for client-side ZIP extraction
 let JSZipLib = null;
@@ -30,7 +32,6 @@ function classifyFile(name) {
   return 'other';
 }
 
-// Skip junk paths
 function shouldSkip(path) {
   const lower = path.toLowerCase();
   const skipPatterns = [
@@ -42,24 +43,92 @@ function shouldSkip(path) {
   return skipPatterns.some(p => lower.includes(p));
 }
 
-// Check if the file extension is text-based (analyzable)
 function isTextFile(name) {
   const cat = classifyFile(name);
   return !['asset', 'design'].includes(cat);
 }
 
+// ─── Persistence helpers ────────────────────────────
+function _persistUploaderState(queue, stats) {
+  try {
+    const serializable = queue.map(z => ({
+      id: z.id,
+      name: z.name,
+      size: z.size,
+      status: z.status,
+      fileCount: z.fileCount,
+      enqueuedCount: z.enqueuedCount,
+      error: z.error,
+      // If the file was already uploaded to server, store the URL so we can re-extract on resume
+      uploadedUrl: z.uploadedUrl || null,
+    }));
+    localStorage.setItem(UPLOADER_STORAGE_KEY, JSON.stringify({
+      queue: serializable,
+      stats,
+      timestamp: Date.now(),
+    }));
+  } catch {}
+}
+
+function _loadUploaderState() {
+  try {
+    const raw = localStorage.getItem(UPLOADER_STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    // Discard if older than 24 hours
+    if (Date.now() - (data.timestamp || 0) > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(UPLOADER_STORAGE_KEY);
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function _clearUploaderState() {
+  try { localStorage.removeItem(UPLOADER_STORAGE_KEY); } catch {}
+}
+
 export default function ZipBatchUploader({ onRefreshKnowledge }) {
   const fileInputRef = useRef(null);
-  const [zipQueue, setZipQueue] = useState([]); // { id, file, name, size, status, fileCount, error }
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentZip, setCurrentZip] = useState(null);
-  const [stats, setStats] = useState({ totalZips: 0, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 });
+
+  // Restore persisted state on mount
+  const [zipQueue, setZipQueue] = useState(() => {
+    const saved = _loadUploaderState();
+    if (saved?.queue?.length > 0) {
+      // Mark any "in-progress" items as "queued" so they can be retried
+      return saved.queue.map(z => ({
+        ...z,
+        file: null, // File objects can't be persisted — will need re-selection
+        status: (z.status === 'extracting' || z.status === 'analyzing') ? 'needs_file' : z.status,
+      }));
+    }
+    return [];
+  });
+
+  const [stats, setStats] = useState(() => {
+    const saved = _loadUploaderState();
+    return saved?.stats || { totalZips: 0, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 };
+  });
+
+  // Persist state whenever queue or stats change
+  useEffect(() => {
+    if (zipQueue.length > 0) {
+      _persistUploaderState(zipQueue, stats);
+    } else if (stats.totalZips === 0) {
+      _clearUploaderState();
+    }
+  }, [zipQueue, stats]);
+
+  // Check for items that were already uploaded but not yet extracted (resumable)
+  const needsFileReselect = zipQueue.some(z => z.status === 'needs_file' && !z.file);
+  const hasResumableItems = zipQueue.some(z => z.status === 'queued' && z.file);
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    // Accept .zip and .rar files — each file is treated as its own independent archive part
     const archiveFiles = files.filter(f => {
       const name = f.name.toLowerCase();
       return name.endsWith('.zip') || name.endsWith('.rar') || 
@@ -76,38 +145,76 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       showError(`${nonArchives} non-archive file(s) were ignored.`);
     }
 
-    // Sort multi-part files in order (part001, part002...) so they process sequentially
+    // Sort multi-part files in order
     archiveFiles.sort((a, b) => {
       const partA = a.name.match(/part(\d+)/i)?.[1] || '0';
       const partB = b.name.match(/part(\d+)/i)?.[1] || '0';
       return parseInt(partA) - parseInt(partB);
     });
 
-    // Each file = one queue item, processed individually
-    const newItems = archiveFiles.map(f => ({
-      id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-      file: f,
-      name: f.name,
-      size: f.size,
-      status: 'queued',
-      fileCount: null,
-      enqueuedCount: 0,
-      error: null,
-    }));
+    // Try to match re-selected files to existing "needs_file" items
+    const updatedQueue = [...zipQueue];
+    const newItems = [];
 
-    setZipQueue(prev => [...prev, ...newItems]);
+    for (const f of archiveFiles) {
+      // Check if this file matches a persisted item that needs re-selection
+      const matchIdx = updatedQueue.findIndex(z => 
+        z.status === 'needs_file' && z.name === f.name && z.size === f.size && !z.file
+      );
+
+      if (matchIdx !== -1) {
+        // Re-attach the File object and mark as queued again
+        updatedQueue[matchIdx] = {
+          ...updatedQueue[matchIdx],
+          file: f,
+          status: 'queued',
+          error: null,
+        };
+      } else {
+        // Check if this exact file is already in the queue (by name+size)
+        const alreadyExists = updatedQueue.some(z => z.name === f.name && z.size === f.size && z.status !== 'failed');
+        if (!alreadyExists) {
+          newItems.push({
+            id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            file: f,
+            name: f.name,
+            size: f.size,
+            status: 'queued',
+            fileCount: null,
+            enqueuedCount: 0,
+            error: null,
+            uploadedUrl: null,
+          });
+        }
+      }
+    }
+
+    setZipQueue([...updatedQueue, ...newItems]);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    showSuccess(`Added ${newItems.length} archive(s) to queue`);
+
+    const matchedCount = archiveFiles.length - newItems.length;
+    if (matchedCount > 0 && newItems.length > 0) {
+      showSuccess(`Matched ${matchedCount} file(s) from previous session, added ${newItems.length} new archive(s)`);
+    } else if (matchedCount > 0) {
+      showSuccess(`Re-attached ${matchedCount} file(s) — ready to resume processing`);
+    } else if (newItems.length > 0) {
+      showSuccess(`Added ${newItems.length} archive(s) to queue`);
+    }
   };
 
   const removeFromQueue = (id) => {
-    setZipQueue(prev => prev.filter(z => z.id !== id));
+    setZipQueue(prev => {
+      const updated = prev.filter(z => z.id !== id);
+      if (updated.length === 0) _clearUploaderState();
+      return updated;
+    });
   };
 
   const clearQueue = () => {
     if (isProcessing) return;
     setZipQueue([]);
     setStats({ totalZips: 0, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 });
+    _clearUploaderState();
   };
 
   const processZipFile = async (zipItem, JSZip, newStats) => {
@@ -155,16 +262,16 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
   };
 
   const processRarFile = async (zipItem, newStats) => {
-    // Upload the RAR file to the server, then extract server-side
     setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
     console.log(`[RAR] Uploading ${zipItem.name} (${(zipItem.size / (1024*1024)).toFixed(1)} MB)...`);
 
-    // Upload file first
     const { file_url } = await base44.integrations.Core.UploadFile({ file: zipItem.file });
     console.log(`[RAR] Uploaded to: ${file_url}`);
 
-    // Call backend function to extract RAR contents
+    // Persist the uploaded URL so we can resume if page refreshes after upload
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, uploadedUrl: file_url } : z));
+
     let result;
     try {
       const { extractRarArchive } = await import('@/functions/extractRarArchive');
@@ -172,13 +279,11 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       const response = await extractRarArchive({ file_url });
       result = response?.data || response;
     } catch (apiErr) {
-      console.warn('[RAR] Backend call failed (likely too large for server):', apiErr?.response?.status, apiErr.message);
-      // Return empty result so the queue continues to the next part
+      console.warn('[RAR] Backend call failed:', apiErr?.response?.status, apiErr.message);
       return { items: [], fileCount: 0 };
     }
     console.log('[RAR] Backend response:', { files: result?.files?.length, error: result?.error, note: result?.note });
 
-    // If there's an error but also files array, treat as partial success
     if (result.error && (!result.files || result.files.length === 0)) {
       console.warn('[RAR] Part returned error:', result.error);
       return { items: [], fileCount: 0 };
@@ -205,7 +310,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
   };
 
   const processAllZips = useCallback(async () => {
-    const pending = zipQueue.filter(z => z.status === 'queued');
+    const pending = zipQueue.filter(z => z.status === 'queued' && z.file);
     if (pending.length === 0) return;
 
     setIsProcessing(true);
@@ -231,17 +336,14 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         let items, fileCount;
 
         if (ext === 'rar') {
-          // RAR files are extracted server-side (each part processed individually)
           ({ items, fileCount } = await processRarFile(zipItem, newStats));
           if (items.length === 0) {
-            // Part had no extractable files — mark as done with note
             setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount: 0, enqueuedCount: 0, error: 'No extractable text files in this part' } : z));
             newStats.processedZips += 1;
             setStats({ ...newStats });
             continue;
           }
         } else {
-          // ZIP files extracted client-side with JSZip
           ({ items, fileCount } = await processZipFile(zipItem, JSZip, newStats));
         }
 
@@ -269,7 +371,8 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     showSuccess(`Finished processing ${newStats.processedZips} archive(s) — ${newStats.enqueuedFiles} files queued for AI analysis`);
   }, [zipQueue, onRefreshKnowledge]);
 
-  const pendingCount = zipQueue.filter(z => z.status === 'queued').length;
+  const pendingCount = zipQueue.filter(z => z.status === 'queued' && z.file).length;
+  const needsFileCount = zipQueue.filter(z => z.status === 'needs_file').length;
   const doneCount = zipQueue.filter(z => z.status === 'done').length;
   const failedCount = zipQueue.filter(z => z.status === 'failed').length;
 
@@ -295,6 +398,36 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         )}
       </div>
 
+      {/* Resume Banner — shown when items exist from a previous session that need files re-selected */}
+      {needsFileCount > 0 && !isProcessing && (
+        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-white font-semibold text-xs">Previous session interrupted</p>
+                <p className="text-amber-300/60 text-[11px] mt-0.5">
+                  {needsFileCount} archive(s) need to be re-selected to continue. Select the same files again below.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={clearQueue} className="text-slate-400 hover:text-white text-xs h-7">
+              Discard
+            </Button>
+          </div>
+          {/* Show which files are needed */}
+          <div className="mt-2 space-y-1">
+            {zipQueue.filter(z => z.status === 'needs_file').map(z => (
+              <div key={z.id} className="flex items-center gap-2 text-xs text-amber-300/70 pl-6">
+                <Archive className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{z.name}</span>
+                <span className="text-slate-500">({(z.size / (1024*1024)).toFixed(1)} MB)</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Drop Zone / File Picker */}
       <input
         ref={fileInputRef}
@@ -312,10 +445,13 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         <div className="flex flex-col items-center gap-2">
           <FileArchive className="w-10 h-10 text-orange-400/60 group-hover:text-orange-300 transition-colors" />
           <p className="text-white font-semibold text-sm">
-          {isProcessing ? 'Processing in progress...' : 'Click to select archive files (.zip, .rar) — multi-part supported'}
+            {isProcessing ? 'Processing in progress...' : needsFileCount > 0 ? 'Re-select your archive files to resume' : 'Click to select archive files (.zip, .rar) — multi-part supported'}
           </p>
           <p className="text-slate-500 text-xs max-w-sm">
-          Select any number of .zip or .rar files. Multi-part archives (part001, part002...) are processed individually — each part extracts whatever files it contains.
+            {needsFileCount > 0 
+              ? 'Select the same files you uploaded before — they will be matched automatically and processing will continue where it left off.'
+              : 'Select any number of .zip or .rar files. Multi-part archives (part001, part002...) are processed individually — each part extracts whatever files it contains.'
+            }
           </p>
         </div>
       </div>
@@ -327,6 +463,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
             <span className="text-xs text-slate-400 font-medium">
               Queue: {doneCount}/{zipQueue.length} complete
               {failedCount > 0 && <span className="text-red-400 ml-2">({failedCount} failed)</span>}
+              {needsFileCount > 0 && <span className="text-amber-400 ml-2">({needsFileCount} need re-select)</span>}
             </span>
             {pendingCount > 0 && !isProcessing && (
               <Button size="sm" onClick={processAllZips} className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs">
@@ -346,6 +483,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                 className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
                   z.status === 'done' ? 'bg-green-500/5 border-green-500/20' :
                   z.status === 'failed' ? 'bg-red-500/5 border-red-500/20' :
+                  z.status === 'needs_file' ? 'bg-amber-500/5 border-amber-500/20' :
                   z.status === 'extracting' || z.status === 'analyzing' ? 'bg-orange-500/5 border-orange-500/20' :
                   'bg-slate-800/40 border-slate-700'
                 }`}
@@ -353,6 +491,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                 {/* Status Icon */}
                 <div className="flex-shrink-0">
                   {z.status === 'queued' && <Archive className="w-5 h-5 text-slate-500" />}
+                  {z.status === 'needs_file' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
                   {z.status === 'extracting' && <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />}
                   {z.status === 'analyzing' && <Brain className="w-5 h-5 text-orange-400 animate-pulse" />}
                   {z.status === 'done' && <CheckCircle2 className="w-5 h-5 text-green-400" />}
@@ -370,6 +509,9 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                     {z.status === 'done' && z.enqueuedCount !== undefined && (
                       <span className="text-green-400 text-xs">• {z.enqueuedCount} queued for analysis</span>
                     )}
+                    {z.status === 'needs_file' && (
+                      <span className="text-amber-400 text-xs">Re-select this file to resume</span>
+                    )}
                     {z.status === 'extracting' && (
                       <span className="text-orange-400 text-xs">Extracting files...</span>
                     )}
@@ -383,16 +525,17 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                 </div>
 
                 {/* Actions */}
-                {z.status === 'queued' && !isProcessing && (
+                {(z.status === 'queued' || z.status === 'needs_file') && !isProcessing && (
                   <Button size="icon" variant="ghost" onClick={() => removeFromQueue(z.id)} className="h-7 w-7 text-slate-500 hover:text-red-400">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
-                {z.status === 'done' && (
-                  <Badge className="bg-green-500/15 text-green-400 text-[10px] border border-green-500/25">Done</Badge>
-                )}
-                {z.status === 'failed' && (
-                  <Badge className="bg-red-500/15 text-red-400 text-[10px] border border-red-500/25">Failed</Badge>
+                {z.status === 'failed' && !isProcessing && (
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    setZipQueue(prev => prev.map(q => q.id === z.id ? { ...q, status: z.file ? 'queued' : 'needs_file', error: null } : q));
+                  }} className="text-xs text-orange-400 hover:text-orange-300 h-7">
+                    Retry
+                  </Button>
                 )}
               </motion.div>
             ))}
