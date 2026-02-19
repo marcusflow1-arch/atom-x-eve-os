@@ -26,47 +26,50 @@ Deno.serve(async (req) => {
     // ─── Google Drive FOLDER detection ───
     const gdriveFolderMatch = url.match(/drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([a-zA-Z0-9_-]+)/);
     if (gdriveFolderMatch) {
-      // This is a folder link — we need to list files inside it and queue each one
       const folderId = gdriveFolderMatch[1];
-      const listUrl = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+trashed=false&fields=files(id,name,mimeType,size)&pageSize=100&key=AIzaSyBIlG-LB9VPXfcfmyTmPUlEFYRkbWHWqKk`;
+
+      // Get OAuth access token from the authorized Google Drive connector
+      let accessToken;
+      try {
+        accessToken = await base44.asServiceRole.connectors.getAccessToken("googledrive");
+      } catch (e) {
+        console.log('No Google Drive connector token, falling back to public API');
+      }
 
       let files = [];
-      try {
-        // Try public listing first (works if folder is shared publicly)
-        const listResp = await fetch(listUrl);
-        if (listResp.ok) {
-          const listData = await listResp.json();
-          files = listData.files || [];
-        }
-      } catch {}
+      let nextPageToken = null;
 
-      if (files.length === 0) {
-        // Fallback: try scraping the folder page for file links
-        try {
-          const pageResp = await fetch(url, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-            redirect: 'follow',
-          });
-          if (pageResp.ok) {
-            const html = await pageResp.text();
-            // Extract file IDs from the HTML
-            const fileIdRegex = /\/file\/d\/([a-zA-Z0-9_-]{20,})/g;
-            const foundIds = new Set();
-            let match;
-            while ((match = fileIdRegex.exec(html)) !== null) {
-              foundIds.add(match[1]);
-            }
-            for (const fileId of foundIds) {
-              files.push({ id: fileId, name: `file_${fileId}`, mimeType: 'application/octet-stream' });
-            }
-          }
-        } catch {}
-      }
+      // Try with OAuth token first, then fall back to public
+      const headers = accessToken
+        ? { 'Authorization': `Bearer ${accessToken}` }
+        : {};
+
+      do {
+        const params = new URLSearchParams({
+          q: `'${folderId}' in parents and trashed=false`,
+          fields: 'nextPageToken,files(id,name,mimeType,size)',
+          pageSize: '100',
+        });
+        if (nextPageToken) params.set('pageToken', nextPageToken);
+
+        const listUrl = `https://www.googleapis.com/drive/v3/files?${params}`;
+        const listResp = await fetch(listUrl, { headers });
+
+        if (!listResp.ok) {
+          const errText = await listResp.text();
+          console.log('Drive API error:', listResp.status, errText);
+          break;
+        }
+
+        const listData = await listResp.json();
+        files = files.concat(listData.files || []);
+        nextPageToken = listData.nextPageToken || null;
+      } while (nextPageToken);
 
       if (files.length === 0) {
         await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
           status: 'failed',
-          error_message: 'Could not list folder contents. Make sure the folder is shared as "Anyone with the link can view" and contains files. Google Drive folders require public sharing.',
+          error_message: 'Could not list folder contents. The Google Drive connector may not have access to this folder. Try sharing the folder with your connected Google account, or make it publicly viewable.',
         });
         return Response.json({ error: 'Cannot list folder' }, { status: 400 });
       }
