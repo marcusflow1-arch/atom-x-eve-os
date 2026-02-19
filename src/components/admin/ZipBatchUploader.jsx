@@ -218,9 +218,9 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
             <Archive className="w-5 h-5 text-orange-400" />
           </div>
           <div>
-            <h3 className="text-white font-bold text-sm">ZIP Batch Upload</h3>
+            <h3 className="text-white font-bold text-sm">Archive Batch Upload</h3>
             <p className="text-slate-400 text-xs mt-0.5">
-              Select multiple ZIP files (up to 50MB each) — they'll be extracted and analyzed one by one
+              Select multiple .zip or .rar files (up to 50MB each) — processed one at a time
             </p>
           </div>
         </div>
