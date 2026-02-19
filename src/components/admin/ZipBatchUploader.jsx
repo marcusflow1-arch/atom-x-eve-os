@@ -248,7 +248,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         <div className="flex flex-col items-center gap-2">
           <FileArchive className="w-10 h-10 text-orange-400/60 group-hover:text-orange-300 transition-colors" />
           <p className="text-white font-semibold text-sm">
-            {isProcessing ? 'Processing in progress...' : 'Click to select ZIP files'}
+            {isProcessing ? 'Processing in progress...' : 'Click to select archive files (.zip, .rar)'}
           </p>
           <p className="text-slate-500 text-xs max-w-sm">
             Select any number of .zip or .rar files (up to 50MB each). They'll be processed one at a time, sequentially.
