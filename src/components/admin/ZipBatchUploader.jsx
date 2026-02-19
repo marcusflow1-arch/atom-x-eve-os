@@ -76,7 +76,14 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       showError(`${nonArchives} non-archive file(s) were ignored.`);
     }
 
-    // Each file = one queue item, no grouping, no multi-part logic
+    // Sort multi-part files in order (part001, part002...) so they process sequentially
+    archiveFiles.sort((a, b) => {
+      const partA = a.name.match(/part(\d+)/i)?.[1] || '0';
+      const partB = b.name.match(/part(\d+)/i)?.[1] || '0';
+      return parseInt(partA) - parseInt(partB);
+    });
+
+    // Each file = one queue item, processed individually
     const newItems = archiveFiles.map(f => ({
       id: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
       file: f,
@@ -213,8 +220,15 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         let items, fileCount;
 
         if (ext === 'rar') {
-          // RAR files are extracted server-side
+          // RAR files are extracted server-side (each part processed individually)
           ({ items, fileCount } = await processRarFile(zipItem, newStats));
+          if (items.length === 0) {
+            // Part had no extractable files — mark as done with note
+            setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount: 0, enqueuedCount: 0, error: 'No extractable text files in this part' } : z));
+            newStats.processedZips += 1;
+            setStats({ ...newStats });
+            continue;
+          }
         } else {
           // ZIP files extracted client-side with JSZip
           ({ items, fileCount } = await processZipFile(zipItem, JSZip, newStats));
