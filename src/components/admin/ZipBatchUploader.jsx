@@ -167,11 +167,22 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     // Call backend function to extract RAR contents
     const { extractRarArchive } = await import('@/functions/extractRarArchive');
     console.log('[RAR] Calling extractRarArchive backend...');
-    const response = await extractRarArchive({ file_url });
-    const result = response?.data || response;
-    console.log('[RAR] Backend response:', { files: result?.files?.length, error: result?.error });
+    let result;
+    try {
+      const response = await extractRarArchive({ file_url });
+      result = response?.data || response;
+    } catch (apiErr) {
+      console.warn('[RAR] Backend call failed:', apiErr.message);
+      // Return empty result so the queue continues to the next part
+      return { items: [], fileCount: 0 };
+    }
+    console.log('[RAR] Backend response:', { files: result?.files?.length, error: result?.error, note: result?.note });
 
-    if (result.error) throw new Error(result.error);
+    // If there's an error but also files array, treat as partial success
+    if (result.error && (!result.files || result.files.length === 0)) {
+      console.warn('[RAR] Part returned error:', result.error);
+      return { items: [], fileCount: 0 };
+    }
 
     const files = result.files || [];
     const fileCount = files.length;
