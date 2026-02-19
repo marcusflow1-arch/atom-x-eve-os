@@ -102,6 +102,84 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     setStats({ totalZips: 0, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 });
   };
 
+  const processZipFile = async (zipItem, JSZip, newStats) => {
+    const arrayBuffer = await zipItem.file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    const entries = [];
+    zip.forEach((relativePath, zipEntry) => {
+      if (zipEntry.dir) return;
+      if (shouldSkip(relativePath)) return;
+      if (!isTextFile(relativePath)) return;
+      entries.push({ path: relativePath, entry: zipEntry });
+    });
+
+    const fileCount = entries.length;
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'analyzing', fileCount } : z));
+    newStats.totalFiles += fileCount;
+    setStats({ ...newStats });
+
+    const items = [];
+    for (const { path, entry } of entries) {
+      if (entry._data?.uncompressedSize > 2 * 1024 * 1024) continue;
+      let content = '';
+      try {
+        content = await entry.async('string');
+      } catch {
+        continue;
+      }
+      if (!content || content.length < 5) continue;
+
+      const category = classifyFile(path);
+      const displayName = `[${zipItem.name}] ${path}`;
+      items.push({
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + path.split('/').pop(),
+        name: displayName,
+        size: content.length,
+        category,
+        content: content.substring(0, 50000),
+        rawFile: null,
+        needsUpload: false,
+        status: 'queued',
+      });
+    }
+    return { items, fileCount };
+  };
+
+  const processRarFile = async (zipItem, newStats) => {
+    // Upload the RAR file to the server, then extract server-side
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
+
+    // Upload file first
+    const { file_url } = await base44.integrations.Core.UploadFile({ file: zipItem.file });
+
+    // Call backend function to extract RAR contents
+    const { extractRarArchive } = await import('@/functions/extractRarArchive');
+    const response = await extractRarArchive({ file_url });
+    const result = response.data || response;
+
+    if (result.error) throw new Error(result.error);
+
+    const files = result.files || [];
+    const fileCount = files.length;
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'analyzing', fileCount } : z));
+    newStats.totalFiles += fileCount;
+    setStats({ ...newStats });
+
+    const items = files.map(f => ({
+      id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + (f.path || '').split('/').pop(),
+      name: `[${zipItem.name}] ${f.path}`,
+      size: (f.content || '').length,
+      category: classifyFile(f.path),
+      content: (f.content || '').substring(0, 50000),
+      rawFile: null,
+      needsUpload: false,
+      status: 'queued',
+    })).filter(f => f.size >= 5);
+
+    return { items, fileCount };
+  };
+
   const processAllZips = useCallback(async () => {
     const pending = zipQueue.filter(z => z.status === 'queued');
     if (pending.length === 0) return;
@@ -110,72 +188,32 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     const newStats = { totalZips: pending.length, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 };
     setStats(newStats);
 
-    let Archive;
+    let JSZip;
     try {
-      Archive = await loadArchiveLib();
+      JSZip = await loadJSZip();
     } catch (err) {
-      console.error('Failed to load archive library:', err);
-      showError('Failed to load archive library. Please try again.');
+      console.error('Failed to load JSZip:', err);
+      showError('Failed to load ZIP library.');
       setIsProcessing(false);
       return;
     }
 
-    // Process ONE at a time — iterate sequentially
     for (const zipItem of pending) {
       setCurrentZip(zipItem.id);
       setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
       try {
-        // Open the archive (works for ZIP, RAR, 7z, TAR, etc.)
-        const archive = await Archive.open(zipItem.file);
-        const filesArray = await archive.getFilesArray();
+        const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
+        let items, fileCount;
 
-        // Filter to text-based, non-junk files
-        const textEntries = filesArray.filter(({ file, path: filePath }) => {
-          const fullPath = filePath + file.name;
-          if (shouldSkip(fullPath)) return false;
-          if (!isTextFile(file.name)) return false;
-          if (file.size > 2 * 1024 * 1024) return false; // skip files > 2MB
-          return true;
-        });
-
-        const fileCount = textEntries.length;
-        setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'analyzing', fileCount } : z));
-        newStats.totalFiles += fileCount;
-        setStats({ ...newStats });
-
-        // Extract text content from each file
-        const items = [];
-        for (const { file: compressedFile, path: filePath } of textEntries) {
-          const fullPath = filePath + compressedFile.name;
-          
-          let content = '';
-          try {
-            // Extract the actual File object
-            const extracted = await compressedFile.extract();
-            content = await extracted.text();
-          } catch {
-            continue;
-          }
-
-          if (!content || content.length < 5) continue;
-
-          const category = classifyFile(fullPath);
-          const displayName = `[${zipItem.name}] ${fullPath}`;
-
-          items.push({
-            id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + compressedFile.name,
-            name: displayName,
-            size: content.length,
-            category,
-            content: content.substring(0, 50000),
-            rawFile: null,
-            needsUpload: false,
-            status: 'queued',
-          });
+        if (ext === 'rar') {
+          // RAR files are extracted server-side
+          ({ items, fileCount } = await processRarFile(zipItem, newStats));
+        } else {
+          // ZIP files extracted client-side with JSZip
+          ({ items, fileCount } = await processZipFile(zipItem, JSZip, newStats));
         }
 
-        // Enqueue into the knowledge learner
         const folderLabel = zipItem.name.replace(/\.(zip|rar|7z|tar|gz)$/i, '');
         const { added, dupes } = await enqueueFiles(items, folderLabel);
 
