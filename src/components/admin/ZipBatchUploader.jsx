@@ -339,7 +339,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       {/* Overall Stats */}
       {stats.totalZips > 0 && (
         <div className="flex items-center gap-4 text-xs text-slate-400 pt-3 border-t border-slate-700/50">
-          <span>ZIPs: {stats.processedZips}/{stats.totalZips}</span>
+          <span>Archives: {stats.processedZips}/{stats.totalZips}</span>
           <span>Files found: {stats.totalFiles}</span>
           <span className="text-green-400">Queued: {stats.enqueuedFiles}</span>
           {stats.skippedFiles > 0 && <span className="text-slate-500">Skipped (dupes): {stats.skippedFiles}</span>}
