@@ -91,7 +91,12 @@ function KnowledgeCard({ entry, onDelete, onTogglePin }) {
             <h4 className="text-white font-semibold text-sm truncate">{entry.source_filename}</h4>
             {entry.is_pinned && <Pin className="w-3 h-3 text-amber-400 flex-shrink-0" />}
           </div>
-          <p className="text-slate-500 text-xs truncate mt-0.5">{entry.summary || 'Knowledge entry'}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <p className="text-slate-500 text-xs truncate">{entry.summary || 'Knowledge entry'}</p>
+            <span className="text-slate-600 text-[10px] flex-shrink-0">
+              {entry.analyzed_date ? new Date(entry.analyzed_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : entry.created_date ? new Date(entry.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             <Badge variant="outline" className={`text-[9px] py-0 ${catColor}`}>{entry.category}</Badge>
             {entry.tags?.slice(0, 4).map(tag => (

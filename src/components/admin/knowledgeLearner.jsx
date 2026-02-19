@@ -378,17 +378,24 @@ export function removeFromQueue(id) {
 // ─── Internal Processing Loop ───────────────────────
 
 async function _processQueue() {
+  if (_state.isRunning) {
+    console.log('[KnowledgeLearner] Already running, skipping duplicate start');
+    return;
+  }
   _state.isRunning = true;
   _notify();
+  console.log(`[KnowledgeLearner] Starting processing loop with ${_state.queue.length} items`);
 
   while (_state.queue.length > 0) {
     const readyIdx = _state.queue.findIndex(q => !q.needsReread);
     if (readyIdx === -1) {
       _state.lastLog = `Paused: ${_state.queue.length} file(s) need re-selecting the folder to resume.`;
+      console.log('[KnowledgeLearner] No ready items, pausing');
       break;
     }
 
     const item = _state.queue[readyIdx];
+    console.log(`[KnowledgeLearner] Processing: ${item.name} (${readyIdx + 1}/${_state.queue.length})`);
 
     // If content is missing from memory but might be in IDB (e.g. after hot-reload)
     if (!item.content && !item.needsUpload) {
@@ -396,7 +403,7 @@ async function _processQueue() {
       if (idbContent) {
         item.content = idbContent;
       } else {
-        // Can't process without content — mark as needing re-read
+        console.warn(`[KnowledgeLearner] No content for ${item.name}, marking as needs-reread`);
         item.needsReread = true;
         _persistQueue();
         _notify();
@@ -409,6 +416,7 @@ async function _processQueue() {
     _persistQueue();
     _notify();
 
+    const startTime = Date.now();
     try {
       const existing = await _loadExistingKnowledge();
       const key = _makeKey(item.name, item.size);
@@ -416,12 +424,15 @@ async function _processQueue() {
         _state.skipped.push({ id: item.id, name: item.name });
         _state.progress.done += 1;
         _state.lastLog = `Skipped (already exists): ${item.name}`;
+        console.log(`[KnowledgeLearner] Skipped (dupe): ${item.name}`);
       } else {
         await _learnSingleFile(item);
         _state.completed.push(item.id);
         _state.progress.done += 1;
-        _state.lastLog = `Learned: ${item.name}`;
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        _state.lastLog = `Learned: ${item.name} (${elapsed}s)`;
         existing.set(key, true);
+        console.log(`[KnowledgeLearner] Learned: ${item.name} in ${elapsed}s`);
       }
     } catch (err) {
       console.error(`[KnowledgeLearner] Failed on ${item.name}:`, err);
