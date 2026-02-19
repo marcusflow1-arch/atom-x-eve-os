@@ -178,8 +178,38 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
       try {
-        // Read the ZIP file
-        const arrayBuffer = await zipItem.file.arrayBuffer();
+        // Read the ZIP file — handle multi-part archives
+        let arrayBuffer;
+        if (zipItem.isMultiPart && zipItem.parts?.length > 0) {
+          // Multi-part ZIP: concatenate .z01, .z02, ..., .zip in order
+          const orderedFiles = [...zipItem.parts];
+          if (zipItem.file) orderedFiles.push(zipItem.file); // .zip is the last part
+          
+          const buffers = [];
+          for (const part of orderedFiles) {
+            buffers.push(await part.arrayBuffer());
+          }
+          // Concatenate all parts into one buffer
+          const totalLength = buffers.reduce((sum, b) => sum + b.byteLength, 0);
+          const combined = new Uint8Array(totalLength);
+          let offset = 0;
+          for (const buf of buffers) {
+            combined.set(new Uint8Array(buf), offset);
+            offset += buf.byteLength;
+          }
+          arrayBuffer = combined.buffer;
+        } else {
+          arrayBuffer = await zipItem.file.arrayBuffer();
+        }
+
+        const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
+        if (ext === 'rar' || ext === '7z') {
+          setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'failed', error: `${ext.toUpperCase()} format detected — please convert to .zip first (use 7-Zip or WinRAR to re-save as .zip)` } : z));
+          newStats.processedZips += 1;
+          setStats({ ...newStats });
+          continue;
+        }
+
         const zip = await JSZip.loadAsync(arrayBuffer);
 
         // Collect all text-based files from the ZIP
