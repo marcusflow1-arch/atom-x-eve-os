@@ -115,71 +115,61 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     const newStats = { totalZips: pending.length, processedZips: 0, totalFiles: 0, enqueuedFiles: 0, skippedFiles: 0 };
     setStats(newStats);
 
-    let JSZip;
+    let Archive;
     try {
-      JSZip = await loadJSZip();
+      Archive = await loadArchiveLib();
     } catch (err) {
-      showError('Failed to load ZIP library. Please try again.');
+      console.error('Failed to load archive library:', err);
+      showError('Failed to load archive library. Please try again.');
       setIsProcessing(false);
       return;
     }
 
+    // Process ONE at a time — iterate sequentially
     for (const zipItem of pending) {
       setCurrentZip(zipItem.id);
-
-      // Update status to extracting
       setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
       try {
-        const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
-        
-        // RAR files: JSZip can't handle them — skip with helpful message
-        if (ext === 'rar') {
-          setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'failed', error: 'RAR format — please convert to .zip first (use 7-Zip or WinRAR → Save As .zip)' } : z));
-          newStats.processedZips += 1;
-          setStats({ ...newStats });
-          continue;
-        }
+        // Open the archive (works for ZIP, RAR, 7z, TAR, etc.)
+        const archive = await Archive.open(zipItem.file);
+        const filesArray = await archive.getFilesArray();
 
-        // Read the single ZIP file
-        const arrayBuffer = await zipItem.file.arrayBuffer();
-        const zip = await JSZip.loadAsync(arrayBuffer);
-
-        // Collect all text-based files from the ZIP
-        const entries = [];
-        zip.forEach((relativePath, zipEntry) => {
-          if (zipEntry.dir) return;
-          if (shouldSkip(relativePath)) return;
-          if (!isTextFile(relativePath)) return;
-          entries.push({ path: relativePath, entry: zipEntry });
+        // Filter to text-based, non-junk files
+        const textEntries = filesArray.filter(({ file, path: filePath }) => {
+          const fullPath = filePath + file.name;
+          if (shouldSkip(fullPath)) return false;
+          if (!isTextFile(file.name)) return false;
+          if (file.size > 2 * 1024 * 1024) return false; // skip files > 2MB
+          return true;
         });
 
-        const fileCount = entries.length;
+        const fileCount = textEntries.length;
         setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'analyzing', fileCount } : z));
         newStats.totalFiles += fileCount;
         setStats({ ...newStats });
 
-        // Extract and prepare files for the learner queue
+        // Extract text content from each file
         const items = [];
-        for (const { path, entry } of entries) {
-          // Only read files under 2MB
-          if (entry._data?.uncompressedSize > 2 * 1024 * 1024) continue;
-
+        for (const { file: compressedFile, path: filePath } of textEntries) {
+          const fullPath = filePath + compressedFile.name;
+          
           let content = '';
           try {
-            content = await entry.async('string');
+            // Extract the actual File object
+            const extracted = await compressedFile.extract();
+            content = await extracted.text();
           } catch {
-            // Binary file that can't be read as string — skip
             continue;
           }
 
           if (!content || content.length < 5) continue;
 
-          const category = classifyFile(path);
-          const displayName = `[${zipItem.name}] ${path}`;
+          const category = classifyFile(fullPath);
+          const displayName = `[${zipItem.name}] ${fullPath}`;
 
           items.push({
-            id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + path.split('/').pop(),
+            id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + compressedFile.name,
             name: displayName,
             size: content.length,
             category,
@@ -190,8 +180,8 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
           });
         }
 
-        // Enqueue into the knowledge learner (processes one by one)
-        const folderLabel = zipItem.name.replace(/\.zip$/i, '');
+        // Enqueue into the knowledge learner
+        const folderLabel = zipItem.name.replace(/\.(zip|rar|7z|tar|gz)$/i, '');
         const { added, dupes } = await enqueueFiles(items, folderLabel);
 
         newStats.enqueuedFiles += added;
@@ -202,7 +192,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount, enqueuedCount: added } : z));
 
       } catch (err) {
-        console.error(`Failed to process ZIP: ${zipItem.name}`, err);
+        console.error(`Failed to process archive: ${zipItem.name}`, err);
         newStats.processedZips += 1;
         setStats({ ...newStats });
         setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'failed', error: err.message || 'Unknown error' } : z));
@@ -212,7 +202,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     setCurrentZip(null);
     setIsProcessing(false);
     if (onRefreshKnowledge) onRefreshKnowledge();
-    showSuccess(`Finished processing ${newStats.processedZips} ZIP(s) — ${newStats.enqueuedFiles} files queued for AI analysis`);
+    showSuccess(`Finished processing ${newStats.processedZips} archive(s) — ${newStats.enqueuedFiles} files queued for AI analysis`);
   }, [zipQueue, onRefreshKnowledge]);
 
   const pendingCount = zipQueue.filter(z => z.status === 'queued').length;
