@@ -10,13 +10,18 @@ import { base44 } from '@/api/base44Client';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 import { enqueueFiles, invalidateKnowledgeCache } from './knowledgeLearner';
 
-// JSZip loaded from CDN on demand
-let JSZipLib = null;
-async function loadJSZip() {
-  if (JSZipLib) return JSZipLib;
-  const mod = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm');
-  JSZipLib = mod.default || mod;
-  return JSZipLib;
+// libarchive.js loaded from CDN on demand — supports ZIP, RAR, 7z, TAR, etc.
+let ArchiveLib = null;
+async function loadArchiveLib() {
+  if (ArchiveLib) return ArchiveLib;
+  const mod = await import('https://cdn.jsdelivr.net/npm/libarchive.js@2.0.2/+esm');
+  const Archive = mod.Archive || mod.default?.Archive || mod.default;
+  // Init with worker URL from CDN
+  Archive.init({
+    workerUrl: 'https://cdn.jsdelivr.net/npm/libarchive.js@2.0.2/dist/worker-bundle.js'
+  });
+  ArchiveLib = Archive;
+  return ArchiveLib;
 }
 
 function classifyFile(name) {
