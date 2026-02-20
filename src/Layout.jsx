@@ -713,9 +713,22 @@ function LayoutContent({ children, currentPageName }) {
                     <>
                       <div className="my-2 border-t border-white/10" />
                       <Link
-                            to={createPageUrl('Admin')}
+                            to={createPageUrl('Engine')}
                             onClick={() => setDrawerOpen(false)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
+                              location.pathname === createPageUrl('Engine')
+                                ? 'bg-white/[0.1] text-white' 
+                                : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
+                            }`}
+                          >
+                            <Rocket className="w-5 h-5" />
+                            <span className="font-medium">Engine</span>
+                          </Link>
+
+                      <Link
+                            to={createPageUrl('Admin')}
+                            onClick={() => setDrawerOpen(false)}
+                            className={`mt-1 w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
                               location.pathname === createPageUrl('Admin')
                                 ? 'bg-white/[0.1] text-white' 
                                 : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
