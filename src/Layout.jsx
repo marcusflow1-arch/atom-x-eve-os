@@ -983,7 +983,6 @@ function LayoutContent({ children, currentPageName }) {
                            ap.includes('/aibattle') ? 'Atom X Eve AI Battle' :
                            ap.includes('/leaderboard') ? 'Atom X Eve Leaderboard' :
                            ap.includes('/seasonalpass') ? 'Atom X Eve Season Pass' :
-                           ap.includes('/engine') ? 'Atom X Eve Engine' :
                            'Atom X Eve Cards'}
                         </span>
 
