@@ -61,6 +61,10 @@ export default function Engine() {
               <Button size="sm" variant={leftPanel === 'tools' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('tools'); setLeftCollapsed(false); }} className="h-7 text-[10px]">
                 <Wrench className="w-3 h-3 mr-1" /> Tools
               </Button>
+              <Button size="sm" variant={leftPanel === 'unreal' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('unreal'); setLeftCollapsed(false); }}
+                className={`h-7 text-[10px] ${leftPanel === 'unreal' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}>
+                <Unplug className="w-3 h-3 mr-1" /> Unreal
+              </Button>
               <div className="w-px h-5 bg-white/10 mx-0.5" />
               <Button size="sm" variant={!rightCollapsed ? 'default' : 'ghost'} onClick={() => setRightCollapsed(!rightCollapsed)} className="h-7 text-[10px]">
                 <Brain className="w-3 h-3 mr-1" /> Knowledge
