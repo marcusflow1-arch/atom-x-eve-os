@@ -327,8 +327,18 @@ function LayoutContent({ children, currentPageName }) {
     try {
       const saved = localStorage.getItem('nav_order');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.filter(id => id !== 'entertainment' && id !== 'settings');
+        let parsed = JSON.parse(saved);
+        parsed = parsed.filter(id => id !== 'entertainment' && id !== 'settings');
+        // Ensure 'cards' is included (may be missing from older saved orders)
+        if (!parsed.includes('cards')) {
+          const forumIdx = parsed.indexOf('forum');
+          if (forumIdx !== -1) {
+            parsed.splice(forumIdx + 1, 0, 'cards');
+          } else {
+            parsed.push('cards');
+          }
+        }
+        return parsed;
       }
     } catch(e) {}
     return ['home', 'library', 'clan', 'forum', 'cards', 'aura'];
