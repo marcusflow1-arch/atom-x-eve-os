@@ -314,15 +314,19 @@ export default function AssetPackImporter() {
       try {
         let file_url;
 
-        if (source === 'zip' && file.zipEntry) {
+        if (source === 'folder' && file.rawFileIndex !== undefined) {
+          // Direct folder upload — use the raw File object
+          const rawFile = rawFilesRef.current[file.rawFileIndex];
+          if (!rawFile) { errors.push({ file: file.name, error: 'File reference lost' }); continue; }
+          const result = await base44.integrations.Core.UploadFile({ file: rawFile });
+          file_url = result.file_url;
+        } else if (source === 'zip' && file.zipEntry) {
           // Extract from ZIP and upload
           const blob = await file.zipEntry.async('blob');
           const uploadFile = new File([blob], file.name, { type: 'application/octet-stream' });
           const result = await base44.integrations.Core.UploadFile({ file: uploadFile });
           file_url = result.file_url;
         } else if (source === 'rar' && file.content) {
-          // RAR: content is text — for binary files like FBX this won't work well
-          // We need the raw binary. For now, upload the content as-is
           const blob = new Blob([file.content], { type: 'application/octet-stream' });
           const uploadFile = new File([blob], file.name, { type: 'application/octet-stream' });
           const result = await base44.integrations.Core.UploadFile({ file: uploadFile });
