@@ -418,6 +418,15 @@ function LayoutContent({ children, currentPageName }) {
             Entertainment
           </button>
         );
+      case 'cards':
+        return (
+          <button
+            onClick={() => navigate(createPageUrl('GenreMastery'))}
+            className={btnClass(location.pathname.toLowerCase().includes('/genremastery'))}
+          >
+            Cards
+          </button>
+        );
       case 'aura':
         return (
           <button
