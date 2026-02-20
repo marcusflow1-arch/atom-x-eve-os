@@ -592,6 +592,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                 <div className="flex-shrink-0">
                   {z.status === 'queued' && <Archive className="w-5 h-5 text-slate-500" />}
                   {z.status === 'needs_file' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
+                  {z.status === 'resumable_rar' && <RefreshCw className="w-5 h-5 text-cyan-400 animate-spin" />}
                   {z.status === 'extracting' && <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />}
                   {z.status === 'analyzing' && <Brain className="w-5 h-5 text-orange-400 animate-pulse" />}
                   {z.status === 'done' && <CheckCircle2 className="w-5 h-5 text-green-400" />}
