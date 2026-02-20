@@ -196,47 +196,59 @@ export default function Model3DManager() {
     },
   });
 
+  const singleInputRef = useRef(null);
+  const [uploadError, setUploadError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState('');
+
   // 1. Single File Upload
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset the input so the same file can be re-selected
+    if (singleInputRef.current) singleInputRef.current.value = '';
+
+    const fileName = file.name.toLowerCase();
+    const fileExtension = fileName.slice(fileName.lastIndexOf('.'));
     const validExtensions = ['.glb', '.gltf', '.fbx', '.zip'];
-    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
     
     if (!validExtensions.includes(fileExtension)) {
-      alert('Please upload a GLB, GLTF, FBX, or ZIP file');
+      setUploadError(`Invalid file type "${fileExtension}". Please upload a .glb, .gltf, .fbx, or .zip file.`);
       return;
     }
 
+    setUploadError(null);
     setUploading(true);
+    setUploadProgress('Uploading file...');
+    
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
-      // Auto-Detect Info
-      let finalFileUrl = file_url;
-      let finalFileType = fileExtension.replace('.', '');
-      
-      // ZIP Processing Logic (If your backend supports it)
-      if (fileExtension === '.zip') {
-         // Logic to trigger unzip cloud function would go here
-         // For now, we assume raw storage
+      if (!file_url) {
+        throw new Error('Upload returned no URL. The file may be too large or unsupported.');
       }
 
+      setUploadProgress('Saving to library...');
+
+      let finalFileType = fileExtension.replace('.', '');
+
       await createMutation.mutateAsync({
-        name: newModel.name || file.name,
+        name: newModel.name || file.name.replace(/\.[^/.]+$/, ''),
         description: newModel.description,
-        file_url: finalFileUrl,
+        file_url: file_url,
         file_type: finalFileType,
         category: newModel.category || 'uncategorized',
         tags: newModel.tags,
         file_size: file.size,
         is_public: false
       });
+
+      setUploadProgress('');
       
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Upload failed. Please try again.');
+      setUploadError(`Upload failed: ${error?.message || 'Unknown error'}. Please try again.`);
+      setUploadProgress('');
     } finally {
       setUploading(false);
     }
