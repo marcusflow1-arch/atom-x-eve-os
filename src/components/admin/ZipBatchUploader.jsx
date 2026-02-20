@@ -477,6 +477,26 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
         )}
       </div>
 
+      {/* Auto-Resume Banner — RAR files already on server, resuming automatically */}
+      {resumableRarCount > 0 && !isProcessing && (
+        <div className="mb-4 rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 text-green-400 flex-shrink-0 animate-spin" />
+              <div>
+                <p className="text-white font-semibold text-xs">Auto-resuming {resumableRarCount} archive(s)</p>
+                <p className="text-green-300/60 text-[11px] mt-0.5">
+                  These files were already uploaded to the server — resuming extraction automatically.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" variant="ghost" onClick={clearQueue} className="text-slate-400 hover:text-white text-xs h-7">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Resume Banner — shown when items exist from a previous session that need files re-selected */}
       {needsFileCount > 0 && !isProcessing && (
         <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
