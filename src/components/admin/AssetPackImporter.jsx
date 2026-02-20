@@ -108,6 +108,7 @@ async function loadJSZip() {
 
 export default function AssetPackImporter() {
   const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
   const [phase, setPhase] = useState('idle'); // idle, scanning, review, importing, done
   const [packName, setPackName] = useState('');
   const [scanResults, setScanResults] = useState(null); // { categories, fileList, raw }
@@ -116,6 +117,7 @@ export default function AssetPackImporter() {
   const [reclassifications, setReclassifications] = useState({}); // fileIndex -> newCategory
   const [selectedFile, setSelectedFile] = useState(null);
   const zipDataRef = useRef(null); // holds the JSZip instance for extraction during import
+  const rawFilesRef = useRef([]); // holds raw File objects for folder upload
 
   // Toggle a category expansion
   const toggleCategory = (cat) => {
@@ -127,7 +129,7 @@ export default function AssetPackImporter() {
     setReclassifications(prev => ({ ...prev, [fileIndex]: newCategory }));
   };
 
-  // ─── SCAN Phase ────────────────────────────
+  // ─── SCAN Phase: Archive ────────────────────────────
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -157,6 +159,45 @@ export default function AssetPackImporter() {
     }
 
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // ─── SCAN Phase: Folder ────────────────────────────
+  const handleFolderSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Derive pack name from the first file's root folder
+    const firstPath = files[0].webkitRelativePath || files[0].name;
+    const rootFolder = firstPath.split('/')[0] || 'Imported';
+    setPackName(rootFolder);
+    setPhase('scanning');
+    setScanResults(null);
+    setReclassifications({});
+
+    const fileList = [];
+    const rawFiles = [];
+
+    for (const f of files) {
+      const relativePath = f.webkitRelativePath || f.name;
+      if (shouldSkipFile(relativePath)) continue;
+      const category = classifyAsset(relativePath);
+      rawFiles.push(f);
+      fileList.push({
+        path: relativePath,
+        name: f.name,
+        size: f.size || 0,
+        category,
+        group: extractGroupName(relativePath, rootFolder),
+        rawFileIndex: rawFiles.length - 1, // index into rawFilesRef
+      });
+    }
+
+    rawFilesRef.current = rawFiles;
+    const categories = buildCategories(fileList);
+    setScanResults({ categories, fileList, source: 'folder' });
+    setPhase('review');
+
+    if (folderInputRef.current) folderInputRef.current.value = '';
   };
 
   const scanZipFile = async (file, name) => {
