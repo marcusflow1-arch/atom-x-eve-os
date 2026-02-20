@@ -10,6 +10,7 @@ import GameStudyPanel from '../components/engine/GameStudyPanel';
 import KnowledgeConnectionPanel from '../components/engine/KnowledgeConnectionPanel';
 import EngineAIChat from '../components/engine/EngineAIChat';
 import BlueprintPanel from '../components/engine/BlueprintPanel';
+import UnrealBridgePanel from '../components/engine/UnrealBridgePanel';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 
