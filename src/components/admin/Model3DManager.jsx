@@ -418,6 +418,17 @@ export default function Model3DManager() {
         <p className="text-xs text-slate-500 mt-2 text-center">
             Use "Upload Folder" if your model has separate texture files (.png, .jpg) alongside the .gltf/.fbx file.
         </p>
+
+        {/* Upload Error Display */}
+        {uploadError && (
+          <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex items-start gap-2">
+            <span className="text-red-400 mt-0.5">⚠️</span>
+            <div>
+              <p>{uploadError}</p>
+              <button onClick={() => setUploadError(null)} className="text-xs text-red-400/60 hover:text-red-300 mt-1 underline">Dismiss</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search */}
