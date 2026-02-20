@@ -379,7 +379,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
   };
 
   const processAllZips = useCallback(async () => {
-    const pending = zipQueue.filter(z => z.status === 'queued' && z.file);
+    const pending = zipQueue.filter(z => (z.status === 'queued' && z.file) || (z.status === 'resumable_rar' && z.uploadedUrl));
     if (pending.length === 0) return;
 
     setIsProcessing(true);
