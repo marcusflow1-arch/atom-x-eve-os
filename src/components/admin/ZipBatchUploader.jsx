@@ -277,21 +277,14 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     return { items, fileCount };
   };
 
-  const processRarFile = async (zipItem, newStats) => {
+  // Shared RAR extraction logic — works with either a file_url (already uploaded) or by uploading zipItem.file
+  const extractRarFromUrl = async (zipItem, file_url, newStats) => {
     setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
-
-    console.log(`[RAR] Uploading ${zipItem.name} (${(zipItem.size / (1024*1024)).toFixed(1)} MB)...`);
-
-    const { file_url } = await base44.integrations.Core.UploadFile({ file: zipItem.file });
-    console.log(`[RAR] Uploaded to: ${file_url}`);
-
-    // Persist the uploaded URL so we can resume if page refreshes after upload
-    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, uploadedUrl: file_url } : z));
 
     let result;
     try {
       const { extractRarArchive } = await import('@/functions/extractRarArchive');
-      console.log('[RAR] Calling extractRarArchive backend...');
+      console.log('[RAR] Calling extractRarArchive backend with URL:', file_url);
       const response = await extractRarArchive({ file_url });
       result = response?.data || response;
     } catch (apiErr) {
@@ -308,8 +301,10 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     const files = result.files || [];
     const fileCount = files.length;
     setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'analyzing', fileCount } : z));
-    newStats.totalFiles += fileCount;
-    setStats({ ...newStats });
+    if (newStats) {
+      newStats.totalFiles += fileCount;
+      setStats({ ...newStats });
+    }
 
     const items = files.map(f => ({
       id: Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '_' + (f.path || '').split('/').pop(),
@@ -323,6 +318,64 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     })).filter(f => f.size >= 5);
 
     return { items, fileCount };
+  };
+
+  const processRarFile = async (zipItem, newStats) => {
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
+
+    console.log(`[RAR] Uploading ${zipItem.name} (${(zipItem.size / (1024*1024)).toFixed(1)} MB)...`);
+
+    const { file_url } = await base44.integrations.Core.UploadFile({ file: zipItem.file });
+    console.log(`[RAR] Uploaded to: ${file_url}`);
+
+    // Persist the uploaded URL so we can resume if page refreshes after upload
+    setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, uploadedUrl: file_url } : z));
+
+    return extractRarFromUrl(zipItem, file_url, newStats);
+  };
+
+  // Auto-resume RAR files that were already uploaded to the server before a refresh
+  const processResumableRars = async (resumableItems) => {
+    if (isProcessing || resumableItems.length === 0) return;
+    
+    setIsProcessing(true);
+    console.log(`[ZipUploader] Resuming ${resumableItems.length} RAR(s) from server...`);
+    
+    const newStats = { ...stats, totalZips: stats.totalZips || resumableItems.length };
+    
+    for (const zipItem of resumableItems) {
+      setCurrentZip(zipItem.id);
+      try {
+        const { items, fileCount } = await extractRarFromUrl(zipItem, zipItem.uploadedUrl, newStats);
+        
+        if (items.length === 0) {
+          setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount: 0, enqueuedCount: 0, error: 'No extractable text files in this part' } : z));
+          newStats.processedZips = (newStats.processedZips || 0) + 1;
+          setStats({ ...newStats });
+          continue;
+        }
+        
+        const folderLabel = zipItem.name.replace(/\.(zip|rar|7z|tar|gz)$/i, '');
+        const { added, dupes } = await enqueueFiles(items, folderLabel);
+        
+        newStats.enqueuedFiles = (newStats.enqueuedFiles || 0) + added;
+        newStats.skippedFiles = (newStats.skippedFiles || 0) + dupes;
+        newStats.processedZips = (newStats.processedZips || 0) + 1;
+        setStats({ ...newStats });
+        
+        setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount, enqueuedCount: added } : z));
+      } catch (err) {
+        console.error(`[ZipUploader] Resume failed for ${zipItem.name}:`, err);
+        newStats.processedZips = (newStats.processedZips || 0) + 1;
+        setStats({ ...newStats });
+        setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'failed', error: err.message || 'Resume failed' } : z));
+      }
+    }
+    
+    setCurrentZip(null);
+    setIsProcessing(false);
+    if (onRefreshKnowledge) onRefreshKnowledge();
+    showSuccess(`Resumed & finished ${resumableItems.length} archive(s) from previous session`);
   };
 
   const processAllZips = useCallback(async () => {
