@@ -2416,6 +2416,8 @@ export default function LunaTemplate() {
   return (
     <PageErrorBoundary pageName="LunaTemplate">
     <GlassPageFrame>
+    {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
+    <CombatXPHandler />
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
