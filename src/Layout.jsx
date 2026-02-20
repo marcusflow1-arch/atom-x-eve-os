@@ -1022,7 +1022,7 @@ function LayoutContent({ children, currentPageName }) {
                             <Radio className="w-4 h-4" /> Aura
                           </button>
 
-a
+                          <a
                             href="https://discord.gg/awFvGxC5"
                             target="_blank"
                             rel="noopener noreferrer"
