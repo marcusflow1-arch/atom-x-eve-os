@@ -1042,6 +1042,11 @@ function LayoutContent({ children, currentPageName }) {
                             if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
                             if (pp.includes('/discover')) return 'Atom X Eve Discover';
                             if (pp.includes('/aistory')) return 'Atom X Eve AI Story';
+                            if (pp.includes('/library')) return 'Atom X Eve Library';
+                            if (pp.includes('/genremastery')) return 'Atom X Eve Cards';
+                            if (pp.includes('/aibattle')) return 'Atom X Eve AI Battle';
+                            if (pp.includes('/leaderboard')) return 'Atom X Eve Leaderboard';
+                            if (pp.includes('/streaminghome')) return 'Atom X Eve Aura Home';
                             return 'Atom X Eve Dashboard';
                           })()}
                         </span>
