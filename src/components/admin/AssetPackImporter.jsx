@@ -383,6 +383,7 @@ export default function AssetPackImporter() {
     setReclassifications({});
     setPackName('');
     zipDataRef.current = null;
+    rawFilesRef.current = [];
   };
 
   // Get effective category for a file
