@@ -317,6 +317,15 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         if (child.isMesh) {
           child.receiveShadow = true;
           child.castShadow = true;
+          // Sanitize materials to prevent null shader errors
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          mats.forEach((m, i) => {
+            if (!m || m.type === 'ShaderMaterial' && (!m.vertexShader || !m.fragmentShader)) {
+              const arr = Array.isArray(child.material) ? child.material : null;
+              const replacement = new THREE.MeshStandardMaterial({ color: 0x888888 });
+              if (arr) { arr[i] = replacement; } else { child.material = replacement; }
+            }
+          });
         }
       });
 
