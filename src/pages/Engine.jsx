@@ -17,7 +17,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 export default function Engine() {
   const navigate = useNavigate();
   const [sceneApi, setSceneApi] = useState(null);
-  const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints'
+  const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints' | 'unreal'
   const [rightPanel, setRightPanel] = useState('knowledge'); // 'knowledge'
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(true); // Start collapsed — AI chat is the primary interface
