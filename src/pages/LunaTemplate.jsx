@@ -1329,6 +1329,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
                   }
                   ai.deathTimer = DEATH_LINGER_S;
                   console.log(`[Combat] ${ai.assetName} KILLED!`);
+
+                  // --- GRANT XP ON KILL ---
+                  const XP_REWARD = 40;
+                  window.dispatchEvent(new CustomEvent('combatXPReward', {
+                    detail: { xp: XP_REWARD, genre: 'Action', source: ai.assetName || 'Enemy', position: ai.modelMesh.position.clone() }
+                  }));
+                  console.log(`[Combat] Awarded ${XP_REWARD} XP for killing ${ai.assetName}`);
                 } else {
                   // --- HIT REACTION ---
                   ai.aiState = 'hit';
