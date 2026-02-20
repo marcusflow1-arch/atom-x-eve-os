@@ -126,9 +126,20 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     }
   }, [zipQueue, stats]);
 
-  // Check for items that were already uploaded but not yet extracted (resumable)
+  // Auto-resume RAR files that were already uploaded to the server (survives refresh)
+  useEffect(() => {
+    if (autoResumeTriggered.current) return;
+    const resumableRars = zipQueue.filter(z => z.status === 'resumable_rar' && z.uploadedUrl);
+    if (resumableRars.length > 0 && !isProcessing) {
+      autoResumeTriggered.current = true;
+      console.log(`[ZipUploader] Auto-resuming ${resumableRars.length} RAR(s) that are already on the server...`);
+      // Small delay so the UI renders first
+      setTimeout(() => processResumableRars(resumableRars), 1500);
+    }
+  }, []);
+
   const needsFileReselect = zipQueue.some(z => z.status === 'needs_file' && !z.file);
-  const hasResumableItems = zipQueue.some(z => z.status === 'queued' && z.file);
+  const resumableRarCount = zipQueue.filter(z => z.status === 'resumable_rar' && z.uploadedUrl).length;
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || []);
