@@ -959,6 +959,10 @@ export default function Admin() {
             <ReactorEditor />
           </TabsContent>
 
+          <TabsContent value="asset-pack">
+            <AssetPackImporter />
+          </TabsContent>
+
                     </Tabs>
       </div>
     </div>
