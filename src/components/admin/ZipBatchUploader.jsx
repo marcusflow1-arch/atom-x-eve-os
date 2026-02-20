@@ -401,10 +401,13 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
       setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'extracting' } : z));
 
       try {
-        const ext = (zipItem.file?.name || '').split('.').pop()?.toLowerCase();
+        const ext = (zipItem.file?.name || zipItem.name || '').split('.').pop()?.toLowerCase();
         let items, fileCount;
 
-        if (ext === 'rar') {
+        if (zipItem.status === 'resumable_rar' && zipItem.uploadedUrl) {
+          // Already uploaded to server — just re-extract
+          ({ items, fileCount } = await extractRarFromUrl(zipItem, zipItem.uploadedUrl, newStats));
+        } else if (ext === 'rar') {
           ({ items, fileCount } = await processRarFile(zipItem, newStats));
           if (items.length === 0) {
             setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount: 0, enqueuedCount: 0, error: 'No extractable text files in this part' } : z));
@@ -414,6 +417,13 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
           }
         } else {
           ({ items, fileCount } = await processZipFile(zipItem, JSZip, newStats));
+        }
+        
+        if (items.length === 0 && zipItem.status === 'resumable_rar') {
+          setZipQueue(prev => prev.map(z => z.id === zipItem.id ? { ...z, status: 'done', fileCount: 0, enqueuedCount: 0, error: 'No extractable text files in this part' } : z));
+          newStats.processedZips += 1;
+          setStats({ ...newStats });
+          continue;
         }
 
         const folderLabel = zipItem.name.replace(/\.(zip|rar|7z|tar|gz)$/i, '');
