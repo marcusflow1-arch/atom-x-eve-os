@@ -294,11 +294,11 @@ function LayoutContent({ children, currentPageName }) {
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
   const p_lower = location.pathname.toLowerCase();
-  // Achievements header takes priority for these routes (no duplicates)
-  const showAchievementsHeader = ['/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle', '/leaderboard', '/seasonalpass'].some(s => p_lower.includes(s));
-  const showStoreHeader = !showAchievementsHeader && ['/store', '/gamedetail'].some(s => p_lower.includes(s));
-  const showNotificationsHeader = !showAchievementsHeader && !showStoreHeader && p_lower.includes('/notifications');
-  const showLunaHeaderBar = !showAchievementsHeader && !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/blacksmith','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory']
+  // Store header for store/gamedetail pages (kept separate as user likes it)
+  const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
+  const showNotificationsHeader = !showStoreHeader && p_lower.includes('/notifications');
+  // Luna header bar used for most pages including Library, Aura, Cards, AI Battle, etc.
+  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/blacksmith','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
   .some(s => p_lower.includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
