@@ -629,7 +629,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                 </div>
 
                 {/* Actions */}
-                {(z.status === 'queued' || z.status === 'needs_file') && !isProcessing && (
+                {(z.status === 'queued' || z.status === 'needs_file' || z.status === 'resumable_rar') && !isProcessing && (
                   <Button size="icon" variant="ghost" onClick={() => removeFromQueue(z.id)} className="h-7 w-7 text-slate-500 hover:text-red-400">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
