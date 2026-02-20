@@ -331,7 +331,7 @@ function LayoutContent({ children, currentPageName }) {
         return parsed.filter(id => id !== 'entertainment' && id !== 'settings');
       }
     } catch(e) {}
-    return ['home', 'library', 'clan', 'forum', 'aura'];
+    return ['home', 'library', 'clan', 'forum', 'cards', 'aura'];
   });
 
   const onNavDragEnd = (result) => {
