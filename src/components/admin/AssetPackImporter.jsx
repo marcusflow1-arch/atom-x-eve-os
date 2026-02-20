@@ -426,7 +426,7 @@ export default function AssetPackImporter() {
         )}
       </div>
 
-      {/* ─── IDLE: File Picker ────────────────────────── */}
+      {/* ─── IDLE: File / Folder Picker ────────────────────────── */}
       {phase === 'idle' && (
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.03] p-8">
           <input
@@ -436,19 +436,45 @@ export default function AssetPackImporter() {
             onChange={handleFileSelect}
             className="hidden"
           />
-          <div
-            className="border-2 border-dashed border-violet-500/25 hover:border-violet-400/50 rounded-xl p-12 text-center transition-all cursor-pointer group"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Package className="w-16 h-16 text-violet-400/40 mx-auto mb-4 group-hover:text-violet-300 transition-colors" />
-            <p className="text-white font-bold text-lg mb-2">Drop your asset pack here</p>
-            <p className="text-slate-400 text-sm max-w-lg mx-auto">
-              Upload a .zip or .rar containing character models, animations, textures, and more.
-              The importer will scan the archive, classify each file, and route animations to FBX Animations
-              and models to 3D Models — each in their own folder.
-            </p>
-            <p className="text-slate-500 text-xs mt-3">Supports large files (5GB+). ZIP is processed locally, RAR is uploaded then extracted on the server.</p>
+          <input
+            ref={folderInputRef}
+            type="file"
+            webkitdirectory=""
+            directory=""
+            multiple
+            onChange={handleFolderSelect}
+            className="hidden"
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Folder upload */}
+            <div
+              className="border-2 border-dashed border-violet-500/25 hover:border-violet-400/50 rounded-xl p-10 text-center transition-all cursor-pointer group"
+              onClick={() => folderInputRef.current?.click()}
+            >
+              <FolderOpen className="w-14 h-14 text-violet-400/40 mx-auto mb-3 group-hover:text-violet-300 transition-colors" />
+              <p className="text-white font-bold text-base mb-1">Drop a Folder</p>
+              <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                Select a folder containing models, animations, textures, etc. Files are uploaded directly — no zipping needed.
+              </p>
+            </div>
+
+            {/* Archive upload */}
+            <div
+              className="border-2 border-dashed border-slate-600/40 hover:border-violet-400/50 rounded-xl p-10 text-center transition-all cursor-pointer group"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Package className="w-14 h-14 text-slate-500/40 mx-auto mb-3 group-hover:text-violet-300 transition-colors" />
+              <p className="text-white font-bold text-base mb-1">Upload an Archive</p>
+              <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                Upload a .zip or .rar archive. ZIP is extracted locally, RAR is uploaded then extracted on the server.
+              </p>
+            </div>
           </div>
+
+          <p className="text-slate-500 text-xs mt-4 text-center">
+            The importer scans the contents, classifies each file, and routes animations to FBX Animations and models to 3D Models — each in their own folder.
+          </p>
         </div>
       )}
 
