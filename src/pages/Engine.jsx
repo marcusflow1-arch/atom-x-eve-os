@@ -78,7 +78,7 @@ export default function Engine() {
             {!leftCollapsed && (
               <div
                 className="h-full border-r border-white/10 flex-shrink-0 overflow-hidden"
-                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: leftPanel === 'ai' ? 380 : 320 }}
+                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: (leftPanel === 'ai' || leftPanel === 'unreal') ? 380 : 320 }}
               >
                 <div className="h-full flex flex-col">
                   {leftPanel === 'ai' ? (
@@ -87,6 +87,8 @@ export default function Engine() {
                     <BlueprintPanel />
                   ) : leftPanel === 'study' ? (
                     <GameStudyPanel />
+                  ) : leftPanel === 'unreal' ? (
+                    <UnrealBridgePanel />
                   ) : (
                     <div className="p-3">
                       <EngineToolbar sceneApi={sceneApi} />
