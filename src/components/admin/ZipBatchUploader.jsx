@@ -92,16 +92,21 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
   const fileInputRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentZip, setCurrentZip] = useState(null);
+  const autoResumeTriggered = useRef(false);
 
   // Restore persisted state on mount
   const [zipQueue, setZipQueue] = useState(() => {
     const saved = _loadUploaderState();
     if (saved?.queue?.length > 0) {
-      // Mark any "in-progress" items as "queued" so they can be retried
       return saved.queue.map(z => ({
         ...z,
         file: null, // File objects can't be persisted — will need re-selection
-        status: (z.status === 'extracting' || z.status === 'analyzing') ? 'needs_file' : z.status,
+        // RAR files that were already uploaded to the server CAN be auto-resumed
+        status: z.status === 'done' ? 'done'
+          : z.status === 'failed' ? 'failed'
+          : z.uploadedUrl ? 'resumable_rar'  // server has the file, can re-extract
+          : (z.status === 'extracting' || z.status === 'analyzing') ? 'needs_file'
+          : z.status,
       }));
     }
     return [];
