@@ -295,7 +295,7 @@ function LayoutContent({ children, currentPageName }) {
   const [pendingRoute, setPendingRoute] = useState(null);
   const p_lower = location.pathname.toLowerCase();
   // Achievements header takes priority for these routes (no duplicates)
-  const showAchievementsHeader = ['/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle', '/leaderboard', '/seasonalpass', '/engine'].some(s => p_lower.includes(s));
+  const showAchievementsHeader = ['/library', '/genremastery', '/aura', '/streaminghome', '/discover', '/aibattle', '/leaderboard', '/seasonalpass'].some(s => p_lower.includes(s));
   const showStoreHeader = !showAchievementsHeader && ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showAchievementsHeader && !showStoreHeader && p_lower.includes('/notifications');
   const showLunaHeaderBar = !showAchievementsHeader && !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/blacksmith','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory']
