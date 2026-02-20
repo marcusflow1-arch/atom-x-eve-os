@@ -21,6 +21,7 @@ import ExpProgressionAdmin from '../components/admin/ExpProgressionAdmin';
 import GameFileAnalyzer from '../components/admin/GameFileAnalyzer';
 import InfrastructurePanel from '../components/admin/InfrastructurePanel';
 import ReactorEditor from '../components/admin/ReactorEditor';
+import AssetPackImporter from '../components/admin/AssetPackImporter';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
