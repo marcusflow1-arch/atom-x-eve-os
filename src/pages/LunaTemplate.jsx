@@ -1081,7 +1081,19 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         modelMesh.lookAt(playerModel.position.clone().setY(modelMesh.position.y));
 
         modelMesh.traverse(child => {
-          if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            // Sanitize materials to prevent null shader errors
+            const mats = Array.isArray(child.material) ? child.material : [child.material];
+            mats.forEach((m, i) => {
+              if (!m || m.type === 'ShaderMaterial' && (!m.vertexShader || !m.fragmentShader)) {
+                const arr = Array.isArray(child.material) ? child.material : null;
+                const replacement = new THREE.MeshStandardMaterial({ color: 0x888888 });
+                if (arr) { arr[i] = replacement; } else { child.material = replacement; }
+              }
+            });
+          }
         });
 
         sceneRef.current.add(modelMesh);
