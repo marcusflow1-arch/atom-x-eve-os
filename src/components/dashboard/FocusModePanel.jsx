@@ -1780,15 +1780,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 <AIAttributesBox />
               </div>
 
-             {/* Knowledge Learner Settings Panel */}
-             <div className="mt-1 rounded-xl overflow-hidden border border-white/10" style={{
-               background: 'rgba(100, 120, 140, 0.08)',
-               backdropFilter: 'blur(20px) saturate(150%)',
-               WebkitBackdropFilter: 'blur(20px) saturate(150%)',
-               maxHeight: '500px',
-             }}>
-               <KnowledgeLearnerPanel />
-             </div>
+
              </div>
         </div>
       </div>
