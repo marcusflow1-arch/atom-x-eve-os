@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight, Bot, Sparkles, MessageSquare } from 'lucide-react';
+import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight, Bot, Sparkles, MessageSquare, Unplug } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
