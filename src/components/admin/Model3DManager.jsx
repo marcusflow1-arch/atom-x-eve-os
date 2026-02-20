@@ -370,20 +370,20 @@ export default function Model3DManager() {
             {/* Single File Button */}
             <input
                 type="file"
-                accept=".glb,.gltf,.fbx,.zip"
+                accept=".glb,.gltf,.fbx,.zip,model/gltf-binary,model/gltf+json"
                 onChange={handleFileUpload}
                 className="hidden"
                 disabled={uploading}
-                ref={(el) => (window.__model3d_single_input = el)}
+                ref={singleInputRef}
             />
             <Button 
                 disabled={uploading}
                 className="w-full bg-purple-600 hover:bg-purple-700 h-12"
-                onClick={() => window.__model3d_single_input?.click()}
+                onClick={() => singleInputRef.current?.click()}
             >
                 {uploading ? (
                 <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> {uploadProgress || 'Uploading...'}
                 </>
                 ) : (
                 <>
