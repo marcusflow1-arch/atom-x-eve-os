@@ -613,6 +613,9 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                     {z.status === 'needs_file' && (
                       <span className="text-amber-400 text-xs">Re-select this file to resume</span>
                     )}
+                    {z.status === 'resumable_rar' && (
+                      <span className="text-cyan-400 text-xs">On server — will auto-resume</span>
+                    )}
                     {z.status === 'extracting' && (
                       <span className="text-orange-400 text-xs">Extracting files...</span>
                     )}
