@@ -1260,6 +1260,74 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           // Default: tap
           if (sequenceLockRef.current) return;
           playSequence(matchedKeybind.animationSequence, matchedKeybind);
+
+          // --- HIT DETECTION: Check if this keybind is an attack (e.g. kick on KeyR) ---
+          // If the keybind's label or animation name suggests an attack, run combat hit detection
+          const isAttackKeybind = (matchedKeybind.label || '').toLowerCase().match(/kick|attack|punch|strike|slash|hit/) ||
+            matchedKeybind.animationSequence.some(a => (a.animationName || '').toLowerCase().match(/kick|attack|punch|strike|slash|melee/));
+
+          if (isAttackKeybind) {
+            const isYBotLocal = activeCharacterRef.current === 'ybot';
+            const currentActiveModel = isYBotLocal ? model : c1ModelRef.current;
+            if (currentActiveModel) {
+              const KICK_DAMAGE = 1;
+              const HIT_RANGE = 2.0;
+              const IMPACT_DELAY_MS = 200;
+              const DEATH_LINGER_S = 2.0;
+
+              setTimeout(() => {
+                if (!currentActiveModel) return;
+                const playerForward = new THREE.Vector3();
+                currentActiveModel.getWorldDirection(playerForward);
+
+                spawnedAIModelsRef.current.forEach(ai => {
+                  if (!ai.isAlive) return;
+                  if (ai.hitCooldown > 0) return;
+                  if (ai.role === 'companion') return;
+                  const dist = currentActiveModel.position.distanceTo(ai.modelMesh.position);
+                  if (dist > HIT_RANGE) return;
+                  const toEnemy = ai.modelMesh.position.clone().sub(currentActiveModel.position).normalize();
+                  const dot = playerForward.dot(toEnemy);
+                  if (dot < 0.3) return;
+
+                  ai.currentHP -= KICK_DAMAGE;
+                  ai.hitCooldown = 0.5;
+                  console.log(`[Combat] Hit ${ai.assetName} (${ai.instanceId}) for ${KICK_DAMAGE} dmg. HP: ${ai.currentHP}/${ai.maxHP}`);
+
+                  if (ai.currentHP <= 0) {
+                    ai.isAlive = false;
+                    ai.aiState = 'death';
+                    ai.mixer.stopAllAction();
+                    if (ai.actions['death']) {
+                      const deathAction = ai.actions['death'];
+                      deathAction.setLoop(THREE.LoopOnce, 1);
+                      deathAction.clampWhenFinished = true;
+                      deathAction.reset().fadeIn(0.15).play();
+                      ai.activeAction = deathAction;
+                    }
+                    ai.deathTimer = DEATH_LINGER_S;
+                    console.log(`[Combat] ${ai.assetName} KILLED!`);
+                    const XP_REWARD = 40;
+                    window.dispatchEvent(new CustomEvent('combatXPReward', {
+                      detail: { xp: XP_REWARD, genre: 'Action', source: ai.assetName || 'Enemy', position: ai.modelMesh.position.clone() }
+                    }));
+                    console.log(`[Combat] Awarded ${XP_REWARD} XP for killing ${ai.assetName}`);
+                  } else {
+                    ai.aiState = 'hit';
+                    if (ai.actions['hit']) {
+                      ai.mixer.stopAllAction();
+                      const hitAction = ai.actions['hit'];
+                      hitAction.setLoop(THREE.LoopOnce, 1);
+                      hitAction.clampWhenFinished = true;
+                      hitAction.reset().fadeIn(0.1).play();
+                      ai.activeAction = hitAction;
+                    }
+                    ai.hitReactTimer = 0.5;
+                  }
+                });
+              }, IMPACT_DELAY_MS);
+            }
+          }
           return;
         }
 
