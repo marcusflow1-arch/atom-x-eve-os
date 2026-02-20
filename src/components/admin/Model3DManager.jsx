@@ -304,7 +304,7 @@ export default function Model3DManager() {
 
     } catch (error) {
       console.error('Folder upload failed:', error);
-      alert('Folder upload failed.');
+      setUploadError(`Folder upload failed: ${error?.message || 'Unknown error'}. Please try again.`);
     } finally {
       setUploading(false);
     }
