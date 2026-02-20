@@ -459,6 +459,7 @@ export default function Admin() {
             <TabsTrigger value="game-files">Game Files</TabsTrigger>
             <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
             <TabsTrigger value="reactor">Reactor Editor</TabsTrigger>
+            <TabsTrigger value="asset-pack">Asset Pack Import</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
