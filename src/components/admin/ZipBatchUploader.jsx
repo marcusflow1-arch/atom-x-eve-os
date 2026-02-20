@@ -450,7 +450,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
     showSuccess(`Finished processing ${newStats.processedZips} archive(s) — ${newStats.enqueuedFiles} files queued for AI analysis`);
   }, [zipQueue, onRefreshKnowledge]);
 
-  const pendingCount = zipQueue.filter(z => z.status === 'queued' && z.file).length;
+  const pendingCount = zipQueue.filter(z => (z.status === 'queued' && z.file) || (z.status === 'resumable_rar' && z.uploadedUrl)).length;
   const needsFileCount = zipQueue.filter(z => z.status === 'needs_file').length;
   const doneCount = zipQueue.filter(z => z.status === 'done').length;
   const failedCount = zipQueue.filter(z => z.status === 'failed').length;
