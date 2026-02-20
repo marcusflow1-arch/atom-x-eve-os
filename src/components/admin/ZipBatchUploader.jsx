@@ -583,6 +583,7 @@ export default function ZipBatchUploader({ onRefreshKnowledge }) {
                   z.status === 'done' ? 'bg-green-500/5 border-green-500/20' :
                   z.status === 'failed' ? 'bg-red-500/5 border-red-500/20' :
                   z.status === 'needs_file' ? 'bg-amber-500/5 border-amber-500/20' :
+                  z.status === 'resumable_rar' ? 'bg-cyan-500/5 border-cyan-500/20' :
                   z.status === 'extracting' || z.status === 'analyzing' ? 'bg-orange-500/5 border-orange-500/20' :
                   'bg-slate-800/40 border-slate-700'
                 }`}
