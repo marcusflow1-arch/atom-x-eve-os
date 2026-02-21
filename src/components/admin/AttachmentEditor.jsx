@@ -183,7 +183,7 @@ export default function AttachmentEditor() {
   // ── Load Character ──
   useEffect(() => {
     const scene = sceneRef.current;
-    if (!scene) return;
+    if (!scene || !initDoneRef.current) return;
     if (characterRef.current) { scene.remove(characterRef.current); characterRef.current = null; }
     meshMapRef.current.forEach(mesh => { if (mesh.parent) mesh.parent.remove(mesh); });
     meshMapRef.current.clear();
