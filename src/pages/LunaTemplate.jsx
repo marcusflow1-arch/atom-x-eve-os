@@ -1557,7 +1557,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           const wc = await attachWeapon(c1, SWORD_URL, {
             backBone: 'Spine2',
             handBone: 'RightHand',
-            scale: 100,
+            scale: 50,
           });
           weaponControllerRef.current = wc;
           if (wc) {

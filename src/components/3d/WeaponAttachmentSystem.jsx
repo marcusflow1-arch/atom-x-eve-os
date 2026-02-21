@@ -89,7 +89,7 @@ export async function attachWeapon(characterModel, weaponUrl, options = {}) {
 
   // Position on back: offset slightly behind and up relative to spine
   weaponMesh.position.set(0, 15, -10); // In bone-local space (cm units for Mixamo)
-  weaponMesh.rotation.set(0, 0, Math.PI * 0.75); // Angled on back
+  weaponMesh.rotation.set(Math.PI, 0, Math.PI * 0.75); // Rotated 180 degrees (opposite direction) and angled on back
 
   spineBone.add(weaponMesh);
   console.log('[WeaponAttach] Sword attached to', spineBone.name);
@@ -107,7 +107,7 @@ export async function attachWeapon(characterModel, weaponUrl, options = {}) {
       if (isInHand || !rightHandBone) return;
       spineBone.remove(weaponMesh);
       weaponMesh.position.set(0, 5, 0);
-      weaponMesh.rotation.set(Math.PI * 0.5, 0, 0);
+      weaponMesh.rotation.set(Math.PI * 0.5, Math.PI, 0);
       rightHandBone.add(weaponMesh);
       isInHand = true;
       console.log('[WeaponAttach] Sword moved to hand:', rightHandBone.name);
@@ -118,7 +118,7 @@ export async function attachWeapon(characterModel, weaponUrl, options = {}) {
       if (!isInHand) return;
       rightHandBone.remove(weaponMesh);
       weaponMesh.position.set(0, 15, -10);
-      weaponMesh.rotation.set(0, 0, Math.PI * 0.75);
+      weaponMesh.rotation.set(Math.PI, 0, Math.PI * 0.75);
       spineBone.add(weaponMesh);
       isInHand = false;
       console.log('[WeaponAttach] Sword returned to back');
