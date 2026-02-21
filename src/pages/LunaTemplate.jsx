@@ -729,6 +729,10 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         // Update companion mixer
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
+        // Update effect mixer (for jetpack_effect GLB animations)
+        // effectControllerRef is in closure scope from C1 setup
+
+
         // Update ALL spawned AI instance mixers + run COMBAT-AWARE AI behavior
         const deadInstances = [];
         spawnedAIModelsRef.current.forEach((ai, instId) => {
