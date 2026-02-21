@@ -24,6 +24,7 @@ const FINALIZE_KEYWORDS = ['finalize', 'done', 'commit', 'execute', 'go ahead', 
  *  - onTaskCompiled: (taskSummary: string) => void — called when the user confirms the compiled task
  */
 const STORAGE_KEY_PREFIX = 'director_chat_';
+const HANDOFF_KEY = 'director_chat_handoff';
 
 function loadPersistedMessages(context) {
   try {
@@ -36,6 +37,43 @@ function persistMessages(context, messages) {
   try {
     localStorage.setItem(STORAGE_KEY_PREFIX + context, JSON.stringify(messages));
   } catch { /* storage full — ignore */ }
+}
+
+/**
+ * Writes a handoff payload to localStorage so Base44 chat can read it.
+ * The payload contains the full conversation, editor state, and a compiled summary.
+ */
+function writeHandoff(context, messages, editorState, compiledSummary) {
+  const payload = {
+    context,
+    timestamp: new Date().toISOString(),
+    editorState,
+    compiledSummary,
+    conversationLog: messages.map(m => ({
+      role: m.role,
+      text: m.text,
+      timestamp: m.timestamp,
+      hasImages: (m.images?.length || 0) > 0,
+    })),
+  };
+  try {
+    localStorage.setItem(HANDOFF_KEY, JSON.stringify(payload));
+  } catch { /* ignore */ }
+  return payload;
+}
+
+/**
+ * Read the latest handoff payload (called from outside, e.g. Base44 chat context).
+ */
+export function readDirectorHandoff() {
+  try {
+    const raw = localStorage.getItem(HANDOFF_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+export function clearDirectorHandoff() {
+  try { localStorage.removeItem(HANDOFF_KEY); } catch {}
 }
 
 export default function DirectorChat({ context = 'Editor', editorState = {}, onTaskCompiled }) {
