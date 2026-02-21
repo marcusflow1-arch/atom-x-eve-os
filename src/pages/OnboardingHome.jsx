@@ -8,6 +8,7 @@ import {
   BookOpen, Swords, Crown, Heart, Home, ShoppingBag, Library as LibraryIcon, MessageSquare, Target, Hammer
 } from 'lucide-react';
 import PageGuideCard from '@/components/onboarding/PageGuideCard';
+import VisualFeatureGuide from '@/components/onboarding/VisualFeatureGuide';
 import { Button } from '@/components/ui/button';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 
