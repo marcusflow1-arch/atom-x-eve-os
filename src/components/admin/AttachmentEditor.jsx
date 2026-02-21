@@ -88,17 +88,17 @@ export default function AttachmentEditor() {
 
   // ── Three.js Scene Setup ──
   const initDoneRef = useRef(false);
+  const [sceneReady, setSceneReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || initDoneRef.current) return;
 
-    // Defer init until container actually has size (forceMount + hidden tab issue)
     const tryInit = () => {
       const el = containerRef.current;
       if (!el) return;
       const w = el.clientWidth;
       const h = el.clientHeight;
-      if (w < 10 || h < 10) return; // Still hidden — wait
+      if (w < 10 || h < 10) return;
       initDoneRef.current = true;
 
       const scene = new THREE.Scene();
@@ -144,14 +144,12 @@ export default function AttachmentEditor() {
       };
       animate();
 
-      // Also trigger character load now that scene is ready
-      setSelectedCharacter(prev => prev);
+      // Signal that scene is ready so the character-load effect can fire
+      setSceneReady(true);
     };
 
-    // Use ResizeObserver to detect when the container becomes visible and gets a real size
     const ro = new ResizeObserver(() => {
       if (initDoneRef.current) {
-        // Already initialised → just resize
         const el = containerRef.current;
         if (!el || !cameraRef.current || !rendererRef.current) return;
         const w = el.clientWidth;
@@ -166,7 +164,6 @@ export default function AttachmentEditor() {
     });
     ro.observe(containerRef.current);
 
-    // Also attempt immediately in case it's already visible
     tryInit();
 
     return () => {
@@ -180,10 +177,12 @@ export default function AttachmentEditor() {
     };
   }, []);
 
-  // ── Load Character ──
+  // ── Load Character ── (depends on sceneReady state so it re-fires after deferred init)
   useEffect(() => {
+    if (!sceneReady) return;
     const scene = sceneRef.current;
-    if (!scene || !initDoneRef.current) return;
+    if (!scene) return;
+
     if (characterRef.current) { scene.remove(characterRef.current); characterRef.current = null; }
     meshMapRef.current.forEach(mesh => { if (mesh.parent) mesh.parent.remove(mesh); });
     meshMapRef.current.clear();
@@ -197,6 +196,8 @@ export default function AttachmentEditor() {
 
     const url = CHARACTER_URLS[selectedCharacter];
     new FBXLoader().load(url, async (fbx) => {
+      // Guard: scene may have been torn down while loading
+      if (!sceneRef.current) return;
       fbx.scale.set(0.01, 0.01, 0.01);
       fbx.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
       const bones = [];
@@ -223,7 +224,7 @@ export default function AttachmentEditor() {
       }
       setIsLoaded(true);
     });
-  }, [selectedCharacter, adminAnimations]);
+  }, [sceneReady, selectedCharacter, adminAnimations]);
 
   // ── Animation Controls ──
   const handlePlayAnimation = useCallback(() => {
