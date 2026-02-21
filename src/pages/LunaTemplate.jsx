@@ -1531,6 +1531,13 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
 
       console.log('[C1] ErikaArcher loaded and ready (hidden)');
+      
+      // Log all bones in C1 for debugging
+      const c1Bones = [];
+      c1.traverse((child) => {
+        if (child.isBone) c1Bones.push(child.name);
+      });
+      console.log('[C1] Available bones:', c1Bones);
 
       // --- WEAPON & EFFECT ATTACHMENT TO C1 ---
       const weaponControllerRef = { current: null };
