@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-        Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight,
+        Calendar as CalendarIcon, Clock, Target, ChevronLeft, ChevronRight, ChevronDown,
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
