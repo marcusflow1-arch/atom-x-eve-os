@@ -245,6 +245,26 @@ Keep responses concise but specific. Reference actual bone names, time codes, an
     }
   };
 
+  // ── Handoff: send full conversation + state to Base44 chat ──
+  const dispatchHandoff = useCallback(() => {
+    const allMsgs = [...messages];
+    const summary = compiledTask || buildPromptHistory(allMsgs);
+    const handoff = writeHandoff(context, allMsgs, editorState, summary);
+
+    if (onTaskCompiled) onTaskCompiled(summary);
+
+    // Dispatch global event so Base44 chat can auto-populate
+    window.dispatchEvent(new CustomEvent('directorTaskReady', { detail: handoff }));
+
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      text: '✅ Full conversation & editor state sent to Base44 chat. Switch to the Base44 chat and press Enter to execute.',
+      timestamp: new Date().toISOString(),
+    }]);
+    setAwaitingConfirmation(false);
+    setCompiledTask(null);
+  }, [messages, compiledTask, context, editorState, onTaskCompiled]);
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
