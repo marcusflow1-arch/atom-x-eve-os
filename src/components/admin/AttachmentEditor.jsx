@@ -1,15 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { RotateCcw, Move, Save, Eye, RefreshCw, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Move, MessageSquare, Save, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import DirectorChat from './DirectorChat';
+import AttachmentObjectPanel from './attachment/AttachmentObjectPanel';
+import { createGizmo, getGizmoHitMeshes, positionGizmo, hideGizmo } from './attachment/TransformGizmo';
+import ReactorBridge from './reactor/ReactorBridge';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+const DEFAULT_TRANSFORMS = {
+  weapon: { position: { x: 0, y: 5, z: 0 }, rotation: { x: 90, y: 180, z: 0 }, scale: 50 },
+  effect: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: 30 },
+  prop:   { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: 50 },
+};
+
+const CHARACTER_URLS = {
+  c1: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx',
+  ybot: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx',
+};
+
+let idCounter = 0;
+function newId() { return `obj_${Date.now()}_${++idCounter}`; }
 
 export default function AttachmentEditor() {
   const containerRef = useRef(null);
@@ -18,47 +34,56 @@ export default function AttachmentEditor() {
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
   const characterRef = useRef(null);
-  const attachedMeshRef = useRef(null);
   const mixerRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
-  const boneListRef = useRef([]);
+  const gizmoRef = useRef(null);
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const mouseRef = useRef(new THREE.Vector2());
+
+  // Multi-object state: each object = { id, type, label, bone, url, position, rotation, scale, visible, _mesh }
+  const [attachedObjects, setAttachedObjects] = useState([]);
+  const [selectedObjectId, setSelectedObjectId] = useState(null);
+  const meshMapRef = useRef(new Map()); // id → THREE.Object3D
 
   const [selectedCharacter, setSelectedCharacter] = useState('c1');
-  const [selectedBone, setSelectedBone] = useState('mixamorigSpine2');
   const [boneList, setBoneList] = useState([]);
-  const [attachmentUrl, setAttachmentUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/53379b78d_stylized_emerald_sword.glb');
-  const [position, setPosition] = useState({ x: 0, y: 15, z: -10 });
-  const [rotation, setRotation] = useState({ x: 180, y: 0, z: 135 });
-  const [scale, setScale] = useState(50);
   const [isLoaded, setIsLoaded] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const CHARACTER_URLS = {
-    c1: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx',
-    ybot: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx',
-  };
+  // Drag state for gizmo
+  const dragAxisRef = useRef(null);
+  const dragStartRef = useRef(null);
+  const dragObjectIdRef = useRef(null);
 
   const { data: adminAnimations = [] } = useQuery({
-    queryKey: ['adminAnimations'],
+    queryKey: ['adminAnimations-att'],
     queryFn: () => base44.entities.AnimationFBX.list(),
     staleTime: Infinity,
   });
 
-  // Initialize Three.js scene
+  const { data: fxList = [] } = useQuery({
+    queryKey: ['reactorFX-att'],
+    queryFn: () => base44.entities.ReactorFX.list('-created_date', 50),
+    staleTime: 60000,
+  });
+
+  // ── Three.js Scene Setup ──
   useEffect(() => {
     if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a2e);
+    scene.background = new THREE.Color(0x12141a);
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.01, 100);
+    const w = containerRef.current.clientWidth;
+    const h = containerRef.current.clientHeight;
+    const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 100);
     camera.position.set(0, 1, 3);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setSize(w, h);
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -67,15 +92,16 @@ export default function AttachmentEditor() {
     controls.update();
     controlsRef.current = controls;
 
-    // Lighting
     scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
     const dir = new THREE.DirectionalLight(0xffffff, 2);
     dir.position.set(5, 10, 5);
     scene.add(dir);
+    scene.add(new THREE.GridHelper(10, 20, 0x333344, 0x222233));
 
-    // Grid
-    const grid = new THREE.GridHelper(10, 20, 0x444444, 0x333333);
-    scene.add(grid);
+    // Gizmo
+    const gizmo = createGizmo();
+    scene.add(gizmo);
+    gizmoRef.current = gizmo;
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -103,264 +129,385 @@ export default function AttachmentEditor() {
     };
   }, []);
 
-  // Load character
-  const loadCharacter = async () => {
+  // ── Load Character ──
+  useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
 
-    // Remove old character
     if (characterRef.current) {
       scene.remove(characterRef.current);
       characterRef.current = null;
     }
-    if (attachedMeshRef.current) {
-      attachedMeshRef.current = null;
-    }
-
+    // Clear all attached meshes from the scene
+    meshMapRef.current.forEach(mesh => {
+      if (mesh.parent) mesh.parent.remove(mesh);
+    });
+    meshMapRef.current.clear();
+    setAttachedObjects([]);
+    setSelectedObjectId(null);
     setIsLoaded(false);
-    const url = CHARACTER_URLS[selectedCharacter];
-    const loader = new FBXLoader();
 
-    loader.load(url, async (fbx) => {
+    const url = CHARACTER_URLS[selectedCharacter];
+    new FBXLoader().load(url, async (fbx) => {
       fbx.scale.set(0.01, 0.01, 0.01);
       fbx.position.set(0, 0, 0);
+      fbx.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
 
-      fbx.traverse(child => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
-
-      // Collect bones
       const bones = [];
-      fbx.traverse(child => {
-        if (child.isBone) bones.push(child.name);
-      });
+      fbx.traverse(child => { if (child.isBone) bones.push(child.name); });
       setBoneList(bones);
-      boneListRef.current = bones;
 
       characterRef.current = fbx;
       scene.add(fbx);
 
-      // Load idle animation
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
-      
       const idleAnim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
       if (idleAnim) {
         const animFbx = await new FBXLoader().loadAsync(idleAnim.file_url);
-        if (animFbx.animations.length > 0) {
-          const action = mixer.clipAction(animFbx.animations[0]);
-          action.play();
+        if (animFbx.animations.length > 0) mixer.clipAction(animFbx.animations[0]).play();
+      }
+      setIsLoaded(true);
+    });
+  }, [selectedCharacter, adminAnimations]);
+
+  // ── Find Bone Helper ──
+  const findBone = useCallback((boneName) => {
+    if (!characterRef.current) return null;
+    let found = null;
+    characterRef.current.traverse(child => {
+      if (child.isBone && child.name === boneName) found = child;
+    });
+    return found;
+  }, []);
+
+  // ── Apply transform to a mesh ──
+  const applyTransform = useCallback((mesh, obj) => {
+    if (!mesh) return;
+    mesh.scale.setScalar(obj.scale);
+    mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
+    mesh.rotation.set(
+      (obj.rotation.x * Math.PI) / 180,
+      (obj.rotation.y * Math.PI) / 180,
+      (obj.rotation.z * Math.PI) / 180
+    );
+    mesh.visible = obj.visible !== false;
+  }, []);
+
+  // ── Load a model and attach to bone ──
+  const loadAndAttach = useCallback((obj) => {
+    if (!obj.url || !characterRef.current) return;
+    const bone = findBone(obj.bone);
+    if (!bone) return;
+
+    // Remove old mesh if exists
+    const oldMesh = meshMapRef.current.get(obj.id);
+    if (oldMesh && oldMesh.parent) oldMesh.parent.remove(oldMesh);
+
+    const lower = obj.url.toLowerCase();
+    const onLoaded = (mesh) => {
+      applyTransform(mesh, obj);
+      mesh.userData._attachId = obj.id;
+      bone.add(mesh);
+      meshMapRef.current.set(obj.id, mesh);
+    };
+
+    if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+      new GLTFLoader().load(obj.url, (gltf) => onLoaded(gltf.scene));
+    } else if (lower.endsWith('.fbx')) {
+      new FBXLoader().load(obj.url, (fbx) => onLoaded(fbx));
+    }
+  }, [findBone, applyTransform]);
+
+  // ── Sync transforms when state changes ──
+  useEffect(() => {
+    attachedObjects.forEach(obj => {
+      const mesh = meshMapRef.current.get(obj.id);
+      if (mesh) applyTransform(mesh, obj);
+    });
+    // Update gizmo position for selected object
+    if (selectedObjectId && gizmoRef.current) {
+      const mesh = meshMapRef.current.get(selectedObjectId);
+      if (mesh) {
+        const wp = new THREE.Vector3();
+        mesh.getWorldPosition(wp);
+        positionGizmo(gizmoRef.current, wp);
+      }
+    }
+  }, [attachedObjects, selectedObjectId, applyTransform]);
+
+  // ── Add Object ──
+  const handleAddObject = useCallback((type) => {
+    const defaults = DEFAULT_TRANSFORMS[type] || DEFAULT_TRANSFORMS.prop;
+    const defaultBone = type === 'weapon' ? 'mixamorigRightHand' : type === 'effect' ? 'mixamorigSpine2' : 'mixamorigHips';
+    const bone = boneList.includes(defaultBone) ? defaultBone : (boneList[0] || '');
+    const obj = {
+      id: newId(),
+      type,
+      label: '',
+      bone,
+      url: '',
+      position: { ...defaults.position },
+      rotation: { ...defaults.rotation },
+      scale: defaults.scale,
+      visible: true,
+    };
+    setAttachedObjects(prev => [...prev, obj]);
+    setSelectedObjectId(obj.id);
+  }, [boneList]);
+
+  // ── Remove Object ──
+  const handleRemoveObject = useCallback((id) => {
+    const mesh = meshMapRef.current.get(id);
+    if (mesh && mesh.parent) mesh.parent.remove(mesh);
+    meshMapRef.current.delete(id);
+    setAttachedObjects(prev => prev.filter(o => o.id !== id));
+    if (selectedObjectId === id) {
+      setSelectedObjectId(null);
+      if (gizmoRef.current) hideGizmo(gizmoRef.current);
+    }
+  }, [selectedObjectId]);
+
+  // ── Toggle Visibility ──
+  const handleToggleVisibility = useCallback((id) => {
+    setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, visible: !o.visible } : o));
+  }, []);
+
+  // ── Update Transform ──
+  const handleUpdateTransform = useCallback((id, updates) => {
+    setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
+  }, []);
+
+  // ── Change Bone ──
+  const handleChangeBone = useCallback((id, newBone) => {
+    const mesh = meshMapRef.current.get(id);
+    if (mesh && mesh.parent) mesh.parent.remove(mesh);
+    const bone = findBone(newBone);
+    if (bone && mesh) bone.add(mesh);
+    setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, bone: newBone } : o));
+  }, [findBone]);
+
+  // ── Change URL ──
+  const handleChangeUrl = useCallback((id, url) => {
+    setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, url } : o));
+  }, []);
+
+  // ── Reattach (reload model) ──
+  const handleReattach = useCallback((id) => {
+    const obj = attachedObjects.find(o => o.id === id);
+    if (obj) loadAndAttach(obj);
+  }, [attachedObjects, loadAndAttach]);
+
+  // ── Select Object ──
+  const handleSelectObject = useCallback((id) => {
+    setSelectedObjectId(id);
+    if (id && gizmoRef.current) {
+      const mesh = meshMapRef.current.get(id);
+      if (mesh) {
+        const wp = new THREE.Vector3();
+        mesh.getWorldPosition(wp);
+        positionGizmo(gizmoRef.current, wp);
+      }
+    } else if (gizmoRef.current) {
+      hideGizmo(gizmoRef.current);
+    }
+  }, []);
+
+  // ── Viewport Click: Select object or gizmo axis ──
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onPointerDown = (e) => {
+      const rect = container.getBoundingClientRect();
+      mouseRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+
+      // Check gizmo first
+      if (gizmoRef.current?.visible) {
+        const gizmoHits = getGizmoHitMeshes(gizmoRef.current);
+        const intersects = raycasterRef.current.intersectObjects(gizmoHits, false);
+        if (intersects.length > 0) {
+          const axis = intersects[0].object.userData.axis;
+          if (axis) {
+            dragAxisRef.current = axis;
+            dragStartRef.current = { x: e.clientX, y: e.clientY };
+            dragObjectIdRef.current = selectedObjectId;
+            if (controlsRef.current) controlsRef.current.enabled = false;
+            return;
+          }
         }
       }
 
-      setIsLoaded(true);
-    });
-  };
-
-  useEffect(() => {
-    if (sceneRef.current && adminAnimations.length >= 0) {
-      loadCharacter();
-    }
-  }, [selectedCharacter, adminAnimations]);
-
-  // Attach object to bone
-  const attachObject = () => {
-    if (!characterRef.current || !attachmentUrl) return;
-
-    // Remove old attached mesh
-    if (attachedMeshRef.current) {
-      const parent = attachedMeshRef.current.parent;
-      if (parent) parent.remove(attachedMeshRef.current);
-      attachedMeshRef.current = null;
-    }
-
-    // Find bone
-    let bone = null;
-    characterRef.current.traverse(child => {
-      if (child.isBone && child.name === selectedBone) bone = child;
-    });
-
-    if (!bone) {
-      alert('Bone not found: ' + selectedBone);
-      return;
-    }
-
-    const lower = attachmentUrl.toLowerCase();
-    if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
-      new GLTFLoader().load(attachmentUrl, (gltf) => {
-        const mesh = gltf.scene;
-        applyTransform(mesh);
-        bone.add(mesh);
-        attachedMeshRef.current = mesh;
+      // Check attached objects
+      const allMeshes = [];
+      meshMapRef.current.forEach((mesh, id) => {
+        mesh.traverse(child => {
+          if (child.isMesh) {
+            child.userData._attachId = id;
+            allMeshes.push(child);
+          }
+        });
       });
-    } else if (lower.endsWith('.fbx')) {
-      new FBXLoader().load(attachmentUrl, (fbx) => {
-        applyTransform(fbx);
-        bone.add(fbx);
-        attachedMeshRef.current = fbx;
+
+      const intersects = raycasterRef.current.intersectObjects(allMeshes, false);
+      if (intersects.length > 0) {
+        let objId = null;
+        let obj = intersects[0].object;
+        while (obj) {
+          if (obj.userData._attachId) { objId = obj.userData._attachId; break; }
+          obj = obj.parent;
+        }
+        if (objId) handleSelectObject(objId);
+      }
+    };
+
+    const onPointerMove = (e) => {
+      if (!dragAxisRef.current || !dragObjectIdRef.current) return;
+
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      const sensitivity = 0.15;
+
+      setAttachedObjects(prev => prev.map(o => {
+        if (o.id !== dragObjectIdRef.current) return o;
+        const pos = { ...o.position };
+        if (dragAxisRef.current === 'x') pos.x += dx * sensitivity;
+        if (dragAxisRef.current === 'y') pos.y -= dy * sensitivity;
+        if (dragAxisRef.current === 'z') pos.z += dx * sensitivity;
+        return { ...o, position: pos };
+      }));
+
+      dragStartRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const onPointerUp = () => {
+      if (dragAxisRef.current) {
+        dragAxisRef.current = null;
+        dragObjectIdRef.current = null;
+        if (controlsRef.current) controlsRef.current.enabled = true;
+      }
+    };
+
+    container.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    return () => {
+      container.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [selectedObjectId, handleSelectObject]);
+
+  // ── Publish state to ReactorBridge ──
+  useEffect(() => {
+    const effectObjects = attachedObjects.filter(o => o.type === 'effect');
+    if (effectObjects.length > 0) {
+      ReactorBridge.emit('attachmentEffectsUpdated', {
+        effects: effectObjects.map(o => ({
+          id: o.id,
+          bone: o.bone,
+          position: o.position,
+          rotation: o.rotation,
+          scale: o.scale,
+          url: o.url,
+          label: o.label,
+        })),
+        character: selectedCharacter,
       });
     }
+  }, [attachedObjects, selectedCharacter]);
+
+  // Build editor state for Director Chat
+  const editorState = {
+    character: selectedCharacter,
+    objectCount: attachedObjects.length,
+    objects: attachedObjects.map(o => ({ id: o.id, type: o.type, label: o.label, bone: o.bone, position: o.position, rotation: o.rotation, scale: o.scale })),
+    selectedObjectId,
+    boneCount: boneList.length,
+    isLoaded,
   };
-
-  const applyTransform = (mesh) => {
-    mesh.scale.setScalar(scale);
-    mesh.position.set(position.x, position.y, position.z);
-    mesh.rotation.set(
-      (rotation.x * Math.PI) / 180,
-      (rotation.y * Math.PI) / 180,
-      (rotation.z * Math.PI) / 180
-    );
-  };
-
-  // Update transform live
-  useEffect(() => {
-    if (!attachedMeshRef.current) return;
-    applyTransform(attachedMeshRef.current);
-  }, [position, rotation, scale]);
-
-  const NumberInput = ({ label, value, onChange, step = 1 }) => (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-slate-400 w-6">{label}</span>
-      <Input
-        type="number"
-        value={value}
-        step={step}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        className="bg-slate-900 border-slate-700 h-8 text-xs w-24"
-      />
-    </div>
-  );
 
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">
-        <Move className="w-6 h-6 text-cyan-500" />
-        3D Attachment Editor
-      </h2>
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-slate-400 text-sm">
-          Attach objects to character bones and adjust position, rotation, and scale in real-time.
-        </p>
-        <button
-          onClick={() => setChatOpen(!chatOpen)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-            chatOpen
-              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-              : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white'
-          }`}
-        >
-          <MessageSquare className="w-3.5 h-3.5" />
-          Director Chat
-        </button>
+    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+            <Move className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-white font-bold text-sm">3D Attachment Editor</h2>
+            <p className="text-slate-500 text-[10px]">Attach weapons, effects & props • Click objects for gizmo • Linked to Reactor Editor</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Character Selector */}
+          <div className="flex gap-1">
+            {Object.keys(CHARACTER_URLS).map(key => (
+              <Button key={key} size="sm" variant={selectedCharacter === key ? 'default' : 'outline'}
+                onClick={() => setSelectedCharacter(key)} className="h-7 text-[10px]">
+                {key === 'c1' ? 'C1 (Erika)' : 'Y-Bot'}
+              </Button>
+            ))}
+          </div>
+          <Badge variant="outline" className="text-slate-500 text-[9px]">{attachedObjects.length} objects</Badge>
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+              chatOpen ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30' : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3 h-3" /> Director Chat
+          </button>
+        </div>
       </div>
 
-      <div className="flex gap-4" style={{ height: '600px' }}>
-        {/* 3D Viewport */}
-        <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700" />
+      <div className="flex gap-3" style={{ height: '620px' }}>
+        {/* LEFT: Object Panel */}
+        <div className="w-64 flex-shrink-0 bg-slate-950/50 border border-slate-800 rounded-xl p-3 overflow-hidden flex flex-col">
+          <AttachmentObjectPanel
+            objects={attachedObjects}
+            selectedId={selectedObjectId}
+            onSelect={handleSelectObject}
+            onAdd={handleAddObject}
+            onRemove={handleRemoveObject}
+            onToggleVisibility={handleToggleVisibility}
+            onUpdateTransform={handleUpdateTransform}
+            boneList={boneList}
+            onChangeBone={handleChangeBone}
+            onChangeUrl={handleChangeUrl}
+            onReattach={handleReattach}
+          />
+        </div>
 
-        {/* Director Chat */}
+        {/* CENTER: 3D Viewport */}
+        <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700 relative">
+          {/* Selection indicator */}
+          {selectedObjectId && (
+            <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
+              Selected: {attachedObjects.find(o => o.id === selectedObjectId)?.label || selectedObjectId.slice(-6)}
+              &nbsp;— Drag gizmo axes to move
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT: Director Chat (if open) */}
         {chatOpen && (
           <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
             <DirectorChat
-              context="Attachment Editor"
-              editorState={{
-                character: selectedCharacter,
-                bone: selectedBone,
-                attachmentUrl,
-                position,
-                rotation,
-                scale,
-                isLoaded,
-                boneCount: boneList.length,
-              }}
+              context="3D Attachment Editor"
+              editorState={editorState}
               onTaskCompiled={(task) => {
                 console.log('[AttachmentEditor] Task compiled:', task);
+                // Forward to ReactorBridge so the Reactor Editor can pick it up
+                ReactorBridge.emit('attachmentTaskCompiled', { task, editorState });
               }}
             />
           </div>
         )}
-
-        {/* Controls Panel */}
-        <div className="w-80 flex-shrink-0 space-y-4 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
-          {/* Character Select */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-white">Character</h3>
-            <div className="flex gap-2">
-              {Object.keys(CHARACTER_URLS).map(key => (
-                <Button
-                  key={key}
-                  size="sm"
-                  variant={selectedCharacter === key ? 'default' : 'outline'}
-                  onClick={() => setSelectedCharacter(key)}
-                >
-                  {key === 'c1' ? 'C1 (Erika)' : 'Y-Bot'}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Bone Select */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-white">Target Bone</h3>
-            <select
-              value={selectedBone}
-              onChange={(e) => setSelectedBone(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white"
-            >
-              {boneList.map(b => (
-                <option key={b} value={b}>{b}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Attachment URL */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-white">Attachment URL</h3>
-            <Input
-              value={attachmentUrl}
-              onChange={(e) => setAttachmentUrl(e.target.value)}
-              className="bg-slate-900 border-slate-700 text-xs"
-              placeholder="GLB/FBX URL"
-            />
-            <Button size="sm" onClick={attachObject} className="w-full bg-cyan-600 hover:bg-cyan-700">
-              <Eye className="w-3 h-3 mr-2" /> Attach to Bone
-            </Button>
-          </div>
-
-          {/* Position */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-white">Position</h3>
-            <NumberInput label="X" value={position.x} onChange={(v) => setPosition(p => ({ ...p, x: v }))} />
-            <NumberInput label="Y" value={position.y} onChange={(v) => setPosition(p => ({ ...p, y: v }))} />
-            <NumberInput label="Z" value={position.z} onChange={(v) => setPosition(p => ({ ...p, z: v }))} />
-          </div>
-
-          {/* Rotation */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-white">Rotation (degrees)</h3>
-            <NumberInput label="X" value={rotation.x} onChange={(v) => setRotation(r => ({ ...r, x: v }))} step={5} />
-            <NumberInput label="Y" value={rotation.y} onChange={(v) => setRotation(r => ({ ...r, y: v }))} step={5} />
-            <NumberInput label="Z" value={rotation.z} onChange={(v) => setRotation(r => ({ ...r, z: v }))} step={5} />
-          </div>
-
-          {/* Scale */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-white">Scale</h3>
-            <NumberInput label="S" value={scale} onChange={setScale} step={5} />
-          </div>
-
-          {/* Reset */}
-          <Button variant="outline" size="sm" className="w-full" onClick={() => {
-            setPosition({ x: 0, y: 15, z: -10 });
-            setRotation({ x: 180, y: 0, z: 135 });
-            setScale(50);
-          }}>
-            <RotateCcw className="w-3 h-3 mr-2" /> Reset Transform
-          </Button>
-        </div>
       </div>
     </div>
   );
