@@ -7,6 +7,7 @@ import DirectorChat from './DirectorChat';
 import AttachmentObjectPanel from './attachment/AttachmentObjectPanel';
 import AssetPickerModal from './attachment/AssetPickerModal';
 import AnimationTimebar from './attachment/AnimationTimebar';
+import AttachmentConfigManager from './attachment/AttachmentConfigManager';
 import { createGizmo, getGizmoHitMeshes, positionGizmo, hideGizmo } from './attachment/TransformGizmo';
 import ReactorBridge from './reactor/ReactorBridge';
 import DirectorBridge from './DirectorBridge';
@@ -648,18 +649,48 @@ export default function AttachmentEditor() {
             />
           </div>
 
-          {/* RIGHT: Director Chat */}
-          {chatOpen && (
-            <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
-              <DirectorChat
+          {/* RIGHT: Config Manager + Director Chat */}
+          <div className={`${chatOpen ? 'w-80' : 'w-64'} flex-shrink-0 rounded-xl overflow-hidden border border-slate-700 flex flex-col`}>
+            {/* Attachment Config Manager — always visible */}
+            <div className="p-3 border-b border-slate-700 bg-slate-950/50 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              <AttachmentConfigManager
+                currentObject={attachedObjects.find(o => o.id === selectedObjectId)}
+                currentAnimation={currentAnimName}
+                animTime={animTime}
+                characterId={selectedCharacter}
+                characterName={selectedCharacter === 'c1' ? 'C1 (Erika)' : 'Y-Bot'}
+                onLoadConfig={(cfg) => {
+                  // Apply loaded config to the matching object, or create hint
+                  const matching = attachedObjects.find(o => o.label === cfg.object_label);
+                  if (matching) {
+                    handleUpdateTransform(matching.id, {
+                      bone: cfg.bone_name,
+                      position: cfg.position || { x: 0, y: 0, z: 0 },
+                      rotation: cfg.rotation || { x: 0, y: 0, z: 0 },
+                      scale: cfg.scale || 50,
+                    });
+                    if (cfg.bone_name !== matching.bone) {
+                      handleChangeBone(matching.id, cfg.bone_name);
+                    }
+                    handleSelectObject(matching.id);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Director Chat — conditional */}
+            {chatOpen && (
+              <div className="flex-1 min-h-0">
+                <DirectorChat
                 context="3D Attachment Editor"
                 editorState={editorState}
                 onTaskCompiled={(task) => {
                   ReactorBridge.emit('attachmentTaskCompiled', { task, editorState });
                 }}
               />
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
