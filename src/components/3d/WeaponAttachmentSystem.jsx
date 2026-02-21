@@ -19,12 +19,18 @@ const fbxLoader = new FBXLoader();
 function findBone(root, partialName) {
   let found = null;
   const lower = partialName.toLowerCase();
+  const allBones = [];
   root.traverse((child) => {
-    if (found) return;
-    if (child.isBone && child.name.toLowerCase().includes(lower)) {
-      found = child;
+    if (child.isBone) {
+      allBones.push(child.name);
+      if (!found && child.name.toLowerCase().includes(lower)) {
+        found = child;
+      }
     }
   });
+  if (!found) {
+    console.warn(`[findBone] Bone "${partialName}" not found. Available bones:`, allBones.slice(0, 20));
+  }
   return found;
 }
 
