@@ -1880,6 +1880,79 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     };
   }, [adminAnimations, keybinds, spawnableAIModels]);
 
+  // --- IDLE CYCLE LISTENER (Moved to Top Level) ---
+  useEffect(() => {
+    if (!isModelLoaded) return; // Only attach listeners when model is ready
+    
+    const mixer = mixerRef.current;
+    const c1Mixer = c1MixerRef.current;
+    const idleVariations = ['standing idle 01', 'standing idle 02 looking', 'standing idle 03 examine', 'standing idle 04'];
+    
+    const handleIdleFinish = (e) => {
+        // Check if we are in "idle state" (not moving, grounded, weapon equipped)
+        const isMoving = keysPressed.current['w'] || keysPressed.current['a'] || keysPressed.current['s'] || keysPressed.current['d'];
+        if (isMoving || !isGroundedRef.current || !equippedWeaponUrl) return;
+        if (sequenceLockRef.current) return; // Don't interrupt sequence
+        
+        // Find which animation finished
+        const action = e.action;
+        const currentName = currentActionNameRef.current.toLowerCase();
+        
+        if (idleVariations.includes(currentName)) {
+          // Find next
+          let idx = idleVariations.indexOf(currentName);
+          let nextName = idleVariations[(idx + 1) % idleVariations.length];
+          
+          // Verify availability in CURRENT active character actions
+          const isYBot = activeCharacterRef.current === 'ybot';
+          const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
+          
+          // Try to find the next available animation
+          let attempts = 0;
+          while (!actions[nextName] && attempts < idleVariations.length) {
+              idx = (idx + 1) % idleVariations.length;
+              nextName = idleVariations[idx];
+              attempts++;
+          }
+          
+          if (actions[nextName]) {
+              console.log(`[Idle Cycle] ${currentName} finished -> playing ${nextName}`);
+              // Configure to play once
+              const nextAction = actions[nextName];
+              nextAction.setLoop(THREE.LoopOnce, 1);
+              nextAction.clampWhenFinished = true;
+              
+              // Play without fade for snap, or small fade
+              const activeRef = isYBot ? activeActionRef : c1ActiveActionRef;
+              if (activeRef.current) activeRef.current.fadeOut(0.2);
+              nextAction.reset().fadeIn(0.2).play();
+              
+              activeRef.current = nextAction;
+              currentActionNameRef.current = nextName;
+          } else {
+              // Fallback to standard idle if none found
+              const actions = activeCharacterRef.current === 'ybot' ? actionsRef.current : c1ActionsRef.current;
+              const activeRef = activeCharacterRef.current === 'ybot' ? activeActionRef : c1ActiveActionRef;
+              const idle = actions['idle'];
+              if (idle) {
+                  if (activeRef.current) activeRef.current.fadeOut(0.2);
+                  idle.reset().fadeIn(0.2).play();
+                  activeRef.current = idle;
+                  currentActionNameRef.current = 'idle';
+              }
+          }
+        }
+    };
+
+    if (mixer) mixer.addEventListener('finished', handleIdleFinish);
+    if (c1Mixer) c1Mixer.addEventListener('finished', handleIdleFinish);
+    
+    return () => {
+        if (mixer) mixer.removeEventListener('finished', handleIdleFinish);
+        if (c1Mixer) c1Mixer.removeEventListener('finished', handleIdleFinish);
+    };
+  }, [equippedWeaponUrl, isModelLoaded]); // Re-bind when weapon state or loaded state changes
+
   return (
     <div ref={containerRef} className="w-full h-full relative">
       {/* Active Character Indicator */}
