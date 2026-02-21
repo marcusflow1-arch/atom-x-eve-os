@@ -195,28 +195,7 @@ INSTRUCTIONS:
           isCompiled: true,
         }]);
       } else if (awaitingConfirmation && ['yes', 'confirm', 'proceed', 'go', 'do it', 'yes continue', 'continue'].some(kw => text.toLowerCase().includes(kw))) {
-        // User confirmed — dispatch the compiled task
-        if (compiledTask && onTaskCompiled) {
-          onTaskCompiled(compiledTask);
-        }
-        
-        // Also dispatch global event for main chat
-        window.dispatchEvent(new CustomEvent('directorTaskReady', {
-          detail: {
-            context,
-            task: compiledTask,
-            editorState,
-            timestamp: new Date().toISOString(),
-          }
-        }));
-
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          text: '✅ Task sent to Base44 chat for execution. You can review and approve the actions there.',
-          timestamp: new Date().toISOString(),
-        }]);
-        setAwaitingConfirmation(false);
-        setCompiledTask(null);
+        dispatchHandoff();
       } else {
         // Normal conversation — analyze screenshots and respond
         const history = buildPromptHistory(messages.slice(-10)); // Last 10 messages for context
