@@ -87,67 +87,95 @@ export default function AttachmentEditor() {
   });
 
   // ── Three.js Scene Setup ──
+  const initDoneRef = useRef(false);
+
   useEffect(() => {
-    if (!containerRef.current) return;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x12141a);
-    sceneRef.current = scene;
+    if (!containerRef.current || initDoneRef.current) return;
 
-    const w = containerRef.current.clientWidth;
-    const h = containerRef.current.clientHeight;
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 100);
-    camera.position.set(0, 1, 3);
-    cameraRef.current = camera;
+    // Defer init until container actually has size (forceMount + hidden tab issue)
+    const tryInit = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (w < 10 || h < 10) return; // Still hidden — wait
+      initDoneRef.current = true;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(w, h);
-    containerRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x12141a);
+      sceneRef.current = scene;
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 0.8, 0);
-    controls.update();
-    controlsRef.current = controls;
+      const camera = new THREE.PerspectiveCamera(50, w / h, 0.01, 100);
+      camera.position.set(0, 1, 3);
+      cameraRef.current = camera;
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
-    const dir = new THREE.DirectionalLight(0xffffff, 2);
-    dir.position.set(5, 10, 5);
-    scene.add(dir);
-    scene.add(new THREE.GridHelper(10, 20, 0x333344, 0x222233));
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(w, h);
+      el.appendChild(renderer.domElement);
+      rendererRef.current = renderer;
 
-    const gizmo = createGizmo();
-    scene.add(gizmo);
-    gizmoRef.current = gizmo;
-
-    const animate = () => {
-      requestAnimationFrame(animate);
-      const delta = clockRef.current.getDelta();
-      if (mixerRef.current) {
-        mixerRef.current.update(delta);
-        // Update timeline time readout
-        if (currentActionRef.current && currentActionRef.current.isRunning()) {
-          setAnimTime(currentActionRef.current.time);
-        }
-      }
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 0.8, 0);
       controls.update();
-      renderer.render(scene, camera);
-    };
-    animate();
+      controlsRef.current = controls;
 
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.5));
+      const dir = new THREE.DirectionalLight(0xffffff, 2);
+      dir.position.set(5, 10, 5);
+      scene.add(dir);
+      scene.add(new THREE.GridHelper(10, 20, 0x333344, 0x222233));
+
+      const gizmo = createGizmo();
+      scene.add(gizmo);
+      gizmoRef.current = gizmo;
+
+      const animate = () => {
+        requestAnimationFrame(animate);
+        const delta = clockRef.current.getDelta();
+        if (mixerRef.current) {
+          mixerRef.current.update(delta);
+          if (currentActionRef.current && currentActionRef.current.isRunning()) {
+            setAnimTime(currentActionRef.current.time);
+          }
+        }
+        controls.update();
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      // Also trigger character load now that scene is ready
+      setSelectedCharacter(prev => prev);
     };
-    window.addEventListener('resize', handleResize);
+
+    // Use ResizeObserver to detect when the container becomes visible and gets a real size
+    const ro = new ResizeObserver(() => {
+      if (initDoneRef.current) {
+        // Already initialised → just resize
+        const el = containerRef.current;
+        if (!el || !cameraRef.current || !rendererRef.current) return;
+        const w = el.clientWidth;
+        const h = el.clientHeight;
+        if (w < 10 || h < 10) return;
+        cameraRef.current.aspect = w / h;
+        cameraRef.current.updateProjectionMatrix();
+        rendererRef.current.setSize(w, h);
+      } else {
+        tryInit();
+      }
+    });
+    ro.observe(containerRef.current);
+
+    // Also attempt immediately in case it's already visible
+    tryInit();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      renderer.dispose();
-      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
-        containerRef.current.removeChild(renderer.domElement);
+      ro.disconnect();
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+        if (containerRef.current && rendererRef.current.domElement.parentNode === containerRef.current) {
+          containerRef.current.removeChild(rendererRef.current.domElement);
+        }
       }
     };
   }, []);
