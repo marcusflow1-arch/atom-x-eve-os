@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Move, Save, Eye, RefreshCw } from 'lucide-react';
+import { RotateCcw, Move, Save, Eye, RefreshCw, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import DirectorChat from './DirectorChat';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
@@ -30,6 +31,7 @@ export default function AttachmentEditor() {
   const [rotation, setRotation] = useState({ x: 180, y: 0, z: 135 });
   const [scale, setScale] = useState(50);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const CHARACTER_URLS = {
     c1: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx',
@@ -238,13 +240,48 @@ export default function AttachmentEditor() {
         <Move className="w-6 h-6 text-cyan-500" />
         3D Attachment Editor
       </h2>
-      <p className="text-slate-400 text-sm mb-6">
-        Attach objects to character bones and adjust position, rotation, and scale in real-time.
-      </p>
+      <div className="flex items-center justify-between mb-6">
+        <p className="text-slate-400 text-sm">
+          Attach objects to character bones and adjust position, rotation, and scale in real-time.
+        </p>
+        <button
+          onClick={() => setChatOpen(!chatOpen)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+            chatOpen
+              ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+              : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          Director Chat
+        </button>
+      </div>
 
       <div className="flex gap-4" style={{ height: '600px' }}>
         {/* 3D Viewport */}
         <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700" />
+
+        {/* Director Chat */}
+        {chatOpen && (
+          <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
+            <DirectorChat
+              context="Attachment Editor"
+              editorState={{
+                character: selectedCharacter,
+                bone: selectedBone,
+                attachmentUrl,
+                position,
+                rotation,
+                scale,
+                isLoaded,
+                boneCount: boneList.length,
+              }}
+              onTaskCompiled={(task) => {
+                console.log('[AttachmentEditor] Task compiled:', task);
+              }}
+            />
+          </div>
+        )}
 
         {/* Controls Panel */}
         <div className="w-80 flex-shrink-0 space-y-4 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
