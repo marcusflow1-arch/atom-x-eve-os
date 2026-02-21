@@ -398,7 +398,9 @@ export default function AttachmentEditor() {
     } else if (gizmoRef.current) { hideGizmo(gizmoRef.current); }
   }, []);
 
-  // ── Viewport Click: gizmo or object ──
+  // ── Viewport Interaction ──
+  // Left-click drag = translate (move) on gizmo axes or free-move (X/Y screen-space)
+  // Right-click drag = rotate 360° (Y from horizontal, X from vertical)
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -409,6 +411,23 @@ export default function AttachmentEditor() {
       mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
 
+      const isRightClick = e.button === 2;
+      const isLeftClick = e.button === 0;
+
+      // Right-click on viewport with a selected object → start rotate drag
+      if (isRightClick && selectedObjectId) {
+        dragAxisRef.current = 'free';
+        dragModeRef.current = 'rotate';
+        dragStartRef.current = { x: e.clientX, y: e.clientY };
+        dragObjectIdRef.current = selectedObjectId;
+        if (controlsRef.current) controlsRef.current.enabled = false;
+        e.preventDefault();
+        return;
+      }
+
+      if (!isLeftClick) return;
+
+      // Left-click: check gizmo arrows first (translate only)
       if (gizmoRef.current?.visible) {
         const gizmoHits = getGizmoHitMeshes(gizmoRef.current);
         const intersects = raycasterRef.current.intersectObjects(gizmoHits, false);
@@ -416,7 +435,8 @@ export default function AttachmentEditor() {
           const hit = intersects[0].object.userData;
           if (hit.axis) {
             dragAxisRef.current = hit.axis;
-            dragModeRef.current = hit.mode || 'translate';
+            // Left-click on arrows = translate, on rings/center = translate too (rotation is right-click only now)
+            dragModeRef.current = 'translate';
             dragStartRef.current = { x: e.clientX, y: e.clientY };
             dragObjectIdRef.current = selectedObjectId;
             if (controlsRef.current) controlsRef.current.enabled = false;
@@ -425,6 +445,7 @@ export default function AttachmentEditor() {
         }
       }
 
+      // Left-click on an attached mesh → select it
       const allMeshes = [];
       meshMapRef.current.forEach((mesh, id) => {
         mesh.traverse(child => { if (child.isMesh) { child.userData._attachId = id; allMeshes.push(child); } });
@@ -444,31 +465,37 @@ export default function AttachmentEditor() {
       const dy = e.clientY - dragStartRef.current.y;
 
       if (dragModeRef.current === 'rotate') {
-        // Rotation mode: drag updates rotation in degrees
-        const rotSensitivity = 0.5;
+        // Full 360° rotation: horizontal mouse → Y rotation, vertical mouse → X rotation
+        const rotSensitivity = 0.6;
         setAttachedObjects(prev => prev.map(o => {
           if (o.id !== dragObjectIdRef.current) return o;
           const rot = { ...o.rotation };
           const axis = dragAxisRef.current;
-          if (axis === 'x') rot.x += dy * rotSensitivity;
-          else if (axis === 'y') rot.y += dx * rotSensitivity;
-          else if (axis === 'z') rot.z += dx * rotSensitivity;
-          else if (axis === 'free') {
-            // Free rotate: horizontal → Y, vertical → X
+          if (axis === 'x') { rot.x += dy * rotSensitivity; }
+          else if (axis === 'y') { rot.y += dx * rotSensitivity; }
+          else if (axis === 'z') { rot.z += dx * rotSensitivity; }
+          else {
+            // free rotate (right-click anywhere)
             rot.y += dx * rotSensitivity;
             rot.x += dy * rotSensitivity;
           }
           return { ...o, rotation: rot };
         }));
       } else {
-        // Translate mode
+        // Translate: axis-constrained or free screen-space
         const posSensitivity = 0.15;
         setAttachedObjects(prev => prev.map(o => {
           if (o.id !== dragObjectIdRef.current) return o;
           const pos = { ...o.position };
-          if (dragAxisRef.current === 'x') pos.x += dx * posSensitivity;
-          if (dragAxisRef.current === 'y') pos.y -= dy * posSensitivity;
-          if (dragAxisRef.current === 'z') pos.z += dx * posSensitivity;
+          const axis = dragAxisRef.current;
+          if (axis === 'x') pos.x += dx * posSensitivity;
+          else if (axis === 'y') pos.y -= dy * posSensitivity;
+          else if (axis === 'z') pos.z += dx * posSensitivity;
+          else if (axis === 'free') {
+            // Free translate: horizontal → X, vertical → Y
+            pos.x += dx * posSensitivity;
+            pos.y -= dy * posSensitivity;
+          }
           return { ...o, position: pos };
         }));
       }
@@ -484,11 +511,16 @@ export default function AttachmentEditor() {
       }
     };
 
+    // Prevent browser context menu on right-click in viewport
+    const onContextMenu = (e) => { e.preventDefault(); };
+
     container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
     return () => {
       container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
     };
