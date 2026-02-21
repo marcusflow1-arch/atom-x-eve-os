@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Move, MessageSquare, Save, FolderOpen } from 'lucide-react';
+import { Move, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AnimatePresence } from 'framer-motion';
 import DirectorChat from './DirectorChat';
 import AttachmentObjectPanel from './attachment/AttachmentObjectPanel';
+import AssetPickerModal from './attachment/AssetPickerModal';
+import AnimationTimebar from './attachment/AnimationTimebar';
 import { createGizmo, getGizmoHitMeshes, positionGizmo, hideGizmo } from './attachment/TransformGizmo';
 import ReactorBridge from './reactor/ReactorBridge';
 import { base44 } from '@/api/base44Client';
@@ -14,9 +17,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const DEFAULT_TRANSFORMS = {
-  weapon: { position: { x: 0, y: 5, z: 0 }, rotation: { x: 90, y: 180, z: 0 }, scale: 50 },
+  object: { position: { x: 0, y: 5, z: 0 }, rotation: { x: 90, y: 180, z: 0 }, scale: 50 },
   effect: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: 30 },
-  prop:   { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: 50 },
 };
 
 const CHARACTER_URLS = {
@@ -39,38 +41,53 @@ export default function AttachmentEditor() {
   const gizmoRef = useRef(null);
   const raycasterRef = useRef(new THREE.Raycaster());
   const mouseRef = useRef(new THREE.Vector2());
+  const currentActionRef = useRef(null);
 
-  // Multi-object state: each object = { id, type, label, bone, url, position, rotation, scale, visible, _mesh }
   const [attachedObjects, setAttachedObjects] = useState([]);
   const [selectedObjectId, setSelectedObjectId] = useState(null);
-  const meshMapRef = useRef(new Map()); // id → THREE.Object3D
+  const meshMapRef = useRef(new Map());
 
   const [selectedCharacter, setSelectedCharacter] = useState('c1');
   const [boneList, setBoneList] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
-  // Drag state for gizmo
+  // Asset picker
+  const [pickerOpen, setPickerOpen] = useState(null); // null | 'object' | 'effect'
+
+  // Animation timeline
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [animTime, setAnimTime] = useState(0);
+  const [animDuration, setAnimDuration] = useState(0);
+  const [currentAnimName, setCurrentAnimName] = useState('');
+
+  // Gizmo drag
   const dragAxisRef = useRef(null);
   const dragStartRef = useRef(null);
   const dragObjectIdRef = useRef(null);
 
+  // ── Data Queries ──
   const { data: adminAnimations = [] } = useQuery({
     queryKey: ['adminAnimations-att'],
-    queryFn: () => base44.entities.AnimationFBX.list(),
+    queryFn: () => base44.entities.AnimationFBX.list('-created_date', 200),
     staleTime: Infinity,
   });
 
   const { data: fxList = [] } = useQuery({
     queryKey: ['reactorFX-att'],
-    queryFn: () => base44.entities.ReactorFX.list('-created_date', 50),
+    queryFn: () => base44.entities.ReactorFX.list('-created_date', 100),
+    staleTime: 60000,
+  });
+
+  const { data: models3d = [] } = useQuery({
+    queryKey: ['models3d-att'],
+    queryFn: () => base44.entities.Model3D.list('-created_date', 100),
     staleTime: 60000,
   });
 
   // ── Three.js Scene Setup ──
   useEffect(() => {
     if (!containerRef.current) return;
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x12141a);
     sceneRef.current = scene;
@@ -98,7 +115,6 @@ export default function AttachmentEditor() {
     scene.add(dir);
     scene.add(new THREE.GridHelper(10, 20, 0x333344, 0x222233));
 
-    // Gizmo
     const gizmo = createGizmo();
     scene.add(gizmo);
     gizmoRef.current = gizmo;
@@ -106,7 +122,13 @@ export default function AttachmentEditor() {
     const animate = () => {
       requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
-      if (mixerRef.current) mixerRef.current.update(delta);
+      if (mixerRef.current) {
+        mixerRef.current.update(delta);
+        // Update timeline time readout
+        if (currentActionRef.current && currentActionRef.current.isRunning()) {
+          setAnimTime(currentActionRef.current.time);
+        }
+      }
       controls.update();
       renderer.render(scene, camera);
     };
@@ -133,74 +155,111 @@ export default function AttachmentEditor() {
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
-
-    if (characterRef.current) {
-      scene.remove(characterRef.current);
-      characterRef.current = null;
-    }
-    // Clear all attached meshes from the scene
-    meshMapRef.current.forEach(mesh => {
-      if (mesh.parent) mesh.parent.remove(mesh);
-    });
+    if (characterRef.current) { scene.remove(characterRef.current); characterRef.current = null; }
+    meshMapRef.current.forEach(mesh => { if (mesh.parent) mesh.parent.remove(mesh); });
     meshMapRef.current.clear();
     setAttachedObjects([]);
     setSelectedObjectId(null);
     setIsLoaded(false);
+    setAnimTime(0);
+    setAnimDuration(0);
+    setCurrentAnimName('');
+    currentActionRef.current = null;
 
     const url = CHARACTER_URLS[selectedCharacter];
     new FBXLoader().load(url, async (fbx) => {
       fbx.scale.set(0.01, 0.01, 0.01);
-      fbx.position.set(0, 0, 0);
       fbx.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
-
       const bones = [];
       fbx.traverse(child => { if (child.isBone) bones.push(child.name); });
       setBoneList(bones);
-
       characterRef.current = fbx;
       scene.add(fbx);
 
       const mixer = new THREE.AnimationMixer(fbx);
       mixerRef.current = mixer;
+
       const idleAnim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
       if (idleAnim) {
         const animFbx = await new FBXLoader().loadAsync(idleAnim.file_url);
-        if (animFbx.animations.length > 0) mixer.clipAction(animFbx.animations[0]).play();
+        if (animFbx.animations.length > 0) {
+          const clip = animFbx.animations[0];
+          const action = mixer.clipAction(clip);
+          action.play();
+          currentActionRef.current = action;
+          setAnimDuration(clip.duration);
+          setCurrentAnimName(idleAnim.name);
+          setIsPlaying(true);
+        }
       }
       setIsLoaded(true);
     });
   }, [selectedCharacter, adminAnimations]);
 
-  // ── Find Bone Helper ──
+  // ── Animation Controls ──
+  const handlePlayAnimation = useCallback(() => {
+    if (currentActionRef.current) {
+      currentActionRef.current.paused = false;
+      setIsPlaying(true);
+    }
+  }, []);
+
+  const handlePauseAnimation = useCallback(() => {
+    if (currentActionRef.current) {
+      currentActionRef.current.paused = true;
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const handleScrubAnimation = useCallback((time) => {
+    if (currentActionRef.current && mixerRef.current) {
+      currentActionRef.current.paused = true;
+      currentActionRef.current.time = time;
+      mixerRef.current.update(0);
+      setAnimTime(time);
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const handleSelectAnimation = useCallback(async (anim) => {
+    if (!characterRef.current || !mixerRef.current) return;
+    const mixer = mixerRef.current;
+    mixer.stopAllAction();
+    currentActionRef.current = null;
+
+    const animFbx = await new FBXLoader().loadAsync(anim.file_url);
+    if (animFbx.animations.length > 0) {
+      const clip = animFbx.animations[0];
+      const action = mixer.clipAction(clip);
+      action.play();
+      currentActionRef.current = action;
+      setAnimDuration(clip.duration);
+      setCurrentAnimName(anim.name);
+      setAnimTime(0);
+      setIsPlaying(true);
+    }
+  }, []);
+
+  // ── Helpers ──
   const findBone = useCallback((boneName) => {
     if (!characterRef.current) return null;
     let found = null;
-    characterRef.current.traverse(child => {
-      if (child.isBone && child.name === boneName) found = child;
-    });
+    characterRef.current.traverse(child => { if (child.isBone && child.name === boneName) found = child; });
     return found;
   }, []);
 
-  // ── Apply transform to a mesh ──
   const applyTransform = useCallback((mesh, obj) => {
     if (!mesh) return;
     mesh.scale.setScalar(obj.scale);
     mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
-    mesh.rotation.set(
-      (obj.rotation.x * Math.PI) / 180,
-      (obj.rotation.y * Math.PI) / 180,
-      (obj.rotation.z * Math.PI) / 180
-    );
+    mesh.rotation.set((obj.rotation.x * Math.PI) / 180, (obj.rotation.y * Math.PI) / 180, (obj.rotation.z * Math.PI) / 180);
     mesh.visible = obj.visible !== false;
   }, []);
 
-  // ── Load a model and attach to bone ──
   const loadAndAttach = useCallback((obj) => {
     if (!obj.url || !characterRef.current) return;
     const bone = findBone(obj.bone);
     if (!bone) return;
-
-    // Remove old mesh if exists
     const oldMesh = meshMapRef.current.get(obj.id);
     if (oldMesh && oldMesh.parent) oldMesh.parent.remove(oldMesh);
 
@@ -219,13 +278,12 @@ export default function AttachmentEditor() {
     }
   }, [findBone, applyTransform]);
 
-  // ── Sync transforms when state changes ──
+  // ── Sync transforms ──
   useEffect(() => {
     attachedObjects.forEach(obj => {
       const mesh = meshMapRef.current.get(obj.id);
       if (mesh) applyTransform(mesh, obj);
     });
-    // Update gizmo position for selected object
     if (selectedObjectId && gizmoRef.current) {
       const mesh = meshMapRef.current.get(selectedObjectId);
       if (mesh) {
@@ -236,17 +294,20 @@ export default function AttachmentEditor() {
     }
   }, [attachedObjects, selectedObjectId, applyTransform]);
 
-  // ── Add Object ──
-  const handleAddObject = useCallback((type) => {
-    const defaults = DEFAULT_TRANSFORMS[type] || DEFAULT_TRANSFORMS.prop;
-    const defaultBone = type === 'weapon' ? 'mixamorigRightHand' : type === 'effect' ? 'mixamorigSpine2' : 'mixamorigHips';
+  // ── Add from Asset Picker ──
+  const handleAssetSelected = useCallback((asset) => {
+    const type = asset.type === 'effect' ? 'effect' : 'object';
+    const defaults = DEFAULT_TRANSFORMS[type];
+    const defaultBone = type === 'object' ? 'mixamorigRightHand' : 'mixamorigSpine2';
     const bone = boneList.includes(defaultBone) ? defaultBone : (boneList[0] || '');
     const obj = {
       id: newId(),
       type,
-      label: '',
+      label: asset.name || '',
       bone,
-      url: '',
+      url: asset.url || '',
+      sourceId: asset.sourceId,
+      sourceType: asset.sourceType,
       position: { ...defaults.position },
       rotation: { ...defaults.rotation },
       scale: defaults.scale,
@@ -254,31 +315,31 @@ export default function AttachmentEditor() {
     };
     setAttachedObjects(prev => [...prev, obj]);
     setSelectedObjectId(obj.id);
-  }, [boneList]);
+    setPickerOpen(null);
 
-  // ── Remove Object ──
+    // Auto-load if URL is present
+    if (obj.url) {
+      setTimeout(() => loadAndAttach(obj), 100);
+    }
+  }, [boneList, loadAndAttach]);
+
+  // ── Remove / Toggle / Update / ChangeBone / ChangeUrl / Reattach ──
   const handleRemoveObject = useCallback((id) => {
     const mesh = meshMapRef.current.get(id);
     if (mesh && mesh.parent) mesh.parent.remove(mesh);
     meshMapRef.current.delete(id);
     setAttachedObjects(prev => prev.filter(o => o.id !== id));
-    if (selectedObjectId === id) {
-      setSelectedObjectId(null);
-      if (gizmoRef.current) hideGizmo(gizmoRef.current);
-    }
+    if (selectedObjectId === id) { setSelectedObjectId(null); if (gizmoRef.current) hideGizmo(gizmoRef.current); }
   }, [selectedObjectId]);
 
-  // ── Toggle Visibility ──
   const handleToggleVisibility = useCallback((id) => {
     setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, visible: !o.visible } : o));
   }, []);
 
-  // ── Update Transform ──
   const handleUpdateTransform = useCallback((id, updates) => {
     setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, ...updates } : o));
   }, []);
 
-  // ── Change Bone ──
   const handleChangeBone = useCallback((id, newBone) => {
     const mesh = meshMapRef.current.get(id);
     if (mesh && mesh.parent) mesh.parent.remove(mesh);
@@ -287,18 +348,15 @@ export default function AttachmentEditor() {
     setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, bone: newBone } : o));
   }, [findBone]);
 
-  // ── Change URL ──
   const handleChangeUrl = useCallback((id, url) => {
     setAttachedObjects(prev => prev.map(o => o.id === id ? { ...o, url } : o));
   }, []);
 
-  // ── Reattach (reload model) ──
   const handleReattach = useCallback((id) => {
     const obj = attachedObjects.find(o => o.id === id);
     if (obj) loadAndAttach(obj);
   }, [attachedObjects, loadAndAttach]);
 
-  // ── Select Object ──
   const handleSelectObject = useCallback((id) => {
     setSelectedObjectId(id);
     if (id && gizmoRef.current) {
@@ -308,12 +366,10 @@ export default function AttachmentEditor() {
         mesh.getWorldPosition(wp);
         positionGizmo(gizmoRef.current, wp);
       }
-    } else if (gizmoRef.current) {
-      hideGizmo(gizmoRef.current);
-    }
+    } else if (gizmoRef.current) { hideGizmo(gizmoRef.current); }
   }, []);
 
-  // ── Viewport Click: Select object or gizmo axis ──
+  // ── Viewport Click: gizmo or object ──
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -322,10 +378,8 @@ export default function AttachmentEditor() {
       const rect = container.getBoundingClientRect();
       mouseRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
 
-      // Check gizmo first
       if (gizmoRef.current?.visible) {
         const gizmoHits = getGizmoHitMeshes(gizmoRef.current);
         const intersects = raycasterRef.current.intersectObjects(gizmoHits, false);
@@ -341,36 +395,24 @@ export default function AttachmentEditor() {
         }
       }
 
-      // Check attached objects
       const allMeshes = [];
       meshMapRef.current.forEach((mesh, id) => {
-        mesh.traverse(child => {
-          if (child.isMesh) {
-            child.userData._attachId = id;
-            allMeshes.push(child);
-          }
-        });
+        mesh.traverse(child => { if (child.isMesh) { child.userData._attachId = id; allMeshes.push(child); } });
       });
-
       const intersects = raycasterRef.current.intersectObjects(allMeshes, false);
       if (intersects.length > 0) {
         let objId = null;
         let obj = intersects[0].object;
-        while (obj) {
-          if (obj.userData._attachId) { objId = obj.userData._attachId; break; }
-          obj = obj.parent;
-        }
+        while (obj) { if (obj.userData._attachId) { objId = obj.userData._attachId; break; } obj = obj.parent; }
         if (objId) handleSelectObject(objId);
       }
     };
 
     const onPointerMove = (e) => {
       if (!dragAxisRef.current || !dragObjectIdRef.current) return;
-
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
       const sensitivity = 0.15;
-
       setAttachedObjects(prev => prev.map(o => {
         if (o.id !== dragObjectIdRef.current) return o;
         const pos = { ...o.position };
@@ -379,7 +421,6 @@ export default function AttachmentEditor() {
         if (dragAxisRef.current === 'z') pos.z += dx * sensitivity;
         return { ...o, position: pos };
       }));
-
       dragStartRef.current = { x: e.clientX, y: e.clientY };
     };
 
@@ -401,33 +442,37 @@ export default function AttachmentEditor() {
     };
   }, [selectedObjectId, handleSelectObject]);
 
-  // ── Publish state to ReactorBridge ──
+  // ── Publish to ReactorBridge ──
   useEffect(() => {
     const effectObjects = attachedObjects.filter(o => o.type === 'effect');
     if (effectObjects.length > 0) {
       ReactorBridge.emit('attachmentEffectsUpdated', {
         effects: effectObjects.map(o => ({
-          id: o.id,
-          bone: o.bone,
-          position: o.position,
-          rotation: o.rotation,
-          scale: o.scale,
-          url: o.url,
-          label: o.label,
+          id: o.id, bone: o.bone, position: o.position, rotation: o.rotation,
+          scale: o.scale, url: o.url, label: o.label, sourceId: o.sourceId, sourceType: o.sourceType,
         })),
         character: selectedCharacter,
+        animationName: currentAnimName,
+        animationTime: animTime,
+        animationDuration: animDuration,
       });
     }
-  }, [attachedObjects, selectedCharacter]);
+  }, [attachedObjects, selectedCharacter, currentAnimName, animTime, animDuration]);
 
-  // Build editor state for Director Chat
   const editorState = {
     character: selectedCharacter,
     objectCount: attachedObjects.length,
-    objects: attachedObjects.map(o => ({ id: o.id, type: o.type, label: o.label, bone: o.bone, position: o.position, rotation: o.rotation, scale: o.scale })),
+    objects: attachedObjects.map(o => ({
+      id: o.id, type: o.type, label: o.label, bone: o.bone,
+      position: o.position, rotation: o.rotation, scale: o.scale,
+      sourceType: o.sourceType, sourceId: o.sourceId,
+    })),
     selectedObjectId,
     boneCount: boneList.length,
     isLoaded,
+    currentAnimation: currentAnimName,
+    animationTime: animTime,
+    isPlaying,
   };
 
   return (
@@ -440,11 +485,10 @@ export default function AttachmentEditor() {
           </div>
           <div>
             <h2 className="text-white font-bold text-sm">3D Attachment Editor</h2>
-            <p className="text-slate-500 text-[10px]">Attach weapons, effects & props • Click objects for gizmo • Linked to Reactor Editor</p>
+            <p className="text-slate-500 text-[10px]">Pick 3D objects & effects from your library • Play animations & position at exact frames • Linked to Reactor</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Character Selector */}
           <div className="flex gap-1">
             {Object.keys(CHARACTER_URLS).map(key => (
               <Button key={key} size="sm" variant={selectedCharacter === key ? 'default' : 'outline'}
@@ -465,50 +509,82 @@ export default function AttachmentEditor() {
         </div>
       </div>
 
-      <div className="flex gap-3" style={{ height: '620px' }}>
-        {/* LEFT: Object Panel */}
-        <div className="w-64 flex-shrink-0 bg-slate-950/50 border border-slate-800 rounded-xl p-3 overflow-hidden flex flex-col">
-          <AttachmentObjectPanel
-            objects={attachedObjects}
-            selectedId={selectedObjectId}
-            onSelect={handleSelectObject}
-            onAdd={handleAddObject}
-            onRemove={handleRemoveObject}
-            onToggleVisibility={handleToggleVisibility}
-            onUpdateTransform={handleUpdateTransform}
-            boneList={boneList}
-            onChangeBone={handleChangeBone}
-            onChangeUrl={handleChangeUrl}
-            onReattach={handleReattach}
-          />
-        </div>
+      <div className="flex gap-3 flex-col" style={{ height: '680px' }}>
+        <div className="flex gap-3 flex-1 min-h-0">
+          {/* LEFT: Object Panel */}
+          <div className="w-64 flex-shrink-0 bg-slate-950/50 border border-slate-800 rounded-xl p-3 overflow-hidden flex flex-col">
+            <AttachmentObjectPanel
+              objects={attachedObjects}
+              selectedId={selectedObjectId}
+              onSelect={handleSelectObject}
+              onAddFromLibrary={(type) => setPickerOpen(type)}
+              onRemove={handleRemoveObject}
+              onToggleVisibility={handleToggleVisibility}
+              onUpdateTransform={handleUpdateTransform}
+              boneList={boneList}
+              onChangeBone={handleChangeBone}
+              onChangeUrl={handleChangeUrl}
+              onReattach={handleReattach}
+            />
+          </div>
 
-        {/* CENTER: 3D Viewport */}
-        <div ref={containerRef} className="flex-1 rounded-xl overflow-hidden border border-slate-700 relative">
-          {/* Selection indicator */}
-          {selectedObjectId && (
-            <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
-              Selected: {attachedObjects.find(o => o.id === selectedObjectId)?.label || selectedObjectId.slice(-6)}
-              &nbsp;— Drag gizmo axes to move
+          {/* CENTER: 3D Viewport */}
+          <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-slate-700">
+            <div ref={containerRef} className="flex-1 relative">
+              {selectedObjectId && (
+                <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
+                  Selected: {attachedObjects.find(o => o.id === selectedObjectId)?.label || selectedObjectId.slice(-6)}
+                  &nbsp;— Drag gizmo axes to move
+                </div>
+              )}
+              {!isPlaying && currentAnimName && (
+                <div className="absolute top-2 right-2 z-10 px-2.5 py-1 rounded-lg bg-amber-600/20 border border-amber-500/30 text-amber-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
+                  Paused at {animTime.toFixed(2)}s — Add effects at this frame
+                </div>
+              )}
+            </div>
+            {/* Animation Timeline */}
+            <AnimationTimebar
+              isPlaying={isPlaying}
+              animTime={animTime}
+              animDuration={animDuration}
+              currentAnimName={currentAnimName}
+              onPlay={handlePlayAnimation}
+              onPause={handlePauseAnimation}
+              onScrub={handleScrubAnimation}
+              onSelectAnimation={handleSelectAnimation}
+              animations={adminAnimations}
+            />
+          </div>
+
+          {/* RIGHT: Director Chat */}
+          {chatOpen && (
+            <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
+              <DirectorChat
+                context="3D Attachment Editor"
+                editorState={editorState}
+                onTaskCompiled={(task) => {
+                  ReactorBridge.emit('attachmentTaskCompiled', { task, editorState });
+                }}
+              />
             </div>
           )}
         </div>
-
-        {/* RIGHT: Director Chat (if open) */}
-        {chatOpen && (
-          <div className="w-80 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700">
-            <DirectorChat
-              context="3D Attachment Editor"
-              editorState={editorState}
-              onTaskCompiled={(task) => {
-                console.log('[AttachmentEditor] Task compiled:', task);
-                // Forward to ReactorBridge so the Reactor Editor can pick it up
-                ReactorBridge.emit('attachmentTaskCompiled', { task, editorState });
-              }}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Asset Picker Modal */}
+      <AnimatePresence>
+        {pickerOpen && (
+          <AssetPickerModal
+            type={pickerOpen}
+            models3d={models3d}
+            reactorFx={fxList}
+            animations={adminAnimations}
+            onSelect={handleAssetSelected}
+            onClose={() => setPickerOpen(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
