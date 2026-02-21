@@ -869,12 +869,6 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = true;
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
-        } else if (p.includes('/seasonalpass')) {
-          headerConfig.hidden = false;
-          headerConfig.showMenu = true;
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
         } else if (p.includes('/blacksmith')) {
           headerConfig.title = "";
           headerConfig.showLevel = false;
@@ -1035,7 +1029,6 @@ function LayoutContent({ children, currentPageName }) {
                             if (pp.includes('/clan')) return 'Atom X Eve Clan';
                             if (pp.includes('/community')) return 'Atom X Eve Forum';
                             if (pp.includes('/blacksmith')) return 'Atom X Eve Blacksmith';
-                            if (pp.includes('/seasonalpass')) return 'Atom X Eve Season Pass';
                             if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
                             if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
                             if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
