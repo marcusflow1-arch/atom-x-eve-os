@@ -688,71 +688,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         }
       };
 
-      // --- IDLE CYCLE LISTENER ---
-      // Listens for finish of "standing idle XX" animations to trigger the next one
-      useEffect(() => {
-        const mixer = mixerRef.current;
-        const c1Mixer = c1MixerRef.current;
-        const idleVariations = ['standing idle 01', 'standing idle 02 looking', 'standing idle 03 examine', 'standing idle 04'];
-        
-        const handleIdleFinish = (e) => {
-           // Check if we are in "idle state" (not moving, grounded, weapon equipped)
-           const isMoving = keysPressed.current['w'] || keysPressed.current['a'] || keysPressed.current['s'] || keysPressed.current['d'];
-           if (isMoving || !isGroundedRef.current || !equippedWeaponUrl) return;
-           
-           // Find which animation finished
-           const action = e.action;
-           // We need to match action to name. This is tricky without a map back.
-           // But we can check if the currentActionNameRef corresponds to one of our idles
-           const currentName = currentActionNameRef.current.toLowerCase();
-           
-           if (idleVariations.includes(currentName)) {
-              // Find next
-              let idx = idleVariations.indexOf(currentName);
-              let nextName = idleVariations[(idx + 1) % idleVariations.length];
-              
-              // Verify availability in CURRENT active character actions
-              const isYBot = activeCharacterRef.current === 'ybot';
-              const actions = isYBot ? actionsRef.current : c1ActionsRef.current;
-              
-              // Try to find the next available animation
-              let attempts = 0;
-              while (!actions[nextName] && attempts < idleVariations.length) {
-                 idx = (idx + 1) % idleVariations.length;
-                 nextName = idleVariations[idx];
-                 attempts++;
-              }
-              
-              if (actions[nextName]) {
-                 console.log(`[Idle Cycle] ${currentName} finished -> playing ${nextName}`);
-                 // Configure to play once
-                 const nextAction = actions[nextName];
-                 nextAction.setLoop(THREE.LoopOnce, 1);
-                 nextAction.clampWhenFinished = true;
-                 
-                 // Play without fade for snap, or small fade
-                 if (activeActionRef.current) activeActionRef.current.fadeOut(0.2);
-                 nextAction.reset().fadeIn(0.2).play();
-                 
-                 if (isYBot) activeActionRef.current = nextAction;
-                 else c1ActiveActionRef.current = nextAction;
-                 
-                 currentActionNameRef.current = nextName;
-              } else {
-                 // Fallback to standard idle if none found
-                 play('Idle');
-              }
-           }
-        };
-
-        if (mixer) mixer.addEventListener('finished', handleIdleFinish);
-        if (c1Mixer) c1Mixer.addEventListener('finished', handleIdleFinish);
-        
-        return () => {
-           if (mixer) mixer.removeEventListener('finished', handleIdleFinish);
-           if (c1Mixer) c1Mixer.removeEventListener('finished', handleIdleFinish);
-        };
-      }, [equippedWeaponUrl]); // Re-bind when weapon state changes (to capture closure state if needed, though using refs is better)
+      // (Moved IDLE CYCLE LISTENER to component top level)
 
       // --- HOLD / TOGGLE RELEASE HANDLER ---
       const stopHoldOrToggle = () => {
