@@ -9,6 +9,7 @@ import AssetPickerModal from './attachment/AssetPickerModal';
 import AnimationTimebar from './attachment/AnimationTimebar';
 import { createGizmo, getGizmoHitMeshes, positionGizmo, hideGizmo } from './attachment/TransformGizmo';
 import ReactorBridge from './reactor/ReactorBridge';
+import DirectorBridge from './DirectorBridge';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import * as THREE from 'three';
@@ -559,6 +560,11 @@ export default function AttachmentEditor() {
     animationTime: animTime,
     isPlaying,
   };
+
+  // Push live state to DirectorBridge so Base44 chat always has context
+  useEffect(() => {
+    DirectorBridge.updateEditorState('3D Attachment Editor', editorState);
+  }, [attachedObjects, selectedCharacter, selectedObjectId, currentAnimName, animTime, isPlaying, isLoaded]);
 
   return (
     <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">

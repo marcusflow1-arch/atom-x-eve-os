@@ -12,6 +12,7 @@ import SequencerTimeline from './reactor/SequencerTimeline';
 import FXUploadManager from './reactor/FXUploadManager';
 import AnimationPlaybackBar from './reactor/AnimationPlaybackBar';
 import ReactorBridge from './reactor/ReactorBridge';
+import DirectorBridge from './DirectorBridge';
 import DirectorChat from './DirectorChat';
 
 const DEFAULT_REACTOR = {
