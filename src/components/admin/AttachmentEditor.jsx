@@ -331,7 +331,7 @@ export default function AttachmentEditor() {
     return () => mixer.removeEventListener('finished', onFinished);
   }, [isLoaded, playNextIdleCycleAnim]);
 
-  // Start idle cycle when toggled on
+  // Start idle cycle when toggled on or when objects change while enabled
   useEffect(() => {
     if (idleCycleEnabled && isLoaded) {
       console.log('[IdleCycle] Starting cycle');
@@ -339,6 +339,21 @@ export default function AttachmentEditor() {
       playNextIdleCycleAnim();
     }
   }, [idleCycleEnabled, isLoaded]);
+
+  // Auto-enable idle cycle when a weapon/object is first attached
+  const prevObjectCountRef = useRef(0);
+  useEffect(() => {
+    const objectCount = attachedObjects.filter(o => o.type === 'object').length;
+    if (objectCount > 0 && prevObjectCountRef.current === 0 && !idleCycleEnabled) {
+      console.log('[IdleCycle] Object equipped — auto-starting idle cycle');
+      setIdleCycleEnabled(true);
+    }
+    if (objectCount === 0 && prevObjectCountRef.current > 0 && idleCycleEnabled) {
+      console.log('[IdleCycle] All objects removed — stopping idle cycle');
+      setIdleCycleEnabled(false);
+    }
+    prevObjectCountRef.current = objectCount;
+  }, [attachedObjects]);
 
   // ── Helpers ──
   const findBone = useCallback((boneName) => {
