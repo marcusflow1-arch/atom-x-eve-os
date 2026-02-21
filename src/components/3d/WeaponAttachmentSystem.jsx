@@ -29,11 +29,22 @@ function findBone(root, partialName) {
 }
 
 /**
- * Load a GLB model and return the scene object.
+ * Load a 3D model (GLB/GLTF or FBX) and return { scene, animations }.
  */
-async function loadGLB(url) {
+async function loadModel(url) {
+  const lower = url.toLowerCase();
+  if (lower.endsWith('.fbx')) {
+    return new Promise((resolve, reject) => {
+      fbxLoader.load(url, (fbx) => {
+        resolve({ scene: fbx, animations: fbx.animations || [] });
+      }, undefined, reject);
+    });
+  }
+  // Default: GLB/GLTF
   return new Promise((resolve, reject) => {
-    gltfLoader.load(url, (gltf) => resolve(gltf), undefined, reject);
+    gltfLoader.load(url, (gltf) => {
+      resolve({ scene: gltf.scene, animations: gltf.animations || [] });
+    }, undefined, reject);
   });
 }
 
