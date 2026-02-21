@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Layers, Backpack } from 'lucide-react';
+import { X, Layers, Backpack, ChevronDown } from 'lucide-react';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 import InventoryPanel from '@/components/profile/InventoryPanel';
@@ -15,21 +15,17 @@ export default function StatsPopupOverlay({ activeTab = 'stats', onTabChange, on
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="fixed z-[55] pointer-events-auto flex flex-col overflow-hidden rounded-2xl"
+      initial={{ opacity: 0, height: 0, marginTop: 0 }}
+      animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="w-full overflow-hidden rounded-2xl pointer-events-auto"
       style={{
-        top: '168px',
-        left: '440px',
-        right: '300px',
-        bottom: '80px',
-        background: 'rgba(6, 8, 14, 0.88)',
+        background: 'rgba(10, 14, 22, 0.90)',
         backdropFilter: 'blur(40px) saturate(150%)',
         WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 16px 64px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
+        border: '1px solid rgba(255, 255, 255, 0.10)',
+        boxShadow: '0 12px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
       }}
     >
       {/* Header */}
@@ -63,7 +59,7 @@ export default function StatsPopupOverlay({ activeTab = 'stats', onTabChange, on
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
+      <div className="overflow-y-auto p-5" style={{ scrollbarWidth: 'none', maxHeight: '60vh' }}>
         {currentTab === 'stats' && <AvatarProgressionBox />}
         {currentTab === 'inventory' && (
           <div className="text-white">
