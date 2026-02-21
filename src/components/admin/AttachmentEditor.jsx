@@ -65,8 +65,9 @@ export default function AttachmentEditor() {
 
   // Idle cycle: alternate between two animations when objects are equipped
   const [idleCycleEnabled, setIdleCycleEnabled] = useState(false);
+  const idleCycleEnabledRef = useRef(false);
   const idleCycleIndexRef = useRef(0);
-  const IDLE_CYCLE_ANIMS = ['standing idle 02 looking', 'standing idle 03 examine'];
+  const idleCycleAnimNames = useRef(['standing idle 02 looking', 'standing idle 03 examine']);
 
   // Gizmo drag
   const dragAxisRef = useRef(null);
