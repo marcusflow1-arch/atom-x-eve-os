@@ -1604,8 +1604,34 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       setupC1Attachments();
 
       // Listen for draw-sword event (KeyX triggers "standing equip bow" keybind on C1)
+      // Also listen for R key (kick) to play effect at the end
       const onDrawSword = (e) => {
         if (activeCharacterRef.current !== 'c1') return;
+        
+        // R key: play effect on kick animation
+        if (e.code === 'KeyR') {
+          if (effectControllerRef.current) {
+            // Delay effect to the end of the kick animation (~0.6s in)
+            setTimeout(() => {
+              if (effectControllerRef.current) {
+                // If weapon is in hand, parent effect to the sword's bone
+                if (weaponControllerRef.current && weaponControllerRef.current.isInHand() && weaponControllerRef.current.rightHandBone) {
+                  const effMesh = effectControllerRef.current.mesh;
+                  const currentParent = effMesh.parent;
+                  if (currentParent) currentParent.remove(effMesh);
+                  effMesh.position.set(0, 5, 0);
+                  weaponControllerRef.current.rightHandBone.add(effMesh);
+                }
+                effectControllerRef.current.play();
+                setTimeout(() => {
+                  if (effectControllerRef.current) effectControllerRef.current.hide();
+                }, 1200);
+              }
+            }, 400);
+          }
+          return;
+        }
+
         if (e.code !== 'KeyX') return;
 
         // Play the effect
