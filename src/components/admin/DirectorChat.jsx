@@ -394,9 +394,26 @@ Keep responses concise but specific. Reference actual bone names, time codes, an
           <AlertCircle className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
           <span className="text-green-300 text-[10px] flex-1">Task compiled.</span>
           <button
-            onClick={dispatchHandoff}
+            onClick={async () => {
+              const allMsgs = [...messages];
+              const summary = compiledTask || buildPromptHistory(allMsgs);
+              const stateStr = JSON.stringify(editorState, null, 2);
+              const clipboardText = `--- DIRECTOR CHAT HANDOFF (${context}) ---\n\nCOMPILED TASK:\n${summary}\n\nEDITOR STATE:\n${stateStr}\n\nCONVERSATION:\n${buildPromptHistory(allMsgs)}\n\n--- END HANDOFF ---`;
+              try { await navigator.clipboard.writeText(clipboardText); } catch {
+                const ta = document.createElement('textarea'); ta.value = clipboardText; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+              }
+              writeHandoff(context, allMsgs, editorState, summary);
+              if (onTaskCompiled) onTaskCompiled(summary);
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                text: '📋 Copied to clipboard! Paste it into the Base44 chat on the left.',
+                timestamp: new Date().toISOString(),
+              }]);
+              setAwaitingConfirmation(false);
+              setCompiledTask(null);
+            }}
             className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-700 text-white text-[9px] font-bold"
-          >Send to Base44</button>
+          >Copy for Base44</button>
           <button
             onClick={() => { setAwaitingConfirmation(false); setCompiledTask(null); }}
             className="text-[9px] text-red-400 hover:text-red-300"
@@ -404,26 +421,43 @@ Keep responses concise but specific. Reference actual bone names, time codes, an
         </div>
       )}
 
-      {/* Quick send button — always visible when there are messages */}
+      {/* Quick send button — copies full context to clipboard for pasting into Base44 chat */}
       {messages.length > 0 && !awaitingConfirmation && (
         <div className="px-3 py-1.5 border-t border-white/5 flex items-center gap-2">
           <button
-            onClick={() => {
-              // Compile and send in one step without needing "done"
+            onClick={async () => {
               const allMsgs = [...messages];
               const summary = buildPromptHistory(allMsgs);
-              const handoff = writeHandoff(context, allMsgs, editorState, summary);
+              const stateStr = JSON.stringify(editorState, null, 2);
+              const clipboardText = `--- DIRECTOR CHAT HANDOFF (${context}) ---\n\nEDITOR STATE:\n${stateStr}\n\nCONVERSATION:\n${summary}\n\n--- END HANDOFF ---`;
+              try {
+                await navigator.clipboard.writeText(clipboardText);
+                setMessages(prev => [...prev, {
+                  role: 'assistant',
+                  text: '📋 Copied to clipboard! Paste it into the Base44 chat on the left.',
+                  timestamp: new Date().toISOString(),
+                }]);
+              } catch {
+                // Fallback: select a temp textarea
+                const ta = document.createElement('textarea');
+                ta.value = clipboardText;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                setMessages(prev => [...prev, {
+                  role: 'assistant',
+                  text: '📋 Copied to clipboard! Paste it into the Base44 chat on the left.',
+                  timestamp: new Date().toISOString(),
+                }]);
+              }
+              // Also write to localStorage for any in-app consumers
+              writeHandoff(context, allMsgs, editorState, summary);
               if (onTaskCompiled) onTaskCompiled(summary);
-              window.dispatchEvent(new CustomEvent('directorTaskReady', { detail: handoff }));
-              setMessages(prev => [...prev, {
-                role: 'assistant',
-                text: '✅ Conversation & editor state sent to Base44 chat. Switch there and press Enter.',
-                timestamp: new Date().toISOString(),
-              }]);
             }}
             className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold transition-all"
           >
-            <Send className="w-3 h-3" /> Send to Base44 Chat
+            <Clipboard className="w-3 h-3" /> Copy for Base44 Chat
           </button>
         </div>
       )}
