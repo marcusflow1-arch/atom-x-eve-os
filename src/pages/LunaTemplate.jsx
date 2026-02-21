@@ -1536,35 +1536,34 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const weaponControllerRef = { current: null };
       const effectControllerRef = { current: null };
 
+      const SWORD_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/53379b78d_stylized_emerald_sword.glb';
+      const EFFECT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb';
+
       const setupC1Attachments = async () => {
-        // Attach weapon if equippedWeaponUrl is set
-        if (equippedWeaponUrl) {
-          try {
-            const wc = await attachWeapon(c1, equippedWeaponUrl, {
-              backBone: 'Spine2',
-              handBone: 'RightHand',
-              scale: 0.15,
-            });
-            weaponControllerRef.current = wc;
-            console.log('[C1] Weapon attached (Blade of Abyss)');
-          } catch (e) {
-            console.error('[C1] Failed to attach weapon:', e);
-          }
+        // Always attach sword to C1's back
+        try {
+          const wc = await attachWeapon(c1, SWORD_URL, {
+            backBone: 'Spine2',
+            handBone: 'RightHand',
+            scale: 0.15,
+          });
+          weaponControllerRef.current = wc;
+          console.log('[C1] Sword attached to back');
+        } catch (e) {
+          console.error('[C1] Failed to attach weapon:', e);
         }
 
-        // Attach jetpack effect GLB to back
-        if (drawEffectUrl) {
-          try {
-            const ec = await attachEffect(c1, drawEffectUrl, {
-              boneName: 'Spine2',
-              scale: 0.15,
-              offset: { x: 0, y: 20, z: -15 },
-            });
-            effectControllerRef.current = ec;
-            console.log('[C1] Draw effect loaded (jetpack_effect)');
-          } catch (e) {
-            console.error('[C1] Failed to attach effect:', e);
-          }
+        // Attach jetpack effect GLB to back (hidden until triggered)
+        try {
+          const ec = await attachEffect(c1, EFFECT_URL, {
+            boneName: 'Spine2',
+            scale: 0.15,
+            offset: { x: 0, y: 20, z: -15 },
+          });
+          effectControllerRef.current = ec;
+          console.log('[C1] Draw effect loaded (jetpack_effect)');
+        } catch (e) {
+          console.error('[C1] Failed to attach effect:', e);
         }
       };
       setupC1Attachments();
