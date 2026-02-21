@@ -91,7 +91,6 @@ import OnboardingHome from './pages/OnboardingHome';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
-import SeasonalPass from './pages/SeasonalPass';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
 import Storyline from './pages/Storyline';
@@ -152,7 +151,6 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
-    "SeasonalPass": SeasonalPass,
     "SocialFeed": SocialFeed,
     "Store": Store,
     "Storyline": Storyline,

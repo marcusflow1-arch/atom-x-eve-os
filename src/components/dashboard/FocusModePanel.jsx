@@ -1300,7 +1300,6 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
     { id: 'cards', label: 'Cards', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
     { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
     { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
     { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
   ];
 

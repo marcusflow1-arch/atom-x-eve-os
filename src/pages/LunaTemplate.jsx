@@ -25,7 +25,6 @@ import BattleModeOverlay from '../components/dashboard/BattleModeOverlay';
 import AIHomeOverlay from '../components/dashboard/AIHomeOverlay';
 import AIStoryOverlay from '../components/dashboard/AIStoryOverlay';
 import AINewsContent from '../components/dashboard/AINewsContent';
-import SeasonalPassContent from '../components/dashboard/SeasonalPassContent';
 import ShinyCard from '../components/shared/ShinyCard';
 import HolographicTile from '@/components/dashboard/HolographicTile';
 import CardEnhancementOverlay from '../components/profile/CardEnhancementOverlay';
@@ -2410,7 +2409,6 @@ export default function LunaTemplate() {
   const [showLive, setShowLive] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showAINews, setShowAINews] = useState(false);
-  const [showSeasonalPass, setShowSeasonalPass] = useState(false);
   // showInventory removed to prevent duplicate state source of truth
   const [showPinGames, setShowPinGames] = useState(false);
   const [expandedGenre, setExpandedGenre] = useState(null);
@@ -2619,7 +2617,7 @@ export default function LunaTemplate() {
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
 
-    if (panel === 'blacksmith' || panel === 'seasonalpass' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
+    if (panel === 'blacksmith' || panel === 'entertainment' || panel === 'clan' || panel === 'forum') {
       setActiveSubTab(panel);
     } else {
       setActiveSubTab(null);
@@ -3327,15 +3325,6 @@ export default function LunaTemplate() {
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
               </ConsoleTile>
 
-              {/* Season Pass */}
-              <ConsoleTile
-                onClick={() => navigate(createPageUrl('SeasonalPass'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
-                <Crown className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Season Pass</span>
-              </ConsoleTile>
-
               {/* Cards */}
               <ConsoleTile
                 onClick={() => navigate(createPageUrl('GenreMastery'))}
@@ -3787,39 +3776,7 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
-      {/* Seasonal Pass Overlay */}
-      <AnimatePresence>
-        {showSeasonalPass &&
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowSeasonalPass(false)} />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
-
-              <div className="flex-1 overflow-y-auto">
-                <SeasonalPassContent />
-              </div>
-
-              <button
-                onClick={() => setShowSeasonalPass(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-
-                <X className="w-5 h-5" />
-              </button>
-            </motion.div>
-          </>
-        }
-      </AnimatePresence>
 
 
 
@@ -4096,7 +4053,6 @@ export default function LunaTemplate() {
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'blacksmith' && <Blacksmith />}
-              {activeSubTab === 'seasonalpass' && <SeasonalPassContent />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
