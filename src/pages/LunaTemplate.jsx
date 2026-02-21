@@ -1590,7 +1590,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         try {
           const ec = await attachEffect(c1, EFFECT_URL, {
             boneName: 'Spine2',
-            scale: 100,
+            scale: 50,
             offset: { x: 0, y: 20, z: -15 },
           });
           effectControllerRef.current = ec;
