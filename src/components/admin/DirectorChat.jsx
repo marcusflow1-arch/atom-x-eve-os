@@ -392,11 +392,39 @@ Keep responses concise but specific. Reference actual bone names, time codes, an
       {awaitingConfirmation && (
         <div className="px-3 py-2 bg-green-600/10 border-t border-green-500/20 flex items-center gap-2">
           <AlertCircle className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
-          <span className="text-green-300 text-[10px] flex-1">Task compiled. Say "yes" to send to Base44.</span>
+          <span className="text-green-300 text-[10px] flex-1">Task compiled.</span>
+          <button
+            onClick={dispatchHandoff}
+            className="px-2 py-0.5 rounded bg-green-600 hover:bg-green-700 text-white text-[9px] font-bold"
+          >Send to Base44</button>
           <button
             onClick={() => { setAwaitingConfirmation(false); setCompiledTask(null); }}
             className="text-[9px] text-red-400 hover:text-red-300"
           >Cancel</button>
+        </div>
+      )}
+
+      {/* Quick send button — always visible when there are messages */}
+      {messages.length > 0 && !awaitingConfirmation && (
+        <div className="px-3 py-1.5 border-t border-white/5 flex items-center gap-2">
+          <button
+            onClick={() => {
+              // Compile and send in one step without needing "done"
+              const allMsgs = [...messages];
+              const summary = buildPromptHistory(allMsgs);
+              const handoff = writeHandoff(context, allMsgs, editorState, summary);
+              if (onTaskCompiled) onTaskCompiled(summary);
+              window.dispatchEvent(new CustomEvent('directorTaskReady', { detail: handoff }));
+              setMessages(prev => [...prev, {
+                role: 'assistant',
+                text: '✅ Conversation & editor state sent to Base44 chat. Switch there and press Enter.',
+                timestamp: new Date().toISOString(),
+              }]);
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 text-[10px] font-bold transition-all"
+          >
+            <Send className="w-3 h-3" /> Send to Base44 Chat
+          </button>
         </div>
       )}
 
