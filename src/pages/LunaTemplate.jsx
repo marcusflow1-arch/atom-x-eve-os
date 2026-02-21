@@ -64,6 +64,7 @@ import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser
 import QuestLogBook from '../components/dashboard/QuestLogBook';
 import ReactorBridge from '../components/admin/reactor/ReactorBridge';
 import CombatXPHandler from '../components/combat/CombatXPHandler';
+import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision }) {
