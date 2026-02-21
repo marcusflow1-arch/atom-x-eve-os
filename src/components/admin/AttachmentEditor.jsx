@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Move, MessageSquare } from 'lucide-react';
+import { Move, MessageSquare, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AnimatePresence } from 'framer-motion';
@@ -644,6 +644,15 @@ export default function AttachmentEditor() {
             ))}
           </div>
           <Badge variant="outline" className="text-slate-500 text-[9px]">{attachedObjects.length} objects</Badge>
+          <button
+            onClick={() => { setIdleCycleEnabled(!idleCycleEnabled); }}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+              idleCycleEnabled ? 'bg-green-500/20 text-green-300 border-green-500/30' : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white'
+            }`}
+            title="Cycle between Standing Idle 02 Looking ↔ Standing Idle 03 Examine"
+          >
+            <Repeat className="w-3 h-3" /> Idle Cycle
+          </button>
           <button
             onClick={() => setChatOpen(!chatOpen)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
