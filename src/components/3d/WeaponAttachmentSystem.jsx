@@ -145,8 +145,8 @@ export async function attachEffect(characterModel, effectUrl, options = {}) {
     offset = { x: 0, y: 20, z: -15 },
   } = options;
 
-  const gltf = await loadGLB(effectUrl);
-  const effectMesh = gltf.scene;
+  const loaded = await loadModel(effectUrl);
+  const effectMesh = loaded.scene;
   effectMesh.scale.setScalar(scale);
 
   const bone = findBone(characterModel, boneName);
@@ -159,12 +159,12 @@ export async function attachEffect(characterModel, effectUrl, options = {}) {
   effectMesh.visible = false; // Hidden until triggered
   bone.add(effectMesh);
 
-  // Set up animation mixer if the GLB has animations
+  // Set up animation mixer if the model has animations
   let mixer = null;
   let actions = [];
-  if (gltf.animations && gltf.animations.length > 0) {
+  if (loaded.animations && loaded.animations.length > 0) {
     mixer = new THREE.AnimationMixer(effectMesh);
-    gltf.animations.forEach((clip) => {
+    loaded.animations.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = true;
