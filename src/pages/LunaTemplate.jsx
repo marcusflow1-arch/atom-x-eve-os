@@ -695,7 +695,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         
         const handleIdleFinish = (e) => {
            // Check if we are in "idle state" (not moving, grounded, weapon equipped)
-           if (isMoving || !isGroundedRef.current || !weaponModelUrl) return;
+           const isMoving = keysPressed.current['w'] || keysPressed.current['a'] || keysPressed.current['s'] || keysPressed.current['d'];
+           if (isMoving || !isGroundedRef.current || !equippedWeaponUrl) return;
            
            // Find which animation finished
            const action = e.action;
@@ -749,7 +750,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
            if (mixer) mixer.removeEventListener('finished', handleIdleFinish);
            if (c1Mixer) c1Mixer.removeEventListener('finished', handleIdleFinish);
         };
-      }, [weaponModelUrl]); // Re-bind when weapon state changes (to capture closure state if needed, though using refs is better)
+      }, [equippedWeaponUrl]); // Re-bind when weapon state changes (to capture closure state if needed, though using refs is better)
 
       // --- HOLD / TOGGLE RELEASE HANDLER ---
       const stopHoldOrToggle = () => {
@@ -1046,7 +1047,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           } else {
               // --- IDLE CYCLE LOGIC ---
               // If weapon is equipped, cycle through idle variations
-              const isWeaponEquipped = !!weaponModelUrl;
+              const isWeaponEquipped = !!equippedWeaponUrl;
               
               if (isWeaponEquipped) {
                 // If not currently playing an idle variation or idle, start the cycle
