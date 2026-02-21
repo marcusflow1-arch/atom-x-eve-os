@@ -277,6 +277,55 @@ export default function AttachmentEditor() {
     }
   }, []);
 
+  // ── Idle Cycle: alternate between two idle animations when enabled ──
+  const playNextIdleCycleAnim = useCallback(async () => {
+    if (!characterRef.current || !mixerRef.current || !adminAnimations.length) return;
+    const idx = idleCycleIndexRef.current % IDLE_CYCLE_ANIMS.length;
+    const animName = IDLE_CYCLE_ANIMS[idx];
+    const anim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === animName.toLowerCase().trim());
+    if (!anim) { console.warn('[IdleCycle] Animation not found:', animName); return; }
+
+    const mixer = mixerRef.current;
+    mixer.stopAllAction();
+    currentActionRef.current = null;
+
+    const animFbx = await new FBXLoader().loadAsync(anim.file_url);
+    if (animFbx.animations.length > 0) {
+      const clip = animFbx.animations[0];
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+      action.play();
+      currentActionRef.current = action;
+      setAnimDuration(clip.duration);
+      setCurrentAnimName(anim.name);
+      setAnimTime(0);
+      setIsPlaying(true);
+      idleCycleIndexRef.current = idx + 1;
+    }
+  }, [adminAnimations]);
+
+  // Listen for animation finished events to chain the next idle cycle anim
+  useEffect(() => {
+    if (!mixerRef.current || !idleCycleEnabled) return;
+    const mixer = mixerRef.current;
+    const onFinished = () => {
+      if (idleCycleEnabled) {
+        playNextIdleCycleAnim();
+      }
+    };
+    mixer.addEventListener('finished', onFinished);
+    return () => mixer.removeEventListener('finished', onFinished);
+  }, [idleCycleEnabled, playNextIdleCycleAnim]);
+
+  // Start idle cycle when toggled on
+  useEffect(() => {
+    if (idleCycleEnabled && isLoaded) {
+      idleCycleIndexRef.current = 0;
+      playNextIdleCycleAnim();
+    }
+  }, [idleCycleEnabled, isLoaded]);
+
   // ── Helpers ──
   const findBone = useCallback((boneName) => {
     if (!characterRef.current) return null;
