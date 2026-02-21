@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles, Monitor, FolderOpen, Download } from 'lucide-react';
+import { Zap, Plus, Trash2, Save, Loader2, ChevronLeft, ChevronRight, Sparkles, Monitor, FolderOpen, Download, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
@@ -12,6 +12,7 @@ import SequencerTimeline from './reactor/SequencerTimeline';
 import FXUploadManager from './reactor/FXUploadManager';
 import AnimationPlaybackBar from './reactor/AnimationPlaybackBar';
 import ReactorBridge from './reactor/ReactorBridge';
+import DirectorChat from './DirectorChat';
 
 const DEFAULT_REACTOR = {
   bone_name: '', animation_name: '', trigger_time: 0.5, trigger_end_time: 0.6,
@@ -32,6 +33,7 @@ export default function ReactorEditor() {
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
   const [rightTab, setRightTab] = useState('properties');
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Animation playback state
   const [isPlaying, setIsPlaying] = useState(false);
@@ -546,6 +548,17 @@ export default function ReactorEditor() {
               <button onClick={() => setActiveFXDrag(null)} className="ml-1 text-amber-400 hover:text-white">×</button>
             </Badge>
           )}
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+              chatOpen
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                : 'bg-slate-800 text-slate-500 border-slate-700 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3 h-3" />
+            Director Chat
+          </button>
         </div>
       </div>
 
@@ -700,6 +713,35 @@ export default function ReactorEditor() {
               />
             </div>
           </div>
+
+          {/* DIRECTOR CHAT PANEL */}
+          {chatOpen && (
+            <DirectorChat
+              context="Reactor Editor"
+              editorState={{
+                selectedModel: selectedModel?.name || selectedModelId,
+                selectedBone,
+                animationName: animName,
+                animationTime: animTime,
+                animationDuration: animDuration,
+                isPlaying,
+                editingReactor: editingReactor ? {
+                  bone: editingReactor.bone_name,
+                  animation: editingReactor.animation_name,
+                  triggerTime: editingReactor.trigger_time,
+                  triggerEndTime: editingReactor.trigger_end_time,
+                  damage: editingReactor.base_damage,
+                  damageType: editingReactor.damage_type,
+                  fx: editingReactor.fx_name,
+                } : null,
+                fxBlockCount: fxBlocks.length,
+                reactorCount: reactors.length,
+              }}
+              onTaskCompiled={(task) => {
+                console.log('[ReactorEditor] Task compiled:', task);
+              }}
+            />
+          )}
 
           {/* RIGHT PANEL: Properties / FX */}
           <div className={`border-l border-slate-800 transition-all flex flex-col ${rightCollapsed ? 'w-8' : 'w-72'}`}>
