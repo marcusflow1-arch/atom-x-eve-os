@@ -1547,19 +1547,40 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       const EFFECT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb';
 
       const setupC1Attachments = async () => {
+        // Wait a tick to ensure skeleton is fully parsed
+        await new Promise(r => setTimeout(r, 100));
+        
         // Always attach sword to C1's back
         try {
           console.log('[C1] Attempting to attach sword from:', SWORD_URL);
+          console.log('[C1] Character has children:', c1.children.length);
           const wc = await attachWeapon(c1, SWORD_URL, {
             backBone: 'Spine2',
             handBone: 'RightHand',
-            scale: 0.15,
+            scale: 100,
           });
           weaponControllerRef.current = wc;
           if (wc) {
             console.log('[C1] ✓ Sword successfully attached to back bone:', wc.spineBone?.name);
+            // Force the sword mesh to be visible
+            wc.mesh.visible = true;
+            wc.mesh.traverse(child => {
+              if (child.isMesh) child.visible = true;
+            });
           } else {
             console.warn('[C1] ✗ attachWeapon returned null — bone not found');
+            // Fallback: attach directly to c1 model if bone search fails
+            console.log('[C1] Attempting direct scene attachment as fallback...');
+            const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader');
+            const loader = new GLTFLoader();
+            loader.load(SWORD_URL, (gltf) => {
+              const sword = gltf.scene;
+              sword.scale.setScalar(0.1);
+              sword.position.set(0, 100, -30);
+              sword.rotation.set(0, 0, Math.PI * 0.75);
+              c1.add(sword);
+              console.log('[C1] ✓ Fallback sword attached directly to C1 model');
+            });
           }
         } catch (e) {
           console.error('[C1] ✗ Failed to attach weapon:', e);
@@ -1569,7 +1590,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
         try {
           const ec = await attachEffect(c1, EFFECT_URL, {
             boneName: 'Spine2',
-            scale: 0.15,
+            scale: 100,
             offset: { x: 0, y: 20, z: -15 },
           });
           effectControllerRef.current = ec;
