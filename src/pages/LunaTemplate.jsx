@@ -67,7 +67,7 @@ import CombatXPHandler from '../components/combat/CombatXPHandler';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
-function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision }) {
+function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
