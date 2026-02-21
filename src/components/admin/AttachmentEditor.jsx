@@ -316,20 +316,20 @@ export default function AttachmentEditor() {
   }, [adminAnimations]);
 
   // Listen for animation finished events to chain the next idle cycle anim
-  // Uses ref to avoid stale closure issues
+  // Re-attach whenever isLoaded changes (which means a new mixer was created)
   useEffect(() => {
+    if (!isLoaded) return;
     const mixer = mixerRef.current;
     if (!mixer) return;
     const onFinished = () => {
       console.log('[IdleCycle] Animation finished, cycleEnabled:', idleCycleEnabledRef.current);
       if (idleCycleEnabledRef.current) {
-        // Small delay to avoid same-frame issues
         setTimeout(() => playNextIdleCycleAnim(), 50);
       }
     };
     mixer.addEventListener('finished', onFinished);
     return () => mixer.removeEventListener('finished', onFinished);
-  }, [playNextIdleCycleAnim]);
+  }, [isLoaded, playNextIdleCycleAnim]);
 
   // Start idle cycle when toggled on
   useEffect(() => {
