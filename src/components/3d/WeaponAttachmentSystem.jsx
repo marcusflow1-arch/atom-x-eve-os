@@ -170,7 +170,7 @@ export async function attachEffect(characterModel, effectUrl, options = {}) {
       action.clampWhenFinished = true;
       actions.push(action);
     });
-    console.log(`[EffectAttach] Loaded ${gltf.animations.length} animations from effect GLB`);
+    console.log(`[EffectAttach] Loaded ${loaded.animations.length} animations from effect model`);
   }
 
   // Make effect materials emissive / glowing
