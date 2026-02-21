@@ -55,7 +55,7 @@ export const skillData = {
 };
 
 export const inventoryData = [
-    { id: 'inv_1', ...itemData['item_502'] },
+    { id: 'inv_1', ...itemData['item_502'], genre: 'MMORPG', game: 'Atom X Eve', model_url: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/53379b78d_stylized_emerald_sword.glb' },
     { id: 'inv_2', "itemId": "inv_2", "type": "weapon", "subtype": "pistol", "name": "Kinetic Repeater", "rarity": "Common", "levelRequirement": 1, "icon_url": "https://res.cloudinary.com/dji1safpy/image/upload/v1715013697/eve_assets/weapon3_d3c3ge.png", "genreCompatibility": ["Shooter", "Sci-Fi"] },
     { id: 'inv_3', "itemId": "inv_3", "type": "armor", "subtype": "boots", "name": "Treads of the Wanderer", "rarity": "Uncommon", "levelRequirement": 3, "icon_url": "https://res.cloudinary.com/dji1safpy/image/upload/v1715013696/eve_assets/boots_jfrlrm.png", "genreCompatibility": ["MMO", "Shooter"] },
     { id: 'inv_4', "itemId": "inv_4", "type": "armor", "subtype": "cape", "name": "Shadow Cloak", "rarity": "Rare", "levelRequirement": 12, "icon_url": "https://res.cloudinary.com/dji1safpy/image/upload/v1715013696/eve_assets/armor_x5vljs.png", "genreCompatibility": ["Fantasy", "MMO"] },
