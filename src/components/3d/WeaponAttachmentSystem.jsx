@@ -7,8 +7,10 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 const gltfLoader = new GLTFLoader();
+const fbxLoader = new FBXLoader();
 
 /**
  * Find a bone by partial name match (case-insensitive).
