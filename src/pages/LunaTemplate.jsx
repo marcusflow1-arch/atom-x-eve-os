@@ -522,6 +522,7 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
           }
       };
       await loadAnimations();
+      setIsModelLoaded(true);
 
       // Dual-character aware fade/play helpers
       const fadeToAction = (name, duration = 0.2) => {
