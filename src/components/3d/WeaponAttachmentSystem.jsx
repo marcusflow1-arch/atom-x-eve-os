@@ -165,6 +165,9 @@ export async function attachEffect(characterModel, effectUrl, options = {}) {
   effectMesh.visible = false; // Hidden until triggered
   bone.add(effectMesh);
 
+  // Also store a reference on the bone for external access
+  bone.userData._effectMesh = effectMesh;
+
   // Set up animation mixer if the model has animations
   let mixer = null;
   let actions = [];
