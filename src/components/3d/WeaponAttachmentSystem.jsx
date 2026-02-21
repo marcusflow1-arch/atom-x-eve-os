@@ -66,8 +66,8 @@ export async function attachWeapon(characterModel, weaponUrl, options = {}) {
     scale = 0.15,
   } = options;
 
-  const gltf = await loadGLB(weaponUrl);
-  const weaponMesh = gltf.scene;
+  const loaded = await loadModel(weaponUrl);
+  const weaponMesh = loaded.scene;
 
   // Scale the weapon
   weaponMesh.scale.setScalar(scale);
