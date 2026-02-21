@@ -618,7 +618,7 @@ export default function AttachmentEditor() {
               {selectedObjectId && (
                 <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
                   Selected: {attachedObjects.find(o => o.id === selectedObjectId)?.label || selectedObjectId.slice(-6)}
-                  &nbsp;— Arrows = move • Rings = rotate • Center = free rotate
+                  &nbsp;— Left-click drag = move • Right-click drag = rotate 360°
                 </div>
               )}
               {!isPlaying && currentAnimName && (
