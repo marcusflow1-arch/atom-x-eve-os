@@ -1527,6 +1527,77 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       }
 
       console.log('[C1] ErikaArcher loaded and ready (hidden)');
+
+      // --- WEAPON & EFFECT ATTACHMENT TO C1 ---
+      const weaponControllerRef = { current: null };
+      const effectControllerRef = { current: null };
+
+      const setupC1Attachments = async () => {
+        // Attach weapon if equippedWeaponUrl is set
+        if (equippedWeaponUrl) {
+          try {
+            const wc = await attachWeapon(c1, equippedWeaponUrl, {
+              backBone: 'Spine2',
+              handBone: 'RightHand',
+              scale: 0.15,
+            });
+            weaponControllerRef.current = wc;
+            console.log('[C1] Weapon attached (Blade of Abyss)');
+          } catch (e) {
+            console.error('[C1] Failed to attach weapon:', e);
+          }
+        }
+
+        // Attach jetpack effect GLB to back
+        if (drawEffectUrl) {
+          try {
+            const ec = await attachEffect(c1, drawEffectUrl, {
+              boneName: 'Spine2',
+              scale: 0.15,
+              offset: { x: 0, y: 20, z: -15 },
+            });
+            effectControllerRef.current = ec;
+            console.log('[C1] Draw effect loaded (jetpack_effect)');
+          } catch (e) {
+            console.error('[C1] Failed to attach effect:', e);
+          }
+        }
+      };
+      setupC1Attachments();
+
+      // Listen for draw-sword event (KeyX triggers "standing equip bow" keybind on C1)
+      const onDrawSword = (e) => {
+        if (activeCharacterRef.current !== 'c1') return;
+        if (e.code !== 'KeyX') return;
+
+        // Play the effect
+        if (effectControllerRef.current) {
+          effectControllerRef.current.play();
+          // Hide effect after 1.5s
+          setTimeout(() => {
+            if (effectControllerRef.current) effectControllerRef.current.hide();
+          }, 1500);
+        }
+
+        // Move sword from back to hand mid-animation (delay ~0.4s into draw anim)
+        if (weaponControllerRef.current && !weaponControllerRef.current.isInHand()) {
+          setTimeout(() => {
+            if (weaponControllerRef.current) weaponControllerRef.current.moveToHand();
+          }, 400);
+        } else if (weaponControllerRef.current && weaponControllerRef.current.isInHand()) {
+          // If already in hand, put it back
+          weaponControllerRef.current.moveToBack();
+        }
+      };
+      window.addEventListener('keydown', onDrawSword);
+
+      // Store cleanup ref
+      c1.userData._weaponCleanup = () => {
+        window.removeEventListener('keydown', onDrawSword);
+        if (weaponControllerRef.current) weaponControllerRef.current.dispose();
+        if (effectControllerRef.current) effectControllerRef.current.dispose();
+      };
+
     }, undefined, (err) => console.error('Error loading C1:', err));
 
     // --- CHARACTER SWITCH HANDLER ( \ key) ---
