@@ -122,6 +122,14 @@ function registerSceneModels(models) {
   emit('sceneModelsUpdated', { models });
 }
 
+// ─── Attachment Editor → Reactor Editor ───
+
+function setAttachmentEffects(effects, character) {
+  _state.attachmentEffects = effects;
+  _state.attachmentCharacter = character;
+  emit('attachmentEffectsUpdated', { effects, character });
+}
+
 function getState() {
   return { ..._state };
 }
@@ -142,6 +150,8 @@ const ReactorBridge = {
   setFXBlocksState,
   // Viewer side
   registerSceneModels,
+  // Attachment editor
+  setAttachmentEffects,
 };
 
 export default ReactorBridge;
