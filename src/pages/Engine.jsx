@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight, Bot, Sparkles, MessageSquare, Unplug } from 'lucide-react';
+import { Cpu, Gamepad2, Brain, Wrench, ChevronLeft, ChevronRight, Bot, Sparkles, MessageSquare, Unplug, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import GameStudyPanel from '../components/engine/GameStudyPanel';
 import KnowledgeConnectionPanel from '../components/engine/KnowledgeConnectionPanel';
 import EngineAIChat from '../components/engine/EngineAIChat';
 import BlueprintPanel from '../components/engine/BlueprintPanel';
+import DirectorChat from '../components/admin/DirectorChat';
 import UnrealBridgePanel from '../components/engine/UnrealBridgePanel';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
@@ -17,7 +18,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 export default function Engine() {
   const navigate = useNavigate();
   const [sceneApi, setSceneApi] = useState(null);
-  const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints' | 'unreal'
+  const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints' | 'unreal' | 'director'
   const [rightPanel, setRightPanel] = useState('knowledge'); // 'knowledge'
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(true); // Start collapsed — AI chat is the primary interface
@@ -65,6 +66,10 @@ export default function Engine() {
                 className={`h-7 text-[10px] ${leftPanel === 'unreal' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}>
                 <Unplug className="w-3 h-3 mr-1" /> Unreal
               </Button>
+              <Button size="sm" variant={leftPanel === 'director' ? 'default' : 'ghost'} onClick={() => { setLeftPanel('director'); setLeftCollapsed(false); }}
+                className={`h-7 text-[10px] ${leftPanel === 'director' ? 'bg-cyan-600 hover:bg-cyan-700' : ''}`}>
+                <Camera className="w-3 h-3 mr-1" /> Director
+              </Button>
               <div className="w-px h-5 bg-white/10 mx-0.5" />
               <Button size="sm" variant={!rightCollapsed ? 'default' : 'ghost'} onClick={() => setRightCollapsed(!rightCollapsed)} className="h-7 text-[10px]">
                 <Brain className="w-3 h-3 mr-1" /> Knowledge
@@ -78,10 +83,21 @@ export default function Engine() {
             {!leftCollapsed && (
               <div
                 className="h-full border-r border-white/10 flex-shrink-0 overflow-hidden"
-                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: (leftPanel === 'ai' || leftPanel === 'unreal') ? 380 : 320 }}
+                style={{ background: 'rgba(10, 15, 25, 0.6)', backdropFilter: 'blur(20px)', width: (leftPanel === 'ai' || leftPanel === 'unreal' || leftPanel === 'director') ? 380 : 320 }}
               >
                 <div className="h-full flex flex-col">
-                  {leftPanel === 'ai' ? (
+                  {leftPanel === 'director' ? (
+                    <DirectorChat
+                      context="Engine Editor"
+                      editorState={{
+                        activePanel: leftPanel,
+                        sceneReady: !!sceneApi,
+                      }}
+                      onTaskCompiled={(task) => {
+                        console.log('[Engine] Director task compiled:', task);
+                      }}
+                    />
+                  ) : leftPanel === 'ai' ? (
                     <EngineAIChat sceneApi={sceneApi} />
                   ) : leftPanel === 'blueprints' ? (
                     <BlueprintPanel />
