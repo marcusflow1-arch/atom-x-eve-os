@@ -20,6 +20,7 @@ import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
+import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 
 export default function StreamingHome() {
   const { user } = useAuth();
@@ -54,6 +55,7 @@ export default function StreamingHome() {
 
   return (
     <GlassPageFrame bottomContent={<AuraBottomNav />}>
+      <SideAccessMenu />
       <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8 relative">
 
         {/* Edit Mode Grid Overlay */}

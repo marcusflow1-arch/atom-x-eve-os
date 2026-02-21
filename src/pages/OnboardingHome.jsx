@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import PageGuideCard from '@/components/onboarding/PageGuideCard';
 import { Button } from '@/components/ui/button';
+import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 
 // Core Loop Pillar Card
 const PillarCard = ({ icon: Icon, title, description, color, delay }) => (
@@ -102,6 +103,7 @@ export default function OnboardingHome() {
 
   return (
     <div className="min-h-screen w-full text-white overflow-y-auto overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+      <SideAccessMenu />
       
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none">

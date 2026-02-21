@@ -6,12 +6,14 @@ import LibrarySidebar from '@/components/streaming/LibrarySidebar';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
+import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 
 export default function Aura() {
   const navigate = useNavigate();
 
   return (
     <GlassPageFrame bottomContent={<AuraBottomNav />}>
+    <SideAccessMenu />
     <div className="w-full min-h-screen bg-[#0f1419] relative">
       {/* Main Content */}
       <div className="pt-20 pb-24">
