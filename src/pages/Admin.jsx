@@ -22,6 +22,7 @@ import GameFileAnalyzer from '../components/admin/GameFileAnalyzer';
 import InfrastructurePanel from '../components/admin/InfrastructurePanel';
 import ReactorEditor from '../components/admin/ReactorEditor';
 import AssetPackImporter from '../components/admin/AssetPackImporter';
+import AttachmentEditor from '../components/admin/AttachmentEditor';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -460,6 +461,7 @@ export default function Admin() {
             <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
             <TabsTrigger value="reactor">Reactor Editor</TabsTrigger>
             <TabsTrigger value="asset-pack">Asset Pack Import</TabsTrigger>
+            <TabsTrigger value="attachment-editor">Attachment Editor</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -961,6 +963,10 @@ export default function Admin() {
 
           <TabsContent value="asset-pack">
             <AssetPackImporter />
+          </TabsContent>
+
+          <TabsContent value="attachment-editor" forceMount className="data-[state=inactive]:hidden">
+            <AttachmentEditor />
           </TabsContent>
 
                     </Tabs>
