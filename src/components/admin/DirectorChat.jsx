@@ -23,16 +23,36 @@ const FINALIZE_KEYWORDS = ['finalize', 'done', 'commit', 'execute', 'go ahead', 
  *  - editorState: object — current state snapshot from the editor (selected model, bone, animation, time, etc.)
  *  - onTaskCompiled: (taskSummary: string) => void — called when the user confirms the compiled task
  */
+const STORAGE_KEY_PREFIX = 'director_chat_';
+
+function loadPersistedMessages(context) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PREFIX + context);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function persistMessages(context, messages) {
+  try {
+    localStorage.setItem(STORAGE_KEY_PREFIX + context, JSON.stringify(messages));
+  } catch { /* storage full — ignore */ }
+}
+
 export default function DirectorChat({ context = 'Editor', editorState = {}, onTaskCompiled }) {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => loadPersistedMessages(context));
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  const [attachedImages, setAttachedImages] = useState([]); // URLs of uploaded screenshots
+  const [attachedImages, setAttachedImages] = useState([]);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [compiledTask, setCompiledTask] = useState(null); // The final compiled task summary
+  const [compiledTask, setCompiledTask] = useState(null);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Persist messages whenever they change
+  useEffect(() => {
+    persistMessages(context, messages);
+  }, [messages, context]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -253,7 +273,7 @@ Keep responses concise but specific. Reference actual bone names, time codes, an
           <button onClick={() => setIsMinimized(true)} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10">
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => { setMessages([]); setCompiledTask(null); setAwaitingConfirmation(false); }} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10" title="Clear chat">
+          <button onClick={() => { setMessages([]); setCompiledTask(null); setAwaitingConfirmation(false); persistMessages(context, []); }} className="w-6 h-6 rounded flex items-center justify-center text-white/40 hover:text-red-400 hover:bg-white/10" title="Clear chat">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
