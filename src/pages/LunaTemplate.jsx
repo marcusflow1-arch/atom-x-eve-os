@@ -3208,7 +3208,7 @@ export default function LunaTemplate() {
             </div>
 
             {/* Environment Selector (Replaces Game Banner) */}
-            <div className={`mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`mb-6 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
             </div>
 
