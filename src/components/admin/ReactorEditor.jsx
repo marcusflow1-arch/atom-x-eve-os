@@ -715,36 +715,39 @@ export default function ReactorEditor() {
             </div>
           </div>
 
-          {/* DIRECTOR CHAT PANEL */}
-          {chatOpen && (
-            <DirectorChat
-              context="Reactor Editor"
-              editorState={{
-                selectedModel: selectedModel?.name || selectedModelId,
-                selectedBone,
-                animationName: animName,
-                animationTime: animTime,
-                animationDuration: animDuration,
-                isPlaying,
-                editingReactor: editingReactor ? {
-                  bone: editingReactor.bone_name,
-                  animation: editingReactor.animation_name,
-                  triggerTime: editingReactor.trigger_time,
-                  triggerEndTime: editingReactor.trigger_end_time,
-                  damage: editingReactor.base_damage,
-                  damageType: editingReactor.damage_type,
-                  fx: editingReactor.fx_name,
-                } : null,
-                fxBlockCount: fxBlocks.length,
-                reactorCount: reactors.length,
-              }}
-              onTaskCompiled={(task) => {
-                console.log('[ReactorEditor] Task compiled:', task);
-              }}
-            />
-          )}
+          {/* DIRECTOR CHAT PANEL — push live state to DirectorBridge */}
+          {(() => {
+            const reactorEditorState = {
+              selectedModel: selectedModel?.name || selectedModelId,
+              selectedBone,
+              animationName: animName,
+              animationTime: animTime,
+              animationDuration: animDuration,
+              isPlaying,
+              editingReactor: editingReactor ? {
+                bone: editingReactor.bone_name,
+                animation: editingReactor.animation_name,
+                triggerTime: editingReactor.trigger_time,
+                triggerEndTime: editingReactor.trigger_end_time,
+                damage: editingReactor.base_damage,
+                damageType: editingReactor.damage_type,
+                fx: editingReactor.fx_name,
+              } : null,
+              fxBlockCount: fxBlocks.length,
+              reactorCount: reactors.length,
+            };
+            DirectorBridge.updateEditorState('Reactor Editor', reactorEditorState);
+            return chatOpen ? (
+              <DirectorChat
+                context="Reactor Editor"
+                editorState={reactorEditorState}
+                onTaskCompiled={(task) => {
+                  console.log('[ReactorEditor] Task compiled:', task);
+                }}
+                /> ) : null;
+                })()}
 
-          {/* RIGHT PANEL: Properties / FX */}
+                {/* RIGHT PANEL: Properties / FX */}
           <div className={`border-l border-slate-800 transition-all flex flex-col ${rightCollapsed ? 'w-8' : 'w-72'}`}>
             <div className="flex items-center border-b border-slate-800">
               <button onClick={() => setRightCollapsed(!rightCollapsed)} className="p-1.5 text-slate-500 hover:text-white">
