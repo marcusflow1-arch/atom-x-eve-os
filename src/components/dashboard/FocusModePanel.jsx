@@ -1292,53 +1292,98 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
   );
 }
 
-// New QuickActionsBar Component
+// New QuickActionsBar Component - Dropdown Menu with Liquid Glass
 function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
+
   const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, color: 'from-blue-500/20 to-cyan-500/20', borderColor: 'border-blue-500/30', onClick: onFriendsClick },
-    { id: 'live', label: 'Live', icon: Radio, color: 'from-red-500/20 to-rose-500/20', borderColor: 'border-red-500/30', onClick: onLiveClick },
-    { id: 'cards', label: 'Cards', icon: Trophy, color: 'from-yellow-500/20 to-orange-500/20', borderColor: 'border-yellow-500/30', onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, color: 'from-emerald-500/20 to-teal-500/20', borderColor: 'border-emerald-500/30', onClick: () => navigate(createPageUrl('AIStory')) },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'from-orange-500/20 to-red-500/20', borderColor: 'border-orange-500/30', onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'season-pass', label: 'Season Pass', icon: Crown, color: 'from-amber-500/20 to-yellow-500/20', borderColor: 'border-amber-500/30', onClick: () => navigate(createPageUrl('SeasonalPass')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'from-cyan-500/20 to-blue-500/20', borderColor: 'border-cyan-500/30', onClick: () => navigate(createPageUrl('Leaderboard')) },
+    { id: 'stats', label: 'Stats', icon: TrendingUp, onClick: () => { onStatsClick?.(); setIsOpen(false); } },
+    { id: 'friends', label: 'Friends', icon: Users, onClick: () => { onFriendsClick?.(); setIsOpen(false); } },
+    { id: 'live', label: 'Live', icon: Radio, onClick: () => { onLiveClick?.(); setIsOpen(false); } },
+    { id: 'cards', label: 'Cards', icon: Trophy, onClick: () => { navigate(createPageUrl('GenreMastery')); setIsOpen(false); } },
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, onClick: () => { navigate(createPageUrl('AIStory')); setIsOpen(false); } },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, onClick: () => { navigate(createPageUrl('AIBattle')); setIsOpen(false); } },
+    { id: 'season-pass', label: 'Season Pass', icon: Crown, onClick: () => { navigate(createPageUrl('SeasonalPass')); setIsOpen(false); } },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, onClick: () => { navigate(createPageUrl('Leaderboard')); setIsOpen(false); } },
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto w-full pointer-events-auto" style={{ scrollbarWidth: 'none' }}>
-      <motion.button
-        key="stats-tile"
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onStatsClick}
-        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/15 transition-all flex-shrink-0"
-        style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', width: '85px', height: '75px' }}
+    <div className="relative w-full pointer-events-auto" ref={dropdownRef}>
+      {/* Trigger Button */}
+      <button
+        onClick={() => setIsOpen(v => !v)}
+        className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group"
+        style={{
+          background: isOpen ? 'rgba(20, 28, 40, 0.85)' : 'rgba(15, 22, 35, 0.75)',
+          backdropFilter: 'blur(30px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+          border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)'}`,
+          boxShadow: isOpen
+            ? '0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            : '0 2px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.03)'
+        }}
       >
-        <TrendingUp className="w-5 h-5 text-white/80" />
-        <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">Stats</span>
-      </motion.button>
-      {quickActions.map((action) => {
-        const Icon = action.icon;
-        return (
-          <motion.button
-            key={action.id}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={action.onClick}
-            className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
+        <div className="flex items-center gap-3">
+          <Layers className="w-4 h-4 text-cyan-400/80" />
+          <span className="text-[#CCCCCC] text-sm font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            Quick Actions
+          </span>
+        </div>
+        <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+          <ChevronDown className="w-4 h-4 text-[#A0A8B4]" />
+        </motion.div>
+      </button>
+
+      {/* Dropdown Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="overflow-hidden rounded-2xl"
             style={{
-              background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
-              width: '85px',
-              height: '75px'
+              background: 'rgba(12, 18, 30, 0.88)',
+              backdropFilter: 'blur(35px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(35px) saturate(150%)',
+              border: '1px solid rgba(255, 255, 255, 0.10)',
+              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.04)'
             }}
           >
-            <Icon className="w-5 h-5 text-white/80" />
-            <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
-          </motion.button>
-        );
-      })}
+            <div className="p-2 grid grid-cols-4 gap-1.5">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <motion.button
+                    key={action.id}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={action.onClick}
+                    className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/[0.06] transition-all hover:bg-white/[0.08] hover:border-white/15"
+                    style={{ background: 'rgba(255,255,255,0.02)' }}
+                  >
+                    <Icon className="w-5 h-5 text-white/70" />
+                    <span className="text-white/60 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
