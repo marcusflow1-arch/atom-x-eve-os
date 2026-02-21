@@ -67,7 +67,13 @@ export default function AttachmentEditor() {
   const [idleCycleEnabled, setIdleCycleEnabled] = useState(false);
   const idleCycleEnabledRef = useRef(false);
   const idleCycleIndexRef = useRef(0);
-  const idleCycleAnimNames = useRef(['standing idle 02 looking', 'standing idle 03 examine']);
+  // Cycle through idle animations 00-03 (or as many as available)
+  const idleCycleAnimNames = useRef([
+    'standing idle 01', 
+    'standing idle 02 looking', 
+    'standing idle 03 examine',
+    'standing idle 04' 
+  ]);
 
   // Gizmo drag
   const dragAxisRef = useRef(null);
@@ -93,6 +99,18 @@ export default function AttachmentEditor() {
     queryFn: () => base44.entities.Model3D.list('-created_date', 100),
     staleTime: 60000,
   });
+
+  // Merge default characters with DB models for the dropdown
+  const availableCharacters = [
+    { id: 'c1', name: 'C1 (Erika)', url: CHARACTER_URLS.c1, type: 'fbx' },
+    { id: 'ybot', name: 'Y-Bot', url: CHARACTER_URLS.ybot, type: 'fbx' },
+    ...models3d.map(m => ({
+      id: m.id,
+      name: m.name,
+      url: m.file_url,
+      type: (m.file_url || '').toLowerCase().endsWith('.glb') ? 'glb' : 'fbx'
+    }))
+  ];
 
   // ── Three.js Scene Setup ──
   const initDoneRef = useRef(false);
@@ -202,37 +220,61 @@ export default function AttachmentEditor() {
     setCurrentAnimName('');
     currentActionRef.current = null;
 
-    const url = CHARACTER_URLS[selectedCharacter];
-    new FBXLoader().load(url, async (fbx) => {
-      // Guard: scene may have been torn down while loading
-      if (!sceneRef.current) return;
-      fbx.scale.set(0.01, 0.01, 0.01);
-      fbx.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
-      const bones = [];
-      fbx.traverse(child => { if (child.isBone) bones.push(child.name); });
-      setBoneList(bones);
-      characterRef.current = fbx;
-      scene.add(fbx);
+    const charData = availableCharacters.find(c => c.id === selectedCharacter) || availableCharacters[0];
+    const url = charData?.url;
+    if (!url) return;
 
-      const mixer = new THREE.AnimationMixer(fbx);
+    const onLoad = async (object) => {
+      if (!sceneRef.current) return;
+      
+      const model = object.scene || object;
+      
+      // Auto-scale if needed (Mixamo FBX usually needs 0.01, GLB usually 1)
+      if (charData.type === 'fbx') {
+        model.scale.set(0.01, 0.01, 0.01);
+      } else {
+        // For GLB, ensure it's reasonable size
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+        if (size.y > 10) model.scale.setScalar(0.01);
+        else if (size.y < 0.1) model.scale.setScalar(10);
+      }
+
+      model.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; } });
+      
+      const bones = [];
+      model.traverse(child => { if (child.isBone) bones.push(child.name); });
+      setBoneList(bones);
+      characterRef.current = model;
+      scene.add(model);
+
+      const mixer = new THREE.AnimationMixer(model);
       mixerRef.current = mixer;
 
       const idleAnim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
       if (idleAnim) {
-        const animFbx = await new FBXLoader().loadAsync(idleAnim.file_url);
-        if (animFbx.animations.length > 0) {
-          const clip = animFbx.animations[0];
-          const action = mixer.clipAction(clip);
-          action.play();
-          currentActionRef.current = action;
-          setAnimDuration(clip.duration);
-          setCurrentAnimName(idleAnim.name);
-          setIsPlaying(true);
-        }
+        try {
+          const animFbx = await new FBXLoader().loadAsync(idleAnim.file_url);
+          if (animFbx.animations.length > 0) {
+            const clip = animFbx.animations[0];
+            const action = mixer.clipAction(clip);
+            action.play();
+            currentActionRef.current = action;
+            setAnimDuration(clip.duration);
+            setCurrentAnimName(idleAnim.name);
+            setIsPlaying(true);
+          }
+        } catch (e) { console.error('Failed to load default idle', e); }
       }
       setIsLoaded(true);
-    });
-  }, [sceneReady, selectedCharacter, adminAnimations]);
+    };
+
+    if (charData.type === 'glb') {
+      new GLTFLoader().load(url, onLoad, undefined, e => console.error(e));
+    } else {
+      new FBXLoader().load(url, onLoad, undefined, e => console.error(e));
+    }
+  }, [sceneReady, selectedCharacter, adminAnimations, availableCharacters]);
 
   // ── Animation Controls ──
   const handlePlayAnimation = useCallback(() => {
@@ -665,12 +707,15 @@ export default function AttachmentEditor() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            {Object.keys(CHARACTER_URLS).map(key => (
-              <Button key={key} size="sm" variant={selectedCharacter === key ? 'default' : 'outline'}
-                onClick={() => setSelectedCharacter(key)} className="h-7 text-[10px]">
-                {key === 'c1' ? 'C1 (Erika)' : 'Y-Bot'}
-              </Button>
-            ))}
+            <select
+              value={selectedCharacter}
+              onChange={(e) => setSelectedCharacter(e.target.value)}
+              className="h-7 rounded-md border border-slate-700 bg-slate-800 text-[10px] text-white px-2 outline-none focus:border-cyan-500"
+            >
+              {availableCharacters.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
           <Badge variant="outline" className="text-slate-500 text-[9px]">{attachedObjects.length} objects</Badge>
           <button
