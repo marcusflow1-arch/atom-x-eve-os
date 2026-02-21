@@ -94,12 +94,25 @@ export default function CloudKnowledgeImporter({ onComplete }) {
                   ? <Loader2 className="w-3 h-3 text-cyan-400 animate-spin flex-shrink-0" />
                   : <Clock className="w-3 h-3 text-slate-500 flex-shrink-0" />
                 }
-                <span className={item.status === 'processing' ? 'text-cyan-300' : 'text-slate-400'}>
+                <span className={`flex-1 truncate ${item.status === 'processing' ? 'text-cyan-300' : 'text-slate-400'}`}>
                   {item.label || item.url}
                 </span>
                 <Badge className={`text-[8px] ${item.status === 'processing' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-700 text-slate-400'}`}>
                   {item.status}
                 </Badge>
+                {item.status === 'pending' && (
+                  <button
+                    onClick={async () => {
+                      await base44.entities.PendingKnowledgeURL.delete(item.id);
+                      queryClient.invalidateQueries({ queryKey: ['pending-knowledge-urls'] });
+                      showSuccess('Removed pending URL');
+                    }}
+                    className="text-red-400/60 hover:text-red-400 transition-colors p-0.5 flex-shrink-0"
+                    title="Remove from queue"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
