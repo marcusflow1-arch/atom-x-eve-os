@@ -1775,6 +1775,8 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('contextmenu', onContextMenu);
       dismissCompanion();
+      // Clean up C1 weapon/effect attachments
+      if (c1ModelRef.current?.userData?._weaponCleanup) c1ModelRef.current.userData._weaponCleanup();
       // Clean up all spawned AI instances
       spawnedAIModelsRef.current.forEach(inst => {
         if (inst.mixer) inst.mixer.stopAllAction();
