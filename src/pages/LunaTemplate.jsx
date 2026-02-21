@@ -2486,20 +2486,28 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const checkBladeEquipped = async () => {
+      // Check if any weapon slot has an item with a model_url (direct from inventory)
+      const equippedWeapon = Object.entries(equippedItems).find(
+        ([slotId, item]) => slotId.startsWith('weapon-') && item.model_url
+      );
+
+      if (equippedWeapon) {
+        const [, item] = equippedWeapon;
+        if (item.model_url !== weaponModelUrl) {
+          setWeaponModelUrl(item.model_url);
+        }
+        return;
+      }
+
+      // Legacy check for Blade of Abyss by name
       const hasBladeOfAbyss = Object.entries(equippedItems).some(
-        ([slotId, item]) => slotId.startsWith('weapon-') && item.name === 'Blade of Abyss'
+        ([slotId, item]) => slotId.startsWith('weapon-') && (item.name === 'Blade of Abyss' || item.name === 'Blade of the Abyss')
       );
 
       if (hasBladeOfAbyss && !weaponModelUrl) {
-        try {
-          const swordModels = await base44.entities.ModelFBX.filter({ name: 'Blade of Abyss Sword' });
-          if (swordModels.length > 0) {
-            setWeaponModelUrl(swordModels[0].file_url);
-          }
-        } catch (error) {
-          console.error('Failed to load weapon model:', error);
-        }
-      } else if (!hasBladeOfAbyss && weaponModelUrl) {
+        // Use the known sword GLB URL directly
+        setWeaponModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/53379b78d_stylized_emerald_sword.glb');
+      } else if (!hasBladeOfAbyss && !equippedWeapon && weaponModelUrl) {
         setWeaponModelUrl(null);
       }
     };
