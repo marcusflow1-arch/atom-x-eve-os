@@ -3517,6 +3517,7 @@ export default function LunaTemplate() {
           key="inventory-panel-container"
         >
           <InventoryPanel
+            inventory={inventoryData}
             onEquip={handleEquipItem}
             targetSlot={clickedSlot}
             onClose={() => setClickedSlot(null)}
