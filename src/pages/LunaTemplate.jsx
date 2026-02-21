@@ -2644,6 +2644,8 @@ export default function LunaTemplate() {
             isStatsOpen={showStats}
             playerSpawn={playerSpawn}
             useMeshCollision={useMeshCollision}
+            equippedWeaponUrl={weaponModelUrl}
+            drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb"
           />
         </div>
       }
