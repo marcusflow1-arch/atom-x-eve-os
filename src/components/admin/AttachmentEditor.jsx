@@ -63,6 +63,7 @@ export default function AttachmentEditor() {
 
   // Gizmo drag
   const dragAxisRef = useRef(null);
+  const dragModeRef = useRef(null); // 'translate' | 'rotate'
   const dragStartRef = useRef(null);
   const dragObjectIdRef = useRef(null);
 
@@ -384,9 +385,10 @@ export default function AttachmentEditor() {
         const gizmoHits = getGizmoHitMeshes(gizmoRef.current);
         const intersects = raycasterRef.current.intersectObjects(gizmoHits, false);
         if (intersects.length > 0) {
-          const axis = intersects[0].object.userData.axis;
-          if (axis) {
-            dragAxisRef.current = axis;
+          const hit = intersects[0].object.userData;
+          if (hit.axis) {
+            dragAxisRef.current = hit.axis;
+            dragModeRef.current = hit.mode || 'translate';
             dragStartRef.current = { x: e.clientX, y: e.clientY };
             dragObjectIdRef.current = selectedObjectId;
             if (controlsRef.current) controlsRef.current.enabled = false;
@@ -412,21 +414,43 @@ export default function AttachmentEditor() {
       if (!dragAxisRef.current || !dragObjectIdRef.current) return;
       const dx = e.clientX - dragStartRef.current.x;
       const dy = e.clientY - dragStartRef.current.y;
-      const sensitivity = 0.15;
-      setAttachedObjects(prev => prev.map(o => {
-        if (o.id !== dragObjectIdRef.current) return o;
-        const pos = { ...o.position };
-        if (dragAxisRef.current === 'x') pos.x += dx * sensitivity;
-        if (dragAxisRef.current === 'y') pos.y -= dy * sensitivity;
-        if (dragAxisRef.current === 'z') pos.z += dx * sensitivity;
-        return { ...o, position: pos };
-      }));
+
+      if (dragModeRef.current === 'rotate') {
+        // Rotation mode: drag updates rotation in degrees
+        const rotSensitivity = 0.5;
+        setAttachedObjects(prev => prev.map(o => {
+          if (o.id !== dragObjectIdRef.current) return o;
+          const rot = { ...o.rotation };
+          const axis = dragAxisRef.current;
+          if (axis === 'x') rot.x += dy * rotSensitivity;
+          else if (axis === 'y') rot.y += dx * rotSensitivity;
+          else if (axis === 'z') rot.z += dx * rotSensitivity;
+          else if (axis === 'free') {
+            // Free rotate: horizontal → Y, vertical → X
+            rot.y += dx * rotSensitivity;
+            rot.x += dy * rotSensitivity;
+          }
+          return { ...o, rotation: rot };
+        }));
+      } else {
+        // Translate mode
+        const posSensitivity = 0.15;
+        setAttachedObjects(prev => prev.map(o => {
+          if (o.id !== dragObjectIdRef.current) return o;
+          const pos = { ...o.position };
+          if (dragAxisRef.current === 'x') pos.x += dx * posSensitivity;
+          if (dragAxisRef.current === 'y') pos.y -= dy * posSensitivity;
+          if (dragAxisRef.current === 'z') pos.z += dx * posSensitivity;
+          return { ...o, position: pos };
+        }));
+      }
       dragStartRef.current = { x: e.clientX, y: e.clientY };
     };
 
     const onPointerUp = () => {
       if (dragAxisRef.current) {
         dragAxisRef.current = null;
+        dragModeRef.current = null;
         dragObjectIdRef.current = null;
         if (controlsRef.current) controlsRef.current.enabled = true;
       }
@@ -534,7 +558,7 @@ export default function AttachmentEditor() {
               {selectedObjectId && (
                 <div className="absolute top-2 left-2 z-10 px-2.5 py-1 rounded-lg bg-cyan-600/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold backdrop-blur-sm pointer-events-none">
                   Selected: {attachedObjects.find(o => o.id === selectedObjectId)?.label || selectedObjectId.slice(-6)}
-                  &nbsp;— Drag gizmo axes to move
+                  &nbsp;— Arrows = move • Rings = rotate • Center = free rotate
                 </div>
               )}
               {!isPlaying && currentAnimName && (
