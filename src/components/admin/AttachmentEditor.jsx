@@ -279,13 +279,21 @@ export default function AttachmentEditor() {
   }, []);
 
   // ── Idle Cycle: alternate between two idle animations when enabled ──
+  // Keep ref in sync so event listeners always see the latest value
+  useEffect(() => { idleCycleEnabledRef.current = idleCycleEnabled; }, [idleCycleEnabled]);
+
   const playNextIdleCycleAnim = useCallback(async () => {
     if (!characterRef.current || !mixerRef.current || !adminAnimations.length) return;
-    const idx = idleCycleIndexRef.current % IDLE_CYCLE_ANIMS.length;
-    const animName = IDLE_CYCLE_ANIMS[idx];
-    const anim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === animName.toLowerCase().trim());
-    if (!anim) { console.warn('[IdleCycle] Animation not found:', animName); return; }
+    const names = idleCycleAnimNames.current;
+    const idx = idleCycleIndexRef.current % names.length;
+    const targetName = names[idx];
+    const anim = adminAnimations.find(a => (a.name || '').toLowerCase().trim() === targetName.toLowerCase().trim());
+    if (!anim) {
+      console.warn('[IdleCycle] Animation not found:', targetName, '— available:', adminAnimations.map(a => a.name));
+      return;
+    }
 
+    console.log('[IdleCycle] Playing:', anim.name, '(index', idx, ')');
     const mixer = mixerRef.current;
     mixer.stopAllAction();
     currentActionRef.current = null;
@@ -294,6 +302,7 @@ export default function AttachmentEditor() {
     if (animFbx.animations.length > 0) {
       const clip = animFbx.animations[0];
       const action = mixer.clipAction(clip);
+      action.reset();
       action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = true;
       action.play();
@@ -307,21 +316,25 @@ export default function AttachmentEditor() {
   }, [adminAnimations]);
 
   // Listen for animation finished events to chain the next idle cycle anim
+  // Uses ref to avoid stale closure issues
   useEffect(() => {
-    if (!mixerRef.current || !idleCycleEnabled) return;
     const mixer = mixerRef.current;
+    if (!mixer) return;
     const onFinished = () => {
-      if (idleCycleEnabled) {
-        playNextIdleCycleAnim();
+      console.log('[IdleCycle] Animation finished, cycleEnabled:', idleCycleEnabledRef.current);
+      if (idleCycleEnabledRef.current) {
+        // Small delay to avoid same-frame issues
+        setTimeout(() => playNextIdleCycleAnim(), 50);
       }
     };
     mixer.addEventListener('finished', onFinished);
     return () => mixer.removeEventListener('finished', onFinished);
-  }, [idleCycleEnabled, playNextIdleCycleAnim]);
+  }, [playNextIdleCycleAnim]);
 
   // Start idle cycle when toggled on
   useEffect(() => {
     if (idleCycleEnabled && isLoaded) {
+      console.log('[IdleCycle] Starting cycle');
       idleCycleIndexRef.current = 0;
       playNextIdleCycleAnim();
     }
