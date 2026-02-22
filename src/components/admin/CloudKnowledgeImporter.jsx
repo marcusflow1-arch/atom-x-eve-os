@@ -71,10 +71,10 @@ export default function CloudKnowledgeImporter({ onComplete }) {
       <div className="flex items-center gap-2 mb-3">
         <Cloud className="w-5 h-5 text-indigo-400" />
         <h3 className="text-white font-bold text-sm">Cloud / URL Import</h3>
-        <Badge variant="outline" className="text-indigo-400 border-indigo-500/30 text-[9px]">Fully Automatic — Server-Side</Badge>
+        <Badge variant="outline" className="text-indigo-400 border-indigo-500/30 text-[9px]">Fully Automatic — Learning & Adapting</Badge>
       </div>
       <p className="text-slate-400 text-xs mb-4">
-        Paste any URL and hit submit. Files are fetched and analyzed <strong className="text-white">automatically on the server</strong> — you can close the browser, leave the page, even shut down your PC. When you come back, the knowledge will be in your bank.
+        Paste any URL and hit submit. The system will <strong className="text-white">study, learn, and adapt</strong> from each file automatically on the server. If a file fails, it will be skipped while the rest continue processing. You can close the browser; the knowledge will be stored in your bank.
       </p>
 
       {/* Active Queue Indicator */}
