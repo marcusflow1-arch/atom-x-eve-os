@@ -187,6 +187,68 @@ export default function EngineViewport({ onSceneReady }) {
           mesh.name = type + '_' + Date.now();
           scene.add(mesh);
           setObjectCount(c => c + 1);
+        },
+        createTerrain: (options = {}) => {
+            const size = options.size || 50;
+            const segments = options.segments || 64;
+            const color = options.color || 0x2d5a27; // forest green default
+            
+            const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
+            
+            // Simple random displacement for terrain look
+            const positionAttribute = geometry.attributes.position;
+            for ( let i = 0; i < positionAttribute.count; i ++ ) {
+                const x = positionAttribute.getX( i );
+                const y = positionAttribute.getY( i );
+                // Simple noise
+                const z = (Math.sin(x * 0.2) * Math.cos(y * 0.2) * 2) + (Math.random() * 0.5);
+                positionAttribute.setZ( i, z );
+            }
+            geometry.computeVertexNormals();
+
+            const material = new THREE.MeshStandardMaterial({ 
+                color: color, 
+                roughness: 0.8, 
+                metalness: 0.1,
+                flatShading: true 
+            });
+            
+            const terrain = new THREE.Mesh(geometry, material);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.receiveShadow = true;
+            terrain.castShadow = true;
+            terrain.name = 'GeneratedTerrain_' + Date.now();
+            
+            scene.add(terrain);
+            setObjectCount(c => c + 1);
+            
+            // Add some random trees/rocks if requested
+            if (options.addFoliage) {
+               const treeGeo = new THREE.ConeGeometry(0.5, 2, 8);
+               const treeMat = new THREE.MeshStandardMaterial({ color: 0x1a472a });
+               const trunkGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
+               const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3c31 });
+
+               for(let i=0; i<20; i++) {
+                  const x = (Math.random() - 0.5) * size * 0.8;
+                  const z = (Math.random() - 0.5) * size * 0.8;
+                  const y = (Math.sin(x * 0.2) * Math.cos(z * 0.2) * 2) + 0.5; // match terrain height approx
+
+                  const group = new THREE.Group();
+                  const tree = new THREE.Mesh(treeGeo, treeMat);
+                  tree.position.y = 1;
+                  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+                  trunk.position.y = 0.25;
+                  
+                  group.add(trunk);
+                  group.add(tree);
+                  group.position.set(x, y, z); // z in 3D is y in plane geo (rotated)
+                  group.scale.setScalar(0.5 + Math.random());
+                  
+                  scene.add(group);
+               }
+               setObjectCount(c => c + 20);
+            }
         }
       });
     }

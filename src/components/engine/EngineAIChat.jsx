@@ -219,6 +219,13 @@ export default function EngineAIChat({ sceneApi }) {
           animation_url: action.data?.animation_url
        });
     }
+    else if (action.type === 'create_terrain') {
+       sceneApi.createTerrain({
+          size: action.data?.size || 50,
+          color: action.data?.color,
+          addFoliage: action.data?.addFoliage !== false
+       });
+    }
   }, [sceneApi]);
 
   const handleSend = async (overrideText) => {
