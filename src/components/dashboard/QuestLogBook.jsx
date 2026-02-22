@@ -129,11 +129,24 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
 // --- Main Component ---
 
 export default function QuestLogBook() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [pinnedGameId, setPinnedGameId] = useState('cyberpunk'); // Default game
-  const [viewGameId, setViewGameId] = useState('cyberpunk');
-  const [genreFilter, setGenreFilter] = useState('All');
+  const navigate = useNavigate();
+  // Read persisted pinned game from localStorage
+  const [pinnedGameId, setPinnedGameId] = useState(() => localStorage.getItem('luna_pinned_quest_game') || 'cyberpunk');
   
+  // Update local state when localStorage changes (in case changed from full page)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setPinnedGameId(localStorage.getItem('luna_pinned_quest_game') || 'cyberpunk');
+    };
+    window.addEventListener('storage', handleStorageChange);
+    // Custom event dispatch from full page to sync immediately
+    window.addEventListener('questPinUpdated', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('questPinUpdated', handleStorageChange);
+    };
+  }, []);
+
   // Book Page Logic (Collapsed)
   const [spreadIdx, setSpreadIdx] = useState(0);
   const [contentVisible, setContentVisible] = useState(true);
@@ -167,20 +180,12 @@ export default function QuestLogBook() {
     }, 220);
   };
 
-  // Expanded View Logic
-  const filteredGames = useMemo(() => {
-    if (genreFilter === 'All') return GAMES_DATA;
-    return GAMES_DATA.filter(g => g.genre === genreFilter);
-  }, [genreFilter]);
-
-  const viewGame = GAMES_DATA.find(g => g.id === viewGameId) || GAMES_DATA[0];
-
   return (
     <>
       <div className="w-full flex flex-col items-center" style={{ perspective: '1000px' }}>
-        {/* Title - Clickable to Expand */}
+        {/* Title - Clickable to Navigate to Full Page */}
         <button 
-          onClick={() => setIsExpanded(true)}
+          onClick={() => navigate(createPageUrl('QuestLog'))}
           className="flex items-center gap-2 mb-3 w-full justify-center group"
         >
           <BookOpen className="w-4 h-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
@@ -241,163 +246,6 @@ export default function QuestLogBook() {
           </div>
         </div>
       </div>
-
-      {/* EXPANDED MODAL VIEW */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-6"
-            onClick={() => setIsExpanded(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full max-w-5xl h-[80vh] bg-[#0f1115] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Left Sidebar: Games List */}
-              <div className="w-full md:w-80 bg-[#161920] border-r border-white/5 flex flex-col">
-                <div className="p-6 border-b border-white/5">
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <BookOpen className="w-5 h-5 text-cyan-400" /> Quest Log
-                  </h2>
-                  
-                  {/* Genre Filter */}
-                  <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
-                    {['All', 'RPG', 'FPS', 'Misc'].map(genre => (
-                      <button
-                        key={genre}
-                        onClick={() => setGenreFilter(genre)}
-                        className={`text-xs px-3 py-1.5 rounded-full border transition-all whitespace-nowrap ${
-                          genreFilter === genre 
-                            ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300' 
-                            : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
-                        }`}
-                      >
-                        {genre}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                  {filteredGames.map(game => (
-                    <button
-                      key={game.id}
-                      onClick={() => setViewGameId(game.id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${
-                        viewGameId === game.id
-                          ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
-                          : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/5'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${viewGameId === game.id ? 'bg-cyan-500/20' : 'bg-black/20'}`}>
-                        {game.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`font-bold text-sm truncate ${viewGameId === game.id ? 'text-white' : 'text-white/60'}`}>{game.title}</div>
-                        <div className="text-[10px] text-white/30 flex items-center justify-between">
-                          <span>{game.genre}</span>
-                          <span>{game.quests.filter(q => q.complete).length}/{game.quests.length} Done</span>
-                        </div>
-                      </div>
-                      {viewGameId === game.id && <ChevronRight className="w-4 h-4 text-cyan-400" />}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Right Content: Quests Detail */}
-              <div className="flex-1 flex flex-col bg-[#0f1115] relative">
-                {/* Header */}
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#0f1115]/50 backdrop-blur-md sticky top-0 z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10 flex items-center justify-center text-2xl">
-                      {viewGame.icon}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">{viewGame.title}</h2>
-                      <div className="flex items-center gap-2 text-white/40 text-xs">
-                        <Badge variant="outline" className="border-white/10 text-white/50">{viewGame.genre}</Badge>
-                        <span>•</span>
-                        <span>{viewGame.quests.length} Active Quests</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button 
-                      variant={pinnedGameId === viewGame.id ? "default" : "outline"}
-                      onClick={() => setPinnedGameId(viewGame.id)}
-                      className={`gap-2 ${pinnedGameId === viewGame.id ? 'bg-green-500 hover:bg-green-600 text-white' : 'border-white/10 text-white/60'}`}
-                    >
-                      <Pin className="w-4 h-4" />
-                      {pinnedGameId === viewGame.id ? 'Pinned to Dashboard' : 'Pin to Dashboard'}
-                    </Button>
-                    <button onClick={() => setIsExpanded(false)} className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 transition-colors">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Quests Grid */}
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {viewGame.quests.map((quest) => {
-                      const pct = Math.round((quest.progress / quest.total) * 100);
-                      const isComplete = quest.complete || quest.progress >= quest.total;
-                      
-                      return (
-                        <div key={quest.id} className={`p-4 rounded-2xl border transition-all group ${
-                          isComplete 
-                            ? 'bg-green-900/10 border-green-500/20 opacity-70 hover:opacity-100' 
-                            : 'bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10'
-                        }`}>
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">{quest.icon}</span>
-                              <div>
-                                <h4 className={`font-bold ${isComplete ? 'text-green-400 line-through' : 'text-white'}`}>{quest.title}</h4>
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                                  quest.rarity === 'Legendary' ? 'border-amber-500/30 text-amber-400 bg-amber-500/10' :
-                                  quest.rarity === 'Epic' ? 'border-purple-500/30 text-purple-400 bg-purple-500/10' :
-                                  'border-white/10 text-white/40 bg-white/5'
-                                }`}>
-                                  {quest.rarity}
-                                </span>
-                              </div>
-                            </div>
-                            {isComplete && <div className="bg-green-500/20 p-1.5 rounded-full"><Target className="w-4 h-4 text-green-400" /></div>}
-                          </div>
-                          
-                          <p className="text-sm text-white/60 mb-4 h-10">{quest.desc}</p>
-                          
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-white/40">Progress</span>
-                              <span className="text-white font-mono">{quest.progress} / {quest.total}</span>
-                            </div>
-                            <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full transition-all duration-500 ${isComplete ? 'bg-green-500' : 'bg-cyan-500'}`} 
-                                style={{ width: `${pct}%` }} 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }
