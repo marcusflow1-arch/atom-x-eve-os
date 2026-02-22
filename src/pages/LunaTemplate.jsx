@@ -2676,6 +2676,7 @@ export default function LunaTemplate() {
   }, [equippedItems, weaponModelUrl]);
 
   const [triggerAnimation, setTriggerAnimation] = useState(null);
+  const stageContainerRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => {
