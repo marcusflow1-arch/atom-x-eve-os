@@ -107,52 +107,83 @@ export default function EngineViewport({ onSceneReady }) {
         scene,
         camera,
         renderer,
-        addModel: async (url) => {
+        addModel: async (url, options = {}) => {
           const lower = url.toLowerCase();
           let obj;
-          if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
-            const gltf = await new GLTFLoader().loadAsync(url);
-            obj = gltf.scene;
-            if (gltf.animations?.length > 0) {
-              const mixer = new THREE.AnimationMixer(obj);
-              gltf.animations.forEach(clip => mixer.clipAction(clip).play());
-              mixersRef.current.push(mixer);
+          try {
+            if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+              const gltf = await new GLTFLoader().loadAsync(url);
+              obj = gltf.scene;
+              if (gltf.animations?.length > 0) {
+                const mixer = new THREE.AnimationMixer(obj);
+                gltf.animations.forEach(clip => mixer.clipAction(clip).play());
+                mixersRef.current.push(mixer);
+              }
+            } else if (lower.endsWith('.fbx')) {
+              obj = await new FBXLoader().loadAsync(url);
+              if (obj.animations?.length > 0) {
+                const mixer = new THREE.AnimationMixer(obj);
+                obj.animations.forEach(clip => mixer.clipAction(clip).play());
+                mixersRef.current.push(mixer);
+              }
             }
-          } else if (lower.endsWith('.fbx')) {
-            obj = await new FBXLoader().loadAsync(url);
-            if (obj.animations?.length > 0) {
-              const mixer = new THREE.AnimationMixer(obj);
-              obj.animations.forEach(clip => mixer.clipAction(clip).play());
-              mixersRef.current.push(mixer);
+            if (obj) {
+              // Apply options
+              if (options.position) obj.position.set(options.position.x, options.position.y, options.position.z);
+              if (options.scale) obj.scale.set(options.scale.x, options.scale.y, options.scale.z);
+              else {
+                 // Auto-scale default if not provided
+                const box = new THREE.Box3().setFromObject(obj);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                if (maxDim > 0) obj.scale.setScalar(3 / maxDim);
+              }
+              
+              if (options.animation_url) {
+                 const animLoader = new FBXLoader();
+                 const animObj = await animLoader.loadAsync(options.animation_url);
+                 if (animObj.animations.length > 0) {
+                    const mixer = new THREE.AnimationMixer(obj);
+                    const action = mixer.clipAction(animObj.animations[0]);
+                    action.play();
+                    mixersRef.current.push(mixer);
+                 }
+              }
+
+              obj.traverse(child => {
+                if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+              });
+              scene.add(obj);
+              setObjectCount(c => c + 1);
             }
-          }
-          if (obj) {
-            // Auto-scale
-            const box = new THREE.Box3().setFromObject(obj);
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            if (maxDim > 0) obj.scale.setScalar(3 / maxDim);
-            obj.position.set(0, 0, 0);
-            obj.traverse(child => {
-              if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
-            });
-            scene.add(obj);
-            setObjectCount(c => c + 1);
-          }
+          } catch(e) { console.error("Failed to load model", e); }
         },
-        addPrimitive: (type) => {
+        addPrimitive: (type, options = {}) => {
           let geo;
           switch(type) {
             case 'cube': geo = new THREE.BoxGeometry(1, 1, 1); break;
             case 'sphere': geo = new THREE.SphereGeometry(0.5, 32, 32); break;
             case 'cylinder': geo = new THREE.CylinderGeometry(0.5, 0.5, 1, 32); break;
-            case 'plane': geo = new THREE.PlaneGeometry(2, 2); break;
+            case 'plane': geo = new THREE.PlaneGeometry(10, 10); break; // Larger default plane
             default: geo = new THREE.BoxGeometry(1, 1, 1);
           }
-          const mat = new THREE.MeshStandardMaterial({ color: Math.random() * 0xffffff, roughness: 0.4, metalness: 0.3 });
+          const color = options.color || (Math.random() * 0xffffff);
+          const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.4, metalness: 0.3 });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.position.set((Math.random() - 0.5) * 6, 0.5, (Math.random() - 0.5) * 6);
-          mesh.castShadow = true;
+          
+          if (options.position) mesh.position.set(options.position.x, options.position.y, options.position.z);
+          else mesh.position.set((Math.random() - 0.5) * 6, 0.5, (Math.random() - 0.5) * 6);
+          
+          if (options.scale) mesh.scale.set(options.scale.x, options.scale.y, options.scale.z);
+
+          if (type === 'plane') {
+             mesh.rotation.x = -Math.PI / 2;
+             mesh.receiveShadow = true;
+          } else {
+             mesh.castShadow = true;
+             mesh.receiveShadow = true;
+          }
+
           mesh.name = type + '_' + Date.now();
           scene.add(mesh);
           setObjectCount(c => c + 1);
