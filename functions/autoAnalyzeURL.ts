@@ -29,8 +29,46 @@ Deno.serve(async (req) => {
       const folderId = gdriveFolderMatch[1];
       const folderName = folderLabel || label || `Folder: ${folderId}`;
 
-      // Scrape the public Google Drive folder page to extract file/folder entries
-      const items = await scrapePublicDriveFolder(folderId);
+      // 1. Try Google Drive API first (more reliable for large folders)
+      let items = [];
+      try {
+        const token = await base44.asServiceRole.connectors.getAccessToken("googledrive");
+        if (token) {
+          console.log('Attempting to list folder via API with token...');
+          // Fetch pages of files until we have them all or hit a limit
+          let pageToken = null;
+          do {
+            const query = `'${folderId}' in parents and trashed = false`;
+            const fields = 'nextPageToken, files(id, name, mimeType)';
+            const apiUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=${encodeURIComponent(fields)}&pageSize=1000${pageToken ? `&pageToken=${pageToken}` : ''}`;
+            
+            const apiResp = await fetch(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
+            if (apiResp.ok) {
+              const data = await apiResp.json();
+              if (data.files && data.files.length > 0) {
+                const apiItems = data.files.map(f => ({
+                  id: f.id,
+                  name: f.name,
+                  isFolder: f.mimeType === 'application/vnd.google-apps.folder'
+                }));
+                items.push(...apiItems);
+              }
+              pageToken = data.nextPageToken;
+            } else {
+              console.log('API list failed:', await apiResp.text());
+              pageToken = null;
+            }
+          } while (pageToken && items.length < 500); // Safety limit
+        }
+      } catch (e) {
+        console.log('API list error (skipping to scrape):', e.message);
+      }
+
+      // 2. Fallback to scraping if API failed or returned nothing (common with restricted scopes)
+      if (items.length === 0) {
+        console.log('API returned 0 items, falling back to HTML scraping...');
+        items = await scrapePublicDriveFolder(folderId);
+      }
 
       if (items.length === 0) {
         await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
