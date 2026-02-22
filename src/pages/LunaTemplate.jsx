@@ -2809,7 +2809,7 @@ export default function LunaTemplate() {
             backgroundUrl={bannerBackgroundUrl} 
             roomModelUrl={roomModelUrl} 
             activeScene={activeScene}
-            isStatsOpen={showStats}
+            isStatsOpen={stageMode === 'stats'}
             playerSpawn={playerSpawn}
             useMeshCollision={useMeshCollision}
             equippedWeaponUrl={weaponModelUrl}
@@ -2871,7 +2871,7 @@ export default function LunaTemplate() {
               <FocusModePanel
                  onOpenCalendar={() => setShowCalendar(true)}
                  onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
-                 onToggleStats={() => setShowStats((v) => !v)}
+                 onToggleStats={() => setStageMode(m => m === 'stats' ? 'default' : 'stats')}
                  currentEnvId={currentEnvId}
                  onSelectEnv={handleEnvSelect}
                  onOpenDevSpotlight={() => setShowDevSpotlight(true)}
