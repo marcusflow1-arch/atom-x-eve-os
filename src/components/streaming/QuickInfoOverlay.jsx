@@ -240,60 +240,188 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   </div>
                   
                   {/* Profile Body */}
-                  <div className="flex-1 p-12 pt-16 overflow-y-auto">
+                  {/* Profile Body */}
+                  <div className="flex-1 p-8 pt-16 overflow-y-auto custom-scrollbar">
                       <div className="flex justify-between items-start mb-8">
                           <div>
-                              <h1 className="text-4xl font-bold text-white mb-2">{item.name}</h1>
+                              <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                                {item.name}
+                                {(item.status === 'playing' || item.is_streaming) && (
+                                  <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/50 text-red-400 text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                                    LIVE
+                                  </span>
+                                )}
+                              </h1>
                               <div className="flex items-center gap-3 text-white/60">
-                                  <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-bold uppercase tracking-wider">Lvl 42</span>
+                                  <span className="px-3 py-1 rounded-full bg-white/10 text-xs font-bold uppercase tracking-wider text-cyan-400">Level 42</span>
                                   <span>•</span>
-                                  <span>{item.game ? `Playing ${item.game}` : item.status}</span>
+                                  <span className="flex items-center gap-2">
+                                    {item.status === 'playing' ? (
+                                        <>
+                                            <Gamepad2 className="w-3 h-3 text-emerald-400" />
+                                            Playing <span className="text-white">{item.game || 'Unknown Game'}</span>
+                                        </>
+                                    ) : (
+                                        item.status
+                                    )}
+                                  </span>
                               </div>
                           </div>
                           <div className="flex gap-3">
-                              <Button className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
+                              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white gap-2 shadow-lg shadow-emerald-900/20">
+                                  <Radio className="w-4 h-4" /> Join Voice
+                              </Button>
+                              <Button className="bg-blue-600 hover:bg-blue-500 text-white gap-2 shadow-lg shadow-blue-900/20">
                                   <MessageSquare className="w-4 h-4" /> Message
                               </Button>
-                              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
-                                  <User className="w-4 h-4" /> Profile
+                              <Button variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10 gap-2">
+                                  <User className="w-4 h-4" /> View Profile
                               </Button>
                           </div>
                       </div>
 
+                      {/* Live Stream / Activity Feed */}
+                      {(item.status === 'playing' || item.is_streaming || true) && ( // Force true for demo per request
+                        <div className="mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/40 relative aspect-video group shadow-2xl">
+                            {/* Mock Live Feed */}
+                            <img 
+                                src="https://source.unsplash.com/random/1200x675?gaming,cyberpunk,action" 
+                                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                            
+                            <div className="absolute top-4 left-4 flex gap-2">
+                                <span className="px-2 py-1 rounded bg-red-600 text-white text-xs font-bold flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-white animate-pulse" /> LIVE
+                                </span>
+                                <span className="px-2 py-1 rounded bg-black/60 backdrop-blur-md text-white/80 text-xs font-mono">
+                                    00:42:15
+                                </span>
+                            </div>
+
+                            <div className="absolute bottom-0 left-0 right-0 p-6">
+                                <h3 className="text-xl font-bold text-white mb-1">Ranked Match • Diamond Tier</h3>
+                                <p className="text-white/60 text-sm">Streaming {item.game || 'Gameplay'} - 1.2k Viewers</p>
+                                
+                                <div className="absolute bottom-6 right-6">
+                                    <Button size="sm" className="bg-white text-black hover:bg-gray-200 font-bold">
+                                        Watch Stream
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          {/* Stats Card */}
-                          <div className="md:col-span-2 p-6 rounded-2xl bg-white/5 border border-white/10">
-                              <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-6">Recent Activity</h3>
-                              <div className="space-y-4">
-                                  <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20">
-                                      <div className="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                                          <Gamepad2 className="w-6 h-6" />
-                                      </div>
-                                      <div>
-                                          <div className="text-white font-bold">Cyberpunk 2088</div>
-                                          <div className="text-white/40 text-xs">Played for 3h today</div>
-                                      </div>
-                                  </div>
-                                  <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20">
-                                      <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-400">
-                                          <Trophy className="w-6 h-6" />
-                                      </div>
-                                      <div>
-                                          <div className="text-white font-bold">Achievement Unlocked</div>
-                                          <div className="text-white/40 text-xs">Master of the Arena</div>
-                                      </div>
-                                  </div>
-                              </div>
+                          {/* Left: Progression & Stats */}
+                          <div className="md:col-span-2 space-y-6">
+                                {/* Progression Bar */}
+                                <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                    <div className="flex items-end justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-white font-bold text-lg">Season Progression</h3>
+                                            <p className="text-white/40 text-xs">Battle Pass Season 4</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-2xl font-bold text-cyan-400">Lvl 42</span>
+                                            <span className="text-white/40 text-sm ml-2">/ 100</span>
+                                        </div>
+                                    </div>
+                                    <div className="h-3 w-full bg-black/40 rounded-full overflow-hidden mb-2">
+                                        <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 w-[42%] relative">
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/50 animate-pulse" />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] text-white/30 uppercase font-bold tracking-widest">
+                                        <span>Current Rank: Diamond II</span>
+                                        <span>Next Reward: Epic Skin</span>
+                                    </div>
+                                </div>
+
+                                {/* Achievements */}
+                                <div>
+                                    <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                                        <Trophy className="w-5 h-5 text-yellow-400" /> Recent Achievements
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {[
+                                            { title: 'Unstoppable Force', desc: 'Win 10 ranked matches in a row without dying', date: '2h ago', xp: 500, icon: Swords },
+                                            { title: 'Sharp Shooter', desc: 'Achieve 50 headshots in a single match with a sniper rifle', date: 'Yesterday', xp: 250, icon: Target },
+                                            { title: 'Team Player', desc: 'Revive 5 teammates in a high-stakes zone', date: '2 days ago', xp: 150, icon: Heart }
+                                        ].map((ach, i) => (
+                                            <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-white/5 to-white/10 border border-white/10 flex items-center justify-center text-white/60 group-hover:text-yellow-400 transition-colors shadow-inner">
+                                                    <ach.icon className="w-6 h-6" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between mb-0.5">
+                                                        <span className="text-white font-bold">{ach.title}</span>
+                                                        <span className="text-xs text-white/30">{ach.date}</span>
+                                                    </div>
+                                                    <p className="text-white/60 text-xs leading-relaxed">{ach.desc}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-300 border-yellow-500/20 font-mono text-[10px]">+{ach.xp} XP</Badge>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <Button variant="ghost" className="w-full mt-2 text-white/40 hover:text-white text-xs uppercase tracking-widest">
+                                        View All Achievements
+                                    </Button>
+                                </div>
                           </div>
 
-                          {/* Badges / Info */}
+                          {/* Right: Social & Badges */}
                           <div className="space-y-6">
+                              {/* Quick Actions */}
+                              <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20">
+                                  <h3 className="text-sm font-bold text-white/60 uppercase tracking-widest mb-4">Party Actions</h3>
+                                  <div className="space-y-2">
+                                      <Button className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+                                          <Gamepad2 className="w-4 h-4 mr-2 text-cyan-400" /> Invite to Game
+                                      </Button>
+                                      <Button className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+                                          <Swords className="w-4 h-4 mr-2 text-red-400" /> Challenge to Duel
+                                      </Button>
+                                      <Button className="w-full justify-start bg-white/5 hover:bg-white/10 border border-white/10 text-white/80">
+                                          <ExternalLink className="w-4 h-4 mr-2 text-purple-400" /> Share Profile
+                                      </Button>
+                                  </div>
+                              </div>
+
+                              {/* Badges */}
                               <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-                                  <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-4">Badges</h3>
+                                  <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-4">Earned Badges</h3>
                                   <div className="flex flex-wrap gap-2">
-                                      {['Beta', 'VIP', 'Sniper', 'Leader'].map(b => (
-                                          <span key={b} className="px-3 py-1 rounded-lg bg-white/10 text-white/70 text-xs font-bold border border-white/5">{b}</span>
+                                      {[
+                                          { label: 'Beta Tester', color: 'text-blue-300 bg-blue-500/10 border-blue-500/20' },
+                                          { label: 'VIP', color: 'text-yellow-300 bg-yellow-500/10 border-yellow-500/20' },
+                                          { label: 'Sharpshooter', color: 'text-red-300 bg-red-500/10 border-red-500/20' },
+                                          { label: 'Sherpa', color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' },
+                                          { label: 'Streamer', color: 'text-purple-300 bg-purple-500/10 border-purple-500/20' }
+                                      ].map(b => (
+                                          <span key={b.label} className={`px-3 py-1 rounded-lg text-[10px] font-bold border ${b.color} cursor-help`} title={`Earned for being a ${b.label}`}>{b.label}</span>
                                       ))}
+                                      <span className="px-3 py-1 rounded-lg bg-white/5 text-white/20 text-[10px] font-bold border border-white/5 border-dashed flex items-center justify-center">+3</span>
+                                  </div>
+                              </div>
+                              
+                              {/* Mutual Friends */}
+                              <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                                  <div className="flex justify-between items-center mb-4">
+                                      <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest">Mutuals</h3>
+                                      <span className="text-xs text-white/40">12 Friends</span>
+                                  </div>
+                                  <div className="flex -space-x-2">
+                                      {[1,2,3,4].map(i => (
+                                          <div key={i} className="w-8 h-8 rounded-full border-2 border-[#141822] bg-slate-700 overflow-hidden">
+                                              <img src={`https://source.unsplash.com/random/100x100?face,${i}`} className="w-full h-full object-cover" />
+                                          </div>
+                                      ))}
+                                      <div className="w-8 h-8 rounded-full border-2 border-[#141822] bg-white/10 flex items-center justify-center text-[10px] text-white/60">
+                                          +8
+                                      </div>
                                   </div>
                               </div>
                           </div>
