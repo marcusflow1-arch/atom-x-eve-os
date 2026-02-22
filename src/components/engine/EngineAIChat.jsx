@@ -205,8 +205,20 @@ export default function EngineAIChat({ sceneApi }) {
 
   const executeSceneAction = useCallback((action) => {
     if (!sceneApi) return;
-    if (action.type === 'add_primitive') sceneApi.addPrimitive(action.data?.shape || 'cube');
-    else if (action.type === 'add_model' && action.data?.url) sceneApi.addModel(action.data.url);
+    if (action.type === 'add_primitive') {
+       sceneApi.addPrimitive(action.data?.shape || 'cube', {
+          position: action.data?.position,
+          scale: action.data?.scale,
+          color: action.data?.color
+       });
+    }
+    else if (action.type === 'add_model' && action.data?.url) {
+       sceneApi.addModel(action.data.url, {
+          position: action.data?.position,
+          scale: action.data?.scale,
+          animation_url: action.data?.animation_url
+       });
+    }
   }, [sceneApi]);
 
   const handleSend = async (overrideText) => {
