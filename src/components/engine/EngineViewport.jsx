@@ -18,6 +18,19 @@ export default function EngineViewport({ onSceneReady }) {
   const [objectCount, setObjectCount] = useState(0);
   const clockRef = useRef(new THREE.Clock());
   const mixersRef = useRef([]);
+  const characterRef = useRef(null);
+  const keysRef = useRef({});
+
+  useEffect(() => {
+    const onKeyDown = (e) => { keysRef.current[e.code] = true; };
+    const onKeyUp = (e) => { keysRef.current[e.code] = false; };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+        window.removeEventListener('keydown', onKeyDown);
+        window.removeEventListener('keyup', onKeyUp);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -188,6 +201,10 @@ export default function EngineViewport({ onSceneReady }) {
           scene.add(mesh);
           setObjectCount(c => c + 1);
         },
+        attachCharacterController: (mesh) => {
+            characterRef.current = mesh;
+            console.log("Character controller attached to:", mesh.name);
+        },
         createTerrain: (options = {}) => {
             const size = options.size || 50;
             const segments = options.segments || 64;
@@ -260,6 +277,22 @@ export default function EngineViewport({ onSceneReady }) {
       const delta = clockRef.current.getDelta();
       controls.update();
       mixersRef.current.forEach(m => m.update(delta));
+      
+      // Character Movement (WASD)
+      if (characterRef.current) {
+          const speed = 5 * delta;
+          const char = characterRef.current;
+          
+          if (keysRef.current['KeyW'] || keysRef.current['ArrowUp']) char.position.z -= speed;
+          if (keysRef.current['KeyS'] || keysRef.current['ArrowDown']) char.position.z += speed;
+          if (keysRef.current['KeyA'] || keysRef.current['ArrowLeft']) char.position.x -= speed;
+          if (keysRef.current['KeyD'] || keysRef.current['ArrowRight']) char.position.x += speed;
+          
+          // Simple camera follow
+          // camera.position.lerp(new THREE.Vector3(char.position.x, char.position.y + 5, char.position.z + 8), 0.1);
+          // controls.target.lerp(char.position, 0.1);
+      }
+
       // Rotate starter cube gently
       if (cube) cube.rotation.y += delta * 0.3;
       renderer.render(scene, camera);

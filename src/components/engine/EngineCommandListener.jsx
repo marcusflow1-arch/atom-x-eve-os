@@ -63,6 +63,38 @@ export default function EngineCommandListener({ sceneApi }) {
            showSuccess(`Created blueprint: ${action.data.name}`);
         }
       }
+      else if (action.type === 'setup_character') {
+          // 1. Add model
+          const modelUrl = action.data?.modelUrl;
+          if (modelUrl) {
+              await sceneApi.addModel(modelUrl, {
+                  position: { x: 0, y: 0, z: 0 },
+                  scale: { x: 0.01, y: 0.01, z: 0.01 }, // Adjust scale often needed for FBX
+                  animation_url: action.data?.idleAnimUrl // Start with idle
+              });
+              
+              // Find the mesh we just added (last one) or by searching logic
+              // Since addModel is async but doesn't return the mesh directly in current API, 
+              // we can cheat by grabbing the last added Mesh or assume sceneApi can return it.
+              // For now, let's assume the user wants to control the "C1" model if found.
+              
+              const scene = sceneApi.scene;
+              // Wait a tick for loader
+              setTimeout(() => {
+                  let charMesh = null;
+                  scene.traverse(c => {
+                      if (c.type === 'Group' || (c.isMesh && c.name !== 'ground' && c.name !== 'grid')) {
+                          charMesh = c; // simplistic pick
+                      }
+                  });
+                  
+                  if (charMesh) {
+                      sceneApi.attachCharacterController(charMesh);
+                      showSuccess("Character controls (WASD) attached!");
+                  }
+              }, 1000);
+          }
+      }
     } catch (err) {
       console.error('Action failed:', err);
       throw err;
