@@ -1696,78 +1696,94 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
             />
 
-            <AnimatePresence>
-              {showFriendsDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden pointer-events-auto"
-                >
-                  <div className="w-full">
-                    <FriendsDropdown />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {showStatsDropdown && (
-                <StatsPopupOverlay
-                  activeTab={statsActiveTab}
-                  onTabChange={setStatsActiveTab}
-                  onClose={() => setShowStatsDropdown(false)}
-                />
-              )}
-            </AnimatePresence>
-
-            <div className="mt-1 pointer-events-auto">
+            {/* Banner + DevSpotlight always in normal flow — NEVER move */}
+            <div className="mt-1 pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
                 currentEnvId={currentEnvId}
                 onSelectEnv={onSelectEnv}
               />
-            </div>
 
-            {/* Developer Spotlight + Mystery Boxes row */}
-            <div className="pointer-events-auto flex items-end gap-3" style={{ marginTop: 'auto', paddingTop: '24px', transform: 'translateY(-76px)' }}>
-              <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-            </div>
+              {/* Spacer so DevSpotlightRibbon has a fixed position below banner */}
+              <div className="mt-3 pointer-events-auto">
+                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+              </div>
 
-            <AnimatePresence>
-              {showLiveDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 0, marginBottom: 24 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                  className="w-full overflow-hidden pointer-events-auto"
-                >
-                  <div className="h-[400px] w-full flex gap-4">
-                    <div className="h-full w-[70%]">
-                      <StreamPlayerBox 
-                                                isLive={isLive} 
-                                                onToggleLive={() => setIsLive(!isLive)}
-                                                isPlaying={isPlaying}
-                                                onTogglePlay={() => setIsPlaying(!isPlaying)}
-                                                volume={volume}
-                                                onVolumeChange={setVolume}
-                                                onOpenSettings={() => setShowStreamSettings(true)}
-                                                settingsOpen={showStreamSettings}
-                                                onCloseSettings={() => setShowStreamSettings(false)}
-                                                isSettingsMaximized={settingsMaximized}
-                                                onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
-                                              />
-                    </div>
-                    <div className="h-full w-[30%]">
-                      <StreamChatBox isLive={isLive} />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              {/* OVERLAY: Stats / Friends / Live — floats between banner and DevSpotlight, no layout shift */}
+              <AnimatePresence>
+                {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
+                  <motion.div
+                    key="panel-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-0 right-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
+                    style={{
+                      top: '68px', // just below the Environment Hub tile (60px height + 8px gap)
+                      bottom: '28px', // just above the DevSpotlightRibbon (~28px height)
+                      background: 'rgba(6, 10, 18, 0.90)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: showStatsDropdown
+                        ? '1px solid rgba(34,211,238,0.25)'
+                        : showFriendsDropdown
+                        ? '1px solid rgba(74,222,128,0.25)'
+                        : '1px solid rgba(248,113,113,0.25)',
+                    }}
+                  >
+                    {/* Close button */}
+                    <button
+                      onClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
+                      className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                    >
+                      <X className="w-3 h-3 text-white/60" />
+                    </button>
+
+                    {showStatsDropdown && (
+                      <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                        <StatsPopupOverlay
+                          activeTab={statsActiveTab}
+                          onTabChange={setStatsActiveTab}
+                          onClose={() => setShowStatsDropdown(false)}
+                          inline={true}
+                        />
+                      </div>
+                    )}
+
+                    {showFriendsDropdown && (
+                      <div className="h-full overflow-hidden">
+                        <FriendsDropdown />
+                      </div>
+                    )}
+
+                    {showLiveDropdown && (
+                      <div className="h-full flex gap-3 p-3">
+                        <div className="h-full w-[70%]">
+                          <StreamPlayerBox
+                            isLive={isLive}
+                            onToggleLive={() => setIsLive(!isLive)}
+                            isPlaying={isPlaying}
+                            onTogglePlay={() => setIsPlaying(!isPlaying)}
+                            volume={volume}
+                            onVolumeChange={setVolume}
+                            onOpenSettings={() => setShowStreamSettings(true)}
+                            settingsOpen={showStreamSettings}
+                            onCloseSettings={() => setShowStreamSettings(false)}
+                            isSettingsMaximized={settingsMaximized}
+                            onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                          />
+                        </div>
+                        <div className="h-full w-[30%]">
+                          <StreamChatBox isLive={isLive} />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           {/* Right Column: System Status + Calendar + Knowledge Learner */}
