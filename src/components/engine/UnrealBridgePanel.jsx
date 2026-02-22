@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cpu, Wifi, WifiOff, Play, Send, Terminal, FolderOpen,
   FileCode, RefreshCw, Loader2, CheckCircle2, XCircle,
-  ChevronRight, Trash2, Settings2, Copy, Download
+  ChevronRight, Trash2, Settings2, Copy, Download,
+  HardDrive, ShieldAlert, ScanSearch, Database
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { showSuccess, showError } from '@/components/error/ErrorToast';
+import { Switch } from '@/components/ui/switch';
+import { showSuccess, showError, showInfo } from '@/components/error/ErrorToast';
 import UnrealBridgeStatus from './UnrealBridgeStatus';
 
 const BRIDGE_URL_KEY = 'unreal_bridge_url';
@@ -31,6 +33,13 @@ export default function UnrealBridgePanel() {
   const [commandLog, setCommandLog] = useState([]);
   const [sending, setSending] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Local File System State
+  const [projectHandle, setProjectHandle] = useState(null);
+  const [scannedFiles, setScannedFiles] = useState(0);
+  const [isScanning, setIsScanning] = useState(false);
+  const [strictMode, setStrictMode] = useState(false);
+
   const logEndRef = useRef(null);
 
   // Auto-scroll log
