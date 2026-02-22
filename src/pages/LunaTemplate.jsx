@@ -5,7 +5,7 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -64,6 +64,8 @@ import QuestLogBook from '../components/dashboard/QuestLogBook';
 import ReactorBridge from '../components/admin/reactor/ReactorBridge';
 import CombatXPHandler from '../components/combat/CombatXPHandler';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
+import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
+import FriendsListContent from '../components/dashboard/FriendsListContent';
 
 // Transparent 3D Model Viewer with Chase Camera & Map Environment
 function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
@@ -2406,8 +2408,7 @@ export default function LunaTemplate() {
   const { equipItem, unequipItem, equippedItems, setWeaponModelUrl, weaponModelUrl } = useEquipment();
   const { activeSkills, triggerSkill } = useSkills();
   const [showSettings, setShowSettings] = useState(false);
-  const [showLive, setShowLive] = useState(false);
-  const [showStats, setShowStats] = useState(false);
+  const [stageMode, setStageMode] = useState('default'); // 'default', 'stats', 'live', 'friends'
   const [showAINews, setShowAINews] = useState(false);
   // showInventory removed to prevent duplicate state source of truth
   const [showPinGames, setShowPinGames] = useState(false);
@@ -2612,7 +2613,7 @@ export default function LunaTemplate() {
     const params = new URLSearchParams(location.search);
     const panel = params.get('panel');
     setShowSettings(panel === 'settings');
-    setShowLive(panel === 'live');
+    if (panel === 'live') setStageMode('live');
     setShowProfile(panel === 'profile');
     setShowNotifications(panel === 'notifications');
     setShowConsoleMode(panel === 'console');
@@ -2741,7 +2742,7 @@ export default function LunaTemplate() {
       const slotId = e?.detail?.slotId;
       if (slotId) {
         setClickedSlot(slotId);
-        setShowStats(false); // Close stats panel to prevent duplicate UI background
+        setStageMode('default'); // Close stats panel to prevent duplicate UI background
       }
     };
     window.addEventListener('openInventoryPanel', handler);
@@ -3177,75 +3178,7 @@ export default function LunaTemplate() {
           >
 {!showAvatarProgression && (
             <>
-            {/* LIVE STREAM SECTION (Condition Rendered) */}
-            <AnimatePresence>
-              {showLive && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, mb: 0 }}
-                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
-                  exit={{ opacity: 0, height: 0, mb: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full flex gap-6 overflow-hidden h-[340px] md:h-[380px] lg:h-[420px] pointer-events-auto"
-                >
-                  {/* Streamy Box */}
-                  <div className="basis-[75%] h-full bg-black/40 rounded-2xl border border-white/10 overflow-hidden relative group">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-full h-full bg-slate-900 flex items-center justify-center">
-                            <span className="text-white/40">Stream Offline</span>
-                        </div>
-                    </div>
-                    {/* Mock Controls */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex gap-3">
-                            <button className="text-white hover:text-cyan-400"><Play className="w-5 h-5 fill-current" /></button>
-                            <span className="text-white text-sm">00:00 / 00:00</span>
-                        </div>
-                        <button className="text-white hover:text-cyan-400"><Settings className="w-5 h-5" /></button>
-                    </div>
-                  </div>
-
-                  {/* Chat Box */}
-                  <div className="basis-[25%] h-full bg-black/40 rounded-2xl border border-white/10 flex flex-col overflow-hidden">
-                    <div className="p-3 border-b border-white/10 bg-white/5 flex justify-between items-center">
-                        <span className="text-white font-bold text-sm">Stream Chat</span>
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    </div>
-                    <div className="flex-1 p-3 space-y-2 overflow-y-auto">
-                        <div className="text-xs text-white/60">Welcome to the chat!</div>
-                        <div className="flex gap-2">
-                            <span className="text-cyan-400 text-xs font-bold">Bot:</span>
-                            <span className="text-white text-xs">Stream starting soon...</span>
-                        </div>
-                    </div>
-                    <div className="p-3 border-t border-white/10 bg-white/5">
-                        <input 
-                            type="text" 
-                            placeholder="Send a message..." 
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500/50"
-                        />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* STATS SECTION (Dropdown) */}
-            <AnimatePresence>
-              {showStats && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0, mb: 0 }}
-                  animate={{ opacity: 1, height: 'auto', mb: 24 }}
-                  exit={{ opacity: 0, height: 0, mb: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full overflow-hidden relative z-20" // High Z to sit above fade
-                  style={{ paddingLeft: '440px' }}
-                >
-                  <div className="bg-black/40 rounded-2xl border border-white/10 p-4 mr-8 pointer-events-auto">
-                    <AvatarProgressionBox />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Live/Stats Dropdowns Removed - Replaced by DashboardStage */}
 
             {/* TOP SECTION: Aspects / Artifacts / Genre */}
             <div className={`flex gap-12 mb-6 items-start pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
@@ -3309,29 +3242,29 @@ export default function LunaTemplate() {
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
-                onClick={() => setShowStats((v) => !v)}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+                onClick={() => setStageMode(m => m === 'stats' ? 'default' : 'stats')}
+                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'stats' ? 'border-cyan-400/50 bg-cyan-900/20' : ''}`}
               >
-                <Grid className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
+                <Grid className={`w-10 h-10 relative z-10 ${stageMode === 'stats' ? 'text-cyan-400' : ''}`} style={stageMode === 'stats' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className={`text-sm font-sans relative z-10 ${stageMode === 'stats' ? 'text-cyan-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
               </ConsoleTile>
 
-              {/* Skill Tree */}
+              {/* Friends (Replaces Skill Tree) */}
               <ConsoleTile
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+                onClick={() => setStageMode(m => m === 'friends' ? 'default' : 'friends')}
+                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}
               >
-                <Bot className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Skill Tree</span>
+                <Users className={`w-10 h-10 relative z-10 ${stageMode === 'friends' ? 'text-green-400' : ''}`} style={stageMode === 'friends' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
-              {/* Cards */}
+              {/* Live (Replaces Cards) */}
               <ConsoleTile
-                onClick={() => navigate(createPageUrl('GenreMastery'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
+                onClick={() => setStageMode(m => m === 'live' ? 'default' : 'live')}
+                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'live' ? 'border-red-400/50 bg-red-900/20' : ''}`}
               >
-                <Trophy className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
-                <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Cards</span>
+                <Video className={`w-10 h-10 relative z-10 ${stageMode === 'live' ? 'text-red-400' : ''}`} style={stageMode === 'live' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
+                <span className={`text-sm font-sans relative z-10 ${stageMode === 'live' ? 'text-red-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Live</span>
               </ConsoleTile>
 
               {/* Leaderboard */}
@@ -3344,15 +3277,94 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* Environment Selector (Replaces Game Banner) */}
-            <div className={`mb-6 transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-              <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+            {/* DASHBOARD STAGE: Environment / Stats / Friends / Live */}
+            {/* Fixed height container to prevent layout shifting */}
+            <div 
+              className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              style={{ minHeight: '160px' }} // Matches approx height of EnvSelector + DevSpotlight
+            >
+              <AnimatePresence mode="wait">
+                {stageMode === 'default' && (
+                  <motion.div
+                    key="default-stage"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col gap-4"
+                  >
+                    <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+                    <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
+                  </motion.div>
+                )}
+
+                {stageMode === 'stats' && (
+                  <motion.div
+                    key="stats-stage"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 z-20 h-full"
+                  >
+                    <div className="bg-black/60 rounded-2xl border border-cyan-500/30 p-4 h-full overflow-hidden flex flex-col backdrop-blur-md">
+                      {/* Scaled down version of Stats to fit, or just the main content */}
+                      <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <AvatarProgressionBox compact={true} />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {stageMode === 'friends' && (
+                  <motion.div
+                    key="friends-stage"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 z-20 h-full"
+                  >
+                    <FriendsListContent />
+                  </motion.div>
+                )}
+
+                {stageMode === 'live' && (
+                  <motion.div
+                    key="live-stage"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 z-20 h-full flex gap-4"
+                  >
+                    {/* Live Content - Compact */}
+                    <div className="flex-1 bg-black/60 rounded-xl border border-red-500/30 overflow-hidden relative group backdrop-blur-md">
+                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
+                            <Video className="w-8 h-8 text-red-500/50" />
+                            <span className="text-white/40 text-xs">Stream Offline</span>
+                        </div>
+                    </div>
+                    {/* Chat - Compact */}
+                    <div className="w-1/3 bg-black/60 rounded-xl border border-white/10 flex flex-col overflow-hidden backdrop-blur-md">
+                        <div className="p-2 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                            <span className="text-white font-bold text-xs">Chat</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        </div>
+                        <div className="flex-1 p-2">
+                           <div className="text-[10px] text-white/40 italic">Connecting...</div>
+                        </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             </div>
 
             {/* Main Grid: Leaderboard + 2x2 Right */}
-            <div className={`flex-1 flex gap-6 min-h-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {/* Added relative z-index to ensure it sits below the overlays if they overflow */}
+            <div className={`flex-1 flex gap-6 min-h-0 relative z-0 transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Leaderboard Tile - Left */}
               <div className="pointer-events-auto"><LeaderboardTile /></div>
 

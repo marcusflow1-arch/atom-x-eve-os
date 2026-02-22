@@ -61,6 +61,7 @@ import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
 import Blacksmith from './pages/Blacksmith';
 import BlankTransition from './pages/BlankTransition';
+import CardCollection from './pages/CardCollection';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Clan from './pages/Clan';
@@ -91,6 +92,7 @@ import OnboardingHome from './pages/OnboardingHome';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import PlayerProfile from './pages/PlayerProfile';
+import QuestLog from './pages/QuestLog';
 import SocialFeed from './pages/SocialFeed';
 import Store from './pages/Store';
 import Storyline from './pages/Storyline';
@@ -103,8 +105,6 @@ import StreamingHome from './pages/StreamingHome';
 import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import YBotTest from './pages/YBotTest';
-import QuestLog from './pages/QuestLog';
-import CardCollection from './pages/CardCollection';
 import __Layout from './Layout.jsx';
 
 
@@ -123,6 +123,7 @@ export const PAGES = {
     "AvatarStudio": AvatarStudio,
     "Blacksmith": Blacksmith,
     "BlankTransition": BlankTransition,
+    "CardCollection": CardCollection,
     "Cart": Cart,
     "Checkout": Checkout,
     "Clan": Clan,
@@ -153,6 +154,7 @@ export const PAGES = {
     "OrderConfirmation": OrderConfirmation,
     "Orders": Orders,
     "PlayerProfile": PlayerProfile,
+    "QuestLog": QuestLog,
     "SocialFeed": SocialFeed,
     "Store": Store,
     "Storyline": Storyline,
@@ -165,8 +167,6 @@ export const PAGES = {
     "StreamingHub": StreamingHub,
     "WorldEvents": WorldEvents,
     "YBotTest": YBotTest,
-    "QuestLog": QuestLog,
-    "CardCollection": CardCollection,
 }
 
 export const pagesConfig = {
