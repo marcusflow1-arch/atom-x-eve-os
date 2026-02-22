@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { ChevronLeft, ChevronRight, Sparkles, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, Star, Pin } from 'lucide-react';
 
 const GENRES = ['Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
 
@@ -77,6 +77,31 @@ const COLS_PER_ROW = 4;
 
 export default function CardCollectionBrowser() {
   const navigate = useNavigate();
+  
+  // Pinned Cards Logic (The Jar)
+  const [pinnedCards, setPinnedCards] = useState(() => {
+    try {
+      const saved = localStorage.getItem('luna_pinned_cards');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  // Listen for pin updates from full page
+  useEffect(() => {
+    const handlePinsUpdate = () => {
+      try {
+        const saved = localStorage.getItem('luna_pinned_cards');
+        setPinnedCards(saved ? JSON.parse(saved) : []);
+      } catch {}
+    };
+    window.addEventListener('cardPinsUpdated', handlePinsUpdate);
+    window.addEventListener('storage', handlePinsUpdate);
+    return () => {
+      window.removeEventListener('cardPinsUpdated', handlePinsUpdate);
+      window.removeEventListener('storage', handlePinsUpdate);
+    };
+  }, []);
+
   const [genreIndex, setGenreIndex] = useState(0);
   const [isGenreHovered, setIsGenreHovered] = useState(false);
   const [isCardsHovered, setIsCardsHovered] = useState(false);
@@ -85,8 +110,19 @@ export default function CardCollectionBrowser() {
   const cardsRef = useRef(null);
   const genreRef = useRef(null);
 
-  const currentGenre = GENRES[genreIndex];
-  const cards = GENRE_CARDS[currentGenre] || [];
+  // If we have pinned cards, show "The Jar" as the first genre
+  const hasPins = pinnedCards.length > 0;
+  
+  // Determine displayed genre
+  // If index is -1, it's "The Jar" (only available if hasPins)
+  // Otherwise it's standard GENRES[index]
+  const currentGenre = hasPins && genreIndex === -1 ? 'The Jar' : GENRES[genreIndex];
+  
+  // Get cards for current view
+  const cards = useMemo(() => {
+    if (currentGenre === 'The Jar') return pinnedCards;
+    return GENRE_CARDS[currentGenre] || [];
+  }, [currentGenre, pinnedCards]);
 
   // Build rows of COLS_PER_ROW cards
   const rows = useMemo(() => {
@@ -97,6 +133,11 @@ export default function CardCollectionBrowser() {
     return r;
   }, [cards]);
 
+  // Start at "The Jar" if available
+  useEffect(() => {
+    if (hasPins) setGenreIndex(-1);
+  }, []); // Only run once on mount
+
   // Genre scroll: one wheel tick = one genre change
   const genreCooldown = useRef(false);
   const handleGenreWheel = useCallback((e) => {
@@ -106,14 +147,26 @@ export default function CardCollectionBrowser() {
     genreCooldown.current = true;
 
     setGenreIndex(prev => {
-      if (e.deltaY > 0) return (prev + 1) % GENRES.length;
-      return (prev - 1 + GENRES.length) % GENRES.length;
+      const minIndex = hasPins ? -1 : 0;
+      const totalLen = GENRES.length;
+      
+      let next = prev;
+      if (e.deltaY > 0) {
+        // Next
+        next++;
+        if (next >= totalLen) next = minIndex;
+      } else {
+        // Prev
+        next--;
+        if (next < minIndex) next = totalLen - 1;
+      }
+      return next;
     });
     setScrollX(0);
     setScrollY(0);
 
     setTimeout(() => { genreCooldown.current = false; }, 400);
-  }, []);
+  }, [hasPins]);
 
   // Attach genre wheel listener
   useEffect(() => {
@@ -210,9 +263,9 @@ export default function CardCollectionBrowser() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="text-sm font-bold uppercase tracking-[0.2em] text-white/60"
+            className={`text-sm font-bold uppercase tracking-[0.2em] ${currentGenre === 'The Jar' ? 'text-cyan-400' : 'text-white/60'}`}
           >
-            {currentGenre}
+            {currentGenre} {currentGenre === 'The Jar' && <Pin className="inline w-3 h-3 ml-1 mb-0.5" />}
           </motion.span>
         </AnimatePresence>
         <ChevronRight className={`w-3.5 h-3.5 transition-opacity ${isGenreHovered ? 'text-white/50 opacity-100' : 'text-white/0 opacity-0'}`} />

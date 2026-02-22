@@ -2,10 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Search, ArrowLeft, Filter, Sparkles, Trophy, Zap, Shield, Crown, Crosshair, Ghost, Gamepad2, Skull, Rocket, Car, Monitor } from 'lucide-react';
+import { Search, ArrowLeft, Filter, Sparkles, Trophy, Zap, Shield, Crown, Crosshair, Ghost, Gamepad2, Skull, Rocket, Car, Monitor, Pin, GripVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 // Mock Data
 const GENRES = ['Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
@@ -89,11 +90,20 @@ const RARITY_STYLES = {
   Legendary: { border: 'border-amber-500/50', text: 'text-amber-300', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.4)]', bg: 'from-amber-500/10 to-transparent' },
 };
 
+// Combine all cards for searching/pinning
+const ALL_CARDS = Object.values(GENRE_CARDS).flat();
+
 export default function CardCollection() {
   const navigate = useNavigate();
   const [activeGenre, setActiveGenre] = useState('Fear');
   const [searchTerm, setSearchTerm] = useState('');
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [pinnedCards, setPinnedCards] = useState(() => {
+    try {
+      const saved = localStorage.getItem('luna_pinned_cards');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   // Handle Escape Key to Exit
   useEffect(() => {
@@ -106,11 +116,40 @@ export default function CardCollection() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
 
+  // Save pinned cards
+  useEffect(() => {
+    localStorage.setItem('luna_pinned_cards', JSON.stringify(pinnedCards));
+    // Dispatch event for widget update
+    window.dispatchEvent(new Event('cardPinsUpdated'));
+  }, [pinnedCards]);
+
   const filteredCards = useMemo(() => {
     const genreCards = GENRE_CARDS[activeGenre] || [];
     if (!searchTerm) return genreCards;
     return genreCards.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [activeGenre, searchTerm]);
+
+  const togglePin = (card) => {
+    if (pinnedCards.some(p => p.id === card.id)) {
+      setPinnedCards(pinnedCards.filter(p => p.id !== card.id));
+    } else {
+      if (pinnedCards.length >= 8) {
+        // Optional: limit pins, but Jar concept suggests flexible collection
+        // For visual "slot box" of 4, maybe we warn? For now let's allow more.
+      }
+      setPinnedCards([...pinnedCards, card]);
+    }
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(pinnedCards);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setPinnedCards(items);
+  };
 
   return (
     <PageErrorBoundary pageName="CardCollection">
@@ -127,7 +166,7 @@ export default function CardCollection() {
               <Sparkles className="w-6 h-6 text-purple-400" />
               Card Collection
             </h1>
-            <p className="text-white/40 text-sm">Manage your trading cards and collectibles.</p>
+            <p className="text-white/40 text-sm">Manage your trading cards and pin your favorites to the Jar.</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -189,9 +228,88 @@ export default function CardCollection() {
             </div>
           </div>
 
-          {/* RIGHT CONTENT: Cards Grid */}
+          {/* RIGHT CONTENT: Jar & Grid */}
           <div className="col-span-9 flex flex-col gap-6">
             
+            {/* The Jar (Pinned Cards) */}
+            <div className="bg-[#161920]/80 rounded-3xl border border-white/10 p-6 flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Pin className="w-4 h-4 text-cyan-400" />
+                  The Jar (Pinned Cards)
+                </h3>
+                <span className="text-[10px] text-white/40 uppercase tracking-wider">Drag to Reorder • First 4 appear in Widget</span>
+              </div>
+
+              <div className="min-h-[140px] bg-black/20 rounded-2xl border border-white/5 p-4 flex items-center">
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="jar-pins" direction="horizontal">
+                    {(provided) => (
+                      <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                        className="flex gap-4 overflow-x-auto pb-2 w-full min-h-[120px] items-center"
+                      >
+                        {pinnedCards.length === 0 ? (
+                          <div className="w-full text-center text-white/20 text-sm py-4 italic">
+                            Pin cards from the collection below to add them to your Jar.
+                          </div>
+                        ) : (
+                          pinnedCards.map((card, index) => {
+                            const rs = RARITY_STYLES[card.rarity] || RARITY_STYLES.Common;
+                            return (
+                              <Draggable key={card.id} draggableId={card.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`relative flex-shrink-0 w-24 aspect-[2.5/3.5] rounded-lg border ${rs.border} bg-[#0f1115] overflow-hidden group shadow-lg ${snapshot.isDragging ? 'z-50 scale-110 shadow-2xl ring-2 ring-cyan-400' : ''}`}
+                                  >
+                                    {/* Card Visual */}
+                                    <div className="absolute inset-0">
+                                      <img src={card.image} alt={card.name} className="w-full h-full object-cover opacity-70" />
+                                      <div className={`absolute inset-0 bg-gradient-to-t ${rs.bg} opacity-80`} />
+                                    </div>
+                                    
+                                    {/* Icon & Name */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2 z-10 pointer-events-none">
+                                      <span className="text-xl drop-shadow-md mb-1">{card.icon}</span>
+                                      <span className="text-[8px] font-bold text-center text-white leading-tight drop-shadow-md">{card.name}</span>
+                                    </div>
+
+                                    {/* Rank Badge */}
+                                    <div className="absolute top-1 left-1 z-20">
+                                       <span className="text-[8px] font-mono text-white/50 bg-black/60 px-1 rounded">#{index + 1}</span>
+                                    </div>
+
+                                    {/* Controls (hover only) */}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-30">
+                                      <button 
+                                        onClick={() => togglePin(card)}
+                                        className="p-1.5 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors"
+                                        title="Unpin"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <div className="p-1.5 rounded-full bg-white/10 text-white cursor-grab active:cursor-grabbing">
+                                        <GripVertical className="w-3.5 h-3.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          })
+                        )}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
+            </div>
+
             {/* Toolbar */}
             <div className="flex items-center justify-between bg-[#161920] p-2 rounded-2xl border border-white/5">
               <div className="relative w-64">
@@ -200,7 +318,7 @@ export default function CardCollection() {
                   type="text" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search cards..." 
+                  placeholder="Search collection..." 
                   className="w-full bg-black/20 border border-white/5 rounded-xl py-2 pl-10 pr-4 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/10 transition-colors"
                 />
               </div>
@@ -219,6 +337,8 @@ export default function CardCollection() {
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {filteredCards.map((card) => {
                       const rs = RARITY_STYLES[card.rarity] || RARITY_STYLES.Common;
+                      const isPinned = pinnedCards.some(p => p.id === card.id);
+
                       return (
                         <motion.div
                           key={card.id}
@@ -228,7 +348,7 @@ export default function CardCollection() {
                           whileHover={{ y: -5, scale: 1.02 }}
                           onMouseEnter={() => setHoveredCard(card.id)}
                           onMouseLeave={() => setHoveredCard(null)}
-                          className={`aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border ${rs.border} bg-[#0f1115] relative group shadow-lg`}
+                          className={`aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border ${isPinned ? 'border-cyan-500/50 shadow-cyan-500/20' : rs.border} bg-[#0f1115] relative group shadow-lg transition-all`}
                         >
                           {/* Image & Overlay */}
                           <div className="absolute inset-0">
@@ -238,18 +358,31 @@ export default function CardCollection() {
                           </div>
 
                           {/* Content */}
-                          <div className="absolute inset-0 p-3 flex flex-col justify-between z-10">
+                          <div className="absolute inset-0 p-3 flex flex-col justify-between z-10 pointer-events-none">
                             <div className="flex justify-between items-start">
                               <Badge className={`text-[9px] h-5 px-1.5 border-0 backdrop-blur-md bg-black/40 ${rs.text}`}>
                                 {card.rarity}
                               </Badge>
-                              {card.rarity === 'Legendary' && <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />}
+                              {isPinned && <Pin className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400" />}
                             </div>
 
                             <div className="text-center">
                               <div className="text-3xl mb-2 drop-shadow-md transform group-hover:scale-110 transition-transform">{card.icon}</div>
                               <h4 className="font-bold text-sm text-white leading-tight drop-shadow-md">{card.name}</h4>
                             </div>
+                          </div>
+
+                          {/* Pin Action (Overlay on Hover) */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                             <Button 
+                               onClick={() => togglePin(card)}
+                               variant="ghost" 
+                               size="sm" 
+                               className={`gap-2 backdrop-blur-md ${isPinned ? 'bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                             >
+                               <Pin className={`w-4 h-4 ${isPinned ? 'fill-current' : ''}`} />
+                               {isPinned ? 'Unpin' : 'Pin to Jar'}
+                             </Button>
                           </div>
 
                           {/* Hover Glow Effect */}
