@@ -1702,7 +1702,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
               {/* Open space below Environment Hub — Stats/Friends/Live overlay fills this */}
               {/* Height is fixed so DevSpotlight always stays at same position */}
-              <div className="relative mt-3" style={{ height: '140px' }}>
+              <div className="relative mt-3" style={{ height: '220px' }}>
                 {/* OVERLAY: Stats / Friends / Live — fills the open space exactly */}
                 <AnimatePresence>
                   {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
