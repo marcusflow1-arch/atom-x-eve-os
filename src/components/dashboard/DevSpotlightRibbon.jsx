@@ -9,7 +9,7 @@ function MysteryBox() {
   return (
     <motion.div
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+      onMouseLeave={() => {setIsHovered(false);setMousePos({ x: 0.5, y: 0.5 });}}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
@@ -22,21 +22,21 @@ function MysteryBox() {
         backdropFilter: 'blur(24px) saturate(150%)',
         WebkitBackdropFilter: 'blur(24px) saturate(150%)',
         border: '1px solid rgba(255, 255, 255, 0.10)',
-        boxShadow: isHovered
-          ? '0 6px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)'
-          : '0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)',
-      }}
-    >
+        boxShadow: isHovered ?
+        '0 6px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)' :
+        '0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+      }}>
+
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
         style={{
           opacity: isHovered ? 0.8 : 0.3,
           background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.06) 0%, transparent 60%)`
-        }}
-      />
+        }} />
+
       <span className="text-white/20 text-xl font-bold relative z-10">?</span>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
 
 export default function DevSpotlightRibbon({ onOpenOverlay }) {
@@ -52,7 +52,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-2">
+    <div className="my-64 w-full flex flex-col items-center gap-2">
       {/* Title above — centered */}
       <div className="flex items-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
@@ -65,7 +65,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
         <motion.div
           onClick={onOpenOverlay}
           onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => { setIsHovered(false); setMousePos({ x: 0.5, y: 0.5 }); }}
+          onMouseLeave={() => {setIsHovered(false);setMousePos({ x: 0.5, y: 0.5 });}}
           onMouseMove={handleMouseMove}
           whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -76,20 +76,20 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
             backdropFilter: 'blur(28px) saturate(160%)',
             WebkitBackdropFilter: 'blur(28px) saturate(160%)',
             border: '1px solid rgba(255, 255, 255, 0.12)',
-            boxShadow: isHovered
-              ? '0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)'
-              : '0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)',
+            boxShadow: isHovered ?
+            '0 8px 28px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)' :
+            '0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)',
             transition: 'box-shadow 0.4s ease'
-          }}
-        >
+          }}>
+
           {/* Shine */}
           <div
             className="absolute inset-0 pointer-events-none transition-opacity duration-300"
             style={{
               opacity: isHovered ? 1 : 0.4,
               background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.08) 0%, transparent 60%)`
-            }}
-          />
+            }} />
+
 
           {/* Content */}
           <div className="relative z-10 flex items-center justify-center h-full px-3">
@@ -104,6 +104,6 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
         <MysteryBox />
         <MysteryBox />
       </div>
-    </div>
-  );
+    </div>);
+
 }
