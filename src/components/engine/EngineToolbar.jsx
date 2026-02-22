@@ -31,34 +31,96 @@ export default function EngineToolbar({ sceneApi }) {
   const handleUploadPack = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+      
+      // Check size
+      if (file.size > 500 * 1024 * 1024) {
+          showError("File is too large (>500MB) for browser processing.");
+          return;
+      }
+
       setPackUploading(true);
       try {
-          // 1. Upload ZIP
-          showSuccess("Uploading environment pack...");
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          showSuccess(`Analyzing ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)...`);
           
-          // 2. Process via backend
-          showSuccess("Constructing Room 4 environment...");
-          const res = await base44.functions.invoke('processEnvironmentPack', { 
-              fileUrl: file_url,
-              environmentName: "Room 4"
+          // 1. Load ZIP Client-Side (Avoids backend memory limits for 400MB files)
+          const JSZip = (await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm')).default;
+          const zip = await JSZip.loadAsync(file);
+          
+          // 2. Scan for best map candidate
+          let bestCandidate = null;
+          let maxScore = -1;
+          
+          const files = [];
+          zip.forEach((path, entry) => {
+              if (!entry.dir) files.push({ path, entry });
           });
           
-          if (res.data?.success) {
-              showSuccess(res.data.message);
-              // Optionally load it immediately
-              /*
-              if (sceneApi?.addModel && res.data.entityId) {
-                  // Fetch the entity to get the URL? The func returns mainScene URL implicitly if we asked for it, 
-                  // but let's just let the user find it in the browser or auto-load if we want.
-                  // For now, let's just notify.
+          for (const { path, entry } of files) {
+              const lower = path.toLowerCase();
+              // Skip MacOS junk
+              if (lower.includes('__macosx') || lower.includes('.ds_store')) continue;
+              
+              const is3D = lower.endsWith('.fbx') || lower.endsWith('.glb') || lower.endsWith('.gltf') || lower.endsWith('.obj');
+              
+              if (is3D) {
+                  let score = 0;
+                  const sizeMB = entry._data.uncompressedSize / 1024 / 1024;
+                  
+                  // Size Factor (Maps are big)
+                  score += Math.min(sizeMB, 100); 
+                  
+                  // Keyword Factor
+                  if (lower.includes('demo') && lower.includes('map')) score += 150;
+                  else if (lower.includes('overview')) score += 120;
+                  else if (lower.includes('map')) score += 80;
+                  else if (lower.includes('level')) score += 80;
+                  else if (lower.includes('scene')) score += 60;
+                  else if (lower.includes('environment')) score += 50;
+                  else if (lower.includes('merged')) score += 40;
+                  
+                  // Source folder preference
+                  if (lower.includes('source') || lower.includes('src')) score += 30;
+                  
+                  if (score > maxScore) {
+                      maxScore = score;
+                      bestCandidate = { path, entry, score };
+                  }
               }
-              */
-          } else {
-              throw new Error(res.data?.error || "Processing failed");
           }
+          
+          if (!bestCandidate) {
+              throw new Error("No 3D map file (FBX/GLB) found. If this is a raw Unreal project, please export the level as FBX first.");
+          }
+          
+          showSuccess(`Found map: ${bestCandidate.path}. Extracting...`);
+          
+          // 3. Extract ONLY the map file
+          const blob = await bestCandidate.entry.async('blob');
+          const ext = bestCandidate.path.split('.').pop();
+          const extractFile = new File([blob], `Room4_Constructed.${ext}`, { type: 'application/octet-stream' });
+          
+          // 4. Upload extracted map
+          showSuccess(`Uploading map (${(extractFile.size / 1024 / 1024).toFixed(1)} MB)...`);
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: extractFile });
+          
+          // 5. Create Entity
+          await base44.entities.Model3D.create({
+              name: "Room 4",
+              description: `Constructed from ${file.name} (Source: ${bestCandidate.path})`,
+              file_url: file_url,
+              file_type: ext,
+              category: 'environment',
+              is_bundle: false, // It's a single merged map now
+              use_mesh_collision: true,
+              tags: ['room4', 'constructed', 'environment'],
+              player_spawn: { x: 0, y: 1, z: 0 }
+          });
+          
+          showSuccess("Room 4 successfully constructed!");
+          
       } catch (err) {
-          showError('Failed to process pack: ' + err.message);
+          console.error(err);
+          showError('Failed to build environment: ' + err.message);
       }
       setPackUploading(false);
       e.target.value = '';
