@@ -1777,8 +1777,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 </AnimatePresence>
               </div>
 
-              {/* DevSpotlightRibbon — always at the same position, never moves */}
-              <div className="pointer-events-auto">
+              {/* DevSpotlightRibbon — below the overlay space, at the bottom (matching screenshot position) */}
+              <div className="pointer-events-auto mt-3">
                 <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
               </div>
             </div>
