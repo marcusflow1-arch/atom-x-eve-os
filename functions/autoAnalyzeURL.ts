@@ -141,23 +141,39 @@ Deno.serve(async (req) => {
       redirect: 'follow',
     });
 
-    if (!response.ok) {
-      await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
-        status: 'failed',
-        error_message: `Fetch failed: HTTP ${response.status}`,
-      });
-      return Response.json({ error: `HTTP ${response.status}` }, { status: 502 });
-    }
-
-    const contentType = response.headers.get('content-type') || '';
     let content = '';
+    let fetchError = null;
 
-    if (contentType.includes('text') || contentType.includes('json') || contentType.includes('csv') ||
-        contentType.includes('xml') || contentType.includes('javascript') || contentType.includes('yaml') ||
-        contentType.includes('html') || contentType.includes('plain') || contentType.includes('octet-stream')) {
-      content = await response.text();
+    if (!response.ok) {
+      fetchError = `HTTP ${response.status}`;
+      // Fallback: Try to use LLM with internet access to read the page content if direct fetch fails
+      console.log(`Direct fetch failed (${fetchError}), attempting LLM fallback for: ${url}`);
+      
+      try {
+        const fallbackAnalysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `Please access the following URL and extract its full text content for analysis. URL: ${url}
+          
+          If you can read it, return the content. If not, describe what you see.`,
+          add_context_from_internet: true
+        });
+        content = fallbackAnalysis;
+      } catch (e) {
+        console.error('LLM fallback failed:', e);
+        await base44.asServiceRole.entities.PendingKnowledgeURL.update(entityId, {
+          status: 'failed',
+          error_message: `Fetch failed: ${fetchError}. Fallback also failed.`,
+        });
+        return Response.json({ error: `Fetch failed: ${fetchError}` }, { status: 502 });
+      }
     } else {
-      content = `[Binary file: ${contentType}. URL: ${url}]`;
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text') || contentType.includes('json') || contentType.includes('csv') ||
+          contentType.includes('xml') || contentType.includes('javascript') || contentType.includes('yaml') ||
+          contentType.includes('html') || contentType.includes('plain') || contentType.includes('octet-stream')) {
+        content = await response.text();
+      } else {
+        content = `[Binary file: ${contentType}. URL: ${url}]`;
+      }
     }
 
     const truncated = content.substring(0, 50000);
