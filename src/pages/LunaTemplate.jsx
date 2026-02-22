@@ -3366,19 +3366,23 @@ export default function LunaTemplate() {
               <div className="pointer-events-auto"><LeaderboardTile /></div>
 
               {/* Right Side - 2x2 Grid */}
-              <div className="flex-1 flex flex-col gap-6">
-                {/* App Shortcuts */}
-                <div className="flex gap-6 flex-1">
-                  {/* My Games & Apps */}
-                  <ConsoleTile
-                    onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                    className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
-                  >
-                    <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
-                    <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
-                  </ConsoleTile>
-                </div>
-              </div>
+                <div className="flex-1 flex flex-col gap-6">
+                   {/* App Shortcuts */}
+                   <div className="flex gap-6 flex-1">
+                     {/* My Games & Apps */}
+                     <ConsoleTile
+                       onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                       className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
+                     >
+                       <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
+                       <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
+                     </ConsoleTile>
+                   </div>
+                   {/* Developer Spotlight — at the bottom of the right column, aligned with AI Attribute Box bottom */}
+                   <div className="pointer-events-auto">
+                     <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
+                   </div>
+                 </div>
             </div>
             </>
             )}
