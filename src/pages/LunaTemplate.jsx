@@ -3277,84 +3277,74 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* DASHBOARD STAGE: Environment / Stats / Friends / Live */}
-            {/* Fixed height container to prevent layout shifting */}
+            {/* DASHBOARD STAGE: EnvironmentSelector + DevSpotlightRibbon always in normal flow */}
+            {/* Stage overlay (Stats/Friends/Live) floats on top without affecting layout */}
             <div 
               className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-              style={{ minHeight: '160px' }} // Matches approx height of EnvSelector + DevSpotlight
+              ref={stageContainerRef}
             >
-              <AnimatePresence mode="wait">
-                {stageMode === 'default' && (
-                  <motion.div
-                    key="default-stage"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col gap-4"
-                  >
-                    <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
-                    <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
-                  </motion.div>
-                )}
+              {/* Always-visible default content — never moves */}
+              <div className="flex flex-col gap-4">
+                <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+                <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
+              </div>
 
-                {stageMode === 'stats' && (
+              {/* Overlay panel — floats ON TOP of the above, same bounds, no layout impact */}
+              <AnimatePresence>
+                {stageMode !== 'default' && (
                   <motion.div
-                    key="stats-stage"
+                    key={stageMode}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 z-20 h-full"
+                    transition={{ duration: 0.25 }}
+                    className="absolute inset-0 z-30 rounded-2xl overflow-hidden"
+                    style={{
+                      background: 'rgba(6, 10, 18, 0.88)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.25)'
+                            : stageMode === 'friends' ? '1px solid rgba(74,222,128,0.25)'
+                            : '1px solid rgba(248,113,113,0.25)',
+                    }}
                   >
-                    <div className="bg-black/60 rounded-2xl border border-cyan-500/30 p-4 h-full overflow-hidden flex flex-col backdrop-blur-md">
-                      {/* Scaled down version of Stats to fit, or just the main content */}
-                      <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    {/* Close button */}
+                    <button
+                      onClick={() => setStageMode('default')}
+                      className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                    >
+                      <X className="w-3 h-3 text-white/60" />
+                    </button>
+
+                    {stageMode === 'stats' && (
+                      <div className="h-full overflow-y-auto p-3">
                         <AvatarProgressionBox compact={true} />
                       </div>
-                    </div>
-                  </motion.div>
-                )}
+                    )}
 
-                {stageMode === 'friends' && (
-                  <motion.div
-                    key="friends-stage"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 z-20 h-full"
-                  >
-                    <FriendsListContent />
-                  </motion.div>
-                )}
+                    {stageMode === 'friends' && (
+                      <div className="h-full">
+                        <FriendsListContent />
+                      </div>
+                    )}
 
-                {stageMode === 'live' && (
-                  <motion.div
-                    key="live-stage"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="absolute inset-0 z-20 h-full flex gap-4"
-                  >
-                    {/* Live Content - Compact */}
-                    <div className="flex-1 bg-black/60 rounded-xl border border-red-500/30 overflow-hidden relative group backdrop-blur-md">
-                        <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
-                            <Video className="w-8 h-8 text-red-500/50" />
-                            <span className="text-white/40 text-xs">Stream Offline</span>
+                    {stageMode === 'live' && (
+                      <div className="h-full flex gap-3 p-3">
+                        <div className="flex-1 bg-black/40 rounded-xl border border-red-500/20 overflow-hidden flex items-center justify-center flex-col gap-2">
+                          <Video className="w-8 h-8 text-red-500/40" />
+                          <span className="text-white/30 text-xs">Stream Offline</span>
                         </div>
-                    </div>
-                    {/* Chat - Compact */}
-                    <div className="w-1/3 bg-black/60 rounded-xl border border-white/10 flex flex-col overflow-hidden backdrop-blur-md">
-                        <div className="p-2 border-b border-white/10 bg-white/5 flex justify-between items-center">
+                        <div className="w-1/3 bg-black/40 rounded-xl border border-white/10 flex flex-col overflow-hidden">
+                          <div className="p-2 border-b border-white/10 bg-white/5 flex justify-between items-center">
                             <span className="text-white font-bold text-xs">Chat</span>
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          </div>
+                          <div className="flex-1 p-2">
+                            <div className="text-[10px] text-white/40 italic">Connecting...</div>
+                          </div>
                         </div>
-                        <div className="flex-1 p-2">
-                           <div className="text-[10px] text-white/40 italic">Connecting...</div>
-                        </div>
-                    </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
