@@ -298,7 +298,7 @@ function LayoutContent({ children, currentPageName }) {
   const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showStoreHeader && p_lower.includes('/notifications');
   // Luna header bar used for most pages including Library, Aura, Cards, AI Battle, etc.
-  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/blacksmith','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
+  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/entertainment','/clan','/community','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
   .some(s => p_lower.includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
@@ -869,10 +869,6 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showLevel = true;
           headerConfig.showDiscord = true;
           headerConfig.showModeToggle = true;
-        } else if (p.includes('/blacksmith')) {
-          headerConfig.title = "";
-          headerConfig.showLevel = false;
-          headerConfig.showDiscord = false;
         } else if (p.includes('/tradingpost')) {
           headerConfig.title = "Adam - Marcus | Avatar Profile";
           headerConfig.showLevel = false;
@@ -1028,7 +1024,6 @@ function LayoutContent({ children, currentPageName }) {
                             const pp = location.pathname.toLowerCase();
                             if (pp.includes('/clan')) return 'Atom X Eve Clan';
                             if (pp.includes('/community')) return 'Atom X Eve Forum';
-                            if (pp.includes('/blacksmith')) return 'Atom X Eve Blacksmith';
                             if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
                             if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
                             if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
