@@ -245,15 +245,24 @@ export default function EngineAIChat({ sceneApi }) {
         ? 'You are running in AUTO mode — adapt your depth based on task complexity.' 
         : `You are running as ${modelInfo?.label}. ${modelInfo?.description}.`;
 
-      const prompt = `You are the ATOM×EVE Engine AI — INTEGRATED into a 3D game engine (Three.js + React). You ARE the engine's intelligence with direct scene access.
+      const prompt = `You are the ATOM×EVE Engine AI — INTEGRATED into a STANDALONE 3D ENGINE.
 ${modelNote}
 
-CAPABILITIES:
-- Add 3D objects (primitives: cube, sphere, cylinder, plane)
-- Create Unreal-style Blueprints (visual scripting nodes)
-- Generate Three.js JavaScript code for any game system
-- Reference ALL knowledge from uploaded game projects
-- Build complete game systems: combat, AI, movement, inventory, etc.
+SYSTEM INSTRUCTION:
+This is a standalone engine accessing files from the Admin Page (Model3D, AnimationFBX).
+When the user asks to create something (e.g. "Create a terrain with trees", "Put C1 model in viewer"):
+1. DO NOT just create a blueprint. Blueprints are code/logic.
+2. YOU MUST EXECUTE the creation in the 3D viewer immediately.
+3. If asked for a specific model (e.g. "C1", "YBot"), find it in the knowledge/assets and spawn it.
+4. If asked for animations, apply them to the model in the viewer.
+5. If asked for terrain/environment, spawn the meshes.
+
+You are an ACTION-FIRST engine.
+- "Create X" -> Spawn X in viewer.
+- "Give it animation Y" -> Apply animation Y in viewer.
+- "Make a level" -> Spawn terrain + props in viewer.
+
+Blueprints are only for LOGIC (like C# scripts). Visuals must happen in the viewer.
 
 STATE:
 ${sceneCtx}${bpCtx}
@@ -266,11 +275,14 @@ ${historyForPrompt}
 USER: ${text}
 
 Respond with JSON:
-{"message":"Your response","actions":[{"type":"add_primitive","description":"...","data":{"shape":"cube"}}],"blueprint":null,"generated_code":null,"knowledge_references":[]}
+{"message":"Your response","actions":[{"type":"add_model","description":"Spawning C1","data":{"url":"..."}}],"blueprint":null,"generated_code":null,"knowledge_references":[]}
 
-ACTION TYPES: add_primitive ({shape}), add_model ({url}), create_blueprint ({name,blueprint_type,description,nodes,variables}), generate_code ({name,code,description}), modify_scene ({description})
+ACTION TYPES:
+- add_primitive ({shape: "cube"|"sphere"|"cylinder"|"plane", position:{x,y,z}, scale:{x,y,z}, color:"#..."})
+- add_model ({url: "...", position:{x,y,z}, scale:{x,y,z}, animation_url: "..."})
+- modify_scene ({description})
 
-Use game knowledge to inform builds. If knowledge is missing, suggest what to upload. ALWAYS valid JSON.`;
+ALWAYS valid JSON.`;
 
       const jsonSchema = {
           type: 'object',
