@@ -90,15 +90,19 @@ function QuestEntry({ quest }) {
   );
 }
 
-function BookPage({ quests, tiltDirection, contentVisible }) {
-  const tiltAngle = tiltDirection === 'left' ? 8 : -8;
+function BookPage({ quests, tiltDirection }) {
+  const isLeft = tiltDirection === 'left';
+  const tiltAngle = isLeft ? 8 : -8;
 
   return (
-    <div
-      className="flex-1 min-w-0 rounded-xl overflow-hidden relative cursor-pointer"
+    <motion.div
+      className="flex-1 min-w-0 rounded-xl overflow-hidden relative cursor-pointer h-52 bg-slate-900/40"
+      initial={{ rotateY: isLeft ? 90 : -90, opacity: 0 }}
+      animate={{ rotateY: tiltAngle, opacity: 1 }}
+      exit={{ rotateY: isLeft ? 90 : -90, opacity: 0 }}
+      transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       style={{
-        transform: `perspective(800px) rotateY(${tiltAngle}deg)`,
-        transformOrigin: tiltDirection === 'left' ? 'right center' : 'left center',
+        transformOrigin: isLeft ? 'right center' : 'left center',
         background: 'linear-gradient(135deg, rgba(180, 195, 215, 0.10) 0%, rgba(140, 160, 185, 0.07) 40%, rgba(200, 210, 225, 0.09) 100%)',
         backdropFilter: 'blur(28px) saturate(160%)',
         WebkitBackdropFilter: 'blur(28px) saturate(160%)',
@@ -106,25 +110,27 @@ function BookPage({ quests, tiltDirection, contentVisible }) {
         boxShadow: '0 4px 16px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)',
       }}
     >
-      <div className={`absolute top-0 bottom-0 w-[2px] ${tiltDirection === 'left' ? 'right-0' : 'left-0'}`}
+      <div className={`absolute top-0 bottom-0 w-[2px] ${isLeft ? 'right-0' : 'left-0'}`}
         style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
       />
       <div
-        className={`absolute top-0 bottom-0 pointer-events-none z-10 ${tiltDirection === 'left' ? 'right-0 w-8' : 'left-0 w-8'}`}
+        className={`absolute top-0 bottom-0 pointer-events-none z-10 ${isLeft ? 'right-0 w-8' : 'left-0 w-8'}`}
         style={{
-          background: tiltDirection === 'left'
+          background: isLeft
             ? 'linear-gradient(to left, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)'
             : 'linear-gradient(to right, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.08) 40%, transparent 100%)',
-          borderRadius: tiltDirection === 'left' ? '0 12px 12px 0' : '12px 0 0 12px',
+          borderRadius: isLeft ? '0 12px 12px 0' : '12px 0 0 12px',
         }}
       />
-      <div
-        className="relative z-20 p-3 flex flex-col gap-1 h-full transition-opacity duration-200"
-        style={{ opacity: contentVisible ? 1 : 0 }}
-      >
+      <div className="relative z-20 p-3 flex flex-col gap-1 h-full">
         {quests.slice(0, 3).map(q => <QuestEntry key={q.id} quest={q} />)}
+        {quests.length === 0 && (
+          <div className="h-full flex items-center justify-center opacity-30">
+            <Gamepad2 className="w-8 h-8" />
+          </div>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -151,8 +157,6 @@ export default function QuestLogBook() {
 
   // Book Page Logic (Collapsed)
   const [spreadIdx, setSpreadIdx] = useState(0);
-  const [contentVisible, setContentVisible] = useState(true);
-  const [turning, setTurning] = useState(false);
 
   // Get Quests for Pinned Game
   const pinnedGame = GAMES_DATA.find(g => g.id === pinnedGameId) || GAMES_DATA[0];
@@ -168,18 +172,11 @@ export default function QuestLogBook() {
   const rightPageQuests = allPinnedQuests.slice((spreadIdx * 2 + 1) * ITEMS_PER_PAGE, (spreadIdx * 2 + 1) * ITEMS_PER_PAGE + ITEMS_PER_PAGE);
 
   const turnPage = (direction) => {
-    if (turning) return;
-    setTurning(true);
-    setContentVisible(false);
-    setTimeout(() => {
-      if (direction === 'forward') {
-        setSpreadIdx((spreadIdx + 1) % totalSpreads);
-      } else {
-        setSpreadIdx((spreadIdx - 1 + totalSpreads) % totalSpreads);
-      }
-      setContentVisible(true);
-      setTurning(false);
-    }, 220);
+    if (direction === 'forward') {
+      setSpreadIdx((spreadIdx + 1) % totalSpreads);
+    } else {
+      setSpreadIdx((spreadIdx - 1 + totalSpreads) % totalSpreads);
+    }
   };
 
   return (
@@ -240,10 +237,14 @@ export default function QuestLogBook() {
           {/* Book Pages */}
           <div className="relative z-20 w-full flex gap-1" style={{ transformStyle: 'preserve-3d' }}>
             <div className="flex-1 min-w-0" onClick={() => turnPage('backward')}>
-              <BookPage quests={leftPageQuests} tiltDirection="left" contentVisible={contentVisible} />
+              <AnimatePresence mode="wait">
+                <BookPage key={`left-${spreadIdx}`} quests={leftPageQuests} tiltDirection="left" />
+              </AnimatePresence>
             </div>
             <div className="flex-1 min-w-0" onClick={() => turnPage('forward')}>
-              <BookPage quests={rightPageQuests} tiltDirection="right" contentVisible={contentVisible} />
+              <AnimatePresence mode="wait">
+                <BookPage key={`right-${spreadIdx}`} quests={rightPageQuests} tiltDirection="right" />
+              </AnimatePresence>
             </div>
           </div>
         </div>
