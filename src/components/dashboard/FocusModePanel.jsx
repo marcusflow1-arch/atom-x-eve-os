@@ -1697,7 +1697,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
             />
 
-            {/* Banner + DevSpotlight always in normal flow — NEVER move */}
+            {/* Banner area — Environment Hub always stays fixed */}
             <div className="mt-1 pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
                 games={ownedGames}
@@ -1706,84 +1706,87 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 onSelectEnv={onSelectEnv}
               />
 
-              {/* Spacer so DevSpotlightRibbon has a fixed position below banner */}
-              <div className="mt-3 pointer-events-auto">
-                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-              </div>
-
-              {/* OVERLAY: Stats / Friends / Live — floats between banner and DevSpotlight, no layout shift */}
-              <AnimatePresence>
-                {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
-                  <motion.div
-                    key="panel-overlay"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute left-0 right-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
-                    style={{
-                      top: '68px', // just below the Environment Hub tile (60px height + 8px gap)
-                      bottom: '28px', // just above the DevSpotlightRibbon (~28px height)
-                      background: 'rgba(6, 10, 18, 0.90)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: showStatsDropdown
-                        ? '1px solid rgba(34,211,238,0.25)'
-                        : showFriendsDropdown
-                        ? '1px solid rgba(74,222,128,0.25)'
-                        : '1px solid rgba(248,113,113,0.25)',
-                    }}
-                  >
-                    {/* Close button */}
-                    <button
-                      onClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
-                      className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+              {/* Open space below Environment Hub — Stats/Friends/Live overlay fills this */}
+              {/* Height is fixed so DevSpotlight always stays at same position */}
+              <div className="relative mt-3" style={{ height: '140px' }}>
+                {/* OVERLAY: Stats / Friends / Live — fills the open space exactly */}
+                <AnimatePresence>
+                  {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
+                    <motion.div
+                      key="panel-overlay"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: showStatsDropdown
+                          ? '1px solid rgba(34,211,238,0.30)'
+                          : showFriendsDropdown
+                          ? '1px solid rgba(74,222,128,0.30)'
+                          : '1px solid rgba(248,113,113,0.30)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
+                      }}
                     >
-                      <X className="w-3 h-3 text-white/60" />
-                    </button>
+                      {/* Close button */}
+                      <button
+                        onClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
+                        className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                      >
+                        <X className="w-3 h-3 text-white/60" />
+                      </button>
 
-                    {showStatsDropdown && (
-                      <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                        <StatsPopupOverlay
-                          activeTab={statsActiveTab}
-                          onTabChange={setStatsActiveTab}
-                          onClose={() => setShowStatsDropdown(false)}
-                          inline={true}
-                        />
-                      </div>
-                    )}
-
-                    {showFriendsDropdown && (
-                      <div className="h-full overflow-hidden">
-                        <FriendsDropdown />
-                      </div>
-                    )}
-
-                    {showLiveDropdown && (
-                      <div className="h-full flex gap-3 p-3">
-                        <div className="h-full w-[70%]">
-                          <StreamPlayerBox
-                            isLive={isLive}
-                            onToggleLive={() => setIsLive(!isLive)}
-                            isPlaying={isPlaying}
-                            onTogglePlay={() => setIsPlaying(!isPlaying)}
-                            volume={volume}
-                            onVolumeChange={setVolume}
-                            onOpenSettings={() => setShowStreamSettings(true)}
-                            settingsOpen={showStreamSettings}
-                            onCloseSettings={() => setShowStreamSettings(false)}
-                            isSettingsMaximized={settingsMaximized}
-                            onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                      {showStatsDropdown && (
+                        <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                          <StatsPopupOverlay
+                            activeTab={statsActiveTab}
+                            onTabChange={setStatsActiveTab}
+                            onClose={() => setShowStatsDropdown(false)}
+                            inline={true}
                           />
                         </div>
-                        <div className="h-full w-[30%]">
-                          <StreamChatBox isLive={isLive} />
+                      )}
+
+                      {showFriendsDropdown && (
+                        <div className="h-full overflow-hidden">
+                          <FriendsDropdown />
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      )}
+
+                      {showLiveDropdown && (
+                        <div className="h-full flex gap-3 p-3">
+                          <div className="h-full w-[70%]">
+                            <StreamPlayerBox
+                              isLive={isLive}
+                              onToggleLive={() => setIsLive(!isLive)}
+                              isPlaying={isPlaying}
+                              onTogglePlay={() => setIsPlaying(!isPlaying)}
+                              volume={volume}
+                              onVolumeChange={setVolume}
+                              onOpenSettings={() => setShowStreamSettings(true)}
+                              settingsOpen={showStreamSettings}
+                              onCloseSettings={() => setShowStreamSettings(false)}
+                              isSettingsMaximized={settingsMaximized}
+                              onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                            />
+                          </div>
+                          <div className="h-full w-[30%]">
+                            <StreamChatBox isLive={isLive} />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* DevSpotlightRibbon — always at the same position, never moves */}
+              <div className="pointer-events-auto">
+                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+              </div>
             </div>
           </div>
           
