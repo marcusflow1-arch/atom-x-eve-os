@@ -19,7 +19,17 @@ export default function KnowledgeConnectionPanel() {
   const { data: knowledgeEntries = [] } = useQuery({
     queryKey: ['knowledge-entries'],
     queryFn: () => base44.entities.KnowledgeEntry.list('-created_date', 500),
+    refetchInterval: 5000,
   });
+
+  // Watch for pending analysis
+  const { data: pendingUrls = [] } = useQuery({
+    queryKey: ['pending-knowledge-urls'],
+    queryFn: () => base44.entities.PendingKnowledgeURL.list('-created_date', 20),
+    refetchInterval: 3000,
+  });
+
+  const activePending = pendingUrls.filter(p => p.status === 'pending' || p.status === 'processing');
 
   const q = searchTerm.toLowerCase();
 
@@ -62,6 +72,28 @@ export default function KnowledgeConnectionPanel() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Live Learning Status */}
+      {activePending.length > 0 && (
+        <div className="bg-indigo-500/10 border-b border-indigo-500/20 p-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-indigo-300 flex items-center gap-1.5">
+              <Zap className="w-3 h-3 animate-pulse" />
+              ANALYZING {activePending.length} FILES...
+            </span>
+          </div>
+          <div className="space-y-0.5">
+            {activePending.slice(0, 2).map(p => (
+              <div key={p.id} className="text-[9px] text-indigo-400/70 truncate pl-4">
+                • {p.label || 'Processing URL...'}
+              </div>
+            ))}
+            {activePending.length > 2 && (
+              <div className="text-[8px] text-indigo-400/50 pl-4">+ {activePending.length - 2} more</div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="p-3 border-b border-white/10">
         <div className="flex items-center gap-2 mb-2">
           <Link2 className="w-4 h-4 text-cyan-400" />

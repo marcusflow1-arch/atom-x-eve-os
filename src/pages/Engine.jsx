@@ -21,7 +21,7 @@ export default function Engine() {
   const [leftPanel, setLeftPanel] = useState('ai'); // 'ai' | 'study' | 'tools' | 'blueprints' | 'unreal' | 'director'
   const [rightPanel, setRightPanel] = useState('knowledge'); // 'knowledge'
   const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(true); // Start collapsed — AI chat is the primary interface
+  const [rightCollapsed, setRightCollapsed] = useState(false); // Open by default to show Knowledge
 
   useEffect(() => {
     const onKey = (e) => {
