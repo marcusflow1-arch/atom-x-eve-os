@@ -3278,19 +3278,20 @@ export default function LunaTemplate() {
               </ConsoleTile>
             </div>
 
-            {/* DASHBOARD STAGE: EnvironmentSelector + DevSpotlightRibbon always in normal flow */}
+            {/* DASHBOARD STAGE: EnvironmentSelector always in normal flow */}
             {/* Stage overlay (Stats/Friends/Live) floats on top without affecting layout */}
             <div 
               className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
               ref={stageContainerRef}
             >
-              {/* Always-visible default content — never moves */}
+              {/* Always-visible default content — EnvironmentSelector only, DevSpotlight moved to right column */}
               <div className="flex flex-col gap-4">
                 <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
-                <DevSpotlightRibbon onOpenOverlay={() => setShowDevSpotlight(true)} />
+                {/* Open space below — Stats/Friends/Live overlay fills this exactly */}
+                <div style={{ height: '140px' }} />
               </div>
 
-              {/* Overlay panel — floats ON TOP of the above, same bounds, no layout impact */}
+              {/* Overlay panel — floats ON TOP of the open space, no layout impact */}
               <AnimatePresence>
                 {stageMode !== 'default' && (
                   <motion.div
@@ -3299,14 +3300,19 @@ export default function LunaTemplate() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25 }}
-                    className="absolute inset-0 z-30 rounded-2xl overflow-hidden"
+                    className="absolute z-30 rounded-2xl overflow-hidden"
                     style={{
-                      background: 'rgba(6, 10, 18, 0.88)',
-                      backdropFilter: 'blur(20px)',
-                      WebkitBackdropFilter: 'blur(20px)',
-                      border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.25)'
-                            : stageMode === 'friends' ? '1px solid rgba(74,222,128,0.25)'
-                            : '1px solid rgba(248,113,113,0.25)',
+                      top: 'calc(100% - 140px)',
+                      left: 0,
+                      right: 0,
+                      height: '140px',
+                      background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
+                      backdropFilter: 'blur(24px)',
+                      WebkitBackdropFilter: 'blur(24px)',
+                      border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.30)'
+                            : stageMode === 'friends' ? '1px solid rgba(74,222,128,0.30)'
+                            : '1px solid rgba(248,113,113,0.30)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
                     }}
                   >
                     {/* Close button */}
@@ -3318,13 +3324,13 @@ export default function LunaTemplate() {
                     </button>
 
                     {stageMode === 'stats' && (
-                      <div className="h-full overflow-y-auto p-3">
+                      <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
                         <AvatarProgressionBox compact={true} />
                       </div>
                     )}
 
                     {stageMode === 'friends' && (
-                      <div className="h-full">
+                      <div className="h-full overflow-hidden">
                         <FriendsListContent />
                       </div>
                     )}
