@@ -61,7 +61,12 @@ export default function CloudKnowledgeImporter({ onComplete }) {
 
   const clearCompleted = async () => {
     for (const item of pending.filter(p => p.status === 'completed' || p.status === 'failed')) {
-      await base44.entities.PendingKnowledgeURL.delete(item.id);
+      try {
+        await base44.entities.PendingKnowledgeURL.delete(item.id);
+      } catch (err) {
+        // Ignore if already deleted or not found
+        console.log(`Skipped deleting ${item.id}:`, err);
+      }
     }
     queryClient.invalidateQueries({ queryKey: ['pending-knowledge-urls'] });
   };
@@ -103,9 +108,11 @@ export default function CloudKnowledgeImporter({ onComplete }) {
                 {item.status === 'pending' && (
                   <button
                     onClick={async () => {
-                      await base44.entities.PendingKnowledgeURL.delete(item.id);
+                      try {
+                        await base44.entities.PendingKnowledgeURL.delete(item.id);
+                        showSuccess('Removed pending URL');
+                      } catch (e) { console.log('Already deleted', e); }
                       queryClient.invalidateQueries({ queryKey: ['pending-knowledge-urls'] });
-                      showSuccess('Removed pending URL');
                     }}
                     className="text-red-400/60 hover:text-red-400 transition-colors p-0.5 flex-shrink-0"
                     title="Remove from queue"
