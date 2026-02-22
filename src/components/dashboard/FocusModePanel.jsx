@@ -1305,36 +1305,27 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto w-full pointer-events-auto" style={{ scrollbarWidth: 'none' }}>
-      <motion.button
-        key="stats-tile"
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onStatsClick}
-        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border border-white/15 transition-all flex-shrink-0"
-        style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', width: '85px', height: '75px' }}
-      >
-        <TrendingUp className="w-5 h-5 text-white/80" />
-        <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">Stats</span>
-      </motion.button>
-      {quickActions.map((action) => {
+      {[{ id: 'stats', label: 'Stats', icon: TrendingUp, onClick: onStatsClick }, ...quickActions].map((action) => {
         const Icon = action.icon;
         return (
           <motion.button
             key={action.id}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.96 }}
             onClick={action.onClick}
-            className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border ${action.borderColor} transition-all hover:shadow-lg flex-shrink-0`}
+            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all flex-shrink-0 group"
             style={{
-              background: `linear-gradient(135deg, ${action.color.split(' ')[0].replace('from-', '')} 0%, ${action.color.split(' ')[1].replace('to-', '')} 100%)`.replace(/\/\d+/g, ''),
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
+              background: 'linear-gradient(145deg, rgba(18, 28, 44, 0.92) 0%, rgba(12, 20, 34, 0.96) 100%)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(125, 211, 252, 0.15)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(125,211,252,0.08)',
               width: '85px',
-              height: '75px'
+              height: '75px',
             }}
           >
-            <Icon className="w-5 h-5 text-white/80" />
-            <span className="text-white/70 text-[9px] font-semibold text-center leading-tight">{action.label}</span>
+            <Icon className="w-5 h-5 text-sky-300/80 group-hover:text-sky-200 transition-colors" />
+            <span className="text-slate-300/80 text-[9px] font-semibold text-center leading-tight group-hover:text-white transition-colors">{action.label}</span>
           </motion.button>
         );
       })}
