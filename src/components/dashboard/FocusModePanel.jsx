@@ -1196,10 +1196,13 @@ function EnvironmentHubTile({ isOpen, onToggle }) {
     <button 
       className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
       style={{
-        background: isOpen ? 'rgba(200, 210, 220, 0.14)' : 'rgba(100, 120, 140, 0.08)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        border: `1px solid ${isOpen ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.10)'}`,
+        background: isOpen
+          ? 'linear-gradient(145deg, rgba(18,32,52,0.98) 0%, rgba(10,20,36,0.99) 100%)'
+          : 'linear-gradient(145deg, rgba(14,24,40,0.95) 0%, rgba(8,16,28,0.97) 100%)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: isOpen ? '1px solid rgba(125,211,252,0.35)' : '1px solid rgba(125,211,252,0.12)',
+        boxShadow: isOpen ? '0 0 16px rgba(125,211,252,0.12), inset 0 1px 0 rgba(125,211,252,0.1)' : 'inset 0 1px 0 rgba(125,211,252,0.05)',
         transition: 'all 0.3s ease'
       }}
       onClick={onToggle}
