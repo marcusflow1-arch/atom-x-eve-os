@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { ChevronLeft, ChevronRight, Sparkles, Star } from 'lucide-react';
 
 const GENRES = ['Fear', 'Shooter', 'RPG', 'Sci-Fi', 'Action', 'Strategy', 'Adventure', 'Racing', 'Sports', 'Puzzle'];
@@ -74,6 +76,7 @@ const RARITY_STYLES = {
 const COLS_PER_ROW = 4;
 
 export default function CardCollectionBrowser() {
+  const navigate = useNavigate();
   const [genreIndex, setGenreIndex] = useState(0);
   const [isGenreHovered, setIsGenreHovered] = useState(false);
   const [isCardsHovered, setIsCardsHovered] = useState(false);
@@ -174,18 +177,23 @@ export default function CardCollectionBrowser() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Title */}
-      <h3 
-        className="text-base font-extrabold uppercase tracking-widest mb-3 text-center w-full" 
-        style={{ 
-          background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-        }}
+      {/* Title - Clickable for Full Page */}
+      <button 
+        onClick={() => navigate(createPageUrl('CardCollection'))}
+        className="w-full flex justify-center group mb-3"
       >
-        Card Collection
-      </h3>
+        <h3 
+          className="text-base font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
+          style={{ 
+            background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+          }}
+        >
+          Card Collection
+        </h3>
+      </button>
 
       {/* Genre Name - scroll over this to change genre */}
       <div

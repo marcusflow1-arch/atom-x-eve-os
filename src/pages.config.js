@@ -104,6 +104,7 @@ import StreamingHub from './pages/StreamingHub';
 import WorldEvents from './pages/WorldEvents';
 import YBotTest from './pages/YBotTest';
 import QuestLog from './pages/QuestLog';
+import CardCollection from './pages/CardCollection';
 import __Layout from './Layout.jsx';
 
 
@@ -165,6 +166,7 @@ export const PAGES = {
     "WorldEvents": WorldEvents,
     "YBotTest": YBotTest,
     "QuestLog": QuestLog,
+    "CardCollection": CardCollection,
 }
 
 export const pagesConfig = {
