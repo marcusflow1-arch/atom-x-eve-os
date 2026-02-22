@@ -21,8 +21,33 @@ export default function EngineViewport({ onSceneReady }) {
   const characterRef = useRef(null);
   const keysRef = useRef({});
 
+  // Combat State
+  const gameRef = useRef({
+    isActive: false,
+    lastSpawn: 0,
+    spawnInterval: 5000,
+    enemies: [], // { id, mesh, hp, maxHp }
+    projectiles: [],
+    score: 0
+  });
+
+  const [hudState, setHudState] = useState({
+    playerHp: 100,
+    playerMaxHp: 100,
+    exp: 0,
+    level: 1,
+    enemies: [] // Synced with gameRef for UI { id, hp, maxHp, screenX, screenY }
+  });
+
   useEffect(() => {
-    const onKeyDown = (e) => { keysRef.current[e.code] = true; };
+    const onKeyDown = (e) => { 
+        keysRef.current[e.code] = true; 
+        
+        // Attack Input (K or Space)
+        if ((e.code === 'KeyK' || e.code === 'Space') && characterRef.current && gameRef.current.isActive) {
+            handlePlayerAttack();
+        }
+    };
     const onKeyUp = (e) => { keysRef.current[e.code] = false; };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
@@ -31,6 +56,24 @@ export default function EngineViewport({ onSceneReady }) {
         window.removeEventListener('keyup', onKeyUp);
     };
   }, []);
+
+  const handlePlayerAttack = () => {
+      // 1. Play Kick Animation (if available) - Logic handled in mixer usually, strictly separate here for damage
+      // Assuming 'K' triggers the animation via other controllers or we force it here if we had access to the mixer directly.
+      // For now, calculate damage immediately.
+      
+      const playerPos = characterRef.current.position;
+      const range = 3.0;
+      const damage = 50;
+
+      gameRef.current.enemies.forEach(enemy => {
+          if (enemy.mesh.position.distanceTo(playerPos) < range) {
+              enemy.hp -= damage;
+              // Floating text or effect could go here
+              console.log(`Hit enemy ${enemy.id} for ${damage} dmg`);
+          }
+      });
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -120,6 +163,12 @@ export default function EngineViewport({ onSceneReady }) {
         scene,
         camera,
         renderer,
+        setupCombatScenario: () => {
+            gameRef.current.isActive = true;
+            gameRef.current.lastSpawn = 0; // Trigger immediate spawn logic check
+            setHudState(prev => ({ ...prev, playerHp: 100, exp: 0 }));
+            console.log("Combat Scenario Initiated");
+        },
         addModel: async (url, options = {}) => {
           const lower = url.toLowerCase();
           let obj;
@@ -212,59 +261,69 @@ export default function EngineViewport({ onSceneReady }) {
             
             const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
             
-            // Simple random displacement for terrain look
+            // Heightmap
             const positionAttribute = geometry.attributes.position;
             for ( let i = 0; i < positionAttribute.count; i ++ ) {
                 const x = positionAttribute.getX( i );
                 const y = positionAttribute.getY( i );
-                // Simple noise
-                const z = (Math.sin(x * 0.2) * Math.cos(y * 0.2) * 2) + (Math.random() * 0.5);
+                const z = (Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2) + (Math.random() * 0.2);
                 positionAttribute.setZ( i, z );
             }
             geometry.computeVertexNormals();
 
             const material = new THREE.MeshStandardMaterial({ 
                 color: color, 
-                roughness: 0.8, 
-                metalness: 0.1,
-                flatShading: true 
+                roughness: 0.9, 
+                metalness: 0.05,
+                flatShading: false
             });
             
             const terrain = new THREE.Mesh(geometry, material);
             terrain.rotation.x = -Math.PI / 2;
             terrain.receiveShadow = true;
             terrain.castShadow = true;
-            terrain.name = 'GeneratedTerrain_' + Date.now();
-            
+            terrain.name = 'Terrain';
             scene.add(terrain);
             setObjectCount(c => c + 1);
-            
-            // Add some random trees/rocks if requested
+
+            // Detailed Grass (InstancedMesh)
             if (options.addFoliage) {
-               const treeGeo = new THREE.ConeGeometry(0.5, 2, 8);
-               const treeMat = new THREE.MeshStandardMaterial({ color: 0x1a472a });
-               const trunkGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5);
-               const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3c31 });
-
-               for(let i=0; i<20; i++) {
-                  const x = (Math.random() - 0.5) * size * 0.8;
-                  const z = (Math.random() - 0.5) * size * 0.8;
-                  const y = (Math.sin(x * 0.2) * Math.cos(z * 0.2) * 2) + 0.5; // match terrain height approx
-
-                  const group = new THREE.Group();
-                  const tree = new THREE.Mesh(treeGeo, treeMat);
-                  tree.position.y = 1;
-                  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-                  trunk.position.y = 0.25;
-                  
-                  group.add(trunk);
-                  group.add(tree);
-                  group.position.set(x, y, z); // z in 3D is y in plane geo (rotated)
-                  group.scale.setScalar(0.5 + Math.random());
-                  
-                  scene.add(group);
-               }
-               setObjectCount(c => c + 20);
+                const bladeGeo = new THREE.ConeGeometry(0.05, 0.5, 3);
+                bladeGeo.translate(0, 0.25, 0);
+                const bladeMat = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.6 });
+                const grassCount = 2000;
+                const grass = new THREE.InstancedMesh(bladeGeo, bladeMat, grassCount);
+                
+                const dummy = new THREE.Object3D();
+                for (let i = 0; i < grassCount; i++) {
+                    const x = (Math.random() - 0.5) * size;
+                    const z = (Math.random() - 0.5) * size;
+                    // Approximate height at x,z
+                    const y = (Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2);
+                    
+                    dummy.position.set(x, y, z); // In terrain local space (rotated later)
+                    // Since terrain is rotated X -90, y becomes z and z becomes -y... 
+                    // Easier to place them in world space.
+                }
+                
+                // Let's place grass in World Space
+                scene.add(grass);
+                for (let i = 0; i < grassCount; i++) {
+                    const x = (Math.random() - 0.5) * size;
+                    const z = (Math.random() - 0.5) * size;
+                    // Re-calc height
+                    const h = (Math.sin(x * 0.1) * Math.cos(z * 0.1) * 2) + (Math.random() * 0.2);
+                    
+                    dummy.position.set(x, h, z);
+                    dummy.scale.setScalar(0.5 + Math.random() * 0.5);
+                    dummy.rotation.y = Math.random() * Math.PI;
+                    dummy.rotation.x = (Math.random() - 0.5) * 0.2;
+                    dummy.rotation.z = (Math.random() - 0.5) * 0.2;
+                    dummy.updateMatrix();
+                    grass.setMatrixAt(i, dummy.matrix);
+                }
+                grass.castShadow = true;
+                grass.receiveShadow = true;
             }
         }
       });
@@ -275,8 +334,93 @@ export default function EngineViewport({ onSceneReady }) {
     const animate = () => {
       animId = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
+      const now = Date.now();
       controls.update();
       mixersRef.current.forEach(m => m.update(delta));
+      
+      // GAME LOOP
+      if (gameRef.current.isActive) {
+          const game = gameRef.current;
+          
+          // 1. Spawning
+          if (now - game.lastSpawn > game.spawnInterval && game.enemies.length < 5) {
+              game.lastSpawn = now;
+              // Spawn Enemy
+              const geo = new THREE.CapsuleGeometry(0.5, 1, 4, 8);
+              const mat = new THREE.MeshStandardMaterial({ color: 0xff4444 });
+              const enemyMesh = new THREE.Mesh(geo, mat);
+              // Random pos around center
+              const angle = Math.random() * Math.PI * 2;
+              const radius = 10 + Math.random() * 5;
+              enemyMesh.position.set(Math.cos(angle) * radius, 1, Math.sin(angle) * radius);
+              scene.add(enemyMesh);
+              
+              game.enemies.push({
+                  id: 'enemy_' + now,
+                  mesh: enemyMesh,
+                  hp: 100,
+                  maxHp: 100,
+                  lastAttack: 0
+              });
+              console.log("Spawned Enemy");
+          }
+          
+          // 2. Enemy AI & Logic
+          const deadEnemies = [];
+          const enemiesForUI = [];
+          
+          game.enemies.forEach(enemy => {
+              // Death Check
+              if (enemy.hp <= 0) {
+                  deadEnemies.push(enemy);
+                  return;
+              }
+              
+              // Movement
+              if (characterRef.current) {
+                  const playerPos = characterRef.current.position;
+                  const dir = new THREE.Vector3().subVectors(playerPos, enemy.mesh.position).normalize();
+                  const dist = playerPos.distanceTo(enemy.mesh.position);
+                  
+                  if (dist > 1.5) {
+                      enemy.mesh.position.add(dir.multiplyScalar(2 * delta)); // Move
+                      enemy.mesh.lookAt(playerPos.x, enemy.mesh.position.y, playerPos.z);
+                  } else {
+                      // Attack
+                      if (now - enemy.lastAttack > 2000) { // 2s cooldown
+                          enemy.lastAttack = now;
+                          // Deal Damage
+                          setHudState(prev => ({ ...prev, playerHp: Math.max(0, prev.playerHp - 1) })); // 1 damage
+                          // Visual feedback
+                          enemy.mesh.material.emissive.setHex(0xffffff);
+                          setTimeout(() => enemy.mesh.material.emissive.setHex(0x000000), 200);
+                      }
+                  }
+              }
+              
+              // Map to screen space for UI
+              const vector = enemy.mesh.position.clone();
+              vector.y += 2; // Above head
+              vector.project(camera);
+              const x = (vector.x * .5 + .5) * containerRef.current.clientWidth;
+              const y = -(vector.y * .5 - .5) * containerRef.current.clientHeight;
+              
+              if (vector.z < 1) { // Only if in front of camera
+                  enemiesForUI.push({ ...enemy, screenX: x, screenY: y });
+              }
+          });
+          
+          // Cleanup Dead
+          deadEnemies.forEach(dead => {
+              scene.remove(dead.mesh);
+              game.enemies = game.enemies.filter(e => e.id !== dead.id);
+              // EXP Reward
+              setHudState(prev => ({ ...prev, exp: prev.exp + 20 }));
+          });
+          
+          // Sync UI state every frame (expensive but smooth)
+          setHudState(prev => ({ ...prev, enemies: enemiesForUI }));
+      }
       
       // Character Movement (WASD)
       if (characterRef.current) {
@@ -287,10 +431,6 @@ export default function EngineViewport({ onSceneReady }) {
           if (keysRef.current['KeyS'] || keysRef.current['ArrowDown']) char.position.z += speed;
           if (keysRef.current['KeyA'] || keysRef.current['ArrowLeft']) char.position.x -= speed;
           if (keysRef.current['KeyD'] || keysRef.current['ArrowRight']) char.position.x += speed;
-          
-          // Simple camera follow
-          // camera.position.lerp(new THREE.Vector3(char.position.x, char.position.y + 5, char.position.z + 8), 0.1);
-          // controls.target.lerp(char.position, 0.1);
       }
 
       // Rotate starter cube gently
@@ -358,6 +498,54 @@ export default function EngineViewport({ onSceneReady }) {
           Live
         </div>
       </div>
+
+      {/* COMBAT HUD */}
+      {gameRef.current.isActive && (
+          <>
+            {/* Player Stats */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md p-4 rounded-xl border border-white/20 w-80">
+                <div className="flex justify-between text-xs text-white mb-1">
+                    <span>HP {hudState.playerHp}/{hudState.playerMaxHp}</span>
+                    <span>Lvl {hudState.level}</span>
+                </div>
+                <div className="h-2 w-full bg-slate-700 rounded-full overflow-hidden mb-2">
+                    <div 
+                        className="h-full bg-red-500 transition-all duration-300" 
+                        style={{ width: `${(hudState.playerHp / hudState.playerMaxHp) * 100}%` }}
+                    />
+                </div>
+                <div className="flex justify-between text-[10px] text-white/60 mb-1">
+                    <span>EXP {hudState.exp}</span>
+                </div>
+                <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                        className="h-full bg-yellow-400 transition-all duration-300" 
+                        style={{ width: `${Math.min(100, hudState.exp % 100)}%` }} // Simple level curve
+                    />
+                </div>
+            </div>
+            
+            {/* Enemy Health Bars (Floating) */}
+            {hudState.enemies.map(enemy => (
+                <div 
+                    key={enemy.id}
+                    className="absolute w-16 pointer-events-none"
+                    style={{ 
+                        left: enemy.screenX, 
+                        top: enemy.screenY,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                >
+                    <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-white/10">
+                        <div 
+                            className="h-full bg-red-500" 
+                            style={{ width: `${(enemy.hp / enemy.maxHp) * 100}%` }}
+                        />
+                    </div>
+                </div>
+            ))}
+          </>
+      )}
     </div>
   );
 }

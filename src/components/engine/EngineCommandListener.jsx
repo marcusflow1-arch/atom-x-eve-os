@@ -73,18 +73,15 @@ export default function EngineCommandListener({ sceneApi }) {
                   animation_url: action.data?.idleAnimUrl // Start with idle
               });
               
-              // Find the mesh we just added (last one) or by searching logic
-              // Since addModel is async but doesn't return the mesh directly in current API, 
-              // we can cheat by grabbing the last added Mesh or assume sceneApi can return it.
-              // For now, let's assume the user wants to control the "C1" model if found.
-              
+              // Find the mesh we just added
               const scene = sceneApi.scene;
-              // Wait a tick for loader
               setTimeout(() => {
                   let charMesh = null;
+                  // Improved search: look for the most recently added group/mesh that isn't environment
+                  // or just check children count
                   scene.traverse(c => {
-                      if (c.type === 'Group' || (c.isMesh && c.name !== 'ground' && c.name !== 'grid')) {
-                          charMesh = c; // simplistic pick
+                      if (c.type === 'Group' && !c.name.includes('Terrain') && !c.name.includes('grid')) {
+                          charMesh = c;
                       }
                   });
                   
@@ -94,6 +91,15 @@ export default function EngineCommandListener({ sceneApi }) {
                   }
               }, 1000);
           }
+      }
+      else if (action.type === 'setup_combat_scenario') {
+          // 1. Setup Terrain
+          sceneApi.createTerrain({ size: 60, color: 0x1f3b1b, addFoliage: true });
+          
+          // 2. Initialize Game Mode
+          sceneApi.setupCombatScenario();
+          
+          showSuccess("Combat Scenario Loaded: Enemies spawning!");
       }
     } catch (err) {
       console.error('Action failed:', err);
