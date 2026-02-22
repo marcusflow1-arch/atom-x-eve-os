@@ -299,6 +299,7 @@ Respond with JSON:
 ACTION TYPES:
 - add_primitive ({shape: "cube"|"sphere"|"cylinder"|"plane", position:{x,y,z}, scale:{x,y,z}, color:"#..."})
 - add_model ({url: "...", position:{x,y,z}, scale:{x,y,z}, animation_url: "..."})
+- create_terrain ({size: 50, color: "#...", addFoliage: true})
 - modify_scene ({description})
 
 ALWAYS valid JSON.`;
