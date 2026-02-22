@@ -235,22 +235,64 @@ export default function UnrealBridgePanel() {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-b border-white/10"
           >
-            <div className="p-3 space-y-2">
-              <label className="text-white/40 text-[9px] font-bold uppercase tracking-wider">Bridge URL</label>
-              <div className="flex gap-1.5">
-                <Input
-                  value={bridgeUrl}
-                  onChange={e => setBridgeUrl(e.target.value)}
-                  placeholder="http://localhost:5000"
-                  className="h-7 text-xs bg-white/5 border-white/10"
-                />
-                <Button size="sm" onClick={checkConnection} disabled={checking} className="h-7 text-[10px]">
-                  {checking ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Test'}
-                </Button>
+            <div className="p-3 space-y-4">
+              {/* Project Link Section */}
+              <div className="space-y-2">
+                <label className="text-white/40 text-[9px] font-bold uppercase tracking-wider flex items-center gap-2">
+                  <HardDrive className="w-3 h-3" />
+                  Local Project Access
+                </label>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleOpenProject} 
+                    className="h-8 text-xs w-full justify-start gap-2 bg-white/5 border-white/10"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                    {projectHandle ? projectHandle.name : 'Link Project Folder'}
+                  </Button>
+                  {projectHandle && (
+                    <Button size="sm" onClick={() => handleScanProject(projectHandle)} disabled={isScanning} className="h-8 w-8 px-0">
+                      <ScanSearch className={`w-3.5 h-3.5 ${isScanning ? 'animate-pulse text-cyan-400' : ''}`} />
+                    </Button>
+                  )}
+                </div>
+                {scannedFiles > 0 && (
+                  <p className="text-green-400/60 text-[9px] flex items-center gap-1">
+                    <Database className="w-3 h-3" />
+                    {scannedFiles} files indexed for learning
+                  </p>
+                )}
               </div>
-              <p className="text-white/20 text-[9px]">
-                The bridge service must be running on your PC. <a href="#setup" className="text-cyan-400 hover:underline" onClick={(e) => { e.preventDefault(); addLog('system', SETUP_GUIDE); }}>View setup guide</a>
-              </p>
+
+              {/* Strict Mode Toggle */}
+              <div className="flex items-center justify-between bg-red-500/5 p-2 rounded-lg border border-red-500/10">
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className={`w-4 h-4 ${strictMode ? 'text-red-400' : 'text-white/20'}`} />
+                  <div>
+                    <span className={`text-[10px] font-bold ${strictMode ? 'text-red-300' : 'text-white/40'}`}>Strict Mode</span>
+                    <p className="text-[8px] text-white/30">Enforce direct engine execution rules</p>
+                  </div>
+                </div>
+                <Switch checked={strictMode} onCheckedChange={setStrictMode} className="data-[state=checked]:bg-red-500" />
+              </div>
+
+              {/* Bridge URL */}
+              <div className="space-y-2 pt-2 border-t border-white/5">
+                <label className="text-white/40 text-[9px] font-bold uppercase tracking-wider">Bridge URL</label>
+                <div className="flex gap-1.5">
+                  <Input
+                    value={bridgeUrl}
+                    onChange={e => setBridgeUrl(e.target.value)}
+                    placeholder="http://localhost:5000"
+                    className="h-7 text-xs bg-white/5 border-white/10"
+                  />
+                  <Button size="sm" onClick={checkConnection} disabled={checking} className="h-7 text-[10px]">
+                    {checking ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Test'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
