@@ -1777,6 +1777,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 </AnimatePresence>
               </div>
 
+              {/* DevSpotlightRibbon — centered below, at the bottom of the center column */}
+              <div className="pointer-events-auto mt-3">
+                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+              </div>
 
             </div>
           </div>
