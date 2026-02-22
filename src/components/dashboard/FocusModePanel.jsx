@@ -1616,6 +1616,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
   const [settingsMaximized, setSettingsMaximized] = useState(false);
+  const bannerAreaRef = useRef(null);
 
   const handleGameSelect = (game) => {
     setSelectedGame(game);
