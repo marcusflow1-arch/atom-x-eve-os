@@ -1790,10 +1790,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 <AIAttributesBox />
               </div>
 
-             {/* DevSpotlightRibbon — at the bottom edge of AI Attribute Box */}
-             <div className="pointer-events-auto mt-1">
-               <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-             </div>
              </div>
         </div>
       </div>
