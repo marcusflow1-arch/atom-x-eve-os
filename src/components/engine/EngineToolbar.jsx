@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Box, CircleDot, Cylinder, Square, Upload, Plus, Loader2, Lightbulb } from 'lucide-react';
+import { Box, CircleDot, Cylinder, Square, Upload, Plus, Loader2, Lightbulb, Package, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { showSuccess, showError } from '@/components/error/ErrorToast';
 
 export default function EngineToolbar({ sceneApi }) {
   const [uploading, setUploading] = useState(false);
+  const [packUploading, setPackUploading] = useState(false);
 
   const handleAddPrimitive = (type) => {
     if (sceneApi?.addPrimitive) sceneApi.addPrimitive(type);
@@ -25,6 +26,42 @@ export default function EngineToolbar({ sceneApi }) {
     }
     setUploading(false);
     e.target.value = '';
+  };
+
+  const handleUploadPack = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setPackUploading(true);
+      try {
+          // 1. Upload ZIP
+          showSuccess("Uploading environment pack...");
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          
+          // 2. Process via backend
+          showSuccess("Constructing Room 4 environment...");
+          const res = await base44.functions.invoke('processEnvironmentPack', { 
+              fileUrl: file_url,
+              environmentName: "Room 4"
+          });
+          
+          if (res.data?.success) {
+              showSuccess(res.data.message);
+              // Optionally load it immediately
+              /*
+              if (sceneApi?.addModel && res.data.entityId) {
+                  // Fetch the entity to get the URL? The func returns mainScene URL implicitly if we asked for it, 
+                  // but let's just let the user find it in the browser or auto-load if we want.
+                  // For now, let's just notify.
+              }
+              */
+          } else {
+              throw new Error(res.data?.error || "Processing failed");
+          }
+      } catch (err) {
+          showError('Failed to process pack: ' + err.message);
+      }
+      setPackUploading(false);
+      e.target.value = '';
   };
 
   return (
@@ -60,13 +97,20 @@ export default function EngineToolbar({ sceneApi }) {
         <span className="text-orange-300 text-xs font-medium">Import Model</span>
       </label>
 
+      {/* Upload Environment Pack */}
+      <label className="flex items-center justify-center gap-2 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer transition-colors">
+        <input type="file" accept=".zip,.rar" onChange={handleUploadPack} className="hidden" />
+        {packUploading ? <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" /> : <Package className="w-4 h-4 text-emerald-400" />}
+        <span className="text-emerald-300 text-xs font-medium">Build Environment</span>
+      </label>
+
       <div className="mt-2 p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
         <div className="flex items-center gap-1.5 mb-1">
           <Lightbulb className="w-3 h-3 text-cyan-400" />
           <span className="text-cyan-400 text-[9px] font-bold">TIP</span>
         </div>
         <p className="text-slate-500 text-[9px] leading-relaxed">
-          Upload .glb, .gltf, or .fbx models. Knowledge from Game Study feeds into how scenes are structured here.
+          Use "Build Environment" to upload a ZIP pack. I will auto-construct "Room 4" from the main scene file inside.
         </p>
       </div>
     </div>
