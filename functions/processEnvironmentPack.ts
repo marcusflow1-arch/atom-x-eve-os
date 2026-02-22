@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'No file URL provided' }, { status: 400 });
     }
 
-    console.log(`Processing environment pack for: ${environmentName}`);
+    console.log(`Processing Unreal/Asset pack for: ${environmentName}`);
 
     // 1. Fetch the ZIP
     const response = await fetch(fileUrl);
@@ -25,82 +25,87 @@ Deno.serve(async (req) => {
     // 2. Load ZIP
     const zip = await JSZip.loadAsync(arrayBuffer);
     
-    const assets = [];
-    let mainSceneFile = null;
-    let mainSceneSize = 0;
-    
-    // 3. Analyze contents
-    // We look for the "Main" scene file - usually the largest FBX/GLB or one named "Scene"/"Level"
-    const fileEntries = [];
-    
+    let bestCandidate = null;
+    let maxScore = -1;
+
+    // 3. Smart Scan for "Map" / "Demo" / "Level" file
     zip.forEach((relativePath, zipEntry) => {
-        if (!zipEntry.dir) {
-            fileEntries.push({ path: relativePath, entry: zipEntry });
+        if (zipEntry.dir) return;
+        
+        const path = relativePath.toLowerCase();
+        
+        // Skip system files
+        if (path.includes('__macosx') || path.includes('.ds_store')) return;
+
+        // Must be a 3D format we can likely support (FBX is most common in Source folders)
+        // GLB/GLTF is best, OBJ is fallback
+        const is3D = path.endsWith('.fbx') || path.endsWith('.glb') || path.endsWith('.gltf') || path.endsWith('.obj');
+        
+        if (is3D) {
+            let score = 0;
+            const size = zipEntry._data?.uncompressedSize || 0;
+            
+            // Size factor (maps are usually big)
+            score += Math.min(size / 1024 / 1024, 50); // Up to 50 points for size
+
+            // Name factor (Key keywords for maps)
+            if (path.includes('demo') && path.includes('map')) score += 100;
+            else if (path.includes('overview')) score += 80;
+            else if (path.includes('level_')) score += 60;
+            else if (path.includes('scene')) score += 50;
+            else if (path.includes('environment')) score += 40;
+            else if (path.includes('merged')) score += 30; // Merged actors
+            
+            // Prefer "Source" directory if it exists (Unreal packs often put source FBX there)
+            if (path.includes('source/') || path.includes('src/')) score += 20;
+
+            if (score > maxScore) {
+                maxScore = score;
+                bestCandidate = { path: relativePath, entry: zipEntry, score };
+            }
         }
     });
 
-    // Upload extraction logic is complex in a serverless function due to timeouts/memory.
-    // For this implementation, we will:
-    // A. Identify the main scene file.
-    // B. Extract ONLY the main scene file to use as the Model3D entry point.
-    // C. (Ideally) we would extract all and upload them, but let's stick to the main one for the "Construct" request.
-    // If the user wants individual assets, the AssetPackImporter is better.
-    // Here we want to "Construct the environment".
-
-    for (const { path, entry } of fileEntries) {
-        const lower = path.toLowerCase();
-        const isModel = lower.endsWith('.fbx') || lower.endsWith('.glb') || lower.endsWith('.gltf') || lower.endsWith('.obj');
-        
-        if (isModel) {
-            // Heuristic for main scene
-            const size = entry._data?.uncompressedSize || 0;
-            const nameScore = (lower.includes('scene') ? 10 : 0) + (lower.includes('level') ? 10 : 0) + (lower.includes('environment') ? 10 : 0) + (lower.includes('demo') ? 5 : 0);
-            
-            // Prefer "Scene" files or just the largest file
-            if (nameScore > 0 || size > mainSceneSize) {
-                // If previous was just size-based, replace it. 
-                // If current has name score, prioritize it.
-                if (nameScore > 0 || !mainSceneFile?.nameScore) {
-                    mainSceneFile = { path, entry, size, nameScore };
-                    mainSceneSize = size;
-                }
-            }
-        }
+    if (!bestCandidate) {
+        return Response.json({ 
+            error: 'No compatible 3D map file (FBX/GLB/OBJ) found in archive. Ensure the pack includes Source files.' 
+        }, { status: 400 });
     }
 
-    if (!mainSceneFile) {
-        return Response.json({ error: 'No 3D model files found in the pack to construct an environment from.' }, { status: 400 });
-    }
+    console.log(`Selected candidate: ${bestCandidate.path} (Score: ${bestCandidate.score})`);
 
-    // 4. Extract and Upload Main Scene
-    const blob = await mainSceneFile.entry.async('blob');
-    const fileObj = new File([blob], mainSceneFile.path.split('/').pop(), { type: 'application/octet-stream' });
+    // 4. Extract and Upload Best Candidate
+    const blob = await bestCandidate.entry.async('blob');
+    // Sanitize name
+    const ext = bestCandidate.path.split('.').pop();
+    const safeName = `Room4_Constructed.${ext}`;
+    const fileObj = new File([blob], safeName, { type: 'application/octet-stream' });
     
     const uploadRes = await base44.asServiceRole.integrations.Core.UploadFile({ file: fileObj });
-    const mainFileUrl = uploadRes.file_url;
-
-    // 5. Create Model3D Entity
+    
+    // 5. Create the Environment Entity
     const entity = await base44.asServiceRole.entities.Model3D.create({
         name: environmentName,
-        description: `Constructed from environment pack. Main scene: ${mainSceneFile.path}`,
-        file_url: mainFileUrl,
-        file_type: mainSceneFile.path.split('.').pop().toLowerCase(),
+        description: `Auto-constructed from ${bestCandidate.path}`,
+        file_url: uploadRes.file_url,
+        file_type: ext,
         category: 'environment',
-        is_bundle: true,
-        use_mesh_collision: true, // Environments usually need collision
-        tags: ['environment', 'pack', 'constructed'],
-        files: [] // In a full implementation, we'd list all assets here
+        is_bundle: false,
+        use_mesh_collision: true,
+        tags: ['room4', 'unreal_import', 'constructed'],
+        // Set specific spawn if it looks like a demo map
+        player_spawn: { x: 0, y: 1, z: 0 }
     });
 
     return Response.json({ 
         success: true, 
         entityId: entity.id,
-        mainScene: mainSceneFile.path,
-        message: `Environment "${environmentName}" constructed successfully from ${mainSceneFile.path}`
+        mapPath: bestCandidate.path,
+        message: `Constructed "Room 4" from ${bestCandidate.path}`
     });
 
   } catch (error) {
-    console.error('Environment processing error:', error);
+    console.error('Room 4 construction error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

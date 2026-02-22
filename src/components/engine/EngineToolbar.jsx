@@ -101,7 +101,7 @@ export default function EngineToolbar({ sceneApi }) {
       <label className="flex items-center justify-center gap-2 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 cursor-pointer transition-colors">
         <input type="file" accept=".zip,.rar" onChange={handleUploadPack} className="hidden" />
         {packUploading ? <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" /> : <Package className="w-4 h-4 text-emerald-400" />}
-        <span className="text-emerald-300 text-xs font-medium">Build Environment</span>
+        <span className="text-emerald-300 text-xs font-medium">Construct Room 4</span>
       </label>
 
       <div className="mt-2 p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
