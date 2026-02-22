@@ -47,26 +47,36 @@ Deno.serve(async (req) => {
       // Queue each file as a PendingKnowledgeURL
       let queued = 0;
       for (const file of files.slice(0, 100)) {
-        const fileUrl = `https://drive.google.com/file/d/${file.id}/view`;
-        await base44.asServiceRole.entities.PendingKnowledgeURL.create({
-          url: fileUrl,
-          label: file.name || `file_${file.id}`,
-          folder_label: folderName,
-          status: 'pending',
-        });
-        queued++;
+        try {
+          const fileUrl = `https://drive.google.com/file/d/${file.id}/view`;
+          await base44.asServiceRole.entities.PendingKnowledgeURL.create({
+            url: fileUrl,
+            label: file.name || `file_${file.id}`,
+            folder_label: folderName,
+            status: 'pending',
+          });
+          queued++;
+        } catch (err) {
+          console.error(`Failed to queue file ${file.id}:`, err);
+          // Skip and continue
+        }
       }
 
       // Queue each subfolder as a PendingKnowledgeURL (recursive crawl)
       for (const sub of subFolders) {
-        const subUrl = `https://drive.google.com/drive/folders/${sub.id}`;
-        await base44.asServiceRole.entities.PendingKnowledgeURL.create({
-          url: subUrl,
-          label: sub.name || `subfolder_${sub.id}`,
-          folder_label: folderName + ' > ' + (sub.name || sub.id),
-          status: 'pending',
-        });
-        queued++;
+        try {
+          const subUrl = `https://drive.google.com/drive/folders/${sub.id}`;
+          await base44.asServiceRole.entities.PendingKnowledgeURL.create({
+            url: subUrl,
+            label: sub.name || `subfolder_${sub.id}`,
+            folder_label: folderName + ' > ' + (sub.name || sub.id),
+            status: 'pending',
+          });
+          queued++;
+        } catch (err) {
+           console.error(`Failed to queue folder ${sub.id}:`, err);
+           // Skip and continue
+        }
       }
 
       // Mark the folder entry as completed
@@ -175,10 +185,11 @@ Deno.serve(async (req) => {
     else if (engineIndicators.some(i => lowerLabel.includes(i) || lowerContent.includes(i))) knowledgeDomain = 'engine_building';
     if (folderLabel && folderLabel.startsWith('🎮')) knowledgeDomain = 'game_reference';
 
-    // AI Analysis
+    // AI Analysis - Enhanced for "Learning and Adapting"
     const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: `You are an EXHAUSTIVE knowledge extraction engine for a game development platform. 
-Your job is to extract EVERY piece of useful information from this file — leave nothing behind.
+      prompt: `You are an ADVANCED LEARNING ENGINE for a game development platform.
+Your goal is not just to summarize, but to STUDY, LEARN, and ADAPT from this file.
+Analyze it deeply to understand its logic, patterns, and structure so we can replicate or interface with it.
 
 FILE: "${label}" (category: ${category}, source URL: ${url})
 ${folderLabel ? `BATCH CONTEXT: ${folderLabel}` : ''}
@@ -187,31 +198,37 @@ ${folderLabel ? `BATCH CONTEXT: ${folderLabel}` : ''}
 ${truncated}
 --- END ---
 
-Extract and organize ALL of the following:
+Perform a deep study and return the following EXHAUSTIVE analysis:
 
-## Summary
-3-5 detailed paragraphs about what this file is, what it does, and why it matters.
+## Summary & Core Concept
+3-5 detailed paragraphs. What is this? How does it think? What is its unique value or logic?
 
-## Architecture & Structure
-How is this code/data organized? What design patterns are used?
+## Architecture & Design Patterns
+How is it structured? What patterns (Singleton, Factory, Component, etc.) does it use? How does it manage state?
+
+## Learning & Adaptation
+If we were to recreate this or integrate it into a React + Three.js engine:
+- What are the critical logic flows we need to copy?
+- What are the "gotchas" or complex parts we need to be careful about?
+- How can we adapt its logic for our context?
 
 ## Key Knowledge Extracted
-Every function, class, method, constant, API endpoint, data schema, config value.
+List every significant function, class, variable, constant, and configuration option. Explain what each one does.
 
-## Code Patterns & Snippets
-Extract the most important code blocks verbatim in fenced code blocks.
+## Code Patterns & Snippets (Verbatim)
+Extract the most important/complex code blocks exactly as they are. We need these for reference.
 
 ## Data Structures & Schemas
-Any JSON schemas, data models, type definitions.
-
-## Dependencies & Integrations
-What external libraries, APIs, services does this reference?
+Document every JSON structure, type definition, database schema, or data model found.
 
 ## Integration Guide
-How could this knowledge be applied in a React + Three.js web game engine?
+Concrete steps to use this knowledge. "To implement this feature, you would..."
+
+## Dependencies
+External libraries, APIs, or assets required.
 
 ## Tags
-25 relevant tags for search and categorization.`,
+25 relevant tags for search and categorization (e.g. "unreal", "ai", "pathfinding", "blueprint").`,
     });
 
     // Parse tags
