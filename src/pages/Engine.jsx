@@ -12,6 +12,7 @@ import EngineAIChat from '../components/engine/EngineAIChat';
 import BlueprintPanel from '../components/engine/BlueprintPanel';
 import DirectorChat from '../components/admin/DirectorChat';
 import UnrealBridgePanel from '../components/engine/UnrealBridgePanel';
+import EngineCommandListener from '../components/engine/EngineCommandListener';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 
@@ -34,6 +35,9 @@ export default function Engine() {
   return (
     <PageErrorBoundary pageName="Engine">
       <GlassPageFrame>
+        {/* Remote Command Listener - Always active when Engine is open */}
+        <EngineCommandListener sceneApi={sceneApi} />
+        
         <div className="h-screen w-full flex flex-col pt-16" style={{ background: 'linear-gradient(135deg, #0a0d14 0%, #111827 50%, #0a0d14 100%)' }}>
           {/* Engine Header */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/10" style={{ background: 'rgba(10, 15, 25, 0.8)', backdropFilter: 'blur(20px)' }}>
