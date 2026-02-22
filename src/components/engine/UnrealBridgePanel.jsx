@@ -216,6 +216,12 @@ export default function UnrealBridgePanel() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {strictMode && (
+            <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20 text-[9px] h-5 px-1.5 gap-1">
+              <ShieldAlert className="w-3 h-3" />
+              STRICT
+            </Badge>
+          )}
           <UnrealBridgeStatus connected={connected} checking={checking} info={bridgeInfo} />
           <Button size="icon" variant="ghost" onClick={() => setShowSettings(!showSettings)} className="h-6 w-6">
             <Settings2 className="w-3 h-3 text-white/40" />
