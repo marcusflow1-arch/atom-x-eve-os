@@ -189,70 +189,40 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
   // Render Friend Profile View if item type is friend — PS5-style UI
   if (item?.type === 'friend') {
-    const PS5_TILES = [
-      {
-        id: 'live_dashboard',
-        label: 'Live Dashboard View',
-        sublabel: 'Watch their Luna dashboard live',
-        icon: Layers,
-        color: 'from-blue-600/30 to-cyan-600/20',
-        border: 'border-cyan-500/30',
-        accent: 'text-cyan-400',
-        badge: item.status === 'online' ? 'ONLINE' : null,
-        badgeColor: 'bg-green-500/20 text-green-300 border-green-500/30',
-      },
-      {
-        id: 'live_gameplay',
-        label: 'Live Gameplay View',
-        sublabel: item.game ? `Playing ${item.game}` : 'Watch their screen live',
-        icon: Play,
-        color: 'from-red-600/30 to-rose-600/20',
-        border: 'border-red-500/30',
-        accent: 'text-red-400',
-        badge: item.status === 'playing' ? 'IN GAME' : 'OFFLINE',
-        badgeColor: item.status === 'playing' ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse' : 'bg-white/5 text-white/30 border-white/10',
-      },
-      {
-        id: 'join_party',
-        label: 'Join Party',
-        sublabel: 'Join their active game session',
-        icon: Users,
-        color: 'from-emerald-600/30 to-teal-600/20',
-        border: 'border-emerald-500/30',
-        accent: 'text-emerald-400',
-        badge: null,
-      },
-      {
-        id: 'message',
-        label: 'Send Message',
-        sublabel: 'Open direct message chat',
-        icon: MessageSquare,
-        color: 'from-purple-600/30 to-violet-600/20',
-        border: 'border-purple-500/30',
-        accent: 'text-purple-400',
-        badge: null,
-      },
-      {
-        id: 'challenge',
-        label: 'Challenge to Duel',
-        sublabel: '1v1 ranked match request',
-        icon: Swords,
-        color: 'from-orange-600/30 to-amber-600/20',
-        border: 'border-orange-500/30',
-        accent: 'text-orange-400',
-        badge: null,
-      },
-      {
-        id: 'profile',
-        label: 'View Full Profile',
-        sublabel: 'Stats, badges, and history',
-        icon: User,
-        color: 'from-slate-600/30 to-slate-700/20',
-        border: 'border-white/10',
-        accent: 'text-white/60',
-        badge: null,
-      },
+    const [friendTab, setFriendTab] = React.useState('games'); // 'games' | 'achievements'
+    const [achCardTilts, setAchCardTilts] = React.useState({});
+
+    const MOCK_GAMES = [
+      { id: 1, title: 'Elden Ring', cover: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=200&q=80', hours: '124h' },
+      { id: 2, title: 'Cyberpunk 2077', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&q=80', hours: '89h' },
+      { id: 3, title: 'Shadow Realm', cover: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200&q=80', hours: '42h' },
+      { id: 4, title: 'Stellar Odyssey', cover: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200&q=80', hours: '67h' },
+      { id: 5, title: 'Neon Legends', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&q=80', hours: '31h' },
+      { id: 6, title: 'Dragon Age', cover: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200&q=80', hours: '156h' },
+      { id: 7, title: 'Apex Legends', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&q=80', hours: '210h' },
+      { id: 8, title: 'The Witcher 3', cover: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=200&q=80', hours: '98h' },
     ];
+
+    const TROPHY_COUNTS = { platinum: 0, gold: 136, silver: 652, bronze: 3300 };
+    const TROPHY_TOTAL = Object.values(TROPHY_COUNTS).reduce((a, b) => a + b, 0);
+
+    const ACH_CARDS = Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      rarity: i % 8 === 0 ? 'legendary' : i % 4 === 0 ? 'epic' : i % 2 === 0 ? 'rare' : 'common',
+      type: ['Ability', 'Equipment', 'Companion', 'Environment'][i % 4],
+    }));
+
+    const rarityGlow = { legendary: 'rgba(251,191,36,0.5)', epic: 'rgba(168,85,247,0.4)', rare: 'rgba(59,130,246,0.35)', common: 'rgba(255,255,255,0.1)' };
+    const rarityBorder = { legendary: 'border-amber-400/60', epic: 'border-purple-400/50', rare: 'border-blue-400/40', common: 'border-white/10' };
+    const rarityText = { legendary: 'text-amber-300', epic: 'text-purple-300', rare: 'text-blue-300', common: 'text-white/30' };
+
+    const handleCardMouseMove = (e, id) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      setAchCardTilts(prev => ({ ...prev, [id]: { x: (y - 0.5) * 22, y: (x - 0.5) * -22, mx: x, my: y } }));
+    };
+    const handleCardMouseLeave = (id) => setAchCardTilts(prev => ({ ...prev, [id]: null }));
 
     return (
       <AnimatePresence>
@@ -264,177 +234,254 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               exit={{ opacity: 0 }}
               className="fixed top-0 bottom-0 right-0 left-[320px] sm:left-[384px] z-[80]"
               onClick={onClose}
-              style={{ background: 'rgba(0,0,0,0.6)' }}
+              style={{ background: 'rgba(0,0,0,0.55)' }}
             />
             <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 40 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
               className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] flex flex-col overflow-hidden"
-              style={{
-                background: 'rgba(8, 12, 20, 0.97)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                borderLeft: '1px solid rgba(165, 243, 252, 0.10)'
-              }}
+              style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Full-page background — friend's environment/skybox feel */}
+              <div className="absolute inset-0 -z-0">
+                <img
+                  src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1600&q=80"
+                  className="w-full h-full object-cover opacity-20"
+                />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(5,10,20,0.55) 0%, rgba(5,10,20,0.85) 40%, rgba(5,10,20,0.97) 100%)' }} />
+                <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(60,100,200,0.15) 0%, transparent 70%)' }} />
+              </div>
+
               {/* Close */}
               <div className="absolute top-4 right-4 z-50">
-                <button onClick={onClose} className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors border border-white/10">
+                <button onClick={onClose} className="p-2 bg-black/30 hover:bg-black/50 rounded-full text-white/50 hover:text-white transition-colors border border-white/10 backdrop-blur-md">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Hero Banner */}
-              <div className="relative h-52 flex-shrink-0 overflow-hidden">
-                <img
-                  src={`https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1400&q=80`}
-                  className="w-full h-full object-cover opacity-25"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-[#080c14]" />
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 to-purple-900/20" />
+              {/* ── PS5-style top nav: Games | Achievements ── */}
+              <div className="relative z-10 flex-shrink-0 pt-5 px-8">
+                <div className="flex items-center gap-8 border-b border-white/10 pb-0">
+                  {[
+                    { id: 'games', label: 'Games' },
+                    { id: 'achievements', label: 'Achievements' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setFriendTab(tab.id)}
+                      className={`relative pb-3 text-sm font-bold tracking-wide transition-colors ${friendTab === tab.id ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+                    >
+                      {tab.label}
+                      {friendTab === tab.id && (
+                        <motion.div layoutId="friendTabIndicator" className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-full" />
+                      )}
+                    </button>
+                  ))}
 
-                {/* Avatar + Info overlay */}
-                <div className="absolute bottom-0 left-0 right-0 px-8 pb-0 flex items-end gap-6">
-                  <div className="relative flex-shrink-0 mb-[-28px]">
-                    <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl" style={{ background: 'rgba(20,25,40,0.9)' }}>
-                      <img src={item.avatar || `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200`} className="w-full h-full object-cover" />
+                  {/* Right side — user info */}
+                  <div className="ml-auto flex items-center gap-3">
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.status === 'online' || item.status === 'playing' ? 'bg-green-400' : 'bg-gray-500'}`} />
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
+                      <img src={item.avatar} className="w-full h-full object-cover" />
                     </div>
-                    <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[#080c14] ${
-                      item.status === 'online' || item.status === 'playing' ? 'bg-green-500' : item.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-600'
-                    }`} />
-                  </div>
-                  <div className="mb-4">
-                    <h1 className="text-2xl font-bold text-white tracking-tight">{item.name}</h1>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">Lv. 42</span>
-                      {item.status === 'playing' && item.game && (
-                        <span className="text-xs text-white/50 flex items-center gap-1">
-                          <Gamepad2 className="w-3 h-3 text-emerald-400" /> {item.game}
-                        </span>
-                      )}
-                      {(item.status === 'playing' || item.is_streaming) && (
-                        <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/40 text-red-400 text-[9px] font-bold uppercase tracking-wider animate-pulse">LIVE</span>
-                      )}
+                    <div>
+                      <p className="text-white text-sm font-bold leading-tight">{item.name}</p>
+                      <p className="text-white/40 text-[10px]">Level 42 • Diamond II</p>
                     </div>
+                    {(item.status === 'playing' || item.is_streaming) && (
+                      <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/40 text-red-400 text-[9px] font-bold uppercase tracking-wider animate-pulse">LIVE</span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* PS5-style Tile Grid */}
-              <div className="flex-1 overflow-y-auto px-8 pt-12 pb-8" style={{ scrollbarWidth: 'none' }}>
-                {/* Section label */}
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/25 mb-5">Select an action</p>
-
-                {/* Primary large tiles (top 2) */}
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  {PS5_TILES.slice(0, 2).map((tile, i) => {
-                    const Icon = tile.icon;
-                    return (
-                      <motion.button
-                        key={tile.id}
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05, duration: 0.3 }}
-                        className={`relative h-36 rounded-2xl overflow-hidden text-left border ${tile.border} group`}
-                        style={{
-                          background: `linear-gradient(135deg, rgba(15,22,38,0.98) 0%, rgba(10,16,28,0.99) 100%)`,
-                        }}
-                      >
-                        {/* BG gradient */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${tile.color} opacity-60 group-hover:opacity-80 transition-opacity`} />
-                        {/* Shine on hover */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                        <div className="relative z-10 h-full flex flex-col justify-between p-5">
-                          <div className="flex items-start justify-between">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tile.accent} bg-white/5 border border-white/10`}>
-                              <Icon className="w-5 h-5" />
-                            </div>
-                            {tile.badge && (
-                              <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${tile.badgeColor}`}>
-                                {tile.badge}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <p className="text-white font-bold text-base leading-tight">{tile.label}</p>
-                            <p className="text-white/40 text-xs mt-1">{tile.sublabel}</p>
+              {/* ── GAMES TAB ── */}
+              <AnimatePresence mode="wait">
+              {friendTab === 'games' && (
+                <motion.div
+                  key="games"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="relative z-10 flex-1 overflow-y-auto px-8 py-6"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  {/* Currently playing banner */}
+                  {item.status === 'playing' && (
+                    <div className="mb-6 relative rounded-2xl overflow-hidden border border-white/10 h-44 group">
+                      <img src="https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=1200&q=80" className="w-full h-full object-cover opacity-50 group-hover:opacity-60 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+                      <div className="absolute inset-0 flex items-center px-8 gap-6">
+                        <div>
+                          <p className="text-[10px] text-white/50 uppercase tracking-widest font-bold mb-1 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse inline-block" /> Now Playing
+                          </p>
+                          <h2 className="text-3xl font-black text-white mb-2">{item.game || 'Elden Ring'}</h2>
+                          <div className="flex gap-3">
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-black text-xs font-bold hover:bg-white/90 transition">
+                              <Play className="w-3 h-3 fill-black" /> Watch Live
+                            </button>
+                            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/15 text-white text-xs font-bold hover:bg-white/15 transition">
+                              <Users className="w-3 h-3" /> Join Session
+                            </button>
                           </div>
                         </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {/* Secondary tiles (smaller grid) */}
-                <div className="grid grid-cols-4 gap-3 mb-6">
-                  {PS5_TILES.slice(2).map((tile, i) => {
-                    const Icon = tile.icon;
-                    return (
-                      <motion.button
-                        key={tile.id}
-                        whileHover={{ scale: 1.04, y: -2 }}
-                        whileTap={{ scale: 0.97 }}
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 + i * 0.05, duration: 0.3 }}
-                        className={`relative h-28 rounded-xl overflow-hidden text-left border ${tile.border} group`}
-                        style={{ background: 'rgba(15,22,38,0.98)' }}
-                      >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${tile.color} opacity-50 group-hover:opacity-70 transition-opacity`} />
-                        <div className="relative z-10 h-full flex flex-col justify-between p-4">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${tile.accent} bg-white/5`}>
-                            <Icon className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-white font-bold text-xs leading-tight">{tile.label}</p>
-                            <p className="text-white/30 text-[9px] mt-0.5 leading-snug">{tile.sublabel}</p>
-                          </div>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {/* Bottom info bar — Season + Mutuals */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Season Progress */}
-                  <div className="p-4 rounded-xl border border-white/8" style={{ background: 'rgba(15,22,38,0.8)' }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Season Pass</span>
-                      <span className="text-cyan-400 font-bold text-xs font-mono">Lvl 42</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style={{ width: '42%' }} />
-                    </div>
-                    <div className="flex justify-between text-[9px] text-white/25 font-mono">
-                      <span>Diamond II</span>
-                      <span>42 / 100</span>
-                    </div>
-                  </div>
-
-                  {/* Mutuals */}
-                  <div className="p-4 rounded-xl border border-white/8 flex flex-col justify-between" style={{ background: 'rgba(15,22,38,0.8)' }}>
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Mutual Friends</span>
-                    <div className="flex items-center gap-2 mt-2">
-                      <div className="flex -space-x-2">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="w-7 h-7 rounded-full border-2 border-[#080c14] overflow-hidden bg-slate-700">
-                            <img src={`https://images.unsplash.com/photo-${1535713875002 + i}?w=80`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                        <div className="w-7 h-7 rounded-full border-2 border-[#080c14] bg-white/10 flex items-center justify-center text-[9px] text-white/50 font-bold">+9</div>
                       </div>
-                      <span className="text-white/40 text-xs">12 in common</span>
+                    </div>
+                  )}
+
+                  {/* Horizontal game strip — PS5 style */}
+                  <div className="mb-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-3">Recent Games</p>
+                    <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                      {MOCK_GAMES.map((game, i) => (
+                        <motion.div
+                          key={game.id}
+                          whileHover={{ scale: 1.06, y: -4 }}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="flex-shrink-0 cursor-pointer group"
+                        >
+                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
+                            <img src={game.cover} className="w-full h-full object-cover" />
+                          </div>
+                          <p className="text-white/60 text-[9px] text-center mt-1.5 font-medium truncate w-20">{game.title}</p>
+                          <p className="text-white/25 text-[8px] text-center font-mono">{game.hours}</p>
+                        </motion.div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </div>
+
+                  {/* Trophies section — PS5 style */}
+                  <div className="rounded-2xl border border-white/8 p-5" style={{ background: 'rgba(15,22,38,0.75)', backdropFilter: 'blur(20px)' }}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <span className="text-white font-bold text-sm">Trophies</span>
+                      </div>
+                      <span className="text-white/40 text-xs font-mono">Total: {TROPHY_TOTAL.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      {[
+                        { label: 'Platinum', count: TROPHY_COUNTS.platinum, color: 'text-cyan-300', emoji: '🏆' },
+                        { label: 'Gold', count: TROPHY_COUNTS.gold, color: 'text-yellow-300', emoji: '🥇' },
+                        { label: 'Silver', count: TROPHY_COUNTS.silver, color: 'text-slate-300', emoji: '🥈' },
+                        { label: 'Bronze', count: TROPHY_COUNTS.bronze, color: 'text-orange-300', emoji: '🥉' },
+                      ].map(t => (
+                        <div key={t.label} className="flex flex-col items-center gap-1">
+                          <span className="text-2xl">{t.emoji}</span>
+                          <span className={`text-base font-black ${t.color}`}>{t.count === 0 ? '0' : t.count.toLocaleString()}</span>
+                          <span className="text-white/30 text-[9px] uppercase tracking-wider">{t.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Level bar */}
+                    <div className="mt-4 pt-4 border-t border-white/8">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-white/50 text-xs flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center text-[8px]">⚡</span>
+                          Level 324
+                        </span>
+                        <span className="text-white/30 text-[10px] font-mono">53%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style={{ width: '53%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action row */}
+                  <div className="flex gap-3 mt-4">
+                    <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/8 border border-white/10 text-white/70 text-xs font-bold hover:bg-white/12 transition">
+                      <MessageSquare className="w-4 h-4" /> Message
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/8 border border-white/10 text-white/70 text-xs font-bold hover:bg-white/12 transition">
+                      <Swords className="w-4 h-4" /> Challenge
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/8 border border-white/10 text-white/70 text-xs font-bold hover:bg-white/12 transition">
+                      <User className="w-4 h-4" /> Full Profile
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── ACHIEVEMENTS TAB ── */}
+              {friendTab === 'achievements' && (
+                <motion.div
+                  key="achievements"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="relative z-10 flex-1 overflow-y-auto px-8 py-6"
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-4">Achievement Cards</p>
+                  {/* Larger card grid — taller cards, tilt on hover */}
+                  <div className="grid grid-cols-5 gap-3">
+                    {ACH_CARDS.map((card, i) => {
+                      const tilt = achCardTilts[card.id];
+                      return (
+                        <motion.div
+                          key={card.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.03 }}
+                          onMouseMove={(e) => handleCardMouseMove(e, card.id)}
+                          onMouseLeave={() => handleCardMouseLeave(card.id)}
+                          style={{
+                            transformStyle: 'preserve-3d',
+                            perspective: '800px',
+                            transform: tilt ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` : 'rotateX(0) rotateY(0)',
+                            transition: tilt ? 'transform 0.05s ease-out' : 'transform 0.4s ease-out',
+                          }}
+                          className={`relative rounded-xl border-2 ${rarityBorder[card.rarity]} overflow-hidden cursor-pointer group`}
+                          // Twice the height as regular cards
+                          // w auto from grid, h set explicitly
+                        >
+                          <div style={{ aspectRatio: '2/3.5', background: 'linear-gradient(135deg, rgba(20,30,50,0.98) 0%, rgba(10,15,28,1) 100%)' }}>
+                            {/* Shine layer */}
+                            {tilt && (
+                              <div
+                                className="absolute inset-0 pointer-events-none z-10"
+                                style={{
+                                  background: `radial-gradient(ellipse 80% 60% at ${(tilt.mx || 0.5) * 100}% ${(tilt.my || 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
+                                }}
+                              />
+                            )}
+                            {/* Rarity glow */}
+                            <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 24px ${rarityGlow[card.rarity]}`, pointerEvents: 'none' }} />
+
+                            {/* Corner brackets */}
+                            <div className={`absolute top-1.5 left-1.5 w-3 h-3 border-t-2 border-l-2 ${rarityBorder[card.rarity]} rounded-tl`} />
+                            <div className={`absolute top-1.5 right-1.5 w-3 h-3 border-t-2 border-r-2 ${rarityBorder[card.rarity]} rounded-tr`} />
+                            <div className={`absolute bottom-1.5 left-1.5 w-3 h-3 border-b-2 border-l-2 ${rarityBorder[card.rarity]} rounded-bl`} />
+                            <div className={`absolute bottom-1.5 right-1.5 w-3 h-3 border-b-2 border-r-2 ${rarityBorder[card.rarity]} rounded-br`} />
+
+                            {/* Rarity dot */}
+                            {card.rarity === 'legendary' && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
+
+                            {/* Content */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
+                              <span className="text-4xl opacity-60 group-hover:opacity-90 transition-opacity">?</span>
+                              <span className={`text-[8px] font-bold uppercase tracking-widest ${rarityText[card.rarity]}`}>{card.rarity}</span>
+                            </div>
+
+                            {/* Bottom label */}
+                            <div className="absolute bottom-4 left-0 right-0 text-center">
+                              <span className="text-[7px] text-white/20 uppercase tracking-wider">{card.type}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+              </AnimatePresence>
             </motion.div>
           </>
         )}
