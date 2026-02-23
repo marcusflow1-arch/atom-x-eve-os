@@ -446,14 +446,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 text-white/70 text-xs font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
                           <MessageSquare className="w-3.5 h-3.5" /> Send Message
                         </button>
-                        <div className="flex gap-2">
-                          <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                            <Swords className="w-3 h-3" /> Challenge
-                          </button>
-                          <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                            <Gamepad2 className="w-3 h-3" /> Game Capture
-                          </button>
-                        </div>
+                        <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
+                          <Swords className="w-3 h-3" /> Challenge
+                        </button>
                         <InteractDropdown />
                       </div>
                     </div>
