@@ -1,27 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, ShoppingBag, Trophy, Gamepad2, LayoutGrid, Swords, Users, MessageSquare, Radio, Crown, Layers, Rocket, Hammer } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Home, ShoppingBag, Trophy, Gamepad2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Home', icon: Home, page: 'LunaTemplate' },
   { id: 'store', label: 'Store', icon: ShoppingBag, page: 'Store' },
   { id: 'library', label: 'Library', icon: Gamepad2, page: 'Library' },
   { id: 'achievements', label: 'Cards', icon: Trophy, page: 'GenreMastery' },
-
-];
-
-const MORE_ITEMS = [
-  { label: 'AI Battle', icon: Swords, page: 'AIBattle' },
-  { label: 'Clan', icon: Users, page: 'Clan' },
-  { label: 'Forum', icon: MessageSquare, page: 'Community' },
-  { label: 'Aura', icon: Radio, page: 'Aura' },
-  { label: 'Blacksmith', icon: Hammer, page: 'Blacksmith' },
-  { label: 'Friends', icon: Users, page: 'Friends' },
-  { label: 'Leaderboard', icon: Crown, page: 'Leaderboard' },
-  { label: 'Skill Tree', icon: Layers, page: 'GenreMastery' },
-  { label: 'Season Pass', icon: Rocket, page: 'SeasonalPass' },
 ];
 
 export default function MobileBottomNav() {
