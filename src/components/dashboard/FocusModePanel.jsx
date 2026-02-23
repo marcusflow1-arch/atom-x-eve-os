@@ -1777,18 +1777,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 </AnimatePresence>
               </div>
 
-              {/* CardCollectionBrowser — permanently sits below the overlay space, above DevSpotlight */}
-              <div className="pointer-events-auto mt-3 rounded-2xl overflow-hidden px-4 py-3"
-                style={{
-                  background: 'rgba(100, 120, 140, 0.06)',
-                  backdropFilter: 'blur(20px) saturate(140%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-                  border: '1px solid rgba(255, 255, 255, 0.07)',
-                }}>
-                <CardCollectionBrowser />
-              </div>
-
-              {/* DevSpotlightRibbon — centered below, at the bottom of the center column */}
+              {/* DevSpotlightRibbon — sits directly below the overlay space */}
               <div className="pointer-events-auto mt-3">
                 <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
               </div>
