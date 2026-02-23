@@ -39,15 +39,14 @@ function InteractDropdown() {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -6, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full mb-1 left-0 right-0 z-50 rounded-xl overflow-hidden border border-white/10"
-            style={{ background: 'rgba(10,16,28,0.97)', backdropFilter: 'blur(20px)' }}
+            className="absolute top-full mt-1 left-0 right-0 z-50"
           >
             {INTERACT_OPTIONS.map(({ label, icon: Icon }) => (
-              <button key={label} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-white/70 hover:bg-white/10 hover:text-white transition-colors text-left font-medium">
+              <button key={label} className="w-full flex items-center gap-2.5 px-2 py-2 text-xs text-white/70 hover:text-white transition-colors text-left font-medium">
                 <Icon className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
                 {label}
               </button>
