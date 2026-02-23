@@ -498,8 +498,8 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
 
                         {/* Genres */}
-                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-2">Specializes In</p>
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">Specializes In</p>
                           <div className="flex flex-wrap gap-1.5">
                             {['RPG', 'Action', 'Horror', 'Strategy'].map(g => (
                               <span key={g} className="px-2 py-0.5 rounded-full text-[9px] font-semibold"
