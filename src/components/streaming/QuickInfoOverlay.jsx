@@ -408,13 +408,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   {/* PS5-style info grid below the viewer + games */}
                   <div className="flex gap-3 mt-2">
 
-                    {/* MAIN: Dashboard area (large, fills most space) */}
-                    <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ minHeight: '200px', background: 'rgba(10,15,26,0.85)' }}>
-                      <span className="text-white/15 text-7xl font-light group-hover:text-white/25 transition-colors">?</span>
-                      <span className="text-white/25 text-[9px] font-bold uppercase tracking-widest mt-3">Dashboard</span>
-                    </div>
-
-                    {/* RIGHT SIDEBAR: compact trophy + buttons */}
+                    {/* LEFT SIDEBAR: compact trophy + buttons */}
                     <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '160px' }}>
                       {/* Trophy counts — compact */}
                       <div className="rounded-xl border border-white/10 p-2.5" style={{ background: 'rgba(15,22,38,0.9)', backdropFilter: 'blur(20px)' }}>
