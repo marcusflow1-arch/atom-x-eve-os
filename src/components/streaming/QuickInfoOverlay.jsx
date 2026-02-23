@@ -19,6 +19,46 @@ import FriendsListContent from '../dashboard/FriendsListContent';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import AvatarStatCard from '@/components/dashboard/AvatarStatCard';
 
+function InteractDropdown() {
+  const [open, setOpen] = React.useState(false);
+  const INTERACT_OPTIONS = [
+    { label: 'Invite to Party', icon: Users },
+    { label: 'Join Party', icon: Users },
+    { label: 'Voice Chat', icon: Radio },
+    { label: 'Join Game', icon: Play },
+  ];
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-cyan-500/30 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/10 transition"
+        style={{ background: 'rgba(15,22,38,0.7)' }}
+      >
+        <Zap className="w-3 h-3" /> Interact
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.15 }}
+            className="absolute bottom-full mb-1 left-0 right-0 z-50 rounded-xl overflow-hidden border border-white/10"
+            style={{ background: 'rgba(10,16,28,0.97)', backdropFilter: 'blur(20px)' }}
+          >
+            {INTERACT_OPTIONS.map(({ label, icon: Icon }) => (
+              <button key={label} className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-white/70 hover:bg-white/10 hover:text-white transition-colors text-left font-medium">
+                <Icon className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                {label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
   const [activeTab, setActiveTab] = React.useState('content');
   const [selectedDLC, setSelectedDLC] = React.useState(null);
