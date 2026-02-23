@@ -35,18 +35,11 @@ export default function MobileBottomNav() {
         }}
       >
         {NAV_ITEMS.map((item) => {
-          const active = item.page ? isActive(item.page) : showMore;
+          const active = isActive(item.page);
           return (
             <button
               key={item.id}
-              onClick={() => {
-                if (item.id === 'more') {
-                  setShowMore(!showMore);
-                } else {
-                  setShowMore(false);
-                  navigate(createPageUrl(item.page));
-                }
-              }}
+              onClick={() => navigate(createPageUrl(item.page))}
               className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative transition-colors ${
                 active ? 'text-cyan-400' : 'text-white/40'
               }`}
