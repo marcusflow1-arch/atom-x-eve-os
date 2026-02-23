@@ -33,6 +33,10 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   const [expandedDlcId, setExpandedDlcId] = React.useState(null);
   const { addToCart } = useCart();
 
+  // Friend profile view state (always declared — Rules of Hooks)
+  const [friendTab, setFriendTab] = React.useState('games');
+  const [achCardTilts, setAchCardTilts] = React.useState({});
+
   const [selectedCommunityMedia, setSelectedCommunityMedia] = React.useState(null);
 
   const COMMUNITY_SKIRMISH = [
