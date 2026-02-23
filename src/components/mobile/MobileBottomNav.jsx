@@ -36,57 +36,6 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      {/* More Menu Overlay */}
-      <AnimatePresence>
-        {showMore && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[88]"
-              onClick={() => setShowMore(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 30, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-[56px] left-3 right-3 z-[95] rounded-2xl overflow-hidden"
-              style={{
-                background: 'rgba(12, 16, 24, 0.97)',
-                backdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                boxShadow: '0 -4px 24px rgba(0,0,0,0.4)',
-              }}
-            >
-              <div className="p-3 grid grid-cols-3 gap-1.5">
-                {MORE_ITEMS.map((item) => {
-                  const active = isActive(item.page);
-                  return (
-                    <button
-                      key={item.label}
-                      onClick={() => {
-                        setShowMore(false);
-                        navigate(createPageUrl(item.page));
-                      }}
-                      className={`flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl transition-all ${
-                        active
-                          ? 'bg-cyan-500/15 text-cyan-400'
-                          : 'text-white/50 active:bg-white/10'
-                      }`}
-                    >
-                      <item.icon className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} />
-                      <span className="text-[10px] font-medium leading-tight">{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Bottom Nav Bar */}
       <div
         className="flex items-center justify-around relative z-[80] flex-shrink-0"
