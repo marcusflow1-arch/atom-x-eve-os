@@ -511,9 +511,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
 
                         {/* Favorite Games */}
-                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-2">Favorite Games</p>
-                          <div className="flex gap-1.5">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">Favorite Games</p>
+                          <div className="flex gap-1.5" style={{ width: '65%' }}>
                             {[
                               { cover: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=80&q=60', title: 'Elden Ring' },
                               { cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=80&q=60', title: 'Cyberpunk' },
