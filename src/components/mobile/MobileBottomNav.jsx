@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { id: 'store', label: 'Store', icon: ShoppingBag, page: 'Store' },
   { id: 'library', label: 'Library', icon: Gamepad2, page: 'Library' },
   { id: 'achievements', label: 'Cards', icon: Trophy, page: 'GenreMastery' },
-  { id: 'more', label: 'More', icon: LayoutGrid, page: null },
+
 ];
 
 const MORE_ITEMS = [
