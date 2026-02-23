@@ -448,6 +448,12 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       <InteractDropdown />
                     </div>
 
+                    {/* MAIN: Dashboard area (large, fills most space) */}
+                    <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ minHeight: '200px', background: 'rgba(10,15,26,0.85)' }}>
+                      <span className="text-white/15 text-7xl font-light group-hover:text-white/25 transition-colors">?</span>
+                      <span className="text-white/25 text-[9px] font-bold uppercase tracking-widest mt-3">Dashboard</span>
+                    </div>
+
                   </div>
                 </motion.div>
               )}
