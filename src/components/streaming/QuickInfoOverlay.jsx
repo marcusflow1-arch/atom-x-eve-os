@@ -448,10 +448,97 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       <InteractDropdown />
                     </div>
 
-                    {/* DASHBOARD: narrow column, stretches full height to bottom edge */}
-                    <div className="relative rounded-2xl overflow-hidden border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group flex-shrink-0" style={{ width: '110px', background: 'rgba(10,15,26,0.85)' }}>
-                      <span className="text-white/15 text-5xl font-light group-hover:text-white/25 transition-colors">?</span>
-                      <span className="text-white/25 text-[8px] font-bold uppercase tracking-widest mt-2">Dashboard</span>
+                    {/* PLAYER DASHBOARD PANEL — liquid glass, fills remaining width to edge */}
+                    <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden flex flex-col"
+                      style={{
+                        background: 'rgba(4, 8, 18, 0.75)',
+                        backdropFilter: 'blur(32px) saturate(160%)',
+                        WebkitBackdropFilter: 'blur(32px) saturate(160%)',
+                        border: '1px solid rgba(255,255,255,0.10)',
+                        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      {/* Liquid glass sheen overlay */}
+                      <div className="absolute inset-0 pointer-events-none z-10" style={{
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 70%)',
+                      }} />
+
+                      {/* Scrollable content */}
+                      <div className="relative z-20 flex-1 overflow-y-auto p-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
+
+                        {/* PUP Rank Score */}
+                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">PUP Rank Score</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl font-black text-amber-300">8,420</span>
+                            <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[9px] font-bold">Diamond II</span>
+                          </div>
+                          <div className="mt-2 h-1 bg-white/8 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full" style={{ width: '72%' }} />
+                          </div>
+                          <p className="text-[8px] text-white/25 mt-1">72% to Diamond I</p>
+                        </div>
+
+                        {/* Last Action (clip preview) */}
+                        <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <div className="relative aspect-video bg-black/40">
+                            <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&q=60" className="w-full h-full object-cover opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+                              </div>
+                            </div>
+                            <div className="absolute bottom-2 left-2 right-2">
+                              <p className="text-[9px] text-white/50 uppercase tracking-wider">Last Action</p>
+                              <p className="text-white text-xs font-bold truncate">Shadow Realm • Boss Kill</p>
+                            </div>
+                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 text-[8px] text-white/70 font-mono">0:08</div>
+                          </div>
+                        </div>
+
+                        {/* Genres */}
+                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-2">Specializes In</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {['RPG', 'Action', 'Horror', 'Strategy'].map(g => (
+                              <span key={g} className="px-2 py-0.5 rounded-full text-[9px] font-semibold"
+                                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)', color: 'rgba(165,180,252,0.9)' }}>
+                                {g}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Favorite Games */}
+                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-2">Favorite Games</p>
+                          <div className="flex gap-1.5">
+                            {[
+                              { cover: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=80&q=60', title: 'Elden Ring' },
+                              { cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=80&q=60', title: 'Cyberpunk' },
+                              { cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=80&q=60', title: 'Apex' },
+                            ].map(g => (
+                              <div key={g.title} className="flex-1 rounded-lg overflow-hidden border border-white/10 aspect-square relative group cursor-pointer">
+                                <img src={g.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                <p className="absolute bottom-1 left-0 right-0 text-center text-[7px] text-white/70 font-medium">{g.title}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Player News */}
+                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Newspaper className="w-3 h-3 text-cyan-400" />
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-white/30">Player News</p>
+                          </div>
+                          <p className="text-white/70 text-[10px] leading-relaxed italic">"Going AFK for 30 mins, back for the raid at 9pm!"</p>
+                          <p className="text-white/25 text-[8px] mt-1.5">Posted 12 min ago</p>
+                        </div>
+
+                      </div>
                     </div>
 
                   </div>
