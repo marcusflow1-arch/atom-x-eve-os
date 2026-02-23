@@ -492,38 +492,38 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           // w auto from grid, h set explicitly
                         >
                           <div style={{ aspectRatio: '2/3.5', background: 'linear-gradient(135deg, rgba(20,30,50,0.98) 0%, rgba(10,15,28,1) 100%)' }}>
-                            {/* Shine layer */}
-                            {tilt && (
-                              <div
-                                className="absolute inset-0 pointer-events-none z-10"
-                                style={{
-                                  background: `radial-gradient(ellipse 80% 60% at ${(tilt.mx || 0.5) * 100}% ${(tilt.my || 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
-                                }}
-                              />
-                            )}
-                            {/* Rarity glow */}
-                            <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 24px ${rarityGlow[card.rarity]}`, pointerEvents: 'none' }} />
+                             {/* Shine layer */}
+                             {tilt && (
+                               <div
+                                 className="absolute inset-0 pointer-events-none z-10"
+                                 style={{
+                                   background: `radial-gradient(ellipse 80% 60% at ${(tilt.mx || 0.5) * 100}% ${(tilt.my || 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
+                                 }}
+                               />
+                             )}
+                             {/* Rarity glow */}
+                             <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 14px ${rarityGlow[card.rarity]}`, pointerEvents: 'none' }} />
 
-                            {/* Corner brackets */}
-                            <div className={`absolute top-1.5 left-1.5 w-3 h-3 border-t-2 border-l-2 ${rarityBorder[card.rarity]} rounded-tl`} />
-                            <div className={`absolute top-1.5 right-1.5 w-3 h-3 border-t-2 border-r-2 ${rarityBorder[card.rarity]} rounded-tr`} />
-                            <div className={`absolute bottom-1.5 left-1.5 w-3 h-3 border-b-2 border-l-2 ${rarityBorder[card.rarity]} rounded-bl`} />
-                            <div className={`absolute bottom-1.5 right-1.5 w-3 h-3 border-b-2 border-r-2 ${rarityBorder[card.rarity]} rounded-br`} />
+                             {/* Corner brackets */}
+                             <div className={`absolute top-1 left-1 w-2 h-2 border-t border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-tl`} />
+                             <div className={`absolute top-1 right-1 w-2 h-2 border-t border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-tr`} />
+                             <div className={`absolute bottom-1 left-1 w-2 h-2 border-b border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-bl`} />
+                             <div className={`absolute bottom-1 right-1 w-2 h-2 border-b border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-br`} />
 
-                            {/* Rarity dot */}
-                            {card.rarity === 'legendary' && <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />}
+                             {/* Rarity dot */}
+                             {card.rarity === 'legendary' && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />}
 
-                            {/* Content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3">
-                              <span className="text-4xl opacity-60 group-hover:opacity-90 transition-opacity">?</span>
-                              <span className={`text-[8px] font-bold uppercase tracking-widest ${rarityText[card.rarity]}`}>{card.rarity}</span>
-                            </div>
+                             {/* Content */}
+                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1">
+                               <span className="text-xl opacity-60 group-hover:opacity-90 transition-opacity">?</span>
+                               <span className={`text-[6px] font-bold uppercase tracking-widest ${rarityText[card.rarity]}`}>{card.rarity}</span>
+                             </div>
 
-                            {/* Bottom label */}
-                            <div className="absolute bottom-4 left-0 right-0 text-center">
-                              <span className="text-[7px] text-white/20 uppercase tracking-wider">{card.type}</span>
-                            </div>
-                          </div>
+                             {/* Bottom label */}
+                             <div className="absolute bottom-1.5 left-0 right-0 text-center">
+                               <span className="text-[5px] text-white/20 uppercase tracking-wider">{card.type}</span>
+                             </div>
+                           </div>
                         </motion.div>
                       );
                     })}
