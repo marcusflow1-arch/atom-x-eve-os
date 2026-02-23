@@ -480,20 +480,20 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
 
                         {/* Last Action (clip preview) */}
-                        <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          <div className="relative aspect-video bg-black/40">
+                        <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', width: '65%' }}>
+                          <div className="relative bg-black/40" style={{ aspectRatio: '16/9' }}>
                             <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&q=60" className="w-full h-full object-cover opacity-50" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                                <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+                              <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
                               </div>
                             </div>
-                            <div className="absolute bottom-2 left-2 right-2">
-                              <p className="text-[9px] text-white/50 uppercase tracking-wider">Last Action</p>
-                              <p className="text-white text-xs font-bold truncate">Shadow Realm • Boss Kill</p>
+                            <div className="absolute bottom-1.5 left-2 right-2">
+                              <p className="text-[8px] text-white/50 uppercase tracking-wider">Last Action</p>
+                              <p className="text-white text-[9px] font-bold truncate">Shadow Realm • Boss Kill</p>
                             </div>
-                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded bg-black/60 text-[8px] text-white/70 font-mono">0:08</div>
+                            <div className="absolute top-1.5 right-1.5 px-1 py-0.5 rounded bg-black/60 text-[7px] text-white/70 font-mono">0:08</div>
                           </div>
                         </div>
 
