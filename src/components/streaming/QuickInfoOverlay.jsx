@@ -497,18 +497,10 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
                       </div>
 
-                      {/* Wishlist / Invite tile */}
-                      <div className="flex-1 rounded-xl border border-white/10 p-3 flex flex-col justify-between cursor-pointer hover:bg-white/5 transition" style={{ background: 'rgba(15,22,38,0.8)', minHeight: '95px' }}>
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-3.5 h-3.5 text-rose-400" />
-                          <span className="text-white font-bold text-xs">Invite to Party</span>
-                        </div>
-                        <div>
-                          <p className="text-white/50 text-[9px] leading-relaxed">Start a session with {item.name} right now</p>
-                          <button className="mt-2 w-full py-1.5 rounded-lg bg-blue-600/30 border border-blue-500/30 text-blue-300 text-[9px] font-bold hover:bg-blue-600/50 transition">
-                            Send Invite
-                          </button>
-                        </div>
+                      {/* Dashboard tile */}
+                      <div className="flex-1 rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ background: 'rgba(15,22,38,0.8)', minHeight: '95px' }}>
+                        <span className="text-white/20 text-4xl font-light group-hover:text-white/35 transition-colors">?</span>
+                        <span className="text-white/30 text-[9px] font-bold uppercase tracking-wider mt-1">Dashboard</span>
                       </div>
                     </div>
 
