@@ -193,9 +193,6 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
   // Render Friend Profile View if item type is friend — PS5-style UI
   if (item?.type === 'friend') {
-    const [friendTab, setFriendTab] = React.useState('games'); // 'games' | 'achievements'
-    const [achCardTilts, setAchCardTilts] = React.useState({});
-
     const MOCK_GAMES = [
       { id: 1, title: 'Elden Ring', cover: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=200&q=80', hours: '124h' },
       { id: 2, title: 'Cyberpunk 2077', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=200&q=80', hours: '89h' },
