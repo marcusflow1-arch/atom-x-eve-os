@@ -52,7 +52,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="my-64 w-full flex flex-col items-center gap-2">
+    <div className="w-full flex flex-col items-center gap-2">
       {/* Title above — centered */}
       <div className="flex items-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
