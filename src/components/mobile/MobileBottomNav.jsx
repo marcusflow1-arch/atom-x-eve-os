@@ -14,7 +14,6 @@ const NAV_ITEMS = [
 export default function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [showMore, setShowMore] = useState(false);
 
   const isActive = (page) => {
     if (!page) return false;
