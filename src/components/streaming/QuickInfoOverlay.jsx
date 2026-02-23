@@ -477,25 +477,11 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                       </div>
                     </div>
 
-                    {/* RIGHT COL: Info tiles */}
-                    <div className="col-span-3 flex flex-col gap-3">
-                      {/* "Recently Played" highlight tile */}
-                      <div className="flex-1 relative rounded-xl overflow-hidden border border-white/10 group cursor-pointer" style={{ minHeight: '95px' }}>
-                        <img
-                          src={MOCK_GAMES[1]?.cover || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80'}
-                          className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-65 transition-opacity"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <p className="text-white font-bold text-xs truncate">{MOCK_GAMES[1]?.title}</p>
-                          <p className="text-white/40 text-[9px]">{MOCK_GAMES[1]?.hours} played</p>
-                        </div>
-                      </div>
-
-                      {/* Dashboard tile */}
-                      <div className="flex-1 rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ background: 'rgba(15,22,38,0.8)', minHeight: '95px' }}>
-                        <span className="text-white/20 text-4xl font-light group-hover:text-white/35 transition-colors">?</span>
-                        <span className="text-white/30 text-[9px] font-bold uppercase tracking-wider mt-1">Dashboard</span>
+                    {/* RIGHT COL: Dashboard tile (full height) */}
+                    <div className="col-span-3">
+                      <div className="h-full rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ background: 'rgba(15,22,38,0.8)', minHeight: '200px' }}>
+                        <span className="text-white/20 text-5xl font-light group-hover:text-white/35 transition-colors">?</span>
+                        <span className="text-white/30 text-[9px] font-bold uppercase tracking-wider mt-2">Dashboard</span>
                       </div>
                     </div>
 
