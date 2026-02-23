@@ -469,8 +469,8 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   style={{ scrollbarWidth: 'none' }}
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-4">Achievement Cards</p>
-                  {/* Larger card grid — taller cards, tilt on hover */}
-                  <div className="grid grid-cols-5 gap-3">
+                  {/* Smaller cards — 50% size reduction, more cols */}
+                  <div className="grid grid-cols-10 gap-2">
                     {ACH_CARDS.map((card, i) => {
                       const tilt = achCardTilts[card.id];
                       return (
