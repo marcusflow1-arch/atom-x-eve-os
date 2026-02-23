@@ -16,6 +16,8 @@ import CreatePostForm from '@/components/community/CreatePostForm';
 import MysteryCardDetail from '@/components/streaming/MysteryCardDetail';
 import StreamerProfilePanel from '@/components/streaming/profile/StreamerProfilePanel';
 import FriendsListContent from '../dashboard/FriendsListContent';
+import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
+import AvatarStatCard from '@/components/dashboard/AvatarStatCard';
 
 export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
   const [activeTab, setActiveTab] = React.useState('content');
