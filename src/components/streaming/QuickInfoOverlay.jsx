@@ -406,83 +406,52 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   </div>
 
                   {/* PS5-style info grid below the viewer + games */}
-                  <div className="grid grid-cols-12 gap-3 mt-2">
+                  <div className="flex gap-3 mt-2">
 
-                    {/* LEFT COL: Trophy box */}
-                    <div className="col-span-4 flex flex-col gap-3">
-                      {/* Trophy counts — PS5 style */}
-                      <div className="rounded-2xl border border-white/10 p-4" style={{ background: 'rgba(15,22,38,0.85)', backdropFilter: 'blur(20px)' }}>
-                        {/* Trophy row */}
-                        <div className="flex items-center gap-4 mb-3">
+                    {/* MAIN: Dashboard area (large, fills most space) */}
+                    <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ minHeight: '200px', background: 'rgba(10,15,26,0.85)' }}>
+                      <span className="text-white/15 text-7xl font-light group-hover:text-white/25 transition-colors">?</span>
+                      <span className="text-white/25 text-[9px] font-bold uppercase tracking-widest mt-3">Dashboard</span>
+                    </div>
+
+                    {/* RIGHT SIDEBAR: compact trophy + buttons */}
+                    <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '160px' }}>
+                      {/* Trophy counts — compact */}
+                      <div className="rounded-xl border border-white/10 p-2.5" style={{ background: 'rgba(15,22,38,0.9)', backdropFilter: 'blur(20px)' }}>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 mb-2">
                           {[
                             { count: TROPHY_COUNTS.platinum, color: 'text-cyan-200', icon: '🏆' },
                             { count: TROPHY_COUNTS.gold, color: 'text-yellow-300', icon: '🥇' },
                             { count: TROPHY_COUNTS.silver, color: 'text-slate-300', icon: '🥈' },
                             { count: TROPHY_COUNTS.bronze, color: 'text-orange-300', icon: '🥉' },
                           ].map((t, i) => (
-                            <div key={i} className="flex items-center gap-1.5">
-                              <span className="text-base">{t.icon}</span>
-                              <span className={`text-sm font-black ${t.color}`}>{t.count === 0 ? '0' : t.count >= 1000 ? (t.count/1000).toFixed(1)+'K' : t.count}</span>
+                            <div key={i} className="flex items-center gap-1">
+                              <span className="text-xs">{t.icon}</span>
+                              <span className={`text-[10px] font-black ${t.color}`}>{t.count === 0 ? '0' : t.count >= 1000 ? (t.count/1000).toFixed(1)+'K' : t.count}</span>
                             </div>
                           ))}
                         </div>
-                        {/* Level + star */}
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-yellow-400 text-sm">⭐</span>
-                          <span className="text-white font-bold text-sm">{TROPHY_TOTAL.toLocaleString()}</span>
-                          <span className="text-white/40 text-xs ml-auto">Next trophy level</span>
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <span className="text-yellow-400 text-[10px]">⭐</span>
+                          <span className="text-white font-bold text-[10px]">{TROPHY_TOTAL.toLocaleString()}</span>
                         </div>
-                        {/* Progress bar */}
-                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style={{ width: '18%' }} />
                         </div>
-                        <div className="flex justify-end mt-1">
-                          <span className="text-white/30 text-[9px] font-mono">18%</span>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-white/30 text-[8px]">Next level</span>
+                          <span className="text-white/30 text-[8px] font-mono">18%</span>
                         </div>
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex flex-col gap-2">
-                        <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 text-white/70 text-xs font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                          <MessageSquare className="w-3.5 h-3.5" /> Send Message
-                        </button>
-                        <button className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-white/10 text-white/60 text-[10px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                          <Swords className="w-3 h-3" /> Challenge
-                        </button>
-                        <InteractDropdown />
-                      </div>
-                    </div>
-
-                    {/* CENTER: Featured game capture / last played hero */}
-                    <div className="col-span-5 relative rounded-2xl overflow-hidden border border-white/10 group cursor-pointer" style={{ minHeight: '200px' }}>
-                      <img
-                        src={MOCK_GAMES[0]?.cover || 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=800&q=80'}
-                        className="w-full h-full object-cover opacity-60 group-hover:opacity-75 transition-opacity"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                      {/* Game Captures label */}
-                      <div className="absolute bottom-4 left-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Gamepad2 className="w-3.5 h-3.5 text-white/60" />
-                          <span className="text-white/60 text-[10px] font-semibold uppercase tracking-wider">Game Captures</span>
-                        </div>
-                        <p className="text-white font-bold text-base">{MOCK_GAMES[0]?.title || 'Elden Ring'}</p>
-                        <p className="text-white/40 text-[10px] mt-0.5">Last played • {MOCK_GAMES[0]?.hours}</p>
-                      </div>
-                      {/* Play button */}
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                          <Play className="w-4 h-4 text-white fill-white" />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* RIGHT COL: Dashboard tile (full height) */}
-                    <div className="col-span-3">
-                      <div className="h-full rounded-xl border border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition group" style={{ background: 'rgba(15,22,38,0.8)', minHeight: '200px' }}>
-                        <span className="text-white/20 text-5xl font-light group-hover:text-white/35 transition-colors">?</span>
-                        <span className="text-white/30 text-[9px] font-bold uppercase tracking-wider mt-2">Dashboard</span>
-                      </div>
+                      <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-white/10 text-white/70 text-[9px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
+                        <MessageSquare className="w-3 h-3" /> Send Message
+                      </button>
+                      <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-white/10 text-white/60 text-[9px] font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
+                        <Swords className="w-3 h-3" /> Challenge
+                      </button>
+                      <InteractDropdown />
                     </div>
 
                   </div>
