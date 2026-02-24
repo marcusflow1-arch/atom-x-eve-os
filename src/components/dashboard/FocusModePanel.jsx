@@ -1408,9 +1408,9 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef}>
         <div className="flex items-stretch gap-4 w-full">
-          {/* Environment Hub Tile (dropdown trigger) */}
+          {/* Environment Hub Tile — opens the Environment drawer */}
           <div className="w-[368px] h-[60px] flex-shrink-0 relative">
-            <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+            <EnvironmentHubTile isOpen={showMemoriesDrawer === 'environment'} onToggle={() => setShowMemoriesDrawer('environment')} />
           </div>
 
           {/* References Section — cycling label opens different drawer/mode */}
