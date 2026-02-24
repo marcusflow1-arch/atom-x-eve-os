@@ -14,6 +14,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('environments');
   const [selectedEnv, setSelectedEnv] = useState(null);
+  const [expandedTab, setExpandedTab] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hubProgression, setHubProgression] = useState(null);
   const [environments, setEnvironments] = useState([]);
