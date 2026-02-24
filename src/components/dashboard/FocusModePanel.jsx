@@ -28,6 +28,7 @@ import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalenda
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
+import DateTimeTile from '@/components/dashboard/DateTimeTile';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
