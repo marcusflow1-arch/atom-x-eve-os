@@ -84,6 +84,87 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
     );
   }
 
+  const renderExpandedContent = () => {
+    switch (expandedTab) {
+      case 'environments':
+        return (
+          <div className="space-y-4">
+            {roomModels.length > 0 ? (
+              <div className="grid grid-cols-6 gap-3">
+                {roomModels.map(model => (
+                  <button
+                    key={model.id}
+                    onClick={() => {
+                      setSelectedEnv(model);
+                      onSelectEnv?.({
+                        id: model.id,
+                        name: model.name,
+                        modelUrl: model.file_url,
+                        thumbnail: model.thumbnail_url,
+                        description: model.description,
+                        playerSpawn: model.player_spawn || { x: 0, y: -0.5, z: 0 },
+                        useMeshCollision: model.use_mesh_collision || false,
+                      });
+                    }}
+                    className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
+                      selectedEnv?.id === model.id
+                        ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
+                        : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
+                    }`}
+                  >
+                    <div className="aspect-video w-full bg-black/30 overflow-hidden">
+                      {model.thumbnail_url ? (
+                        <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Globe className="w-5 h-5 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2">
+                      <h4 className="text-[10px] font-bold text-white truncate">{model.name}</h4>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-32">
+                <Globe className="w-12 h-12 mx-auto mb-3 text-white/10" />
+                <p className="text-white/30 text-sm font-medium">No environments yet</p>
+              </div>
+            )}
+          </div>
+        );
+      case 'skyboxes':
+        return (
+          <div className="grid grid-cols-6 gap-3">
+            {SKYBOXES.map(sky => (
+              <button
+                key={sky.id}
+                onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
+                className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                  activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+                }`}
+              >
+                <img src={sky.thumbnail} alt={sky.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                {activeSkybox === sky.id && (
+                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                    <span className="text-black text-[9px] font-black">✓</span>
+                  </div>
+                )}
+                <p className="absolute bottom-2 left-2 right-2 text-white text-[10px] font-semibold truncate">{sky.title}</p>
+              </button>
+            ))}
+          </div>
+        );
+      case 'companions':
+        return <CompanionsGrid />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
       {/* Header */}
