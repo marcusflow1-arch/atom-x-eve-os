@@ -3325,7 +3325,7 @@ export default function LunaTemplate() {
 
                     {stageMode === 'stats' && (
                       <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                        <AvatarProgressionBox compact={true} />
+                        <div className="text-white/40 text-xs text-center py-8">Click a stat button below to expand</div>
                       </div>
                     )}
 
