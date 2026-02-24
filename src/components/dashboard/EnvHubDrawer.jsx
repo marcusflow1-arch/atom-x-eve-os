@@ -195,6 +195,7 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                     currentEnvId={currentEnvId}
                     onSelectEnv={handleSelect}
                     onClose={handleClose}
+                    onItemClick={handleItemClick}
                   />
                 </div>
               </>
