@@ -1411,13 +1411,19 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
             <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
           </div>
 
-          {/* References Section (Memories) */}
+          {/* References Section (Memories) — click label to open drawer */}
           <div 
             ref={scrollRef}
             className="flex items-center gap-2 overflow-x-auto" 
             style={{ scrollbarWidth: 'none' }}
           >
-            <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
+            <button
+              onClick={() => setShowMemoriesDrawer(true)}
+              className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0 transition-colors flex items-center gap-1"
+            >
+              <span>📷</span>
+              <span>Memories</span>
+            </button>
             {references.map((ref) => (
               <GameReference 
                 key={ref.id} 
@@ -1426,15 +1432,54 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
                 isActive={activeReference?.id === ref.id}
               />
             ))}
-            {/* Home Button */}
-            <GameReference 
-              isHomeButton={true}
-              onClick={handleHomeClick}
-            />
+            <GameReference isHomeButton={true} onClick={handleHomeClick} />
           </div>
         </div>
-
       </div>
+
+      {/* Memories Drawer — slides in from right */}
+      <AnimatePresence>
+        {showMemoriesDrawer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
+              onClick={() => setShowMemoriesDrawer(false)}
+            />
+            <motion.div
+              initial={{ x: 340, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 340, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-80 z-[9999] flex flex-col rounded-l-3xl"
+              style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '-4px 0 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              }}
+            >
+              <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📷</span>
+                  <span className="text-white font-bold text-lg tracking-wide">Memories</span>
+                </div>
+                <button onClick={() => setShowMemoriesDrawer(false)} className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                <MemoriesDrawer
+                  references={references}
+                  activeReference={activeReference}
+                  onSelectReference={handleReferenceClick}
+                  onHomeClick={handleHomeClick}
+                  onClose={() => setShowMemoriesDrawer(false)}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
