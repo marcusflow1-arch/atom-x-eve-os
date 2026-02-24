@@ -5,15 +5,21 @@ import EnvironmentHub from '@/components/environment/EnvironmentHub';
 
 export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv }) {
   const [expanded, setExpanded] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const handleClose = () => {
     setExpanded(false);
+    setSelectedItem(null);
     onClose();
   };
 
   const handleSelect = (env) => {
     onSelectEnv?.(env);
     handleClose();
+  };
+
+  const handleItemClick = (item) => {
+    setSelectedItem(item);
   };
 
   return (
