@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, ShoppingBag, Trophy, Gamepad2, Users, Radio, MessageSquare, Menu } from 'lucide-react';
+import { Home, ShoppingBag, Trophy, Gamepad2, Users, Radio, MessageSquare, Library } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const NAV_ITEMS = [
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { id: 'clan', label: 'Clan', icon: Users, page: 'Clan' },
   { id: 'aura', label: 'Aura', icon: Radio, page: 'Aura' },
   { id: 'forum', label: 'Forum', icon: MessageSquare, page: 'Community' },
+  { id: 'sidebar', label: 'Quick', icon: Library, action: 'library_sidebar' },
 ];
 
 export default function MobileBottomNav({ onMenuOpen }) {
@@ -23,47 +24,38 @@ export default function MobileBottomNav({ onMenuOpen }) {
     return location.pathname.toLowerCase().includes(`/${page.toLowerCase()}`);
   };
 
+  const handleClick = (item) => {
+    if (item.action === 'library_sidebar') {
+      window.dispatchEvent(new CustomEvent('openLibrarySidebar'));
+    } else {
+      navigate(createPageUrl(item.page));
+    }
+  };
+
   return (
     <div
-      className="flex items-center relative z-[80] flex-shrink-0 overflow-x-auto"
+      className="flex items-center justify-around relative z-[80] flex-shrink-0"
       style={{
-        height: '52px',
+        height: '56px',
         background: 'rgba(100, 120, 140, 0.12)',
         backdropFilter: 'blur(30px) saturate(150%)',
         WebkitBackdropFilter: 'blur(30px) saturate(150%)',
         borderTop: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(255, 255, 255, 0.06)',
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
       }}
     >
-      {/* Hamburger Menu Button */}
-      <button
-        onClick={onMenuOpen}
-        className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0 h-full px-3 text-white/40 active:text-white/80 transition-colors"
-        style={{ minWidth: '48px' }}
-      >
-        <Menu className="w-[18px] h-[18px]" />
-        <span className="text-[9px] font-medium">Menu</span>
-      </button>
-
-      {/* Divider */}
-      <div className="w-px h-6 bg-white/10 flex-shrink-0" />
-
-      {/* Nav Items */}
       {NAV_ITEMS.map((item) => {
-        const active = isActive(item.page);
+        const active = item.page ? isActive(item.page) : false;
         return (
           <button
             key={item.id}
-            onClick={() => navigate(createPageUrl(item.page))}
-            className={`flex flex-col items-center justify-center gap-0.5 flex-shrink-0 h-full relative transition-colors px-3 ${
+            onClick={() => handleClick(item)}
+            className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full relative transition-colors ${
               active ? 'text-cyan-400' : 'text-white/40'
             }`}
-            style={{ minWidth: '52px' }}
           >
-            <item.icon className="w-[18px] h-[18px]" />
-            <span className="text-[9px] font-medium">{item.label}</span>
+            <item.icon className="w-[17px] h-[17px]" />
+            <span className="text-[8px] font-medium">{item.label}</span>
             {active && (
               <motion.div
                 layoutId="mobile-nav-dot"
