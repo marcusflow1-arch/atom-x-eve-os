@@ -10,7 +10,7 @@ import FeatureUnlockGrid from './FeatureUnlockGrid';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import CompanionsGrid from './CompanionsGrid';
 
-export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
+export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, onItemClick }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('environments');
   const [selectedEnv, setSelectedEnv] = useState(null);
