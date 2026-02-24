@@ -7,6 +7,7 @@ import MobileLibraryPanel from './MobileLibraryPanel';
 
 export default function MobileLayoutShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   return (
     <div
