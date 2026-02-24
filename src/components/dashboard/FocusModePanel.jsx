@@ -5,7 +5,7 @@ import {
         Plus, Star, Zap, Sword, Shield, Wand2, Flame, Pin,
         Play, Sparkles, Trophy, Crown, Eye, Check, Trash2, X,
         Library as LibraryIcon, Radio, Gamepad2, Search, MoreHorizontal, Bot,
-        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe
+        Heart, BookOpen, Bell, Settings, Book, Home, Download, Ticket, Users, Tv, Swords, Layers, TrendingUp, Globe, UserPlus
       } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
@@ -1894,18 +1894,21 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           
           {/* Right Column: System Status + Calendar + Knowledge Learner */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
-             {/* Party invite icon + Date tile row */}
-             <div className="flex items-start gap-2">
-               <PartyInviteDropdown />
-               <div className="flex-1 min-w-0">
+             {/* Party Invite icon + DateTime in a row */}
+             <div className="flex items-stretch gap-2">
+               <div className="flex items-start pt-1">
+                 <PartyInviteDropdown />
+               </div>
+               <div className="flex-1">
                  <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
                </div>
              </div>
 
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
-               <AIAttributesBox />
-             </div>
+                <AIAttributesBox />
+              </div>
+
              </div>
         </div>
       </div>
