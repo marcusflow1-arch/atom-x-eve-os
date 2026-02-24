@@ -54,8 +54,20 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
 
   const globalLevel = hubProgression?.global_hub_level || 1;
 
+  const SKYBOXES = [
+    { id: 'sky_1', title: 'Neon City Night', thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400', background: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920' },
+    { id: 'sky_2', title: 'Deep Space', thumbnail: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400', background: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920' },
+    { id: 'sky_3', title: 'Alien Jungle', thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400', background: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920' },
+    { id: 'sky_4', title: 'Volcanic World', thumbnail: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=400', background: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=1920' },
+    { id: 'sky_5', title: 'Arctic Tundra', thumbnail: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=400', background: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=1920' },
+    { id: 'sky_6', title: 'Desert Ruins', thumbnail: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400', background: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920' },
+  ];
+
+  const [activeSkybox, setActiveSkybox] = useState(null);
+
   const tabs = [
     { id: 'environments', label: 'Environments', icon: Map },
+    { id: 'skyboxes', label: 'Skyboxes', icon: CloudSun },
     { id: 'features', label: 'Features', icon: Gift },
     { id: 'companions', label: 'Companions', icon: Bot },
   ];
