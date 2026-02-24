@@ -1904,10 +1904,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                </div>
              </div>
 
-             {/* AI Attribute Box to the right side */}
-             <div className="mt-1">
-                <AIAttributesBox />
-              </div>
            </div>
         </div>
       </div>
