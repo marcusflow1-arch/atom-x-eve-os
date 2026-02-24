@@ -128,6 +128,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, onI
                       key={model.id}
                       onClick={() => {
                         setSelectedEnv(model);
+                        onItemClick?.(model);
                         onSelectEnv?.({
                           id: model.id,
                           name: model.name,
