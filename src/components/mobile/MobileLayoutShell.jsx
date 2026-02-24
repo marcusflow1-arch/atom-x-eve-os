@@ -56,6 +56,9 @@ export default function MobileLayoutShell({ children }) {
       <AnimatePresence>
         {drawerOpen && <MobileDrawer onClose={() => setDrawerOpen(false)} />}
       </AnimatePresence>
+
+      {/* Mobile Library Panel (middle-left button) */}
+      <MobileLibraryPanel isOpen={libraryOpen} onClose={() => setLibraryOpen(false)} />
     </div>
   );
 }
