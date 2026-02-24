@@ -1809,7 +1809,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
               {/* Open space below Environment Hub — Stats/Friends/Live overlay fills this */}
               {/* Height is fixed so DevSpotlight always stays at same position */}
-              <div className="relative mt-3" style={{ height: '512px' }}>
+              <div className="relative mt-3" style={{ height: '256px' }}>
                 {/* OVERLAY: Stats / Friends / Live — fills the open space exactly */}
                 <AnimatePresence>
                   {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
@@ -1821,15 +1821,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                       transition={{ duration: 0.2 }}
                       className="absolute inset-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
-                        backdropFilter: 'blur(24px)',
-                        WebkitBackdropFilter: 'blur(24px)',
-                        border: showStatsDropdown
-                          ? '1px solid rgba(34,211,238,0.30)'
-                          : showFriendsDropdown
-                          ? '1px solid rgba(74,222,128,0.30)'
-                          : '1px solid rgba(248,113,113,0.30)',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
+                        background: 'linear-gradient(135deg, rgba(200,210,220,0.10) 0%, rgba(160,180,200,0.07) 40%, rgba(120,140,160,0.12) 100%)',
+                        backdropFilter: 'blur(32px) saturate(180%) brightness(1.08)',
+                        WebkitBackdropFilter: 'blur(32px) saturate(180%) brightness(1.08)',
+                        border: '1px solid rgba(255,255,255,0.18)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
                       }}
                     >
                       {/* Close button */}
