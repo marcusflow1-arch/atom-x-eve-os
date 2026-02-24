@@ -167,18 +167,21 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
 
   return (
     <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
-      {/* Header with Current Section */}
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <div className="text-sm text-white/60 font-light">Full</div>
-          <div className="text-lg font-bold text-white">{tabs.find(t => t.id === activeTab)?.abbr}</div>
-        </div>
-        <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/10 flex items-center justify-center flex-shrink-0 transition-colors">
-          <X className="w-3.5 h-3.5 text-white/50" />
-        </button>
-      </div>
+      {/* Hub Progression Info */}
+       {hubProgression && <HubProgressionHeader hubProgression={hubProgression} />}
 
-      {/* Tabs */}
+       {/* Header with Current Section */}
+       <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06]">
+         <div className="flex items-center gap-2">
+           <div className="text-sm text-white/60 font-light">Full</div>
+           <div className="text-lg font-bold text-white">{tabs.find(t => t.id === activeTab)?.abbr}</div>
+         </div>
+         <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/10 flex items-center justify-center flex-shrink-0 transition-colors">
+           <X className="w-3.5 h-3.5 text-white/50" />
+         </button>
+       </div>
+
+       {/* Tabs */}
       <div className="flex items-center gap-0.5 mb-4 p-0.5 rounded-lg bg-white/[0.03] border border-white/[0.05] w-fit">
         {tabs.map(tab => {
           const Icon = tab.icon;
