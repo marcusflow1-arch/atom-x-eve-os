@@ -35,9 +35,9 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[9999] flex flex-col rounded-l-3xl"
+            className="fixed top-0 right-0 bottom-0 z-[9999] flex rounded-l-3xl"
             style={{
-              width: expanded ? '100vw' : '429px',
+              width: expanded ? 'calc(100vw - 80px)' : '429px',
               background: 'rgba(10, 16, 28, 0.96)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
@@ -48,41 +48,96 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-              <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-cyan-400" />
-                <span className="text-white font-bold text-lg tracking-wide">Environment Hub</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Expand / collapse */}
-                <button
-                  onClick={() => setExpanded(v => !v)}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] flex items-center justify-center transition-all border border-white/10"
-                  title={expanded ? 'Collapse' : 'Expand to full width'}
-                >
-                  {expanded
-                    ? <ChevronRight className="w-4 h-4 text-cyan-300" />
-                    : <ChevronLeft className="w-4 h-4 text-cyan-300" />
-                  }
-                </button>
-                <button
-                  onClick={handleClose}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
-            </div>
+            {expanded && (
+              <>
+                {/* Left Sidebar */}
+                <div className="w-64 flex flex-col border-r border-white/10 flex-shrink-0">
+                  <div className="p-4 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-cyan-400" />
+                      <span className="text-white font-bold text-sm">Hub</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                    <EnvironmentHub
+                      currentEnvId={currentEnvId}
+                      onSelectEnv={handleSelect}
+                      onClose={handleClose}
+                      compact
+                    />
+                  </div>
+                </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
-              <EnvironmentHub
-                currentEnvId={currentEnvId}
-                onSelectEnv={handleSelect}
-                onClose={handleClose}
-              />
-            </div>
+                {/* Right Content Panel */}
+                <div className="flex-1 flex flex-col">
+                  <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-cyan-400" />
+                      <span className="text-white font-bold text-lg tracking-wide">Environment Hub</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setExpanded(false)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] flex items-center justify-center transition-all border border-white/10"
+                        title="Collapse"
+                      >
+                        <ChevronRight className="w-4 h-4 text-cyan-300" />
+                      </button>
+                      <button
+                        onClick={handleClose}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                      >
+                        <X className="w-4 h-4 text-white/60" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                    <EnvironmentHub
+                      currentEnvId={currentEnvId}
+                      onSelectEnv={handleSelect}
+                      onClose={handleClose}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!expanded && (
+              <>
+                {/* Header */}
+                <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0 w-full">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-cyan-400" />
+                    <span className="text-white font-bold text-lg tracking-wide">Environment Hub</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Expand / collapse */}
+                    <button
+                      onClick={() => setExpanded(true)}
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] flex items-center justify-center transition-all border border-white/10"
+                      title="Expand to full width"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-cyan-300" />
+                    </button>
+                    <button
+                      onClick={handleClose}
+                      className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                    >
+                      <X className="w-4 h-4 text-white/60" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 w-full" style={{ scrollbarWidth: 'none' }}>
+                  <EnvironmentHub
+                    currentEnvId={currentEnvId}
+                    onSelectEnv={handleSelect}
+                    onClose={handleClose}
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         </>
       )}
