@@ -202,11 +202,19 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         })}
       </div>
 
-      {/* Content */}
+      {/* Content Box - Single persistent box with changing content */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence mode="wait">
-          {activeTab === 'environments' && (
-            <motion.div key="envs" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+          <motion.div 
+            key={activeTab}
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-4">
+            {activeTab === 'environments' && (
+            <>
+
               {/* 3D Room Environments from Admin */}
               {roomModels.length > 0 ? (
                 <div className="grid grid-cols-4 gap-2">
