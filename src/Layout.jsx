@@ -1115,10 +1115,6 @@ function LayoutContent({ children, currentPageName }) {
             );
       })()}
 
-      {/* Removed Luna header bar - now part of page content for seamless animation */}
-
-
-
 
 
       )}
