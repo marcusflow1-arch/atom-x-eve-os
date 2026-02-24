@@ -1337,8 +1337,7 @@ function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
-export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, onSelectEnv }) {
-  const [showEnvDropdown, setShowEnvDropdown] = useState(false);
+export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown }) {
   const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
