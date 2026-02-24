@@ -1894,7 +1894,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           
           {/* Right Column: System Status + Calendar + Knowledge Learner */}
           <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
-             <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+             {/* Party invite icon + Date tile row */}
+             <div className="flex items-start gap-2">
+               <PartyInviteDropdown />
+               <div className="flex-1 min-w-0">
+                 <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+               </div>
+             </div>
 
              {/* AI Attribute Box to the right side */}
              <div className="mt-1">
