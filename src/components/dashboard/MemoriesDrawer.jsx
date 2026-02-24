@@ -13,7 +13,6 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
   const tabs = [
     { id: 'screenshots', label: 'Screenshots', icon: '🖼️', items: screenshots },
     { id: 'videos', label: 'Video', icon: '🎬', items: videos },
-    { id: 'skyboxes', label: 'Skyboxes', icon: '🌌', items: MOCK_SKYBOXES },
   ];
 
   const currentItems = tabs.find(t => t.id === activeTab)?.items || [];
