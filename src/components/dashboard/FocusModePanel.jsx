@@ -1411,7 +1411,10 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
         <div className="flex items-stretch gap-4 w-full">
           {/* Environment Hub Tile — opens the Environment drawer */}
           <div className="w-[368px] h-[60px] flex-shrink-0 relative">
-            <EnvironmentHubTile isOpen={showMemoriesDrawer === 'environment'} onToggle={() => setShowMemoriesDrawer('environment')} />
+            <EnvironmentHubTile
+              isOpen={showMemoriesDrawer === 'environment'}
+              onToggle={() => setShowMemoriesDrawer(prev => prev === 'environment' ? null : 'environment')}
+            />
           </div>
 
           {/* References Section — cycling label opens different drawer/mode */}
