@@ -343,7 +343,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Expanded Tab Overlay (slides in from left) */}
+      {/* Expanded Tab Overlay (fades in, appears to left) */}
       <AnimatePresence>
         {expandedTab && (
           <>
@@ -351,6 +351,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setExpandedTab(null)}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9997]"
               style={{ pointerEvents: 'all' }}
@@ -359,7 +360,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
                exit={{ opacity: 0 }}
-               transition={{ duration: 0.3, ease: 'easeInOut' }}
+               transition={{ duration: 0.2 }}
                className="fixed top-0 left-0 bottom-0 z-[9998] flex flex-col"
                style={{
                  width: 'calc(100vw - 429px)',
