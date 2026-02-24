@@ -291,11 +291,11 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                   </AnimatePresence>
                 </>
               )}
-            </motion.div>
-          )}
+              </>
+              )}
 
-          {activeTab === 'skyboxes' && (
-            <motion.div key="skyboxes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              {activeTab === 'skyboxes' && (
+              <>
               <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
               <div className="grid grid-cols-2 gap-2">
                 {SKYBOXES.map(sky => (
