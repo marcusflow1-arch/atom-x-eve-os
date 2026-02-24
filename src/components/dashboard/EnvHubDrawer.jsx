@@ -37,7 +37,7 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 right-0 bottom-0 z-[9999] flex flex-col rounded-l-3xl"
             style={{
-              width: expanded ? '100vw' : '390px',
+              width: expanded ? '100vw' : '429px',
               background: 'rgba(10, 16, 28, 0.96)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
