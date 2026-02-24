@@ -213,132 +213,131 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             transition={{ duration: 0.2 }}
             className="space-y-4">
             {activeTab === 'environments' && (
-            <>
-
-              {/* 3D Room Environments from Admin */}
-              {roomModels.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
-                  {roomModels.map(model => (
-                    <button
-                      key={model.id}
-                      onClick={() => {
-                        setSelectedEnv(model);
-                        onSelectEnv?.({
-                          id: model.id,
-                          name: model.name,
-                          modelUrl: model.file_url,
-                          thumbnail: model.thumbnail_url,
-                          description: model.description,
-                          playerSpawn: model.player_spawn || { x: 0, y: -0.5, z: 0 },
-                          useMeshCollision: model.use_mesh_collision || false,
-                        });
-                      }}
-                      className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
-                        selectedEnv?.id === model.id
-                          ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
-                          : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
-                      }`}
-                    >
-                      <div className="aspect-video w-full bg-black/30 overflow-hidden">
-                        {model.thumbnail_url ? (
-                          <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Globe className="w-5 h-5 text-white/10" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-1.5">
-                        <h4 className="text-[10px] font-bold text-white truncate">{model.name}</h4>
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="text-[8px] px-1 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 font-semibold">3D</span>
-                          {model.file_type && (
-                            <span className="text-[8px] px-1 py-0.5 rounded bg-white/5 text-white/30 border border-white/10 uppercase font-mono">{model.file_type}</span>
+              <>
+                {/* 3D Room Environments from Admin */}
+                {roomModels.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {roomModels.map(model => (
+                      <button
+                        key={model.id}
+                        onClick={() => {
+                          setSelectedEnv(model);
+                          onSelectEnv?.({
+                            id: model.id,
+                            name: model.name,
+                            modelUrl: model.file_url,
+                            thumbnail: model.thumbnail_url,
+                            description: model.description,
+                            playerSpawn: model.player_spawn || { x: 0, y: -0.5, z: 0 },
+                            useMeshCollision: model.use_mesh_collision || false,
+                          });
+                        }}
+                        className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
+                          selectedEnv?.id === model.id
+                            ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
+                            : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
+                        }`}
+                      >
+                        <div className="aspect-video w-full bg-black/30 overflow-hidden">
+                          {model.thumbnail_url ? (
+                            <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Globe className="w-5 h-5 text-white/10" />
+                            </div>
                           )}
                         </div>
-                      </div>
+                        <div className="p-1.5">
+                          <h4 className="text-[10px] font-bold text-white truncate">{model.name}</h4>
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="text-[8px] px-1 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20 font-semibold">3D</span>
+                            {model.file_type && (
+                              <span className="text-[8px] px-1 py-0.5 rounded bg-white/5 text-white/30 border border-white/10 uppercase font-mono">{model.file_type}</span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : environments.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Globe className="w-10 h-10 mx-auto mb-3 text-white/10" />
+                    <p className="text-white/30 text-sm font-medium">No environments yet</p>
+                    <p className="text-white/15 text-xs mt-1">Add 3D models with "Room" in their name from the Admin page.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                      {environments.map(env => (
+                        <EnvironmentInstanceCard
+                          key={env.id}
+                          env={env}
+                          isActive={env.is_active || env.id === currentEnvId}
+                          isSelected={selectedEnv?.id === env.id}
+                          onClick={(e) => setSelectedEnv(selectedEnv?.id === e.id ? null : e)}
+                        />
+                      ))}
+                    </div>
+
+                    <AnimatePresence>
+                      {selectedEnv && (
+                        <EnvironmentDetailPanel
+                          env={selectedEnv}
+                          globalHubLevel={globalLevel}
+                          onClose={() => setSelectedEnv(null)}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
+              </>
+            )}
+
+            {activeTab === 'skyboxes' && (
+              <>
+                <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {SKYBOXES.map(sky => (
+                    <button
+                      key={sky.id}
+                      onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
+                      className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                        activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <img src={sky.thumbnail} alt={sky.title} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      {activeSkybox === sky.id && (
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                          <span className="text-black text-[9px] font-black">✓</span>
+                        </div>
+                      )}
+                      <p className="absolute bottom-1.5 left-2 right-2 text-white text-[9px] font-semibold truncate">{sky.title}</p>
                     </button>
                   ))}
                 </div>
-              ) : environments.length === 0 ? (
-                <div className="text-center py-16">
-                  <Globe className="w-10 h-10 mx-auto mb-3 text-white/10" />
-                  <p className="text-white/30 text-sm font-medium">No environments yet</p>
-                  <p className="text-white/15 text-xs mt-1">Add 3D models with "Room" in their name from the Admin page.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="flex gap-2.5 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-                    {environments.map(env => (
-                      <EnvironmentInstanceCard
-                        key={env.id}
-                        env={env}
-                        isActive={env.is_active || env.id === currentEnvId}
-                        isSelected={selectedEnv?.id === env.id}
-                        onClick={(e) => setSelectedEnv(selectedEnv?.id === e.id ? null : e)}
-                      />
-                    ))}
-                  </div>
-
-                  <AnimatePresence>
-                    {selectedEnv && (
-                      <EnvironmentDetailPanel
-                        env={selectedEnv}
-                        globalHubLevel={globalLevel}
-                        onClose={() => setSelectedEnv(null)}
-                      />
-                    )}
-                  </AnimatePresence>
-                </>
-              )}
               </>
-              )}
+            )}
 
-              {activeTab === 'skyboxes' && (
+            {activeTab === 'features' && (
               <>
-              <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {SKYBOXES.map(sky => (
-                  <button
-                    key={sky.id}
-                    onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
-                    className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
-                      activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
-                    }`}
-                  >
-                    <img src={sky.thumbnail} alt={sky.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    {activeSkybox === sky.id && (
-                      <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                        <span className="text-black text-[9px] font-black">✓</span>
-                      </div>
-                    )}
-                    <p className="absolute bottom-1.5 left-2 right-2 text-white text-[9px] font-semibold truncate">{sky.title}</p>
-                  </button>
-                ))}
-                </div>
-                </>
-                )}
-
-                {activeTab === 'features' && (
-                <>
                 <p className="text-white/30 text-xs mb-4">
-                Features unlock globally at each Hub Level and become available across all environments.
+                  Features unlock globally at each Hub Level and become available across all environments.
                 </p>
                 <FeatureUnlockGrid
-                globalHubLevel={globalLevel}
-                onFeatureClick={(f) => console.log('Open feature:', f.name)}
+                  globalHubLevel={globalLevel}
+                  onFeatureClick={(f) => console.log('Open feature:', f.name)}
                 />
-                </>
-                )}
+              </>
+            )}
 
-                {activeTab === 'companions' && (
-                <>
+            {activeTab === 'companions' && (
+              <>
                 <CompanionsGrid />
-                </>
-                )}
-                </motion.div>
-                </AnimatePresence>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Expanded Tab Overlay (slides in from left) */}
