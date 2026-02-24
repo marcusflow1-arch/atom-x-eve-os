@@ -1,392 +1,308 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, MessageSquare, UserPlus, Gamepad2, 
-  Swords, Repeat, Play, Crown, Shield, 
-  MoreHorizontal, Check, X, Bell, Search,
-  Circle, Activity, Trophy, Star, Target, Crosshair
+import {
+  Users, MessageSquare, UserPlus, Gamepad2,
+  Swords, Repeat, Check, X, Search,
+  Trophy, Shield, Crosshair, ChevronRight
 } from 'lucide-react';
 
 // Mock Data
 const MOCK_FRIENDS = [
-  { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', level: 42, role: 'Damage' },
-  { id: 2, name: 'CyberVixen', status: 'playing', game: 'Final Fantasy XIV', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', level: 56, role: 'Healer', inParty: true },
-  { id: 3, name: 'GhostReaper', status: 'idle', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150', level: 33, role: 'Tank' },
-  { id: 4, name: 'IronFist', status: 'offline', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150', level: 60, role: 'Tank' },
-  { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', level: 25, role: 'Support' },
+  { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', level: 42 },
+  { id: 2, name: 'CyberVixen', status: 'playing', game: 'Final Fantasy XIV', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', level: 56 },
+  { id: 3, name: 'GhostReaper', status: 'idle', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150', level: 33 },
+  { id: 4, name: 'IronFist', status: 'offline', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150', level: 60 },
+  { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', level: 25 },
 ];
 
-const PARTY_MEMBERS = [MOCK_FRIENDS[1]];
-
 const MOCK_REQUESTS = [
-  { 
-    id: 101, name: 'BladeRunner_X', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', sentAgo: '2h',
-    achievementRank: 'Diamond', pvpRank: 'Platinum II', pveRank: 'Mythic', 
-    genres: ['RPG', 'Sci-Fi'], mutualFriends: ['Shadow_Striker', 'CyberVixen'] 
-  },
-  { 
-    id: 102, name: 'NightOwl_92', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', sentAgo: '5h',
-    achievementRank: 'Gold', pvpRank: 'Silver III', pveRank: 'Epic', 
-    genres: ['Horror', 'FPS'], mutualFriends: ['GhostReaper'] 
-  },
-  { 
-    id: 103, name: 'PixelSamurai', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', sentAgo: '1d',
-    achievementRank: 'Silver', pvpRank: 'Gold I', pveRank: 'Rare', 
-    genres: ['Strategy', 'RPG', 'Action'], mutualFriends: [] 
-  },
+  { id: 101, name: 'BladeRunner_X', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150', sentAgo: '2h', achievementRank: 'Diamond', pvpRank: 'Platinum II', pveRank: 'Mythic', genres: ['RPG', 'Sci-Fi'], mutualFriends: ['Shadow_Striker'] },
+  { id: 102, name: 'NightOwl_92', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', sentAgo: '5h', achievementRank: 'Gold', pvpRank: 'Silver III', pveRank: 'Epic', genres: ['Horror', 'FPS'], mutualFriends: [] },
+];
+
+const STATUS_COLOR = {
+  online: 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]',
+  playing: 'bg-purple-400 shadow-[0_0_6px_rgba(192,132,252,0.6)]',
+  idle: 'bg-amber-400',
+  offline: 'bg-slate-600',
+};
+
+const FRIEND_ACTIONS = [
+  { id: 'chat', icon: MessageSquare, label: 'Chat', color: 'text-cyan-400' },
+  { id: 'invite', icon: UserPlus, label: 'Invite', color: 'text-green-400' },
+  { id: 'duel', icon: Swords, label: 'Duel', color: 'text-red-400' },
+  { id: 'trade', icon: Repeat, label: 'Trade', color: 'text-amber-400' },
 ];
 
 export default function FriendsDropdown() {
-  const [activeTab, setActiveTab] = useState('online'); 
+  const [activeTab, setActiveTab] = useState('friends');
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredFriends = MOCK_FRIENDS.filter(f => 
+  const filteredFriends = MOCK_FRIENDS.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const onlineFriends = filteredFriends.filter(f => f.status !== 'offline');
-  const offlineFriends = filteredFriends.filter(f => f.status === 'offline');
+  const handleFriendClick = (friend) => {
+    setSelectedFriend(prev => prev?.id === friend.id ? null : friend);
+  };
 
   return (
-    <div 
-      className="w-full rounded-3xl overflow-hidden border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-      style={{
-        background: 'rgba(10, 12, 16, 0.6)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      }}
-    >
-      {/* Header & Tabs */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
-        <div className="flex gap-6">
-          <TabItem id="online" label="Friends" active={activeTab === 'online'} onClick={setActiveTab} count={MOCK_FRIENDS.length} />
-          <TabItem id="party" label="Party" active={activeTab === 'party'} onClick={setActiveTab} count={PARTY_MEMBERS.length} />
-          <TabItem id="requests" label="Requests" active={activeTab === 'requests'} onClick={setActiveTab} count={3} alert />
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <Search className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-white/60 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
+    <div className="w-full h-full flex flex-col overflow-hidden" style={{ background: 'transparent' }}>
+      {/* Tabs */}
+      <div className="flex items-center gap-1 px-3 pt-2 pb-1 flex-shrink-0">
+        {[
+          { id: 'friends', label: 'Friends', count: filteredFriends.filter(f => f.status !== 'offline').length },
+          { id: 'requests', label: 'Requests', count: MOCK_REQUESTS.length, alert: true },
+          { id: 'party', label: 'Party', count: 1 },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`relative px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === tab.id
+                ? 'bg-white/10 text-white border border-white/15'
+                : 'text-white/40 hover:text-white/70 border border-transparent'
+            }`}
+          >
+            {tab.label}
+            {tab.count > 0 && (
+              <span className={`ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}>
+                {tab.count}
+              </span>
+            )}
+            {tab.alert && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+          </button>
+        ))}
+
+        {/* Search */}
+        {activeTab === 'friends' && (
+          <div className="ml-auto relative">
+            <Search className="w-3 h-3 text-white/30 absolute left-2 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-40 bg-black/20 border border-white/5 rounded-full pl-9 pr-3 py-1.5 text-xs text-white/80 placeholder:text-white/20 focus:outline-none focus:bg-black/40 focus:border-white/10 transition-all"
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-28 bg-black/20 border border-white/5 rounded-full pl-6 pr-2 py-1 text-[10px] text-white/80 placeholder:text-white/20 focus:outline-none"
             />
           </div>
-          <button className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center transition-colors">
-            <UserPlus className="w-4 h-4 text-white/60" />
-          </button>
-        </div>
+        )}
       </div>
 
       {/* Content */}
-      <div className="p-4 min-h-[300px] max-h-[500px] overflow-y-auto custom-scrollbar">
-        {activeTab === 'online' && (
-          <div className="space-y-6">
-            {/* Online Section */}
-            <FriendGroup title="Online" count={onlineFriends.length}>
-              {onlineFriends.map(f => (
-                <FriendRow 
-                  key={f.id} 
-                  friend={f} 
-                  selected={selectedFriend?.id === f.id}
-                  onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)}
-                />
-              ))}
-            </FriendGroup>
-
-            {/* Offline Section */}
-            {offlineFriends.length > 0 && (
-              <FriendGroup title="Offline" count={offlineFriends.length} className="opacity-60">
-                {offlineFriends.map(f => (
-                  <FriendRow 
-                    key={f.id} 
-                    friend={f} 
-                    selected={selectedFriend?.id === f.id}
-                    onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)}
+      <div className="flex-1 overflow-hidden flex">
+        <AnimatePresence mode="wait">
+          {activeTab === 'friends' && (
+            <motion.div
+              key="friends"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 flex overflow-hidden"
+            >
+              {/* Left: Friends List */}
+              <div className="flex-1 overflow-y-auto py-1 px-2 space-y-0.5" style={{ scrollbarWidth: 'none' }}>
+                {/* Online */}
+                <p className="text-[9px] font-bold text-white/25 uppercase tracking-widest px-2 py-1">
+                  Online — {filteredFriends.filter(f => f.status !== 'offline').length}
+                </p>
+                {filteredFriends.filter(f => f.status !== 'offline').map(friend => (
+                  <FriendRow
+                    key={friend.id}
+                    friend={friend}
+                    selected={selectedFriend?.id === friend.id}
+                    onSelect={() => handleFriendClick(friend)}
                   />
                 ))}
-              </FriendGroup>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'party' && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/5 border border-purple-500/20 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-                  <Crown className="w-6 h-6 text-purple-300" />
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-sm">Squad Alpha</h3>
-                  <p className="text-purple-300/60 text-xs">2 / 4 Members • Open</p>
-                </div>
+                {/* Offline */}
+                {filteredFriends.filter(f => f.status === 'offline').length > 0 && (
+                  <>
+                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-widest px-2 py-1 mt-2">
+                      Offline — {filteredFriends.filter(f => f.status === 'offline').length}
+                    </p>
+                    {filteredFriends.filter(f => f.status === 'offline').map(friend => (
+                      <FriendRow
+                        key={friend.id}
+                        friend={friend}
+                        selected={selectedFriend?.id === friend.id}
+                        onSelect={() => handleFriendClick(friend)}
+                        dim
+                      />
+                    ))}
+                  </>
+                )}
               </div>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold rounded-lg transition-all shadow-lg shadow-purple-500/20">
-                  Ready Up
-                </button>
-                <button className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/60 transition-colors">
-                  <SettingsIcon />
-                </button>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-2">
-              {PARTY_MEMBERS.map(f => (
-                <FriendRow key={f.id} friend={f} selected={selectedFriend?.id === f.id} onSelect={() => setSelectedFriend(selectedFriend?.id === f.id ? null : f)} />
+              {/* Right: Actions Panel */}
+              <div
+                className="flex-shrink-0 border-l border-white/5 flex flex-col"
+                style={{ width: '140px' }}
+              >
+                <AnimatePresence>
+                  {selectedFriend ? (
+                    <motion.div
+                      key={selectedFriend.id}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 10 }}
+                      className="flex flex-col h-full"
+                    >
+                      {/* Selected Friend Info */}
+                      <div className="p-3 border-b border-white/5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-8 h-8 rounded-lg overflow-hidden">
+                              <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-black/50 ${STATUS_COLOR[selectedFriend.status]}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-white text-[10px] font-bold truncate">{selectedFriend.name}</p>
+                            <p className="text-white/30 text-[8px]">Lv.{selectedFriend.level}</p>
+                          </div>
+                        </div>
+                        {selectedFriend.game && (
+                          <div className="flex items-center gap-1">
+                            <Gamepad2 className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
+                            <span className="text-[8px] text-cyan-200/60 truncate">{selectedFriend.game}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-1 p-2 flex-1">
+                        {FRIEND_ACTIONS.map(action => (
+                          <button
+                            key={action.id}
+                            className="flex items-center gap-2 px-2 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.04] hover:border-white/[0.1] transition-all group"
+                          >
+                            <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
+                            <span className="text-[10px] text-white/60 group-hover:text-white/90 transition-colors">{action.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="h-full flex flex-col items-center justify-center text-center p-4"
+                    >
+                      <ChevronRight className="w-5 h-5 text-white/15 mb-2" />
+                      <p className="text-[9px] text-white/20 leading-relaxed">Select a friend to see actions</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'requests' && (
+            <motion.div
+              key="requests"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 overflow-y-auto py-2 px-3 space-y-2"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              {MOCK_REQUESTS.map(req => (
+                <RequestRow key={req.id} request={req} />
               ))}
-              {/* Empty Slots */}
-              {[1, 2].map(i => (
-                <div key={i} className="h-16 rounded-xl border border-white/5 bg-white/[0.02] border-dashed flex items-center justify-center gap-3 text-white/20 hover:text-white/40 hover:bg-white/5 hover:border-white/10 transition-all cursor-pointer group">
-                  <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30">
-                    <UserPlus className="w-4 h-4" />
+              {MOCK_REQUESTS.length === 0 && (
+                <div className="flex flex-col items-center justify-center h-full text-white/20 text-xs pt-12">
+                  No pending requests
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'party' && (
+            <motion.div
+              key="party"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 overflow-y-auto py-2 px-3 space-y-1"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              <p className="text-[9px] font-bold text-white/25 uppercase tracking-widest px-1 py-1">Current Party</p>
+              {MOCK_FRIENDS.filter(f => f.id === 2).map(f => (
+                <FriendRow key={f.id} friend={f} selected={false} onSelect={() => {}} />
+              ))}
+              {/* Empty slots */}
+              {[1, 2, 3].map(i => (
+                <div key={i} className="flex items-center gap-3 px-2 py-2 rounded-xl border border-dashed border-white/10 text-white/20 hover:border-white/20 transition-all cursor-pointer">
+                  <div className="w-8 h-8 rounded-lg border border-white/10 flex items-center justify-center">
+                    <UserPlus className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-medium tracking-wide">Invite Player</span>
+                  <span className="text-[10px]">Empty Slot</span>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'requests' && (
-          <div className="space-y-2">
-            {MOCK_REQUESTS.map(req => (
-              <FriendRequestCard key={req.id} request={req} />
-            ))}
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 }
 
-// Sub-components
-
-const TabItem = ({ id, label, active, onClick, count, alert }) => (
-  <button 
-    onClick={() => onClick(id)}
-    className={`relative py-2 text-sm font-medium transition-colors ${active ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
+// Friend Row - compact book-style entry
+const FriendRow = ({ friend, selected, onSelect, dim }) => (
+  <button
+    onClick={onSelect}
+    className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-xl border transition-all text-left ${
+      selected
+        ? 'bg-white/[0.08] border-white/10'
+        : `border-transparent hover:bg-white/[0.04] ${dim ? 'opacity-50' : ''}`
+    }`}
   >
-    {label}
-    {count > 0 && (
-      <span className={`ml-2 text-[10px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-white/5 text-white/40'}`}>
-        {count}
-      </span>
-    )}
-    {alert && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.5)]" />}
-    {active && (
-      <motion.div 
-        layoutId="tab-line" 
-        className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_-2px_10px_rgba(34,211,238,0.5)]" 
-      />
-    )}
-  </button>
-);
-
-const FriendGroup = ({ title, count, children, className = "" }) => (
-  <div className={className}>
-    <div className="flex items-center gap-3 mb-3 px-2">
-      <h4 className="text-xs font-bold text-white/30 uppercase tracking-widest">{title}</h4>
-      <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-      <span className="text-[10px] text-white/20 font-mono">{count}</span>
-    </div>
-    <div className="space-y-1">
-      {children}
-    </div>
-  </div>
-);
-
-const FriendRow = ({ friend, selected, onSelect }) => (
-  <div className="relative">
-    <div 
-      onClick={onSelect}
-      className={`group flex items-center gap-4 p-3 rounded-xl border transition-all cursor-pointer ${
-        selected 
-          ? 'bg-white/10 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.2)]' 
-          : 'bg-transparent border-transparent hover:bg-white/5'
-      }`}
-    >
-      {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        <div className={`w-10 h-10 rounded-lg overflow-hidden ring-2 transition-all ${
-          selected ? 'ring-cyan-400/50' : 'ring-transparent group-hover:ring-white/10'
-        }`}>
-          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-        </div>
-        
-        {/* Status Dot */}
-        <div className="absolute -bottom-1 -right-1 p-0.5 bg-[#0a0c10] rounded-full">
-          <div className={`w-2.5 h-2.5 rounded-full border border-black/50 ${
-            friend.status === 'online' ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' :
-            friend.status === 'playing' ? 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.6)]' :
-            friend.status === 'idle' ? 'bg-amber-400' : 'bg-slate-600'
-          }`} />
-        </div>
+    <div className="relative flex-shrink-0">
+      <div className={`w-8 h-8 rounded-lg overflow-hidden ring-1 transition-all ${selected ? 'ring-cyan-400/40' : 'ring-transparent'}`}>
+        <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
       </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <h4 className={`text-sm font-semibold truncate transition-colors ${selected ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
-            {friend.name}
-          </h4>
-          <span className="text-[10px] font-mono text-white/20">Lv.{friend.level}</span>
-        </div>
-        
-        <div className="flex items-center gap-2 mt-0.5">
-          {friend.game ? (
-            <>
-              <Gamepad2 className="w-3 h-3 text-cyan-400" />
-              <span className="text-xs text-cyan-100/60 truncate group-hover:text-cyan-100 transition-colors">
-                {friend.game}
-              </span>
-            </>
-          ) : (
-            <span className="text-xs text-white/30 capitalize">{friend.status}</span>
-          )}
-        </div>
-      </div>
-
-      {/* Hover Action */}
-      <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ${selected ? 'opacity-100' : ''}`}>
-        <MoreHorizontal className="w-4 h-4 text-white/40" />
-      </div>
+      <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black/60 ${STATUS_COLOR[friend.status]}`} />
     </div>
-
-    {/* Expanded Controls */}
-    <AnimatePresence>
-      {selected && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="overflow-hidden bg-black/20 rounded-b-xl mx-2 -mt-2 border-x border-b border-white/5"
-        >
-          <div className="p-3 pt-4 grid grid-cols-4 gap-2">
-            <QuickAction icon={MessageSquare} label="Chat" onClick={() => {}} />
-            <QuickAction icon={UserPlus} label="Invite" onClick={() => {}} />
-            <QuickAction icon={Swords} label="Duel" onClick={() => {}} />
-            <QuickAction icon={Repeat} label="Trade" onClick={() => {}} />
-          </div>
-          
-          {friend.game && (
-            <div className="px-3 pb-3">
-              <button className="w-full py-2.5 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/30 text-white/60 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all group">
-                <Play className="w-3 h-3 fill-current" />
-                Join Session
-              </button>
-            </div>
-          )}
-        </motion.div>
+    <div className="flex-1 min-w-0">
+      <p className={`text-xs font-semibold truncate ${selected ? 'text-white' : 'text-white/75'}`}>{friend.name}</p>
+      {friend.game ? (
+        <p className="text-[9px] text-cyan-300/50 truncate">{friend.game}</p>
+      ) : (
+        <p className="text-[9px] text-white/25 capitalize">{friend.status}</p>
       )}
-    </AnimatePresence>
-  </div>
-);
-
-const QuickAction = ({ icon: Icon, label, onClick }) => (
-  <button 
-    onClick={(e) => { e.stopPropagation(); onClick(); }}
-    className="flex flex-col items-center gap-1.5 p-2 rounded-lg hover:bg-white/10 transition-colors group"
-  >
-    <Icon className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
-    <span className="text-[9px] font-medium text-white/30 group-hover:text-white/80 transition-colors">{label}</span>
+    </div>
+    <span className="text-[9px] text-white/20 flex-shrink-0">Lv.{friend.level}</span>
   </button>
 );
 
-const RANK_COLORS = {
-  'Mythic': 'text-red-400 bg-red-500/15 border-red-500/25',
-  'Diamond': 'text-cyan-300 bg-cyan-500/15 border-cyan-500/25',
-  'Platinum II': 'text-teal-300 bg-teal-500/15 border-teal-500/25',
-  'Gold': 'text-amber-300 bg-amber-500/15 border-amber-500/25',
-  'Gold I': 'text-amber-300 bg-amber-500/15 border-amber-500/25',
-  'Silver': 'text-slate-300 bg-slate-500/15 border-slate-500/25',
-  'Silver III': 'text-slate-300 bg-slate-500/15 border-slate-500/25',
-  'Epic': 'text-purple-300 bg-purple-500/15 border-purple-500/25',
-  'Rare': 'text-blue-300 bg-blue-500/15 border-blue-500/25',
-};
-
-const RankPill = ({ icon: Icon, label, value }) => {
-  const colors = RANK_COLORS[value] || 'text-white/50 bg-white/5 border-white/10';
-  return (
-    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8px] font-bold ${colors}`}>
-      <Icon className="w-2.5 h-2.5" />
-      <span className="truncate">{label}</span>
-      <span className="opacity-70">{value}</span>
+// Request Row - compact inline
+const RequestRow = ({ request }) => (
+  <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-colors">
+    <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0">
+      <img src={request.avatar} alt={request.name} className="w-full h-full object-cover" />
     </div>
-  );
-};
-
-const FriendRequestCard = ({ request }) => (
-  <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.07] transition-colors">
-    <div className="flex gap-3">
-      {/* Left: Avatar + Name */}
-      <div className="flex-shrink-0">
-        <div className="w-10 h-10 rounded-lg overflow-hidden ring-1 ring-white/10">
-          <img src={request.avatar} alt={request.name} className="w-full h-full object-cover" />
-        </div>
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <p className="text-white text-[10px] font-bold truncate">{request.name}</p>
+        <span className="text-[8px] text-white/25">{request.sentAgo} ago</span>
       </div>
-
-      {/* Middle: Info + Ranks */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between mb-1">
-          <h4 className="text-white text-sm font-bold truncate">{request.name}</h4>
-          <span className="text-[9px] text-white/25 flex-shrink-0 ml-2">{request.sentAgo} ago</span>
-        </div>
-
-        {/* Rank row */}
-        <div className="flex items-center gap-1 flex-wrap mb-1.5">
-          <RankPill icon={Trophy} label="Ach" value={request.achievementRank} />
-          <RankPill icon={Crosshair} label="PvP" value={request.pvpRank} />
-          <RankPill icon={Shield} label="PvE" value={request.pveRank} />
-        </div>
-
-        {/* Genres + Mutual Friends row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Genres */}
-          <div className="flex items-center gap-1">
-            <Gamepad2 className="w-2.5 h-2.5 text-white/20 flex-shrink-0" />
-            {request.genres.map(g => (
-              <span key={g} className="text-[8px] px-1.5 py-0 rounded bg-white/[0.06] border border-white/[0.06] text-white/45 font-medium">{g}</span>
-            ))}
-          </div>
-
-          {/* Mutual Friends */}
-          {request.mutualFriends.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Users className="w-2.5 h-2.5 text-white/20 flex-shrink-0" />
-              <span className="text-[8px] text-white/35">
-                {request.mutualFriends.length} mutual{request.mutualFriends.length > 1 && 's'}
-              </span>
-              <span className="text-[8px] text-white/20 truncate max-w-[100px]" title={request.mutualFriends.join(', ')}>
-                ({request.mutualFriends.join(', ')})
-              </span>
-            </div>
-          )}
-        </div>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className="text-[8px] px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/20">{request.achievementRank}</span>
+        {request.mutualFriends.length > 0 && (
+          <span className="text-[8px] text-white/30">{request.mutualFriends.length} mutual</span>
+        )}
       </div>
-
-      {/* Right: Action buttons */}
-      <div className="flex flex-col gap-1 flex-shrink-0 justify-center">
-        <button className="w-7 h-7 rounded-lg bg-green-500/15 hover:bg-green-500/30 border border-green-500/20 flex items-center justify-center text-green-400 transition-colors">
-          <Check className="w-3.5 h-3.5" />
-        </button>
-        <button className="w-7 h-7 rounded-lg bg-white/[0.04] hover:bg-red-500/15 border border-white/[0.06] hover:border-red-500/20 flex items-center justify-center text-white/30 hover:text-red-400 transition-colors">
-          <X className="w-3.5 h-3.5" />
-        </button>
-      </div>
+    </div>
+    <div className="flex flex-col gap-1 flex-shrink-0">
+      <button className="w-6 h-6 rounded-md bg-green-500/15 hover:bg-green-500/30 border border-green-500/20 flex items-center justify-center text-green-400 transition-colors">
+        <Check className="w-3 h-3" />
+      </button>
+      <button className="w-6 h-6 rounded-md bg-white/[0.04] hover:bg-red-500/15 border border-white/[0.06] hover:border-red-500/20 flex items-center justify-center text-white/30 hover:text-red-400 transition-colors">
+        <X className="w-3 h-3" />
+      </button>
     </div>
   </div>
-);
-
-const SettingsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
 );
