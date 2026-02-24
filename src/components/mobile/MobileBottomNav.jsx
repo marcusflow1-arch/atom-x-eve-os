@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, ShoppingBag, Trophy, Gamepad2, Users, Radio, MessageSquare, Library } from 'lucide-react';
+import { Home, ShoppingBag, Trophy, Users, Radio, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const NAV_ITEMS = [
