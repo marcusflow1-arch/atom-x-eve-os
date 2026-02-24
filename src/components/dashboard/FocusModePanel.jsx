@@ -1591,8 +1591,6 @@ function PartyInviteDropdown() {
   );
 }
 
-// DateTimeTile moved to components/dashboard/DateTimeTile.jsx
-
 // Add to Calendar Button Component
 const AddToCalendarButton = ({ onClick, clanIcon }) => (
   <motion.button
