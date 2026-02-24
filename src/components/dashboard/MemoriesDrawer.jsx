@@ -11,19 +11,17 @@ const MOCK_SKYBOXES = [
   { id: 'sky_6', title: 'Desert Ruins', thumbnail: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400', background: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920', type: 'skybox' },
 ];
 
-export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose, initialTab = 'screenshots' }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose }) {
+  const [activeTab, setActiveTab] = useState('screenshots');
 
   const screenshots = references.filter(r => !r.isVideo);
   const videos = references.filter(r => r.isVideo);
 
-  // If opened as skybox mode show only skyboxes tab, otherwise show screenshots + videos
-  const tabs = initialTab === 'skyboxes'
-    ? [{ id: 'skyboxes', label: 'Skyboxes', icon: '🌌', items: MOCK_SKYBOXES }]
-    : [
-        { id: 'screenshots', label: 'Screenshots', icon: '🖼️', items: screenshots },
-        { id: 'videos', label: 'Video', icon: '🎬', items: videos },
-      ];
+  const tabs = [
+    { id: 'screenshots', label: 'Screenshots', icon: '🖼️', items: screenshots },
+    { id: 'videos', label: 'Video', icon: '🎬', items: videos },
+    { id: 'skyboxes', label: 'Skyboxes', icon: '🌌', items: MOCK_SKYBOXES },
+  ];
 
   const currentItems = tabs.find(t => t.id === activeTab)?.items || [];
 
