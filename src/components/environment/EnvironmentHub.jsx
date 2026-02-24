@@ -358,14 +358,14 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
               style={{ pointerEvents: 'all' }}
             />
             <motion.div
-               initial={{ opacity: 0, x: 20 }}
+               initial={{ opacity: 0, x: -20 }}
                animate={{ opacity: 1, x: 0 }}
-               exit={{ opacity: 0, x: 20 }}
+               exit={{ opacity: 0, x: -20 }}
                transition={{ duration: 0.2 }}
                className="fixed top-0 bottom-0 z-[9998] flex flex-col overflow-hidden rounded-l-2xl"
                style={{
-                 right: 'calc(429px + 20px)',
-                 left: '20px',
+                 left: 'calc(429px + 20px)',
+                 right: '20px',
                  background: 'rgba(10, 16, 28, 0.96)',
                  backdropFilter: 'blur(30px) saturate(150%)',
                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
