@@ -199,6 +199,32 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             </motion.div>
           )}
 
+          {activeTab === 'skyboxes' && (
+            <motion.div key="skyboxes" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SKYBOXES.map(sky => (
+                  <button
+                    key={sky.id}
+                    onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
+                    className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                      activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+                    }`}
+                  >
+                    <img src={sky.thumbnail} alt={sky.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    {activeSkybox === sky.id && (
+                      <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                        <span className="text-black text-[9px] font-black">✓</span>
+                      </div>
+                    )}
+                    <p className="absolute bottom-1.5 left-2 right-2 text-white text-[9px] font-semibold truncate">{sky.title}</p>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === 'features' && (
             <motion.div key="feats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p className="text-white/30 text-xs mb-4">
