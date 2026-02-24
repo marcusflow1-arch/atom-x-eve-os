@@ -1342,6 +1342,7 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
+  const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
   const scrollRef = useRef(null);
 
 
