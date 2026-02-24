@@ -32,6 +32,7 @@ import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
+import SkyboxMemoriesDropdown from '@/components/dashboard/SkyboxMemoriesDropdown';
 
 
 import { useQuery } from '@tanstack/react-query';
