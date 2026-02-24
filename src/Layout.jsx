@@ -783,8 +783,8 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </AnimatePresence>
 
-      {/* Menu Button - Custom Header Logic */}
-      {(() => {
+      {/* Menu Button - Custom Header Logic (desktop only) */}
+      {!isMobile && (() => {
         const p = location.pathname.toLowerCase();
 
         // Default Config
