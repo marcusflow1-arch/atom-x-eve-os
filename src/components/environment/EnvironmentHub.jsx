@@ -10,7 +10,7 @@ import FeatureUnlockGrid from './FeatureUnlockGrid';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import CompanionsGrid from './CompanionsGrid';
 
-export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, onItemClick }) {
+export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('environments');
   const [selectedEnv, setSelectedEnv] = useState(null);
@@ -128,7 +128,6 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, onI
                       key={model.id}
                       onClick={() => {
                         setSelectedEnv(model);
-                        onItemClick?.(model);
                         onSelectEnv?.({
                           id: model.id,
                           name: model.name,
@@ -207,7 +206,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, onI
                 {SKYBOXES.map(sky => (
                   <button
                     key={sky.id}
-                    onClick={() => { setActiveSkybox(sky.id); onItemClick?.(sky); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
+                    onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
                     className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
                       activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
                     }`}
