@@ -1655,6 +1655,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [statsActiveTab, setStatsActiveTab] = useState('ai'); // 'ai' | 'inventory'
   const [showCalendar, setShowCalendar] = useState(false);
   const openCalendar = () => setShowCalendar(true);
+  const [showEnvDrawer, setShowEnvDrawer] = useState(false);
 
   // Toggle Stats dropdown with 'O' (AI) and 'I' (Inventory) keys
   useEffect(() => {
