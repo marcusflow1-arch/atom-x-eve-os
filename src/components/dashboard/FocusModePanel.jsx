@@ -1842,12 +1842,16 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
                       {showStatsDropdown && (
                         <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                          <StatsPopupOverlay
-                            activeTab={statsActiveTab}
-                            onTabChange={setStatsActiveTab}
-                            onClose={() => setShowStatsDropdown(false)}
-                            inline={true}
-                          />
+                          {statsActiveTab === 'inventory' ? (
+                            <AIAttributesBox />
+                          ) : (
+                            <StatsPopupOverlay
+                              activeTab={statsActiveTab}
+                              onTabChange={setStatsActiveTab}
+                              onClose={() => setShowStatsDropdown(false)}
+                              inline={true}
+                            />
+                          )}
                         </div>
                       )}
 
