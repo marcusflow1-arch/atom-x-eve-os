@@ -24,7 +24,7 @@ export default function MobileLayoutShell({ children }) {
 
       {/* Bottom Navigation - floating glass overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-[50]">
-        <MobileBottomNav onMenuOpen={() => setDrawerOpen(true)} />
+        <MobileBottomNav />
       </div>
 
       {/* Mobile Drawer */}
