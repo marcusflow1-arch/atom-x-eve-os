@@ -1413,18 +1413,30 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
             <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
           </div>
 
-          {/* References Section (Memories) — click label to open drawer */}
+          {/* References Section — cycling label opens different drawer/mode */}
           <div 
             ref={scrollRef}
             className="flex items-center gap-2 overflow-x-auto" 
             style={{ scrollbarWidth: 'none' }}
           >
             <button
-              onClick={() => setShowMemoriesDrawer(true)}
+              onClick={() => {
+                if (labelMode === 'memories') {
+                  setShowMemoriesDrawer('memories');
+                  setLabelMode('environment');
+                } else if (labelMode === 'environment') {
+                  setShowMemoriesDrawer('environment');
+                  setLabelMode('skybox');
+                } else {
+                  setShowMemoriesDrawer('skybox');
+                  setLabelMode('memories');
+                }
+              }}
               className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0 transition-colors flex items-center gap-1"
             >
-              <span>📷</span>
-              <span>Memories</span>
+              {labelMode === 'memories' && <><span>📷</span><span>Memories</span></>}
+              {labelMode === 'environment' && <><span>🌐</span><span>Environment</span></>}
+              {labelMode === 'skybox' && <><span>🌌</span><span>Skybox</span></>}
             </button>
             {references.map((ref) => (
               <GameReference 
