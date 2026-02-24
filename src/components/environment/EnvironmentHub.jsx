@@ -344,7 +344,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Expanded Tab Overlay (appears to right of hub) */}
+      {/* Expanded Tab Overlay (appears to left of hub) */}
       <AnimatePresence>
         {expandedTab && (
           <>
@@ -364,13 +364,13 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                transition={{ duration: 0.2 }}
                className="fixed top-0 bottom-0 z-[9998] flex flex-col overflow-hidden rounded-l-2xl"
                style={{
-                 left: 'calc(429px + 20px)',
-                 right: '20px',
+                 right: 'calc(429px + 20px)',
+                 left: '20px',
                  background: 'rgba(10, 16, 28, 0.96)',
                  backdropFilter: 'blur(30px) saturate(150%)',
                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                 borderRight: '1px solid rgba(255, 255, 255, 0.10)',
-                 boxShadow: '-4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                 borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+                 boxShadow: '4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                  pointerEvents: 'all',
                }}
                onClick={(e) => e.stopPropagation()}
