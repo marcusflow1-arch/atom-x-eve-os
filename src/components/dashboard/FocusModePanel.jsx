@@ -1477,6 +1477,113 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   );
 }
 
+// Party Invite Dropdown - small icon that sits left of calendar
+function PartyInviteDropdown() {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const friends = [
+    { id: 1, name: 'Shadow_Striker', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', status: 'online' },
+    { id: 2, name: 'CyberVixen', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'playing' },
+    { id: 5, name: 'NovaStar', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', status: 'online' },
+  ].filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  return (
+    <div className="relative" ref={ref}>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setOpen(v => !v)}
+        title="Invite to Party"
+        className="w-8 h-8 rounded-xl flex items-center justify-center transition-all border"
+        style={{
+          background: open ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.06)',
+          borderColor: open ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.1)',
+          boxShadow: open ? '0 0 10px rgba(168,85,247,0.2)' : 'none',
+        }}
+      >
+        <UserPlus className="w-4 h-4 text-purple-300" />
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full mt-2 right-0 w-56 rounded-2xl overflow-hidden z-[100]"
+            style={{
+              background: 'rgba(12, 18, 30, 0.96)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(168,85,247,0.25)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+          >
+            {/* Header */}
+            <div className="px-3 pt-3 pb-2 border-b border-white/5">
+              <p className="text-xs font-bold text-white/80 flex items-center gap-1.5">
+                <UserPlus className="w-3.5 h-3.5 text-purple-400" />
+                Invite to Party
+              </p>
+            </div>
+
+            {/* Search */}
+            <div className="px-2 pt-2">
+              <div className="relative">
+                <Search className="w-3 h-3 text-white/25 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search friends..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border border-white/5 rounded-lg pl-7 pr-2 py-1.5 text-[10px] text-white/80 placeholder:text-white/20 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Friends List */}
+            <div className="p-2 space-y-0.5 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+              {friends.map(friend => (
+                <button
+                  key={friend.id}
+                  onClick={() => setOpen(false)}
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08] transition-all text-left group"
+                >
+                  <div className="relative flex-shrink-0">
+                    <div className="w-7 h-7 rounded-lg overflow-hidden">
+                      <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-black/50 ${
+                      friend.status === 'online' ? 'bg-green-400' :
+                      friend.status === 'playing' ? 'bg-purple-400' : 'bg-slate-600'
+                    }`} />
+                  </div>
+                  <span className="flex-1 text-[10px] text-white/60 group-hover:text-white/90 truncate transition-colors">{friend.name}</span>
+                  <span className="text-[8px] text-purple-400/60 group-hover:text-purple-300 transition-colors flex-shrink-0">+ Invite</span>
+                </button>
+              ))}
+              {friends.length === 0 && (
+                <p className="text-center text-[9px] text-white/20 py-4">No friends found</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // Date & Time Tile Component
 const DateTimeTile = ({ onClick, onCalendarClick = () => {} }) => {
   const [time, setTime] = useState(new Date());
