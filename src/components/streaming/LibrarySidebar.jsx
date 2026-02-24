@@ -32,6 +32,13 @@ export default function LibrarySidebar() {
     };
   }, []);
 
+  // Allow mobile bottom nav to trigger sidebar open
+  useEffect(() => {
+    const handler = () => setIsOpen(true);
+    window.addEventListener('openLibrarySidebar', handler);
+    return () => window.removeEventListener('openLibrarySidebar', handler);
+  }, []);
+
   // Mock Friends List
   const friendsList = [
     { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' },
