@@ -11,6 +11,7 @@ import PageGuideCard from '@/components/onboarding/PageGuideCard';
 import VisualFeatureGuide from '@/components/onboarding/VisualFeatureGuide';
 import { Button } from '@/components/ui/button';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
+import { useViewMode } from '@/components/mobile/ViewModeContext';
 
 // Core Loop Pillar Card
 const PillarCard = ({ icon: Icon, title, description, color, delay }) => (
