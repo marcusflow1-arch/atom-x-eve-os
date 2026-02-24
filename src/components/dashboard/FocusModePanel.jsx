@@ -32,7 +32,6 @@ import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
-import SkyboxMemoriesDropdown from '@/components/dashboard/SkyboxMemoriesDropdown';
 
 
 import { useQuery } from '@tanstack/react-query';
@@ -1411,42 +1410,35 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   };
 
   return (
-    <div className="flex flex-col items-end w-full">
-      {/* Environment Hub + Memories — compact top-right layout */}
-      <div ref={envDropdownRef} className="flex flex-col items-end gap-2">
-        {/* Row: Memories dropdown + Environment Hub tile */}
-        <div className="flex items-center gap-2">
-          {/* Memories label → dropdown */}
-          <SkyboxMemoriesDropdown
-            onBackgroundChange={onBackgroundChange}
-            references={references}
-            activeReferenceId={activeReference?.id}
-            onSelectReference={(ref) => {
-              setActiveReference(ref);
-              if (onBackgroundChange) onBackgroundChange(ref.background);
-            }}
-          />
+    <div className="flex flex-col items-start w-full">
+      {/* Game Banner + Memories */}
+      <div ref={envDropdownRef}>
+        <div className="flex items-stretch gap-4 w-full">
+          {/* Environment Hub Tile (dropdown trigger) */}
+          <div className="w-[368px] h-[60px] flex-shrink-0 relative">
+            <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+          </div>
 
-          {/* Scrollable quick-pick memories (thumbnails) */}
-          <div
+          {/* References Section (Memories) */}
+          <div 
             ref={scrollRef}
-            className="flex items-center gap-1 overflow-x-auto"
-            style={{ scrollbarWidth: 'none', maxWidth: '200px' }}
+            className="flex items-center gap-2 overflow-x-auto" 
+            style={{ scrollbarWidth: 'none' }}
           >
-            {references.slice(0, 4).map((ref) => (
-              <GameReference
-                key={ref.id}
-                reference={ref}
+            <span className="text-white/30 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0">Memories</span>
+            {references.map((ref) => (
+              <GameReference 
+                key={ref.id} 
+                reference={ref} 
                 onClick={handleReferenceClick}
                 isActive={activeReference?.id === ref.id}
               />
             ))}
-            <GameReference isHomeButton={true} onClick={handleHomeClick} />
-          </div>
-
-          {/* Environment Hub Tile — compact */}
-          <div className="w-[100px] h-[60px] flex-shrink-0 relative">
-            <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+            {/* Home Button */}
+            <GameReference 
+              isHomeButton={true}
+              onClick={handleHomeClick}
+            />
           </div>
         </div>
 
@@ -1455,10 +1447,10 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
           {showEnvDropdown && (
             <motion.div
               initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 4 }}
+              animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
               exit={{ opacity: 0, height: 0, marginTop: 0 }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-80 overflow-hidden rounded-2xl"
+              className="w-full overflow-hidden rounded-2xl"
               style={{
                 background: 'rgba(180, 190, 200, 0.08)',
                 backdropFilter: 'blur(30px) saturate(140%)',
@@ -1904,19 +1896,19 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
             </div>
           </div>
           
-          {/* Right Column: Party Invite only */}
-          <div className="flex-shrink-0 flex items-start pt-1 pointer-events-auto">
-            <PartyInviteDropdown />
-          </div>
-        </div>
-      </div>
+          {/* Right Column: System Status + Calendar + Knowledge Learner */}
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
+             {/* Party Invite icon + DateTime in a row */}
+             <div className="flex items-stretch gap-2">
+               <div className="flex items-start pt-1">
+                 <PartyInviteDropdown />
+               </div>
+               <div className="flex-1">
+                 <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+               </div>
+             </div>
 
-      {/* Calendar bar — pinned above the bottom, full width */}
-      <div className="w-full pointer-events-auto mt-auto pt-4">
-        <div className="flex items-stretch gap-2 w-full">
-          <div className="flex-1">
-            <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
-          </div>
+           </div>
         </div>
       </div>
 
