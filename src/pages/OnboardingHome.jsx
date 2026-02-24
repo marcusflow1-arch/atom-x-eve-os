@@ -84,6 +84,7 @@ const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) 
 export default function OnboardingHome() {
   const navigate = useNavigate();
   const [selectedPath, setSelectedPath] = useState(null);
+  const { isMobile } = useViewMode();
 
   const handleBegin = () => {
     // Store selected path preference
