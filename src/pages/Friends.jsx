@@ -9,7 +9,6 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import MiniAvatarViewer from '../components/dashboard/MiniAvatarViewer';
 
 // --- Sub-components ---
 
