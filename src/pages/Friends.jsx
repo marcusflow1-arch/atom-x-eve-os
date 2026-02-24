@@ -1,545 +1,477 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Star, Users, UserPlus, ChevronDown, ChevronUp, Check, XCircle, Trophy, Gamepad2 } from 'lucide-react';
+import { 
+  Users, UserPlus, MessageSquare, Mic, Gamepad2, 
+  Trophy, Heart, Zap, Activity, MoreHorizontal, 
+  Search, Bell, Shield, Radio, Sparkles, Sword
+} from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MiniAvatarViewer from '../components/dashboard/MiniAvatarViewer';
-import MiniAchievementCard from '../components/dashboard/MiniAchievementCard';
 
-export default function Friends() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('friends');
-  const [friends, setFriends] = useState([]);
-  const [friendRequests, setFriendRequests] = useState([]);
-  const [achievements, setAchievements] = useState([]);
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showFriendRequests, setShowFriendRequests] = useState(false);
-  const seededRef = React.useRef(false);
+// --- Sub-components ---
 
-  const [stats, setStats] = useState({
-    friends: 0,
-    gamesMostPlayed: 0,
-    friendsCurrentlyPlaying: 0,
-    friendsOnline: 0
-  });
-
-  // Escape key to go back to Luna
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        navigate(createPageUrl('LunaTemplate'));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate]);
-
-  useEffect(() => {
-    loadData();
-  }, [user]);
-
-  const loadData = async () => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const friendsList = await base44.entities.Friend.filter({ user_id: user.id });
-      // Seed a couple of temp friends for preview if none exist
-      if (friendsList.length === 0 && !seededRef.current) {
-        await base44.entities.Friend.bulkCreate([
-          {
-            user_id: user.id,
-            friend_id: 'temp_logan',
-            friend_name: 'Logan',
-            friend_avatar: 'https://i.pravatar.cc/150?u=logan',
-            status: 'online',
-            current_game: 'Neon Racer'
-          },
-          {
-            user_id: user.id,
-            friend_id: 'temp_ariana',
-            friend_name: 'Ariana',
-            friend_avatar: 'https://i.pravatar.cc/150?u=ariana',
-            status: 'away',
-            current_game: 'Galactic Empire'
-          }
-        ]);
-        seededRef.current = true;
-        return loadData();
-      }
-      setFriends(friendsList);
-
-      const requests = await base44.entities.FriendRequest.filter({ 
-        receiver_id: user.id, 
-        status: 'pending' 
-      });
-      setFriendRequests(requests);
-
-      const achievementsList = await base44.entities.Achievement.list('-created_date', 20);
-      setAchievements(achievementsList);
-
-      const gamesList = await base44.entities.Game.list('-created_date', 10);
-      setGames(gamesList);
-
-      const onlineFriends = friendsList.filter(f => f.status === 'online').length;
-      const playingFriends = friendsList.filter(f => f.current_game).length;
-      
-      setStats({
-        friends: friendsList.length,
-        gamesMostPlayed: gamesList.length,
-        friendsCurrentlyPlaying: playingFriends,
-        friendsOnline: onlineFriends
-      });
-
-    } catch (error) {
-      console.error('Failed to load friends data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAcceptRequest = async (requestId) => {
-    try {
-      const request = friendRequests.find(r => r.id === requestId);
-      if (!request) return;
-
-      await base44.entities.FriendRequest.update(requestId, { status: 'accepted' });
-
-      await base44.entities.Friend.create({
-        user_id: user.id,
-        friend_id: request.sender_id,
-        friend_name: request.sender_name,
-        friend_avatar: request.sender_avatar,
-        status: 'offline'
-      });
-
-      loadData();
-    } catch (error) {
-      console.error('Failed to accept friend request:', error);
-    }
-  };
-
-  const handleDeclineRequest = async (requestId) => {
-    try {
-      await base44.entities.FriendRequest.update(requestId, { status: 'declined' });
-      loadData();
-    } catch (error) {
-      console.error('Failed to decline friend request:', error);
-    }
-  };
-
-  const getRandomAchievements = () => {
-    if (!achievements || achievements.length === 0) return [];
-    const count = Math.min(Math.floor(Math.random() * 3) + 2, achievements.length);
-    return achievements.slice(0, count).filter(a => a != null);
-  };
-
-  const getRandomGames = () => {
-    if (!games || games.length === 0) return [];
-    const count = Math.min(Math.floor(Math.random() * 2) + 1, games.length);
-    return games.slice(0, count).filter(g => g != null);
+const AICompatibilityMeter = ({ score }) => {
+  const getColor = (s) => {
+    if (s > 85) return 'bg-gradient-to-r from-purple-500 to-pink-500';
+    if (s > 60) return 'bg-gradient-to-r from-blue-500 to-cyan-500';
+    return 'bg-gradient-to-r from-yellow-500 to-orange-500';
   };
 
   return (
-    <div 
-      className="min-h-screen w-full text-white flex"
-      style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
+    <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 relative overflow-hidden group">
+      <div className="flex justify-between items-end mb-2 relative z-10">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <span className="text-xs font-bold text-white/80 uppercase tracking-wider">AI Compatibility</span>
+        </div>
+        <span className="text-2xl font-black text-white">{score}%</span>
+      </div>
+      <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden relative z-10">
+        <motion.div 
+          initial={{ width: 0 }}
+          animate={{ width: `${score}%` }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className={`h-full ${getColor(score)} shadow-[0_0_15px_rgba(168,85,247,0.5)]`}
+        />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    </div>
+  );
+};
+
+const FriendCard = ({ friend, isSelected, onClick }) => {
+  return (
+    <motion.div
+      onClick={onClick}
+      whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+      whileTap={{ scale: 0.98 }}
+      className={`
+        relative p-4 rounded-2xl cursor-pointer transition-all duration-300 border
+        ${isSelected 
+          ? 'bg-white/10 border-white/30 shadow-[0_0_30px_rgba(59,130,246,0.15)] backdrop-blur-md' 
+          : 'bg-black/20 border-white/5 hover:border-white/20 backdrop-blur-sm'
+        }
+      `}
     >
+      {/* Selection Glow Indicator */}
+      {isSelected && (
+        <motion.div 
+          layoutId="activeGlow"
+          className="absolute inset-0 rounded-2xl border-2 border-cyan-400/50 shadow-[0_0_20px_rgba(34,211,238,0.3)] z-0"
+          initial={false}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+      )}
 
+      <div className="flex items-center gap-4 relative z-10">
+        {/* Avatar with Status Ring */}
+        <div className="relative">
+          <div className={`w-14 h-14 rounded-full p-0.5 ${
+            friend.status === 'online' ? 'bg-gradient-to-tr from-green-400 to-emerald-600' :
+            friend.status === 'away' ? 'bg-gradient-to-tr from-yellow-400 to-orange-500' :
+            friend.status === 'busy' ? 'bg-gradient-to-tr from-red-500 to-pink-600' :
+            'bg-gradient-to-tr from-slate-600 to-slate-800'
+          }`}>
+            <div className="w-full h-full rounded-full overflow-hidden bg-black/50">
+              <img 
+                src={friend.friend_avatar || `https://i.pravatar.cc/150?u=${friend.friend_id}`} 
+                alt={friend.friend_name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          {/* Online Indicator Badge */}
+          <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-[#0f1419] flex items-center justify-center ${
+             friend.status === 'online' ? 'bg-green-500' :
+             friend.status === 'away' ? 'bg-yellow-500' :
+             friend.status === 'busy' ? 'bg-red-500' : 'bg-slate-600'
+          }`}>
+            {friend.status === 'online' && <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />}
+          </div>
+        </div>
 
-      {/* Left Sidebar - Stats */}
-      <div 
-        className="w-64 h-screen flex flex-col py-8 px-6"
-        style={{
-          background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.1)'
-        }}
-      >
-        {/* User Profile */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-700">
-            {user?.avatar_url ? (
-              <img src={user.avatar_url} alt="User" className="w-full h-full object-cover" />
+        {/* Text Info */}
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-bold text-lg truncate ${isSelected ? 'text-white' : 'text-white/90'}`}>
+            {friend.friend_name}
+          </h3>
+          <div className="flex items-center gap-2 text-sm">
+            {friend.current_game ? (
+              <>
+                <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-cyan-400 truncate">{friend.current_game}</span>
+              </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-white font-bold">
-                {user?.full_name?.charAt(0) || 'U'}
-              </div>
+              <span className="text-white/40">{friend.status === 'offline' ? 'Offline' : 'Online'}</span>
             )}
           </div>
-          <span className="text-white font-semibold">{user?.full_name || 'Guest'}</span>
         </div>
 
-        {/* Stats */}
-        <div className="space-y-4 flex-1">
-          <div 
-            onClick={() => setActiveTab('friends')}
-            className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'friends' ? 'bg-blue-500/20' : ''}`}
-          >
-            <span>Friends</span>
-            <span className="text-2xl font-bold text-blue-400">{stats.friends}</span>
-          </div>
-          <div 
-            onClick={() => setActiveTab('games')}
-            className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'games' ? 'bg-blue-500/20' : ''}`}
-          >
-            <span>Games most played</span>
-            <span className="text-2xl font-bold text-blue-400">{stats.gamesMostPlayed}</span>
-          </div>
-          <div 
-            onClick={() => setActiveTab('playing')}
-            className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'playing' ? 'bg-blue-500/20' : ''}`}
-          >
-            <span>Friends currently playing</span>
-            <span className="text-2xl font-bold text-blue-400">{stats.friendsCurrentlyPlaying}</span>
-          </div>
-          <div 
-            onClick={() => setActiveTab('online')}
-            className={`flex justify-between items-center text-white/90 hover:bg-blue-500/10 px-2 py-2 rounded-lg cursor-pointer transition-colors ${activeTab === 'online' ? 'bg-blue-500/20' : ''}`}
-          >
-            <span>Friends online</span>
-            <span className="text-2xl font-bold text-blue-400">{stats.friendsOnline}</span>
-          </div>
-
-          {/* Friend Requests Dropdown */}
-          <div className="mt-6">
-            <button 
-              onClick={() => setShowFriendRequests(!showFriendRequests)}
-              className="w-full flex items-center justify-between text-white/70 px-2 py-2 rounded-lg cursor-pointer hover:text-white hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-cyan-400" />
-                <span>Friend requests</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {friendRequests.length > 0 && (
-                  <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                    {friendRequests.length}
-                  </span>
-                )}
-                {showFriendRequests ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </div>
-            </button>
-
-            <AnimatePresence>
-              {showFriendRequests && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                    {friendRequests.length === 0 ? (
-                      <p className="text-white/40 text-sm px-2 py-4 text-center">No pending requests</p>
-                    ) : (
-                      friendRequests.map((request) => (
-                        <div 
-                          key={request.id}
-                          className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
-                        >
-                          <img 
-                            src={request.sender_avatar || `https://i.pravatar.cc/150?u=${request.sender_id}`}
-                            alt={request.sender_name}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm truncate">{request.sender_name}</p>
-                          </div>
-                          <div className="flex gap-1">
-                            <button 
-                              onClick={() => handleAcceptRequest(request.id)}
-                              className="p-1 rounded-full bg-green-500/20 hover:bg-green-500/40 text-green-400 transition-colors"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeclineRequest(request.id)}
-                              className="p-1 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 transition-colors"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        {/* Chevron */}
+        <div className={`transition-transform duration-300 ${isSelected ? 'rotate-90 text-white' : 'text-white/20'}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
         </div>
       </div>
+    </motion.div>
+  );
+};
 
-      {/* Center - Main Content */}
-      <div className="flex-1 h-screen flex flex-col py-8 px-8 overflow-hidden">
-        {/* Navigation Tabs */}
-        <div className="flex items-center gap-8 mb-8">
-          <button 
-            onClick={() => setActiveTab('friends')}
-            className={`text-lg font-medium transition-colors ${activeTab === 'friends' ? 'text-white border-b-2 border-white pb-1' : 'text-white/50 hover:text-white/80'}`}
-          >
-            Friends
-          </button>
-        </div>
+const ActionButton = ({ icon: Icon, label, primary, onClick }) => (
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={onClick}
+    className={`
+      flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm tracking-wide transition-all
+      ${primary 
+        ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]' 
+        : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10'
+      }
+    `}
+  >
+    <Icon className={`w-4 h-4 ${primary ? 'fill-black' : ''}`} />
+    {label}
+  </motion.button>
+);
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto pr-2">
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            </div>
-          ) : activeTab === 'friends' ? (
-            <div className="space-y-4">
-              {friends.length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40">No friends yet</p>
-                  <p className="text-white/30 text-sm mt-2">Add friends to see them here</p>
-                </div>
-              ) : (
-                friends.map((friend) => {
-                  const friendAchievements = getRandomAchievements();
-                  const friendGames = getRandomGames();
+const ActivityItem = ({ icon: Icon, text, time }) => (
+  <div className="flex gap-4 items-start p-3 rounded-xl hover:bg-white/5 transition-colors">
+    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+      <Icon className="w-4 h-4 text-white/70" />
+    </div>
+    <div>
+      <p className="text-sm text-white/90 leading-tight">{text}</p>
+      <span className="text-xs text-white/40 mt-1 block">{time}</span>
+    </div>
+  </div>
+);
 
-                  return (
-                    <div 
-                      key={friend.id}
-                      className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
-                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
-                    >
-                      <div className="flex-shrink-0">
-                        <MiniAvatarViewer size={80} />
-                      </div>
+// --- Main Page Component ---
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-white font-bold text-lg">{friend.friend_name}</h3>
-                          <div className={`w-2 h-2 rounded-full ${
-                            friend.status === 'online' ? 'bg-green-400' : 
-                            friend.status === 'away' ? 'bg-yellow-400' : 'bg-gray-500'
-                          }`} />
-                          {friend.current_game && (
-                            <span className="text-green-400 text-sm">Playing {friend.current_game}</span>
-                          )}
-                        </div>
+export default function FriendsPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Data State
+  const [friends, setFriends] = useState([]);
+  const [selectedFriendId, setSelectedFriendId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
+  const [aiPartyMode, setAiPartyMode] = useState(false);
+  
+  // Refs
+  const seededRef = useRef(false);
 
-                        <div className="flex items-center gap-2 mb-2">
-                          <Gamepad2 className="w-4 h-4 text-white/40" />
-                          <span className="text-white/60 text-sm">
-                            {friendGames.length > 0 ? friendGames.map(g => g?.title || '').filter(t => t).join(', ') : 'No recent games'}
-                          </span>
-                        </div>
+  // Load Data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.id) return;
+      try {
+        let friendsList = await base44.entities.Friend.filter({ user_id: user.id });
+        
+        // Seeding logic preserved from original
+        if (friendsList.length === 0 && !seededRef.current) {
+          await base44.entities.Friend.bulkCreate([
+            { user_id: user.id, friend_id: 'temp_logan', friend_name: 'Logan_X', friend_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', status: 'online', current_game: 'Cyberpunk 2077' },
+            { user_id: user.id, friend_id: 'temp_ariana', friend_name: 'Ariana_V', friend_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', status: 'away', current_game: 'Starfield' },
+            { user_id: user.id, friend_id: 'temp_kai', friend_name: 'Kai_Zero', friend_avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150', status: 'online', current_game: 'Apex Legends' },
+            { user_id: user.id, friend_id: 'temp_nova', friend_name: 'Nova_Prime', friend_avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', status: 'offline' },
+          ]);
+          seededRef.current = true;
+          friendsList = await base44.entities.Friend.filter({ user_id: user.id });
+        }
+        
+        // Enhance with mock console-like data
+        const enhancedFriends = friendsList.map(f => ({
+          ...f,
+          ai_compatibility: Math.floor(Math.random() * 40) + 60, // 60-100%
+          shared_achievements: Math.floor(Math.random() * 50),
+          rivalry_score: Math.floor(Math.random() * 100),
+          last_active: '2h ago',
+          bg_image: f.current_game === 'Cyberpunk 2077' ? 'https://images.unsplash.com/photo-1533972724312-6eafa2708b28?w=1200' :
+                   f.current_game === 'Starfield' ? 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200' :
+                   'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200'
+        }));
 
-                        <div className="flex items-center gap-2">
-                          <span className="text-white/40 text-xs mr-1">Recent:</span>
-                          <div className="flex gap-1">
-                            {friendAchievements.map((ach, i) => (
-                              <MiniAchievementCard key={i} achievement={ach} size={35} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ) : activeTab === 'games' ? (
-            <div className="space-y-4">
-              {games.length === 0 ? (
-                <div className="text-center py-12">
-                  <Gamepad2 className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40">No games found</p>
-                </div>
-              ) : (
-                games.map((game) => {
-                  const gameAchievements = achievements.filter(a => a.game === game.title).slice(0, 4);
-                  
-                  return (
-                    <div 
-                      key={game.id}
-                      className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
-                    >
-                      <div className="flex-shrink-0">
-                        <MiniAvatarViewer size={80} />
-                      </div>
+        setFriends(enhancedFriends);
+        if (enhancedFriends.length > 0) setSelectedFriendId(enhancedFriends[0].id);
+      } catch (err) {
+        console.error("Failed to load friends", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [user]);
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <img 
-                            src={game.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&h=60&fit=crop'}
-                            alt={game.title}
-                            className="w-16 h-10 rounded object-cover"
-                          />
-                          <h3 className="text-white font-bold text-lg">{game.title}</h3>
-                        </div>
+  // Derived State
+  const selectedFriend = friends.find(f => f.id === selectedFriendId);
+  const filteredFriends = activeTab === 'all' ? friends :
+                         activeTab === 'online' ? friends.filter(f => f.status === 'online') :
+                         friends.filter(f => f.current_game);
 
-                        <div className="flex items-center gap-2">
-                          <Trophy className="w-4 h-4 text-yellow-400" />
-                          <span className="text-white/40 text-xs mr-2">Achievements to unlock:</span>
-                          <div className="flex gap-1">
-                            {gameAchievements.length > 0 ? (
-                              gameAchievements.map((ach, i) => (
-                                <MiniAchievementCard key={i} achievement={ach} size={35} />
-                              ))
-                            ) : (
-                              <span className="text-white/30 text-xs">No achievements available</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ) : activeTab === 'playing' ? (
-            <div className="space-y-4">
-              {friends.filter(f => f.current_game).length === 0 ? (
-                <div className="text-center py-12">
-                  <Gamepad2 className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40">No friends currently playing</p>
-                </div>
-              ) : (
-                friends.filter(f => f.current_game).map((friend) => {
-                  const friendAchievements = getRandomAchievements();
-
-                  return (
-                    <div 
-                      key={friend.id}
-                      className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
-                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
-                    >
-                      <div className="flex-shrink-0">
-                        <MiniAvatarViewer size={80} />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-white font-bold text-lg">{friend.friend_name}</h3>
-                          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                        </div>
-
-                        <div className="flex items-center gap-3 mb-2">
-                          <Gamepad2 className="w-4 h-4 text-green-400" />
-                          <span className="text-green-400 font-medium">{friend.current_game}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Trophy className="w-4 h-4 text-yellow-400" />
-                          <span className="text-white/40 text-xs mr-1">Earn:</span>
-                          <div className="flex gap-1">
-                            {friendAchievements.map((ach, i) => (
-                              <MiniAchievementCard key={i} achievement={ach} size={35} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ) : activeTab === 'online' ? (
-            <div className="space-y-4">
-              {friends.filter(f => f.status === 'online').length === 0 ? (
-                <div className="text-center py-12">
-                  <Users className="w-16 h-16 text-white/20 mx-auto mb-4" />
-                  <p className="text-white/40">No friends online</p>
-                </div>
-              ) : (
-                friends.filter(f => f.status === 'online').map((friend) => {
-                  const friendAchievements = getRandomAchievements();
-                  const achievementScore = Math.floor(Math.random() * 50000);
-
-                  return (
-                    <div 
-                      key={friend.id}
-                      className="flex gap-4 p-3 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
-                      onClick={() => navigate(createPageUrl('AvatarHome') + `?userId=${encodeURIComponent(friend.friend_id)}`)}
-                    >
-                      <div className="flex-shrink-0">
-                        <MiniAvatarViewer size={80} />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-white font-bold text-lg">{friend.friend_name}</h3>
-                          <div className="w-2 h-2 rounded-full bg-green-400" />
-                          <span className="text-green-400 text-sm">Online</span>
-                        </div>
-
-                        <div className="flex items-center gap-2 mb-2">
-                          <Trophy className="w-4 h-4 text-yellow-400" />
-                          <span className="text-white/60 text-sm">Achievement Score:</span>
-                          <span className="text-cyan-400 font-bold">{achievementScore.toLocaleString()}</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-white/40 text-xs mr-1">Recent:</span>
-                          <div className="flex gap-1">
-                            {friendAchievements.map((ach, i) => (
-                              <MiniAchievementCard key={i} achievement={ach} size={35} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          ) : null}
-        </div>
+  return (
+    <div className="min-h-screen w-full bg-[#0f1419] text-white font-sans overflow-hidden relative selection:bg-cyan-500/30">
+      
+      {/* 1. Animated Background Starfield/Grid */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(76,29,149,0.15),_transparent_70%)]" />
+        <div className="absolute inset-0" style={{ 
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', 
+          backgroundSize: '40px 40px',
+          maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)'
+        }} />
+        <motion.div 
+          animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px]" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.2, 0.5, 0.2], scale: [1.1, 1, 1.1] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px]" 
+        />
       </div>
 
-      {/* Right Sidebar - Leaderboard */}
-      <div 
-        className="w-72 h-screen py-8 px-6"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          borderLeft: '1px solid rgba(255, 255, 255, 0.1)'
-        }}
-      >
-        <h2 className="text-white font-bold text-lg mb-6 tracking-wide">LEADERBOARD</h2>
+      <div className="relative z-10 flex h-screen p-8 gap-8">
+        
+        {/* 2. Left Panel: Friend List */}
+        <div className="w-[400px] flex flex-col gap-6 shrink-0">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-black tracking-tighter italic">SOCIAL HUB</h1>
+            <div className="flex gap-2">
+              <button className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                <Search className="w-5 h-5 text-white/70" />
+              </button>
+              <button className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
+                <UserPlus className="w-5 h-5 text-white/70" />
+              </button>
+            </div>
+          </div>
 
-        <div className="space-y-3">
-          {friends.slice(0, 7).map((friend, index) => (
-            <div 
-              key={friend.id}
-              className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
-            >
-              <img 
-                src={friend.friend_avatar || `https://i.pravatar.cc/150?u=${friend.friend_id}`}
-                alt={friend.friend_name}
-                className="w-10 h-10 rounded-lg object-cover"
+          {/* Filter Tabs */}
+          <div className="flex p-1 bg-white/5 rounded-xl backdrop-blur-md">
+            {['all', 'online', 'playing'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+                  activeTab === tab ? 'bg-white/10 text-white shadow-lg' : 'text-white/40 hover:text-white/70'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+            {loading ? (
+              <div className="text-center text-white/30 py-10">Loading neural network...</div>
+            ) : filteredFriends.map((friend) => (
+              <FriendCard 
+                key={friend.id} 
+                friend={friend} 
+                isSelected={selectedFriendId === friend.id}
+                onClick={() => setSelectedFriendId(friend.id)}
               />
+            ))}
+          </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-white/60 text-sm">{index + 1} -</span>
-                  <span className="text-white text-sm font-medium truncate">{friend.friend_name}</span>
-                </div>
-                <div className="flex items-center gap-1 text-cyan-400 text-xs">
-                  <div className="w-3 h-3 rounded-full bg-cyan-400/30 flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                  </div>
-                  <span>{Math.floor(Math.random() * 50000).toLocaleString()}</span>
-                </div>
+          {/* AI Party Mode Toggle */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-white/10 backdrop-blur-md flex items-center justify-between group cursor-pointer" onClick={() => setAiPartyMode(!aiPartyMode)}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${aiPartyMode ? 'bg-cyan-500 text-black' : 'bg-white/10 text-white/50'}`}>
+                <Radio className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm text-white">AI Party Mode</h4>
+                <p className="text-xs text-white/50 group-hover:text-cyan-400 transition-colors">Enhance voice clarity</p>
               </div>
             </div>
-          ))}
-
-          {friends.length === 0 && (
-            <p className="text-white/40 text-sm text-center py-4">Add friends to see leaderboard</p>
-          )}
+            <div className={`w-12 h-7 rounded-full p-1 transition-colors ${aiPartyMode ? 'bg-cyan-500' : 'bg-white/10'}`}>
+              <motion.div 
+                animate={{ x: aiPartyMode ? 20 : 0 }}
+                className="w-5 h-5 bg-white rounded-full shadow-sm"
+              />
+            </div>
+          </div>
         </div>
+
+        {/* 3. Right Panel: Cinematic Preview */}
+        <AnimatePresence mode="wait">
+          {selectedFriend && (
+            <motion.div 
+              key={selectedFriend.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="flex-1 relative rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
+            >
+              {/* Dynamic Background Image */}
+              <div className="absolute inset-0 z-0">
+                <img 
+                  src={selectedFriend.bg_image} 
+                  alt="Background" 
+                  className="w-full h-full object-cover opacity-60 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1419] via-[#0f1419]/80 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#0f1419]/40 to-[#0f1419]" />
+              </div>
+
+              {/* Content Container */}
+              <div className="absolute inset-0 z-10 p-12 flex flex-col justify-end">
+                
+                {/* Top Actions (Close/More) */}
+                <div className="absolute top-8 right-8 flex gap-4">
+                  <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
+                    <Bell className="w-5 h-5" />
+                  </button>
+                  <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Main Profile Info */}
+                <div className="flex items-end gap-10 mb-12">
+                  {/* Large Avatar */}
+                  <div className="relative group">
+                    <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white/10 shadow-2xl relative z-10">
+                      <img 
+                        src={selectedFriend.friend_avatar || `https://i.pravatar.cc/300?u=${selectedFriend.friend_id}`}
+                        alt={selectedFriend.friend_name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Glow effect behind avatar */}
+                    <div className="absolute inset-0 bg-cyan-500/30 blur-[60px] rounded-full z-0 group-hover:bg-cyan-400/50 transition-colors duration-500" />
+                    
+                    {/* Status Badge */}
+                    <div className="absolute -bottom-4 -right-4 bg-black/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 z-20">
+                      <div className={`w-3 h-3 rounded-full ${
+                        selectedFriend.status === 'online' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 
+                        selectedFriend.status === 'away' ? 'bg-yellow-500' : 'bg-slate-500'
+                      }`} />
+                      <span className="font-bold text-sm uppercase tracking-wide">
+                        {selectedFriend.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Name & Title */}
+                  <div className="mb-4">
+                    <motion.h2 
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-6xl font-black text-white tracking-tight mb-2 drop-shadow-lg"
+                    >
+                      {selectedFriend.friend_name}
+                    </motion.h2>
+                    <div className="flex items-center gap-4 text-white/60">
+                      <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg">
+                        <Trophy className="w-4 h-4 text-yellow-500" />
+                        <span className="font-mono text-sm">LVL 42</span>
+                      </div>
+                      <span className="w-1 h-1 bg-white/20 rounded-full" />
+                      <span className="text-lg">{selectedFriend.current_game || "Chilling in Lobby"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid Layout: Stats & Activity */}
+                <div className="grid grid-cols-12 gap-6 mb-10">
+                  
+                  {/* Left Column: Stats */}
+                  <div className="col-span-8 grid grid-cols-2 gap-4">
+                    <AICompatibilityMeter score={selectedFriend.ai_compatibility} />
+                    
+                    <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col justify-between group hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-2 text-white/60 mb-2">
+                        <Sword className="w-4 h-4" />
+                        <span className="text-xs font-bold uppercase">Rivalry Stats</span>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <div className="text-2xl font-black text-white">{selectedFriend.rivalry_score}</div>
+                          <div className="text-xs text-white/40">Matches Won</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-red-400">12</div>
+                          <div className="text-xs text-white/40">Losses</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-2 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex items-center justify-between group hover:bg-white/5 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xl font-bold">
+                          {selectedFriend.shared_achievements}
+                        </div>
+                        <div>
+                          <div className="font-bold text-white">Shared Achievements</div>
+                          <div className="text-xs text-white/50">Across 14 Games</div>
+                        </div>
+                      </div>
+                      <div className="flex -space-x-2">
+                        {[1,2,3].map(i => (
+                          <div key={i} className="w-8 h-8 rounded-full bg-white/10 border border-white/20" />
+                        ))}
+                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/20 flex items-center justify-center text-xs">+5</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Activity Feed */}
+                  <div className="col-span-4 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col gap-2">
+                    <div className="text-xs font-bold text-white/50 uppercase mb-2 flex items-center gap-2">
+                      <Activity className="w-3 h-3" /> Recent Activity
+                    </div>
+                    <div className="space-y-1">
+                      <ActivityItem icon={Trophy} text={`Earned "Legendary" in ${selectedFriend.current_game || 'Apex'}`} time="2m ago" />
+                      <ActivityItem icon={Gamepad2} text="Started playing Starfield" time="2h ago" />
+                      <ActivityItem icon={MessageSquare} text="Commented on your clip" time="5h ago" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Action Row */}
+                <div className="flex items-center gap-4">
+                  <ActionButton 
+                    icon={Gamepad2} 
+                    label="Join Game" 
+                    primary 
+                    onClick={() => console.log('Join')} 
+                  />
+                  <ActionButton 
+                    icon={Mic} 
+                    label="Start Party" 
+                    onClick={() => console.log('Voice')} 
+                  />
+                  <ActionButton 
+                    icon={MessageSquare} 
+                    label="Message" 
+                    onClick={() => console.log('Message')} 
+                  />
+                  <ActionButton 
+                    icon={Users} 
+                    label="Compare" 
+                    onClick={() => console.log('Compare')} 
+                  />
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
