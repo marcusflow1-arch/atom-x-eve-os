@@ -316,28 +316,29 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                     <p className="absolute bottom-1.5 left-2 right-2 text-white text-[9px] font-semibold truncate">{sky.title}</p>
                   </button>
                 ))}
-              </div>
-            </motion.div>
-          )}
+                </div>
+                </>
+                )}
 
-          {activeTab === 'features' && (
-            <motion.div key="feats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <p className="text-white/30 text-xs mb-4">
+                {activeTab === 'features' && (
+                <>
+                <p className="text-white/30 text-xs mb-4">
                 Features unlock globally at each Hub Level and become available across all environments.
-              </p>
-              <FeatureUnlockGrid
+                </p>
+                <FeatureUnlockGrid
                 globalHubLevel={globalLevel}
                 onFeatureClick={(f) => console.log('Open feature:', f.name)}
-              />
-            </motion.div>
-          )}
+                />
+                </>
+                )}
 
-          {activeTab === 'companions' && (
-            <motion.div key="companions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <CompanionsGrid />
-            </motion.div>
-          )}
-        </AnimatePresence>
+                {activeTab === 'companions' && (
+                <>
+                <CompanionsGrid />
+                </>
+                )}
+                </motion.div>
+                </AnimatePresence>
       </div>
 
       {/* Expanded Tab Overlay (slides in from left) */}
