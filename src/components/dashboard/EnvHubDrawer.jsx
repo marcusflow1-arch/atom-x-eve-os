@@ -31,17 +31,17 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
           />
 
           <motion.div
-            initial={{ x: '100%', opacity: 0 }}
+            initial={{ x: '-100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
+            exit={{ x: '-100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[9999] flex flex-col rounded-l-3xl"
+            className="fixed top-0 left-0 bottom-0 z-[9999] flex flex-col rounded-r-3xl"
             style={{
               width: expanded ? '100vw' : '429px',
               background: 'rgba(10, 16, 28, 0.96)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+              borderRight: '1px solid rgba(255, 255, 255, 0.10)',
               boxShadow: '-4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
               pointerEvents: 'all',
               transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)',
