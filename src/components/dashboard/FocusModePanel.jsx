@@ -1344,6 +1344,8 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
+  // cycles: 'memories' -> 'environment' -> 'skybox'
+  const [labelMode, setLabelMode] = useState('memories');
   const scrollRef = useRef(null);
 
 
