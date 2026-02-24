@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import MobileBottomNav from './MobileBottomNav';
 import MobileHeader from './MobileHeader';
 import MobileDrawer from './MobileDrawer';
+import MobileLibraryPanel from './MobileLibraryPanel';
 
 export default function MobileLayoutShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
