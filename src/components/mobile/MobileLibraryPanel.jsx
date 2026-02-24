@@ -592,6 +592,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
             isOpen={isExpandedInventory}
             onClose={() => { setIsExpandedInventory(false); setPendingRewardGame(null); }}
             initialGameName={pendingRewardGame}
+            fullScreen={true}
           />
 
           {/* ── QUICK INFO OVERLAY (friends, aura games/streamers, entertainment apps, library games) ── */}
@@ -602,6 +603,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
             onPlay={() => {}}
             onStream={() => {}}
             onMoreInfo={() => {}}
+            fullScreen={true}
           />
         </>
       )}
