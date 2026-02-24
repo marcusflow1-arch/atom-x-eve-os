@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Check, Home, X } from 'lucide-react';
 
-const MOCK_SKYBOXES = [
-  { id: 'sky_1', title: 'Neon City Night', thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400', background: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920', type: 'skybox' },
-  { id: 'sky_2', title: 'Deep Space', thumbnail: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400', background: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920', type: 'skybox' },
-  { id: 'sky_3', title: 'Alien Jungle', thumbnail: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400', background: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1920', type: 'skybox' },
-  { id: 'sky_4', title: 'Volcanic World', thumbnail: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=400', background: 'https://images.unsplash.com/photo-1536768139911-e290a59011e4?w=1920', type: 'skybox' },
-  { id: 'sky_5', title: 'Arctic Tundra', thumbnail: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=400', background: 'https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=1920', type: 'skybox' },
-  { id: 'sky_6', title: 'Desert Ruins', thumbnail: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400', background: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920', type: 'skybox' },
-];
+
 
 export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose }) {
   const [activeTab, setActiveTab] = useState('screenshots');
