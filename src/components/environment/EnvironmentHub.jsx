@@ -190,13 +190,11 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setSelectedEnv(null); }}
-              onDoubleClick={() => { setExpandedTab(tab.id); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all ${
                 isActive
                   ? 'bg-white/10 text-white shadow-sm'
                   : 'text-white/35 hover:text-white/60'
               }`}
-              title="Double-click to expand"
             >
               <Icon className="w-3 h-3" />
               {tab.label}
