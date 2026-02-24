@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, Map, Gift, Loader2, Bot } from 'lucide-react';
+import { Globe, X, Map, Gift, Loader2, Bot, CloudSun } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import HubProgressionHeader from './HubProgressionHeader';
