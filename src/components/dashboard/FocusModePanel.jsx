@@ -1442,36 +1442,6 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
           </div>
         </div>
 
-        {/* Environment Hub Dropdown */}
-        <AnimatePresence>
-          {showEnvDropdown && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, marginTop: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-              exit={{ opacity: 0, height: 0, marginTop: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-full overflow-hidden rounded-2xl"
-              style={{
-                background: 'rgba(180, 190, 200, 0.08)',
-                backdropFilter: 'blur(30px) saturate(140%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(140%)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-              }}
-            >
-              <div className="p-4 max-h-[480px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                <EnvironmentHub
-                  currentEnvId={currentEnvId}
-                  onSelectEnv={(env) => {
-                    onSelectEnv?.(env);
-                    setShowEnvDropdown(false);
-                  }}
-                  onClose={() => setShowEnvDropdown(false)}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
   );
