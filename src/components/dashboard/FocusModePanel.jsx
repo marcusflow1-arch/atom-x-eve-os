@@ -1765,6 +1765,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 onBackgroundChange={onBackgroundChange}
                 currentEnvId={currentEnvId}
                 onSelectEnv={onSelectEnv}
+                showEnvDropdown={false}
+                setShowEnvDropdown={() => setShowEnvDrawer(true)}
               />
 
               {/* Open space below Environment Hub — Stats/Friends/Live overlay fills this */}
