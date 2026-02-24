@@ -344,7 +344,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Expanded Tab Overlay (fades in, appears to left) */}
+      {/* Expanded Tab Overlay (appears to right of hub) */}
       <AnimatePresence>
         {expandedTab && (
           <>
@@ -354,22 +354,22 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setExpandedTab(null)}
-              className="fixed inset-0 z-[9997]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9997]"
               style={{ pointerEvents: 'all' }}
             />
             <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
+               initial={{ opacity: 0, x: 20 }}
+               animate={{ opacity: 1, x: 0 }}
+               exit={{ opacity: 0, x: 20 }}
                transition={{ duration: 0.2 }}
-               className="fixed top-0 bottom-0 z-[9998] flex flex-col overflow-hidden rounded-r-2xl"
+               className="fixed top-0 bottom-0 z-[9998] flex flex-col overflow-hidden rounded-l-2xl"
                style={{
-                 right: '0',
-                 width: 'calc(100vw - 429px - 20px)',
+                 left: 'calc(429px + 20px)',
+                 right: '20px',
                  background: 'rgba(10, 16, 28, 0.96)',
                  backdropFilter: 'blur(30px) saturate(150%)',
                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                 borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+                 borderRight: '1px solid rgba(255, 255, 255, 0.10)',
                  boxShadow: '-4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                  pointerEvents: 'all',
                }}
