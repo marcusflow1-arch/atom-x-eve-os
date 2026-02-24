@@ -26,7 +26,7 @@ export default function MobileLayoutShell({ children }) {
 
       {/* Middle-Left Floating Button */}
       <button
-        onClick={() => setDrawerOpen(true)}
+        onClick={() => setLibraryOpen(true)}
         className="absolute left-0 top-1/2 -translate-y-1/2 z-[49] flex items-center justify-center"
         style={{
           width: '28px',
