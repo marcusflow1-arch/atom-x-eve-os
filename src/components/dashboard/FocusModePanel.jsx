@@ -1918,6 +1918,58 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
       {/* Inventory Equip Overlay - opens when any inventory slot is clicked */}
       <InventoryEquipOverlay />
 
+      {/* Environment Hub — slide-in drawer from the right */}
+      <AnimatePresence>
+        {showEnvDrawer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
+              onClick={() => setShowEnvDrawer(false)}
+            />
+            <motion.div
+              initial={{ x: 340, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 340, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 bottom-0 w-80 z-[9999] flex flex-col rounded-l-3xl"
+              style={{
+                background: 'rgba(100, 120, 140, 0.12)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: '-4px 0 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              }}
+            >
+              <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-cyan-400" />
+                  <span className="text-white font-bold text-lg tracking-wide">Environment Hub</span>
+                </div>
+                <button
+                  onClick={() => setShowEnvDrawer(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                <EnvironmentHub
+                  currentEnvId={currentEnvId}
+                  onSelectEnv={(env) => {
+                    onSelectEnv?.(env);
+                    setShowEnvDrawer(false);
+                  }}
+                  onClose={() => setShowEnvDrawer(false)}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Section - Grid layout */}
 
       {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
