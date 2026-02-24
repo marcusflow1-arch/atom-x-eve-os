@@ -49,7 +49,7 @@ function generateInventoryForGame(game) {
   return items;
 }
 
-export default function InventoryFullPanel({ isOpen, onClose, initialGameName }) {
+export default function InventoryFullPanel({ isOpen, onClose, initialGameName, fullScreen = false }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [marketItem, setMarketItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');

@@ -58,7 +58,7 @@ function InteractDropdown() {
   );
 }
 
-export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo }) {
+export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream, onMoreInfo, fullScreen = false }) {
   const [activeTab, setActiveTab] = React.useState('content');
   const [selectedDLC, setSelectedDLC] = React.useState(null);
   const [posts, setPosts] = React.useState([]);
