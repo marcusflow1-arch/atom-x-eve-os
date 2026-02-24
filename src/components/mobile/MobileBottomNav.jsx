@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { id: 'sidebar', label: 'Quick', icon: Library, action: 'library_sidebar' },
 ];
 
-export default function MobileBottomNav({ onMenuOpen }) {
+export default function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
