@@ -1121,6 +1121,8 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
+      )}
+
       {/* Floating View Mode Toggle for pages with hidden headers */}
       {(() => {
         const p = location.pathname.toLowerCase();
