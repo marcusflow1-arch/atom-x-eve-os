@@ -67,10 +67,10 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
   const [activeSkybox, setActiveSkybox] = useState(null);
 
   const tabs = [
-    { id: 'environments', label: 'Environments', icon: Map },
-    { id: 'skyboxes', label: 'Skyboxes', icon: CloudSun },
-    { id: 'features', label: 'Features', icon: Gift },
-    { id: 'companions', label: 'Companions', icon: Bot },
+    { id: 'environments', label: 'Environments', abbr: 'Env', icon: Map },
+    { id: 'skyboxes', label: 'Skyboxes', abbr: 'S-Box', icon: CloudSun },
+    { id: 'features', label: 'Features', abbr: 'Features', icon: Gift },
+    { id: 'companions', label: 'Companions', abbr: 'Companions', icon: Bot },
   ];
 
   if (loading) {
