@@ -11,8 +11,8 @@ const MOCK_SKYBOXES = [
   { id: 'sky_6', title: 'Desert Ruins', thumbnail: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=400', background: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920', type: 'skybox' },
 ];
 
-export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose }) {
-  const [activeTab, setActiveTab] = useState('screenshots');
+export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose, initialTab = 'screenshots' }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const screenshots = references.filter(r => !r.isVideo);
   const videos = references.filter(r => r.isVideo);
