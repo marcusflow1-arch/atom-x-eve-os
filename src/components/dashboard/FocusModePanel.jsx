@@ -1343,17 +1343,7 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   const [references, setReferences] = useState([]);
   const scrollRef = useRef(null);
 
-  // Close env dropdown on outside click
-  useEffect(() => {
-    if (!showEnvDropdown) return;
-    const handler = (e) => {
-      if (envDropdownRef.current && !envDropdownRef.current.contains(e.target)) {
-        setShowEnvDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showEnvDropdown]);
+
 
   useEffect(() => {
     const fetchBackgrounds = async () => {
