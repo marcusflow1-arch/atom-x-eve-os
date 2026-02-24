@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Library, Gamepad2, User, Search, Play, ChevronRight, X, Settings,
@@ -8,7 +7,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { libraryGames } from '@/components/dashboard/gamehub/mockLibraryData';
-import { createPageUrl } from '@/utils';
+import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
+import InventoryFullPanel from '@/components/streaming/inventory/InventoryFullPanel';
 
 const friendsList = [
   { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' },
@@ -57,19 +57,53 @@ const TABS = [
 
 export default function MobileLibraryPanel({ isOpen, onClose }) {
   const [activeSub, setActiveSub] = useState('library');
-  const navigate = useNavigate();
 
-  // Reset tab when closed
+  // Library sub-panels
+  const [isExpandedLibrary, setIsExpandedLibrary] = useState(false);
+  const [previewGame, setPreviewGame] = useState(null);
+
+  // Inventory sub-panels
+  const [isExpandedInventory, setIsExpandedInventory] = useState(false);
+  const [pendingRewardGame, setPendingRewardGame] = useState(null);
+
+  // Quick Info Overlay (friends, aura, entertainment items)
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Reset everything when closed
   useEffect(() => {
-    if (!isOpen) setActiveSub('library');
+    if (!isOpen) {
+      setActiveSub('library');
+      setIsExpandedLibrary(false);
+      setPreviewGame(null);
+      setIsExpandedInventory(false);
+      setPendingRewardGame(null);
+      setOverlayOpen(false);
+      setSelectedItem(null);
+    }
   }, [isOpen]);
 
-  // Close on Escape
+  // Reset sub-panels when switching tabs
+  useEffect(() => {
+    setIsExpandedLibrary(false);
+    setPreviewGame(null);
+    setIsExpandedInventory(false);
+    setPendingRewardGame(null);
+    setOverlayOpen(false);
+    setSelectedItem(null);
+  }, [activeSub]);
+
+  useEffect(() => {
+    if (!isExpandedLibrary) setPreviewGame(null);
+  }, [isExpandedLibrary]);
+
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape' && isOpen) onClose(); };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [isOpen, onClose]);
+
+  const openOverlay = (item) => { setSelectedItem(item); setOverlayOpen(true); };
 
   const headerTitle = {
     library: 'My Library',
@@ -92,7 +126,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[98]"
           />
 
-          {/* Panel */}
+          {/* Main Panel */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
@@ -116,7 +150,9 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-base font-bold text-white tracking-wide truncate">{headerTitle}</h2>
-                <p className="text-[10px] text-white/40">Quick Access</p>
+                <p className="text-[10px] text-white/40">
+                  {activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'friends' ? 'Online & Offline' : activeSub === 'inventory' ? 'Recently Earned' : 'All Games & Recently Played'}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -151,17 +187,24 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                   <div className="flex items-center gap-2 mb-3">
                     <Gamepad2 className="w-4 h-4 text-cyan-400" />
                     <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                    <span className="ml-auto text-[10px] text-white/30">{libraryGames.length} total</span>
+                    <div className="ml-auto flex items-center gap-2">
+                      <span className="text-[10px] text-white/30">{libraryGames.length} total</span>
+                      <button
+                        onClick={() => setIsExpandedLibrary(true)}
+                        className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 flex items-center gap-1"
+                      >
+                        Full Library <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     {libraryGames.map((game, i) => (
                       <div
                         key={`lib_${game.id || i}`}
+                        onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
                         className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
                       >
-                        <div className="flex-shrink-0 text-white/30 group-hover:text-cyan-400 transition-colors">
-                          <Gamepad2 className="w-4 h-4" />
-                        </div>
+                        <Gamepad2 className="w-4 h-4 text-white/30 group-hover:text-cyan-400 transition-colors flex-shrink-0" />
                         <div className="relative w-10 h-14 flex-shrink-0 rounded-md overflow-hidden bg-black/50">
                           <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover" />
                         </div>
@@ -185,7 +228,11 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {recentGames.map((game, i) => (
-                        <div key={`rg_${i}`} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 transition">
+                        <div
+                          key={`rg_${i}`}
+                          onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image, context: 'aura' })}
+                          className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 transition"
+                        >
                           <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-1.5">
@@ -195,7 +242,6 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                       ))}
                     </div>
                   </section>
-
                   <section className="mt-4">
                     <div className="flex items-center gap-2 mb-3">
                       <User className="w-4 h-4 text-pink-400" />
@@ -203,7 +249,11 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                     </div>
                     <div className="space-y-2">
                       {recentChannels.map((ch, idx) => (
-                        <div key={`rc_${idx}`} className="flex items-center gap-3 p-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 transition cursor-pointer">
+                        <div
+                          key={`rc_${idx}`}
+                          onClick={() => openOverlay({ type: 'stream', title: ch.name, image: ch.avatar, subtitle: ch.game })}
+                          className="flex items-center gap-3 p-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 transition cursor-pointer"
+                        >
                           <div className="relative">
                             <img src={ch.avatar} alt={ch.name} className="w-9 h-9 rounded-lg object-cover" />
                             {ch.isLive && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
@@ -213,8 +263,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                             <p className="text-white/40 text-xs truncate">{ch.game}</p>
                           </div>
                           <div className="text-white/50 text-xs font-mono flex items-center gap-1">
-                            <span className="text-red-500">●</span>
-                            {ch.viewers}
+                            <span className="text-red-500">●</span>{ch.viewers}
                           </div>
                         </div>
                       ))}
@@ -233,11 +282,9 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {entertainmentApps.map((app, i) => (
-                        <a
+                        <div
                           key={`ea_${i}`}
-                          href={app.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => openOverlay({ type: 'app', title: app.name, url: app.url, image: app.image })}
                           className="group flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:border-indigo-400/40 hover:bg-white/10 transition"
                         >
                           <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 border border-white/10">
@@ -245,11 +292,10 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                           </div>
                           <p className="text-white text-[10px] font-semibold truncate w-full text-center">{app.name}</p>
                           <Badge className="text-[8px] bg-white/5 border-white/10 text-white/40 px-1 py-0">{app.category}</Badge>
-                        </a>
+                        </div>
                       ))}
                     </div>
                   </section>
-
                   <section className="mt-4">
                     <div className="flex items-center gap-2 mb-3">
                       <ExternalLink className="w-4 h-4 text-white/40" />
@@ -261,21 +307,19 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                         { name: 'Watch Cartoons Online', url: 'https://www.wcostream.tv', category: 'Cartoons' },
                         { name: 'Watch 32', url: 'https://www.watch32.is', category: 'Movies' },
                       ].map((svc, i) => (
-                        <a
+                        <div
                           key={`svc_${i}`}
-                          href={svc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          onClick={() => openOverlay({ type: 'app', title: svc.name, url: svc.url })}
                           className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-white/15 transition group"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white/50 group-hover:text-white transition-colors flex-shrink-0">
+                          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white/50 flex-shrink-0">
                             <ExternalLink className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-semibold truncate">{svc.name}</p>
                           </div>
                           <ChevronRight className="w-4 h-4 text-white/20 flex-shrink-0" />
-                        </a>
+                        </div>
                       ))}
                     </div>
                   </section>
@@ -293,6 +337,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                   {friendsList.map(friend => (
                     <div
                       key={friend.id}
+                      onClick={() => openOverlay({ type: 'friend', ...friend })}
                       className="flex items-center gap-3 p-2.5 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition cursor-pointer"
                     >
                       <div className="relative">
@@ -319,10 +364,17 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                   <div className="flex items-center gap-2 mb-2">
                     <Package className="w-4 h-4 text-amber-400" />
                     <h3 className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Recent Rewards</h3>
+                    <button
+                      onClick={() => setIsExpandedInventory(true)}
+                      className="ml-auto text-[10px] font-medium text-amber-400 border-b border-amber-400/60 flex items-center gap-1"
+                    >
+                      Full Inventory <ChevronRight className="w-3 h-3" />
+                    </button>
                   </div>
                   {REWARD_ITEMS.map((item, i) => (
                     <div
                       key={i}
+                      onClick={() => { setPendingRewardGame(item.game); setIsExpandedInventory(true); }}
                       className="flex items-center gap-3 p-2.5 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-amber-400/30 transition group"
                     >
                       <div className={`w-9 h-9 rounded-lg ${item.bg} border border-white/10 flex items-center justify-center flex-shrink-0`}>
@@ -338,7 +390,7 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
                       </div>
                     </div>
                   ))}
-                  <p className="text-[10px] text-white/20 text-center pt-1 italic">Click any reward to see details</p>
+                  <p className="text-[10px] text-white/20 text-center pt-1 italic">Click any reward to see its full inventory</p>
                 </div>
               )}
             </div>
@@ -351,6 +403,206 @@ export default function MobileLibraryPanel({ isOpen, onClose }) {
               </button>
             </div>
           </motion.div>
+
+          {/* ── FULL LIBRARY GRID (slides in over main panel) ── */}
+          <AnimatePresence>
+            {isExpandedLibrary && (
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed top-0 left-0 bottom-0 z-[100] flex flex-col overflow-hidden"
+                style={{
+                  width: '100vw',
+                  background: 'rgba(12, 16, 24, 0.97)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  borderRight: '1px solid rgba(165, 243, 252, 0.15)',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-[#0c1018]/95 sticky top-0 z-10">
+                  <Library className="w-5 h-5 text-cyan-400" />
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-base font-bold text-white">Full Library</h2>
+                    <p className="text-[10px] text-white/40">{libraryGames.length} titles</p>
+                  </div>
+                  <button
+                    onClick={() => setIsExpandedLibrary(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Grid */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {libraryGames.map((game, i) => (
+                      <motion.div
+                        key={`full_lib_${game.id || i}`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.02 }}
+                        onClick={() => setPreviewGame(game)}
+                        className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border cursor-pointer transition-all duration-300 ${
+                          previewGame?.id === game.id
+                            ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                            : 'border-white/10 hover:border-cyan-400/50'
+                        }`}
+                      >
+                        <img
+                          src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                          alt={game.title || game.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                          <h4 className="text-white font-bold text-[10px] leading-tight mb-1">{game.title || game.name}</h4>
+                          <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[8px] px-1 h-4">Info</Badge>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── GAME PREVIEW PANEL (slides in when a game is selected in Full Library) ── */}
+          <AnimatePresence>
+            {previewGame && (
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed inset-0 z-[101] flex flex-col overflow-hidden"
+                style={{
+                  background: 'rgba(15, 20, 26, 0.97)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                }}
+              >
+                {/* Banner */}
+                <div className="relative h-52 w-full flex-shrink-0">
+                  <img
+                    src={previewGame.banner || previewGame.cover_image || 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1200&q=80'}
+                    alt="Banner"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-[#0f141a]" />
+                  <button
+                    onClick={() => setPreviewGame(null)}
+                    className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-white/10 text-white/60 hover:text-white transition-colors backdrop-blur-md border border-white/5"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  {/* Box Art */}
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -4 }}
+                    onClick={() => openOverlay({ type: 'game', id: previewGame.id, title: previewGame.title || previewGame.name, image: previewGame.cover || previewGame.cover_image })}
+                    className="absolute -bottom-10 left-5 w-20 aspect-[3/4] rounded-lg shadow-2xl border-2 border-white/10 overflow-hidden cursor-pointer z-10"
+                  >
+                    <img
+                      src={previewGame.cover || previewGame.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'}
+                      alt="Box Art"
+                      className="w-full h-full object-cover"
+                    />
+                  </motion.div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto px-5 pt-14 pb-6 space-y-5">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white mb-1 leading-tight">{previewGame.title || previewGame.name}</h2>
+                    <div className="flex items-center gap-2 text-xs text-white/50">
+                      <Badge variant="outline" className="border-white/10 bg-white/5 text-white/70">RPG</Badge>
+                      <span>•</span>
+                      <span>Last Played: 2d ago</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold h-11 text-sm">
+                      <Play className="w-4 h-4 mr-2 fill-current" /> Play
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="icon" className="h-11 w-11 border-white/10 bg-white/5 hover:bg-white/10">
+                        <Settings className="w-4 h-4 text-white/70" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-11 w-11 border-white/10 bg-white/5 hover:bg-white/10 hover:text-red-400">
+                        <Trash2 className="w-4 h-4 text-white/70" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Latest Updates */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <RefreshCw className="w-3.5 h-3.5 text-cyan-400" /> Latest Updates
+                      </h3>
+                      <Button variant="ghost" size="sm" className="text-[10px] text-cyan-400 h-auto p-0 hover:bg-transparent">View All</Button>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 cursor-pointer hover:border-white/20 transition-colors">
+                      <div className="flex justify-between items-start mb-1">
+                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">Patch 1.2.0</Badge>
+                        <span className="text-xs text-white/40">Today</span>
+                      </div>
+                      <h4 className="text-white font-bold text-xs mb-1">Season of the Witch</h4>
+                      <p className="text-[10px] text-white/50 line-clamp-2">New raid content, 5 new weapons, and balance changes for all classes.</p>
+                    </div>
+                  </div>
+
+                  {/* DLC */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Download className="w-3.5 h-3.5 text-purple-400" /> DLC & Add-ons
+                      </h3>
+                      <Button variant="ghost" size="sm" className="text-[10px] text-purple-400 h-auto p-0 hover:bg-transparent">Store</Button>
+                    </div>
+                    <div className="space-y-2">
+                      {[1, 2].map(idx => (
+                        <div key={idx} className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                          <div className="w-10 h-10 bg-black/40 rounded-md overflow-hidden">
+                            <img src={`https://images.unsplash.com/photo-1511512578047-dfb367046420?w=100&q=80`} className="w-full h-full object-cover opacity-60" alt="DLC" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-xs font-medium text-white">Expansion Pack {idx}</h4>
+                            <p className="text-[10px] text-white/40">Installed</p>
+                          </div>
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 mr-1" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── FULL INVENTORY PANEL ── */}
+          <InventoryFullPanel
+            isOpen={isExpandedInventory}
+            onClose={() => { setIsExpandedInventory(false); setPendingRewardGame(null); }}
+            initialGameName={pendingRewardGame}
+          />
+
+          {/* ── QUICK INFO OVERLAY (friends, aura games/streamers, entertainment apps, library games) ── */}
+          <QuickInfoOverlay
+            open={overlayOpen}
+            item={selectedItem}
+            onClose={() => setOverlayOpen(false)}
+            onPlay={() => {}}
+            onStream={() => {}}
+            onMoreInfo={() => {}}
+          />
         </>
       )}
     </AnimatePresence>
