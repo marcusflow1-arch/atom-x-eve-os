@@ -17,11 +17,13 @@ export default function MemoriesDrawer({ references = [], activeReference, onSel
   const screenshots = references.filter(r => !r.isVideo);
   const videos = references.filter(r => r.isVideo);
 
-  const tabs = [
-    { id: 'screenshots', label: 'Screenshots', icon: '🖼️', items: screenshots },
-    { id: 'videos', label: 'Video', icon: '🎬', items: videos },
-    { id: 'skyboxes', label: 'Skyboxes', icon: '🌌', items: MOCK_SKYBOXES },
-  ];
+  // If opened as skybox mode show only skyboxes tab, otherwise show screenshots + videos
+  const tabs = initialTab === 'skyboxes'
+    ? [{ id: 'skyboxes', label: 'Skyboxes', icon: '🌌', items: MOCK_SKYBOXES }]
+    : [
+        { id: 'screenshots', label: 'Screenshots', icon: '🖼️', items: screenshots },
+        { id: 'videos', label: 'Video', icon: '🎬', items: videos },
+      ];
 
   const currentItems = tabs.find(t => t.id === activeTab)?.items || [];
 
