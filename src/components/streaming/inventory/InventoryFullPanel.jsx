@@ -156,7 +156,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed top-0 bottom-0 left-80 sm:left-96 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
+        className={`fixed top-0 bottom-0 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col ${fullScreen ? 'left-0' : 'left-80 sm:left-96'}`}
         style={glassStyle}
       >
         {/* Header */}

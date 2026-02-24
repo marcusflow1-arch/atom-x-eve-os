@@ -274,7 +274,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed top-0 bottom-0 right-0 left-[320px] sm:left-[384px] z-[80]"
+              className={`fixed top-0 bottom-0 right-0 z-[80] ${fullScreen ? 'left-0' : 'left-[320px] sm:left-[384px]'}`}
               onClick={onClose}
               style={{ background: 'rgba(0,0,0,0.55)' }}
             />
@@ -283,7 +283,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed top-0 right-0 bottom-0 left-[320px] sm:left-[384px] z-[90] flex flex-col overflow-hidden"
+              className={`fixed top-0 right-0 bottom-0 z-[90] flex flex-col overflow-hidden ${fullScreen ? 'left-0' : 'left-[320px] sm:left-[384px]'}`}
               style={{ borderLeft: '1px solid rgba(255,255,255,0.06)' }}
               onClick={(e) => e.stopPropagation()}
             >
