@@ -404,142 +404,121 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
                   </div>
 
-                  {/* Bottom: full-height row — left sidebar + dashboard stretches to bottom */}
-                  <div className="flex gap-3 flex-1 min-h-0">
+                  {/* Redesigned Bottom Section - Bento Box Style */}
+                  <div className="flex-1 min-h-0 mt-2 overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-6">
+                      
+                      {/* Column 1: Player ID & Rank */}
+                      <div className="flex flex-col gap-5">
+                        {/* Rank Card */}
+                        <div className="rounded-3xl p-6 border border-white/10 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(30,40,60,0.4), rgba(15,20,30,0.8))', backdropFilter: 'blur(20px)' }}>
+                          <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Target className="w-24 h-24 text-amber-400" />
+                          </div>
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-white/50 mb-3">PUP Rank Score</p>
+                          <div className="flex items-end gap-3 mb-5 relative z-10">
+                            <span className="text-5xl font-black text-amber-400 tracking-tighter drop-shadow-lg">8,420</span>
+                            <span className="mb-2 px-3 py-1 rounded-lg bg-amber-400/20 border border-amber-400/30 text-amber-300 text-[11px] font-bold shadow-lg">Diamond II</span>
+                          </div>
+                          <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden mb-3 border border-white/5">
+                            <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-300" style={{ width: '72%' }} />
+                          </div>
+                          <p className="text-[10px] text-white/50 font-medium">72% to Diamond I</p>
+                        </div>
 
-                    {/* LEFT SIDEBAR: trophy + buttons — takes all freed space */}
-                    <div className="flex flex-col gap-2 flex-shrink-0" style={{ width: '220px' }}>
-                      {/* Trophy counts */}
-                      <div className="rounded-xl border border-white/10 p-3" style={{ background: 'rgba(15,22,38,0.9)', backdropFilter: 'blur(20px)' }}>
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mb-2.5">
-                          {[
-                            { count: TROPHY_COUNTS.platinum, color: 'text-cyan-200', icon: '🏆' },
-                            { count: TROPHY_COUNTS.gold, color: 'text-yellow-300', icon: '🥇' },
-                            { count: TROPHY_COUNTS.silver, color: 'text-slate-300', icon: '🥈' },
-                            { count: TROPHY_COUNTS.bronze, color: 'text-orange-300', icon: '🥉' },
-                          ].map((t, i) => (
-                            <div key={i} className="flex items-center gap-1.5">
-                              <span className="text-sm">{t.icon}</span>
-                              <span className={`text-xs font-black ${t.color}`}>{t.count === 0 ? '0' : t.count >= 1000 ? (t.count/1000).toFixed(1)+'K' : t.count}</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-1.5 mb-2">
-                          <span className="text-yellow-400 text-xs">⭐</span>
-                          <span className="text-white font-bold text-xs">{TROPHY_TOTAL.toLocaleString()}</span>
-                          <span className="text-white/30 text-[9px] ml-auto">Next level</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" style={{ width: '18%' }} />
-                        </div>
-                        <div className="flex justify-end mt-1">
-                          <span className="text-white/30 text-[9px] font-mono">18%</span>
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-3 gap-3">
+                          <button className="flex flex-col items-center justify-center gap-2.5 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group">
+                            <MessageSquare className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
+                            <span className="text-[11px] font-semibold text-white/60 group-hover:text-white">Message</span>
+                          </button>
+                          <button className="flex flex-col items-center justify-center gap-2.5 py-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all group">
+                            <Swords className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
+                            <span className="text-[11px] font-semibold text-white/60 group-hover:text-white">Challenge</span>
+                          </button>
+                          <InteractDropdown />
                         </div>
                       </div>
 
-                      {/* Action buttons */}
-                      <button className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-white/10 text-white/70 text-xs font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                        <MessageSquare className="w-3.5 h-3.5" /> Send Message
-                      </button>
-                      <button className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-white/10 text-white/60 text-xs font-bold hover:bg-white/10 transition" style={{ background: 'rgba(15,22,38,0.7)' }}>
-                        <Swords className="w-3.5 h-3.5" /> Challenge
-                      </button>
-                      <InteractDropdown />
-                    </div>
-
-                    {/* PLAYER DASHBOARD PANEL — liquid glass, fills remaining width to edge */}
-                    <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden flex flex-col"
-                      style={{
-                        background: 'rgba(4, 8, 18, 0.75)',
-                        backdropFilter: 'blur(32px) saturate(160%)',
-                        WebkitBackdropFilter: 'blur(32px) saturate(160%)',
-                        border: '1px solid rgba(255,255,255,0.10)',
-                        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
-                      }}
-                    >
-                      {/* Liquid glass sheen overlay */}
-                      <div className="absolute inset-0 pointer-events-none z-10" style={{
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 40%, transparent 70%)',
-                      }} />
-
-                      {/* Scrollable content */}
-                      <div className="relative z-20 flex-1 overflow-y-auto p-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
-
-                        {/* PUP Rank Score */}
-                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">PUP Rank Score</p>
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl font-black text-amber-300">8,420</span>
-                            <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/25 text-amber-300 text-[9px] font-bold">Diamond II</span>
+                      {/* Column 2: Trophies & Genres */}
+                      <div className="flex flex-col gap-5">
+                        {/* Trophies */}
+                        <div className="rounded-3xl p-6 border border-white/10" style={{ background: 'rgba(15,22,38,0.4)', backdropFilter: 'blur(20px)' }}>
+                          <div className="flex items-center justify-between mb-5">
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-white/50">Trophies</p>
+                            <span className="text-white font-bold text-xs bg-white/10 px-3 py-1 rounded-xl border border-white/10 shadow-sm">{TROPHY_TOTAL.toLocaleString()} Total</span>
                           </div>
-                          <div className="mt-2 h-1 bg-white/8 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full" style={{ width: '72%' }} />
-                          </div>
-                          <p className="text-[8px] text-white/25 mt-1">72% to Diamond I</p>
-                        </div>
-
-                        {/* Last Action (clip preview) */}
-                        <div className="rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', width: '65%' }}>
-                          <div className="relative bg-black/40" style={{ aspectRatio: '16/9' }}>
-                            <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&q=60" className="w-full h-full object-cover opacity-50" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="w-6 h-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
-                                <Play className="w-2.5 h-2.5 text-white fill-white ml-0.5" />
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { count: TROPHY_COUNTS.platinum, color: 'text-cyan-300', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: '🏆', label: 'Platinum' },
+                              { count: TROPHY_COUNTS.gold, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', icon: '🥇', label: 'Gold' },
+                              { count: TROPHY_COUNTS.silver, color: 'text-slate-300', bg: 'bg-slate-500/10', border: 'border-slate-500/20', icon: '🥈', label: 'Silver' },
+                              { count: TROPHY_COUNTS.bronze, color: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: '🥉', label: 'Bronze' },
+                            ].map((t, i) => (
+                              <div key={i} className={`flex items-center gap-3 p-3.5 rounded-2xl border ${t.bg} ${t.border} transition-transform hover:scale-[1.02] cursor-default`}>
+                                <span className="text-2xl drop-shadow-md">{t.icon}</span>
+                                <div>
+                                  <p className={`text-base font-black ${t.color}`}>{t.count === 0 ? '0' : t.count >= 1000 ? (t.count/1000).toFixed(1)+'K' : t.count}</p>
+                                  <p className="text-[10px] text-white/50 uppercase tracking-wider font-semibold mt-0.5">{t.label}</p>
+                                </div>
                               </div>
-                            </div>
-                            <div className="absolute bottom-1.5 left-2 right-2">
-                              <p className="text-[8px] text-white/50 uppercase tracking-wider">Last Action</p>
-                              <p className="text-white text-[9px] font-bold truncate">Shadow Realm • Boss Kill</p>
-                            </div>
-                            <div className="absolute top-1.5 right-1.5 px-1 py-0.5 rounded bg-black/60 text-[7px] text-white/70 font-mono">0:08</div>
+                            ))}
                           </div>
                         </div>
 
                         {/* Genres */}
-                        <div>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">Specializes In</p>
-                          <div className="flex flex-wrap gap-1.5">
+                        <div className="rounded-3xl p-6 border border-white/10" style={{ background: 'rgba(15,22,38,0.4)', backdropFilter: 'blur(20px)' }}>
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-white/50 mb-4">Top Genres</p>
+                          <div className="flex flex-wrap gap-2.5">
                             {['RPG', 'Action', 'Horror', 'Strategy'].map(g => (
-                              <span key={g} className="px-2 py-0.5 rounded-full text-[9px] font-semibold"
-                                style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.25)', color: 'rgba(165,180,252,0.9)' }}>
+                              <span key={g} className="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 shadow-sm transition-colors hover:bg-indigo-500/20 cursor-default">
                                 {g}
                               </span>
                             ))}
                           </div>
                         </div>
+                      </div>
 
-                        {/* Favorite Games */}
-                        <div>
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-1.5">Favorite Games</p>
-                          <div className="flex gap-1.5" style={{ width: '65%' }}>
-                            {[
-                              { cover: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=80&q=60', title: 'Elden Ring' },
-                              { cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=80&q=60', title: 'Cyberpunk' },
-                              { cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=80&q=60', title: 'Apex' },
-                            ].map(g => (
-                              <div key={g.title} className="flex-1 rounded-lg overflow-hidden border border-white/10 aspect-square relative group cursor-pointer">
-                                <img src={g.cover} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                                <p className="absolute bottom-1 left-0 right-0 text-center text-[7px] text-white/70 font-medium">{g.title}</p>
+                      {/* Column 3: Highlights & News */}
+                      <div className="flex flex-col gap-5">
+                        {/* Last Action / Highlight */}
+                        <div className="rounded-3xl border border-white/10 overflow-hidden group cursor-pointer relative shadow-xl" style={{ background: 'rgba(15,22,38,0.4)' }}>
+                          <div className="aspect-video relative">
+                            <img src="https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=600&q=80" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-500 group-hover:scale-105" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                                <Play className="w-5 h-5 text-white fill-white ml-1" />
                               </div>
-                            ))}
+                            </div>
+                            <div className="absolute top-4 right-4 px-2.5 py-1 rounded-md bg-black/60 text-[10px] text-white/90 font-mono font-semibold backdrop-blur-md border border-white/10">0:08</div>
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                                <p className="text-[10px] text-white/80 uppercase tracking-widest font-bold">Latest Clip</p>
+                              </div>
+                              <p className="text-white text-base font-bold truncate drop-shadow-md">Shadow Realm • Boss Kill</p>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Player News */}
-                        <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                          <div className="flex items-center gap-1.5 mb-2">
-                            <Newspaper className="w-3 h-3 text-cyan-400" />
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-white/30">Player News</p>
+                        {/* News Update */}
+                        <div className="rounded-3xl p-6 border border-white/10 flex-1 flex flex-col justify-between" style={{ background: 'rgba(15,22,38,0.4)', backdropFilter: 'blur(20px)' }}>
+                          <div>
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                                <Newspaper className="w-4 h-4 text-blue-400" />
+                              </div>
+                              <p className="text-[11px] font-bold uppercase tracking-widest text-white/50">Status Update</p>
+                            </div>
+                            <p className="text-white/90 text-sm leading-relaxed italic border-l-2 border-blue-500/50 pl-4 py-1">"Going AFK for 30 mins, back for the raid at 9pm!"</p>
                           </div>
-                          <p className="text-white/70 text-[10px] leading-relaxed italic">"Going AFK for 30 mins, back for the raid at 9pm!"</p>
-                          <p className="text-white/25 text-[8px] mt-1.5">Posted 12 min ago</p>
+                          <p className="text-white/40 text-[11px] font-semibold flex items-center gap-1.5 mt-6">
+                            <Clock className="w-3.5 h-3.5" /> 12 minutes ago
+                          </p>
                         </div>
-
                       </div>
                     </div>
-
                   </div>
                 </motion.div>
               )}
