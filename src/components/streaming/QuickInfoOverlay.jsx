@@ -574,78 +574,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </motion.div>
               )}
 
-              {/* ── ACHIEVEMENTS TAB ── */}
-              {friendTab === 'achievements' && (
-                <motion.div
-                  key="achievements"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="relative z-10 flex-1 overflow-y-auto px-8 py-6"
-                  style={{ scrollbarWidth: 'none' }}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-4">Achievement Cards</p>
-                  {/* Smaller cards — 50% size reduction, more cols */}
-                  <div className="grid grid-cols-10 gap-2">
-                    {ACH_CARDS.map((card, i) => {
-                      const tilt = achCardTilts[card.id];
-                      return (
-                        <motion.div
-                          key={card.id}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.03 }}
-                          onMouseMove={(e) => handleCardMouseMove(e, card.id)}
-                          onMouseLeave={() => handleCardMouseLeave(card.id)}
-                          style={{
-                            transformStyle: 'preserve-3d',
-                            perspective: '800px',
-                            transform: tilt ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` : 'rotateX(0) rotateY(0)',
-                            transition: tilt ? 'transform 0.05s ease-out' : 'transform 0.4s ease-out',
-                          }}
-                          className={`relative rounded-xl border-2 ${rarityBorder[card.rarity]} overflow-hidden cursor-pointer group`}
-                          // Twice the height as regular cards
-                          // w auto from grid, h set explicitly
-                        >
-                          <div style={{ aspectRatio: '2/3.5', background: 'linear-gradient(135deg, rgba(20,30,50,0.98) 0%, rgba(10,15,28,1) 100%)' }}>
-                             {/* Shine layer */}
-                             {tilt && (
-                               <div
-                                 className="absolute inset-0 pointer-events-none z-10"
-                                 style={{
-                                   background: `radial-gradient(ellipse 80% 60% at ${(tilt.mx || 0.5) * 100}% ${(tilt.my || 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
-                                 }}
-                               />
-                             )}
-                             {/* Rarity glow */}
-                             <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 14px ${rarityGlow[card.rarity]}`, pointerEvents: 'none' }} />
 
-                             {/* Corner brackets */}
-                             <div className={`absolute top-1 left-1 w-2 h-2 border-t border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-tl`} />
-                             <div className={`absolute top-1 right-1 w-2 h-2 border-t border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-tr`} />
-                             <div className={`absolute bottom-1 left-1 w-2 h-2 border-b border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-bl`} />
-                             <div className={`absolute bottom-1 right-1 w-2 h-2 border-b border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-br`} />
-
-                             {/* Rarity dot */}
-                             {card.rarity === 'legendary' && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />}
-
-                             {/* Content */}
-                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1">
-                               <span className="text-xl opacity-60 group-hover:opacity-90 transition-opacity">?</span>
-                               <span className={`text-[6px] font-bold uppercase tracking-widest ${rarityText[card.rarity]}`}>{card.rarity}</span>
-                             </div>
-
-                             {/* Bottom label */}
-                             <div className="absolute bottom-1.5 left-0 right-0 text-center">
-                               <span className="text-[5px] text-white/20 uppercase tracking-wider">{card.type}</span>
-                             </div>
-                           </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
               </AnimatePresence>
             </motion.div>
           </>
