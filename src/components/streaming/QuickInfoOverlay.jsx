@@ -358,7 +358,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         <Mini3DViewerBox />
                       </div>
                       
-                      <div className="flex-shrink-0 w-[200px] mt-auto">
+                      <div className="flex-shrink-0 w-[200px] mt-auto relative">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
                         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                           {MOCK_GAMES.slice(0, 3).map((game, i) => (
