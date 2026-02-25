@@ -377,25 +377,6 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           </div>
                         </div>
                       </div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
-                        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                          {MOCK_GAMES.slice(0, 3).map((game, i) => (
-                            <motion.div
-                              key={game.id}
-                              whileHover={{ scale: 1.06, y: -4 }}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.04 }}
-                              className="flex-shrink-0 cursor-pointer group w-14"
-                            >
-                              <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
-                                <img src={game.cover} className="w-full h-full object-cover" />
-                              </div>
-                              <p className="text-white/60 text-[8px] text-center mt-1 font-medium truncate w-14">{game.title}</p>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
                     </div>
 
                     {/* Right: Currently playing + Achievements strip */}
