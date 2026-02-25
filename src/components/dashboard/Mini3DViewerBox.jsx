@@ -152,7 +152,7 @@ export default function Mini3DViewerBox() {
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-          height: '264px',
+          height: '272px',
           width: '200px',
         }}
       >
