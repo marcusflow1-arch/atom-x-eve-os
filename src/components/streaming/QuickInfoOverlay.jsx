@@ -406,7 +406,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Achievement Cards</p>
                         </div>
                         <div className="flex-1 min-h-0 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-                          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 pb-2">
+                          <div className="grid grid-cols-7 sm:grid-cols-9 md:grid-cols-11 gap-2 pb-2">
                             {ACH_CARDS.map((card, i) => {
                               const tilt = achCardTilts[card.id];
                               return (
