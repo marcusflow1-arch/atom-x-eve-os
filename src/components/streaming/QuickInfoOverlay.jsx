@@ -476,8 +476,6 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   </div>
 
                   {/* Redesigned Bottom Section - Bento Box Style */}
-
-                  {/* Redesigned Bottom Section - Bento Box Style */}
                   <div className="flex-1 min-h-0 mt-2 overflow-y-auto custom-scrollbar">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-6">
                       
