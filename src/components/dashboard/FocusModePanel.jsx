@@ -1640,27 +1640,20 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
-  const [showStatsDropdown, setShowStatsDropdown] = useState(false);
-  const [statsActiveTab, setStatsActiveTab] = useState('ai'); // 'ai' | 'inventory'
+  const [showSkillTree, setShowSkillTree] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const openCalendar = () => setShowCalendar(true);
   const [showEnvDrawer, setShowEnvDrawer] = useState(false);
   const [envDrawerExpanded, setEnvDrawerExpanded] = useState(false);
 
-  // Toggle Stats dropdown with 'O' (AI) and 'I' (Inventory) keys
+  // Toggle Skill Tree dropdown with 'O' key
   useEffect(() => {
     const onKeyDown = (e) => {
       const key = e.key?.toLowerCase();
       if (key === 'o') {
         setShowLiveDropdown(false);
         setShowFriendsDropdown(false);
-        setStatsActiveTab('ai');
-        setShowStatsDropdown((v) => !v);
-      } else if (key === 'i') {
-        setShowLiveDropdown(false);
-        setShowFriendsDropdown(false);
-        setStatsActiveTab('inventory');
-        setShowStatsDropdown(true);
+        setShowSkillTree((v) => !v);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -1739,17 +1732,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
       {/* Top Section - Quick Access Icons & Live Streaming */}
       <div className="w-full relative z-50">
         <div className="flex gap-6 items-start">
-          {/* Left Column: Quick Actions + Stream Player */}
+          {/* Left Column: Environment Hub + Memories + Overlays */}
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
-            <QuickActionsBar 
-              navigate={navigate} 
-              onLiveClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }} 
-              onStatsClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowStatsDropdown((v) => !v); }}
-              onFriendsClick={() => { setShowLiveDropdown(false); setShowStatsDropdown(false); setShowFriendsDropdown((v) => !v); }}
-            />
 
             {/* Banner area — Environment Hub always stays fixed */}
-            <div className="mt-1 pointer-events-auto relative" ref={bannerAreaRef}>
+            <div className="pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
@@ -1759,12 +1746,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
               />
 
-              {/* Open space below Environment Hub — Stats/Friends/Live overlay fills this */}
+              {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
               {/* Height is fixed so DevSpotlight always stays at same position */}
               <div className="relative mt-3" style={{ height: '512px' }}>
-                {/* OVERLAY: Stats / Friends / Live — fills the open space exactly */}
+                {/* OVERLAY: Skill Tree / Friends / Live — fills the open space exactly */}
                 <AnimatePresence>
-                  {(showStatsDropdown || showFriendsDropdown || showLiveDropdown) && (
+                  {(showSkillTree || showFriendsDropdown || showLiveDropdown) && (
                     <motion.div
                       key="panel-overlay"
                       initial={{ opacity: 0 }}
@@ -1776,7 +1763,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                         background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
                         backdropFilter: 'blur(24px)',
                         WebkitBackdropFilter: 'blur(24px)',
-                        border: showStatsDropdown
+                        border: showSkillTree
                           ? '1px solid rgba(34,211,238,0.30)'
                           : showFriendsDropdown
                           ? '1px solid rgba(74,222,128,0.30)'
@@ -1786,20 +1773,15 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     >
                       {/* Close button */}
                       <button
-                        onClick={() => { setShowStatsDropdown(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
+                        onClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
                         className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
                       >
                         <X className="w-3 h-3 text-white/60" />
                       </button>
 
-                      {showStatsDropdown && (
+                      {showSkillTree && (
                         <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                          <StatsPopupOverlay
-                            activeTab={statsActiveTab}
-                            onTabChange={setStatsActiveTab}
-                            onClose={() => setShowStatsDropdown(false)}
-                            inline={true}
-                          />
+                          <AvatarProgressionBox />
                         </div>
                       )}
 
