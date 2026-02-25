@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Mini3DViewerBox from './Mini3DViewerBox';
+import AIAttributesBox from './AIAttributesBox';
 
 export default function InventoryGrid({ equippedItems, handleBoxClick }) {
   return (
@@ -161,6 +162,9 @@ export default function InventoryGrid({ equippedItems, handleBoxClick }) {
               );
             })}
           </div>
+        </div>
+        <div className="mt-4 w-full">
+          <AIAttributesBox />
         </div>
       </div>
     </motion.div>
