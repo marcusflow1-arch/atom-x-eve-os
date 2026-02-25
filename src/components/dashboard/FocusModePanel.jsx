@@ -22,7 +22,6 @@ import StreamChatBox from '@/components/streaming/StreamChatBox';
 import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
 import StatsPopupOverlay from '@/components/dashboard/StatsPopupOverlay';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
-import AIAttributesBox from '@/components/dashboard/AIAttributesBox';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
 import IntelligentCalendarOverlay from '@/components/calendar/IntelligentCalendarOverlay';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
@@ -1795,16 +1794,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
                       {showStatsDropdown && (
                         <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                          {statsActiveTab === 'inventory' ? (
-                            <AIAttributesBox />
-                          ) : (
-                            <StatsPopupOverlay
-                              activeTab={statsActiveTab}
-                              onTabChange={setStatsActiveTab}
-                              onClose={() => setShowStatsDropdown(false)}
-                              inline={true}
-                            />
-                          )}
+                          <StatsPopupOverlay
+                            activeTab={statsActiveTab}
+                            onTabChange={setStatsActiveTab}
+                            onClose={() => setShowStatsDropdown(false)}
+                            inline={true}
+                          />
                         </div>
                       )}
 
