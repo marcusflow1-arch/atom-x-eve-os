@@ -351,12 +351,12 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   style={{ scrollbarWidth: 'none' }}
                 >
                   {/* Top section: 3D viewer + recent games left, achievements right */}
-                  <div className="flex gap-6 mb-4 flex-shrink-0">
+                  <div className="flex gap-6 mb-4 flex-shrink-0 h-[380px]">
                     {/* Left: 3D Avatar Viewer + Stat Card + Recent Games */}
-                    <div className="flex-shrink-0 flex flex-col gap-4">
+                    <div className="flex-shrink-0 flex flex-col gap-3 h-full">
                       <Mini3DViewerBox />
                       
-                      <div className="flex-shrink-0 w-[200px]">
+                      <div className="flex-shrink-0 w-[200px] mt-auto">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
                         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                           {MOCK_GAMES.slice(0, 3).map((game, i) => (
