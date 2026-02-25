@@ -354,11 +354,29 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   <div className="flex gap-6 mb-4 flex-shrink-0 h-[350px]">
                     {/* Left: 3D Avatar Viewer + Stat Card + Recent Games */}
                     <div className="flex-shrink-0 flex flex-col gap-4 h-full">
-                      <div className="h-[260px] flex-shrink-0">
+                      <div className="h-[260px] flex-shrink-0 flex flex-col items-center">
                         <Mini3DViewerBox />
+                        <div className="flex-shrink-0 w-[200px] mt-2 relative">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
+                          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                            {MOCK_GAMES.slice(0, 3).map((game, i) => (
+                              <motion.div
+                                key={game.id}
+                                whileHover={{ scale: 1.06, y: -4 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.04 }}
+                                className="flex-shrink-0 cursor-pointer group w-14"
+                              >
+                                <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
+                                  <img src={game.cover} className="w-full h-full object-cover" />
+                                </div>
+                                <p className="text-white/60 text-[8px] text-center mt-1 font-medium truncate w-14">{game.title}</p>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="flex-shrink-0 w-[200px] mt-auto relative">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
                         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                           {MOCK_GAMES.slice(0, 3).map((game, i) => (
