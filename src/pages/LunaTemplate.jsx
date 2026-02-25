@@ -411,25 +411,22 @@ function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, bac
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // --- MOUSE CONTROLS (right-click orbit + scroll zoom) ---
+    // --- MOUSE CONTROLS (Left/Right click orbit + zoom) ---
     const onMouseDown = (e) => {
-      if (e.button === 2) {
+      if (e.button === 0 || e.button === 2) {
         isRightMouseDownRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
+        if (containerRef.current) containerRef.current.focus();
         e.preventDefault();
       }
     };
-    const onMouseUp = (e) => {
-      if (e.button === 2) isRightMouseDownRef.current = false;
-    };
+    const onMouseUp = () => { isRightMouseDownRef.current = false; };
     const onMouseMove = (e) => {
       if (!isRightMouseDownRef.current) return;
-      const dx = e.clientX - lastMouseRef.current.x;
-      const dy = e.clientY - lastMouseRef.current.y;
+      const dx = e.clientX - lastMouseRef.current.x, dy = e.clientY - lastMouseRef.current.y;
       lastMouseRef.current = { x: e.clientX, y: e.clientY };
-      const orbit = cameraOrbitRef.current;
-      orbit.yaw -= dx * 0.005;
-      orbit.pitch = Math.max(0.05, Math.min(Math.PI / 2.2, orbit.pitch + dy * 0.005));
+      cameraOrbitRef.current.yaw -= dx * 0.005;
+      cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
       const orbit = cameraOrbitRef.current;
