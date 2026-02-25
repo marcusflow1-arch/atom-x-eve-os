@@ -304,12 +304,11 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                 </button>
               </div>
 
-              {/* ── PS5-style top nav: Games | Achievements ── */}
+              {/* ── PS5-style top nav: Games ── */}
               <div className="relative z-10 flex-shrink-0 pt-5 px-8">
                 <div className="flex items-center gap-8 border-b border-white/10 pb-0">
                   {[
                     { id: 'games', label: 'Games' },
-                    { id: 'achievements', label: 'Achievements' },
                   ].map(tab => (
                     <button
                       key={tab.id}
