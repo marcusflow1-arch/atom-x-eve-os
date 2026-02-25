@@ -16,7 +16,7 @@ export default function Mini3DViewerBox() {
   const modelRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
-  const [activeChar, setActiveChar] = useState('ybot');
+  const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
 
   // Listen for character switch events from the main 3D viewer
   useEffect(() => {
