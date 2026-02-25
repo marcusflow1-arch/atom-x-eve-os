@@ -382,7 +382,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     <div className="flex-1 min-w-0 flex flex-col">
                       {/* Currently playing banner (compact) */}
                       {item.status === 'playing' && (
-                        <div className="mb-3 relative rounded-xl overflow-hidden border border-white/10 h-16 flex-shrink-0 group flex items-center px-4 gap-4"
+                        <div className="mb-2 relative rounded-xl overflow-hidden border border-white/10 h-16 flex-shrink-0 group flex items-center px-4 gap-4"
                           style={{ background: 'rgba(15,22,38,0.8)' }}>
                           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
                           <div className="min-w-0">
