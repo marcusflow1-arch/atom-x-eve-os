@@ -358,10 +358,10 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                     </div>
 
                     {/* Right: Recent Games strip */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div className="flex-1 min-w-0 flex flex-col">
                       {/* Currently playing banner (compact) */}
                       {item.status === 'playing' && (
-                        <div className="mb-3 relative rounded-xl overflow-hidden border border-white/10 h-16 group flex items-center px-4 gap-4"
+                        <div className="mb-3 relative rounded-xl overflow-hidden border border-white/10 h-16 flex-shrink-0 group flex items-center px-4 gap-4"
                           style={{ background: 'rgba(15,22,38,0.8)' }}>
                           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
                           <div className="min-w-0">
@@ -379,9 +379,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
                       )}
 
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-3">Recent Games</p>
-                        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                      <div className="flex-shrink-0 mb-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
+                        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                           {MOCK_GAMES.map((game, i) => (
                             <motion.div
                               key={game.id}
@@ -391,13 +391,65 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                               transition={{ delay: i * 0.04 }}
                               className="flex-shrink-0 cursor-pointer group"
                             >
-                              <div className="w-16 h-16 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
+                              <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
                                 <img src={game.cover} className="w-full h-full object-cover" />
                               </div>
-                              <p className="text-white/60 text-[8px] text-center mt-1 font-medium truncate w-16">{game.title}</p>
-                              <p className="text-white/25 text-[7px] text-center font-mono">{game.hours}</p>
+                              <p className="text-white/60 text-[8px] text-center mt-1 font-medium truncate w-14">{game.title}</p>
                             </motion.div>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* Achievements - fitted into remaining space */}
+                      <div className="flex-1 min-h-0 flex flex-col">
+                        <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Achievement Cards</p>
+                        </div>
+                        <div className="flex-1 min-h-0 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+                          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 pb-2">
+                            {ACH_CARDS.map((card, i) => {
+                              const tilt = achCardTilts[card.id];
+                              return (
+                                <motion.div
+                                  key={card.id}
+                                  initial={{ opacity: 0, y: 12 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: i * 0.03 }}
+                                  onMouseMove={(e) => handleCardMouseMove(e, card.id)}
+                                  onMouseLeave={() => handleCardMouseLeave(card.id)}
+                                  style={{
+                                    transformStyle: 'preserve-3d',
+                                    perspective: '800px',
+                                    transform: tilt ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)` : 'rotateX(0) rotateY(0)',
+                                    transition: tilt ? 'transform 0.05s ease-out' : 'transform 0.4s ease-out',
+                                  }}
+                                  className={`relative rounded-xl border-2 ${rarityBorder[card.rarity]} overflow-hidden cursor-pointer group`}
+                                >
+                                  <div style={{ aspectRatio: '2/3.5', background: 'linear-gradient(135deg, rgba(20,30,50,0.98) 0%, rgba(10,15,28,1) 100%)' }}>
+                                     {tilt && (
+                                       <div
+                                         className="absolute inset-0 pointer-events-none z-10"
+                                         style={{ background: `radial-gradient(ellipse 80% 60% at ${(tilt.mx || 0.5) * 100}% ${(tilt.my || 0.5) * 100}%, rgba(255,255,255,0.12) 0%, transparent 70%)` }}
+                                       />
+                                     )}
+                                     <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 14px ${rarityGlow[card.rarity]}`, pointerEvents: 'none' }} />
+                                     <div className={`absolute top-1 left-1 w-2 h-2 border-t border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-tl`} />
+                                     <div className={`absolute top-1 right-1 w-2 h-2 border-t border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-tr`} />
+                                     <div className={`absolute bottom-1 left-1 w-2 h-2 border-b border-l-[1.5px] ${rarityBorder[card.rarity]} rounded-bl`} />
+                                     <div className={`absolute bottom-1 right-1 w-2 h-2 border-b border-r-[1.5px] ${rarityBorder[card.rarity]} rounded-br`} />
+                                     {card.rarity === 'legendary' && <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />}
+                                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-1">
+                                       <span className="text-xl opacity-60 group-hover:opacity-90 transition-opacity">?</span>
+                                       <span className={`text-[6px] font-bold uppercase tracking-widest ${rarityText[card.rarity]}`}>{card.rarity}</span>
+                                     </div>
+                                     <div className="absolute bottom-1.5 left-0 right-0 text-center">
+                                       <span className="text-[5px] text-white/20 uppercase tracking-wider">{card.type}</span>
+                                     </div>
+                                   </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
