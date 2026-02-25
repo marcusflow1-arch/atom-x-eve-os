@@ -1227,27 +1227,6 @@ function EnvironmentHubTile({ isOpen, onToggle }) {
   );
 }
 
-// Quick Access Icons Row
-function QuickAccessRow({ onOpenCalendar, onDateTimeClick, navigate, onLiveClick }) {
-  return (
-    <div className="h-full flex gap-6">
-      {/* Left Column: Quick Actions */}
-      <div className="flex-1 min-w-0">
-        <QuickActionsBar navigate={navigate} onLiveClick={onLiveClick} />
-      </div>
-      
-      {/* Right Column: System Status & Calendar Hub */}
-      <div className="w-[280px] flex-shrink-0 flex flex-col gap-3">
-         <DateTimeTile onClick={onDateTimeClick} />
-         <AddToCalendarButton 
-           onClick={onOpenCalendar} 
-           clanIcon="https://images.unsplash.com/photo-1614728853913-3e74785093ca?w=100&h=100&fit=crop" 
-         />
-      </div>
-    </div>
-  );
-}
-
 // Game Reference - clickable scene moments from games that change the Luna dashboard background
 function GameReference({ reference, onClick, isActive, isHomeButton }) {
   if (isHomeButton) {
@@ -1297,43 +1276,47 @@ function GameReference({ reference, onClick, isActive, isHomeButton }) {
   );
 }
 
-// New QuickActionsBar Component
-function QuickActionsBar({ navigate, onLiveClick, onStatsClick, onFriendsClick }) {
-  const quickActions = [
-    { id: 'friends', label: 'Friends', icon: Users, onClick: onFriendsClick },
-    { id: 'live', label: 'Live', icon: Radio, onClick: onLiveClick },
-    { id: 'cards', label: 'Cards', icon: Trophy, onClick: () => navigate(createPageUrl('GenreMastery')) },
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, onClick: () => navigate(createPageUrl('AIStory')) },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, onClick: () => navigate(createPageUrl('Leaderboard')) },
+// Bottom Nav Header (Replaces Quick Actions)
+function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree, showLive }) {
+  const actions = [
+    { id: 'ai-story', label: 'AI Story', icon: BookOpen, image: 'https://images.unsplash.com/photo-1516542076529-1ea3854896f2?w=400', onClick: () => navigate(createPageUrl('AIStory')) },
+    { id: 'ai-battle', label: 'AI Battle', icon: Swords, image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400', onClick: () => navigate(createPageUrl('AIBattle')) },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', onClick: () => navigate(createPageUrl('Leaderboard')) },
+    { id: 'live', label: 'Live', icon: Radio, image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', onClick: onLiveClick, active: showLive },
+    { id: 'skill-tree', label: 'Skill Tree', icon: Zap, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', onClick: onSkillTreeClick, active: showSkillTree },
   ];
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto w-full pointer-events-auto" style={{ scrollbarWidth: 'none' }}>
-      {[{ id: 'stats', label: 'Stats', icon: TrendingUp, onClick: onStatsClick }, ...quickActions].map((action) => {
-        const Icon = action.icon;
-        return (
-          <motion.button
-            key={action.id}
-            whileHover={{ scale: 1.04, y: -2 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={action.onClick}
-            className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all flex-shrink-0 group"
-            style={{
-              background: 'linear-gradient(145deg, rgba(18, 28, 44, 0.92) 0%, rgba(12, 20, 34, 0.96) 100%)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(125, 211, 252, 0.15)',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(125,211,252,0.08)',
-              width: '85px',
-              height: '75px',
-            }}
-          >
-            <Icon className="w-5 h-5 text-sky-300/80 group-hover:text-sky-200 transition-colors" />
-            <span className="text-slate-300/80 text-[9px] font-semibold text-center leading-tight group-hover:text-white transition-colors">{action.label}</span>
-          </motion.button>
-        );
-      })}
+    <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+      <div className="flex items-center gap-4 px-6 py-4 pointer-events-auto"
+        style={{
+          background: 'linear-gradient(to top, rgba(10, 16, 26, 0.95), rgba(10, 16, 26, 0))',
+          width: '100%',
+          justifyContent: 'center',
+          paddingBottom: '24px'
+        }}>
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <motion.button
+              key={action.id}
+              whileHover={{ scale: 1.05, y: -4 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={action.onClick}
+              className={`relative w-40 h-24 rounded-2xl overflow-hidden group shadow-lg flex-shrink-0 border-2 transition-all ${
+                action.active ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+              }`}
+            >
+              <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              <div className="absolute inset-0 p-3 flex flex-col items-center justify-end text-center">
+                <Icon className={`w-6 h-6 mb-1 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
+                <span className="text-white font-bold text-xs drop-shadow-md">{action.label}</span>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1913,8 +1896,13 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
       </div>
 
-
-
+      <BottomNavBoxes 
+        navigate={navigate} 
+        onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
+        onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
+        showSkillTree={showSkillTree}
+        showLive={showLiveDropdown}
+      />
 
     </div>
   );
