@@ -76,7 +76,14 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto p-4" style={{ 
+              scrollbarWidth: 'none',
+              background: 'linear-gradient(135deg, rgba(200, 205, 210, 0.25) 0%, rgba(130, 135, 140, 0.1) 100%)',
+              backdropFilter: 'blur(25px) brightness(110%) saturate(120%)',
+              WebkitBackdropFilter: 'blur(25px) brightness(110%) saturate(120%)',
+              boxShadow: 'inset 0 2px 3px rgba(255, 255, 255, 0.3), inset 0 -2px 3px rgba(0, 0, 0, 0.3)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.15)'
+            }}>
               <EnvironmentHub
                 currentEnvId={currentEnvId}
                 onSelectEnv={handleSelect}
