@@ -142,7 +142,7 @@ export default function Mini3DViewerBox() {
   }, [activeChar]);
 
   return (
-    <div className="pointer-events-auto flex items-start gap-0">
+    <div className="pointer-events-auto flex items-start gap-0 h-full">
       {/* 3D Viewer - Original Size */}
       <div
         className="rounded-2xl overflow-hidden flex-shrink-0"
@@ -152,7 +152,7 @@ export default function Mini3DViewerBox() {
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-          height: '280px',
+          height: '100%',
           width: '200px',
         }}
       >
