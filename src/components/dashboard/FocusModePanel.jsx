@@ -1706,12 +1706,22 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
       {/* Top Section - Quick Access Icons & Live Streaming */}
       <div className="w-full relative z-50">
-        <div className="flex gap-6 items-start">
+        <div className="flex flex-col gap-6 w-full">
+          {/* Expanded Calendar panel - spans full width */}
+          <div className="w-full flex items-stretch gap-4 pointer-events-auto">
+            <div className="flex items-center">
+              <PartyInviteDropdown />
+            </div>
+            <div className="flex-1">
+               <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+            </div>
+          </div>
+
           {/* Left Column: Environment Hub + Memories + Overlays */}
-          <div className="flex-1 min-w-0 flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
+          <div className="w-full flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 160px)' }}>
 
             {/* Banner area — Environment Hub always stays fixed */}
-            <div className="pointer-events-auto relative" ref={bannerAreaRef}>
+            <div className="pointer-events-auto relative w-full" ref={bannerAreaRef}>
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
@@ -1720,6 +1730,17 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 showEnvDropdown={false}
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
               />
+
+              {/* Row of 5 icons directly underneath Environment Hub */}
+              <div className="mt-4 mb-4">
+                <BottomNavBoxes 
+                  navigate={navigate} 
+                  onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
+                  onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
+                  showSkillTree={showSkillTree}
+                  showLive={showLiveDropdown}
+                />
+              </div>
 
               {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
               {/* Height is fixed so DevSpotlight always stays at same position */}
