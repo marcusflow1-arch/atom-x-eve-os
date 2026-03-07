@@ -371,7 +371,12 @@ export default function LunaTemplate() {
   }, []);
 
   useEffect(() => {
-    const handler = () => setAvatarFocusMode(prev => !prev);
+    const handler = () => {
+      setAvatarFocusMode(prev => {
+        if (prev) setActiveAvatarFocusView(null);
+        return !prev;
+      });
+    };
     window.addEventListener('toggleAvatarFocusMode', handler);
     return () => {
       window.removeEventListener('toggleAvatarFocusMode', handler);
