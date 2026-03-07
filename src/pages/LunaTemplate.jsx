@@ -710,7 +710,7 @@ export default function LunaTemplate() {
       {!showConsoleMode && !showAchievements && (
         <div className="fixed z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
              style={uiVisible ? {
-               left: '0px', top: '80px', bottom: '0px', width: '400px', gap: '0px'
+               left: '0px', top: '80px', bottom: '0px', right: '0px', gap: '0px'
              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} />
