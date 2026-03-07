@@ -1318,7 +1318,7 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
-  navBoxes, calendarBox
+  navBoxes, calendarBox, hideLeft
 }) {
   const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
