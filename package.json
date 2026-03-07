@@ -79,7 +79,7 @@
     "@react-three/drei": "^9.92.0",
     "zustand": "^4.5.0",
     "@tanstack/react-virtual": "^3.0.0",
-    "normalize-range": "^0.1.2",
+    "normalize-range": "latest",
     "baseline-browser-mapping": "latest"
   },
   "devDependencies": {
