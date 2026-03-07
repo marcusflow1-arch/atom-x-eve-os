@@ -709,7 +709,9 @@ export default function LunaTemplate() {
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && (
         <div className="fixed z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
-             style={{ left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+             style={uiVisible ? {
+               left: '0px', top: '80px', bottom: '0px', width: '400px', gap: '0px'
+             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} />
           
