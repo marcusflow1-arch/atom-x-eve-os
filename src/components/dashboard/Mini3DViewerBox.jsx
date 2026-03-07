@@ -132,37 +132,55 @@ export default function Mini3DViewerBox({ isInventoryOpen }) {
       camera.updateProjectionMatrix();
       renderer.setSize(nw, nh);
     };
+    
+    const resizeObserver = new ResizeObserver(() => handleResize());
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
     window.addEventListener('resize', handleResize);
 
     return () => {
       cancelAnimationFrame(animIdRef.current);
+      resizeObserver.disconnect();
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
     };
   }, [activeChar]);
 
+  useEffect(() => {
+    if (!cameraRef.current) return;
+    const camera = cameraRef.current;
+    
+    if (isInventoryOpen) {
+      camera.position.set(0, 1.0, -3.8);
+      camera.lookAt(0, 1.0, 0);
+    } else {
+      camera.position.set(0, 1.85, -1.4);
+      camera.lookAt(0, 1.7, 0);
+    }
+    camera.updateProjectionMatrix();
+  }, [isInventoryOpen]);
+
   return (
     <div 
       className="pointer-events-auto flex items-start gap-0 h-full cursor-pointer transition-transform hover:scale-[1.02]"
-      onClick={() => window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'))}
+      onClick={() => window.dispatchEvent(new CustomEvent('toggleInventory'))}
     >
-      {/* 3D Viewer - Original Size */}
+      {/* 3D Viewer - Resizes to take up exact space of AvatarStatCard when inventory is open (200px + 190px = 390px) */}
       <div
-        className="rounded-2xl overflow-hidden flex-shrink-0 h-full"
+        className="rounded-2xl overflow-hidden flex-shrink-0 h-full transition-all duration-500 ease-in-out"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-          width: '200px',
+          width: isInventoryOpen ? '390px' : '200px',
         }}
       >
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      {/* Avatar Stats Card */}
-      <AvatarStatCard />
+      {/* Avatar Stats Card - Hidden when inventory is open */}
+      {!isInventoryOpen && <AvatarStatCard />}
     </div>
   );
 }
