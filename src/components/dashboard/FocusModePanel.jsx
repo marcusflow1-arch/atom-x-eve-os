@@ -1384,17 +1384,17 @@ export function LibraryBannerSection({
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full">
         <div className="flex items-start gap-4 w-full">
-          {/* Left Column: Environment Hub + 5 Icons */}
+          {/* Left Column: Environment Hub + Calendar Box */}
           <div className="w-[368px] flex-shrink-0 flex flex-col gap-3">
             <div className="h-[60px] w-full relative">
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
             </div>
-            {navBoxes}
+            {calendarBox}
           </div>
 
-          {/* Right Column: Calendar Box + Memories */}
+          {/* Right Column: 5 Icons + Memories */}
           <div className="flex-1 flex flex-col gap-3 min-w-0">
-            {calendarBox}
+            {navBoxes}
             
             {/* References Section (Memories) — click label to open drawer */}
             <div 
