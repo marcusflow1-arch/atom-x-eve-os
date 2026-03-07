@@ -1757,7 +1757,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     <div className="flex items-center justify-center">
                       <PartyInviteDropdown />
                     </div>
-                    <div className="w-[70%] h-full">
+                    <div className="flex-1 min-w-0 h-full">
                       <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
                     </div>
                   </div>
