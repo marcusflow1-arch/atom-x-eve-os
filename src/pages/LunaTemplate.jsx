@@ -1521,7 +1521,7 @@ export default function LunaTemplate() {
                   className="w-full">
 
                   <AnimatePresence mode="wait">
-                  {expandedGenre ?
+                  {expandedGenre && (
                     <motion.div
                       key="expanded-genre"
                       initial={{ opacity: 0 }}
@@ -1539,11 +1539,8 @@ export default function LunaTemplate() {
                         onClose={() => setExpandedGenre(null)}
                         onCardClick={setSelectedCardForUpgrade}
                       />
-                    </motion.div> :
-
-
-                      <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleBoxClick} />
-                  }
+                    </motion.div>
+                  )}
                   </AnimatePresence>
                 </motion.div>
               }
