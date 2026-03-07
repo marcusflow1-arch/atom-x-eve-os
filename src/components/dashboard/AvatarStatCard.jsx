@@ -75,17 +75,32 @@ export default function AvatarStatCard() {
           </div>
         </div>
         
-        {/* Skill Tree Button */}
-        <div 
-          className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent('openSkillTreeOverlay'));
-          }}
-        >
-          <div className="w-8 h-8 bg-white/10 rounded-lg border border-white/20 flex items-center justify-center mb-1 shadow-sm">
-            <Zap className="w-4 h-4 text-cyan-400" />
+        <div className="flex gap-2">
+          {/* Avatar Settings Button */}
+          <div 
+            className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('openAvatarSettings'));
+            }}
+          >
+            <div className="w-8 h-8 bg-white/10 rounded-lg border border-white/20 flex items-center justify-center mb-1 shadow-sm">
+              <Settings className="w-4 h-4 text-slate-300" />
+            </div>
+            <span className="text-[8px] text-white/60 font-semibold leading-none uppercase tracking-wider">Settings</span>
           </div>
-          <span className="text-[8px] text-white/60 font-semibold leading-none uppercase tracking-wider">Skill Tree</span>
+
+          {/* Skill Tree Button */}
+          <div 
+            className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('openSkillTreeOverlay'));
+            }}
+          >
+            <div className="w-8 h-8 bg-white/10 rounded-lg border border-white/20 flex items-center justify-center mb-1 shadow-sm">
+              <Zap className="w-4 h-4 text-cyan-400" />
+            </div>
+            <span className="text-[8px] text-white/60 font-semibold leading-none uppercase tracking-wider">Skill Tree</span>
+          </div>
         </div>
       </div>
 
