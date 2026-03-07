@@ -93,7 +93,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
 
         {/* Right Side: System Updates (Clickable) */}
         <motion.div 
-          style={{ flex: 65 }}
+          style={{ flex: 70 }}
           whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
           whileTap={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
