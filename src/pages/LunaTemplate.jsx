@@ -356,15 +356,10 @@ export default function LunaTemplate() {
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
 
   useEffect(() => {
-    const handler = () => setAvatarFocusMode(prev => {
-      const next = !prev;
-      window.dispatchEvent(new CustomEvent('forceHideHeader', { detail: next }));
-      return next;
-    });
+    const handler = () => setAvatarFocusMode(prev => !prev);
     window.addEventListener('toggleAvatarFocusMode', handler);
     return () => {
       window.removeEventListener('toggleAvatarFocusMode', handler);
-      window.dispatchEvent(new CustomEvent('forceHideHeader', { detail: false }));
     };
   }, []);
 
