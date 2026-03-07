@@ -1385,46 +1385,55 @@ export function LibraryBannerSection({
     <div className="flex flex-col items-start w-full">
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full">
-        <div className="flex items-start gap-4 w-full">
-          {/* Left Column: Environment Hub + 5 Icons */}
-          <div className="w-[368px] flex-shrink-0 flex flex-col gap-3 items-center">
-            <div className="h-[60px] w-full relative">
+        <div className="flex flex-col gap-3 w-full">
+          {/* Top Row: Env Hub | Memories | Calendar Box */}
+          <div className="flex items-center gap-4 w-full h-[60px]">
+            {/* Environment Hub */}
+            <div className="w-[368px] h-full flex-shrink-0">
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
             </div>
-            <div className="w-full flex justify-center">
-              {navBoxes}
-            </div>
-          </div>
 
-          {/* Right Column: Calendar Box + Memories */}
-          <div className="flex-1 flex flex-col gap-3 min-w-0">
-            {calendarBox}
-            
-            {/* References Section (Memories) — click label to open drawer */}
+            {/* Memories */}
             <div 
               ref={scrollRef}
-              className="flex items-center gap-2 overflow-x-auto" 
+              className="flex-1 flex items-center gap-2 overflow-x-auto min-w-0 h-full bg-white/[0.03] rounded-xl border border-white/10 px-3" 
               style={{ scrollbarWidth: 'none' }}
             >
               <button
-              onClick={() => setShowMemoriesDrawer(true)}
-              className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0 transition-colors flex items-center gap-1"
-            >
-              <span>📷</span>
-              <span>Memories</span>
-            </button>
-            {references.map((ref) => (
-              <GameReference 
-                key={ref.id} 
-                reference={ref} 
-                onClick={handleReferenceClick}
-                isActive={activeReference?.id === ref.id}
-              />
-            ))}
-            <GameReference isHomeButton={true} onClick={handleHomeClick} />
+                onClick={() => setShowMemoriesDrawer(true)}
+                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
+              >
+                <span className="text-xl leading-none">📷</span>
+                <span className="leading-none">Memories</span>
+              </button>
+              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
+              {references.map((ref) => (
+                <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                  <GameReference 
+                    reference={ref} 
+                    onClick={handleReferenceClick}
+                    isActive={activeReference?.id === ref.id}
+                  />
+                </div>
+              ))}
+              <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                <GameReference isHomeButton={true} onClick={handleHomeClick} />
+              </div>
+            </div>
+
+            {/* Calendar Box */}
+            <div className="w-[450px] h-full flex-shrink-0">
+              {calendarBox}
+            </div>
+          </div>
+
+          {/* Bottom Row: Nav Boxes */}
+          <div className="flex justify-start w-full">
+            <div className="w-[368px] flex justify-center">
+              {navBoxes}
+            </div>
           </div>
         </div>
-      </div>
     </div>
 
       {/* Memories Drawer — slides in from right */}
