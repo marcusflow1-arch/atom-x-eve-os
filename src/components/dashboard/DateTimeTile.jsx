@@ -41,8 +41,18 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
       <div className="relative h-full flex flex-row items-stretch">
         
-        {/* Left Side: Time, Date & Reminders */}
-        <div className="flex-[1.3] p-3 px-4 flex items-center relative gap-3">
+        {/* Left Side: Calendar (35%) */}
+        <div style={{ flex: 35 }} className="p-3 px-3 flex items-center gap-3 overflow-hidden relative">
+          
+          {/* Calendar Button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
+            className="w-8 h-8 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all z-10"
+            title="Calendar"
+          >
+            <CalendarIcon className="w-3.5 h-3.5 text-white/80" />
+          </button>
+
           {/* Time and Date */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <div className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none">{timeString}</div>
@@ -53,7 +63,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
           </div>
           
           {/* Reminders Section */}
-          <div className="flex-1 h-full flex items-center justify-start overflow-hidden pr-8 relative border-l border-white/10 pl-3 ml-1">
+          <div className="flex-1 h-full flex items-center justify-start overflow-hidden relative border-l border-white/10 pl-3 ml-1">
             <div className="flex flex-col items-start justify-center overflow-hidden w-full">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <Bell className="w-2.5 h-2.5 text-amber-400" />
@@ -76,25 +86,18 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
             </div>
           </div>
 
-          {/* Calendar Button */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
-            className="absolute top-1/2 -translate-y-1/2 right-3 w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all z-10"
-            title="Calendar"
-          >
-            <CalendarIcon className="w-3.5 h-3.5 text-white/80" />
-          </button>
         </div>
 
         {/* Main Divider Line */}
-        <div className="w-px bg-white/10 h-full" />
+        <div className="w-px bg-white/10 h-full flex-shrink-0" />
 
         {/* Right Side: System Updates (Clickable) */}
         <motion.div 
+          style={{ flex: 65 }}
           whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
           whileTap={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="flex-1 flex flex-row items-stretch cursor-pointer group transition-colors relative"
+          className="flex flex-row items-stretch cursor-pointer group transition-colors relative overflow-hidden"
         >
           {/* Top Left Text: Updates */}
           <div className="p-2 px-3 flex flex-col justify-start min-w-[65px]">
