@@ -354,6 +354,19 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
+  const [showQuestBook, setShowQuestBook] = useState(true);
+  const [showCardCollection, setShowCardCollection] = useState(true);
+
+  useEffect(() => {
+    const toggleQB = () => setShowQuestBook(v => !v);
+    const toggleCC = () => setShowCardCollection(v => !v);
+    window.addEventListener('toggleQuestBook', toggleQB);
+    window.addEventListener('toggleCardCollection', toggleCC);
+    return () => {
+      window.removeEventListener('toggleQuestBook', toggleQB);
+      window.removeEventListener('toggleCardCollection', toggleCC);
+    };
+  }, []);
 
   useEffect(() => {
     const handler = () => setAvatarFocusMode(prev => !prev);
