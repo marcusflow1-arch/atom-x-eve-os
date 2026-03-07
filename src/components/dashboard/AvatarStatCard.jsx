@@ -53,10 +53,11 @@ export default function AvatarStatCard() {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden flex-shrink-0 flex flex-col"
+      className="rounded-none rounded-r-2xl overflow-hidden flex-shrink-0 flex flex-col group-hover:bg-white/5 transition-all"
       style={{
         background: 'rgba(22, 27, 38, 0.85)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderLeft: 'none',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
         height: '280px',
         width: '190px',
@@ -75,12 +76,12 @@ export default function AvatarStatCard() {
           </div>
         </div>
 
-        {/* Skill Tree Button */}
-        <div className="flex flex-col items-center group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggleSkillTree'))}>
-          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-cyan-400/50 flex items-center justify-center transition-all">
-            <Network className="w-4 h-4 text-white/70 group-hover:text-cyan-400" />
+        {/* Status Button */}
+        <div className="flex flex-col items-center group/btn cursor-pointer" onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('toggleAvatarExpandedMode')); }}>
+          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 group-hover/btn:bg-white/10 group-hover/btn:border-cyan-400/50 flex items-center justify-center transition-all">
+            <Network className="w-4 h-4 text-white/70 group-hover/btn:text-cyan-400" />
           </div>
-          <span className="text-[8px] font-bold text-white/60 mt-1 uppercase tracking-wider group-hover:text-cyan-400 transition-colors">Skill Tree</span>
+          <span className="text-[8px] font-bold text-white/60 mt-1 uppercase tracking-wider group-hover/btn:text-cyan-400 transition-colors">Status</span>
         </div>
       </div>
 
