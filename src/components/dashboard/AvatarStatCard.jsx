@@ -63,14 +63,24 @@ export default function AvatarStatCard() {
       }}
     >
       {/* Name & Rank Header */}
-      <div className="px-3 pt-3 pb-2 border-b border-white/6">
-        <p className="text-white font-bold text-[13px] truncate leading-tight">{displayName}</p>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-cyan-400 text-[10px] font-semibold">{rank}</span>
-          <span className="text-white/20 text-[10px]">·</span>
-          <span className="text-white/40 text-[10px]">Lvl {globalLevel}</span>
-          <span className="text-white/20 text-[10px]">·</span>
-          <span className="text-white/40 text-[10px] capitalize">{gender}</span>
+      <div className="px-3 pt-3 pb-2 border-b border-white/6 flex justify-between items-start">
+        <div className="flex-1 min-w-0 pr-2">
+          <p className="text-white font-bold text-[13px] truncate leading-tight">{displayName}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span className="text-cyan-400 text-[10px] font-semibold">{rank}</span>
+            <span className="text-white/20 text-[10px]">·</span>
+            <span className="text-white/40 text-[10px]">Lvl {globalLevel}</span>
+            <span className="text-white/20 text-[10px]">·</span>
+            <span className="text-white/40 text-[10px] capitalize">{gender}</span>
+          </div>
+        </div>
+
+        {/* Skill Tree Button */}
+        <div className="flex flex-col items-center group cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('toggleSkillTree'))}>
+          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-cyan-400/50 flex items-center justify-center transition-all">
+            <Network className="w-4 h-4 text-white/70 group-hover:text-cyan-400" />
+          </div>
+          <span className="text-[8px] font-bold text-white/60 mt-1 uppercase tracking-wider group-hover:text-cyan-400 transition-colors">Skill Tree</span>
         </div>
       </div>
 
