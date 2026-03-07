@@ -871,6 +871,7 @@ export default function LunaTemplate() {
                  currentEnvId={currentEnvId}
                  onSelectEnv={handleEnvSelect}
                  onOpenDevSpotlight={() => setShowDevSpotlight(true)}
+                 avatarExpandedMode={avatarExpandedMode}
                 />
             </div>
           </motion.div>
