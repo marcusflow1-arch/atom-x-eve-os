@@ -1803,7 +1803,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     showLive={showLiveDropdown}
                   />
                 }
-                calendarBox={null}
+
               />
 
               {!avatarExpandedMode && (
