@@ -28,22 +28,28 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       }}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
-      <div className="relative h-full flex flex-col items-center justify-center p-6 text-center">
-        <button
-          onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
-          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center"
-          title="Add to Calendar"
-        >
-          <CalendarIcon className="w-4 h-4 text-white/80" />
-        </button>
-        <div className="text-5xl font-black text-white tracking-tighter mb-2 drop-shadow-lg">{timeString}</div>
-        <div className="flex flex-col gap-1">
-          <div className="text-sm font-bold text-cyan-300 uppercase tracking-widest">{dateString}</div>
-          <div className="text-xs text-white/40 font-mono">{yearString}</div>
+      <div className="relative h-full flex flex-row items-center justify-between p-6 px-8 text-left">
+        <div className="flex flex-col gap-0 items-start">
+          <div className="text-5xl font-black text-white tracking-tighter drop-shadow-lg leading-none">{timeString}</div>
+          <div className="flex items-center gap-3 mt-2">
+            <div className="text-sm font-bold text-cyan-300 uppercase tracking-widest">{dateString}</div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+            <div className="text-xs text-white/40 font-mono">{yearString}</div>
+          </div>
         </div>
-        <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-          <span className="text-[10px] text-white/60 font-medium">System Online</span>
+        
+        <div className="flex flex-col items-end gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/5">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+            <span className="text-xs text-white/60 font-medium">System Online</span>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
+            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all"
+            title="Add to Calendar"
+          >
+            <CalendarIcon className="w-4 h-4 text-white/80" />
+          </button>
         </div>
       </div>
     </motion.div>
