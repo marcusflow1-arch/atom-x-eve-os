@@ -7,7 +7,7 @@ const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
-export default function Mini3DViewerBox() {
+export default function Mini3DViewerBox({ isInventoryOpen }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
