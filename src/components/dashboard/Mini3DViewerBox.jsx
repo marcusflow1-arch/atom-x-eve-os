@@ -19,6 +19,22 @@ export default function Mini3DViewerBox() {
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
+  const [showSettings, setShowSettings] = useState(false);
+  const [resolution, setResolution] = useState('High');
+  const [showClothes, setShowClothes] = useState(true);
+  const [performanceMode, setPerformanceMode] = useState(false);
+
+  useEffect(() => {
+    const handleOpen = () => setShowSettings(true);
+    window.addEventListener('openAvatarSettings', handleOpen);
+    return () => window.removeEventListener('openAvatarSettings', handleOpen);
+  }, []);
+
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    const ratio = resolution === 'High' ? Math.min(window.devicePixelRatio, 2) : resolution === 'Medium' ? 1 : 0.5;
+    rendererRef.current.setPixelRatio(ratio);
+  }, [resolution]);
 
   // Listen for character switch events from the main 3D viewer
   useEffect(() => {
