@@ -1645,18 +1645,26 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [showEnvDrawer, setShowEnvDrawer] = useState(false);
   const [envDrawerExpanded, setEnvDrawerExpanded] = useState(false);
 
-  // Toggle Skill Tree dropdown with 'O' key
+  // Toggle Skill Tree dropdown with 'O' key and custom event
   useEffect(() => {
+    const toggleSkillTree = () => {
+      setShowLiveDropdown(false);
+      setShowFriendsDropdown(false);
+      setShowSkillTree((v) => !v);
+    };
+
     const onKeyDown = (e) => {
-      const key = e.key?.toLowerCase();
-      if (key === 'o') {
-        setShowLiveDropdown(false);
-        setShowFriendsDropdown(false);
-        setShowSkillTree((v) => !v);
+      if (e.key?.toLowerCase() === 'o') {
+        toggleSkillTree();
       }
     };
+
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('toggleSkillTree', toggleSkillTree);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('toggleSkillTree', toggleSkillTree);
+    };
   }, []);
   const [settingsMaximized, setSettingsMaximized] = useState(false);
   const bannerAreaRef = useRef(null);
