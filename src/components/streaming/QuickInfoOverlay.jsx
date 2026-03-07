@@ -77,6 +77,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
   // Friend profile view state (always declared — Rules of Hooks)
   const [friendTab, setFriendTab] = React.useState('games');
   const [achCardTilts, setAchCardTilts] = React.useState({});
+  const [friendRecentFilter, setFriendRecentFilter] = React.useState(null);
 
   const [selectedCommunityMedia, setSelectedCommunityMedia] = React.useState(null);
 
