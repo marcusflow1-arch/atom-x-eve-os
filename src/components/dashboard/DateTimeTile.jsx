@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar as CalendarIcon, Bell } from 'lucide-react';
 
 export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   const [time, setTime] = useState(new Date());
+  const [currentReminderIdx, setCurrentReminderIdx] = useState(0);
+
+  const reminders = [
+    "Raid at 8:00 PM tonight",
+    "Collect daily rewards",
+    "Check out new game release",
+    "Clan meeting tomorrow"
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const reminderTimer = setInterval(() => {
+      setCurrentReminderIdx((prev) => (prev + 1) % reminders.length);
+    }, 5000);
+    return () => {
+      clearInterval(timer);
+      clearInterval(reminderTimer);
+    };
+  }, [reminders.length]);
 
   const timeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   const dateString = time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -27,9 +41,10 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
       <div className="relative h-full flex flex-row items-stretch">
         
-        {/* Left Side: Time, Date & Calendar */}
-        <div className="flex-1 p-3 px-5 flex items-center justify-between relative">
-          <div className="flex items-center gap-3">
+        {/* Left Side: Time, Date & Reminders */}
+        <div className="flex-[1.3] p-3 px-4 flex items-center relative gap-3">
+          {/* Time and Date */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             <div className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none">{timeString}</div>
             <div className="flex flex-col items-start justify-center leading-tight">
               <div className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest">{dateString}</div>
@@ -37,16 +52,41 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
             </div>
           </div>
           
+          {/* Reminders Section */}
+          <div className="flex-1 h-full flex items-center justify-start overflow-hidden pr-8 relative border-l border-white/10 pl-3 ml-1">
+            <div className="flex flex-col items-start justify-center overflow-hidden w-full">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <Bell className="w-2.5 h-2.5 text-amber-400" />
+                <span className="text-[8px] uppercase tracking-wider text-amber-400/80 font-bold">Reminders</span>
+              </div>
+              <div className="relative w-full h-4 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentReminderIdx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="absolute inset-0 text-[10px] text-white/80 font-medium truncate"
+                  >
+                    {reminders[currentReminderIdx]}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar Button */}
           <button
             onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
-            className="absolute top-2 right-3 w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all z-10"
+            className="absolute top-1/2 -translate-y-1/2 right-3 w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all z-10"
             title="Calendar"
           >
-            <CalendarIcon className="w-3 h-3 text-white/80" />
+            <CalendarIcon className="w-3.5 h-3.5 text-white/80" />
           </button>
         </div>
 
-        {/* Divider Line */}
+        {/* Main Divider Line */}
         <div className="w-px bg-white/10 h-full" />
 
         {/* Right Side: System Updates (Clickable) */}
@@ -54,14 +94,28 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
           whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
           whileTap={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="flex-1 p-3 px-5 flex items-center justify-center cursor-pointer group transition-colors"
+          className="flex-1 flex flex-row items-stretch cursor-pointer group transition-colors relative"
         >
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-              <span className="text-sm font-bold text-white/90">System Online</span>
+          {/* Top Left Text: Updates */}
+          <div className="p-2 px-3 flex flex-col justify-start min-w-[65px]">
+            <span className="text-[9px] text-white/60 group-hover:text-white/90 transition-colors uppercase tracking-widest font-bold border-b border-white/20 pb-1 w-max">
+              Update
+            </span>
+          </div>
+
+          {/* Divider Line inside Updates */}
+          <div className="w-px bg-white/10 h-full" />
+
+          {/* Updates List */}
+          <div className="flex-1 p-2 px-3 flex flex-col justify-center overflow-hidden">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+              <span className="text-[10px] text-white/90 font-bold truncate">System Online</span>
             </div>
-            <span className="text-[10px] text-white/50 group-hover:text-white/80 transition-colors uppercase tracking-wider font-semibold">Updates</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-white/50 group-hover:text-white/70 truncate transition-colors">v2.1 - Cyberpunk Expansion</span>
+              <span className="text-[9px] text-white/50 group-hover:text-white/70 truncate transition-colors">v2.0 - Memory Hub UI</span>
+            </div>
           </div>
         </motion.div>
 
