@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
-import { Zap, Trophy, Star, Gamepad2, Users, TrendingUp } from 'lucide-react';
+import { Zap, Trophy, Star, Gamepad2, Users, TrendingUp, Network } from 'lucide-react';
 
 function StatLine({ icon, label, value, color = 'text-white/70' }) {
   return (
