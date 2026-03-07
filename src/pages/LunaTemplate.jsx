@@ -353,6 +353,21 @@ export default function LunaTemplate() {
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
+  const [avatarFocusMode, setAvatarFocusMode] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setAvatarFocusMode(prev => {
+      const next = !prev;
+      window.dispatchEvent(new CustomEvent('forceHideHeader', { detail: next }));
+      return next;
+    });
+    window.addEventListener('toggleAvatarFocusMode', handler);
+    return () => {
+      window.removeEventListener('toggleAvatarFocusMode', handler);
+      window.dispatchEvent(new CustomEvent('forceHideHeader', { detail: false }));
+    };
+  }, []);
+
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState(null);
   const [roomModelUrl, setRoomModelUrl] = useState(null);
@@ -698,14 +713,46 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
-        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '322px' }}>
+        <div className="fixed z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
+             style={avatarFocusMode ? {
+               top: '50%',
+               left: '50%',
+               transform: 'translate(-50%, -50%)',
+               alignItems: 'center',
+               width: 'auto',
+               gap: '0'
+             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+             
           <Mini3DViewerBox />
-          <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
-            <QuestLogBook />
-          </div>
-          <div className="w-full" style={{ marginTop: '24px' }}>
-            <CardCollectionBrowser />
-          </div>
+          
+          {!avatarFocusMode && (
+            <>
+              <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
+                <QuestLogBook />
+              </div>
+              <div className="w-full" style={{ marginTop: '24px' }}>
+                <CardCollectionBrowser />
+              </div>
+            </>
+          )}
+
+          <AnimatePresence>
+            {avatarFocusMode && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-wrap justify-center gap-4 mt-8"
+              >
+                {['AI Story', 'AI Battle', 'Leaderboard', 'Skill Tree', 'Live'].map(opt => (
+                  <button key={opt} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/80 font-bold hover:bg-white/10 hover:text-white hover:border-cyan-400/50 transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+                    {opt}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -774,7 +821,7 @@ export default function LunaTemplate() {
 
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !showDevSpotlight &&
+        {!uiVisible && !showConsoleMode && !showDevSpotlight && !avatarFocusMode &&
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
