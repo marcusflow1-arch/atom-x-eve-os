@@ -1287,7 +1287,7 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
   ];
 
   return (
-    <div className="w-full flex justify-center pointer-events-auto">
+    <div className="w-full flex justify-center pointer-events-auto h-[32px]">
       <div 
         className="grid grid-cols-5 gap-2 w-full"
         style={{ transform: 'scale(0.55)', transformOrigin: 'top center' }}
