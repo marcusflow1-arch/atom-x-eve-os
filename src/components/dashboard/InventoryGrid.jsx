@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import Mini3DViewerBox from './Mini3DViewerBox';
 import AIAttributesBox from './AIAttributesBox';
 
 export default function InventoryGrid({ equippedItems, handleBoxClick }) {
@@ -13,9 +12,9 @@ export default function InventoryGrid({ equippedItems, handleBoxClick }) {
       transition={{ duration: 0.3 }}
       className="flex h-full relative"
     >
-      {/* Left: 3D Viewer Box */}
-      <div className="w-[420px] flex-shrink-0 mt-20 pl-8 pointer-events-auto">
-        <Mini3DViewerBox />
+      {/* Left: Spacer for floating 3D Viewer Box from LunaTemplate */}
+      <div className="w-[420px] flex-shrink-0 mt-20 pl-8 pointer-events-none">
+        {/* Removed duplicate Mini3DViewerBox */}
       </div>
 
       {/* Middle: All Equipment Sections - positioned below header */}
