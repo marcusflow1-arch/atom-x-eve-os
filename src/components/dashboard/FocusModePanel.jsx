@@ -1287,7 +1287,7 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
   ];
 
   return (
-    <div className="w-full grid grid-cols-5 gap-2 pointer-events-auto">
+    <div className="w-[55%] mx-auto grid grid-cols-5 gap-2 pointer-events-auto">
       {actions.map((action) => {
         const Icon = action.icon;
         return (
