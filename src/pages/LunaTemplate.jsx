@@ -570,7 +570,15 @@ export default function LunaTemplate() {
                 className="flex flex-col gap-3 mt-2"
               >
                 {['AI Story', 'AI Battle', 'Leaderboard', 'Skill Tree', 'Live'].map(opt => (
-                  <button key={opt} className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white/80 font-bold hover:bg-white/10 hover:text-white hover:border-cyan-400/50 transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+                  <button
+                    key={opt}
+                    onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
+                    className={`w-full py-4 rounded-xl border transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center font-bold ${
+                      activeAvatarFocusView === opt
+                        ? 'bg-cyan-500/20 border-cyan-400/50 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]'
+                        : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'
+                    }`}
+                  >
                     {opt}
                   </button>
                 ))}
@@ -579,6 +587,61 @@ export default function LunaTemplate() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Avatar Focus Content Panel (Appears to the right) */}
+      <AnimatePresence>
+        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && (
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+            transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+            className="fixed z-10 pointer-events-auto rounded-[32px] overflow-hidden flex flex-col"
+            style={{
+              left: '386px',
+              top: '80px',
+              bottom: '32px',
+              right: '32px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(30px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/20">
+              <h2 className="text-xl font-bold text-white tracking-wider uppercase flex items-center gap-3">
+                {activeAvatarFocusView === 'AI Story' && <Sparkles className="w-5 h-5 text-cyan-400" />}
+                {activeAvatarFocusView === 'AI Battle' && <Swords className="w-5 h-5 text-red-400" />}
+                {activeAvatarFocusView === 'Leaderboard' && <Crown className="w-5 h-5 text-yellow-400" />}
+                {activeAvatarFocusView === 'Skill Tree' && <Layers className="w-5 h-5 text-purple-400" />}
+                {activeAvatarFocusView === 'Live' && <Radio className="w-5 h-5 text-green-400" />}
+                {activeAvatarFocusView}
+              </h2>
+              <button
+                onClick={() => setActiveAvatarFocusView(null)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 text-white/60 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto relative bg-black/20" style={{ scrollbarWidth: 'none' }}>
+              {activeAvatarFocusView === 'AI Story' && <AIStoryOverlay onClose={() => setActiveAvatarFocusView(null)} />}
+              {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
+              {activeAvatarFocusView === 'Skill Tree' && <GenreMastery onClose={() => setActiveAvatarFocusView(null)} />}
+              {activeAvatarFocusView === 'Leaderboard' && (
+                <div className="absolute inset-0 bg-[#080808] overflow-y-auto overflow-x-hidden">
+                  <Leaderboard />
+                </div>
+              )}
+              {activeAvatarFocusView === 'Live' && <StreamingDiscovery />}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
