@@ -1396,7 +1396,7 @@ export function LibraryBannerSection({
             {/* Memories */}
             <div 
               ref={scrollRef}
-              className="flex-1 flex items-center gap-2 overflow-x-auto min-w-0 h-full bg-white/[0.03] rounded-xl border border-white/10 px-3" 
+              className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
               style={{ scrollbarWidth: 'none' }}
             >
               <button
