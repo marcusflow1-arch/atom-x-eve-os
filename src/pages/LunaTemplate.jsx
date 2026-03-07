@@ -389,6 +389,15 @@ export default function LunaTemplate() {
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
   const [showDevSpotlight, setShowDevSpotlight] = useState(false); // Toggle with 'P' key
   const [currentEnvId, setCurrentEnvId] = useState('default_room');
+  
+  const [avatarExpandedMode, setAvatarExpandedMode] = useState(false);
+  const [avatarExpandedTab, setAvatarExpandedTab] = useState('skill-tree');
+
+  useEffect(() => {
+    const toggle = () => setAvatarExpandedMode(v => !v);
+    window.addEventListener('toggleAvatarExpandedMode', toggle);
+    return () => window.removeEventListener('toggleAvatarExpandedMode', toggle);
+  }, []);
 
   const { mode } = useDashboardMode();
 
