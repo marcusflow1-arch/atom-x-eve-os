@@ -46,19 +46,10 @@ export default function IntroScreen({ onComplete }) {
             src="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/e15ddf60a_Crafting_Premium_AI_Intro_Screen_Prompt.mp4"
             className="w-full h-full object-cover opacity-90"
             autoPlay 
-            muted={true}
+            muted={false}
             playsInline
             onEnded={onComplete}
-            onError={onComplete}
           />
-          
-          <button 
-            onClick={(e) => { e.stopPropagation(); onComplete(); }}
-            className="absolute bottom-8 right-8 px-6 py-3 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md rounded-full border border-white/20 transition-all z-50 flex items-center gap-2"
-          >
-            Skip Intro
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </button>
         </div>
 
       </div>

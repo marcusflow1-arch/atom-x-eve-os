@@ -1,8 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Settings, Monitor, Shirt, Zap } from 'lucide-react';
 import AvatarStatCard from './AvatarStatCard';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
@@ -19,22 +17,6 @@ export default function Mini3DViewerBox() {
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
-  const [showSettings, setShowSettings] = useState(false);
-  const [resolution, setResolution] = useState('High');
-  const [showClothes, setShowClothes] = useState(true);
-  const [performanceMode, setPerformanceMode] = useState(false);
-
-  useEffect(() => {
-    const handleOpen = () => setShowSettings(true);
-    window.addEventListener('openAvatarSettings', handleOpen);
-    return () => window.removeEventListener('openAvatarSettings', handleOpen);
-  }, []);
-
-  useEffect(() => {
-    if (!rendererRef.current) return;
-    const ratio = resolution === 'High' ? Math.min(window.devicePixelRatio, 2) : resolution === 'Medium' ? 1 : 0.5;
-    rendererRef.current.setPixelRatio(ratio);
-  }, [resolution]);
 
   // Listen for character switch events from the main 3D viewer
   useEffect(() => {
@@ -160,81 +142,10 @@ export default function Mini3DViewerBox() {
   }, [activeChar]);
 
   return (
-    <div className="pointer-events-auto flex items-start gap-0 h-full relative">
-      {/* Settings Overlay */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute z-50 rounded-2xl overflow-hidden border border-white/10 flex flex-col"
-            style={{
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(15, 20, 30, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
-            }}
-          >
-            <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
-              <div className="flex items-center gap-2">
-                <Settings className="w-4 h-4 text-white/70" />
-                <h3 className="text-white font-bold text-sm">Avatar Settings</h3>
-              </div>
-              <button onClick={() => setShowSettings(false)} className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <X className="w-3 h-3 text-white" />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
-              <div>
-                <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Monitor className="w-3 h-3" /> Resolution</label>
-                <div className="flex gap-2">
-                  {['Low', 'Medium', 'High'].map(res => (
-                    <button 
-                      key={res}
-                      onClick={() => setResolution(res)}
-                      className={`flex-1 py-1.5 text-[10px] font-semibold rounded-md border transition-colors ${resolution === res ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
-                    >
-                      {res}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Shirt className="w-3 h-3" /> Appearance</label>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setShowClothes(!showClothes)}>
-                  <span className="text-xs text-white/80 font-medium">Show Clothes</span>
-                  <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${showClothes ? 'bg-cyan-500' : 'bg-white/20'}`}>
-                    <div className={`w-3 h-3 rounded-full bg-white transition-transform ${showClothes ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-[10px] font-bold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Zap className="w-3 h-3" /> System</label>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setPerformanceMode(!performanceMode)}>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-white/80 font-medium">Performance Mode</span>
-                    <span className="text-[8px] text-white/40">Reduces background animations</span>
-                  </div>
-                  <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${performanceMode ? 'bg-amber-500' : 'bg-white/20'}`}>
-                    <div className={`w-3 h-3 rounded-full bg-white transition-transform ${performanceMode ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="pointer-events-auto flex items-start gap-0 h-full">
       {/* 3D Viewer - Original Size */}
       <div
-        className="rounded-2xl overflow-hidden flex-shrink-0 h-full relative"
+        className="rounded-2xl overflow-hidden flex-shrink-0 h-full"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
