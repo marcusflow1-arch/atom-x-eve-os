@@ -128,9 +128,9 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
       if (mixerRef.current) mixerRef.current.update(delta);
 
       if (cameraRef.current) {
-         const targetZ = isUiVisibleRef.current ? -2.8 : -1.4;
-         const targetY = isUiVisibleRef.current ? 1.0 : 1.85;
-         const targetLookY = isUiVisibleRef.current ? 1.0 : 1.7;
+         const targetZ = isUiVisibleRef.current ? -3.2 : -1.4;
+         const targetY = isUiVisibleRef.current ? 0.9 : 1.85;
+         const targetLookY = isUiVisibleRef.current ? 0.9 : 1.7;
 
          cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.05;
          cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.05;
