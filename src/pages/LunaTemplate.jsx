@@ -46,6 +46,7 @@ import CommunityPage from './Community';
 import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
+import Leaderboard from './Leaderboard';
 import EntertainmentHub from '../components/dashboard/EntertainmentHub.jsx';
 import useLunaStore from '../components/luna/useLunaStore';
 import { useEquipment } from '../components/luna/hooks/useEquipment';
