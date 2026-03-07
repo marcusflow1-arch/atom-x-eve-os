@@ -20,6 +20,7 @@ export default function LibrarySidebar() {
   const [isExpandedInventory, setIsExpandedInventory] = useState(false);
   const [inventoryDetailItem, setInventoryDetailItem] = useState(null);
   const [pendingRewardGame, setPendingRewardGame] = useState(null);
+  const [showLeftNav, setShowLeftNav] = useState(true);
 
   useEffect(() => {
     const onOpen = () => setOverlayActive(true);
