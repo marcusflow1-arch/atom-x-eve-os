@@ -1803,13 +1803,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     showLive={showLiveDropdown}
                   />
                 }
-                calendarBox={
-                  <div className="flex items-stretch gap-3 w-full justify-end" style={{ height: '60px' }}>
-                    <div className="flex-1 min-w-0 h-full">
-                      <DateTimeTile onClick={handleDateTimeClick} />
-                    </div>
-                  </div>
-                }
+                calendarBox={null}
               />
 
               {!avatarExpandedMode && (
