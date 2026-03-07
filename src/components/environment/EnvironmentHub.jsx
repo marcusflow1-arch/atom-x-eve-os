@@ -10,11 +10,10 @@ import FeatureUnlockGrid from './FeatureUnlockGrid';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import CompanionsGrid from './CompanionsGrid';
 
-export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
+export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, expanded, onToggleExpand }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('environments');
   const [selectedEnv, setSelectedEnv] = useState(null);
-  const [expandedTab, setExpandedTab] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hubProgression, setHubProgression] = useState(null);
   const [environments, setEnvironments] = useState([]);
@@ -84,99 +83,18 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
     );
   }
 
-  const renderExpandedContent = () => {
-    switch (expandedTab) {
-      case 'environments':
-        return (
-          <div className="space-y-4">
-            {roomModels.length > 0 ? (
-              <div className="grid grid-cols-6 gap-3">
-                {roomModels.map(model => (
-                  <button
-                    key={model.id}
-                    onClick={() => {
-                      setSelectedEnv(model);
-                      onSelectEnv?.({
-                        id: model.id,
-                        name: model.name,
-                        modelUrl: model.file_url,
-                        thumbnail: model.thumbnail_url,
-                        description: model.description,
-                        playerSpawn: model.player_spawn || { x: 0, y: -0.5, z: 0 },
-                        useMeshCollision: model.use_mesh_collision || false,
-                      });
-                    }}
-                    className={`relative group rounded-lg overflow-hidden border transition-all text-left ${
-                      selectedEnv?.id === model.id
-                        ? 'border-cyan-400/40 bg-white/10 ring-1 ring-cyan-400/20'
-                        : 'border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20'
-                    }`}
-                  >
-                    <div className="aspect-video w-full bg-black/30 overflow-hidden">
-                      {model.thumbnail_url ? (
-                        <img src={model.thumbnail_url} alt={model.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Globe className="w-5 h-5 text-white/10" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-2">
-                      <h4 className="text-[10px] font-bold text-white truncate">{model.name}</h4>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-32">
-                <Globe className="w-12 h-12 mx-auto mb-3 text-white/10" />
-                <p className="text-white/30 text-sm font-medium">No environments yet</p>
-              </div>
-            )}
-          </div>
-        );
-      case 'skyboxes':
-        return (
-          <div className="grid grid-cols-6 gap-3">
-            {SKYBOXES.map(sky => (
-              <button
-                key={sky.id}
-                onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.title, background: sky.background, isSkybox: true }); }}
-                className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
-                  activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
-                }`}
-              >
-                <img src={sky.thumbnail} alt={sky.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                {activeSkybox === sky.id && (
-                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                    <span className="text-black text-[9px] font-black">✓</span>
-                  </div>
-                )}
-                <p className="absolute bottom-2 left-2 right-2 text-white text-[10px] font-semibold truncate">{sky.title}</p>
-              </button>
-            ))}
-          </div>
-        );
-      case 'companions':
-        return <CompanionsGrid />;
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full max-h-[80vh] overflow-hidden">
+    <div className="flex flex-col h-full max-h-full overflow-hidden">
       {/* Hub Progression Info */}
        {hubProgression && <HubProgressionHeader hubProgression={hubProgression} />}
 
        {/* Header with Current Section */}
        <div className="flex items-center justify-between pb-4 mb-4 border-b border-white/[0.06]">
          <button 
-           onClick={() => setExpandedTab(activeTab)}
+           onClick={onToggleExpand}
            className="flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
          >
-           <div className="text-sm text-white/60 font-light">Full</div>
+           <div className="text-sm text-white/60 font-light">{expanded ? 'Collapse' : 'Full'}</div>
            <div className="text-lg font-bold text-white">{tabs.find(t => t.id === activeTab)?.abbr}</div>
          </button>
          <button onClick={onClose} className="w-7 h-7 rounded-full bg-white/[0.06] hover:bg-white/10 flex items-center justify-center flex-shrink-0 transition-colors">
@@ -220,7 +138,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
               <>
                 {/* 3D Room Environments from Admin */}
                 {roomModels.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className={`grid gap-2 ${expanded ? 'grid-cols-6 lg:grid-cols-8' : 'grid-cols-4'}`}>
                     {roomModels.map(model => (
                       <button
                         key={model.id}
@@ -300,7 +218,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
             {activeTab === 'skyboxes' && (
               <>
                 <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className={`grid gap-2 ${expanded ? 'grid-cols-4 lg:grid-cols-6' : 'grid-cols-2'}`}>
                   {SKYBOXES.map(sky => (
                     <button
                       key={sky.id}
@@ -344,59 +262,6 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Expanded Tab Overlay (appears in center, avoids headers) */}
-      <AnimatePresence>
-        {expandedTab && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={() => setExpandedTab(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9997]"
-              style={{ pointerEvents: 'all' }}
-            />
-            <motion.div
-               initial={{ opacity: 0 }}
-               animate={{ opacity: 1 }}
-               exit={{ opacity: 0 }}
-               transition={{ duration: 0.3 }}
-               className="fixed z-[9998] flex flex-col overflow-hidden rounded-2xl border border-white/10"
-               style={{
-                 top: '80px', // Below the top header
-                 bottom: '80px', // Above bottom elements
-                 left: '24px',
-                 right: '24px',
-                 background: 'rgba(15, 20, 26, 0.96)',
-                 backdropFilter: 'blur(30px) saturate(150%)',
-                 WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                 boxShadow: '0 10px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                 pointerEvents: 'all',
-               }}
-               onClick={(e) => e.stopPropagation()}
-            >
-              {/* Expanded Header */}
-              <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
-                <span className="text-white font-bold text-lg tracking-wide">
-                  {tabs.find(t => t.id === expandedTab)?.label}
-                </span>
-                <button
-                  onClick={() => setExpandedTab(null)}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.14] flex items-center justify-center transition-all border border-white/10"
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
-
-              {/* Expanded Content */}
-              <div className="flex-1 overflow-y-auto p-6" style={{ scrollbarWidth: 'none' }}>
-                {renderExpandedContent()}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -30,24 +30,39 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
             style={{ pointerEvents: 'all' }}
           />
 
-          <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[9999] flex flex-col rounded-l-3xl"
-            style={{
-              width: expanded ? '100vw' : '429px',
-              background: 'rgba(10, 16, 28, 0.96)',
-              backdropFilter: 'blur(30px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
-              boxShadow: '-4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-              pointerEvents: 'all',
-              transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={expanded ? 'expanded' : 'collapsed'}
+              initial={{ opacity: 0, scale: expanded ? 0.95 : 1, x: expanded ? 0 : 50 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: expanded ? 0.95 : 1, x: expanded ? 0 : 50 }}
+              transition={{ duration: 0.25 }}
+              className="fixed z-[9999] flex flex-col"
+              style={{
+                background: 'rgba(10, 16, 28, 0.96)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                boxShadow: '-4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                pointerEvents: 'all',
+                ...(expanded ? {
+                  top: '80px',
+                  bottom: '80px',
+                  left: '24px',
+                  right: '24px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.10)',
+                } : {
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  width: '429px',
+                  borderTopLeftRadius: '24px',
+                  borderBottomLeftRadius: '24px',
+                  borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
+                })
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Header */}
             <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -81,9 +96,12 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                 currentEnvId={currentEnvId}
                 onSelectEnv={handleSelect}
                 onClose={handleClose}
+                expanded={expanded}
+                onToggleExpand={() => setExpanded(v => !v)}
               />
             </div>
-          </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
