@@ -344,7 +344,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
         </AnimatePresence>
       </div>
 
-      {/* Expanded Tab Overlay (appears to left of hub) */}
+      {/* Expanded Tab Overlay (appears in center, avoids headers) */}
       <AnimatePresence>
         {expandedTab && (
           <>
@@ -352,25 +352,26 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.3 }}
               onClick={() => setExpandedTab(null)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9997]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9997]"
               style={{ pointerEvents: 'all' }}
             />
             <motion.div
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               exit={{ opacity: 0, x: 20 }}
-               transition={{ duration: 0.2 }}
-               className="fixed top-0 bottom-0 z-[9998] flex flex-col overflow-hidden rounded-l-2xl"
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               transition={{ duration: 0.3 }}
+               className="fixed z-[9998] flex flex-col overflow-hidden rounded-2xl border border-white/10"
                style={{
-                 right: 'calc(429px + 20px)',
-                 left: '20px',
-                 background: 'rgba(10, 16, 28, 0.96)',
+                 top: '80px', // Below the top header
+                 bottom: '120px', // Above bottom elements
+                 left: '24px',
+                 right: '24px',
+                 background: 'rgba(15, 20, 26, 0.96)',
                  backdropFilter: 'blur(30px) saturate(150%)',
                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                 borderLeft: '1px solid rgba(255, 255, 255, 0.10)',
-                 boxShadow: '4px 0 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                 boxShadow: '0 10px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                  pointerEvents: 'all',
                }}
                onClick={(e) => e.stopPropagation()}
