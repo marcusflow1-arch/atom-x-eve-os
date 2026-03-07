@@ -186,6 +186,24 @@ export default function LibrarySidebar() {
             <Library className="w-5 h-5" />
           </button>
 
+          {/* AI Battle Button */}
+          <button
+            onClick={() => window.location.assign('/aibattle')}
+            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="AI Battle"
+          >
+            <Swords className="w-4 h-4" />
+          </button>
+
+          {/* AI Story Button */}
+          <button
+            onClick={() => window.location.assign('/aistory')}
+            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="AI Story"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
+
           {/* Card Collection Button */}
           <button
             onClick={() => window.location.assign('/genremastery')}
@@ -193,6 +211,15 @@ export default function LibrarySidebar() {
             title="Card Collection"
           >
             <Layers className="w-4 h-4" />
+          </button>
+
+          {/* Leaderboard Button */}
+          <button
+            onClick={() => window.location.assign('/leaderboard')}
+            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="Leaderboard"
+          >
+            <Crown className="w-4 h-4" />
           </button>
 
           {/* Hide UI Button */}
