@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Zap, Heart, Activity, Swords, Brain, Crosshair, Skull } from 'lucide-react';
+import { Shield, Zap, Heart, Activity, Swords, Brain, Crosshair, Skull, Minus, Plus } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { showError } from '@/components/error/ErrorToast';
