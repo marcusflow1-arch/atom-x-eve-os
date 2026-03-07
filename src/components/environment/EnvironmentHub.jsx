@@ -365,7 +365,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose }) {
                className="fixed z-[9998] flex flex-col overflow-hidden rounded-2xl border border-white/10"
                style={{
                  top: '80px', // Below the top header
-                 bottom: '120px', // Above bottom elements
+                 bottom: '80px', // Above bottom elements
                  left: '24px',
                  right: '24px',
                  background: 'rgba(15, 20, 26, 0.96)',
