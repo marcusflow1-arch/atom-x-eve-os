@@ -1302,9 +1302,9 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
           >
             <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-            <div className="absolute inset-0 p-1 flex flex-col items-center justify-center text-center gap-1.5">
-              <Icon className={`w-4 h-4 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
-              <span className="text-white font-bold text-[9px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
+            <div className="absolute inset-0 p-1 flex flex-col items-center justify-center text-center gap-1">
+              <Icon className={`w-3 h-3 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
+              <span className="text-white font-bold text-[7px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
             </div>
           </motion.button>
         );
