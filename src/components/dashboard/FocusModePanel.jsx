@@ -1287,11 +1287,8 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
   ];
 
   return (
-    <div className="w-full flex justify-center pointer-events-auto h-[32px]">
-      <div 
-        className="grid grid-cols-5 gap-2 w-full"
-        style={{ transform: 'scale(0.55)', transformOrigin: 'top center' }}
-      >
+    <div className="w-full flex justify-center pointer-events-auto h-[64px]">
+      <div className="flex justify-between gap-2 w-full">
         {actions.map((action) => {
           const Icon = action.icon;
           return (
@@ -1300,15 +1297,15 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={action.onClick}
-              className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden group shadow-md border transition-all ${
-                action.active ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+              className={`relative w-16 h-16 rounded-lg overflow-hidden group shadow-md border-2 flex-shrink-0 transition-all ${
+                action.active ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
               }`}
             >
               <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
               <div className="absolute inset-0 p-1 flex flex-col items-center justify-center text-center gap-1.5">
-                <Icon className={`w-4 h-4 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
-                <span className="text-white font-bold text-[9px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
+                <Icon className={`w-5 h-5 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
+                <span className="text-white font-bold text-[7px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
               </div>
             </motion.button>
           );
