@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Settings, Monitor, Shirt, Zap } from 'lucide-react';
 import AvatarStatCard from './AvatarStatCard';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
