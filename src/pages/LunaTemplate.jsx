@@ -357,6 +357,7 @@ export default function LunaTemplate() {
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
   const [showQuestBook, setShowQuestBook] = useState(true);
   const [showCardCollection, setShowCardCollection] = useState(true);
+  const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
 
   useEffect(() => {
     const toggleQB = () => setShowQuestBook(v => !v);
