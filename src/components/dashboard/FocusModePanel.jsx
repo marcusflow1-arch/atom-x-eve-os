@@ -1287,28 +1287,36 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
   ];
 
   return (
-    <div className="w-full flex items-center gap-4 py-2 pointer-events-auto">
-      {actions.map((action) => {
-        const Icon = action.icon;
-        return (
-          <motion.button
-            key={action.id}
-            whileHover={{ scale: 1.05, y: -4 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={action.onClick}
-            className={`relative flex-1 h-24 rounded-2xl overflow-hidden group shadow-lg border-2 transition-all ${
-              action.active ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
-            }`}
-          >
-            <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-            <div className="absolute inset-0 p-3 flex flex-col items-center justify-end text-center">
-              <Icon className={`w-6 h-6 mb-1 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
-              <span className="text-white font-bold text-xs drop-shadow-md">{action.label}</span>
-            </div>
-          </motion.button>
-        );
-      })}
+    <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+      <div className="flex items-center gap-4 px-6 py-4 pointer-events-auto"
+        style={{
+          background: 'linear-gradient(to top, rgba(10, 16, 26, 0.95), rgba(10, 16, 26, 0))',
+          width: '100%',
+          justifyContent: 'center',
+          paddingBottom: '24px'
+        }}>
+        {actions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <motion.button
+              key={action.id}
+              whileHover={{ scale: 1.05, y: -4 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={action.onClick}
+              className={`relative w-40 h-24 rounded-2xl overflow-hidden group shadow-lg flex-shrink-0 border-2 transition-all ${
+                action.active ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+              }`}
+            >
+              <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+              <div className="absolute inset-0 p-3 flex flex-col items-center justify-end text-center">
+                <Icon className={`w-6 h-6 mb-1 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
+                <span className="text-white font-bold text-xs drop-shadow-md">{action.label}</span>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1706,22 +1714,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
       {/* Top Section - Quick Access Icons & Live Streaming */}
       <div className="w-full relative z-50">
-        <div className="flex flex-col gap-6 w-full">
-          {/* Expanded Calendar panel - spans full width */}
-          <div className="w-full flex items-stretch gap-4 pointer-events-auto">
-            <div className="flex items-center">
-              <PartyInviteDropdown />
-            </div>
-            <div className="flex-1">
-               <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
-            </div>
-          </div>
-
+        <div className="flex gap-6 items-start">
           {/* Left Column: Environment Hub + Memories + Overlays */}
-          <div className="w-full flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 160px)' }}>
+          <div className="flex-1 min-w-0 flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
 
             {/* Banner area — Environment Hub always stays fixed */}
-            <div className="pointer-events-auto relative w-full" ref={bannerAreaRef}>
+            <div className="pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
@@ -1730,17 +1728,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 showEnvDropdown={false}
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
               />
-
-              {/* Row of 5 icons directly underneath Environment Hub */}
-              <div className="mt-4 mb-4">
-                <BottomNavBoxes 
-                  navigate={navigate} 
-                  onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
-                  onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
-                  showSkillTree={showSkillTree}
-                  showLive={showLiveDropdown}
-                />
-              </div>
 
               {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
               {/* Height is fixed so DevSpotlight always stays at same position */}
@@ -1821,6 +1808,20 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
             </div>
           </div>
+          
+          {/* Right Column: System Status + Calendar + Knowledge Learner */}
+          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
+             {/* Party Invite icon + DateTime in a row */}
+             <div className="flex items-stretch gap-2">
+               <div className="flex items-start pt-1">
+                 <PartyInviteDropdown />
+               </div>
+               <div className="flex-1">
+                 <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+               </div>
+             </div>
+
+           </div>
         </div>
       </div>
 
@@ -1894,6 +1895,14 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
       </div>
+
+      <BottomNavBoxes 
+        navigate={navigate} 
+        onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
+        onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
+        showSkillTree={showSkillTree}
+        showLive={showLiveDropdown}
+      />
 
     </div>
   );
