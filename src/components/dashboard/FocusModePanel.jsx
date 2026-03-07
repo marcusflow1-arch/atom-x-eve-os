@@ -1742,6 +1742,42 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           {/* Left Column: Environment Hub + Memories + Overlays */}
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
 
+            {/* FULL HEIGHT SKILL TREE OVERLAY */}
+            <AnimatePresence>
+              {showSkillTree && (
+                <motion.div
+                  key="skill-tree-full-overlay"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 z-[60] pointer-events-auto rounded-2xl overflow-hidden flex flex-col"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.98) 0%, rgba(14, 22, 38, 0.96) 100%)',
+                    backdropFilter: 'blur(30px)',
+                    WebkitBackdropFilter: 'blur(30px)',
+                    border: '1px solid rgba(34,211,238,0.30)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(125,211,252,0.06)',
+                  }}
+                >
+                  <button
+                    onClick={() => setShowSkillTree(false)}
+                    className="absolute top-6 right-6 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                  >
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+                  <div className="h-full w-full p-8 flex flex-col items-center justify-center">
+                    <Zap className="w-16 h-16 text-cyan-400 mb-6 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                    <h2 className="text-3xl font-bold text-white mb-4">Status & Skill Tree</h2>
+                    <p className="text-white/50 text-center max-w-md">
+                      This is the new full-height status layout that overlays the entire column. 
+                      Your stats and skill tree progression will be displayed here.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Banner area — Environment Hub always stays fixed */}
             <div className="pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
