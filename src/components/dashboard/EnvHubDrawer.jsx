@@ -47,7 +47,7 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                 ...(expanded ? {
                   top: '80px',
                   bottom: '80px',
-                  left: '100px',
+                  left: '120px',
                   right: '24px',
                   borderRadius: '16px',
                   border: '1px solid rgba(255, 255, 255, 0.10)',
