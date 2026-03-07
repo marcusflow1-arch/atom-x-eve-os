@@ -1388,38 +1388,42 @@ export function LibraryBannerSection({
         <div className="flex flex-col gap-3 w-full">
           {/* Top Row: Env Hub | Memories | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-[60px]">
-            {/* Environment Hub */}
-            <div className="w-[368px] h-full flex-shrink-0">
-              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
-            </div>
-
-            {/* Memories */}
-            <div 
-              ref={scrollRef}
-              className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
-              style={{ scrollbarWidth: 'none' }}
-            >
-              <button
-                onClick={() => setShowMemoriesDrawer(true)}
-                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
-              >
-                <span className="text-xl leading-none">📷</span>
-                <span className="leading-none">Memories</span>
-              </button>
-              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
-              {references.map((ref) => (
-                <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
-                  <GameReference 
-                    reference={ref} 
-                    onClick={handleReferenceClick}
-                    isActive={activeReference?.id === ref.id}
-                  />
+            {!hideLeft && (
+              <>
+                {/* Environment Hub */}
+                <div className="w-[368px] h-full flex-shrink-0">
+                  <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
                 </div>
-              ))}
-              <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
-                <GameReference isHomeButton={true} onClick={handleHomeClick} />
-              </div>
-            </div>
+
+                {/* Memories */}
+                <div 
+                  ref={scrollRef}
+                  className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
+                  style={{ scrollbarWidth: 'none' }}
+                >
+                  <button
+                    onClick={() => setShowMemoriesDrawer(true)}
+                    className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span className="text-xl leading-none">📷</span>
+                    <span className="leading-none">Memories</span>
+                  </button>
+                  <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
+                  {references.map((ref) => (
+                    <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                      <GameReference 
+                        reference={ref} 
+                        onClick={handleReferenceClick}
+                        isActive={activeReference?.id === ref.id}
+                      />
+                    </div>
+                  ))}
+                  <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                    <GameReference isHomeButton={true} onClick={handleHomeClick} />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Calendar Box */}
             <div className="flex-1 min-w-0 h-full">
@@ -1428,11 +1432,13 @@ export function LibraryBannerSection({
           </div>
 
           {/* Bottom Row: Nav Boxes */}
-          <div className="flex justify-start w-full">
-            <div className="w-[368px] flex justify-center">
-              {navBoxes}
+          {!hideLeft && (
+            <div className="flex justify-start w-full">
+              <div className="w-[368px] flex justify-center">
+                {navBoxes}
+              </div>
             </div>
-          </div>
+          )}
         </div>
     </div>
 
