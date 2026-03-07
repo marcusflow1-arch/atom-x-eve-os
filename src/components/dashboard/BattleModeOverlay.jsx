@@ -565,7 +565,7 @@ export default function BattleModeOverlay({ onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       id="battle-overlay-root"
-      className="fixed left-0 right-0 bottom-0 top-16 z-[90] flex items-center justify-center overflow-hidden bg-[#050505]"
+      className="absolute inset-0 z-[90] flex items-center justify-center overflow-hidden bg-[#050505]"
     >
       {/* Sleek Background Gradient */}
       <div 
