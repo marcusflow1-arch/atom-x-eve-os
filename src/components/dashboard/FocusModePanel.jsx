@@ -1421,7 +1421,6 @@ export function LibraryBannerSection({
           </div>
         </div>
       </div>
-    </div>
 
       {/* Memories Drawer — slides in from right */}
       <AnimatePresence>
