@@ -166,6 +166,7 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
       onClick={() => {
         if (!isUiVisible) window.dispatchEvent(new CustomEvent('toggleAvatarFocusMode'));
       }}
+      style={isUiVisible ? { width: '100%', height: '100%' } : {}}
     >
       {/* 3D Viewer - Original Size */}
       <div
@@ -174,8 +175,8 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
           background: 'transparent',
           border: 'none',
           boxShadow: 'none',
-          width: '390px',
-          height: '280px',
+          width: '100%',
+          height: '100%',
         } : {
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
@@ -187,8 +188,6 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
         }}
       >
         <div ref={containerRef} className="w-full h-full" />
-        
-
       </div>
 
       {/* Avatar Stats Card */}
