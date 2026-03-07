@@ -25,8 +25,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   }, [reminders.length]);
 
   const timeString = time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const dateString = time.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const yearString = time.getFullYear();
+  const dateString = time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <div
