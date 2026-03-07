@@ -79,10 +79,10 @@
     "@react-three/drei": "^9.92.0",
     "zustand": "^4.5.0",
     "@tanstack/react-virtual": "^3.0.0",
-    "normalize-range": "^0.1.2",
+    "normalize-range": "0.1.2",
     "baseline-browser-mapping": "latest",
-    "autoprefixer": "^10.4.17",
-    "postcss": "^8.4.35",
+    "autoprefixer": "10.4.14",
+    "postcss": "8.4.31",
     "tailwindcss": "^3.4.1"
   },
   "devDependencies": {
