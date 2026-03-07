@@ -70,7 +70,7 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4 sm:px-8"
     >
       {/* Backdrop with blur */}
       <div 
@@ -83,8 +83,9 @@ export default function IntelligentCalendarOverlay({ onClose, currentUserId }) {
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="relative w-full h-full max-w-7xl bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex"
+        className="relative w-full max-w-7xl bg-slate-900/40 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden flex"
         style={{
+          height: 'calc(100vh - 160px)',
           boxShadow: '0 0 80px -20px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,0.05)'
         }}
       >
