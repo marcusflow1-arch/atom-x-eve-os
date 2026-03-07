@@ -671,13 +671,6 @@ export default function LunaTemplate() {
     return () => window.removeEventListener('openInventoryPanel', handler);
   }, []);
 
-  // Listen for opening the Skill Tree Overlay from the Avatar Stat Card
-  useEffect(() => {
-    const handler = () => setShowAvatarProgression(true);
-    window.addEventListener('openSkillTreeOverlay', handler);
-    return () => window.removeEventListener('openSkillTreeOverlay', handler);
-  }, []);
-
   if (mode === 'user') {
     return (
       <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
@@ -1538,7 +1531,7 @@ export default function LunaTemplate() {
         </div>
       )}
 
-      {/* Avatar Progression Overlay (O key or click on stat card) */}
+      {/* Avatar Progression Overlay (O key) */}
       <AnimatePresence>
         {showAvatarProgression && (
           <>
@@ -1546,34 +1539,23 @@ export default function LunaTemplate() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
               onClick={() => setShowAvatarProgression(false)}
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.3 }}
-              className="fixed z-[60] flex flex-col rounded-3xl"
-              style={{
-                top: '80px',
-                bottom: '80px',
-                left: '440px',
-                right: '32px',
-                background: 'rgba(15, 20, 30, 0.95)',
-                backdropFilter: 'blur(30px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-              }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
             >
-              <div className="flex-1 overflow-y-auto p-8" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex-1 overflow-y-auto p-8">
                 <AvatarProgressionBox />
               </div>
               <button
                 onClick={() => setShowAvatarProgression(false)}
-                className="absolute top-6 right-6 z-[60] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
+                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
               >
                 <X className="w-5 h-5" />
               </button>
