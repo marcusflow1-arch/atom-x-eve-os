@@ -354,35 +354,15 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                   style={{ scrollbarWidth: 'none' }}
                 >
                   {/* Top section: 3D viewer + recent games left, achievements right */}
-                  <div className="flex gap-6 mb-4 flex-shrink-0 h-[350px]">
-                    {/* Left: 3D Avatar Viewer + Stat Card + Recent Games */}
-                    <div className="flex-shrink-0 flex flex-col gap-4 h-full">
-                      <div className="h-[260px] flex-shrink-0 flex flex-col items-center">
+                  <div className="flex gap-6 mb-4 flex-shrink-0 h-[280px]">
+                    {/* Left: 3D Avatar Viewer + Stat Card */}
+                    <div className="flex-shrink-0 flex flex-col h-full">
+                      <div className="h-full flex-shrink-0 flex flex-col items-center">
                         <Mini3DViewerBox />
-                        <div className="flex-shrink-0 w-[200px] mt-2 relative">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
-                          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                            {MOCK_GAMES.slice(0, 3).map((game, i) => (
-                              <motion.div
-                                key={game.id}
-                                whileHover={{ scale: 1.06, y: -4 }}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.04 }}
-                                className="flex-shrink-0 cursor-pointer group w-14"
-                              >
-                                <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 group-hover:border-white/30 transition-all shadow-lg">
-                                  <img src={game.cover} className="w-full h-full object-cover" />
-                                </div>
-                                <p className="text-white/60 text-[8px] text-center mt-1 font-medium truncate w-14">{game.title}</p>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Right: Currently playing + Achievements strip */}
+                    {/* Right: Currently playing + Recent Games + Achievements */}
                     <div className="flex-1 min-w-0 flex flex-col">
                       {/* Currently playing banner (compact) */}
                       {item.status === 'playing' && (
@@ -404,14 +384,41 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                         </div>
                       )}
 
+                      {/* Recent Games - horizontal scroll */}
+                      <div className="mb-4 flex-shrink-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2">Recent Games</p>
+                        <div className="flex gap-3 overflow-x-auto pb-1 custom-scrollbar">
+                          {MOCK_GAMES.map((game, i) => (
+                            <motion.div
+                              key={game.id}
+                              onClick={() => setFriendRecentFilter(friendRecentFilter === game.id ? null : game.id)}
+                              whileHover={{ scale: 1.05, y: -2 }}
+                              className={`flex-shrink-0 cursor-pointer group w-16 p-1 rounded-xl border transition-all ${
+                                friendRecentFilter === game.id ? 'bg-white/10 border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-transparent hover:border-white/20'
+                              }`}
+                            >
+                              <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 shadow-lg mb-1.5 aspect-square">
+                                <img src={game.cover} className="w-full h-full object-cover" />
+                              </div>
+                              <p className={`text-[8px] text-center font-bold truncate ${
+                                friendRecentFilter === game.id ? 'text-cyan-300' : 'text-white/60 group-hover:text-white/90'
+                              }`}>{game.title}</p>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+
                       {/* Achievements - fitted into remaining space */}
                       <div className="flex-1 min-h-0 flex flex-col">
                         <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Achievement Cards</p>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+                            {friendRecentFilter ? `${MOCK_GAMES.find(g => g.id === friendRecentFilter)?.title} Achievement Cards` : 'Achievement Cards'}
+                          </p>
                         </div>
                         <div className="flex-1 min-h-0 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-                          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 pb-2">
-                            {ACH_CARDS.map((card, i) => {
+                          {/* Reduced size grid (smaller gaps, more cols) */}
+                          <div className="grid grid-cols-8 sm:grid-cols-10 md:grid-cols-12 lg:grid-cols-[repeat(14,minmax(0,1fr))] gap-1.5 pb-2">
+                            {displayedAchCards.map((card, i) => {
                               const tilt = achCardTilts[card.id];
                               return (
                                 <motion.div
