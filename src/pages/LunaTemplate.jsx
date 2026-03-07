@@ -56,6 +56,7 @@ import { showError } from '@/components/error/ErrorToast';
 import FriendsHubOverlay from '../components/dashboard/FriendsHubOverlay';
 import SideAccessMenu from '../components/dashboard/SideAccessMenu';
 import AvatarProgressionBox from '../components/avatar/AvatarProgressionBox';
+import AvatarStatsOverlay from '../components/dashboard/AvatarStatsOverlay';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
