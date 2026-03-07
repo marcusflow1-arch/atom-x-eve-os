@@ -707,13 +707,13 @@ export default function LunaTemplate() {
 
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
-      {!showConsoleMode && !showAchievements && !uiVisible && (
+      {!showConsoleMode && !showAchievements && (
         <div className="fixed z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
              style={{ left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
-          <Mini3DViewerBox />
+          <Mini3DViewerBox isUiVisible={uiVisible} />
           
-          {!avatarFocusMode && (
+          {!avatarFocusMode && !uiVisible && (
             <>
               <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
                 <QuestLogBook />
@@ -725,7 +725,7 @@ export default function LunaTemplate() {
           )}
 
           <AnimatePresence>
-            {avatarFocusMode && (
+            {avatarFocusMode && !uiVisible && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

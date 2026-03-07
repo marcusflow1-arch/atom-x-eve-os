@@ -7,7 +7,7 @@ const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
-export default function Mini3DViewerBox() {
+export default function Mini3DViewerBox({ isUiVisible = false }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -17,6 +17,12 @@ export default function Mini3DViewerBox() {
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
+  const isUiVisibleRef = useRef(isUiVisible);
+  const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
+
+  useEffect(() => {
+    isUiVisibleRef.current = isUiVisible;
+  }, [isUiVisible]);
 
   // Listen for character switch events from the main 3D viewer
   useEffect(() => {
@@ -120,6 +126,19 @@ export default function Mini3DViewerBox() {
       animIdRef.current = requestAnimationFrame(animate);
       const delta = clockRef.current.getDelta();
       if (mixerRef.current) mixerRef.current.update(delta);
+
+      if (cameraRef.current) {
+         const targetZ = isUiVisibleRef.current ? -2.8 : -1.4;
+         const targetY = isUiVisibleRef.current ? 1.0 : 1.85;
+         const targetLookY = isUiVisibleRef.current ? 1.0 : 1.7;
+
+         cameraRef.current.position.z += (targetZ - cameraRef.current.position.z) * 0.05;
+         cameraRef.current.position.y += (targetY - cameraRef.current.position.y) * 0.05;
+         
+         lookTargetRef.current.y += (targetLookY - lookTargetRef.current.y) * 0.05;
+         cameraRef.current.lookAt(lookTargetRef.current);
+      }
+
       renderer.render(scene, camera);
     };
     animate();
@@ -148,8 +167,11 @@ export default function Mini3DViewerBox() {
     >
       {/* 3D Viewer - Original Size */}
       <div
-        className="rounded-2xl overflow-hidden flex-shrink-0 h-full"
-        style={{
+        className="rounded-2xl overflow-hidden flex-shrink-0 h-full transition-all duration-500"
+        style={isUiVisible ? {
+          background: 'transparent',
+          width: '200px',
+        } : {
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
@@ -162,7 +184,7 @@ export default function Mini3DViewerBox() {
       </div>
 
       {/* Avatar Stats Card */}
-      <AvatarStatCard />
+      {!isUiVisible && <AvatarStatCard />}
     </div>
   );
 }
