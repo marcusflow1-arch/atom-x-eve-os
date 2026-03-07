@@ -79,8 +79,8 @@
     "@react-three/drei": "^9.92.0",
     "zustand": "^4.5.0",
     "@tanstack/react-virtual": "^3.0.0",
-    "autoprefixer": "latest",
-    "postcss": "latest"
+    "autoprefixer": "10.4.16",
+    "postcss": "8.4.31"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
