@@ -102,7 +102,7 @@ export default function AIStoryOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] font-serif overflow-hidden"
+      className="absolute inset-0 z-[100] font-serif overflow-hidden"
     >
       {/* LAYER 0: Plasma Water Video Background */}
       {/* LAYER 0: Plasma Water Video Background */}
