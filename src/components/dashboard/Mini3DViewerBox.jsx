@@ -153,9 +153,15 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
     };
     window.addEventListener('resize', handleResize);
 
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    resizeObserver.observe(containerRef.current);
+
     return () => {
       cancelAnimationFrame(animIdRef.current);
       window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       renderer.dispose();
     };
   }, [activeChar]);
