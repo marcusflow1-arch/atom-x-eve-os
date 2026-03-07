@@ -1744,11 +1744,11 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                   />
                 }
                 calendarBox={
-                  <div className="flex items-stretch gap-3 w-full" style={{ height: '60px' }}>
+                  <div className="flex items-stretch gap-3 w-full justify-end" style={{ height: '60px' }}>
                     <div className="flex items-center justify-center">
                       <PartyInviteDropdown />
                     </div>
-                    <div className="flex-1 h-full">
+                    <div className="w-[70%] h-full">
                       <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
                     </div>
                   </div>
