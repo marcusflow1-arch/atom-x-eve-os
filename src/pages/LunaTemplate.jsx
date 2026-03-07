@@ -671,6 +671,13 @@ export default function LunaTemplate() {
     return () => window.removeEventListener('openInventoryPanel', handler);
   }, []);
 
+  // Listen for opening the Skill Tree Overlay from the Avatar Stat Card
+  useEffect(() => {
+    const handler = () => setShowAvatarProgression(true);
+    window.addEventListener('openSkillTreeOverlay', handler);
+    return () => window.removeEventListener('openSkillTreeOverlay', handler);
+  }, []);
+
   if (mode === 'user') {
     return (
       <div className="h-screen w-full bg-slate-900 pt-24 px-8 pb-8">
