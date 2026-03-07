@@ -160,17 +160,63 @@ export default function LibrarySidebar() {
 
   return (
     <>
-      {/* Trigger Button (Fixed on left) */}
-      {!isOpen && !overlayActive && (
-      <motion.button
-          initial={{ x: 0 }}
-          animate={{ x: 0 }}
+      {/* Trigger Buttons (Fixed on left) */}
+      {!isOpen && !overlayActive && showLeftNav && (
+        <motion.div
+          initial={{ x: -100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          onClick={() => setIsOpen(true)}
-          className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-      >
-          <Library className="w-5 h-5" />
-      </motion.button>
+          className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3"
+        >
+          {/* Quest Book Button */}
+          <button
+            onClick={() => window.location.assign('/questlog')}
+            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="Quest Book"
+          >
+            <Book className="w-4 h-4" />
+          </button>
+
+          {/* Original Library Button */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="Library & Friends"
+          >
+            <Library className="w-5 h-5" />
+          </button>
+
+          {/* Card Collection Button */}
+          <button
+            onClick={() => window.location.assign('/genremastery')}
+            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            title="Card Collection"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+
+          {/* Hide UI Button */}
+          <button
+            onClick={() => setShowLeftNav(false)}
+            className="w-6 h-6 mt-2 rounded-full flex items-center justify-center border border-white/10 bg-white/5 text-white/40 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
+            title="Hide UI"
+          >
+            <EyeOff className="w-3 h-3" />
+          </button>
+        </motion.div>
+      )}
+
+      {/* Show UI Button */}
+      {!isOpen && !overlayActive && !showLeftNav && (
+        <motion.button
+          initial={{ x: -50 }}
+          animate={{ x: 0 }}
+          onClick={() => setShowLeftNav(true)}
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
+          title="Show UI"
+        >
+          <Eye className="w-3 h-3" />
+        </motion.button>
       )}
 
       {/* Backdrop */}
