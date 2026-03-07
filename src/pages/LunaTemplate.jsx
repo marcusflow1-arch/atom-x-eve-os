@@ -570,7 +570,7 @@ export default function LunaTemplate() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-col gap-3 mt-2"
               >
-                {['AI Story', 'AI Battle', 'Leaderboard', 'Skill Tree', 'Live'].map(opt => (
+                {['AI Story', 'AI Battle', 'Leaderboard', 'Stats', 'Live'].map(opt => (
                   <button
                     key={opt}
                     onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
@@ -599,7 +599,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
             className="fixed z-10 pointer-events-auto rounded-[32px] overflow-hidden flex flex-col"
             style={{
-              left: '386px',
+              left: '440px',
               top: '80px',
               bottom: '32px',
               right: '32px',
@@ -616,7 +616,7 @@ export default function LunaTemplate() {
                 {activeAvatarFocusView === 'AI Story' && <Sparkles className="w-5 h-5 text-cyan-400" />}
                 {activeAvatarFocusView === 'AI Battle' && <Swords className="w-5 h-5 text-red-400" />}
                 {activeAvatarFocusView === 'Leaderboard' && <Crown className="w-5 h-5 text-yellow-400" />}
-                {activeAvatarFocusView === 'Skill Tree' && <Layers className="w-5 h-5 text-purple-400" />}
+                {activeAvatarFocusView === 'Stats' && <Layers className="w-5 h-5 text-purple-400" />}
                 {activeAvatarFocusView === 'Live' && <Radio className="w-5 h-5 text-green-400" />}
                 {activeAvatarFocusView}
               </h2>
@@ -632,7 +632,7 @@ export default function LunaTemplate() {
             <div className="flex-1 overflow-y-auto relative bg-black/20" style={{ scrollbarWidth: 'none' }}>
               {activeAvatarFocusView === 'AI Story' && <AIStoryOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
-              {activeAvatarFocusView === 'Skill Tree' && <GenreMastery onClose={() => setActiveAvatarFocusView(null)} />}
+              {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Leaderboard' && (
                 <div className="absolute inset-0 bg-[#080808] overflow-y-auto overflow-x-hidden">
                   <Leaderboard />
