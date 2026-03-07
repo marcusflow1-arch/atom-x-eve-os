@@ -1287,42 +1287,37 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
-      <div className="flex items-center gap-4 px-6 py-4 pointer-events-auto"
-        style={{
-          background: 'linear-gradient(to top, rgba(10, 16, 26, 0.95), rgba(10, 16, 26, 0))',
-          width: '100%',
-          justifyContent: 'center',
-          paddingBottom: '24px'
-        }}>
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <motion.button
-              key={action.id}
-              whileHover={{ scale: 1.05, y: -4 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={action.onClick}
-              className={`relative w-40 h-24 rounded-2xl overflow-hidden group shadow-lg flex-shrink-0 border-2 transition-all ${
-                action.active ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
-              }`}
-            >
-              <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-              <div className="absolute inset-0 p-3 flex flex-col items-center justify-end text-center">
-                <Icon className={`w-6 h-6 mb-1 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
-                <span className="text-white font-bold text-xs drop-shadow-md">{action.label}</span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
+    <div className="w-full grid grid-cols-5 gap-2 pointer-events-auto">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <motion.button
+            key={action.id}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={action.onClick}
+            className={`relative w-full aspect-[4/3] rounded-xl overflow-hidden group shadow-md border transition-all ${
+              action.active ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+            }`}
+          >
+            <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 p-1 flex flex-col items-center justify-center text-center gap-1.5">
+              <Icon className={`w-4 h-4 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
+              <span className="text-white font-bold text-[9px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
+            </div>
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
-export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown }) {
+export function LibraryBannerSection({ 
+  games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
+  navBoxes, calendarBox
+}) {
   const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
   const [references, setReferences] = useState([]);
@@ -1387,20 +1382,27 @@ export function LibraryBannerSection({ games, onBackgroundChange, currentEnvId, 
   return (
     <div className="flex flex-col items-start w-full">
       {/* Game Banner + Memories */}
-      <div ref={envDropdownRef}>
-        <div className="flex items-stretch gap-4 w-full">
-          {/* Environment Hub Tile (dropdown trigger) */}
-          <div className="w-[368px] h-[60px] flex-shrink-0 relative">
-            <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+      <div ref={envDropdownRef} className="w-full">
+        <div className="flex items-start gap-4 w-full">
+          {/* Left Column: Environment Hub + 5 Icons */}
+          <div className="w-[368px] flex-shrink-0 flex flex-col gap-3">
+            <div className="h-[60px] w-full relative">
+              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+            </div>
+            {navBoxes}
           </div>
 
-          {/* References Section (Memories) — click label to open drawer */}
-          <div 
-            ref={scrollRef}
-            className="flex items-center gap-2 overflow-x-auto" 
-            style={{ scrollbarWidth: 'none' }}
-          >
-            <button
+          {/* Right Column: Calendar Box + Memories */}
+          <div className="flex-1 flex flex-col gap-3 min-w-0">
+            {calendarBox}
+            
+            {/* References Section (Memories) — click label to open drawer */}
+            <div 
+              ref={scrollRef}
+              className="flex items-center gap-2 overflow-x-auto" 
+              style={{ scrollbarWidth: 'none' }}
+            >
+              <button
               onClick={() => setShowMemoriesDrawer(true)}
               className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-1 flex-shrink-0 transition-colors flex items-center gap-1"
             >
@@ -1727,6 +1729,25 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 onSelectEnv={onSelectEnv}
                 showEnvDropdown={false}
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
+                navBoxes={
+                  <BottomNavBoxes 
+                    navigate={navigate} 
+                    onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
+                    onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
+                    showSkillTree={showSkillTree}
+                    showLive={showLiveDropdown}
+                  />
+                }
+                calendarBox={
+                  <div className="flex items-stretch gap-3 w-full" style={{ height: '110px' }}>
+                    <div className="flex items-center justify-center">
+                      <PartyInviteDropdown />
+                    </div>
+                    <div className="flex-1 h-full">
+                      <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+                    </div>
+                  </div>
+                }
               />
 
               {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
@@ -1808,20 +1829,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
             </div>
           </div>
-          
-          {/* Right Column: System Status + Calendar + Knowledge Learner */}
-          <div className="w-[280px] flex-shrink-0 flex flex-col gap-2 pointer-events-auto">
-             {/* Party Invite icon + DateTime in a row */}
-             <div className="flex items-stretch gap-2">
-               <div className="flex items-start pt-1">
-                 <PartyInviteDropdown />
-               </div>
-               <div className="flex-1">
-                 <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
-               </div>
-             </div>
-
-           </div>
         </div>
       </div>
 
@@ -1895,14 +1902,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
       </div>
-
-      <BottomNavBoxes 
-        navigate={navigate} 
-        onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
-        onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
-        showSkillTree={showSkillTree}
-        showLive={showLiveDropdown}
-      />
 
     </div>
   );
