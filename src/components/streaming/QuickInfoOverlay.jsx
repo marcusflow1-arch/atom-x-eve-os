@@ -253,7 +253,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
       id: i,
       rarity: i % 8 === 0 ? 'legendary' : i % 4 === 0 ? 'epic' : i % 2 === 0 ? 'rare' : 'common',
       type: ['Ability', 'Equipment', 'Companion', 'Environment'][i % 4],
+      gameId: MOCK_GAMES[i % MOCK_GAMES.length].id,
     }));
+    const displayedAchCards = friendRecentFilter ? ACH_CARDS.filter(c => c.gameId === friendRecentFilter) : ACH_CARDS;
 
     const rarityGlow = { legendary: 'rgba(251,191,36,0.5)', epic: 'rgba(168,85,247,0.4)', rare: 'rgba(59,130,246,0.35)', common: 'rgba(255,255,255,0.1)' };
     const rarityBorder = { legendary: 'border-amber-400/60', epic: 'border-purple-400/50', rare: 'border-blue-400/40', common: 'border-white/10' };
