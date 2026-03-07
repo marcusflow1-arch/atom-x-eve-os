@@ -730,12 +730,16 @@ export default function LunaTemplate() {
           
           {!avatarFocusMode && !uiVisible && (
             <>
-              <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
-                <QuestLogBook />
-              </div>
-              <div className="w-full" style={{ marginTop: '24px' }}>
-                <CardCollectionBrowser />
-              </div>
+              {showQuestBook && (
+                <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
+                  <QuestLogBook />
+                </div>
+              )}
+              {showCardCollection && (
+                <div className="w-full" style={{ marginTop: '24px' }}>
+                  <CardCollectionBrowser />
+                </div>
+              )}
             </>
           )}
 
