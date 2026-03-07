@@ -293,14 +293,6 @@ function LayoutContent({ children, currentPageName }) {
   const { isMobile } = useViewMode();
   const [showRouteTransition, setShowRouteTransition] = useState(false);
   const [pendingRoute, setPendingRoute] = useState(null);
-  const [forceHideHeader, setForceHideHeader] = useState(false);
-
-  useEffect(() => {
-    const handler = (e) => setForceHideHeader(e.detail);
-    window.addEventListener('forceHideHeader', handler);
-    return () => window.removeEventListener('forceHideHeader', handler);
-  }, []);
-
   const p_lower = location.pathname.toLowerCase();
   // Store header for store/gamedetail pages (kept separate as user likes it)
   const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
@@ -893,7 +885,7 @@ function LayoutContent({ children, currentPageName }) {
           headerConfig.showDiscord = false;
         }
 
-        if (headerConfig.hidden || forceHideHeader) return null;
+        if (headerConfig.hidden) return null;
 
         // Check if we're in editor/preview mode (not published)
         const isEditorMode = window.location.hostname === 'localhost' || window.location.hostname.includes('base44.app') || window.location.hostname.includes('preview');

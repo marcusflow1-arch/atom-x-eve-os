@@ -709,14 +709,7 @@ export default function LunaTemplate() {
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
         <div className="fixed z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
-             style={avatarFocusMode ? {
-               top: '50%',
-               left: '50%',
-               transform: 'translate(-50%, -50%)',
-               alignItems: 'center',
-               width: 'auto',
-               gap: '0'
-             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+             style={{ left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox />
           
@@ -738,10 +731,10 @@ export default function LunaTemplate() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ delay: 0.2 }}
-                className="flex flex-wrap justify-center gap-4 mt-8"
+                className="flex flex-col gap-3 mt-2"
               >
                 {['AI Story', 'AI Battle', 'Leaderboard', 'Skill Tree', 'Live'].map(opt => (
-                  <button key={opt} className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-white/80 font-bold hover:bg-white/10 hover:text-white hover:border-cyan-400/50 transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
+                  <button key={opt} className="w-full py-4 rounded-xl bg-white/5 border border-white/10 text-white/80 font-bold hover:bg-white/10 hover:text-white hover:border-cyan-400/50 transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]">
                     {opt}
                   </button>
                 ))}
