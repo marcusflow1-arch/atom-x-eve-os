@@ -142,30 +142,24 @@ export default function Mini3DViewerBox() {
   }, [activeChar]);
 
   return (
-    <div 
-      className="pointer-events-auto flex items-start gap-0 h-[280px] cursor-pointer group hover:scale-[1.02] transition-transform duration-300"
-      onClick={() => window.dispatchEvent(new CustomEvent('toggleAvatarExpandedMode'))}
-    >
+    <div className="pointer-events-auto flex items-start gap-0 h-full">
       {/* 3D Viewer - Original Size */}
       <div
-        className="rounded-none rounded-l-2xl overflow-hidden flex-shrink-0 h-full group-hover:bg-white/5 transition-all"
+        className="rounded-2xl overflow-hidden flex-shrink-0 h-full"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRight: 'none',
           boxShadow: 'inset 0 0 20px rgba(255, 255, 255, 0.05)',
-          width: '132px',
+          width: '200px',
         }}
       >
         <div ref={containerRef} className="w-full h-full" />
       </div>
 
       {/* Avatar Stats Card */}
-      <div className="h-full">
-        <AvatarStatCard />
-      </div>
+      <AvatarStatCard />
     </div>
   );
 }

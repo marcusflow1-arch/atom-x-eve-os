@@ -389,15 +389,6 @@ export default function LunaTemplate() {
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
   const [showDevSpotlight, setShowDevSpotlight] = useState(false); // Toggle with 'P' key
   const [currentEnvId, setCurrentEnvId] = useState('default_room');
-  
-  const [avatarExpandedMode, setAvatarExpandedMode] = useState(false);
-  const [avatarExpandedTab, setAvatarExpandedTab] = useState('skill-tree');
-
-  useEffect(() => {
-    const toggle = () => setAvatarExpandedMode(v => !v);
-    window.addEventListener('toggleAvatarExpandedMode', toggle);
-    return () => window.removeEventListener('toggleAvatarExpandedMode', toggle);
-  }, []);
 
   const { mode } = useDashboardMode();
 
@@ -707,80 +698,15 @@ export default function LunaTemplate() {
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
       {!showConsoleMode && !showAchievements && !uiVisible && (
-        <>
-        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '322px', bottom: avatarExpandedMode ? '80px' : 'auto' }}>
+        <div className="fixed z-20 pointer-events-auto flex flex-col gap-3" style={{ left: '32px', top: '80px', width: '322px' }}>
           <Mini3DViewerBox />
-          
-          {avatarExpandedMode ? (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col gap-2 mt-2 w-full flex-1"
-            >
-              {[
-                { id: 'skill-tree', label: 'Status & Skill Tree', icon: Layers },
-                { id: 'battle', label: 'AI Battle', icon: Swords },
-                { id: 'story', label: 'AI Story', icon: BookOpen },
-                { id: 'settings', label: 'Settings', icon: Settings },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={(e) => { e.stopPropagation(); setAvatarExpandedTab(tab.id); }}
-                  className={`w-full p-4 rounded-xl flex items-center gap-3 transition-all ${
-                    avatarExpandedTab === tab.id 
-                      ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
-                      : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20 hover:text-white'
-                  }`}
-                  style={{ backdropFilter: 'blur(12px)' }}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  <span className="font-bold tracking-wide">{tab.label}</span>
-                </button>
-              ))}
-            </motion.div>
-          ) : (
-            <>
-              <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
-                <QuestLogBook />
-              </div>
-              <div className="w-full" style={{ marginTop: '24px' }}>
-                <CardCollectionBrowser />
-              </div>
-            </>
-          )}
+          <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
+            <QuestLogBook />
+          </div>
+          <div className="w-full" style={{ marginTop: '24px' }}>
+            <CardCollectionBrowser />
+          </div>
         </div>
-
-        {/* Right Column Content for Avatar Expanded Mode */}
-        <AnimatePresence>
-          {avatarExpandedMode && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="fixed z-20 pointer-events-auto rounded-2xl overflow-hidden"
-              style={{
-                left: '374px', // 32px + 322px + 20px gap
-                top: '80px',
-                bottom: '80px',
-                right: '32px',
-                background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.95) 0%, rgba(14, 22, 38, 0.98) 100%)',
-                backdropFilter: 'blur(40px)',
-                WebkitBackdropFilter: 'blur(40px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-              }}
-            >
-              <div className="w-full h-full relative">
-                {avatarExpandedTab === 'skill-tree' && <AvatarProgressionBox />}
-                {avatarExpandedTab === 'battle' && <BattleModeOverlay onClose={() => setAvatarExpandedMode(false)} />}
-                {avatarExpandedTab === 'story' && <AIStoryOverlay onClose={() => setAvatarExpandedMode(false)} />}
-                {avatarExpandedTab === 'settings' && <SettingsPanel />}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        </>
       )}
 
       {/* 3D Model Viewer - Full Page Background */}
@@ -871,7 +797,6 @@ export default function LunaTemplate() {
                  currentEnvId={currentEnvId}
                  onSelectEnv={handleEnvSelect}
                  onOpenDevSpotlight={() => setShowDevSpotlight(true)}
-                 avatarExpandedMode={avatarExpandedMode}
                 />
             </div>
           </motion.div>

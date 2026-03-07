@@ -1318,7 +1318,7 @@ function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown,
-  navBoxes, calendarBox, hideLeft
+  navBoxes, calendarBox
 }) {
   const envDropdownRef = useRef(null);
   const [activeReference, setActiveReference] = useState(null);
@@ -1388,42 +1388,38 @@ export function LibraryBannerSection({
         <div className="flex flex-col gap-3 w-full">
           {/* Top Row: Env Hub | Memories | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-[60px]">
-            {!hideLeft && (
-              <>
-                {/* Environment Hub */}
-                <div className="w-[368px] h-full flex-shrink-0">
-                  <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
-                </div>
+            {/* Environment Hub */}
+            <div className="w-[368px] h-full flex-shrink-0">
+              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+            </div>
 
-                {/* Memories */}
-                <div 
-                  ref={scrollRef}
-                  className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
-                  style={{ scrollbarWidth: 'none' }}
-                >
-                  <button
-                    onClick={() => setShowMemoriesDrawer(true)}
-                    className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
-                  >
-                    <span className="text-xl leading-none">📷</span>
-                    <span className="leading-none">Memories</span>
-                  </button>
-                  <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
-                  {references.map((ref) => (
-                    <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
-                      <GameReference 
-                        reference={ref} 
-                        onClick={handleReferenceClick}
-                        isActive={activeReference?.id === ref.id}
-                      />
-                    </div>
-                  ))}
-                  <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
-                    <GameReference isHomeButton={true} onClick={handleHomeClick} />
-                  </div>
+            {/* Memories */}
+            <div 
+              ref={scrollRef}
+              className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
+              style={{ scrollbarWidth: 'none' }}
+            >
+              <button
+                onClick={() => setShowMemoriesDrawer(true)}
+                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
+              >
+                <span className="text-xl leading-none">📷</span>
+                <span className="leading-none">Memories</span>
+              </button>
+              <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
+              {references.map((ref) => (
+                <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                  <GameReference 
+                    reference={ref} 
+                    onClick={handleReferenceClick}
+                    isActive={activeReference?.id === ref.id}
+                  />
                 </div>
-              </>
-            )}
+              ))}
+              <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                <GameReference isHomeButton={true} onClick={handleHomeClick} />
+              </div>
+            </div>
 
             {/* Calendar Box */}
             <div className="flex-1 min-w-0 h-full">
@@ -1432,13 +1428,11 @@ export function LibraryBannerSection({
           </div>
 
           {/* Bottom Row: Nav Boxes */}
-          {!hideLeft && (
-            <div className="flex justify-start w-full">
-              <div className="w-[368px] flex justify-center">
-                {navBoxes}
-              </div>
+          <div className="flex justify-start w-full">
+            <div className="w-[368px] flex justify-center">
+              {navBoxes}
             </div>
-          )}
+          </div>
         </div>
     </div>
 
@@ -1624,7 +1618,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, avatarExpandedMode }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1748,46 +1742,9 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
           {/* Left Column: Environment Hub + Memories + Overlays */}
           <div className="flex-1 min-w-0 flex flex-col gap-6 relative" style={{ minHeight: 'calc(100vh - 80px)' }}>
 
-            {/* FULL HEIGHT SKILL TREE OVERLAY */}
-            <AnimatePresence>
-              {showSkillTree && (
-                <motion.div
-                  key="skill-tree-full-overlay"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-0 z-[60] pointer-events-auto rounded-2xl overflow-hidden flex flex-col"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.98) 0%, rgba(14, 22, 38, 0.96) 100%)',
-                    backdropFilter: 'blur(30px)',
-                    WebkitBackdropFilter: 'blur(30px)',
-                    border: '1px solid rgba(34,211,238,0.30)',
-                    boxShadow: '0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(125,211,252,0.06)',
-                  }}
-                >
-                  <button
-                    onClick={() => setShowSkillTree(false)}
-                    className="absolute top-6 right-6 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                  >
-                    <X className="w-4 h-4 text-white/60" />
-                  </button>
-                  <div className="h-full w-full p-8 flex flex-col items-center justify-center">
-                    <Zap className="w-16 h-16 text-cyan-400 mb-6 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
-                    <h2 className="text-3xl font-bold text-white mb-4">Status & Skill Tree</h2>
-                    <p className="text-white/50 text-center max-w-md">
-                      This is the new full-height status layout that overlays the entire column. 
-                      Your stats and skill tree progression will be displayed here.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Banner area — Environment Hub always stays fixed */}
             <div className="pointer-events-auto relative" ref={bannerAreaRef}>
               <LibraryBannerSection 
-                hideLeft={avatarExpandedMode}
                 games={ownedGames}
                 onBackgroundChange={onBackgroundChange}
                 currentEnvId={currentEnvId}
@@ -1805,86 +1762,93 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
                 calendarBox={
                   <div className="flex items-stretch gap-3 w-full justify-end" style={{ height: '60px' }}>
+                    <div className="flex items-center justify-center">
+                      <PartyInviteDropdown />
+                    </div>
                     <div className="flex-1 min-w-0 h-full">
-                      <DateTimeTile onClick={handleDateTimeClick} />
+                      <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
                     </div>
                   </div>
                 }
-
               />
 
-              {!avatarExpandedMode && (
-                <>
-                  {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
-                  {/* Height is fixed so DevSpotlight always stays at same position */}
-                  <div className="relative mt-3" style={{ height: '512px' }}>
-                    {/* OVERLAY: Friends / Live — fills the open space exactly */}
-                    <AnimatePresence>
-                      {(showFriendsDropdown || showLiveDropdown) && (
-                        <motion.div
-                          key="panel-overlay"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute inset-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
-                            backdropFilter: 'blur(24px)',
-                            WebkitBackdropFilter: 'blur(24px)',
-                            border: showFriendsDropdown
-                              ? '1px solid rgba(74,222,128,0.30)'
-                              : '1px solid rgba(248,113,113,0.30)',
-                            boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
-                          }}
-                        >
-                          {/* Close button */}
-                          <button
-                            onClick={() => { setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
-                            className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                          >
-                            <X className="w-3 h-3 text-white/60" />
-                          </button>
+              {/* Open space below Environment Hub — Skill Tree/Friends/Live overlay fills this */}
+              {/* Height is fixed so DevSpotlight always stays at same position */}
+              <div className="relative mt-3" style={{ height: '512px' }}>
+                {/* OVERLAY: Skill Tree / Friends / Live — fills the open space exactly */}
+                <AnimatePresence>
+                  {(showSkillTree || showFriendsDropdown || showLiveDropdown) && (
+                    <motion.div
+                      key="panel-overlay"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute inset-0 z-50 pointer-events-auto overflow-hidden rounded-2xl"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
+                        border: showSkillTree
+                          ? '1px solid rgba(34,211,238,0.30)'
+                          : showFriendsDropdown
+                          ? '1px solid rgba(74,222,128,0.30)'
+                          : '1px solid rgba(248,113,113,0.30)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
+                      }}
+                    >
+                      {/* Close button */}
+                      <button
+                        onClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
+                        className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                      >
+                        <X className="w-3 h-3 text-white/60" />
+                      </button>
 
-                          {showFriendsDropdown && (
-                            <div className="h-full overflow-hidden">
-                              <FriendsDropdown />
-                            </div>
-                          )}
-
-                          {showLiveDropdown && (
-                            <div className="h-full flex gap-3 p-3">
-                              <div className="h-full w-[70%]">
-                                <StreamPlayerBox
-                                  isLive={isLive}
-                                  onToggleLive={() => setIsLive(!isLive)}
-                                  isPlaying={isPlaying}
-                                  onTogglePlay={() => setIsPlaying(!isPlaying)}
-                                  volume={volume}
-                                  onVolumeChange={setVolume}
-                                  onOpenSettings={() => setShowStreamSettings(true)}
-                                  settingsOpen={showStreamSettings}
-                                  onCloseSettings={() => setShowStreamSettings(false)}
-                                  isSettingsMaximized={settingsMaximized}
-                                  onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
-                                />
-                              </div>
-                              <div className="h-full w-[30%]">
-                                <StreamChatBox isLive={isLive} />
-                              </div>
-                            </div>
-                          )}
-                        </motion.div>
+                      {showSkillTree && (
+                        <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                          <AvatarProgressionBox />
+                        </div>
                       )}
-                    </AnimatePresence>
-                  </div>
 
-                  {/* DevSpotlightRibbon — sits directly below the overlay space */}
-                  <div className="pointer-events-auto mt-3">
-                    <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
-                  </div>
-                </>
-              )}
+                      {showFriendsDropdown && (
+                        <div className="h-full overflow-hidden">
+                          <FriendsDropdown />
+                        </div>
+                      )}
+
+                      {showLiveDropdown && (
+                        <div className="h-full flex gap-3 p-3">
+                          <div className="h-full w-[70%]">
+                            <StreamPlayerBox
+                              isLive={isLive}
+                              onToggleLive={() => setIsLive(!isLive)}
+                              isPlaying={isPlaying}
+                              onTogglePlay={() => setIsPlaying(!isPlaying)}
+                              volume={volume}
+                              onVolumeChange={setVolume}
+                              onOpenSettings={() => setShowStreamSettings(true)}
+                              settingsOpen={showStreamSettings}
+                              onCloseSettings={() => setShowStreamSettings(false)}
+                              isSettingsMaximized={settingsMaximized}
+                              onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                            />
+                          </div>
+                          <div className="h-full w-[30%]">
+                            <StreamChatBox isLive={isLive} />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* DevSpotlightRibbon — sits directly below the overlay space */}
+              <div className="pointer-events-auto mt-3">
+                <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+              </div>
+
             </div>
           </div>
         </div>
