@@ -597,21 +597,17 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.95 }}
             transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-            className="fixed z-10 pointer-events-auto rounded-[32px] overflow-hidden flex flex-col"
+            className="fixed z-10 pointer-events-auto overflow-hidden flex flex-col"
             style={{
               left: '440px',
               top: '80px',
               bottom: '32px',
               right: '32px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(30px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+              background: 'transparent'
             }}
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-black/20">
+            <div className="px-6 py-4 flex justify-between items-center bg-transparent">
               <h2 className="text-xl font-bold text-white tracking-wider uppercase flex items-center gap-3">
                 {activeAvatarFocusView === 'AI Story' && <Sparkles className="w-5 h-5 text-cyan-400" />}
                 {activeAvatarFocusView === 'AI Battle' && <Swords className="w-5 h-5 text-red-400" />}
