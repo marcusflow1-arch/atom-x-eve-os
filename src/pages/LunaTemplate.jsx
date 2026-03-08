@@ -602,7 +602,8 @@ export default function LunaTemplate() {
               left: '440px',
               top: '80px',
               bottom: '32px',
-              right: '32px',
+              width: '1000px',
+              maxWidth: 'calc(100vw - 480px)',
               background: 'transparent'
             }}
           >
