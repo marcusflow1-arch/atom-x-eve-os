@@ -128,7 +128,7 @@ const LeaderboardRow = ({ player, activeTab, index, onClick }) => {
   );
 };
 
-export default function Leaderboard() {
+export default function Leaderboard({ isEmbedded = false }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overall');
   const [searchTerm, setSearchTerm] = useState('');
@@ -209,18 +209,17 @@ export default function Leaderboard() {
   const topThree = filteredData.slice(0, 3);
   const restOfList = filteredData.slice(3);
 
-  return (
-    <GlassPageFrame>
-    <div className="min-h-screen w-full text-white overflow-y-auto pb-20" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+  const content = (
+    <div className={`${isEmbedded ? 'h-full bg-transparent' : 'min-h-screen'} w-full text-white overflow-y-auto pb-20`} style={isEmbedded ? {} : { background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
-      </div>
+      {!isEmbedded && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[150px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[120px]" />
+        </div>
+      )}
 
-
-
-      <div className="relative z-10 w-full px-6 pt-20 pb-8">
+      <div className={`relative z-10 w-full px-6 ${isEmbedded ? 'pt-6' : 'pt-20'} pb-8`}>
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-6 pb-2" style={{ scrollbarWidth: 'none' }}>
@@ -373,6 +372,11 @@ export default function Leaderboard() {
         )}
       </AnimatePresence>
     </div>
-    </GlassPageFrame>
   );
+
+  if (isEmbedded) {
+    return content;
+  }
+
+  return <GlassPageFrame>{content}</GlassPageFrame>;
 }
