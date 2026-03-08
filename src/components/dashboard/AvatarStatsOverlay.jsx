@@ -49,35 +49,35 @@ export default function AvatarStatsOverlay({ onClose }) {
     fetchProgression();
   }, [user]);
 
-  // Fallback stats if not in DB
-  const defaultStats = [
-    { name: 'HP', value: progression?.stats?.HP || 100, icon: Heart, color: 'text-red-400' },
-    { name: 'Stamina', value: progression?.stats?.Stamina || 100, icon: Activity, color: 'text-green-400' },
-    { name: 'Tenacity', value: progression?.stats?.Tenacity || 10, icon: Shield, color: 'text-yellow-400' },
-    { name: 'Strength', value: progression?.stats?.Strength || 15, icon: Swords, color: 'text-orange-400' },
-    { name: 'Agility', value: progression?.stats?.Agility || 12, icon: Zap, color: 'text-cyan-400' },
-    { name: 'Intelligence', value: progression?.stats?.Intelligence || 8, icon: Brain, color: 'text-purple-400' },
-    { name: 'Critical Hit', value: progression?.stats?.Luck || 5, icon: Crosshair, color: 'text-pink-400' },
+  // Stats definitions
+  const statsList = [
+    { key: 'HP', name: 'HP', icon: Heart, color: 'text-red-400' },
+    { key: 'Stamina', name: 'Stamina', icon: Activity, color: 'text-green-400' },
+    { key: 'Tenacity', name: 'Tenacity', icon: Shield, color: 'text-yellow-400' },
+    { key: 'Strength', name: 'Strength', icon: Swords, color: 'text-orange-400' },
+    { key: 'Agility', name: 'Agility', icon: Zap, color: 'text-cyan-400' },
+    { key: 'Intelligence', name: 'Intelligence', icon: Brain, color: 'text-purple-400' },
+    { key: 'Luck', name: 'Critical Hit', icon: Crosshair, color: 'text-pink-400' },
   ];
 
-  const handleLevelUp = (genreName) => {
-    // Optimistic UI update for leveling up a genre
-    if (!progression || progression.available_points <= 0) return;
+  const handleStatChange = (statName, delta) => {
+    if (!progression) return;
     
-    const updatedGenres = progression.genres.map(g => {
-      if (g.name === genreName) {
-        return { ...g, level: (g.level || 1) + 1 };
-      }
-      return g;
-    });
+    // Check if we can add/remove points
+    if (delta > 0 && progression.available_points <= 0) return;
+    
+    const currentVal = progression.stats[statName] || 0;
+    // Allow decrementing points back to a minimum (let's assume base is 0 or whatever they had)
+    if (delta < 0 && currentVal <= 0) return;
 
-    setProgression({
-      ...progression,
-      genres: updatedGenres,
-      available_points: progression.available_points - 1
-    });
-
-    // We could update DB here if we had backend access
+    setProgression(prev => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        [statName]: currentVal + delta
+      },
+      available_points: prev.available_points - delta
+    }));
   };
 
   if (isLoading) {
@@ -89,89 +89,105 @@ export default function AvatarStatsOverlay({ onClose }) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col p-6 text-white overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+    <div className="w-full h-full flex flex-col p-6 text-white overflow-hidden">
       
       {/* Global Status Header */}
-      <div className="flex items-center justify-between mb-8 pb-6 border-b border-white/10">
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10 shrink-0">
         <div>
-          <h3 className="text-sm text-white/50 uppercase tracking-widest font-semibold mb-1">Global Level</h3>
-          <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+          <h3 className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-1">Global Level</h3>
+          <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
             {progression?.global_level || 1}
           </div>
         </div>
         <div className="text-right">
-          <h3 className="text-sm text-white/50 uppercase tracking-widest font-semibold mb-1">Available Points</h3>
-          <div className="text-3xl font-bold text-yellow-400">
+          <h3 className="text-xs text-white/50 uppercase tracking-widest font-semibold mb-1">Available Points</h3>
+          <div className="text-2xl font-bold text-yellow-400">
             {progression?.available_points || 0}
           </div>
         </div>
       </div>
 
-      {/* Core Stats Grid */}
-      <div className="mb-10">
-        <h4 className="text-sm font-semibold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Activity className="w-4 h-4" /> Core Attributes
-        </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {defaultStats.map((stat, idx) => {
-            const Icon = stat.icon;
-            return (
-              <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-white/10 transition-colors">
-                <Icon className={`w-6 h-6 mb-2 ${stat.color}`} />
-                <span className="text-2xl font-bold mb-1">{stat.value}</span>
-                <span className="text-xs text-white/50 uppercase tracking-wider">{stat.name}</span>
-              </div>
-            );
-          })}
+      <div className="flex-1 flex gap-6 min-h-0">
+        
+        {/* Left Side: Core Attributes */}
+        <div className="w-1/2 flex flex-col min-h-0">
+          <h4 className="text-sm font-semibold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
+            <Activity className="w-4 h-4" /> Core Attributes
+          </h4>
+          <div className="flex-1 overflow-y-auto space-y-2 pr-2" style={{ scrollbarWidth: 'none' }}>
+            {statsList.map((stat, idx) => {
+              const Icon = stat.icon;
+              const val = progression?.stats?.[stat.key] || 0;
+              return (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg bg-black/20 ${stat.color}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider">{stat.name}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold w-8 text-center">{val}</span>
+                    <div className="flex items-center gap-0.5 bg-black/40 rounded-lg p-1 border border-white/10">
+                      <button 
+                        onClick={() => handleStatChange(stat.key, -1)}
+                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 text-white/60 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        disabled={val <= 0}
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <button 
+                        onClick={() => handleStatChange(stat.key, 1)}
+                        className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-white/10 text-white/60 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        disabled={progression?.available_points <= 0}
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Genre Proficiency */}
-      <div>
-        <h4 className="text-sm font-semibold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Shield className="w-4 h-4" /> Genre Proficiency
-        </h4>
-        <div className="space-y-4">
-          {(progression?.genres || []).map((genre, idx) => (
-            <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
-                <Swords className="w-6 h-6 text-purple-400" />
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="font-bold text-lg">{genre.name}</span>
-                  <span className="text-cyan-400 font-mono text-sm">Lv. {genre.level || 1}</span>
+        {/* Right Side: Genre Proficiency */}
+        <div className="w-1/2 flex flex-col min-h-0 pl-2 border-l border-white/10">
+          <h4 className="text-sm font-semibold text-white/70 uppercase tracking-wider mb-4 flex items-center gap-2 shrink-0">
+            <Shield className="w-4 h-4" /> Genre Proficiency
+          </h4>
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2" style={{ scrollbarWidth: 'none' }}>
+            {(progression?.genres || []).map((genre, idx) => (
+              <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <Swords className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-end mb-1">
+                      <span className="font-bold text-sm truncate">{genre.name}</span>
+                      <span className="text-cyan-400 font-mono text-xs">Lv. {genre.level || 1}</span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                        style={{ width: `${((genre.exp || 0) / (genre.next_level_exp || 100)) * 100}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Progress Bar */}
-                <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
-                    style={{ width: `${((genre.exp || 0) / (genre.next_level_exp || 100)) * 100}%` }}
-                  />
-                </div>
-                <div className="text-[10px] text-white/40 mt-1 text-right">
+                <div className="text-[9px] text-white/40 text-right uppercase tracking-widest">
                   {genre.exp || 0} / {genre.next_level_exp || 100} XP
                 </div>
               </div>
-
-              <button 
-                onClick={() => handleLevelUp(genre.name)}
-                disabled={!progression || progression.available_points <= 0}
-                className={`ml-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                  progression?.available_points > 0 
-                    ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/40 border border-cyan-500/50' 
-                    : 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'
-                }`}
-              >
-                UPGRADE
-              </button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }
