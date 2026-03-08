@@ -630,7 +630,7 @@ export default function LunaTemplate() {
               {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Leaderboard' && (
-                <div className="absolute inset-0 bg-[#080808] overflow-y-auto overflow-x-hidden">
+                <div className="absolute inset-0 bg-transparent overflow-y-auto overflow-x-hidden">
                   <Leaderboard />
                 </div>
               )}
