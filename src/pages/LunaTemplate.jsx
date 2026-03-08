@@ -625,7 +625,7 @@ export default function LunaTemplate() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto relative bg-black/20" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto relative bg-transparent" style={{ scrollbarWidth: 'none' }}>
               {activeAvatarFocusView === 'AI Story' && <AIStoryOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
