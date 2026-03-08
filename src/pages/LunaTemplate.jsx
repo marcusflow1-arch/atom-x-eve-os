@@ -631,7 +631,7 @@ export default function LunaTemplate() {
               {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Leaderboard' && (
                 <div className="absolute inset-0 bg-transparent overflow-y-auto overflow-x-hidden">
-                  <Leaderboard />
+                  <Leaderboard isEmbedded={true} />
                 </div>
               )}
               {activeAvatarFocusView === 'Live' && <StreamingDiscovery />}
