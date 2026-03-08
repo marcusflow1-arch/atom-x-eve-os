@@ -513,7 +513,7 @@ export default function BattleModeOverlay({ onClose }) {
       case 'tournaments': return <TournamentsView onBack={() => setActiveView('menu')} />;
       case 'world': return <WorldEventsView onBack={() => setActiveView('menu')} />;
       default: return (
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
+        <div className="flex flex-col items-center justify-center h-full px-6 py-12">
           {/* Main Menu Content */}
           <div className="mb-12 text-center">
             <h1 className="text-5xl font-thin text-white mb-2 tracking-widest uppercase">Battle Mode</h1>
@@ -565,29 +565,8 @@ export default function BattleModeOverlay({ onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       id="battle-overlay-root"
-      className="fixed left-0 right-0 bottom-0 top-16 z-[90] flex items-center justify-center overflow-hidden bg-[#050505]"
+      className="relative w-full h-full flex items-center justify-center overflow-hidden bg-transparent"
     >
-      {/* Sleek Background Gradient */}
-      <div 
-        className="absolute inset-0 opacity-30 pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000000 100%)'
-        }}
-      />
-      
-      {/* Animated Particles/Noise (Simulated) */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none" />
-
-      {/* Close Button */}
-      <button 
-        onClick={onClose}
-        className="absolute top-8 right-8 z-50 w-12 h-12 rounded-full bg-white/[0.03] hover:bg-white/[0.1] border border-white/5 hover:border-white/20 flex items-center justify-center text-white/50 hover:text-white transition-all duration-300"
-      >
-        <X className="w-5 h-5" />
-      </button>
-
-
-
       {/* Content Container */}
       <div className="relative z-10 w-full h-full flex flex-col overflow-y-auto">
         {renderContent()}

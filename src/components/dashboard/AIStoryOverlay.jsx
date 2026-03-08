@@ -102,7 +102,7 @@ export default function AIStoryOverlay({ onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] font-serif overflow-hidden"
+      className="relative w-full h-full z-[100] font-serif overflow-hidden bg-transparent"
     >
       {/* LAYER 0: Plasma Water Video Background */}
       {/* LAYER 0: Plasma Water Video Background */}
@@ -131,10 +131,7 @@ export default function AIStoryOverlay({ onClose }) {
 
       {/* LAYER 2: Liquid Glass Layer */}
       <div 
-        className="absolute inset-0 m-0 md:m-0 backdrop-blur-[20px] bg-white/[0.08] shadow-2xl"
-        style={{
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
+        className="absolute inset-0 m-0 md:m-0 bg-transparent"
       >
         {/* Subtle texture/grain for glass feel */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
@@ -332,13 +329,7 @@ export default function AIStoryOverlay({ onClose }) {
             )}
           </AnimatePresence>
 
-          {/* Footer / Quit */}
-          <div className="absolute bottom-12 right-12 flex items-center gap-3 text-white/50 hover:text-white transition-colors cursor-pointer drop-shadow-md">
-            <div className="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 bg-current rounded-full" />
-            </div>
-            <span className="uppercase tracking-widest text-xs font-bold" onClick={onClose}>Return to Dashboard</span>
-          </div>
+
 
         </div>
       </div>
