@@ -33,6 +33,16 @@ export default function LiveIntelligenceFeed() {
 
   return (
     <div className="flex flex-col items-end gap-3 pointer-events-auto">
+      {/* Settings/Toggle Icons top right of the feed */}
+      <div className="flex items-center gap-2">
+         <button className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center border border-white/10 transition-colors">
+            <span className="block w-2.5 h-[1.5px] bg-white/60"></span>
+         </button>
+         <button className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center border border-white/10 transition-colors">
+            <X className="w-3.5 h-3.5 text-white/60" />
+         </button>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
