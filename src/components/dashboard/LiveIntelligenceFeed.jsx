@@ -33,15 +33,7 @@ export default function LiveIntelligenceFeed() {
 
   return (
     <div className="flex flex-col items-end gap-3 pointer-events-auto">
-      {/* Settings/Toggle Icons top right of the feed */}
-      <div className="flex items-center justify-end gap-2 w-[360px]">
-         <button className="text-white/60 hover:text-white transition-colors p-1" onClick={() => setIsCollapsed(true)}>
-            <span className="block w-3 h-0.5 bg-current"></span>
-         </button>
-         <button className="text-white/60 hover:text-white transition-colors p-1">
-            <X className="w-4 h-4" />
-         </button>
-      </div>
+      {/* Removed icons here to move them inside the layout closer to calendar */}
 
       <motion.div
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
