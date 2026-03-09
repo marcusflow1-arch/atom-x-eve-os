@@ -52,15 +52,15 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-2">
-      {/* Title above — centered */}
-      <div className="flex items-center gap-2">
+    <div className="w-full flex flex-col items-start gap-2">
+      {/* Title above — left-aligned */}
+      <div className="flex items-center gap-2 ml-1">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
         <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">Developer Spotlight</span>
       </div>
 
-      {/* Row: Spotlight box + 3 mystery boxes — centered, evenly spaced */}
-      <div className="w-full flex items-center gap-2">
+      {/* Row: Spotlight box + 3 mystery boxes — left aligned */}
+      <div className="w-full flex items-center gap-2 justify-start">
         {/* Spotlight box - compact */}
         <motion.div
           onClick={onOpenOverlay}
@@ -69,7 +69,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
           onMouseMove={handleMouseMove}
           whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="relative rounded-xl overflow-hidden cursor-pointer flex-1"
+          className="relative rounded-xl overflow-hidden cursor-pointer w-[226px] flex-shrink-0"
           style={{
             height: '56px',
             background: 'linear-gradient(135deg, rgba(180, 195, 215, 0.10) 0%, rgba(140, 160, 185, 0.07) 40%, rgba(200, 210, 225, 0.09) 100%)',
