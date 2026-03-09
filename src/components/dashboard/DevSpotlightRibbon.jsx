@@ -15,7 +15,7 @@ function MysteryBox() {
         setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
       }}
       whileHover={{ y: -2, scale: 1.04 }}
-      className="flex-1 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden"
+      className="w-[226px] flex-shrink-0 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden"
       style={{
         height: '84px',
         background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 100%)',
