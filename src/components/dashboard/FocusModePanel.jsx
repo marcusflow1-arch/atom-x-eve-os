@@ -1850,8 +1850,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 </AnimatePresence>
               </div>
 
-              {/* DevSpotlightRibbon — sits directly below the overlay space */}
-              <div className="pointer-events-auto mt-3">
+              {/* DevSpotlightRibbon — pinned to bottom left of focus panel area */}
+              <div className="pointer-events-auto fixed bottom-8 z-50" style={{ left: '440px' }}>
                 <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
               </div>
 
