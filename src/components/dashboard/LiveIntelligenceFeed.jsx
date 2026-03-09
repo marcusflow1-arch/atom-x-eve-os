@@ -13,22 +13,15 @@ export default function LiveIntelligenceFeed() {
     setActionCenterOpen(true);
   };
 
+  // Use window events to listen to toggle from outside
+  React.useEffect(() => {
+     const handleToggle = () => setIsCollapsed(prev => !prev);
+     window.addEventListener('toggleLiveFeed', handleToggle);
+     return () => window.removeEventListener('toggleLiveFeed', handleToggle);
+  }, []);
+
   if (isCollapsed) {
-    return (
-      <div 
-         className="w-[360px] rounded-xl flex justify-between items-center px-4 py-3 font-sans cursor-pointer flex-shrink-0 border border-white/10 pointer-events-auto"
-         style={{
-           background: 'rgba(15, 23, 42, 0.65)',
-           backdropFilter: 'blur(20px)',
-           WebkitBackdropFilter: 'blur(20px)',
-           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-         }}
-         onClick={() => setIsCollapsed(false)}
-      >
-         <span className="text-white text-sm font-semibold tracking-wider">Mini-Feed Menu</span>
-         <ChevronUp className="w-4 h-4 text-white/50 rotate-180" />
-      </div>
-    );
+    return null; // When collapsed, it's completely hidden, toggled via external button
   }
 
   return (
