@@ -1,90 +1,135 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingDown } from 'lucide-react';
+import { ChevronUp, X, Check } from 'lucide-react';
 import ActionCenterDrawer from './ActionCenterDrawer';
 
 export default function LiveIntelligenceFeed() {
   const [actionCenterOpen, setActionCenterOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
     setActionCenterOpen(true);
   };
 
+  if (isCollapsed) {
+     return (
+        <div 
+           className="w-[340px] rounded-xl flex justify-between items-center px-4 py-3 font-sans cursor-pointer flex-shrink-0 border border-white/10"
+           style={{
+             background: 'rgba(15, 23, 42, 0.65)',
+             backdropFilter: 'blur(20px)',
+             WebkitBackdropFilter: 'blur(20px)',
+             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+           }}
+           onClick={() => setIsCollapsed(false)}
+        >
+           <span className="text-white text-sm font-semibold tracking-wider">Mini-Feed Menu</span>
+           <ChevronUp className="w-4 h-4 text-white/50 rotate-180" />
+        </div>
+     )
+  }
+
   return (
     <>
       <div
-        className="w-[300px] h-[160px] rounded-xl flex flex-col font-mono relative overflow-hidden flex-shrink-0"
+        className="w-[340px] rounded-xl flex flex-col font-sans relative overflow-hidden flex-shrink-0"
         style={{
-          background: 'linear-gradient(135deg, rgba(8, 16, 24, 0.4) 0%, rgba(16, 24, 36, 0.2) 100%)',
+          background: 'rgba(15, 23, 42, 0.65)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(34, 211, 238, 0.3)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.4), 0 0 15px rgba(34,211,238,0.1) inset',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         }}
       >
-        {/* Header / scanline effect */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-cyan-400/50 opacity-50 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+        {/* Header */}
+        <div className="flex justify-between items-center px-4 py-3 bg-white/[0.04] border-b border-white/10">
+          <span className="text-white text-sm font-semibold tracking-wider">Mini-Feed Menu</span>
+          <div className="flex items-center gap-2">
+            <ChevronUp 
+               className="w-4 h-4 text-white/50 cursor-pointer hover:text-white transition-colors" 
+               onClick={() => setIsCollapsed(true)}
+            />
+            <X className="w-4 h-4 text-white/50 cursor-pointer hover:text-white transition-colors" />
+          </div>
+        </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-4" style={{ scrollbarWidth: 'none' }}>
+        <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
            <style>{`
               .intel-scrollbar::-webkit-scrollbar { display: none; }
            `}</style>
-           {/* [LIVE INTEL] */}
-           <div>
-              <h3 className="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-2 opacity-90">[Live Intel]</h3>
-              <div className="cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'intel', title: 'Netrunner Quest', status: '80% Complete' })}>
-                 <div className="flex justify-between items-center text-[10px] text-white/90 mb-1.5">
-                    <span className="truncate mr-2">Active Mission Progress</span>
-                    <span className="text-cyan-300 font-bold">80%</span>
+           
+           {/* LIVE FEED | INTEL */}
+           <div className="text-cyan-400 text-xs font-bold tracking-widest mb-4 flex items-center gap-1.5">
+              LIVE FEED <span className="text-white/30 font-light">|</span> INTEL
+           </div>
+
+           {/* ACTIVE MISSIONS & ACHIEVEMENTS */}
+           <div className="space-y-4">
+              <h4 className="text-cyan-400 text-[10px] font-bold tracking-wider mb-2">ACTIVE MISSIONS & ACHIEVEMENTS</h4>
+              
+              {/* Item 1 */}
+              <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Jedi Outcast: 'Force Adept'", status: '42/50' })}>
+                 <div className="flex justify-between text-[11px] text-white">
+                    <span className="flex-1 leading-relaxed">
+                       <span className="opacity-60 mr-1">•</span> 
+                       [Achievement Progress] Jedi Outcast: 'Force Adept' - <span className="text-cyan-300">(42/50)</span>
+                    </span>
                  </div>
-                 <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
-                      style={{ width: '80%' }}
-                      animate={{ opacity: [0.5, 1, 0.5] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden ml-3 group-hover:bg-white/20 transition-colors">
+                    <div className="h-full bg-[#9d4edd] rounded-full" style={{ width: '84%' }} />
+                 </div>
+              </div>
+
+              {/* Item 2 */}
+              <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Collect 'Phantom Edge'", status: '1/1' })}>
+                 <div className="flex justify-between items-start text-[11px] text-white">
+                    <span className="flex-1 leading-relaxed">
+                       <span className="opacity-60 mr-1">•</span>
+                       [Card Hunt] Collect 'Phantom Edge' - <span className="text-cyan-300">(1/1)</span>
+                    </span>
+                    <Check className="w-3.5 h-3.5 text-green-400 ml-2 flex-shrink-0 mt-0.5" />
+                 </div>
+              </div>
+
+              {/* Item 3 */}
+              <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Reach Lvl 50", status: '4,200/5,000 EXP' })}>
+                 <div className="flex justify-between text-[11px] text-white">
+                    <span className="flex-1 leading-relaxed">
+                       <span className="opacity-60 mr-1">•</span>
+                       [Street Cred] Reach Lvl 50 - <span className="text-cyan-300">(4,200/5,000 EXP)</span>
+                    </span>
+                 </div>
+                 <div className="h-1.5 bg-white/10 rounded-full overflow-hidden ml-3 group-hover:bg-white/20 transition-colors">
+                    <motion.div 
+                       className="h-full bg-cyan-500 rounded-full" 
+                       style={{ width: '84%' }} 
+                       animate={{ opacity: [0.8, 1, 0.8] }}
+                       transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                     />
                  </div>
               </div>
            </div>
 
-           {/* [MARKET ALERTS] */}
-           <div>
-              <h3 className="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-2 opacity-90">[Market Alerts]</h3>
-              <div className="space-y-1">
-                  <div className="cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors flex items-center justify-between" onClick={() => handleItemClick({ type: 'market', title: 'Neon Blade Card', status: 'Price Dropped to 150c' })}>
-                     <span className="text-[10px] text-white/90 truncate mr-2">Neon Blade Card</span>
-                     <div className="flex items-center gap-1">
-                        <TrendingDown className="w-3 h-3 text-green-400" />
-                        <span className="text-[10px] text-green-400 font-bold">150c</span>
-                     </div>
-                  </div>
-              </div>
-           </div>
-
-           {/* [ACHIEVEMENT TRACKER] */}
-           <div>
-              <h3 className="text-[10px] text-cyan-400 font-bold uppercase tracking-[0.2em] mb-2 opacity-90">[Achievement Tracker]</h3>
-              <div className="space-y-2">
-                 <div className="cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'achievement', title: 'Shadow Walker', status: '95% Complete' })}>
-                    <div className="flex justify-between items-center text-[10px] text-white/90 mb-1.5">
-                       <span className="truncate mr-2">Shadow Walker</span>
-                       <span className="text-white/60">95%</span>
-                    </div>
-                    <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
-                       <div className="h-full bg-purple-400" style={{ width: '95%' }} />
-                    </div>
+           {/* MARKET ALERT */}
+           <div className="mt-5 pt-4 border-t border-white/10">
+              <h4 className="text-cyan-400 text-[10px] font-bold tracking-wider mb-3">MARKET ALERT</h4>
+              
+              <div className="space-y-2.5">
+                 <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Neural Shock", status: 'Price Dropped' })}>
+                    <span className="opacity-60 mr-1">•</span>
+                    [Black Market] 'Neural Shock' Ability Card price <span className="text-green-400 font-bold">DROP!</span> (10 min left)
                  </div>
-                 <div className="cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'achievement', title: 'First Blood', status: '85% Complete' })}>
-                    <div className="flex justify-between items-center text-[10px] text-white/90 mb-1.5">
-                       <span className="truncate mr-2">First Blood</span>
-                       <span className="text-white/60">85%</span>
-                    </div>
-                    <div className="h-[2px] bg-white/10 rounded-full overflow-hidden">
-                       <div className="h-full bg-amber-400" style={{ width: '85%' }} />
-                    </div>
+                 
+                 <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Phoenix Companion", status: 'New Release' })}>
+                    <span className="opacity-60 mr-1">•</span>
+                    [New Release] Cyberpunk 20XX 'Phoenix Companion' - ...
+                 </div>
+                 
+                 <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Soul Reaver Raid", status: 'Upcoming Event' })}>
+                    <span className="opacity-60 mr-1">•</span>
+                    [Upcoming Event] Soul Reaver Raid (7h 15m left)
                  </div>
               </div>
            </div>
