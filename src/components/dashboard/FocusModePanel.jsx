@@ -30,7 +30,7 @@ import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
 import EnvHubDrawer from '@/components/dashboard/EnvHubDrawer';
 import DateTimeTile from '@/components/dashboard/DateTimeTile';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
-import SystemUpdatesOverlay from '@/components/dashboard/SystemUpdatesOverlay';
+import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
