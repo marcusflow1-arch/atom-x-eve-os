@@ -1679,8 +1679,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   };
 
   const handleDateTimeClick = () => {
-    setPendingNavigateUrl(createPageUrl('Notifications'));
-    setShowScrollTransition(true);
+    setShowUpdatesOverlay(true);
   };
 
   // Fetch games for bottom Library section
