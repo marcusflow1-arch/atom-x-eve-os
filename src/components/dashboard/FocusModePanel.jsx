@@ -1858,12 +1858,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
 
 
-      {/* System Updates Fullscreen Overlay */}
-      <AnimatePresence>
-        {showUpdatesOverlay && (
-          <SystemUpdatesOverlay onClose={() => setShowUpdatesOverlay(false)} />
-        )}
-      </AnimatePresence>
+      {/* System Updates Drawer */}
+      <SystemUpdatesDrawer open={showUpdatesOverlay} onClose={() => setShowUpdatesOverlay(false)} />
 
       {/* Calendar Overlay - local to FocusModePanel */}
       <AnimatePresence>
