@@ -34,6 +34,7 @@ import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
 import Mini3DViewerBox from '@/components/dashboard/Mini3DViewerBox';
 import DevSpotlightRibbon from '@/components/dashboard/DevSpotlightRibbon';
 import CardCollectionBrowser from '@/components/dashboard/CardCollectionBrowser';
+import LiveIntelligenceFeed from './LiveIntelligenceFeed';
 
 
 import { useQuery } from '@tanstack/react-query';
