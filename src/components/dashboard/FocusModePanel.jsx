@@ -1429,10 +1429,15 @@ export function LibraryBannerSection({
           </div>
 
           {/* Bottom Row: Nav Boxes */}
-          <div className="flex justify-start w-full">
+          <div className="flex justify-between items-start w-full">
             <div className="w-[368px] flex justify-center">
               {navBoxes}
             </div>
+            {intelligenceFeed && (
+              <div className="flex-1 min-w-0 flex justify-end pl-4" style={{ marginTop: '0px' }}>
+                {intelligenceFeed}
+              </div>
+            )}
           </div>
         </div>
     </div>
