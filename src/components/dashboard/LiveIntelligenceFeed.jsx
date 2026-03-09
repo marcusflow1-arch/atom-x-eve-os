@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, ChevronDown, Check, Activity } from 'lucide-react';
+import { ChevronUp, X, Check, Activity, FileText, Gift, Info } from 'lucide-react';
 import ActionCenterDrawer from './ActionCenterDrawer';
 
 export default function LiveIntelligenceFeed() {
@@ -13,117 +13,160 @@ export default function LiveIntelligenceFeed() {
     setActionCenterOpen(true);
   };
 
+  if (isCollapsed) {
+    return (
+      <div 
+         className="w-[360px] rounded-xl flex justify-between items-center px-4 py-3 font-sans cursor-pointer flex-shrink-0 border border-white/10 pointer-events-auto"
+         style={{
+           background: 'rgba(15, 23, 42, 0.65)',
+           backdropFilter: 'blur(20px)',
+           WebkitBackdropFilter: 'blur(20px)',
+           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+         }}
+         onClick={() => setIsCollapsed(false)}
+      >
+         <span className="text-white text-sm font-semibold tracking-wider">Mini-Feed Menu</span>
+         <ChevronUp className="w-4 h-4 text-white/50 rotate-180" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-end gap-3 pointer-events-auto">
-      {/* Toggle Icon Button */}
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-white/10 hover:bg-white/20 border border-white/20 shadow-lg"
+      <motion.div
+        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl"
+        style={{
+          background: 'rgba(20, 26, 38, 0.75)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+        }}
       >
-        <Activity className="w-4 h-4 text-cyan-400" />
-      </button>
+        {/* Header - Added back but styling it to match perfectly */}
+        <div className="flex justify-between items-center px-4 py-3 border-b border-white/5 bg-white/[0.02]">
+          <span className="text-white font-semibold tracking-wide text-[15px]">Mini-Feed Menu</span>
+          <div className="flex items-center gap-3">
+            <button className="text-white/40 hover:text-white transition-colors" onClick={() => setIsCollapsed(true)}>
+              <span className="block w-3 h-0.5 bg-current"></span>
+            </button>
+            <button className="text-white/40 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-      <AnimatePresence>
-        {!isCollapsed && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="w-[340px] rounded-xl flex flex-col font-sans relative overflow-hidden flex-shrink-0"
-            style={{
-              background: 'rgba(15, 23, 42, 0.75)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-              border: '1px solid rgba(34, 211, 238, 0.2)',
-              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-               <style>{`
-                  .intel-scrollbar::-webkit-scrollbar { display: none; }
-               `}</style>
-               
-               {/* LIVE FEED | INTEL */}
-               <div className="text-cyan-400 text-xs font-bold tracking-widest mb-4 flex items-center gap-1.5">
-                  LIVE FEED <span className="text-white/30 font-light">|</span> INTEL
-                  <div className="flex-1 h-[1px] bg-gradient-to-r from-cyan-500/50 to-transparent ml-2"></div>
-               </div>
+        {/* Scrollable Content Area */}
+        <div className="p-4 flex-1 overflow-y-auto max-h-[500px]" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+           <style>{`
+              .intel-scrollbar::-webkit-scrollbar { width: 6px; }
+              .intel-scrollbar::-webkit-scrollbar-track { background: transparent; }
+              .intel-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+           `}</style>
+           
+           {/* LIVE FEED | INTEL */}
+           <div className="text-[#64B5F6] text-sm font-bold tracking-widest mb-4">
+              LIVE FEED | INTEL
+           </div>
 
-               {/* ACTIVE MISSIONS & ACHIEVEMENTS */}
-               <div className="space-y-4">
-                  <h4 className="text-cyan-400 text-[10px] font-bold tracking-wider mb-2">ACTIVE MISSIONS & ACHIEVEMENTS</h4>
-                  
-                  {/* Item 1 */}
-                  <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Jedi Outcast: 'Force Adept'", status: '42/50' })}>
-                     <div className="flex justify-between text-[11px] text-white">
-                        <span className="flex-1 leading-relaxed">
-                           <span className="opacity-60 mr-1">•</span> 
-                           [Achievement Progress] Jedi Outcast: 'Force Adept' - <span className="text-cyan-300">(42/50)</span>
-                        </span>
-                     </div>
-                     <div className="h-1.5 bg-black/40 rounded-full overflow-hidden ml-3 group-hover:bg-black/60 transition-colors shadow-inner">
-                        <div className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.6)]" style={{ width: '84%' }} />
-                     </div>
-                  </div>
+           {/* Inner Box 1: ACTIVE MISSIONS & ACHIEVEMENTS */}
+           <div className="mb-4 rounded-xl border border-white/10 p-3" style={{ background: 'rgba(0, 0, 0, 0.2)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+              <h4 className="text-white/90 text-xs font-bold tracking-wide mb-3">ACTIVE MISSIONS & ACHIEVEMENTS</h4>
+              
+              <div className="space-y-4">
+                 {/* Item 1 */}
+                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Jedi Outcast: 'Force Adept'", status: '42/50' })}>
+                    <div className="flex text-xs text-white mb-2">
+                       <span className="text-white/50 mr-2">•</span> 
+                       <span className="leading-tight">
+                         [Achievement Progress] Jedi Outcast:<br/>
+                         'Force Adept' - <span className="text-white/60">(42/50)</span>
+                       </span>
+                    </div>
+                    <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
+                       <div className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.5)]" style={{ width: '84%' }} />
+                    </div>
+                 </div>
 
-                  {/* Item 2 */}
-                  <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Collect 'Phantom Edge'", status: '1/1' })}>
-                     <div className="flex justify-between items-start text-[11px] text-white">
-                        <span className="flex-1 leading-relaxed">
-                           <span className="opacity-60 mr-1">•</span>
-                           [Card Hunt] Collect 'Phantom Edge' - <span className="text-cyan-300">(1/1)</span>
-                        </span>
-                        <Check className="w-3.5 h-3.5 text-cyan-400 ml-2 flex-shrink-0 mt-0.5 drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]" />
-                     </div>
-                  </div>
+                 <div className="h-px bg-white/5 ml-4"></div>
 
-                  {/* Item 3 */}
-                  <div className="space-y-1.5 cursor-pointer hover:bg-white/5 p-1.5 -mx-1.5 rounded transition-colors group" onClick={() => handleItemClick({ type: 'achievement', title: "Reach Lvl 50", status: '4,200/5,000 EXP' })}>
-                     <div className="flex justify-between text-[11px] text-white">
-                        <span className="flex-1 leading-relaxed">
-                           <span className="opacity-60 mr-1">•</span>
-                           [Street Cred] Reach Lvl 50 - <span className="text-cyan-300">(4,200/5,000 EXP)</span>
-                        </span>
-                     </div>
-                     <div className="h-1.5 bg-black/40 rounded-full overflow-hidden ml-3 group-hover:bg-black/60 transition-colors shadow-inner">
-                        <motion.div 
-                           className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.6)]" 
-                           style={{ width: '84%' }} 
-                           animate={{ opacity: [0.8, 1, 0.8] }}
-                           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        />
-                     </div>
-                  </div>
-               </div>
+                 {/* Item 2 */}
+                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Collect 'Phantom Edge'", status: '1/1' })}>
+                    <div className="flex items-start text-xs text-white">
+                       <span className="text-white/50 mr-2 mt-0.5">•</span>
+                       <span className="flex-1 leading-tight">
+                         [Card Hunt] Collect 'Phantom Edge'<br/>
+                         <span className="text-[#64B5F6] flex items-center gap-1 mt-1">
+                           <FileText className="w-3 h-3" /> (1/1)
+                         </span>
+                       </span>
+                       <Check className="w-4 h-4 text-[#64B5F6] mt-0.5" />
+                    </div>
+                 </div>
 
-               {/* INNER BOX: MARKET ALERT */}
-               <div className="mt-5 rounded-lg border border-cyan-500/30 overflow-hidden" style={{ background: 'rgba(8, 14, 26, 0.6)' }}>
-                  <div className="px-3 py-2 bg-gradient-to-r from-cyan-500/10 to-transparent border-b border-cyan-500/20">
-                     <h4 className="text-cyan-400 text-[10px] font-bold tracking-wider">MARKET ALERT</h4>
-                  </div>
-                  
-                  <div className="p-3 space-y-2.5">
-                     <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1 -mx-1 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Neural Shock", status: 'Price Dropped' })}>
-                        <span className="opacity-60 mr-1">•</span>
-                        [Black Market] 'Neural Shock' Ability Card price: <span className="text-green-400 font-bold drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]">DROP!</span> <span className="text-white/50">(10 min left)</span>
-                     </div>
-                     
-                     <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1 -mx-1 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Phoenix Companion", status: 'New Release' })}>
-                        <span className="opacity-60 mr-1">•</span>
-                        [New Release]: Cyberpunk 20XX 'Phoenix Companion' - 🐕
-                     </div>
-                     
-                     <div className="text-[11px] text-white leading-relaxed cursor-pointer hover:bg-white/5 p-1 -mx-1 rounded transition-colors" onClick={() => handleItemClick({ type: 'market', title: "Soul Reaver Raid", status: 'Upcoming Event' })}>
-                        <span className="opacity-60 mr-1">•</span>
-                        [Upcoming Event]: Soul Reaver Raid <span className="text-white/50">(7h 15m left)</span>
-                     </div>
-                  </div>
-               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                 <div className="h-px bg-white/5 ml-4"></div>
+
+                 {/* Item 3 */}
+                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Reach Lvl 50", status: '4,200/5,000 EXP' })}>
+                    <div className="flex text-xs text-white mb-2">
+                       <span className="text-white/50 mr-2">•</span>
+                       <span className="leading-tight">
+                         [Street Cred] Reach Lvl 50 -<br/>
+                         <span className="text-white/60">(4,200/5,000 EXP)</span>
+                       </span>
+                    </div>
+                    <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
+                       <motion.div 
+                          className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" 
+                          style={{ width: '84%' }} 
+                          animate={{ opacity: [0.8, 1, 0.8] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                       />
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Inner Box 2: MARKET ALERT */}
+           <div className="rounded-xl border border-[#64B5F6]/20 p-3" style={{ background: 'rgba(100, 181, 246, 0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
+              <h4 className="text-white/90 text-xs font-bold tracking-wide mb-3">MARKET ALERT</h4>
+              
+              <div className="space-y-4">
+                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Neural Shock", status: 'Price Dropped' })}>
+                    <span className="text-white/50 mr-2 mt-0.5">•</span>
+                    <span className="leading-tight">
+                      [Black Market] 'Neural Shock' Ability<br/>
+                      Card price <span className="text-green-400 font-bold">DROP!</span> <span className="text-white/60">(10 min left)</span>
+                    </span>
+                 </div>
+                 
+                 <div className="h-px bg-white/5 ml-4"></div>
+                 
+                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Phoenix Companion", status: 'New Release' })}>
+                    <span className="text-white/50 mr-2 mt-0.5">•</span>
+                    <span className="leading-tight">
+                      [New Release] Cyberpunk 20XX<br/>
+                      'Phoenix Companion' - <Gift className="w-3 h-3 inline text-amber-400" />
+                    </span>
+                 </div>
+                 
+                 <div className="h-px bg-white/5 ml-4"></div>
+                 
+                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Soul Reaver Raid", status: 'Upcoming Event' })}>
+                    <span className="text-white/50 mr-2 mt-0.5">•</span>
+                    <span className="leading-tight">
+                      [Upcoming Event] Soul Reaver Raid<br/>
+                      <span className="text-white/60">(7h 15m left)</span>
+                    </span>
+                 </div>
+              </div>
+           </div>
+        </div>
+      </motion.div>
       <ActionCenterDrawer open={actionCenterOpen} onClose={() => setActionCenterOpen(false)} item={selectedItem} />
     </div>
   );
