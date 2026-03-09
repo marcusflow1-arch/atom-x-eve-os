@@ -57,18 +57,7 @@ export default function LiveIntelligenceFeed() {
           boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
         }}
       >
-        {/* Header - Added back but styling it to match perfectly */}
-        <div className="flex justify-between items-center px-4 py-3 border-b border-white/5 bg-white/[0.02]">
-          <span className="text-white font-semibold tracking-wide text-[15px]">Mini-Feed Menu</span>
-          <div className="flex items-center gap-3">
-            <button className="text-white/40 hover:text-white transition-colors" onClick={() => setIsCollapsed(true)}>
-              <span className="block w-3 h-0.5 bg-current"></span>
-            </button>
-            <button className="text-white/40 hover:text-white transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        {/* Header - Removed as requested, toggle icons moved above */}
 
         {/* Scrollable Content Area */}
         <div className="p-4 flex-1 overflow-y-auto max-h-[500px]" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
