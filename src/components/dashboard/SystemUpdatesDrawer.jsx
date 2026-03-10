@@ -34,8 +34,10 @@ export default function SystemUpdatesDrawer({ open, onClose }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-[420px] z-[9999] flex flex-col rounded-l-3xl overflow-hidden"
+            className="fixed right-0 w-[420px] z-[9999] flex flex-col rounded-l-3xl overflow-hidden"
             style={{
+              top: '64px',
+              bottom: '48px',
               background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 16, 28, 0.95) 100%)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
