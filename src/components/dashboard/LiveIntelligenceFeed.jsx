@@ -147,6 +147,8 @@ export default function LiveIntelligenceFeed() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('missions');
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedMissionGame, setSelectedMissionGame] = useState('Cyberpunk 2088');
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -170,10 +172,10 @@ export default function LiveIntelligenceFeed() {
 
       <motion.div
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        animate={{ opacity: 1, y: 0, scale: 1, width: isExpanded ? 'calc(100vw - 480px)' : 360 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
-        transition={{ duration: 0.2 }}
-        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full"
+        transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
+        className="flex flex-row font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full"
         style={{
           background: 'rgba(20, 26, 38, 0.75)',
           backdropFilter: 'blur(24px)',
