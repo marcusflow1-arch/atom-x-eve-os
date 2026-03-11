@@ -231,22 +231,45 @@ export default function CardCollectionBrowser() {
   return (
     <div className="w-full flex flex-col items-center">
       {/* Title - Clickable for Full Page */}
-      <button 
-        onClick={() => navigate(createPageUrl('CardCollection'))}
-        className="w-full flex justify-center group mb-3"
-      >
-        <h3 
-          className="text-base font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
-          style={{ 
-            background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-          }}
+      <div className="w-full flex justify-center items-center gap-2 mb-3">
+        <button 
+          onClick={() => navigate(createPageUrl('CardCollection'))}
+          className="group"
         >
-          Card Collection
-        </h3>
-      </button>
+          <h3 
+            className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
+            style={{ 
+              background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+            }}
+          >
+            Cards Unlocked
+          </h3>
+        </button>
+
+        <div className="w-4 h-4 border border-white/40 rounded flex items-center justify-center text-white/40 flex-shrink-0">
+          <span className="text-[10px] font-bold leading-none">?</span>
+        </div>
+
+        <button 
+          onClick={() => navigate(createPageUrl('CardCollection') + '?game=' + encodeURIComponent(localStorage.getItem('luna_pinned_card_game_name') || 'Cyberpunk 2077'))}
+          className="group"
+        >
+          <h3 
+            className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform truncate max-w-[100px]" 
+            style={{ 
+              background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+            }}
+          >
+            {localStorage.getItem('luna_pinned_card_game_name') || 'Cyberpunk 2077'}
+          </h3>
+        </button>
+      </div>
 
       {/* Genre Name - scroll over this to change genre */}
       <div
