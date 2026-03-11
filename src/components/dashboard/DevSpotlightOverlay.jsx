@@ -289,7 +289,7 @@ export default function DevSpotlightOverlay({ onClose }) {
         animate={{ opacity: 1, scale: 1 }} 
         exit={{ opacity: 0, scale: 0.95 }} 
         transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
-        className={`fixed z-[55] pointer-events-auto overflow-hidden flex flex-col ${isMaximized ? 'inset-0' : 'rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10'}`}
+        className={`fixed z-[55] pointer-events-auto overflow-hidden flex flex-col ${isMaximized ? 'inset-0' : 'rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/15'}`}
         style={isMaximized ? {
           background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
         } : {
@@ -297,9 +297,9 @@ export default function DevSpotlightOverlay({ onClose }) {
           left: '480px',
           right: '390px',
           bottom: '100px',
-          background: 'linear-gradient(135deg, rgba(15, 20, 25, 0.98) 0%, rgba(26, 31, 46, 0.95) 100%)',
-          backdropFilter: 'blur(30px)',
-          WebkitBackdropFilter: 'blur(30px)',
+          background: 'linear-gradient(135deg, rgba(10, 14, 20, 0.95) 0%, rgba(15, 20, 30, 0.98) 100%)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
         }}
       >
         <div className="w-full h-full text-white font-sans flex flex-col relative">
