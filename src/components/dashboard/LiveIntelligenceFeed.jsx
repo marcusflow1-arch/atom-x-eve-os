@@ -25,7 +25,7 @@ export default function LiveIntelligenceFeed() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-3 pointer-events-auto">
+    <div className="flex flex-col items-end gap-3 pointer-events-auto h-full">
       {/* Removed icons here to move them inside the layout closer to calendar */}
 
       <motion.div
@@ -33,7 +33,7 @@ export default function LiveIntelligenceFeed() {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl"
+        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full"
         style={{
           background: 'rgba(20, 26, 38, 0.75)',
           backdropFilter: 'blur(24px)',
@@ -45,7 +45,7 @@ export default function LiveIntelligenceFeed() {
         {/* Header - Removed as requested, toggle icons moved above */}
 
         {/* Scrollable Content Area */}
-        <div className="p-4 flex-1 overflow-y-auto max-h-[500px]" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+        <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
            <style>{`
               .intel-scrollbar::-webkit-scrollbar { width: 6px; }
               .intel-scrollbar::-webkit-scrollbar-track { background: transparent; }
