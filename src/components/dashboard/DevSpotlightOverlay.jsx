@@ -4,7 +4,7 @@ import {
   Gamepad2, Sparkles, Layers, DollarSign, Trophy, X,
   LayoutGrid, Globe, Rocket, Crown, Crosshair, Map, Ghost, Monitor, Car,
   ShoppingCart, Star, Zap, BookOpen, Users, Search, ChevronLeft, Clock,
-  TrendingUp, Bell, ArrowRight
+  TrendingUp, Bell, ArrowRight, Maximize2, Minimize2
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
