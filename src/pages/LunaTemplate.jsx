@@ -712,13 +712,11 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="fixed right-8 z-30 overflow-y-auto pointer-events-none"
+            className="fixed right-8 z-30 overflow-hidden pointer-events-none"
             style={{
               left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
               bottom: '32px',
-              maxHeight: 'calc(100vh - 112px)',
-              minHeight: '800px'
             }}>
 
             <div className="h-full">
