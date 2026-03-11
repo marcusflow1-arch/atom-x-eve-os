@@ -246,7 +246,7 @@ export default function CardCollectionBrowser() {
           className="group"
         >
           <h3 
-            className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
+            className="text-[12.5px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
             style={{ 
               background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
               WebkitBackgroundClip: 'text',
@@ -270,7 +270,7 @@ export default function CardCollectionBrowser() {
           className="group"
         >
           <h3 
-            className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform truncate max-w-[100px]" 
+            className="text-[12.5px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform truncate max-w-[120px]" 
             style={{ 
               background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
               WebkitBackgroundClip: 'text',

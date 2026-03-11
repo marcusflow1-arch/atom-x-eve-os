@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronUp, X, Check, Activity, FileText, Gift, Info } from 'lucide-react';
+import { ChevronUp, X, Check, Activity, FileText, Gift, Info, Target, ShoppingCart } from 'lucide-react';
 import ActionCenterDrawer from './ActionCenterDrawer';
 
 export default function LiveIntelligenceFeed() {
   const [actionCenterOpen, setActionCenterOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('missions');
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
@@ -57,98 +58,149 @@ export default function LiveIntelligenceFeed() {
               LIVE FEED | INTEL
            </div>
 
-           {/* Inner Box 1: ACTIVE MISSIONS & ACHIEVEMENTS */}
-           <div className="mb-4 rounded-xl border border-white/10 p-3" style={{ background: 'rgba(0, 0, 0, 0.2)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
-              <h4 className="text-white/90 text-xs font-bold tracking-wide mb-3">ACTIVE MISSIONS & ACHIEVEMENTS</h4>
-              
-              <div className="space-y-4">
-                 {/* Item 1 */}
-                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Jedi Outcast: 'Force Adept'", status: '42/50' })}>
-                    <div className="flex text-xs text-white mb-2">
-                       <span className="text-white/50 mr-2">•</span> 
-                       <span className="leading-tight">
-                         [Achievement Progress] Jedi Outcast:<br/>
-                         'Force Adept' - <span className="text-white/60">(42/50)</span>
-                       </span>
-                    </div>
-                    <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
-                       <div className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.5)]" style={{ width: '84%' }} />
-                    </div>
-                 </div>
-
-                 <div className="h-px bg-white/5 ml-4"></div>
-
-                 {/* Item 2 */}
-                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Collect 'Phantom Edge'", status: '1/1' })}>
-                    <div className="flex items-start text-xs text-white">
-                       <span className="text-white/50 mr-2 mt-0.5">•</span>
-                       <span className="flex-1 leading-tight">
-                         [Card Hunt] Collect 'Phantom Edge'<br/>
-                         <span className="text-[#64B5F6] flex items-center gap-1 mt-1">
-                           <FileText className="w-3 h-3" /> (1/1)
-                         </span>
-                       </span>
-                       <Check className="w-4 h-4 text-[#64B5F6] mt-0.5" />
-                    </div>
-                 </div>
-
-                 <div className="h-px bg-white/5 ml-4"></div>
-
-                 {/* Item 3 */}
-                 <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Reach Lvl 50", status: '4,200/5,000 EXP' })}>
-                    <div className="flex text-xs text-white mb-2">
-                       <span className="text-white/50 mr-2">•</span>
-                       <span className="leading-tight">
-                         [Street Cred] Reach Lvl 50 -<br/>
-                         <span className="text-white/60">(4,200/5,000 EXP)</span>
-                       </span>
-                    </div>
-                    <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
-                       <motion.div 
-                          className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" 
-                          style={{ width: '84%' }} 
-                          animate={{ opacity: [0.8, 1, 0.8] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                       />
-                    </div>
-                 </div>
-              </div>
+           {/* Tabs */}
+           <div className="flex gap-2 mb-4">
+             <button
+               onClick={() => setActiveTab('missions')}
+               className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest rounded-lg border transition-all ${
+                 activeTab === 'missions' 
+                   ? 'bg-[#64B5F6]/20 border-[#64B5F6]/50 text-[#64B5F6]' 
+                   : 'bg-black/20 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'
+               }`}
+             >
+               <Target className="w-3 h-3 inline mr-1 -mt-0.5" /> MISSIONS
+             </button>
+             <button
+               onClick={() => setActiveTab('market')}
+               className={`flex-1 py-2.5 text-[10px] font-bold tracking-widest rounded-lg border transition-all ${
+                 activeTab === 'market' 
+                   ? 'bg-[#64B5F6]/20 border-[#64B5F6]/50 text-[#64B5F6]' 
+                   : 'bg-black/20 border-white/10 text-white/50 hover:text-white/80 hover:bg-white/5'
+               }`}
+             >
+               <ShoppingCart className="w-3 h-3 inline mr-1 -mt-0.5" /> MARKET
+             </button>
            </div>
 
-           {/* Inner Box 2: MARKET ALERT */}
-           <div className="rounded-xl border border-[#64B5F6]/20 p-3" style={{ background: 'rgba(100, 181, 246, 0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}>
-              <h4 className="text-white/90 text-xs font-bold tracking-wide mb-3">MARKET ALERT</h4>
-              
-              <div className="space-y-4">
-                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Neural Shock", status: 'Price Dropped' })}>
-                    <span className="text-white/50 mr-2 mt-0.5">•</span>
-                    <span className="leading-tight">
-                      [Black Market] 'Neural Shock' Ability<br/>
-                      Card price <span className="text-green-400 font-bold">DROP!</span> <span className="text-white/60">(10 min left)</span>
-                    </span>
-                 </div>
-                 
-                 <div className="h-px bg-white/5 ml-4"></div>
-                 
-                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Phoenix Companion", status: 'New Release' })}>
-                    <span className="text-white/50 mr-2 mt-0.5">•</span>
-                    <span className="leading-tight">
-                      [New Release] Cyberpunk 20XX<br/>
-                      'Phoenix Companion' - <Gift className="w-3 h-3 inline text-amber-400" />
-                    </span>
-                 </div>
-                 
-                 <div className="h-px bg-white/5 ml-4"></div>
-                 
-                 <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Soul Reaver Raid", status: 'Upcoming Event' })}>
-                    <span className="text-white/50 mr-2 mt-0.5">•</span>
-                    <span className="leading-tight">
-                      [Upcoming Event] Soul Reaver Raid<br/>
-                      <span className="text-white/60">(7h 15m left)</span>
-                    </span>
-                 </div>
-              </div>
-           </div>
+           <AnimatePresence mode="wait">
+             {activeTab === 'missions' && (
+               <motion.div 
+                 key="missions"
+                 initial={{ opacity: 0, x: -10 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: 10 }}
+                 transition={{ duration: 0.2 }}
+                 className="rounded-xl border border-white/10 p-3 flex-1" 
+                 style={{ background: 'rgba(0, 0, 0, 0.2)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}
+               >
+                  <div className="space-y-4">
+                     {/* Item 1 */}
+                     <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Jedi Outcast: 'Force Adept'", status: '42/50' })}>
+                        <div className="flex text-xs text-white mb-2">
+                           <span className="text-white/50 mr-2">•</span> 
+                           <span className="leading-tight">
+                             [Achievement Progress] Jedi Outcast:<br/>
+                             'Force Adept' - <span className="text-white/60">(42/50)</span>
+                           </span>
+                        </div>
+                        <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
+                           <div className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full shadow-[0_0_8px_rgba(168,85,247,0.5)]" style={{ width: '84%' }} />
+                        </div>
+                     </div>
+
+                     <div className="h-px bg-white/5 ml-4"></div>
+
+                     {/* Item 2 */}
+                     <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Collect 'Phantom Edge'", status: '1/1' })}>
+                        <div className="flex items-start text-xs text-white">
+                           <span className="text-white/50 mr-2 mt-0.5">•</span>
+                           <span className="flex-1 leading-tight">
+                             [Card Hunt] Collect 'Phantom Edge'<br/>
+                             <span className="text-[#64B5F6] flex items-center gap-1 mt-1">
+                               <FileText className="w-3 h-3" /> (1/1)
+                             </span>
+                           </span>
+                           <Check className="w-4 h-4 text-[#64B5F6] mt-0.5" />
+                        </div>
+                     </div>
+
+                     <div className="h-px bg-white/5 ml-4"></div>
+
+                     {/* Item 3 */}
+                     <div className="cursor-pointer group" onClick={() => handleItemClick({ type: 'achievement', title: "Reach Lvl 50", status: '4,200/5,000 EXP' })}>
+                        <div className="flex text-xs text-white mb-2">
+                           <span className="text-white/50 mr-2">•</span>
+                           <span className="leading-tight">
+                             [Street Cred] Reach Lvl 50 -<br/>
+                             <span className="text-white/60">(4,200/5,000 EXP)</span>
+                           </span>
+                        </div>
+                        <div className="h-2 bg-black/50 rounded-full overflow-hidden ml-4">
+                           <motion.div 
+                              className="h-full bg-gradient-to-r from-amber-500 to-orange-400 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.5)]" 
+                              style={{ width: '84%' }} 
+                              animate={{ opacity: [0.8, 1, 0.8] }}
+                              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                           />
+                        </div>
+                     </div>
+                  </div>
+               </motion.div>
+             )}
+
+             {activeTab === 'market' && (
+               <motion.div 
+                 key="market"
+                 initial={{ opacity: 0, x: 10 }}
+                 animate={{ opacity: 1, x: 0 }}
+                 exit={{ opacity: 0, x: -10 }}
+                 transition={{ duration: 0.2 }}
+                 className="rounded-xl border border-[#64B5F6]/20 p-3 flex-1" 
+                 style={{ background: 'rgba(100, 181, 246, 0.05)', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)' }}
+               >
+                  <div className="space-y-4">
+                     <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Neural Shock", status: 'Price Dropped' })}>
+                        <span className="text-white/50 mr-2 mt-0.5">•</span>
+                        <span className="leading-tight">
+                          [Black Market] 'Neural Shock' Ability<br/>
+                          Card price <span className="text-green-400 font-bold">DROP!</span> <span className="text-white/60">(10 min left)</span>
+                        </span>
+                     </div>
+                     
+                     <div className="h-px bg-white/5 ml-4"></div>
+                     
+                     <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Phoenix Companion", status: 'New Release' })}>
+                        <span className="text-white/50 mr-2 mt-0.5">•</span>
+                        <span className="leading-tight">
+                          [New Release] Cyberpunk 20XX<br/>
+                          'Phoenix Companion' - <Gift className="w-3 h-3 inline text-amber-400" />
+                        </span>
+                     </div>
+                     
+                     <div className="h-px bg-white/5 ml-4"></div>
+                     
+                     <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Soul Reaver Raid", status: 'Upcoming Event' })}>
+                        <span className="text-white/50 mr-2 mt-0.5">•</span>
+                        <span className="leading-tight">
+                          [Upcoming Event] Soul Reaver Raid<br/>
+                          <span className="text-white/60">(7h 15m left)</span>
+                        </span>
+                     </div>
+
+                     <div className="h-px bg-white/5 ml-4"></div>
+                     
+                     <div className="flex items-start text-xs text-white cursor-pointer group" onClick={() => handleItemClick({ type: 'market', title: "Card Drop", status: 'New Cards' })}>
+                        <span className="text-white/50 mr-2 mt-0.5">•</span>
+                        <span className="leading-tight flex flex-col gap-1">
+                          <span>[Card Drop] New Cards Coming Soon!</span>
+                          <span className="text-purple-400 font-semibold">Epic 'Plasma Shield' <span className="text-white/60 text-[10px] font-normal">(Releases tmrw)</span></span>
+                          <span className="text-amber-400 font-semibold">Legendary 'Shadow Step' <span className="text-white/60 text-[10px] font-normal">(In 2 days)</span></span>
+                        </span>
+                     </div>
+                  </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
         </div>
       </motion.div>
       <ActionCenterDrawer open={actionCenterOpen} onClose={() => setActionCenterOpen(false)} item={selectedItem} />
