@@ -223,6 +223,33 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, exp
               <>
                 <p className="text-white/30 text-xs mb-4">Select a skybox to set as your dashboard background.</p>
                 <div className={`grid gap-2 ${expanded ? 'grid-cols-4 lg:grid-cols-6' : 'grid-cols-2'}`}>
+                  {/* Dynamic Skyboxes */}
+                  {skyboxModels.map(sky => (
+                    <button
+                      key={sky.id}
+                      onClick={() => { setActiveSkybox(sky.id); onSelectEnv?.({ id: sky.id, name: sky.name, background: sky.file_url, isSkybox: true }); }}
+                      className={`relative aspect-video rounded-xl overflow-hidden border-2 transition-all ${
+                        activeSkybox === sky.id ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      {sky.thumbnail_url ? (
+                        <img src={sky.thumbnail_url} alt={sky.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-black/50 flex items-center justify-center">
+                          <CloudSun className="w-6 h-6 text-white/30" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                      {activeSkybox === sky.id && (
+                        <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                          <span className="text-black text-[9px] font-black">✓</span>
+                        </div>
+                      )}
+                      <p className="absolute bottom-1.5 left-2 right-2 text-white text-[9px] font-semibold truncate">{sky.name}</p>
+                    </button>
+                  ))}
+                  
+                  {/* Static Skyboxes */}
                   {SKYBOXES.map(sky => (
                     <button
                       key={sky.id}
