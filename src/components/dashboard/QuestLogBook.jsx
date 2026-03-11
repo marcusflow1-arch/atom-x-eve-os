@@ -183,23 +183,43 @@ export default function QuestLogBook() {
     <>
       <div className="w-full flex flex-col items-center" style={{ perspective: '1000px' }}>
         {/* Title - Clickable to Navigate to Full Page */}
-        <button 
-          onClick={() => navigate(createPageUrl('QuestLog'))}
-          className="flex items-center gap-2 mb-3 w-full justify-center group"
-        >
-          <BookOpen className="w-4 h-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
-          <h3
-            className="text-sm font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform"
-            style={{
-              background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #475569 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
-            }}
+        <div className="flex items-center justify-center gap-2 mb-3 w-full">
+          <button 
+            onClick={() => navigate(createPageUrl('QuestLog'))}
+            className="group"
           >
-            Quest Book
-          </h3>
-        </button>
+            <h3
+              className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform"
+              style={{
+                background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #475569 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+              }}
+            >
+              Quest Book
+            </h3>
+          </button>
+          
+          <BookOpen className="w-4 h-4 text-white/40 flex-shrink-0" />
+          
+          <button 
+            onClick={() => navigate(createPageUrl('QuestLog') + '?game=' + pinnedGameId)}
+            className="group"
+          >
+            <h3
+              className="text-[10px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform truncate max-w-[100px]"
+              style={{
+                background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #475569 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+              }}
+            >
+              {pinnedGame.title}
+            </h3>
+          </button>
+        </div>
 
         {/* Book — layered backing for depth, then glass pages on top */}
         <div className="w-full relative" style={{ transformStyle: 'preserve-3d' }}>
