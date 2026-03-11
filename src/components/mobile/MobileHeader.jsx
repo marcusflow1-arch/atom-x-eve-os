@@ -51,10 +51,10 @@ export default function MobileHeader({ onMenuOpen }) {
       </button>
 
       {/* Center: Title */}
-      <div className="flex items-center gap-2 text-[15px] font-black tracking-[0.15em] uppercase">
-        <span className="text-blue-400">Atom</span>
-        <span className="line-through text-white/60">X</span>
-        <span className="text-white">Eve</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[10px] font-extrabold text-cyan-400/60 tracking-[0.2em] uppercase">AXE</span>
+        <span className="text-white/15 text-xs">|</span>
+        <span className="text-[13px] font-semibold text-white/90 tracking-wide">{getTitle()}</span>
       </div>
 
       {/* Right: Toggle + Cart */}
