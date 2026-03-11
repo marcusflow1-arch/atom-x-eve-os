@@ -1928,7 +1928,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
       {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
 
-      <div className="mt-10 w-full flex gap-6 items-start justify-between min-w-0 pointer-events-auto">
+      <div className="hidden">
         {/* Left: Library Area */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <LibraryGamesSection 
