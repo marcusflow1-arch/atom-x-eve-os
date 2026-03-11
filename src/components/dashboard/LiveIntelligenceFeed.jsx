@@ -366,11 +366,12 @@ export default function LiveIntelligenceFeed() {
                      </div>
                   </div>
                </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
-      </motion.div>
-      <ActionCenterDrawer open={actionCenterOpen} onClose={() => setActionCenterOpen(false)} item={selectedItem} />
+               )}
+               </AnimatePresence>
+               </div>
+               </div>
+               </motion.div>
+               <ActionCenterDrawer open={actionCenterOpen} onClose={() => setActionCenterOpen(false)} item={selectedItem} />
     </div>
   );
 }
