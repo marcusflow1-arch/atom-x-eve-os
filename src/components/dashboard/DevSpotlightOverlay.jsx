@@ -321,10 +321,10 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
         style={isMaximized ? {
           background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
         } : {
-          top: '140px',
-          left: '420px',
-          right: '380px',
-          bottom: '90px',
+          top: '160px',
+          left: '480px',
+          right: '390px',
+          bottom: '100px',
           background: 'linear-gradient(135deg, rgba(15, 20, 25, 0.98) 0%, rgba(26, 31, 46, 0.95) 100%)',
           backdropFilter: 'blur(30px)',
           WebkitBackdropFilter: 'blur(30px)',
