@@ -398,7 +398,7 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
           <>
           {/* LEFT PANEL: Quick Access (Recently Visited / Top / New) — OR Games list when a dev is selected */}
           <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-            style={{ width: '300px', minWidth: '300px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+            style={{ width: isMaximized ? '300px' : '220px', minWidth: isMaximized ? '300px' : '220px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
             <AnimatePresence mode="wait">
               {!selectedDev ? (
                 <motion.div key="quick-access" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
