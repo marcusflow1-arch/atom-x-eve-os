@@ -36,6 +36,50 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const [activeCharLabel, setActiveCharLabel] = useState(localStorage.getItem('luna_active_character') || 'ybot'); // For UI display
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const switchingRef = useRef(false);     // Prevent double-switch
+  
+  const skyboxModelRef = useRef(null);
+
+  // Background / Skybox handler
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    if (skyboxModelRef.current) {
+      scene.remove(skyboxModelRef.current);
+      skyboxModelRef.current = null;
+    }
+    
+    scene.background = null;
+
+    if (!backgroundUrl) return;
+
+    const lower = backgroundUrl.toLowerCase();
+    
+    if (lower.endsWith('.fbx') || lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+      const onLoaded = (obj) => {
+        obj.scale.setScalar(500); 
+        obj.traverse((child) => {
+          if (child.isMesh) {
+            child.material.side = THREE.BackSide;
+            child.material.depthWrite = false;
+          }
+        });
+        skyboxModelRef.current = obj;
+        scene.add(obj);
+      };
+
+      if (lower.endsWith('.fbx')) {
+        new FBXLoader().load(backgroundUrl, onLoaded);
+      } else {
+        new GLTFLoader().load(backgroundUrl, (gltf) => onLoaded(gltf.scene));
+      }
+    } else {
+      new THREE.TextureLoader().load(backgroundUrl, (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        scene.background = texture;
+      });
+    }
+  }, [backgroundUrl]);
 
   // Player Controller State
   const isSprintingRef = useRef(false);
