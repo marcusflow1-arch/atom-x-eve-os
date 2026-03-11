@@ -278,34 +278,6 @@ export default function DevSpotlightOverlay({ onClose }) {
     return () => window.removeEventListener('keydown', handler);
   }, [selectedCard, selectedGame, selectedDev, onClose]);
 
-// Developer card in the main listing
-function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.01, y: -2 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={() => onClick(dev)}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all border border-transparent hover:border-white/10 group"
-      style={{ background: 'rgba(255,255,255,0.03)' }}
-    >
-      <img src={dev.logo} alt={dev.name} className="w-14 h-14 rounded-xl border border-white/15 shadow-lg flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <h3 className="text-white font-bold text-sm truncate group-hover:text-cyan-300 transition-colors">{dev.name}</h3>
-        <p className="text-white/30 text-[10px] line-clamp-1 mt-0.5">{dev.description}</p>
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className="text-white/25 text-[10px] flex items-center gap-1">
-            <Gamepad2 className="w-3 h-3" /> {gameCount} game{gameCount !== 1 ? 's' : ''}
-          </span>
-          <span className="text-cyan-400/40 text-[10px] flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> {cardCount} cards
-          </span>
-        </div>
-      </div>
-      <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-white/40 transition-colors flex-shrink-0" />
-    </motion.button>
-  );
-}
-
   return (
     <>
       {/* Backdrop for maximized view */}
