@@ -711,7 +711,7 @@ export default function LunaTemplate() {
 
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !showDevSpotlight && !avatarFocusMode &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode &&
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
