@@ -236,7 +236,13 @@ export default function CardCollectionBrowser() {
       {/* Title - Clickable for Full Page */}
       <div className="w-full flex justify-center items-center gap-2 mb-3">
         <button 
-          onClick={() => navigate(createPageUrl('CardCollection'))}
+          onClick={() => {
+            if (viewMode === 'game') {
+              setViewMode('global');
+            } else {
+              navigate(createPageUrl('CardCollection'));
+            }
+          }}
           className="group"
         >
           <h3 
@@ -246,6 +252,7 @@ export default function CardCollectionBrowser() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+              opacity: viewMode === 'global' ? 1 : 0.6
             }}
           >
             Cards Unlocked
@@ -257,7 +264,9 @@ export default function CardCollectionBrowser() {
         </div>
 
         <button 
-          onClick={() => navigate(createPageUrl('CardCollection') + '?game=' + encodeURIComponent(localStorage.getItem('luna_pinned_card_game_name') || 'Cyberpunk 2077'))}
+          onClick={() => {
+            setViewMode('game');
+          }}
           className="group"
         >
           <h3 
@@ -267,9 +276,10 @@ export default function CardCollectionBrowser() {
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+              opacity: viewMode === 'game' ? 1 : 0.6
             }}
           >
-            {localStorage.getItem('luna_pinned_card_game_name') || 'Cyberpunk 2077'}
+            {gameName}
           </h3>
         </button>
       </div>
@@ -281,7 +291,7 @@ export default function CardCollectionBrowser() {
         onMouseLeave={() => setIsGenreHovered(false)}
         className="mb-3 cursor-pointer select-none relative flex items-center justify-center gap-3 group"
       >
-        <ChevronLeft className={`w-3.5 h-3.5 transition-opacity ${isGenreHovered ? 'text-white/50 opacity-100' : 'text-white/0 opacity-0'}`} />
+        <ChevronLeft className={`w-3.5 h-3.5 transition-opacity ${isGenreHovered && viewMode === 'global' ? 'text-white/50 opacity-100' : 'text-white/0 opacity-0'}`} />
         <AnimatePresence mode="wait">
           <motion.span
             key={currentGenre}
@@ -289,13 +299,13 @@ export default function CardCollectionBrowser() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className={`text-sm font-bold uppercase tracking-[0.2em] ${currentGenre === 'The Jar' ? 'text-cyan-400' : 'text-white/60'}`}
+            className={`text-sm font-bold uppercase tracking-[0.2em] ${viewMode === 'game' ? 'text-cyan-400' : 'text-white/60'}`}
           >
-            {currentGenre} {currentGenre === 'The Jar' && <Pin className="inline w-3 h-3 ml-1 mb-0.5" />}
+            {currentGenre} {viewMode === 'game' && <Pin className="inline w-3 h-3 ml-1 mb-0.5" />}
           </motion.span>
         </AnimatePresence>
-        <ChevronRight className={`w-3.5 h-3.5 transition-opacity ${isGenreHovered ? 'text-white/50 opacity-100' : 'text-white/0 opacity-0'}`} />
-        {isGenreHovered && (
+        <ChevronRight className={`w-3.5 h-3.5 transition-opacity ${isGenreHovered && viewMode === 'global' ? 'text-white/50 opacity-100' : 'text-white/0 opacity-0'}`} />
+        {isGenreHovered && viewMode === 'global' && (
           <span className="absolute -bottom-4 text-[9px] text-white/25 font-mono">scroll to change</span>
         )}
       </div>
