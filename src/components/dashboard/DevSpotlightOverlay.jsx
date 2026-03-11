@@ -279,52 +279,85 @@ export default function DevSpotlightOverlay({ onClose }) {
   }, [selectedCard, selectedGame, selectedDev, onClose]);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[55] pointer-events-auto">
-      <div className="h-screen w-full text-white font-sans overflow-hidden relative flex flex-col"
-        style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+    <>
+      {/* Backdrop for maximized view */}
+      {isMaximized && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[54]" onClick={onClose} />
+      )}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        exit={{ opacity: 0, scale: 0.95 }} 
+        transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
+        className={`fixed z-[55] pointer-events-auto overflow-hidden flex flex-col ${isMaximized ? 'inset-0' : 'rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/10'}`}
+        style={isMaximized ? {
+          background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
+        } : {
+          top: '80px',
+          left: '440px',
+          right: '390px',
+          bottom: '120px',
+          background: 'linear-gradient(135deg, rgba(15, 20, 25, 0.98) 0%, rgba(26, 31, 46, 0.95) 100%)',
+          backdropFilter: 'blur(30px)',
+          WebkitBackdropFilter: 'blur(30px)',
+        }}
+      >
+        <div className="w-full h-full text-white font-sans flex flex-col relative">
 
-        {/* Ambient glow */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-cyan-600/8 rounded-full blur-[150px] mix-blend-screen" />
-          <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/8 rounded-full blur-[150px] mix-blend-screen" />
-        </div>
+          {/* Ambient glow */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-600/10 rounded-full blur-[120px] mix-blend-screen" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px] mix-blend-screen" />
+          </div>
 
-        {/* ═══ SUB-NAV BAR ═══ */}
-        <div className="relative z-10 flex-shrink-0 mt-16">
-          <div className="flex items-center px-6 py-2 gap-0" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">Developer Cards</span>
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
-            <GenreScrollTabs tabs={GENRE_TABS} selectedTab={selectedGenre} onSelect={(t) => { setSelectedGenre(t); handleBackToDevs(); }} />
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setActiveView(activeView === 'blackmarket' ? 'developer' : 'blackmarket')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
-                  activeView === 'blackmarket'
-                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <DollarSign className="w-4 h-4" /><span>Black Market</span>
-              </button>
-              <button
-                onClick={() => setActiveView(activeView === 'tradingpost' ? 'developer' : 'tradingpost')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
-                  activeView === 'tradingpost'
-                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <Layers className="w-4 h-4" /><span>Trading Post</span>
-              </button>
-              <button onClick={onClose} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/40 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/20">
-                <X className="w-4 h-4" />
-              </button>
+          {/* ═══ SUB-NAV BAR ═══ */}
+          <div className={`relative z-10 flex-shrink-0 ${isMaximized ? 'mt-16' : 'mt-0'}`}>
+            <div className="flex items-center px-4 py-2 gap-0" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <span className="text-white/50 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-2 select-none hidden md:block">Dev Cards</span>
+              <div className="flex-shrink-0 w-px h-6 mx-2 relative hidden md:block"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
+              <GenreScrollTabs tabs={GENRE_TABS} selectedTab={selectedGenre} onSelect={(t) => { setSelectedGenre(t); handleBackToDevs(); }} />
+              <div className="flex-shrink-0 w-px h-6 mx-2 relative"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <button
+                  onClick={() => setActiveView(activeView === 'blackmarket' ? 'developer' : 'blackmarket')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                    activeView === 'blackmarket'
+                      ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                  }`}
+                  style={{ backdropFilter: 'blur(12px)' }}
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span className={!isMaximized ? "hidden 2xl:inline" : "hidden sm:inline"}>Black Market</span>
+                </button>
+                <button
+                  onClick={() => setActiveView(activeView === 'tradingpost' ? 'developer' : 'tradingpost')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                    activeView === 'tradingpost'
+                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                  }`}
+                  style={{ backdropFilter: 'blur(12px)' }}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span className={!isMaximized ? "hidden 2xl:inline" : "hidden sm:inline"}>Trading Post</span>
+                </button>
+                <button 
+                  onClick={() => setIsMaximized(!isMaximized)} 
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold transition-all border bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
+                  title={isMaximized ? "Restore down" : "Maximize"}
+                >
+                  {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+                <button 
+                  onClick={onClose} 
+                  className="flex items-center justify-center w-8 h-8 rounded-lg text-xs font-semibold transition-all border bg-white/5 border-white/10 text-white/40 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/20"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* ═══ MAIN CONTENT ═══ */}
         <div className="flex-1 flex min-h-0 relative z-10">
