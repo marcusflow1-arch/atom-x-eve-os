@@ -327,6 +327,11 @@ export default function LunaTemplate() {
   }, [user]);
 
   const handleEnvSelect = async (env) => {
+    if (env.isSkybox) {
+      setBannerBackgroundUrl(env.background);
+      return;
+    }
+
     setCurrentEnvId(env.id);
     
     // Update player spawn and collision from environment data
