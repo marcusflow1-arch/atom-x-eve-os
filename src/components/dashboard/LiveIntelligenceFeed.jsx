@@ -184,10 +184,36 @@ export default function LiveIntelligenceFeed() {
           boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
         }}
       >
-        {/* Header - Removed as requested, toggle icons moved above */}
+        {/* Expanded Content Area */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'calc(100% - 360px)' }}
+              exit={{ opacity: 0, width: 0 }}
+              className="border-r border-white/10 flex flex-col h-full bg-black/20 overflow-hidden flex-shrink-0"
+            >
+              {activeTab === 'market' ? (
+                <MarketExpandedView />
+              ) : (
+                <MissionsExpandedView selectedGame={selectedMissionGame} onSelectGame={setSelectedMissionGame} />
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Scrollable Content Area */}
-        <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+        {/* Original Feed Content */}
+        <div className="w-[360px] flex flex-col h-full flex-shrink-0 relative">
+          {/* Expand Toggle Button */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="absolute top-1/2 left-0 -translate-y-1/2 z-10 w-6 h-16 bg-white/10 hover:bg-white/20 border-y border-r border-white/10 rounded-r-xl flex items-center justify-center backdrop-blur-md transition-colors"
+          >
+            {isExpanded ? <ChevronRight className="w-4 h-4 text-white" /> : <ChevronLeft className="w-4 h-4 text-white" />}
+          </button>
+
+          {/* Scrollable Content Area */}
+          <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
            <style>{`
               .intel-scrollbar::-webkit-scrollbar { width: 6px; }
               .intel-scrollbar::-webkit-scrollbar-track { background: transparent; }
