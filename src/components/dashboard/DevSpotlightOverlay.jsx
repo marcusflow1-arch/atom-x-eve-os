@@ -567,5 +567,6 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
         {/* Card detail overlay removed — cards now add directly to cart */}
       </div>
     </motion.div>
+    </>
   );
 }
