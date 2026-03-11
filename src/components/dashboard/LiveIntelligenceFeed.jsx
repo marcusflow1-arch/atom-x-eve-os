@@ -342,13 +342,13 @@ export default function LiveIntelligenceFeed() {
           {/* Expand Toggle Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="absolute top-1/2 left-0 -translate-y-1/2 z-10 w-6 h-16 bg-white/10 hover:bg-white/20 border-y border-r border-white/10 rounded-r-xl flex items-center justify-center backdrop-blur-md transition-colors"
+            className="absolute top-1/2 left-0 -translate-y-1/2 z-10 w-4 h-12 bg-white/10 hover:bg-white/20 border-y border-r border-white/10 rounded-r-xl flex items-center justify-center backdrop-blur-md transition-colors"
           >
-            {isExpanded ? <ChevronRight className="w-4 h-4 text-white" /> : <ChevronLeft className="w-4 h-4 text-white" />}
+            {isExpanded ? <ChevronRight className="w-3 h-3 text-white" /> : <ChevronLeft className="w-3 h-3 text-white" />}
           </button>
 
           {/* Scrollable Content Area */}
-          <div className="p-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+          <div className="p-4 pl-6 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
            <style>{`
               .intel-scrollbar::-webkit-scrollbar { width: 6px; }
               .intel-scrollbar::-webkit-scrollbar-track { background: transparent; }
