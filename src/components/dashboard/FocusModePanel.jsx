@@ -1434,7 +1434,7 @@ export function LibraryBannerSection({
               {navBoxes}
             </div>
             {intelligenceFeed && (
-              <div className="flex-1 min-w-0 flex justify-end pl-4" style={{ marginTop: '32px' }}>
+              <div className="absolute right-0" style={{ top: '92px', bottom: '0' }}>
                 {intelligenceFeed}
               </div>
             )}
