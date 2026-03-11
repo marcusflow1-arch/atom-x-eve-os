@@ -78,13 +78,15 @@ const COLS_PER_ROW = 4;
 export default function CardCollectionBrowser() {
   const navigate = useNavigate();
   
-  // Pinned Cards Logic (The Jar)
+  // Pinned Cards Logic
   const [pinnedCards, setPinnedCards] = useState(() => {
     try {
       const saved = localStorage.getItem('luna_pinned_cards');
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
+
+  const [viewMode, setViewMode] = useState('global'); // 'global' | 'game'
 
   // Listen for pin updates from full page
   useEffect(() => {
@@ -110,19 +112,17 @@ export default function CardCollectionBrowser() {
   const cardsRef = useRef(null);
   const genreRef = useRef(null);
 
-  // If we have pinned cards, show "The Jar" as the first genre
-  const hasPins = pinnedCards.length > 0;
+  const gameName = localStorage.getItem('luna_pinned_card_game_name') || 'Cyberpunk 2077';
+  const gameGenre = localStorage.getItem('luna_pinned_card_game_genre') || 'RPG';
   
   // Determine displayed genre
-  // If index is -1, it's "The Jar" (only available if hasPins)
-  // Otherwise it's standard GENRES[index]
-  const currentGenre = hasPins && genreIndex === -1 ? 'The Jar' : GENRES[genreIndex];
+  const currentGenre = viewMode === 'game' ? gameGenre : GENRES[genreIndex];
   
   // Get cards for current view
   const cards = useMemo(() => {
-    if (currentGenre === 'The Jar') return pinnedCards;
+    if (viewMode === 'game') return pinnedCards;
     return GENRE_CARDS[currentGenre] || [];
-  }, [currentGenre, pinnedCards]);
+  }, [viewMode, currentGenre, pinnedCards]);
 
   // Build rows of COLS_PER_ROW cards
   const rows = useMemo(() => {
@@ -133,21 +133,24 @@ export default function CardCollectionBrowser() {
     return r;
   }, [cards]);
 
-  // Start at "The Jar" if available
+  // Start at 'game' mode if we have pinned cards available
   useEffect(() => {
-    if (hasPins) setGenreIndex(-1);
+    if (pinnedCards.length > 0) {
+      setViewMode('game');
+    }
   }, []); // Only run once on mount
 
   // Genre scroll: one wheel tick = one genre change
   const genreCooldown = useRef(false);
   const handleGenreWheel = useCallback((e) => {
+    if (viewMode === 'game') return; // Disable genre scrolling in game mode
     if (genreCooldown.current) return;
     e.preventDefault();
     e.stopPropagation();
     genreCooldown.current = true;
 
     setGenreIndex(prev => {
-      const minIndex = hasPins ? -1 : 0;
+      const minIndex = 0;
       const totalLen = GENRES.length;
       
       let next = prev;
@@ -166,7 +169,7 @@ export default function CardCollectionBrowser() {
     setScrollY(0);
 
     setTimeout(() => { genreCooldown.current = false; }, 400);
-  }, [hasPins]);
+  }, [viewMode]);
 
   // Attach genre wheel listener
   useEffect(() => {
