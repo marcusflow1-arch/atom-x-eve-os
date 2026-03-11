@@ -1383,10 +1383,10 @@ export function LibraryBannerSection({
   };
 
   return (
-    <div className="flex flex-col items-start w-full">
+    <div className="flex flex-col items-start w-full h-full">
       {/* Game Banner + Memories */}
-      <div ref={envDropdownRef} className="w-full">
-        <div className="flex flex-col gap-3 w-full">
+      <div ref={envDropdownRef} className="w-full h-full">
+        <div className="flex flex-col gap-3 w-full h-full relative">
           {/* Top Row: Env Hub | Memories | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-[60px]">
             {/* Environment Hub */}
