@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import MobileBottomNav from './MobileBottomNav';
-import MobileHeader from './MobileHeader';
 import MobileDrawer from './MobileDrawer';
 import LibrarySidebar from '@/components/streaming/LibrarySidebar';
+import ViewModeToggle from './ViewModeToggle';
 
 export default function MobileLayoutShell({ children }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -13,13 +13,13 @@ export default function MobileLayoutShell({ children }) {
       className="h-full w-full relative overflow-hidden"
       style={{ maxHeight: '100vh', maxWidth: '100vw' }}
     >
-      {/* Mobile Header - floating glass overlay at top */}
-      <div className="absolute top-0 left-0 right-0 z-[50]">
-        <MobileHeader onMenuOpen={() => setDrawerOpen(true)} />
+      {/* Floating ViewModeToggle so user can switch back to desktop mode */}
+      <div className="absolute top-4 right-4 z-[60]">
+        <ViewModeToggle />
       </div>
 
       {/* Page Content - full screen, scrollable, content flows behind bars */}
-      <div className="h-full w-full overflow-y-auto overflow-x-hidden" style={{ paddingTop: '48px', paddingBottom: '52px' }}>
+      <div className="h-full w-full overflow-y-auto overflow-x-hidden" style={{ paddingTop: '0px', paddingBottom: '52px' }}>
         {children}
       </div>
 
