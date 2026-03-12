@@ -1110,16 +1110,23 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
         aiInstanceCounterRef.current += 1;
         const instanceId = `${aiModelDef.id}_AI_${String(aiInstanceCounterRef.current).padStart(3, '0')}`;
-        const stats = aiModelDef.stats ? { ...aiModelDef.stats } : { hp: 100, max_hp: 100, attack: 10, defense: 5, speed: 1.0, stamina: 100 };
+        
+        // Scale enemy stats based on player level
+        const pLevel = playerStatsRef.current.level;
+        const enemyLevel = Math.max(1, pLevel + Math.floor(Math.random() * 2) - 1); // Player level +/- 1
+        
+        // Level 1 -> 10 dmg, Level 2 -> 50 dmg, Level 3 -> 100 dmg
+        const attackDmg = enemyLevel === 1 ? 10 : (enemyLevel === 2 ? 50 : 50 * Math.pow(1.5, enemyLevel - 2));
+        const combatMaxHP = 2 + (enemyLevel * 3); // Hits to kill scales up
+        
         const aiProfile = aiModelDef.ai_profile || {};
-        const combatMaxHP = 2;
         const instanceRecord = {
           instanceId, assetId: aiModelDef.id, assetName: aiModelDef.name, modelMesh,
-          mixer: instanceMixer, actions: instanceActions, activeAction, stats,
+          mixer: instanceMixer, actions: instanceActions, activeAction,
           role: aiModelDef.role || 'enemy', aiProfile, spawnTime: Date.now(),
           aiState: 'idle', aiTarget: null, aiWanderDir: new THREE.Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize(),
           aiWanderTimer: 0, aiSpawnPos: modelMesh.position.clone(), aiAttackCooldown: 0,
-          isAlive: true, maxHP: combatMaxHP, currentHP: combatMaxHP, attackPower: stats.attack || 10,
+          isAlive: true, aiLevel: enemyLevel, maxHP: combatMaxHP, currentHP: combatMaxHP, attackPower: Math.round(attackDmg),
           hitCooldown: 0, deathTimer: -1, hitReactTimer: -1,
         };
 
