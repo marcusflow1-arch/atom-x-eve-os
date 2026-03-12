@@ -506,8 +506,13 @@ export default function LiveIntelligenceFeed() {
   // Use window events to listen to toggle from outside
   React.useEffect(() => {
      const handleToggle = () => setIsCollapsed(prev => !prev);
+     const handleInvite = (e) => setInvites(prev => [e.detail, ...prev]);
      window.addEventListener('toggleLiveFeed', handleToggle);
-     return () => window.removeEventListener('toggleLiveFeed', handleToggle);
+     window.addEventListener('incomingInvite', handleInvite);
+     return () => {
+         window.removeEventListener('toggleLiveFeed', handleToggle);
+         window.removeEventListener('incomingInvite', handleInvite);
+     };
   }, []);
 
   if (isCollapsed) {
