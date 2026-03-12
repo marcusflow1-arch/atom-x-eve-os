@@ -1495,7 +1495,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
               </p>
               <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-[10px] font-bold">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                {allUsers.length} Online
+                {onlineUsers.length} Online
               </div>
             </div>
 
