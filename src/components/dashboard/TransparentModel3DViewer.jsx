@@ -1716,7 +1716,6 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     window.addEventListener('keydown', onSwitchCharacter);
 
       // --- MULTIPLAYER PLAYERS SYSTEM ---
-      const remotePlayersRef = useRef(new Map());
 
       const handleMultiplayerUpdate = (e) => {
         const scene = sceneRef.current;
