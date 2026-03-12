@@ -9,7 +9,6 @@ import EnvironmentDetailPanel from './EnvironmentDetailPanel';
 import FeatureUnlockGrid from './FeatureUnlockGrid';
 import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import CompanionsGrid from './CompanionsGrid';
-import Room7ViewerBox from './Room7ViewerBox';
 
 export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, expanded, onToggleExpand }) {
   const { user } = useAuth();
@@ -140,8 +139,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, exp
             transition={{ duration: 0.2 }}
             className="space-y-4">
             {activeTab === 'environments' && (
-              <div className="flex flex-col gap-4">
-                <Room7ViewerBox />
+              <>
                 {/* 3D Room Environments from Admin */}
                 {roomModels.length > 0 ? (
                   <div className={`grid gap-2 ${expanded ? 'grid-cols-6 lg:grid-cols-8' : 'grid-cols-4'}`}>
@@ -218,7 +216,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, exp
                     </AnimatePresence>
                   </>
                 )}
-              </div>
+              </>
             )}
 
             {activeTab === 'skyboxes' && (
