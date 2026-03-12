@@ -19,6 +19,13 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [activeInvite, setActiveInvite] = useState(null);
+
+  useEffect(() => {
+     const handleInvite = (e) => setActiveInvite(e.detail);
+     window.addEventListener('incomingInvite', handleInvite);
+     return () => window.removeEventListener('incomingInvite', handleInvite);
+  }, []);
   const isUiVisibleRef = useRef(isUiVisible);
   const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
 
