@@ -1721,97 +1721,130 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
     window.addEventListener('keydown', onSwitchCharacter);
 
-    // --- COMPANION SYSTEM ---
-    const loadCompanion = (detail) => {
-      const scene = sceneRef.current;
-      if (!scene) return;
+      // --- MULTIPLAYER PLAYERS SYSTEM ---
+      const remotePlayersRef = useRef(new Map());
 
-      if (companionRef.current) {
-        scene.remove(companionRef.current);
-        companionRef.current.traverse((child) => {
-          if (child.isMesh) {
-            child.geometry?.dispose();
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach(m => m?.dispose());
+      const handleMultiplayerUpdate = (e) => {
+        const scene = sceneRef.current;
+        if (!scene) return;
+        const players = e.detail.players || [];
+        
+        const currentIds = new Set(players.map(p => p.player_id));
+
+        // Remove disconnected players
+        for (const [id, data] of remotePlayersRef.current.entries()) {
+          if (!currentIds.has(id)) {
+            scene.remove(data.model);
+            if (data.mixer) data.mixer.stopAllAction();
+            remotePlayersRef.current.delete(id);
           }
-        });
-        companionRef.current = null;
-      }
-      if (companionMixerRef.current) {
-        companionMixerRef.current.stopAllAction();
-        companionMixerRef.current = null;
-      }
-
-      if (!detail?.fileUrl) return;
-
-      const onLoaded = (obj) => {
-        const box = new THREE.Box3().setFromObject(obj);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if (maxDim > 0) {
-          const s = 0.4 / maxDim;
-          obj.scale.setScalar(s);
         }
 
-        const sp = playerSpawnRef.current;
-        obj.position.set(sp.x - 0.6, sp.y, sp.z + 0.3);
+        // Add or update players
+        players.forEach(async p => {
+          let pData = remotePlayersRef.current.get(p.player_id);
 
-        obj.traverse((child) => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
+          if (!pData && p.model_url) {
+            // Initiate load
+            pData = { loading: true, targetPos: new THREE.Vector3(p.x, p.y, p.z), targetYaw: p.yaw, targetAnim: p.anim };
+            remotePlayersRef.current.set(p.player_id, pData);
+
+            const onLoaded = (obj) => {
+              obj.scale.set(0.001, 0.001, 0.001); 
+              
+              obj.traverse((child) => {
+                if (child.isMesh) {
+                  child.castShadow = true;
+                  child.receiveShadow = true;
+                }
+              });
+
+              scene.add(obj);
+
+              const mixer = new THREE.AnimationMixer(obj);
+              mixer.timeScale = 1.2;
+              
+              const actions = {};
+              
+              const bindAnims = async () => {
+                if (!adminAnimations || adminAnimations.length === 0) return;
+                const fbxLoader = new FBXLoader();
+                const gltfLoader = new GLTFLoader();
+                for (const anim of adminAnimations) {
+                  try {
+                    const lower = (anim.file_url || '').toLowerCase();
+                    let animAsset;
+                    if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+                        const gltf = await gltfLoader.loadAsync(anim.file_url);
+                        animAsset = { animations: gltf.animations || [] };
+                    } else {
+                        animAsset = await fbxLoader.loadAsync(anim.file_url);
+                    }
+                    if (!animAsset || !animAsset.animations || animAsset.animations.length === 0) continue;
+                    const clip = animAsset.animations[0];
+                    const action = mixer.clipAction(clip);
+                    const name = (anim.name || '').toLowerCase().trim();
+                    if (['idle', 'running', 'jumping', 'falling'].includes(name)) {
+                      actions[name] = action;
+                      if (name !== 'idle' && name !== 'running') {
+                        action.setLoop(THREE.LoopOnce, 1);
+                        action.clampWhenFinished = true;
+                      }
+                    }
+                  } catch (e) {}
+                }
+              };
+              
+              bindAnims().then(() => {
+                if (actions['idle']) actions['idle'].play();
+              });
+
+              pData.model = obj;
+              pData.mixer = mixer;
+              pData.actions = actions;
+              pData.activeActionName = 'idle';
+              pData.loading = false;
+
+              remotePlayersRef.current.set(p.player_id, pData);
+            };
+
+            const url = p.model_url;
+            const lower = url.toLowerCase();
+            if (lower.endsWith('.fbx')) {
+              new FBXLoader().load(url, onLoaded);
+            } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+              new GLTFLoader().load(url, (gltf) => {
+                const obj = gltf.scene;
+                obj.animations = gltf.animations || [];
+                onLoaded(obj);
+              });
+            } else {
+              new FBXLoader().load(url, onLoaded, undefined, () => {
+                new GLTFLoader().load(url, (gltf) => {
+                  const obj = gltf.scene;
+                  obj.animations = gltf.animations || [];
+                  onLoaded(obj);
+                });
+              });
+            }
+          } else if (pData && !pData.loading) {
+            pData.targetPos.set(p.x, p.y, p.z);
+            pData.targetYaw = p.yaw;
+            if (pData.targetAnim !== p.anim) {
+              pData.targetAnim = p.anim;
+              if (pData.actions && pData.actions[p.anim]) {
+                if (pData.activeActionName && pData.actions[pData.activeActionName]) {
+                  pData.actions[pData.activeActionName].fadeOut(0.2);
+                }
+                pData.actions[p.anim].reset().fadeIn(0.2).play();
+                pData.activeActionName = p.anim;
+              }
+            }
           }
         });
-
-        companionRef.current = obj;
-        scene.add(obj);
-
-        const anims = obj.animations || [];
-        if (anims.length > 0) {
-          const mixer = new THREE.AnimationMixer(obj);
-          companionMixerRef.current = mixer;
-          const action = mixer.clipAction(anims[0]);
-          action.play();
-        }
       };
-
-      const url = detail.fileUrl;
-      const lower = url.toLowerCase();
-      if (lower.endsWith('.fbx')) {
-        new FBXLoader().load(url, onLoaded);
-      } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
-        new GLTFLoader().load(url, (gltf) => {
-          const obj = gltf.scene;
-          obj.animations = gltf.animations || [];
-          onLoaded(obj);
-        });
-      } else {
-        new FBXLoader().load(url, onLoaded, undefined, () => {
-          new GLTFLoader().load(url, (gltf) => {
-            const obj = gltf.scene;
-            obj.animations = gltf.animations || [];
-            onLoaded(obj);
-          });
-        });
-      }
-    };
-
-    const dismissCompanion = () => {
-      const scene = sceneRef.current;
-      if (companionRef.current && scene) {
-        scene.remove(companionRef.current);
-        companionRef.current = null;
-      }
-      if (companionMixerRef.current) {
-        companionMixerRef.current.stopAllAction();
-        companionMixerRef.current = null;
-      }
-    };
-
-    const onCompanionSummon = (e) => loadCompanion(e.detail);
-    const onCompanionDismiss = () => dismissCompanion();
-    window.addEventListener('companionSummon', onCompanionSummon);
-    window.addEventListener('companionDismiss', onCompanionDismiss);
+      
+      window.addEventListener('multiplayerPlayersUpdate', handleMultiplayerUpdate);
 
     const onKeyDown = (e) => keysPressed.current[e.key.toLowerCase()] = true;
     const onKeyUp = (e) => keysPressed.current[e.key.toLowerCase()] = false;
