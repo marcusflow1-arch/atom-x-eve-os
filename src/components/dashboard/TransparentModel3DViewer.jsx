@@ -116,7 +116,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         scene.background = texture;
       });
     }
-  }, [backgroundUrl]);
+  }, [backgroundUrl, isModelLoaded]);
 
   // Player Controller State
   const isSprintingRef = useRef(false);
