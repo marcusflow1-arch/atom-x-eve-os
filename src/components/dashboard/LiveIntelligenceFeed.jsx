@@ -487,6 +487,7 @@ function MissionsExpandedView({ selectedGame, onSelectGame }) {
 export default function LiveIntelligenceFeed() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('missions'); // missions, market, settings
+  const [invites, setInvites] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedMissionGame, setSelectedMissionGame] = useState('cp2088');
 
