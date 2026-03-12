@@ -956,13 +956,30 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
         if (!activeModel) { renderer.render(scene, camera); return; }
 
-        if (companionRef.current && activeModel) {
-          const targetX = activeModel.position.x - 0.6;
-          const targetZ = activeModel.position.z + 0.3;
-          companionRef.current.position.x += (targetX - companionRef.current.position.x) * 0.05;
-          companionRef.current.position.z += (targetZ - companionRef.current.position.z) * 0.05;
-          companionRef.current.position.y = activeModel.position.y;
-        }
+        // Update remote players
+        remotePlayersRef.current.forEach(pData => {
+          if (pData.mixer) pData.mixer.update(delta);
+          if (pData.model && !pData.loading) {
+            pData.model.position.lerp(pData.targetPos, 0.1);
+            
+            // Simple yaw interpolation
+            const currentQuat = pData.model.quaternion;
+            const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), pData.targetYaw);
+            currentQuat.slerp(targetQuat, 0.1);
+          }
+        });
+
+        // Broadcast local state
+        const euler = new THREE.Euler().setFromQuaternion(activeModel.quaternion, 'YXZ');
+        window.dispatchEvent(new CustomEvent('multiplayerLocalUpdate', {
+          detail: { 
+            x: activeModel.position.x,
+            y: activeModel.position.y,
+            z: activeModel.position.z,
+            yaw: euler.y,
+            anim: currentActionNameRef.current 
+          }
+        }));
 
         const moveSpeed = 0.6;
         let isMoving = false;
