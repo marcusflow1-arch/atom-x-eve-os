@@ -1442,6 +1442,14 @@ function OnlineUsersDropdown({ onSelectEnv }) {
     setTimeout(() => {
       setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
       
+      // Switch environment to match theirs
+      if (onSelectEnv) {
+        onSelectEnv({
+          id: `joined_${u.id}`,
+          modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+        });
+      }
+
       // Also summon them to your dashboard
       window.dispatchEvent(new CustomEvent('companionSummon', {
         detail: {
@@ -1746,7 +1754,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                   <div className="flex flex-col items-end gap-2 w-full">
                      <div className="flex items-stretch gap-3 w-full justify-end" style={{ height: '60px' }}>
                        <div className="flex items-center justify-center">
-                         <OnlineUsersDropdown />
+                         <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
                        </div>
                        <div className="flex-1 min-w-0 h-full">
                          <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />

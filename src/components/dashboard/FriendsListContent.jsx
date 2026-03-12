@@ -77,6 +77,13 @@ export default function FriendsListContent() {
       setInvitingUserId(null);
       setInvitedUsers(prev => ({ ...prev, [userObj.id]: 'accepted' }));
       
+      // Switch environment if they have one
+      if (userObj.envUrl) {
+        window.dispatchEvent(new CustomEvent('changeEnvironment', {
+          detail: { envUrl: userObj.envUrl }
+        }));
+      }
+
       window.dispatchEvent(new CustomEvent('companionSummon', {
         detail: {
           fileUrl: userObj.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
