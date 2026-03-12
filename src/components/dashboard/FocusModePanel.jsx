@@ -1739,7 +1739,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 intelligenceFeed={<LiveIntelligenceFeed />}
                 calendarBox={
                   <div className="flex flex-col items-end gap-2 w-full">
-                     <div className="flex items-stretch gap-3 w-full justify-end" style={{ height: '60px' }}>
+                     <div className="flex items-stretch gap-3 w-full justify-end h-full">
                        <div className="flex items-center justify-center">
                          <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
                        </div>
