@@ -77,6 +77,13 @@ export default function FriendsListContent() {
       setInvitingUserId(null);
       setInvitedUsers(prev => ({ ...prev, [userObj.id]: 'accepted' }));
       
+      // Simulate them inviting YOU back for demo purposes
+      setTimeout(() => {
+         window.dispatchEvent(new CustomEvent('incomingInvite', {
+            detail: { fromUser: userObj }
+         }));
+      }, 1000);
+      
       // Send invite - they join our local world instance
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
         detail: { channelId: `world_instance_${user?.id || 'local'}`, hostId: user?.id }
