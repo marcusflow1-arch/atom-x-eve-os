@@ -207,17 +207,10 @@ export default function FriendsListContent() {
                     <>
                       <Button 
                         size="sm" 
-                        onClick={() => handleInviteToDashboard(selectedFriend)}
-                        disabled={invitingUserId === selectedFriend.id || invitedUsers[selectedFriend.id] === 'accepted'}
-                        className={`${invitedUsers[selectedFriend.id] === 'accepted' ? 'bg-green-600 hover:bg-green-600' : 'bg-purple-600 hover:bg-purple-500'} text-white gap-2`}
+                        onClick={() => handleJoin(selectedFriend)}
+                        className="bg-purple-600 hover:bg-purple-500 text-white gap-2"
                       >
-                        {invitingUserId === selectedFriend.id ? (
-                          <span className="flex items-center gap-2"><Circle className="w-4 h-4 animate-spin" /> Inviting...</span>
-                        ) : invitedUsers[selectedFriend.id] === 'accepted' ? (
-                          <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Joined You!</span>
-                        ) : (
-                          <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Invite to Dashboard</span>
-                        )}
+                        <UserPlus className="w-4 h-4" /> Join Channel
                       </Button>
                     </>
                   ) : (
