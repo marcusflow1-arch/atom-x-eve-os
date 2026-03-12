@@ -475,10 +475,19 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
           if (!adminAnimations || adminAnimations.length === 0) return;
           
           const fbxLoader = new FBXLoader();
+          const gltfLoader = new GLTFLoader();
           for (const anim of adminAnimations) {
             try {
-              const animAsset = await fbxLoader.loadAsync(anim.file_url);
-              if (animAsset.animations.length === 0) continue;
+              const lower = (anim.file_url || '').toLowerCase();
+              let animAsset;
+              if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+                  const gltf = await gltfLoader.loadAsync(anim.file_url);
+                  animAsset = { animations: gltf.animations || [] };
+              } else {
+                  animAsset = await fbxLoader.loadAsync(anim.file_url);
+              }
+
+              if (!animAsset || !animAsset.animations || animAsset.animations.length === 0) continue;
               
               const clip = animAsset.animations[0];
               const action = mixer.clipAction(clip);
