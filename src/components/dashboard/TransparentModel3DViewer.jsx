@@ -379,9 +379,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // --- MOUSE CONTROLS (Left/Right click orbit + zoom) ---
+    // --- MOUSE CONTROLS (Right click orbit + zoom) ---
     const onMouseDown = (e) => {
-      if (e.button === 0 || e.button === 2) {
+      if (e.button === 2) {
         isDraggingRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
         if (containerRef.current) containerRef.current.focus();
