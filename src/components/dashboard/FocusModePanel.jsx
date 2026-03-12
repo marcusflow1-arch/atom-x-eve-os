@@ -1513,7 +1513,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
 
             {/* Users List */}
             <div className="p-2 space-y-0.5 max-h-56 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-              {allUsers.map(u => (
+              {filteredUsers.map(u => (
                 <div
                   key={u.id}
                   className="w-full flex items-center gap-2 px-2 py-2 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08] transition-all group"
@@ -1531,22 +1531,34 @@ function OnlineUsersDropdown({ onSelectEnv }) {
                     <span className="text-[9px] text-white/40 truncate">{u.isMe ? 'Browsing Dashboard' : 'In Luna Dashboard'}</span>
                   </div>
                   {!u.isMe && (
-                    <button
-                      onClick={() => handleJoin(u)}
-                      disabled={joiningId === u.id}
-                      className="text-[9px] font-bold px-2 py-1 rounded border transition-colors flex-shrink-0 cursor-pointer"
-                      style={{
-                        borderColor: joiningId === u.id ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.1)',
-                        background: joiningId === u.id ? 'rgba(59,130,246,0.2)' : 'transparent',
-                        color: joiningId === u.id ? '#60a5fa' : 'rgba(255,255,255,0.7)',
-                      }}
-                    >
-                      {joiningId === u.id ? 'Joining...' : 'Join'}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => handleInvite(e, u)}
+                        disabled={invitedUsers[u.id] === 'inviting' || invitedUsers[u.id] === 'accepted'}
+                        className="w-6 h-6 rounded border border-white/10 hover:border-purple-400/50 hover:bg-purple-400/20 text-white/50 hover:text-purple-300 transition-colors flex items-center justify-center disabled:opacity-50"
+                        title="Invite to your dashboard"
+                      >
+                        {invitedUsers[u.id] === 'inviting' ? <span className="text-[8px]">...</span> : 
+                         invitedUsers[u.id] === 'accepted' ? <Check className="w-3 h-3 text-green-400" /> : 
+                         <Plus className="w-3 h-3" />}
+                      </button>
+                      <button
+                        onClick={() => handleJoin(u)}
+                        disabled={joiningId === u.id}
+                        className="text-[9px] font-bold px-2 py-1 rounded border transition-colors flex-shrink-0 cursor-pointer"
+                        style={{
+                          borderColor: joiningId === u.id ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.1)',
+                          background: joiningId === u.id ? 'rgba(59,130,246,0.2)' : 'transparent',
+                          color: joiningId === u.id ? '#60a5fa' : 'rgba(255,255,255,0.7)',
+                        }}
+                      >
+                        {joiningId === u.id ? 'Joining...' : 'Join'}
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}
-              {allUsers.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <p className="text-center text-[10px] text-white/30 py-4">No players found</p>
               )}
             </div>
