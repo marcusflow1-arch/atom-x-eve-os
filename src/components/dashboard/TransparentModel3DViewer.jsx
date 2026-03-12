@@ -771,17 +771,19 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
 
         // Auto-spawn enemies
-        enemySpawnTimer -= delta;
-        if (enemySpawnTimer <= 0) {
-           enemySpawnTimer = 8 + Math.random() * 5;
-           const enemyModels = Array.from(spawnableAIModels.values());
-           if (enemyModels.length > 0) {
-               const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
-               if (activeModel) {
-                   const randomEnemy = enemyModels[Math.floor(Math.random() * enemyModels.length)];
-                   spawnAIInstance(randomEnemy, activeModel);
-               }
-           }
+        if (!disableEnemySpawns) {
+          enemySpawnTimer -= delta;
+          if (enemySpawnTimer <= 0) {
+             enemySpawnTimer = 8 + Math.random() * 5;
+             const enemyModels = Array.from(spawnableAIModels.values());
+             if (enemyModels.length > 0) {
+                 const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+                 if (activeModel) {
+                     const randomEnemy = enemyModels[Math.floor(Math.random() * enemyModels.length)];
+                     spawnAIInstance(randomEnemy, activeModel);
+                 }
+             }
+          }
         }
 
         // Update floating texts
