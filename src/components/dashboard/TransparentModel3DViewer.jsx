@@ -485,6 +485,22 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     swapEnvironment(initialEnvUrl);
 
+    let initRenderActive = true;
+    const initRender = () => {
+      if (!initRenderActive) return;
+      if (rendererRef.current && sceneRef.current && cameraRef.current) {
+         const orbit = cameraOrbitRef.current;
+         const camX = orbit.distance * Math.sin(orbit.yaw) * Math.cos(orbit.pitch);
+         const camY = orbit.distance * Math.sin(orbit.pitch);
+         const camZ = orbit.distance * Math.cos(orbit.yaw) * Math.cos(orbit.pitch);
+         cameraRef.current.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
+         cameraRef.current.lookAt(0, 0.15, 0);
+         rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
+      requestAnimationFrame(initRender);
+    };
+    initRender();
+
     // --- CHARACTER (Y-Bot) ---
     const loader = new FBXLoader();
     const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
