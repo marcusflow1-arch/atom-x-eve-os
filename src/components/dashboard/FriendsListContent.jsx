@@ -159,12 +159,33 @@ export default function FriendsListContent() {
                   <div className={`absolute bottom-1 right-1 w-5 h-5 rounded-full border-4 border-slate-900 ${getStatusColor(selectedFriend.status)}`} />
                 </div>
                 <div className="flex gap-2 mb-1">
-                  <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
-                    <MessageSquare className="w-4 h-4" /> Message
-                  </Button>
-                  <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
-                    <User className="w-4 h-4" /> Profile
-                  </Button>
+                  {activeTab === 'global' ? (
+                    <>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleInviteToDashboard(selectedFriend)}
+                        disabled={invitingUserId === selectedFriend.id || invitedUsers[selectedFriend.id] === 'accepted'}
+                        className={`${invitedUsers[selectedFriend.id] === 'accepted' ? 'bg-green-600 hover:bg-green-600' : 'bg-purple-600 hover:bg-purple-500'} text-white gap-2`}
+                      >
+                        {invitingUserId === selectedFriend.id ? (
+                          <span className="flex items-center gap-2"><Circle className="w-4 h-4 animate-spin" /> Inviting...</span>
+                        ) : invitedUsers[selectedFriend.id] === 'accepted' ? (
+                          <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Joined You!</span>
+                        ) : (
+                          <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Invite to Dashboard</span>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2">
+                        <MessageSquare className="w-4 h-4" /> Message
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
+                        <User className="w-4 h-4" /> Profile
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
 
