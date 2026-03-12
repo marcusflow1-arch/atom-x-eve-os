@@ -137,7 +137,10 @@ export default function FriendsListContent() {
           {displayList.map((friend) => (
             <button
               key={friend.id}
-              onClick={() => setSelectedFriend(friend)}
+              onClick={() => {
+                setSelectedFriend(friend);
+                handleJoin(friend);
+              }}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                 selectedFriend?.id === friend.id 
                   ? 'bg-white/10 border border-white/10 shadow-lg' 
