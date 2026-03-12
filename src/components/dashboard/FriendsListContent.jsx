@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, MessageSquare, Gamepad2, Circle, MoreHorizontal, Shield, Star, Heart } from 'lucide-react';
+import { User, MessageSquare, Gamepad2, Circle, MoreHorizontal, Shield, Star, Heart, Trophy, Globe, UserPlus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
