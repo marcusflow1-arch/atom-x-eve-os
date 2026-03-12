@@ -130,16 +130,19 @@ export default function Room7ViewerBox() {
        </div>
 
        {/* 3D Canvas */}
-       <Canvas shadows camera={{ position: [0, 5, 12], fov: 45 }}>
-         <color attach="background" args={['#080C11']} />
-         <fog attach="fog" args={['#080C11', 10, 50]} />
-         
+       <Canvas 
+         shadows 
+         camera={{ position: [0, 5, 12], fov: 45 }}
+         onCreated={({ scene }) => {
+           scene.background = new THREE.Color('#080C11');
+           scene.fog = new THREE.Fog('#080C11', 10, 50);
+         }}
+       >
          <ambientLight intensity={0.6} />
          <directionalLight 
            position={[10, 20, 10]} 
            intensity={1.5} 
            castShadow 
-           shadow-mapSize={[2048, 2048]}
          />
          <pointLight position={[-10, 5, -10]} intensity={0.5} color="#4488ff" />
          <pointLight position={[10, 5, -10]} intensity={0.5} color="#ff4488" />
