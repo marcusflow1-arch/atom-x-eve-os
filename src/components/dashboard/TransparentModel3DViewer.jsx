@@ -1795,6 +1795,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
     window.addEventListener('resize', handleResize);
 
+    animate();
+
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
