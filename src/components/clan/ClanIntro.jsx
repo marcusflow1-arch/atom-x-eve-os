@@ -227,7 +227,7 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                         className="relative z-10 container mx-auto px-6 py-12 max-w-7xl h-screen flex flex-col"
                     >
                         {/* Header */}
-                        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
                             <div>
                                 <h2 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
                                     <Shield className="w-8 h-8 text-cyan-400" />
@@ -236,7 +236,19 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                                 <p className="text-white/50">Find a clan that matches your playstyle or establish your own.</p>
                             </div>
                             <div className="flex items-center gap-4 w-full md:w-auto">
-                                <div className="relative group w-full md:w-80">
+                                <Select value={selectedGameFilter} onValueChange={setSelectedGameFilter}>
+                                    <SelectTrigger className="w-[200px] bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-cyan-500/50">
+                                        <SelectValue placeholder="Filter by Game" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#12141a] border-white/10 text-white">
+                                        <SelectItem value="All">All Games</SelectItem>
+                                        {allGameTags.map(tag => (
+                                            <SelectItem key={tag} value={tag}>{tag}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <div className="relative group w-full md:w-64">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-cyan-400 transition-colors" />
                                     <Input 
                                         value={searchTerm}
@@ -254,115 +266,211 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                             </div>
                         </div>
 
-                        {/* Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto pb-20 pr-2 custom-scrollbar">
-                            {/* Create New Card (Always first) */}
-                            <div 
-                                onClick={() => setIsCreateOpen(true)}
-                                className="group relative aspect-[4/3] rounded-2xl border-2 border-dashed border-white/10 hover:border-cyan-400/50 bg-white/5 hover:bg-cyan-950/20 transition-all cursor-pointer flex flex-col items-center justify-center gap-4 p-8 text-center"
-                            >
-                                <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-cyan-500/20 flex items-center justify-center transition-colors">
-                                    <Plus className="w-8 h-8 text-white/40 group-hover:text-cyan-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-cyan-400">Create Division</h3>
-                                    <p className="text-sm text-white/40">Start your own legacy</p>
-                                </div>
-                            </div>
-
-                            {isLoading ? (
-                                [1,2,3].map(i => (
-                                    <div key={i} className="aspect-[4/3] rounded-2xl bg-white/5 animate-pulse" />
-                                ))
-                            ) : (
-                                filteredClans.map((clan) => (
-                                    <div 
-                                        key={clan.id}
-                                        onClick={() => {
-                                            if (isMember(clan.id) && onClanJoined) {
-                                                onClanJoined(clan.id);
-                                            }
-                                        }}
-                                        className="group relative rounded-2xl bg-[#12141a] border border-white/5 hover:border-cyan-400/30 overflow-hidden transition-all hover:transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-900/10 cursor-pointer"
-                                    >
-                                        {/* Banner */}
-                                        <div className="h-32 bg-black/50 relative">
-                                            {clan.banner ? (
-                                                <img src={clan.banner} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
-                                            ) : (
-                                                <div className="w-full h-full bg-gradient-to-br from-slate-800 to-black" />
-                                            )}
-                                            <div className="absolute top-4 right-4">
-                                                <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80">
-                                                    LVL {clan.level || 1}
-                                                </Badge>
+                        {/* Split View */}
+                        <div className="flex flex-col md:flex-row gap-6 overflow-hidden h-[calc(100vh-220px)] pb-10">
+                            {/* Left List */}
+                            <div className="flex-1 max-w-md overflow-y-auto pr-4 custom-scrollbar space-y-3">
+                                {isLoading ? (
+                                    [1,2,3,4].map(i => (
+                                        <div key={i} className="h-24 rounded-2xl bg-white/5 animate-pulse" />
+                                    ))
+                                ) : (
+                                    filteredClans.map((clan) => (
+                                        <div 
+                                            key={clan.id}
+                                            onClick={() => setSelectedClan(clan)}
+                                            className={`group relative rounded-2xl border p-4 flex items-center gap-4 cursor-pointer transition-all ${
+                                                selectedClan?.id === clan.id 
+                                                    ? 'bg-cyan-950/30 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.15)]' 
+                                                    : 'bg-[#12141a]/80 border-white/5 hover:border-cyan-400/30 hover:bg-[#12141a]'
+                                            }`}
+                                        >
+                                            <div className="w-16 h-16 rounded-xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/10 flex items-center justify-center relative">
+                                                {clan.icon ? (
+                                                    <img src={clan.icon} alt={clan.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Shield className="w-8 h-8 text-white/20" />
+                                                )}
+                                                {clan.isPrivate && (
+                                                    <div className="absolute top-1 right-1 bg-black/80 rounded p-0.5">
+                                                        <Lock className="w-3 h-3 text-white/50" />
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="p-6 relative">
-                                            <div className="absolute -top-10 left-6 w-20 h-20 rounded-2xl bg-[#12141a] p-1.5 shadow-xl">
-                                                <div className="w-full h-full rounded-xl bg-white/5 flex items-center justify-center overflow-hidden border border-white/10">
-                                                    {clan.icon ? (
-                                                        <img src={clan.icon} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Shield className="w-8 h-8 text-white/20" />
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-10">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-xl font-bold text-white group-hover:text-cyan-400 transition-colors truncate pr-2">
+                                            
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-start mb-1">
+                                                    <h3 className={`font-bold truncate ${selectedClan?.id === clan.id ? 'text-cyan-400' : 'text-white group-hover:text-cyan-300'}`}>
                                                         {clan.name}
                                                     </h3>
-                                                    {clan.isPrivate ? (
-                                                        <Lock className="w-4 h-4 text-white/30" />
-                                                    ) : (
-                                                        <Unlock className="w-4 h-4 text-green-500/50" />
-                                                    )}
-                                                </div>
-                                                
-                                                <p className="text-sm text-white/50 line-clamp-2 mb-6 h-10">
-                                                    {clan.description || "No manifesto provided."}
-                                                </p>
-
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-4 text-xs font-medium text-white/40">
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Users className="w-3 h-3" /> {clan.memberCount || 1}
-                                                        </span>
-                                                        <span className="flex items-center gap-1.5">
-                                                            <Trophy className="w-3 h-3" /> {clan.reputation || 0} Rep
-                                                        </span>
+                                                    <div className="flex flex-col items-end">
+                                                        <Badge variant="secondary" className="bg-black/40 text-[10px] px-1.5 py-0 text-white/80 border-white/10">
+                                                            LVL {clan.level || 1}
+                                                        </Badge>
                                                     </div>
+                                                </div>
+                                                <div className="flex items-center gap-3 text-xs text-white/50">
+                                                    <span className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" /> {clan.memberCount || 1}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Trophy className="w-3 h-3 text-amber-500/70" /> {clan.reputation || 0}
+                                                    </span>
+                                                </div>
+                                                {clan.gameTags && clan.gameTags.length > 0 && (
+                                                    <div className="mt-2 flex gap-1 overflow-hidden">
+                                                        {clan.gameTags.slice(0, 3).map((tag, i) => (
+                                                            <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/60 truncate max-w-[80px]">
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                        {clan.gameTags.length > 3 && (
+                                                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/60">
+                                                                +{clan.gameTags.length - 3}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
 
-                                                    <Button 
-                                                        size="sm"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (isMember(clan.id)) {
-                                                                if (onClanJoined) onClanJoined(clan.id);
-                                                            } else {
-                                                                joinClanMutation.mutate({ clanId: clan.id, isPrivate: clan.isPrivate });
-                                                            }
-                                                        }}
-                                                        disabled={joinClanMutation.isPending}
-                                                        className={`border ${isMember(clan.id) ? 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'}`}
-                                                    >
-                                                        {isMember(clan.id) 
-                                                            ? 'Enter' 
-                                                            : joinClanMutation.isPending 
-                                                                ? 'Processing...' 
-                                                                : (clan.isPrivate ? 'Request' : 'Join')
-                                                        }
-                                                    </Button>
+                            {/* Right Details Pane */}
+                            <div className="flex-1 bg-[#12141a]/90 backdrop-blur-md rounded-3xl border border-white/10 overflow-hidden relative flex flex-col">
+                                {selectedClan ? (
+                                    <>
+                                        <div className="h-48 relative flex-shrink-0">
+                                            {selectedClan.banner ? (
+                                                <img src={selectedClan.banner} alt="Banner" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full bg-gradient-to-br from-indigo-900/50 to-slate-900/80" />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#12141a] to-transparent" />
+                                            
+                                            <div className="absolute -bottom-6 left-8 flex items-end gap-5">
+                                                <div className="w-24 h-24 rounded-2xl bg-[#12141a] p-1.5 shadow-2xl border border-white/10">
+                                                    <div className="w-full h-full rounded-xl bg-white/5 overflow-hidden flex items-center justify-center">
+                                                        {selectedClan.icon ? (
+                                                            <img src={selectedClan.icon} alt="Icon" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Shield className="w-10 h-10 text-white/20" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="mb-2 pb-6">
+                                                    <h2 className="text-3xl font-bold text-white tracking-wide">{selectedClan.name}</h2>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {selectedClan.isPrivate ? (
+                                                            <Badge variant="outline" className="text-orange-400 border-orange-500/30 bg-orange-500/10">Private</Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">Public</Badge>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div className="p-8 pt-10 flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-8">
+                                            {/* Score Box & Stats */}
+                                            <div className="grid grid-cols-3 gap-4">
+                                                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-center text-center">
+                                                    <Crown className="w-6 h-6 text-amber-400 mb-2" />
+                                                    <p className="text-2xl font-bold text-white">{selectedClan.level || 1}</p>
+                                                    <p className="text-xs text-white/50 uppercase tracking-widest">Clan Level</p>
+                                                </div>
+                                                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-center text-center">
+                                                    <Users className="w-6 h-6 text-cyan-400 mb-2" />
+                                                    <p className="text-2xl font-bold text-white">{selectedClan.memberCount || 1}</p>
+                                                    <p className="text-xs text-white/50 uppercase tracking-widest">Members</p>
+                                                </div>
+                                                <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex flex-col items-center justify-center text-center">
+                                                    <Trophy className="w-6 h-6 text-purple-400 mb-2" />
+                                                    <p className="text-2xl font-bold text-white">{selectedClan.reputation || 0}</p>
+                                                    <p className="text-xs text-white/50 uppercase tracking-widest">Reputation</p>
+                                                </div>
+                                            </div>
+
+                                            {/* About */}
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white mb-3">Manifesto</h3>
+                                                <p className="text-white/70 leading-relaxed text-sm">
+                                                    {selectedClan.description || "No manifesto provided by the division leaders."}
+                                                </p>
+                                            </div>
+
+                                            {/* Games */}
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white mb-3">Active Operations</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedClan.gameTags && selectedClan.gameTags.length > 0 ? (
+                                                        selectedClan.gameTags.map((tag, idx) => (
+                                                            <div key={idx} className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                                <Target className="w-3 h-3 text-cyan-500" />
+                                                                <span className="text-sm text-white/80">{tag}</span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-white/40 text-sm italic">No specific games listed.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Focus */}
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white mb-3">Division Focus</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedClan.focusTags && selectedClan.focusTags.length > 0 ? (
+                                                        selectedClan.focusTags.map((tag, idx) => (
+                                                            <div key={idx} className="bg-purple-500/10 border border-purple-500/20 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                                                                <Zap className="w-3 h-3 text-purple-400" />
+                                                                <span className="text-sm text-purple-200">{tag}</span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <p className="text-white/40 text-sm italic">No specific focus tags listed.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Action Bar */}
+                                        <div className="p-6 border-t border-white/10 bg-black/20 backdrop-blur-md mt-auto">
+                                            <Button 
+                                                size="lg"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (isMember(selectedClan.id)) {
+                                                        if (onClanJoined) onClanJoined(selectedClan.id);
+                                                    } else {
+                                                        joinClanMutation.mutate({ clanId: selectedClan.id, isPrivate: selectedClan.isPrivate });
+                                                    }
+                                                }}
+                                                disabled={joinClanMutation.isPending}
+                                                className={`w-full font-bold text-lg h-14 ${isMember(selectedClan.id) ? 'bg-green-600 hover:bg-green-500 text-white' : 'bg-cyan-600 hover:bg-cyan-500 text-white'}`}
+                                            >
+                                                {isMember(selectedClan.id) 
+                                                    ? 'Enter Division' 
+                                                    : joinClanMutation.isPending 
+                                                        ? 'Processing...' 
+                                                        : (selectedClan.isPrivate ? 'Request to Join' : 'Join Division')
+                                                }
+                                            </Button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                                        <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                                            <Shield className="w-12 h-12 text-white/20" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-white mb-2">Select a Division</h3>
+                                        <p className="text-white/50 max-w-sm">
+                                            Click on any clan from the list to view their stats, current operations, and manifesto.
+                                        </p>
                                     </div>
-                                ))
-                            )}
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 )}
