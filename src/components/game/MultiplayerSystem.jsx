@@ -79,6 +79,13 @@ export default function MultiplayerSystem({ envUrl }) {
               window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
                  detail: { players: Array.from(otherPlayersMap.values()) }
               }));
+              
+              // If we are in someone else's channel and they change their environment, sync to it
+              if (`world_instance_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+                  window.dispatchEvent(new CustomEvent('changeEnvironment', {
+                      detail: { envUrl: p.env_url }
+                  }));
+              }
           }
       }
     });
