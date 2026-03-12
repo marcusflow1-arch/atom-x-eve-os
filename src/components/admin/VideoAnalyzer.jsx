@@ -5,12 +5,28 @@ import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { showSuccess, showError } from '@/components/error/ErrorToast';
 import ReactMarkdown from 'react-markdown';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Trash2 } from 'lucide-react';
 
 export default function VideoAnalyzer() {
+  const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
+
+  const { data: previousAnalyses = [], isLoading: isLoadingAnalyses } = useQuery({
+    queryKey: ['videoAnalyses'],
+    queryFn: () => base44.entities.VideoAnalysis.list('-created_date')
+  });
+
+  const deleteAnalysisMutation = useMutation({
+    mutationFn: (id) => base44.entities.VideoAnalysis.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['videoAnalyses'] });
+      showSuccess('Analysis deleted');
+    }
+  });
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -53,8 +69,14 @@ export default function VideoAnalyzer() {
         model: 'gemini_3_pro' // Use Gemini 1.5 Pro which natively supports video processing
       });
 
+      await base44.entities.VideoAnalysis.create({
+        video_url: videoUrl,
+        analysis_result: result
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['videoAnalyses'] });
       setAnalysisResult(result);
-      showSuccess('Video analysis complete!');
+      showSuccess('Video analysis complete and saved!');
     } catch (error) {
       showError(error, 'Analyze Video');
     } finally {
@@ -159,6 +181,47 @@ export default function VideoAnalyzer() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-8 bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+        <h3 className="font-semibold mb-4 text-white flex items-center gap-2">
+          <FileText className="w-4 h-4 text-slate-400" />
+          Saved Analyses
+        </h3>
+        
+        {isLoadingAnalyses ? (
+          <div className="text-center py-8 text-slate-500">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+            Loading saved analyses...
+          </div>
+        ) : previousAnalyses.length === 0 ? (
+          <div className="text-center py-8 text-slate-500 border-2 border-dashed border-slate-700 rounded-xl">
+            <p>No saved analyses found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {previousAnalyses.map(analysis => (
+              <div key={analysis.id} className="bg-slate-900 border border-slate-700 rounded-xl p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <a href={analysis.video_url} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline text-sm truncate max-w-md block">
+                    {analysis.video_url}
+                  </a>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8"
+                    onClick={() => deleteAnalysisMutation.mutate(analysis.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="prose prose-invert max-w-none text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 max-h-60 overflow-y-auto custom-scrollbar">
+                  <ReactMarkdown>{analysis.analysis_result}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
