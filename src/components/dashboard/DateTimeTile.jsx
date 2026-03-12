@@ -40,8 +40,8 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
       <div className="relative h-full flex flex-row items-stretch">
         
-        {/* Left Side: Calendar (60%) */}
-        <div style={{ flex: 60 }} className="p-3 px-3 flex items-center gap-3 overflow-hidden relative">
+        {/* Left Side: Calendar */}
+        <div className="flex-1 p-4 px-6 flex items-center gap-4 overflow-hidden relative">
           
           {/* Calendar Button */}
           <button
