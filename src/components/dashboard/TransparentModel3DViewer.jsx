@@ -378,9 +378,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     if (url === 'virtual_room_7.glb') {
         const baseGeo = new THREE.BoxGeometry(20, 0.5, 20);
+        baseGeo.translate(0, -0.25, 0); // Shift geometry so origin is top
         const baseMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
         const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-        baseMesh.position.set(0, -0.75, 0);
         onLoaded(baseMesh, false);
 
         try {
