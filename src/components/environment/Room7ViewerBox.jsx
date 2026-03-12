@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { Maximize2, X, Loader2, Box as BoxIcon, Link as LinkIcon } from 'lucide-react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
@@ -181,16 +181,12 @@ export default function Room7ViewerBox() {
 
          <DynamicModel url={customModelUrl} setLoading={setLoading} setError={setError} />
          
-         <Environment preset="city" />
-         
          {/* Grid Floor */}
          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
            <planeGeometry args={[100, 100]} />
            <meshStandardMaterial color="#111827" depthWrite={true} />
          </mesh>
          <gridHelper args={[100, 100, '#22d3ee', '#1e293b']} position={[0, 0, 0]} opacity={0.2} transparent />
-         
-         <ContactShadows resolution={1024} scale={30} blur={2} opacity={0.8} far={10} color="#000000" />
          
          <OrbitControls 
            makeDefault 
