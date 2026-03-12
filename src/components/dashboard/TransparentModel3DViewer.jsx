@@ -1087,7 +1087,6 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
         renderer.render(scene, camera);
       };
-      animate();
 
       const findKeybindForKey = (keyCode) => {
         if (!keybinds || keybinds.length === 0) return null;
