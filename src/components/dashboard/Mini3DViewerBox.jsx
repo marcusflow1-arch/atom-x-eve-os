@@ -18,8 +18,19 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
   const isUiVisibleRef = useRef(isUiVisible);
   const lookTargetRef = useRef(new THREE.Vector3(0, 1.7, 0));
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === '`') {
+        setVoiceEnabled(v => !v);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     isUiVisibleRef.current = isUiVisible;
@@ -196,6 +207,11 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
       >
         <div ref={containerRef} className="w-full h-full" />
         
+        {/* Voice Chat Icon */}
+        <div className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md">
+           <Mic className={`w-3.5 h-3.5 ${voiceEnabled ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'text-slate-400/50'}`} />
+        </div>
+
         {isUiVisible && (
           <button 
             className="absolute top-4 right-4 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center gap-2 border border-white/20 z-10 transition-colors text-white text-xs font-bold uppercase tracking-wider"
