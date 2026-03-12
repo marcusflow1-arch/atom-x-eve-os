@@ -52,53 +52,113 @@ export default function MultiplayerSystem({ envUrl }) {
   useEffect(() => {
     if (!user?.id || !currentChannel) return;
     
-    const tick = async () => {
-      try {
-        const myModelUrl = localStorage.getItem('luna_active_character') === 'c1' 
-          ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
-          : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+    let isSubscribed = true;
+    let otherPlayersMap = new Map();
 
-        const updateData = {
-          player_id: user.id,
-          display_name: user.full_name || user.username || 'Player',
-          avatar_url: user.avatar_url || '',
-          model_url: myModelUrl,
-          channel_id: currentChannel,
-          env_url: envUrl || '',
-          last_update: Date.now(),
-          status: 'online',
-          x: localStateRef.current.x,
-          y: localStateRef.current.y,
-          z: localStateRef.current.z,
-          yaw: localStateRef.current.yaw,
-          anim: localStateRef.current.anim
-        };
+    // 1. Initial fetch of other players
+    base44.entities.PlayerState.filter({ channel_id: currentChannel }).then(others => {
+       if (!isSubscribed) return;
+       const now = Date.now();
+       others.forEach(p => {
+           if (p.player_id !== user.id && (now - p.last_update) < 15000) {
+               otherPlayersMap.set(p.player_id, p);
+           }
+       });
+       window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
+         detail: { players: Array.from(otherPlayersMap.values()) }
+       }));
+    }).catch(e => console.error("[Multiplayer] init error", e));
 
-        // Update self
-        await base44.entities.PlayerState.update(user.id, updateData).catch(async (err) => {
-          if (err?.status === 404 || err?.message?.includes('not found')) {
-            await base44.entities.PlayerState.create({ id: user.id, ...updateData }).catch(e => console.log(e));
+    // 2. Real-time subscription to PlayerState changes
+    const unsubscribe = base44.entities.PlayerState.subscribe((event) => {
+      if (!isSubscribed) return;
+      if (event.type === 'create' || event.type === 'update') {
+          const p = event.data;
+          if (p.channel_id === currentChannel && p.player_id !== user.id) {
+              otherPlayersMap.set(p.player_id, p);
+              window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
+                 detail: { players: Array.from(otherPlayersMap.values()) }
+              }));
           }
-        });
+      }
+    });
 
-        // Fetch others in channel
-        const others = await base44.entities.PlayerState.filter({ channel_id: currentChannel });
+    let lastPushTime = 0;
+    let lastPushState = { x: null, y: null, z: null, yaw: null, anim: null };
+
+    const tick = async () => {
+      if (!isSubscribed) return;
+      try {
         const now = Date.now();
-        const validOthers = others.filter(p => p.player_id !== user.id && (now - p.last_update) < 10000); // 10s timeout
+        const state = localStateRef.current;
         
-        window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
-          detail: { players: validOthers }
-        }));
+        // Calculate diff to avoid spamming the database with updates when idle
+        const hasMoved = 
+            Math.abs(state.x - (lastPushState.x || 0)) > 0.05 ||
+            Math.abs(state.y - (lastPushState.y || 0)) > 0.05 ||
+            Math.abs(state.z - (lastPushState.z || 0)) > 0.05 ||
+            Math.abs(state.yaw - (lastPushState.yaw || 0)) > 0.1 ||
+            state.anim !== lastPushState.anim;
+
+        // Push if moved significantly, OR every 8 seconds to keep connection alive
+        if (hasMoved || now - lastPushTime > 8000) {
+            lastPushTime = now;
+            lastPushState = { ...state };
+
+            const myModelUrl = localStorage.getItem('luna_active_character') === 'c1' 
+              ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
+              : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+
+            const updateData = {
+              player_id: user.id,
+              display_name: user.full_name || user.username || 'Player',
+              avatar_url: user.avatar_url || '',
+              model_url: myModelUrl,
+              channel_id: currentChannel,
+              env_url: envUrl || '',
+              last_update: now,
+              status: 'online',
+              x: state.x,
+              y: state.y,
+              z: state.z,
+              yaw: state.yaw,
+              anim: state.anim
+            };
+
+            // Non-blocking update so tick is fast
+            base44.entities.PlayerState.update(user.id, updateData).catch(async (err) => {
+              if (err?.status === 404 || err?.message?.includes('not found')) {
+                await base44.entities.PlayerState.create({ id: user.id, ...updateData }).catch(e => console.log(e));
+              }
+            });
+        }
+        
+        // Clean up stale remote players locally (timeout after 15s)
+        let changed = false;
+        for (const [id, p] of otherPlayersMap.entries()) {
+            if (now - p.last_update > 15000) {
+                otherPlayersMap.delete(id);
+                changed = true;
+            }
+        }
+        if (changed) {
+            window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
+              detail: { players: Array.from(otherPlayersMap.values()) }
+            }));
+        }
+
       } catch (e) {
         console.error('[Multiplayer] tick error:', e);
       }
     };
 
     tick();
-    const interval = setInterval(tick, 1000); // 1s sync rate for now (we can use lerping on client)
+    const interval = setInterval(tick, 1000);
 
     return () => {
+      isSubscribed = false;
       clearInterval(interval);
+      if (unsubscribe) unsubscribe();
     };
   }, [user, currentChannel, envUrl]);
 
