@@ -623,6 +623,23 @@ export default function LiveIntelligenceFeed() {
                  className="flex-1" 
                >
                  <div className="space-y-4">
+                    {invites.length > 0 && (
+                      <div className="mb-4 space-y-2">
+                        {invites.map((inv, i) => (
+                          <div key={i} className="p-3 rounded-xl bg-purple-500/20 border border-purple-500/40 cursor-pointer flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center">
+                              <span className="text-purple-300 font-bold text-xs">?</span>
+                            </div>
+                            <div>
+                              <h4 className="text-white text-xs font-bold mb-0.5">Incoming Invite</h4>
+                              <p className="text-[10px] text-white/70">
+                                <span className="font-bold text-purple-300">{inv.fromUser?.friend_name || 'A player'}</span> invited you.
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {MISSION_CATEGORIES.map(category => {
                       const categoryMissions = MOCK_MISSIONS.filter(m => m.category === category);
                       if (categoryMissions.length === 0) return null;
