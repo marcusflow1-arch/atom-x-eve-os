@@ -1228,8 +1228,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
                   const dot = playerForward.dot(toEnemy);
                   if (dot < 0.3) return;
 
-                  ai.currentHP -= KICK_DAMAGE;
+                  const actualDamage = playerStatsRef.current.attack;
+                  ai.currentHP -= 1; // Basic HP chunking, but show actual damage
                   ai.hitCooldown = 0.5;
+                  
+                  spawnFloatingText(`-${actualDamage}`, ai.modelMesh.position.clone().add(new THREE.Vector3(0, 1.5, 0)), '#ffff00');
 
                   if (ai.currentHP <= 0) {
                     ai.isAlive = false;
@@ -1243,7 +1246,19 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
                       ai.activeAction = deathAction;
                     }
                     ai.deathTimer = DEATH_LINGER_S;
-                    const XP_REWARD = 40;
+                    
+                    const XP_REWARD = 40 * ai.aiLevel;
+                    playerStatsRef.current.xp += XP_REWARD;
+                    const nextLevelXp = playerStatsRef.current.level * 100;
+                    if (playerStatsRef.current.xp >= nextLevelXp) {
+                        playerStatsRef.current.level++;
+                        playerStatsRef.current.attack += 15;
+                        playerStatsRef.current.maxHp += 20;
+                        playerStatsRef.current.hp = playerStatsRef.current.maxHp;
+                        spawnFloatingText('LEVEL UP!', currentActiveModel.position.clone().add(new THREE.Vector3(0, 2, 0)), '#00ffff');
+                    }
+                    window.dispatchEvent(new CustomEvent('syncPlayerStats'));
+
                     window.dispatchEvent(new CustomEvent('combatXPReward', {
                       detail: { xp: XP_REWARD, genre: 'Action', source: ai.assetName || 'Enemy', position: ai.modelMesh.position.clone() }
                     }));
