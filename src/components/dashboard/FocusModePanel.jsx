@@ -1240,7 +1240,7 @@ export function LibraryBannerSection({
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
           {/* Top Row: Env Hub | Memories | Calendar Box */}
-          <div className="flex items-center gap-4 w-full h-[60px]">
+          <div className="flex items-center gap-4 w-full h-24">
             {/* Environment Hub */}
             <div className="w-[368px] h-full flex-shrink-0">
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
