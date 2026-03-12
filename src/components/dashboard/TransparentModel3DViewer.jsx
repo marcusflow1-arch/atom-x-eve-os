@@ -791,6 +791,27 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
                 ai.aiState = 'attack';
                 aiFadeToAction('attack');
                 ai.aiAttackCooldown = 1.5 + Math.random();
+
+                // Deal damage to player
+                setTimeout(() => {
+                   if (!ai.isAlive) return;
+                   if (!playerTarget) return;
+                   const dist = ai.modelMesh.position.distanceTo(playerTarget.position);
+                   if (dist < atkRange + 1.0) {
+                       const damage = ai.attackPower;
+                       playerStatsRef.current.hp -= damage;
+                       if (playerStatsRef.current.hp < 0) playerStatsRef.current.hp = 0;
+                       spawnFloatingText(`-${damage}`, playerTarget.position.clone().add(new THREE.Vector3(0, 1.2, 0)), '#ff3333');
+                       
+                       if (playerStatsRef.current.hp <= 0) {
+                           spawnFloatingText(`YOU DIED`, playerTarget.position.clone().add(new THREE.Vector3(0, 1.8, 0)), '#ff0000');
+                           playerStatsRef.current.hp = playerStatsRef.current.maxHp; // Auto revive for now
+                       }
+                       // Sync state
+                       window.dispatchEvent(new CustomEvent('syncPlayerStats'));
+                   }
+                }, 600); // 600ms delay for impact
+
               } else if (ai.aiState !== 'attack') {
                 aiFadeToAction('idle');
               }
