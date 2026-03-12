@@ -42,6 +42,21 @@ export default function FriendsListContent() {
     }
   });
 
+  const handleInviteToDashboard = (userObj) => {
+    setInvitingUserId(userObj.id);
+    setTimeout(() => {
+      setInvitingUserId(null);
+      setInvitedUsers(prev => ({ ...prev, [userObj.id]: 'accepted' }));
+      
+      window.dispatchEvent(new CustomEvent('companionSummon', {
+        detail: {
+          fileUrl: userObj.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+          name: userObj.friend_name
+        }
+      }));
+    }, 2000);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return 'bg-green-500';
@@ -51,17 +66,34 @@ export default function FriendsListContent() {
     }
   };
 
+  const displayList = activeTab === 'friends' ? friends : MOCK_GLOBAL_USERS;
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-slate-900/50 rounded-xl border border-white/10">
       {/* Left List */}
       <div className="w-1/3 border-r border-white/10 flex flex-col bg-black/20">
         <div className="p-4 border-b border-white/10">
-          <h3 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
-            <User className="w-4 h-4 text-blue-400" /> Friends ({friends.length})
+          <div className="flex bg-white/5 rounded-lg p-1 mb-2">
+            <button 
+              onClick={() => { setActiveTab('friends'); setSelectedFriend(null); }}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${activeTab === 'friends' ? 'bg-cyan-500/20 text-cyan-400' : 'text-white/50 hover:text-white'}`}
+            >
+              Friends
+            </button>
+            <button 
+              onClick={() => { setActiveTab('global'); setSelectedFriend(null); }}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${activeTab === 'global' ? 'bg-purple-500/20 text-purple-400' : 'text-white/50 hover:text-white'}`}
+            >
+              Global Online
+            </button>
+          </div>
+          <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 px-1">
+            {activeTab === 'friends' ? <User className="w-3.5 h-3.5 text-blue-400" /> : <Globe className="w-3.5 h-3.5 text-purple-400" />}
+            {activeTab === 'friends' ? `Friends (${friends.length})` : `Online (${MOCK_GLOBAL_USERS.length})`}
           </h3>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-          {friends.map((friend) => (
+          {displayList.map((friend) => (
             <button
               key={friend.id}
               onClick={() => setSelectedFriend(friend)}
