@@ -1488,6 +1488,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         window.removeEventListener('keyup', onSpecialKeyUp);
       };
 
+      initRenderActive = false;
       animate();
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
