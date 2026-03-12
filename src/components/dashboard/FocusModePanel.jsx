@@ -1344,11 +1344,67 @@ export function LibraryBannerSection({
 }
 
 // Online Users Dropdown
-function OnlineUsersDropdown() {
+function OnlineUsersDropdown({ onSelectEnv }) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const ref = React.useRef(null);
   const { user } = useAuth();
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [joiningId, setJoiningId] = useState(null);
+  const [invitedUsers, setInvitedUsers] = useState({});
+
+  // Query actual users
+  const { data: dbUsers } = useQuery({
+    queryKey: ['all_users_for_online_list'],
+    queryFn: () => base44.entities.User.list(),
+    refetchInterval: 10000, // Refresh every 10 seconds to get real-time presence
+  });
+
+  React.useEffect(() => {
+    if (!dbUsers) return;
+
+    const now = new Date();
+    const isOnline = (u) => {
+      if (u.id === user?.id) return true; // Always show self
+      if (u.presence_status === 'online' && u.last_seen) {
+        const lastSeen = new Date(u.last_seen);
+        return (now - lastSeen) < 120000; // Consider online if seen in last 2 mins
+      }
+      return false; // Actually filter by real-time presence!
+    };
+
+    // Filter to only show users who are actually online
+    const usersList = dbUsers.filter(isOnline).map(u => ({
+      id: u.id,
+      name: u.full_name || u.username || u.email?.split('@')[0] || 'Unknown',
+      avatar: u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
+      status: 'online',
+      isMe: u.id === user?.id,
+      modelUrl: u.active_model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+      envUrl: u.current_activity?.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+    }));
+
+    // Ensure current user is always at the top
+    const meIndex = usersList.findIndex(u => u.isMe);
+    if (meIndex > -1) {
+      const me = usersList.splice(meIndex, 1)[0];
+      me.name = me.name + ' (You)';
+      usersList.unshift(me);
+    } else if (user) {
+       // Fallback if current user not in list yet
+       usersList.unshift({
+           id: user.id,
+           name: (user.full_name || user.username || user.email?.split('@')[0] || 'Me') + ' (You)',
+           avatar: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+           status: 'online',
+           isMe: true,
+           modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+           envUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+       });
+    }
+
+    setOnlineUsers(usersList);
+  }, [dbUsers, user]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -1357,13 +1413,17 @@ function OnlineUsersDropdown() {
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const [joiningId, setJoiningId] = useState(null);
-
   const handleJoin = (u) => {
     setJoiningId(u.id);
     setTimeout(() => {
       setJoiningId(null);
       setOpen(false);
+      
+      // Simulate joining their environment: switch our environment to match theirs
+      if (onSelectEnv) {
+        onSelectEnv(u.envUrl);
+      }
+
       window.dispatchEvent(new CustomEvent('companionSummon', {
         detail: {
           fileUrl: u.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
@@ -1372,16 +1432,24 @@ function OnlineUsersDropdown() {
       }));
     }, 1500);
   };
+  
+  const handleInvite = (e, u) => {
+    e.stopPropagation();
+    setInvitedUsers(prev => ({ ...prev, [u.id]: 'inviting' }));
+    setTimeout(() => {
+      setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
+      
+      // Also summon them to your dashboard
+      window.dispatchEvent(new CustomEvent('companionSummon', {
+        detail: {
+          fileUrl: u.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+          name: u.name
+        }
+      }));
+    }, 2000);
+  };
 
-  const myName = user?.full_name || user?.username || user?.email?.split('@')[0] || 'Me';
-
-  const allUsers = [
-    { id: 'me', name: myName + ' (You)', avatar: user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', status: 'online', isMe: true },
-    { id: 101, name: 'AlphaGamer', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', status: 'online', modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
-    { id: 102, name: 'QuantumLeap', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', status: 'online', modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx' },
-    { id: 103, name: 'PixelRogue', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', status: 'online', modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
-    { id: 104, name: 'EchoMage', avatar: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=150', status: 'online' },
-  ].filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredUsers = onlineUsers.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="relative" ref={ref}>
