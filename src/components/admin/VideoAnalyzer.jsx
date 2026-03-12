@@ -39,12 +39,22 @@ export default function VideoAnalyzer() {
 
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setVideoUrl(file_url);
-      showSuccess('Video uploaded successfully!');
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64data = reader.result;
+        try {
+            const { file_url } = await base44.integrations.Core.UploadFile({ file: base64data });
+            setVideoUrl(file_url);
+            showSuccess('Video uploaded successfully!');
+        } catch (error) {
+            showError(error, 'Upload Video');
+        } finally {
+            setUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      showError(error, 'Upload Video');
-    } finally {
+      showError(error, 'Read Video File');
       setUploading(false);
     }
   };
