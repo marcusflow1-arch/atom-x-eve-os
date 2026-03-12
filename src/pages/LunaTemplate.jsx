@@ -65,6 +65,7 @@ import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser
 import QuestLogBook from '../components/dashboard/QuestLogBook';
 import ReactorBridge from '../components/admin/reactor/ReactorBridge';
 import CombatXPHandler from '../components/combat/CombatXPHandler';
+import MultiplayerSystem from '../components/game/MultiplayerSystem';
 import { attachWeapon, attachEffect } from '../components/3d/WeaponAttachmentSystem';
 import DevSpotlightRibbon from '../components/dashboard/DevSpotlightRibbon';
 import FriendsListContent from '../components/dashboard/FriendsListContent';
@@ -541,6 +542,7 @@ export default function LunaTemplate() {
     <GlassPageFrame>
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
+    <MultiplayerSystem envUrl={roomModelUrl} />
     <div
       className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
       style={{
