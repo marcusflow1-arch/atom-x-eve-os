@@ -317,22 +317,22 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
+      
       if (maxDim > 0 && !isSubAsset) {
         const s = 10 / maxDim;
         obj.scale.setScalar(s);
       } else if (isSubAsset && maxDim > 0) {
-        const s = 4 / maxDim;
+        const s = 20 / maxDim; // Make the uploaded environment a bit bigger to be a room
         obj.scale.setScalar(s);
       }
       
-      if (!isSubAsset) {
-        const box2 = new THREE.Box3().setFromObject(obj);
-        const center = box2.getCenter(new THREE.Vector3());
-        const minY = box2.min.y;
-        obj.position.set(-center.x, -minY - 0.5, -center.z);
-      } else {
-        obj.position.set((Math.random() - 0.5) * 15, -0.5, (Math.random() - 0.5) * 15);
-      }
+      // Update bounds after scaling
+      const box2 = new THREE.Box3().setFromObject(obj);
+      const center = box2.getCenter(new THREE.Vector3());
+      const minY = box2.min.y;
+      
+      // Center the object and place its bottom exactly at the player's spawn level (-0.5)
+      obj.position.set(-center.x, -minY - 0.5, -center.z);
 
       obj.traverse((child) => {
         if (child.isMesh) {
