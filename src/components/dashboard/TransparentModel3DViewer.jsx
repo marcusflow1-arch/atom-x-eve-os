@@ -7,31 +7,7 @@ import { base44 } from '@/api/base44Client';
 import ReactorBridge from '../admin/reactor/ReactorBridge';
 import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
 
-// --- WORKAROUND FOR THREE.JS WEBGL INFO LOG CRASH ---
-if (typeof WebGLRenderingContext !== 'undefined') {
-  const originalGetProgramInfoLog = WebGLRenderingContext.prototype.getProgramInfoLog;
-  WebGLRenderingContext.prototype.getProgramInfoLog = function(program) {
-    const log = originalGetProgramInfoLog.call(this, program);
-    return log === null ? '' : log;
-  };
-  const originalGetShaderInfoLog = WebGLRenderingContext.prototype.getShaderInfoLog;
-  WebGLRenderingContext.prototype.getShaderInfoLog = function(shader) {
-    const log = originalGetShaderInfoLog.call(this, shader);
-    return log === null ? '' : log;
-  };
-}
-if (typeof WebGL2RenderingContext !== 'undefined') {
-  const originalGetProgramInfoLog2 = WebGL2RenderingContext.prototype.getProgramInfoLog;
-  WebGL2RenderingContext.prototype.getProgramInfoLog = function(program) {
-    const log = originalGetProgramInfoLog2.call(this, program);
-    return log === null ? '' : log;
-  };
-  const originalGetShaderInfoLog2 = WebGL2RenderingContext.prototype.getShaderInfoLog;
-  WebGL2RenderingContext.prototype.getShaderInfoLog = function(shader) {
-    const log = originalGetShaderInfoLog2.call(this, shader);
-    return log === null ? '' : log;
-  };
-}
+// Removed WebGL info log workaround to save space
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
