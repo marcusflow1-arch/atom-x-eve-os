@@ -293,7 +293,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   }, [useMeshCollision]);
 
   // Standalone function to swap ONLY the environment mesh in the existing scene.
-  const swapEnvironment = (url) => {
+  const swapEnvironment = async (url) => {
     const scene = sceneRef.current;
     if (!scene) return;
     if (url === loadedEnvUrlRef.current) return;
@@ -313,18 +313,26 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     loadedEnvUrlRef.current = url;
     if (!url) return;
 
-    const onLoaded = (obj) => {
+    const onLoaded = (obj, isSubAsset = false) => {
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
-      if (maxDim > 0) {
+      if (maxDim > 0 && !isSubAsset) {
         const s = 10 / maxDim;
         obj.scale.setScalar(s);
+      } else if (isSubAsset && maxDim > 0) {
+        const s = 4 / maxDim;
+        obj.scale.setScalar(s);
       }
-      const box2 = new THREE.Box3().setFromObject(obj);
-      const center = box2.getCenter(new THREE.Vector3());
-      const minY = box2.min.y;
-      obj.position.set(-center.x, -minY - 0.5, -center.z);
+      
+      if (!isSubAsset) {
+        const box2 = new THREE.Box3().setFromObject(obj);
+        const center = box2.getCenter(new THREE.Vector3());
+        const minY = box2.min.y;
+        obj.position.set(-center.x, -minY - 0.5, -center.z);
+      } else {
+        obj.position.set((Math.random() - 0.5) * 15, -0.5, (Math.random() - 0.5) * 15);
+      }
 
       obj.traverse((child) => {
         if (child.isMesh) {
@@ -342,15 +350,18 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       });
 
       if (sceneRef.current && loadedEnvUrlRef.current === url) {
-        envRef.current = obj;
-        sceneRef.current.add(obj);
+        if (!envRef.current) {
+          envRef.current = new THREE.Group();
+          sceneRef.current.add(envRef.current);
+        }
+        envRef.current.add(obj);
 
         envCollidersRef.current = [];
-        obj.traverse((child) => {
+        envRef.current.traverse((child) => {
           if (child.isMesh) envCollidersRef.current.push(child);
         });
 
-        if (modelRef.current) {
+        if (modelRef.current && !isSubAsset) {
           const sp = playerSpawnRef.current;
           modelRef.current.position.set(sp.x, sp.y, sp.z);
           verticalVelocityRef.current = 0;
@@ -358,6 +369,35 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         }
       }
     };
+
+    if (url === 'virtual_room_7.glb') {
+        const baseGeo = new THREE.BoxGeometry(20, 0.5, 20);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+        const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+        baseMesh.position.set(0, -0.75, 0);
+        onLoaded(baseMesh, false);
+
+        try {
+            const assets = await base44.entities.AssetFile.list();
+            const models = assets.filter(a => {
+               const name = (a.name || '').toLowerCase();
+               return name.endsWith('.glb') || name.endsWith('.gltf') || name.endsWith('.fbx');
+            });
+            
+            models.forEach(model => {
+               const mUrl = model.url;
+               const lower = mUrl.toLowerCase();
+               if (lower.endsWith('.fbx')) {
+                  new FBXLoader().load(mUrl, (obj) => onLoaded(obj, true));
+               } else {
+                  new GLTFLoader().load(mUrl, (gltf) => onLoaded(gltf.scene, true));
+               }
+            });
+        } catch (e) {
+            console.error("Failed to load Room 7 assets", e);
+        }
+        return;
+    }
 
     const lower = url.toLowerCase();
     if (lower.endsWith('.fbx')) {
