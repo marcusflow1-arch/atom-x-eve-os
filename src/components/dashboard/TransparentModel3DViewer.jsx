@@ -1858,14 +1858,12 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('keydown', onSwitchCharacter);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('companionSummon', onCompanionSummon);
-      window.removeEventListener('companionDismiss', onCompanionDismiss);
       el.removeEventListener('mousedown', onMouseDown);
       el.removeEventListener('mouseup', onMouseUp);
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('contextmenu', onContextMenu);
-      dismissCompanion();
+      window.removeEventListener('multiplayerPlayersUpdate', handleMultiplayerUpdate);
       if (c1ModelRef.current?.userData?._weaponCleanup) c1ModelRef.current.userData._weaponCleanup();
       spawnedAIModelsRef.current.forEach(inst => {
         if (inst.mixer) inst.mixer.stopAllAction();
