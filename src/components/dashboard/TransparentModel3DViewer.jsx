@@ -1285,6 +1285,15 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       };
 
       const onSpecialKeyDown = async (e) => {
+        if (e.key === '}') {
+          disableEnemySpawns = !disableEnemySpawns;
+          const currentActiveModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+          if (currentActiveModel) {
+            spawnFloatingText(disableEnemySpawns ? "ENEMY SPAWNS DISABLED" : "ENEMY SPAWNS ENABLED", currentActiveModel.position.clone().add(new THREE.Vector3(0, 2, 0)), disableEnemySpawns ? '#ff0000' : '#00ff00');
+          }
+          return;
+        }
+
         const keyCode = e.code;
         const aiModelDef = spawnableAIModels.get(keyCode);
         if (aiModelDef) {
