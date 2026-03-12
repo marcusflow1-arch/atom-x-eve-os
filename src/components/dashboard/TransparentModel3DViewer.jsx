@@ -657,6 +657,13 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         }
       };
 
+      let enemySpawnTimer = 5.0;
+
+      const spawnFloatingText = (text, position, color = '#ffffff') => {
+          const id = Date.now() + Math.random();
+          floatingTextsRef.current.push({ id, text, position: position.clone(), color, age: 0 });
+      };
+
       const animate = () => {
         requestAnimationFrame(animate);
         const delta = clockRef.current.getDelta();
@@ -664,6 +671,46 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (mixer) mixer.update(delta);
         if (c1MixerRef.current) c1MixerRef.current.update(delta);
         if (companionMixerRef.current) companionMixerRef.current.update(delta);
+
+        // Auto-spawn enemies
+        enemySpawnTimer -= delta;
+        if (enemySpawnTimer <= 0) {
+           enemySpawnTimer = 8 + Math.random() * 5;
+           const enemyModels = Array.from(spawnableAIModels.values());
+           if (enemyModels.length > 0) {
+               const activeModel = activeCharacterRef.current === 'ybot' ? model : c1ModelRef.current;
+               if (activeModel) {
+                   const randomEnemy = enemyModels[Math.floor(Math.random() * enemyModels.length)];
+                   spawnAIInstance(randomEnemy, activeModel);
+               }
+           }
+        }
+
+        // Update floating texts
+        if (floatingTextContainerRef.current && cameraRef.current) {
+           let html = '';
+           for (let i = floatingTextsRef.current.length - 1; i >= 0; i--) {
+               const ft = floatingTextsRef.current[i];
+               ft.age += delta;
+               if (ft.age > 1.5) {
+                   floatingTextsRef.current.splice(i, 1);
+                   continue;
+               }
+               ft.position.y += delta * 1.5; // Float up
+               
+               const tempV = ft.position.clone();
+               tempV.project(cameraRef.current);
+               
+               if (tempV.z < 1 && containerRef.current) { // In front of camera
+                   const x = (tempV.x * 0.5 + 0.5) * containerRef.current.clientWidth;
+                   const y = (tempV.y * -0.5 + 0.5) * containerRef.current.clientHeight;
+                   const alpha = Math.max(0, 1 - (ft.age / 1.5));
+                   const scale = 1 + (ft.age * 0.5);
+                   html += `<div style="position:absolute; left:${x}px; top:${y}px; transform:translate(-50%, -50%) scale(${scale}); color:${ft.color}; font-weight:900; font-size:24px; text-shadow:0 0 5px black, 0 0 10px ${ft.color}; opacity:${alpha}; pointer-events:none; font-family:sans-serif; z-index:100; white-space:nowrap;">${ft.text}</div>`;
+               }
+           }
+           floatingTextContainerRef.current.innerHTML = html;
+        }
 
         const deadInstances = [];
         spawnedAIModelsRef.current.forEach((ai, instId) => {
