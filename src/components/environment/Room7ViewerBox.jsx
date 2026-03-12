@@ -174,7 +174,8 @@ export default function Room7ViewerBox() {
            position={[10, 20, 10]} 
            intensity={1.5} 
            castShadow 
-           shadow-mapSize={[2048, 2048]}
+           shadow-mapSize-width={2048}
+           shadow-mapSize-height={2048}
          />
          <pointLight position={[-10, 5, -10]} intensity={0.5} color="#4488ff" />
          <pointLight position={[10, 5, -10]} intensity={0.5} color="#ff4488" />
