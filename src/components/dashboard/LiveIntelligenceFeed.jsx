@@ -15,12 +15,121 @@ const MOCK_GAMES = [
 const MISSION_CATEGORIES = ['Ability', 'Equipment', 'Weapon', 'Companion', 'Cosmetic'];
 
 const MOCK_MISSIONS = [
-  { id: 1, gameId: 'cp2088', category: 'Ability', title: 'Unlock Cyber Dash', progress: '42/50', description: 'Perform 50 perfect dodges in combat to unlock the Cyber Dash ability.', objective: 'Dodge perfectly 50 times.', reward: 'Cyber Dash Ability', conditions: 'Must be in combat.' },
-  { id: 2, gameId: 'cp2088', category: 'Equipment', title: 'Obtain Neural Implant', progress: '0/1', description: 'Defeat the corpo boss in sector 4 to acquire the experimental neural implant.', objective: 'Kill Sector 4 Boss.', reward: 'Neural Implant', conditions: 'Level 10+' },
-  { id: 3, gameId: 'nl', category: 'Weapon', title: 'Neon Blade Blueprint', progress: '10/100', description: 'Collect 100 neon shards scattered across the city to forge the Neon Blade.', objective: 'Loot 100 shards.', reward: 'Neon Blade', conditions: 'None' },
-  { id: 4, gameId: 'so', category: 'Companion', title: 'Rescue Astro-Dog', progress: '0/1', description: 'Find the lost pod on Mars to rescue your new companion.', objective: 'Locate Pod.', reward: 'Astro-Dog Companion', conditions: 'Mars unlocked.' },
-  { id: 5, gameId: 'sr', category: 'Cosmetic', title: 'Shadow Skybox', progress: '5/5', description: 'Defeat 5 shadow wraiths to unlock the Shadow Realm skybox for your environment.', objective: 'Kill 5 wraiths.', reward: 'Shadow Realm Skybox', conditions: 'Night time.' },
-  { id: 6, gameId: 'er', category: 'Weapon', title: 'Forge the Night Blade', progress: '1/3', description: 'Gather 3 rare moonstones to forge the ultimate weapon.', objective: 'Find 3 moonstones.', reward: 'Night Blade', conditions: 'None' },
+  { 
+    id: 1, 
+    gameId: 'cp2088', 
+    category: 'Ability', 
+    type: 'Daily',
+    title: 'Unlock Cyber Dash', 
+    progress: '42/50', 
+    progressPercent: 84,
+    description: 'The cyber-enhancement black market has been flooded with bootleg dash modules. A rogue ripperdoc in Sector 4 is willing to synthesize a stable version for you, but they need combat data. Perform perfect dodges against armed combatants to calibrate the neural pathways.', 
+    objective: 'Dodge perfectly 50 times in combat encounters.', 
+    rewards: {
+      items: ['Cyber Dash Ability'],
+      xp: 2500,
+      currency: 150,
+      blackMarketTokens: 5
+    },
+    conditions: ['Must be in active combat', 'Target must be level 10+'],
+    timeRemaining: '14h 22m'
+  },
+  { 
+    id: 2, 
+    gameId: 'cp2088', 
+    category: 'Equipment', 
+    type: 'Weekly',
+    title: 'Obtain Neural Implant', 
+    progress: '0/1', 
+    progressPercent: 0,
+    description: 'The corpo boss of Sector 4 is hoarding experimental military-grade neural implants. These implants bypass standard firmware restrictions. Infiltrate the Arasaka tower, confront the boss, and extract the implant intact.', 
+    objective: 'Infiltrate Sector 4 headquarters and eliminate the Corpo Boss.', 
+    rewards: {
+      items: ['Experimental Neural Implant', 'Corpo Access Key'],
+      xp: 8500,
+      currency: 500,
+      blackMarketTokens: 25
+    },
+    conditions: ['Level 10+', 'Stealth approach yields bonus XP'],
+    timeRemaining: '4d 12h'
+  },
+  { 
+    id: 3, 
+    gameId: 'nl', 
+    category: 'Weapon', 
+    type: 'Daily',
+    title: 'Neon Blade Blueprint', 
+    progress: '10/100', 
+    progressPercent: 10,
+    description: 'A legendary weaponsmith left behind fragments of their masterpiece, the Neon Blade. These shards resonate with raw energy and are scattered across the lower city slums. Collect enough to decipher the blueprint.', 
+    objective: 'Loot 100 Neon Shards from fallen enemies or hidden caches.', 
+    rewards: {
+      items: ['Neon Blade Blueprint', 'Glowing Dye'],
+      xp: 1200,
+      currency: 80,
+      blackMarketTokens: 2
+    },
+    conditions: ['None'],
+    timeRemaining: '8h 45m'
+  },
+  { 
+    id: 4, 
+    gameId: 'so', 
+    category: 'Companion', 
+    type: 'Epic Quest',
+    title: 'Rescue Astro-Dog', 
+    progress: '0/1', 
+    progressPercent: 0,
+    description: 'A distress signal from a crashed stellar pod on Mars has been intercepted. The logs indicate a specialized Astro-Dog companion is trapped inside. Brave the harsh Martian storms and recover the pod before pirates do.', 
+    objective: 'Locate the crashed pod in the Valles Marineris and hack the containment lock.', 
+    rewards: {
+      items: ['Astro-Dog Companion', 'Spacesuit Visor'],
+      xp: 5000,
+      currency: 300,
+      blackMarketTokens: 15
+    },
+    conditions: ['Mars Region unlocked', 'Hazard protection required'],
+    timeRemaining: 'No Limit'
+  },
+  { 
+    id: 5, 
+    gameId: 'sr', 
+    category: 'Cosmetic', 
+    type: 'Daily',
+    title: 'Shadow Skybox', 
+    progress: '5/5', 
+    progressPercent: 100,
+    description: 'The fabric of the Shadow Realm tears when a wraith is vanquished. Harvesting the essence of 5 shadow wraiths will allow you to weave their lingering darkness into a custom skybox for your personal environment.', 
+    objective: 'Hunt down and defeat 5 Shadow Wraiths during the night cycle.', 
+    rewards: {
+      items: ['Shadow Realm Skybox'],
+      xp: 1500,
+      currency: 100,
+      blackMarketTokens: 0
+    },
+    conditions: ['Night time only'],
+    timeRemaining: 'Completed',
+    completed: true
+  },
+  { 
+    id: 6, 
+    gameId: 'er', 
+    category: 'Weapon', 
+    type: 'Weekly',
+    title: 'Forge the Night Blade', 
+    progress: '1/3', 
+    progressPercent: 33,
+    description: 'The Night Blade requires moonstones bathed in lunar light for a century. The local crypts and forgotten ruins hold exactly three. Seek them out, then bring them to the ancient forge.', 
+    objective: 'Find 3 Rare Moonstones from crypt bosses.', 
+    rewards: {
+      items: ['Night Blade'],
+      xp: 4000,
+      currency: 200,
+      blackMarketTokens: 10
+    },
+    conditions: ['None'],
+    timeRemaining: '6d 2h'
+  },
 ];
 
 const MOCK_MARKET_UPDATES = [
