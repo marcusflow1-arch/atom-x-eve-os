@@ -62,6 +62,12 @@ export default function MultiplayerSystem({ envUrl }) {
        others.forEach(p => {
            if (p.player_id !== user.id && (now - p.last_update) < 15000) {
                otherPlayersMap.set(p.player_id, p);
+               // Sync environment if joining and host has a different environment
+               if (`world_instance_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+                   window.dispatchEvent(new CustomEvent('changeEnvironment', {
+                       detail: { envUrl: p.env_url }
+                   }));
+               }
            }
        });
        window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
