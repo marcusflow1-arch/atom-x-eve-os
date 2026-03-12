@@ -7,9 +7,22 @@ import { base44 } from '@/api/base44Client';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 export default function AssetFilesManager() {
+  const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+
+  const { data: uploadedFiles = [], isLoading } = useQuery({
+    queryKey: ['assetFiles'],
+    queryFn: () => base44.entities.AssetFile.list('-created_date')
+  });
+
+  const deleteAssetMutation = useMutation({
+    mutationFn: (id) => base44.entities.AssetFile.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assetFiles'] });
+      showSuccess('Asset removed');
+    }
+  });
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -26,14 +39,13 @@ export default function AssetFilesManager() {
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           
           const newFile = {
-            id: Date.now().toString() + '-' + i,
             name: file.webkitRelativePath || file.name,
             size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
             type: file.type || 'unknown',
-            url: file_url,
-            uploadedAt: new Date().toLocaleString()
+            url: file_url
           };
           
+          await base44.entities.AssetFile.create(newFile);
           currentUploads.push(newFile);
           setUploadProgress({ current: i + 1, total: files.length });
         } catch (err) {
@@ -41,8 +53,8 @@ export default function AssetFilesManager() {
         }
       }
       
-      setUploadedFiles(prev => [...currentUploads, ...prev]);
-      showSuccess(`Successfully uploaded ${currentUploads.length} files!`);
+      queryClient.invalidateQueries({ queryKey: ['assetFiles'] });
+      showSuccess(`Successfully uploaded and saved ${currentUploads.length} files!`);
     } catch (error) {
       showError(error, 'Upload');
     } finally {
@@ -58,7 +70,7 @@ export default function AssetFilesManager() {
   };
 
   const removeFileFromView = (id) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+    deleteAssetMutation.mutate(id);
   };
 
   const getFileIcon = (type) => {
@@ -140,11 +152,16 @@ export default function AssetFilesManager() {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4 text-white">Recent Uploads (Session)</h3>
-        {uploadedFiles.length === 0 ? (
+        <h3 className="text-lg font-semibold mb-4 text-white">Saved Asset Files</h3>
+        {isLoading ? (
+          <div className="text-center py-12 text-slate-500">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" />
+            <p>Loading asset files...</p>
+          </div>
+        ) : uploadedFiles.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-slate-800 rounded-xl">
             <FolderArchive className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">No files uploaded in this session yet.</p>
+            <p className="text-slate-400">No asset files saved yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -158,7 +175,7 @@ export default function AssetFilesManager() {
                   <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
                     <span>{file.size}</span>
                     <span>•</span>
-                    <span>{file.uploadedAt}</span>
+                    <span>{new Date(file.created_date).toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -176,7 +193,7 @@ export default function AssetFilesManager() {
                     variant="ghost"
                     className="hover:bg-red-500/20 text-red-400 hover:text-red-300"
                     onClick={() => removeFileFromView(file.id)}
-                    title="Remove from list (Does not delete file)"
+                    title="Delete Asset Record"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
