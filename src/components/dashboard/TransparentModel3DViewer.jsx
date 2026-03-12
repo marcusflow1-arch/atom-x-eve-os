@@ -322,17 +322,23 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         const s = 10 / maxDim;
         obj.scale.setScalar(s);
       } else if (isSubAsset && maxDim > 0) {
-        const s = 20 / maxDim; // Make the uploaded environment a bit bigger to be a room
+        const s = 4 / maxDim; // Adjust scale for sub assets
         obj.scale.setScalar(s);
       }
       
       // Update bounds after scaling
       const box2 = new THREE.Box3().setFromObject(obj);
       const center = box2.getCenter(new THREE.Vector3());
-      const minY = box2.min.y;
       
-      // Center the object and place its bottom exactly at the player's spawn level (-0.5)
-      obj.position.set(-center.x, -minY - 0.5, -center.z);
+      if (!isSubAsset) {
+        // Center horizontally, but keep origin aligned with player's feet (-0.5)
+        // We avoid using minY because environments with deep basements/roots would push the floor into the sky
+        obj.position.set(-center.x, -0.5, -center.z);
+      } else {
+        // Place sub-assets randomly, resting perfectly on the floor
+        const currentMinY = box2.min.y - obj.position.y;
+        obj.position.set((Math.random() - 0.5) * 8, -0.5 - currentMinY, (Math.random() - 0.5) * 8);
+      }
 
       obj.traverse((child) => {
         if (child.isMesh) {
