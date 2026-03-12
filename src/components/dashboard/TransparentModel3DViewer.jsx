@@ -755,6 +755,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       };
 
       let enemySpawnTimer = 5.0;
+      let disableEnemySpawns = false;
 
       const spawnFloatingText = (text, position, color = '#ffffff') => {
           const id = Date.now() + Math.random();
