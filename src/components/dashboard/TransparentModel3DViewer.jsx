@@ -1781,6 +1781,35 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
   return (
     <div ref={containerRef} className="w-full h-full relative" tabIndex="0">
+      {/* Player HUD */}
+      <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-1.5 w-48"
+        style={{
+          background: 'rgba(10, 14, 20, 0.75)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '12px',
+          padding: '12px'
+        }}>
+        <div className="flex justify-between items-end mb-1">
+          <span className="text-white font-bold text-sm">Level {playerStats.level}</span>
+          <span className="text-white/60 text-[10px] font-bold">ATK: {playerStats.attack}</span>
+        </div>
+        
+        {/* HP Bar */}
+        <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
+          <div className="absolute inset-y-0 left-0 bg-red-500 transition-all duration-300" style={{ width: `${Math.max(0, (playerStats.hp / playerStats.maxHp) * 100)}%` }} />
+        </div>
+        <div className="text-[9px] text-white/50 text-right mb-2">{Math.round(playerStats.hp)} / {playerStats.maxHp} HP</div>
+
+        {/* XP Bar */}
+        <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 relative">
+          <div className="absolute inset-y-0 left-0 bg-cyan-400 transition-all duration-300" style={{ width: `${(playerStats.xp / (playerStats.level * 100)) * 100}%` }} />
+        </div>
+        <div className="text-[9px] text-white/50 text-right">{playerStats.xp} / {playerStats.level * 100} XP</div>
+      </div>
+
+      <div ref={floatingTextContainerRef} className="absolute inset-0 pointer-events-none z-50 overflow-hidden" />
+
       <div className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase pointer-events-none"
         style={{
           background: 'rgba(0,0,0,0.5)',
