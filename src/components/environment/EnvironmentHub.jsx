@@ -218,7 +218,7 @@ export default function EnvironmentHub({ currentEnvId, onSelectEnv, onClose, exp
                     </AnimatePresence>
                   </>
                 )}
-              </>
+              </div>
             )}
 
             {activeTab === 'skyboxes' && (
