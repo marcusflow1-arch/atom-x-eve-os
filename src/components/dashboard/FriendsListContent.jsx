@@ -77,18 +77,9 @@ export default function FriendsListContent() {
       setInvitingUserId(null);
       setInvitedUsers(prev => ({ ...prev, [userObj.id]: 'accepted' }));
       
-      // Switch environment if they have one
-      if (userObj.envUrl) {
-        window.dispatchEvent(new CustomEvent('changeEnvironment', {
-          detail: { envUrl: userObj.envUrl }
-        }));
-      }
-
-      window.dispatchEvent(new CustomEvent('companionSummon', {
-        detail: {
-          fileUrl: userObj.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-          name: userObj.friend_name
-        }
+      // Send invite - they join our local world instance
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `world_instance_${user?.id || 'local'}`, hostId: user?.id }
       }));
     }, 2000);
   };
@@ -105,20 +96,17 @@ export default function FriendsListContent() {
   const displayList = activeTab === 'friends' ? friends : globalUsers;
 
   const handleJoin = (userObj) => {
-    // Summon their avatar
-    window.dispatchEvent(new CustomEvent('companionSummon', {
-      detail: {
-        fileUrl: userObj.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-        name: userObj.friend_name
-      }
-    }));
-    
-    // Switch environment if they have one
+    // Switch environment to match the host
     if (userObj.envUrl) {
       window.dispatchEvent(new CustomEvent('changeEnvironment', {
         detail: { envUrl: userObj.envUrl }
       }));
     }
+
+    // Connect to their specific multiplayer world instance channel
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: { channelId: `world_instance_${userObj.id}`, hostId: userObj.id }
+    }));
   };
 
   return (
