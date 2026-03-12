@@ -214,6 +214,40 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
       >
         <div ref={containerRef} className="w-full h-full" />
         
+        {/* Incoming Invite Notification */}
+        {activeInvite && !isUiVisible && (
+          <div className="absolute top-2 left-2 z-30 bg-black/60 rounded-lg p-2 border border-purple-500/50 backdrop-blur-md flex flex-col gap-1.5 shadow-lg w-[140px]">
+            <div className="flex items-start gap-2">
+               <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5">?</div>
+               <span className="text-[10px] text-white font-bold leading-tight">Would you like to join {activeInvite.fromUser?.friend_name}?</span>
+            </div>
+            <div className="flex justify-between gap-2 mt-1">
+              <button 
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setActiveInvite(null);
+                }}
+                className="flex-1 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/40 text-[10px] font-bold border border-red-500/30 transition-colors flex justify-center items-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+              <button 
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setActiveInvite(null);
+                   if (activeInvite.fromUser?.envUrl) {
+                      window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } }));
+                   }
+                   window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
+                }}
+                className="flex-1 py-1 rounded bg-green-500/20 text-green-400 hover:bg-green-500/40 text-[10px] font-bold border border-green-500/30 transition-colors flex justify-center items-center"
+              >
+                <Check className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Voice Chat Icon */}
         <div className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md">
            <Mic className={`w-3.5 h-3.5 ${voiceEnabled ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'text-slate-400/50'}`} />
