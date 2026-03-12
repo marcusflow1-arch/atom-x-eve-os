@@ -16,8 +16,18 @@ const MOCK_FRIENDS = [
   { id: '5', friend_name: 'NovaStar', status: 'online', current_game: 'League of Legends', friend_avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', bio: 'Mid or feed', level: 60 },
 ];
 
+const MOCK_GLOBAL_USERS = [
+  { id: '101', friend_name: 'AlphaGamer', status: 'online', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', bio: 'Just chilling', level: 12, modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
+  { id: '102', friend_name: 'QuantumLeap', status: 'online', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', bio: 'Looking for a party', level: 24, modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx' },
+  { id: '103', friend_name: 'PixelRogue', status: 'online', current_game: 'Cyberpunk 2088', friend_avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', bio: 'Solo player', level: 88 },
+  { id: '104', friend_name: 'EchoMage', status: 'idle', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=150', bio: 'AFK', level: 15, modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
+];
+
 export default function FriendsListContent() {
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [activeTab, setActiveTab] = useState('friends');
+  const [invitingUserId, setInvitingUserId] = useState(null);
+  const [invitedUsers, setInvitedUsers] = useState({});
 
   // Fetch Friends
   const { data: friends = MOCK_FRIENDS } = useQuery({
