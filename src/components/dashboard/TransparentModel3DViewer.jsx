@@ -453,11 +453,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     // --- MOUSE CONTROLS (Right click orbit + zoom) ---
     const onMouseDown = (e) => {
-      if (e.button === 2) {
+      if (e.button === 0 || e.button === 2) {
         isDraggingRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
         if (containerRef.current) containerRef.current.focus();
-        e.preventDefault();
+        if (e.button === 2) e.preventDefault();
       }
     };
     const onMouseUp = () => { isDraggingRef.current = false; };
