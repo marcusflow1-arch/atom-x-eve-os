@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/components/auth/AuthContext';
 
 // Mock Data if entity fetch fails or is empty
 const MOCK_FRIENDS = [
@@ -28,6 +29,34 @@ export default function FriendsListContent() {
   const [activeTab, setActiveTab] = useState('friends');
   const [invitingUserId, setInvitingUserId] = useState(null);
   const [invitedUsers, setInvitedUsers] = useState({});
+  const { user } = useAuth();
+
+  // Fetch Global Users
+  const { data: globalUsers = MOCK_GLOBAL_USERS } = useQuery({
+    queryKey: ['globalUsers'],
+    queryFn: async () => {
+      try {
+        const res = await base44.entities.PlayerState.list();
+        if (res && res.length > 0) {
+          return res.filter(p => p.player_id !== user?.id).map(p => ({
+            id: p.player_id,
+            friend_name: p.display_name || 'Unknown Player',
+            status: p.status || 'online',
+            current_game: p.channel_id === 'dashboard' ? 'Dashboard' : p.channel_id,
+            friend_avatar: p.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+            bio: 'Online Player',
+            level: 1,
+            modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+            envUrl: p.env_url
+          }));
+        }
+        return MOCK_GLOBAL_USERS;
+      } catch (e) {
+        return MOCK_GLOBAL_USERS;
+      }
+    },
+    refetchInterval: 5000
+  });
 
   // Fetch Friends
   const { data: friends = MOCK_FRIENDS } = useQuery({
@@ -66,7 +95,24 @@ export default function FriendsListContent() {
     }
   };
 
-  const displayList = activeTab === 'friends' ? friends : MOCK_GLOBAL_USERS;
+  const displayList = activeTab === 'friends' ? friends : globalUsers;
+
+  const handleJoin = (userObj) => {
+    // Summon their avatar
+    window.dispatchEvent(new CustomEvent('companionSummon', {
+      detail: {
+        fileUrl: userObj.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+        name: userObj.friend_name
+      }
+    }));
+    
+    // Switch environment if they have one
+    if (userObj.envUrl) {
+      window.dispatchEvent(new CustomEvent('changeEnvironment', {
+        detail: { envUrl: userObj.envUrl }
+      }));
+    }
+  };
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-slate-900/50 rounded-xl border border-white/10">
@@ -210,7 +256,7 @@ export default function FriendsListContent() {
                       <p className="text-xs text-white/40 uppercase font-bold">Playing Now</p>
                       <p className="text-white font-semibold">{selectedFriend.current_game}</p>
                     </div>
-                    <Button size="sm" variant="secondary" className="bg-white/10 hover:bg-white/20 text-white">
+                    <Button onClick={() => handleJoin(selectedFriend)} size="sm" variant="secondary" className="bg-white/10 hover:bg-white/20 text-white">
                       Join
                     </Button>
                   </div>

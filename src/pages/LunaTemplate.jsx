@@ -412,6 +412,17 @@ export default function LunaTemplate() {
   }, [user]);
 
   useEffect(() => {
+    const handleEnvChange = (e) => {
+      const url = e.detail?.envUrl;
+      if (url) {
+        setRoomModelUrl(url);
+      }
+    };
+    window.addEventListener('changeEnvironment', handleEnvChange);
+    return () => window.removeEventListener('changeEnvironment', handleEnvChange);
+  }, []);
+
+  useEffect(() => {
     const checkBladeEquipped = async () => {
       // Check if any weapon slot has an item with a model_url (direct from inventory)
       const equippedWeapon = Object.entries(equippedItems).find(
