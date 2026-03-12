@@ -8,32 +8,46 @@ import { showError, showSuccess } from '@/components/error/ErrorToast';
 
 export default function AssetFilesManager() {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setUploading(true);
+    setUploadProgress({ current: 0, total: files.length });
+    let currentUploads = [];
+
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          
+          const newFile = {
+            id: Date.now().toString() + '-' + i,
+            name: file.webkitRelativePath || file.name,
+            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            type: file.type || 'unknown',
+            url: file_url,
+            uploadedAt: new Date().toLocaleString()
+          };
+          
+          currentUploads.push(newFile);
+          setUploadProgress({ current: i + 1, total: files.length });
+        } catch (err) {
+          showError(`Failed to upload ${file.name}`);
+        }
+      }
       
-      const newFile = {
-        id: Date.now().toString(),
-        name: file.name,
-        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-        type: file.type || 'unknown',
-        url: file_url,
-        uploadedAt: new Date().toLocaleString()
-      };
-      
-      setUploadedFiles(prev => [newFile, ...prev]);
-      showSuccess('File uploaded successfully!');
+      setUploadedFiles(prev => [...currentUploads, ...prev]);
+      showSuccess(`Successfully uploaded ${currentUploads.length} files!`);
     } catch (error) {
       showError(error, 'Upload');
     } finally {
       setUploading(false);
-      // Reset input
+      setUploadProgress({ current: 0, total: 0 });
       e.target.value = '';
     }
   };
@@ -74,6 +88,7 @@ export default function AssetFilesManager() {
           <label className="relative cursor-pointer w-full md:w-auto">
             <input
               type="file"
+              multiple
               onChange={handleFileUpload}
               className="hidden"
               disabled={uploading}
@@ -85,15 +100,41 @@ export default function AssetFilesManager() {
             >
               <span>
                 {uploading ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {uploadProgress.total > 0 ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...` : 'Uploading...'}</>
                 ) : (
-                  <><Upload className="w-4 h-4 mr-2" /> Select File</>
+                  <><Upload className="w-4 h-4 mr-2" /> Select File(s)</>
                 )}
               </span>
             </Button>
           </label>
+          
+          <label className="relative cursor-pointer w-full md:w-auto">
+            <input
+              type="file"
+              webkitdirectory="true"
+              directory="true"
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
+              disabled={uploading}
+            />
+            <Button 
+              disabled={uploading}
+              className="bg-indigo-600 hover:bg-indigo-700 w-full md:w-auto"
+              asChild
+            >
+              <span>
+                {uploading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {uploadProgress.total > 0 ? `Uploading Folder (${uploadProgress.current}/${uploadProgress.total})...` : 'Uploading...'}</>
+                ) : (
+                  <><FolderArchive className="w-4 h-4 mr-2" /> Upload Folder</>
+                )}
+              </span>
+            </Button>
+          </label>
+
           <div className="text-sm text-slate-400">
-            Supports any file type. You can copy the URL immediately after upload.
+            Supports bulk files and folder uploads.
           </div>
         </div>
       </div>
