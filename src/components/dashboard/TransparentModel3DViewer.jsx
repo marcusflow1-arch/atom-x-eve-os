@@ -430,11 +430,14 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     // --- MOUSE CONTROLS (Right click orbit + zoom) ---
     const onMouseDown = (e) => {
+      // Ignore clicks on UI elements (buttons, links, inputs, scrollable areas)
+      if (e.target.closest('button, a, input, [role="button"], .overflow-y-auto')) {
+        if (e.target.tagName.toLowerCase() !== 'canvas') return;
+      }
       if (e.button === 0 || e.button === 2) {
         isDraggingRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
         if (containerRef.current) containerRef.current.focus();
-        if (e.button === 2) e.preventDefault();
       }
     };
     const onMouseUp = () => { isDraggingRef.current = false; };
@@ -446,18 +449,24 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
+      // Ignore scroll on UI elements
+      if (e.target.closest('.overflow-y-auto, .overflow-auto, .scroll-auto')) return;
+      
       const orbit = cameraOrbitRef.current;
       orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
-      e.preventDefault();
     };
-    const onContextMenu = (e) => e.preventDefault();
+    const onContextMenu = (e) => {
+      // Allow context menu on UI elements, prevent on background
+      if (!e.target.closest('button, a, input, [role="button"]')) {
+        e.preventDefault();
+      }
+    };
 
-    const el = renderer.domElement;
-    el.addEventListener('mousedown', onMouseDown);
-    el.addEventListener('mouseup', onMouseUp);
-    el.addEventListener('mousemove', onMouseMove);
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('contextmenu', onContextMenu);
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('contextmenu', onContextMenu);
 
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     swapEnvironment(initialEnvUrl);
