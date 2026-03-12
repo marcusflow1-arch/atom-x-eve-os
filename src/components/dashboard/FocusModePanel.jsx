@@ -1421,7 +1421,10 @@ function OnlineUsersDropdown({ onSelectEnv }) {
       
       // Simulate joining their environment: switch our environment to match theirs
       if (onSelectEnv) {
-        onSelectEnv(u.envUrl);
+        onSelectEnv({
+          id: `joined_${u.id}`,
+          modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+        });
       }
 
       window.dispatchEvent(new CustomEvent('companionSummon', {
