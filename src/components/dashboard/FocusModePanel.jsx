@@ -1419,7 +1419,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
       setJoiningId(null);
       setOpen(false);
       
-      // Simulate joining their environment: switch our environment to match theirs
+      // Switch environment to match theirs
       if (onSelectEnv) {
         onSelectEnv({
           id: `joined_${u.id}`,
@@ -1427,11 +1427,9 @@ function OnlineUsersDropdown({ onSelectEnv }) {
         });
       }
 
-      window.dispatchEvent(new CustomEvent('companionSummon', {
-        detail: {
-          fileUrl: u.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-          name: u.name
-        }
+      // Connect to their world instance channel
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `world_instance_${u.id}`, hostId: u.id }
       }));
     }, 1500);
   };
@@ -1442,20 +1440,9 @@ function OnlineUsersDropdown({ onSelectEnv }) {
     setTimeout(() => {
       setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
       
-      // Switch environment to match theirs
-      if (onSelectEnv) {
-        onSelectEnv({
-          id: `joined_${u.id}`,
-          modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-        });
-      }
-
-      // Also summon them to your dashboard
-      window.dispatchEvent(new CustomEvent('companionSummon', {
-        detail: {
-          fileUrl: u.modelUrl || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-          name: u.name
-        }
+      // Simulate them joining us
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `world_instance_${user?.id || 'local'}`, hostId: user?.id }
       }));
     }, 2000);
   };
