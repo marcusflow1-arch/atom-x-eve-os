@@ -20,6 +20,8 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newClanData, setNewClanData] = useState({ name: '', description: '', isPrivate: false });
+    const [selectedClan, setSelectedClan] = useState(null);
+    const [selectedGameFilter, setSelectedGameFilter] = useState('All');
 
     // Check membership status - if user is already in a clan, redirect them
     const { data: myMemberships, isLoading: membershipsLoading } = useQuery({
