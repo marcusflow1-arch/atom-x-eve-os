@@ -37,6 +37,17 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const switchingRef = useRef(false);     // Prevent double-switch
   
+  const [playerStats, setPlayerStats] = useState({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
+  const playerStatsRef = useRef({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
+  const floatingTextsRef = useRef([]);
+  const floatingTextContainerRef = useRef(null);
+
+  useEffect(() => {
+    const onSync = () => setPlayerStats({ ...playerStatsRef.current });
+    window.addEventListener('syncPlayerStats', onSync);
+    return () => window.removeEventListener('syncPlayerStats', onSync);
+  }, []);
+  
   const skyboxModelRef = useRef(null);
 
   // Background / Skybox handler
