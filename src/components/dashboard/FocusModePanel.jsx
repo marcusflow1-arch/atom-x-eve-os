@@ -1261,7 +1261,7 @@ export function LibraryBannerSection({
               </button>
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
               {references.map((ref) => (
-                <div key={ref.id} className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+                <div key={ref.id} className="flex-shrink-0">
                   <GameReference 
                     reference={ref} 
                     onClick={handleReferenceClick}
@@ -1269,7 +1269,7 @@ export function LibraryBannerSection({
                   />
                 </div>
               ))}
-              <div className="flex-shrink-0 transform scale-[0.80] origin-left -mr-3">
+              <div className="flex-shrink-0">
                 <GameReference isHomeButton={true} onClick={handleHomeClick} />
               </div>
             </div>
