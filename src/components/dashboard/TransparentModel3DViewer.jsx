@@ -28,6 +28,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const raycasterRef = useRef(new THREE.Raycaster());
   const companionRef = useRef(null);
   const companionMixerRef = useRef(null);
+  const remotePlayersRef = useRef(new Map());
   
   // --- DUAL CHARACTER SYSTEM ---
   const c1ModelRef = useRef(null);       // C1 (ErikaArcher) model object
