@@ -1488,6 +1488,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         window.removeEventListener('keyup', onSpecialKeyUp);
       };
 
+      animate();
+
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
     // --- C1 MODEL (ErikaArcher) ---
