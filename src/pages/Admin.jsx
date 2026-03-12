@@ -19,10 +19,9 @@ import KeybindManager from '../components/admin/KeybindManager';
 import AIModelController from '../components/admin/AIModelController';
 import ExpProgressionAdmin from '../components/admin/ExpProgressionAdmin';
 import GameFileAnalyzer from '../components/admin/GameFileAnalyzer';
-import InfrastructurePanel from '../components/admin/InfrastructurePanel';
 import ReactorEditor from '../components/admin/ReactorEditor';
-import AssetPackImporter from '../components/admin/AssetPackImporter';
 import AttachmentEditor from '../components/admin/AttachmentEditor';
+import AssetFilesManager from '../components/admin/AssetFilesManager';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -458,10 +457,9 @@ export default function Admin() {
             <TabsTrigger value="ai-models">3D Model AI</TabsTrigger>
             <TabsTrigger value="exp-progression">EXP & Leveling</TabsTrigger>
             <TabsTrigger value="game-files">Game Files</TabsTrigger>
-            <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
             <TabsTrigger value="reactor">Reactor Editor</TabsTrigger>
-            <TabsTrigger value="asset-pack">Asset Pack Import</TabsTrigger>
             <TabsTrigger value="attachment-editor">Attachment Editor</TabsTrigger>
+            <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -953,20 +951,16 @@ export default function Admin() {
             <GameFileAnalyzer />
           </TabsContent>
 
-          <TabsContent value="infrastructure" forceMount className="data-[state=inactive]:hidden">
-            <InfrastructurePanel />
-          </TabsContent>
-
           <TabsContent value="reactor" forceMount className="data-[state=inactive]:hidden">
             <ReactorEditor />
           </TabsContent>
 
-          <TabsContent value="asset-pack">
-            <AssetPackImporter />
-          </TabsContent>
-
           <TabsContent value="attachment-editor" forceMount className="data-[state=inactive]:hidden">
             <AttachmentEditor />
+          </TabsContent>
+
+          <TabsContent value="asset-files">
+            <AssetFilesManager />
           </TabsContent>
 
                     </Tabs>
