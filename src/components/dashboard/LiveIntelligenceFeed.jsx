@@ -280,15 +280,26 @@ function MarketExpandedView() {
 }
 
 function MissionsExpandedView({ selectedGame, onSelectGame }) {
-  const [expandedMissionId, setExpandedMissionId] = useState(null);
+  const [selectedMission, setSelectedMission] = useState(null);
 
   const selectedGameObj = MOCK_GAMES.find(g => g.id === selectedGame) || MOCK_GAMES[0];
   const missions = MOCK_MISSIONS.filter(m => m.gameId === selectedGameObj.id);
 
+  // Auto-select first mission if none selected or selected mission is from another game
+  useEffect(() => {
+    if (missions.length > 0) {
+      if (!selectedMission || selectedMission.gameId !== selectedGameObj.id) {
+        setSelectedMission(missions[0]);
+      }
+    } else {
+      setSelectedMission(null);
+    }
+  }, [selectedGameObj.id, missions]);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#0a0d14]">
       {/* Top: Game Selection */}
-      <div className="p-4 border-b border-white/10 flex gap-3 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'none' }}>
+      <div className="p-4 border-b border-white/10 flex gap-3 overflow-x-auto flex-shrink-0 bg-black/40" style={{ scrollbarWidth: 'none' }}>
         {MOCK_GAMES.map(game => (
           <div 
             key={game.id}
@@ -301,81 +312,173 @@ function MissionsExpandedView({ selectedGame, onSelectGame }) {
         ))}
       </div>
 
-      <div className="flex-1 p-6 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
-         <div className="flex justify-between items-start mb-6">
-            <div>
-               <h2 className="text-2xl font-bold text-white mb-1">{selectedGameObj.name} Missions</h2>
-               <p className="text-[#64B5F6] text-sm">Comprehensive Mission Management</p>
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Side: Quest List */}
+        <div className="w-1/3 border-r border-white/10 overflow-y-auto p-4 space-y-6 bg-black/20" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+          <div>
+            <h2 className="text-xl font-bold text-white mb-1">Quest Log</h2>
+            <p className="text-[#64B5F6] text-xs mb-4">Daily & Weekly Tasks</p>
+          </div>
+
+          {MISSION_CATEGORIES.map(category => {
+            const categoryMissions = missions.filter(m => m.category === category);
+            if (categoryMissions.length === 0) return null;
+
+            return (
+              <div key={category} className="mb-6">
+                <h3 className="text-white/40 font-bold tracking-widest text-[10px] uppercase mb-2 flex items-center gap-1.5 border-b border-white/10 pb-1">
+                  {category === 'Ability' && <Zap className="w-3 h-3 text-purple-400" />}
+                  {category === 'Equipment' && <Shield className="w-3 h-3 text-blue-400" />}
+                  {category === 'Weapon' && <Sword className="w-3 h-3 text-red-400" />}
+                  {category === 'Companion' && <Bot className="w-3 h-3 text-green-400" />}
+                  {category === 'Cosmetic' && <Image className="w-3 h-3 text-amber-400" />}
+                  {category}
+                </h3>
+                <div className="space-y-2">
+                  {categoryMissions.map(mission => (
+                    <div 
+                      key={mission.id} 
+                      onClick={() => setSelectedMission(mission)}
+                      className={`p-3 rounded-lg cursor-pointer transition-all border ${selectedMission?.id === mission.id ? 'bg-[#64B5F6]/10 border-[#64B5F6]/30' : 'bg-black/20 border-transparent hover:bg-white/5'}`}
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className={`text-xs font-bold ${mission.completed ? 'text-green-400 line-through opacity-70' : selectedMission?.id === mission.id ? 'text-[#64B5F6]' : 'text-white'}`}>{mission.title}</span>
+                        {mission.completed && <CheckCircle2 className="w-3 h-3 text-green-400" />}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className={`${mission.type === 'Daily' ? 'text-green-300' : mission.type === 'Weekly' ? 'text-purple-300' : 'text-amber-300'}`}>{mission.type}</span>
+                        <span className="text-white/40">{mission.progress}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Right Side: Detailed Quest Journal */}
+        <div className="flex-1 overflow-y-auto bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] relative" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.2) transparent' }}>
+          {selectedMission ? (
+            <div className="p-8 max-w-3xl mx-auto h-full flex flex-col relative z-10">
+              {/* Header */}
+              <div className="mb-8 border-b border-white/10 pb-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-3xl font-extrabold text-white tracking-wide font-serif">{selectedMission.title}</h2>
+                  <span className={`px-3 py-1 rounded text-xs font-bold tracking-wider border ${
+                    selectedMission.type === 'Daily' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                    selectedMission.type === 'Weekly' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 
+                    'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}>{selectedMission.type} Quest</span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-white/50">
+                  <span className="flex items-center gap-1.5"><Gamepad2 className="w-4 h-4" /> {selectedGameObj.name}</span>
+                  <span className="flex items-center gap-1.5"><Activity className="w-4 h-4" /> {selectedMission.category}</span>
+                  <span className="flex items-center gap-1.5 text-amber-400/70"><AlertTriangle className="w-4 h-4" /> {selectedMission.timeRemaining}</span>
+                </div>
+              </div>
+
+              {/* Description / Lore */}
+              <div className="mb-8">
+                <h3 className="text-[#64B5F6] text-xs font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Journal Entry
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed italic font-serif bg-black/20 p-5 rounded-xl border-l-4 border-[#64B5F6]/50">
+                  "{selectedMission.description}"
+                </p>
+              </div>
+
+              {/* Objective & Progress */}
+              <div className="mb-8 bg-white/5 rounded-xl border border-white/10 p-5">
+                <h3 className="text-white text-sm font-bold tracking-wide mb-3 flex items-center gap-2">
+                  <Target className="w-4 h-4 text-red-400" /> Current Objective
+                </h3>
+                <p className="text-white/90 text-sm mb-5">{selectedMission.objective}</p>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-semibold">
+                    <span className="text-white/60">Progress</span>
+                    <span className={selectedMission.completed ? 'text-green-400' : 'text-[#64B5F6]'}>{selectedMission.progress}</span>
+                  </div>
+                  <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${selectedMission.progressPercent}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className={`h-full rounded-full ${selectedMission.completed ? 'bg-green-500' : 'bg-gradient-to-r from-[#64B5F6] to-blue-500'}`}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Conditions */}
+              <div className="mb-8">
+                <h3 className="text-white/50 text-xs font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+                  <List className="w-4 h-4" /> Conditions
+                </h3>
+                <ul className="space-y-2">
+                  {selectedMission.conditions.map((cond, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-white/70">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 opacity-50" />
+                      {cond}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Rewards */}
+              <div className="mt-auto">
+                <h3 className="text-amber-400 text-xs font-bold tracking-widest uppercase mb-4 flex items-center gap-2">
+                  <Gift className="w-4 h-4" /> Rewards
+                </h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* XP Reward */}
+                  {selectedMission.rewards.xp > 0 && (
+                    <div className="bg-gradient-to-br from-blue-900/40 to-black/40 border border-blue-500/30 rounded-xl p-3 flex flex-col items-center justify-center text-center gap-1 group hover:border-blue-400/60 transition-colors">
+                      <ChevronUp className="w-6 h-6 text-blue-400 mb-1 group-hover:-translate-y-1 transition-transform" />
+                      <span className="text-white font-bold text-lg">{selectedMission.rewards.xp}</span>
+                      <span className="text-blue-300/70 text-[10px] uppercase font-bold tracking-wider">Player XP</span>
+                    </div>
+                  )}
+                  
+                  {/* Currency Reward */}
+                  {selectedMission.rewards.currency > 0 && (
+                    <div className="bg-gradient-to-br from-amber-900/40 to-black/40 border border-amber-500/30 rounded-xl p-3 flex flex-col items-center justify-center text-center gap-1 group hover:border-amber-400/60 transition-colors">
+                      <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                        <span className="text-amber-400 font-bold text-xs">$</span>
+                      </div>
+                      <span className="text-white font-bold text-lg">{selectedMission.rewards.currency}</span>
+                      <span className="text-amber-300/70 text-[10px] uppercase font-bold tracking-wider">Credits</span>
+                    </div>
+                  )}
+
+                  {/* Black Market Tokens */}
+                  {selectedMission.rewards.blackMarketTokens > 0 && (
+                    <div className="bg-gradient-to-br from-red-900/40 to-black/40 border border-red-500/30 rounded-xl p-3 flex flex-col items-center justify-center text-center gap-1 group hover:border-red-400/60 transition-colors">
+                      <Shield className="w-6 h-6 text-red-400 mb-1 group-hover:scale-110 transition-transform" />
+                      <span className="text-white font-bold text-lg">{selectedMission.rewards.blackMarketTokens}</span>
+                      <span className="text-red-300/70 text-[10px] uppercase font-bold tracking-wider">BM Tokens</span>
+                    </div>
+                  )}
+
+                  {/* Item Rewards */}
+                  {selectedMission.rewards.items.map((item, idx) => (
+                    <div key={idx} className="bg-gradient-to-br from-purple-900/40 to-black/40 border border-purple-500/30 rounded-xl p-3 flex flex-col items-center justify-center text-center gap-1 group hover:border-purple-400/60 transition-colors">
+                      <Gift className="w-6 h-6 text-purple-400 mb-1 group-hover:scale-110 transition-transform" />
+                      <span className="text-white font-bold text-xs leading-tight line-clamp-2">{item}</span>
+                      <span className="text-purple-300/70 text-[10px] uppercase font-bold tracking-wider">Item</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-         </div>
-
-         {MISSION_CATEGORIES.map(category => {
-           const categoryMissions = missions.filter(m => m.category === category);
-           if (categoryMissions.length === 0) return null;
-
-           return (
-             <div key={category} className="mb-8">
-               <h3 className="text-white/60 font-bold tracking-widest text-xs uppercase mb-3 flex items-center gap-2">
-                 {category === 'Ability' && <Zap className="w-4 h-4 text-purple-400" />}
-                 {category === 'Equipment' && <Shield className="w-4 h-4 text-blue-400" />}
-                 {category === 'Weapon' && <Sword className="w-4 h-4 text-red-400" />}
-                 {category === 'Companion' && <Bot className="w-4 h-4 text-green-400" />}
-                 {category === 'Cosmetic' && <Image className="w-4 h-4 text-amber-400" />}
-                 {category} Missions
-               </h3>
-
-               <div className="space-y-3">
-                 {categoryMissions.map(mission => (
-                   <div key={mission.id} className="rounded-xl bg-black/20 border border-white/10 overflow-hidden">
-                     <div 
-                       className="p-4 cursor-pointer hover:bg-white/5 transition-colors flex justify-between items-center"
-                       onClick={() => setExpandedMissionId(expandedMissionId === mission.id ? null : mission.id)}
-                     >
-                       <div className="flex items-center gap-3">
-                         <Target className={`w-5 h-5 ${expandedMissionId === mission.id ? 'text-[#64B5F6]' : 'text-white/40'}`} />
-                         <div>
-                           <h4 className="text-white font-semibold text-sm">{mission.title}</h4>
-                           <div className="text-[10px] text-white/50 mt-0.5">{mission.progress} Completed</div>
-                         </div>
-                       </div>
-                       {expandedMissionId === mission.id ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
-                     </div>
-
-                     <AnimatePresence>
-                       {expandedMissionId === mission.id && (
-                         <motion.div 
-                           initial={{ height: 0, opacity: 0 }}
-                           animate={{ height: 'auto', opacity: 1 }}
-                           exit={{ height: 0, opacity: 0 }}
-                           className="border-t border-white/10 bg-white/5"
-                         >
-                           <div className="p-4 grid grid-cols-2 gap-6">
-                             <div>
-                               <p className="text-sm text-white/80 mb-4 leading-relaxed">{mission.description}</p>
-                               <div className="text-sm text-white/60">
-                                 <span className="font-bold text-white/80 block mb-1">Objective:</span> {mission.objective}
-                               </div>
-                             </div>
-                             <div className="space-y-3">
-                               <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                                 <span className="text-xs text-[#64B5F6] uppercase tracking-wider block mb-1 font-bold">Reward</span>
-                                 <span className="text-base font-semibold text-white">{mission.reward}</span>
-                               </div>
-                               <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                                 <span className="text-xs text-amber-400 uppercase tracking-wider block mb-1 font-bold">Conditions</span>
-                                 <span className="text-sm text-white/80">{mission.conditions}</span>
-                               </div>
-                             </div>
-                           </div>
-                         </motion.div>
-                       )}
-                     </AnimatePresence>
-                   </div>
-                 ))}
-               </div>
-             </div>
-           )
-         })}
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-white/20">
+              <FileText className="w-16 h-16 mb-4 opacity-50" />
+              <p className="text-lg font-serif">Select a quest to view its details</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
