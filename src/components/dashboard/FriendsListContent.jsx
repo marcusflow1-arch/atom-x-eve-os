@@ -42,12 +42,13 @@ export default function FriendsListContent() {
             id: p.player_id,
             friend_name: p.display_name || 'Unknown Player',
             status: p.status || 'online',
-            current_game: p.channel_id === 'dashboard' ? 'Dashboard' : p.channel_id,
+            current_game: (p.channel_id && p.channel_id.startsWith('dashboard_')) ? 'Dashboard' : p.channel_id,
             friend_avatar: p.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
             bio: 'Online Player',
             level: 1,
             modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-            envUrl: p.env_url
+            envUrl: p.env_url,
+            channel_id: p.channel_id
           }));
         }
         return MOCK_GLOBAL_USERS;
