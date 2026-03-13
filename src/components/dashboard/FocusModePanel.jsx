@@ -1286,7 +1286,7 @@ export function LibraryBannerSection({
               {navBoxes}
             </div>
             {intelligenceFeed && (
-              <div className="fixed right-8 z-[999] pointer-events-none" style={{ top: '220px', bottom: '32px' }}>
+              <div className="fixed right-8 z-[999] pointer-events-none" style={{ top: '188px', bottom: '96px' }}>
                 <div className="pointer-events-auto h-full shadow-2xl">
                   {intelligenceFeed}
                 </div>
