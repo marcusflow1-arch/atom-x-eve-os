@@ -185,6 +185,15 @@ export default function MultiplayerSystem({ envUrl }) {
 
     let lastPushTime = 0;
     let lastPushState = { x: null, y: null, z: null, yaw: null, anim: null };
+    let localEntityId = null;
+
+    // Find our existing state first
+    base44.entities.PlayerState.filter({ player_id: user.id }).then(res => {
+        if (!isSubscribed) return;
+        if (res.length > 0) {
+            localEntityId = res[0].id;
+        }
+    }).catch(e => console.error(e));
 
     const tick = async () => {
       if (!isSubscribed) return;
