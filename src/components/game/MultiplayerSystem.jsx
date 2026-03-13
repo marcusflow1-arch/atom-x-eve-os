@@ -105,8 +105,8 @@ export default function MultiplayerSystem({ envUrl }) {
                if (!targetEnvUrl) {
                    // Fallback to PlayerState env_url if we couldn't resolve home state
                    try {
-                       const hostState = await base44.entities.PlayerState.get(hostId);
-                       if (hostState && hostState.env_url) targetEnvUrl = hostState.env_url;
+                       const hostStates = await base44.entities.PlayerState.filter({ player_id: hostId });
+                       if (hostStates && hostStates.length > 0 && hostStates[0].env_url) targetEnvUrl = hostStates[0].env_url;
                    } catch (e) {
                        console.log("PlayerState fallback failed", e);
                    }
