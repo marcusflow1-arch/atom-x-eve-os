@@ -377,7 +377,7 @@ export default function LunaTemplate() {
     }
 
     // Persist Preference
-    if (user?.id) {
+    if (user?.id && !env.id.toString().startsWith('joined_')) {
       try {
         const states = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
         if (states.length > 0) {
