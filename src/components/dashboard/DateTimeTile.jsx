@@ -69,7 +69,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
               <div className="flex-1 overflow-hidden border-l border-white/10 pl-3">
                 <div className="flex items-center gap-1 mb-0.5">
                   <Bell className="w-2.5 h-2.5 text-amber-400" />
-                  <span className="text-[8px] uppercase tracking-wider text-amber-400/80 font-bold">Reminders</span>
+                  <span className="text-[8px] uppercase tracking-wider text-amber-400/80 font-bold">0 Reminders</span>
                 </div>
                 <div className="relative w-full h-4 overflow-hidden">
                   <AnimatePresence mode="wait">
