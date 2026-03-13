@@ -726,7 +726,104 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
                             </div>
                         </section>
 
-                        {/* 6. Recruitment & Settings */}
+                        {/* 6. Clan Roles & Tags */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Users className="w-5 h-5" /> Roles & Tags
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium text-white/70">Custom Clan Roles</label>
+                                    <p className="text-xs text-white/40 mb-2">Default roles: Leader, Officer, Veteran, Member, Recruit</p>
+                                    <div className="flex gap-2">
+                                        <Input 
+                                            placeholder="e.g. Raid Leader" 
+                                            id="newRoleInput"
+                                            className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (e.target.value.trim()) {
+                                                        toggleArrayItem('customRoles', e.target.value.trim());
+                                                        e.target.value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <Button 
+                                            variant="outline" 
+                                            className="border-white/10 text-white/70 hover:text-white"
+                                            onClick={(e) => {
+                                                const input = document.getElementById('newRoleInput');
+                                                if (input && input.value.trim()) {
+                                                    toggleArrayItem('customRoles', input.value.trim());
+                                                    input.value = '';
+                                                }
+                                            }}
+                                        >
+                                            Add
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        {newClanData.customRoles.map(role => (
+                                            <Badge key={role} variant="secondary" className="bg-white/10 text-white flex items-center gap-1">
+                                                {role}
+                                                <button onClick={() => toggleArrayItem('customRoles', role)} className="ml-1 text-white/50 hover:text-red-400">
+                                                    ×
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium text-white/70">Search Tags</label>
+                                    <p className="text-xs text-white/40 mb-2">Help players find you (e.g. retro-games, speedrun)</p>
+                                    <div className="flex gap-2">
+                                        <Input 
+                                            placeholder="Add tag..." 
+                                            id="newTagInput"
+                                            className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                            onKeyDown={e => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    if (e.target.value.trim()) {
+                                                        const val = e.target.value.trim().toLowerCase().replace(/\s+/g, '-');
+                                                        toggleArrayItem('searchTags', val);
+                                                        e.target.value = '';
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                        <Button 
+                                            variant="outline" 
+                                            className="border-white/10 text-white/70 hover:text-white"
+                                            onClick={() => {
+                                                const input = document.getElementById('newTagInput');
+                                                if (input && input.value.trim()) {
+                                                    const val = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+                                                    toggleArrayItem('searchTags', val);
+                                                    input.value = '';
+                                                }
+                                            }}
+                                        >
+                                            Add
+                                        </Button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-3">
+                                        {newClanData.searchTags.map(tag => (
+                                            <Badge key={tag} variant="outline" className="border-cyan-500/30 text-cyan-300 flex items-center gap-1">
+                                                #{tag}
+                                                <button onClick={() => toggleArrayItem('searchTags', tag)} className="ml-1 text-cyan-500/50 hover:text-red-400">
+                                                    ×
+                                                </button>
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 7. Recruitment & Settings */}
                         <section>
                             <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
                                 <Users className="w-5 h-5" /> Privacy & Recruitment
