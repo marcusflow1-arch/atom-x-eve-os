@@ -112,13 +112,21 @@ export default function MultiplayerSystem({ envUrl }) {
     let isSubscribed = true;
     let otherPlayersMap = new Map();
 
+    hostGraceTimerRef.current = Date.now(); // Reset grace timer on channel join/change
+
     // 1. Initial fetch of other players
     base44.entities.PlayerState.filter({ channel_id: currentChannel }).then(others => {
        if (!isSubscribed) return;
        const now = Date.now();
+       const hostIdMatch = currentChannel.match(/^dashboard_(.+)$/);
+       const hostId = hostIdMatch ? hostIdMatch[1] : null;
+       let hostFound = false;
+
        others.forEach(p => {
            if (p.player_id !== user.id && (now - p.last_update) < 15000) {
                otherPlayersMap.set(p.player_id, p);
+               if (p.player_id === hostId) hostFound = true;
+               
                // Sync environment if joining and host has a different environment
                if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
@@ -127,6 +135,13 @@ export default function MultiplayerSystem({ envUrl }) {
                }
            }
        });
+
+       if (hostId && hostId !== user.id && !hostFound) {
+           console.log("[Multiplayer] Host not found on join. Giving grace period.");
+       } else if (hostFound) {
+           hostGraceTimerRef.current = null; // Host found, no need for grace
+       }
+
        window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
          detail: { players: Array.from(otherPlayersMap.values()) }
        }));
