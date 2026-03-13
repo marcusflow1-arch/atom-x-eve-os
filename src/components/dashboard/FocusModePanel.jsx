@@ -1719,12 +1719,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
     setShowGamePanel(false);
   };
 
-  useEffect(() => {
-    const handleInvite = (e) => setActiveInvite(e.detail);
-    window.addEventListener('incomingInvite', handleInvite);
-    return () => window.removeEventListener('incomingInvite', handleInvite);
-  }, []);
-
   const handleDateTimeClick = () => {
     setShowUpdatesOverlay(true);
   };
