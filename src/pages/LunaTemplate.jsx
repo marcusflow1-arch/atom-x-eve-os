@@ -303,7 +303,7 @@ export default function LunaTemplate() {
           setCurrentEnvId(savedId);
           
           // 1. Try to load as SceneLayout (New System)
-          if (savedId !== 'default_room') {
+          if (savedId !== 'default_room' && !savedId.startsWith('joined_')) {
              try {
                  const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
                  if (layouts && layouts.length > 0) {
