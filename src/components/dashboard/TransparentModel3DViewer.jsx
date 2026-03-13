@@ -317,20 +317,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         obj.position.set((Math.random() - 0.5) * 8, -0.5 - currentMinY, (Math.random() - 0.5) * 8);
       }
 
-      obj.traverse((child) => {
-        if (child.isMesh) {
-          child.receiveShadow = true;
-          child.castShadow = true;
-          const mats = Array.isArray(child.material) ? child.material : [child.material];
-          mats.forEach((m, i) => {
-            if (!m || m.type === 'ShaderMaterial' && (!m.vertexShader || !m.fragmentShader)) {
-              const arr = Array.isArray(child.material) ? child.material : null;
-              const replacement = new THREE.MeshStandardMaterial({ color: 0x888888 });
-              if (arr) { arr[i] = replacement; } else { child.material = replacement; }
-            }
-          });
-        }
-      });
+      obj.traverse(cleanMesh);
 
       if (sceneRef.current && loadedEnvUrlRef.current === url) {
         if (!envRef.current) {
@@ -497,20 +484,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       model.position.set(0, -0.5, 0);
       model.visible = activeCharacterRef.current === 'ybot';
       
-      model.traverse((child) => {
-          if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              const mats = Array.isArray(child.material) ? child.material : [child.material];
-              mats.forEach((m, i) => {
-                if (!m || m.type === 'ShaderMaterial' && (!m.vertexShader || !m.fragmentShader)) {
-                  const arr = Array.isArray(child.material) ? child.material : null;
-                  const replacement = new THREE.MeshStandardMaterial({ color: 0x888888 });
-                  if (arr) { arr[i] = replacement; } else { child.material = replacement; }
-                }
-              });
-          }
-      });
+      model.traverse(cleanMesh);
       
       modelRef.current = model;
       scene.add(model);
@@ -1174,20 +1148,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         modelMesh.position.copy(playerModel.position).add(offset);
         modelMesh.lookAt(playerModel.position.clone().setY(modelMesh.position.y));
 
-        modelMesh.traverse(child => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            const mats = Array.isArray(child.material) ? child.material : [child.material];
-            mats.forEach((m, i) => {
-              if (!m || m.type === 'ShaderMaterial' && (!m.vertexShader || !m.fragmentShader)) {
-                const arr = Array.isArray(child.material) ? child.material : null;
-                const replacement = new THREE.MeshStandardMaterial({ color: 0x888888 });
-                if (arr) { arr[i] = replacement; } else { child.material = replacement; }
-              }
-            });
-          }
-        });
+        modelMesh.traverse(cleanMesh);
 
         sceneRef.current.add(modelMesh);
 
@@ -1545,12 +1506,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       c1.position.set(0, -0.5, 0);
       c1.visible = activeCharacterRef.current === 'c1';
 
-      c1.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-        }
-      });
+      c1.traverse(cleanMesh);
 
       c1ModelRef.current = c1;
       scene.add(c1);
@@ -1767,12 +1723,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
             const onLoaded = (obj) => {
               obj.scale.set(0.001, 0.001, 0.001); 
               
-              obj.traverse((child) => {
-                if (child.isMesh) {
-                  child.castShadow = true;
-                  child.receiveShadow = true;
-                }
-              });
+              obj.traverse(cleanMesh);
 
               scene.add(obj);
 
