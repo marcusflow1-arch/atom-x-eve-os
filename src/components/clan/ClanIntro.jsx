@@ -50,6 +50,14 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
         enabled: !membershipsLoading && (!myMemberships || myMemberships.length === 0)
     });
 
+    // Fetch games for selection
+    const { data: allGames } = useQuery({
+        queryKey: ['allGamesClanIntro'],
+        queryFn: async () => {
+            return await base44.entities.Game.list();
+        }
+    });
+
     // Define mutations before any early returns to keep hook order stable
     const createClanMutation = useMutation({
         mutationFn: async (clanData) => {
