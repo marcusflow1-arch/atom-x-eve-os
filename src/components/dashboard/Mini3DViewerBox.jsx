@@ -309,6 +309,70 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
 
       {/* Avatar Stats Card */}
       {!isUiVisible && <AvatarStatCard />}
+
+      {/* Global Bottom-Right Invite Notification */}
+      {createPortal(
+        <AnimatePresence>
+          {activeInvite && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              className="fixed bottom-6 right-6 z-[9999] w-80 rounded-xl overflow-hidden shadow-2xl border border-cyan-500/30"
+              style={{
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(8, 12, 20, 0.98) 100%)',
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.6), 0 0 20px rgba(34, 211, 238, 0.15)'
+              }}
+            >
+              <div className="p-4 flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg border border-cyan-200/20">
+                    <span className="text-white font-bold text-lg">!</span>
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold text-sm tracking-wide">Incoming Invite</h4>
+                    <p className="text-white/70 text-xs mt-0.5">
+                      <span className="text-cyan-400 font-semibold">{activeInvite.fromUser?.friend_name}</span> has invited you to join their Luna Dashboard.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 mt-1">
+                  <button 
+                    onClick={() => {
+                      setActiveInvite(null);
+                      window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } }));
+                    }}
+                    className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/70 hover:text-red-400 text-xs font-bold border border-white/10 hover:border-red-500/30 transition-all flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Decline
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setActiveInvite(null);
+                      if (activeInvite.fromUser?.envUrl) {
+                        window.dispatchEvent(new CustomEvent('changeEnvironment', { detail: { envUrl: activeInvite.fromUser.envUrl } }));
+                      }
+                      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
+                    }}
+                    className="flex-1 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold border border-cyan-500/40 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                  >
+                    <Check className="w-4 h-4" />
+                    Join Luna
+                  </button>
+                </div>
+              </div>
+              
+              {/* Top Glow Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
