@@ -165,15 +165,35 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                         type: 'answer',
                         payload: { sdp: answer.sdp, type: answer.type }
                     });
+
+                    if (pendingCandidates.current[peerId]) {
+                        for (const c of pendingCandidates.current[peerId]) {
+                            await pc.addIceCandidate(c);
+                        }
+                        pendingCandidates.current[peerId] = [];
+                    }
                 } else if (signal.type === 'answer') {
                     const pc = peersRef.current[peerId];
                     if (pc) {
                         await pc.setRemoteDescription(new RTCSessionDescription(signal.payload));
+                        
+                        if (pendingCandidates.current[peerId]) {
+                            for (const c of pendingCandidates.current[peerId]) {
+                                await pc.addIceCandidate(c);
+                            }
+                            pendingCandidates.current[peerId] = [];
+                        }
                     }
                 } else if (signal.type === 'ice-candidate') {
-                    const pc = peersRef.current[peerId];
-                    if (pc) {
+                    let pc = peersRef.current[peerId];
+                    if (!pc) {
+                        pc = createPeerConnection(peerId);
+                    }
+                    if (pc.remoteDescription) {
                         await pc.addIceCandidate(new RTCIceCandidate(signal.payload));
+                    } else {
+                        if (!pendingCandidates.current[peerId]) pendingCandidates.current[peerId] = [];
+                        pendingCandidates.current[peerId].push(new RTCIceCandidate(signal.payload));
                     }
                 }
             } catch (err) {
