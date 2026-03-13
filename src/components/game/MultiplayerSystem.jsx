@@ -34,13 +34,52 @@ export default function MultiplayerSystem({ envUrl }) {
         channelRef.current = targetChannel;
         console.log(`[Multiplayer] Joined channel: ${targetChannel}`);
 
-        // Fetch host's environment right away to sync it
+        // Fetch host's home environment
         if (hostId) {
            try {
-               const hostState = await base44.entities.PlayerState.get(hostId);
-               if (hostState && hostState.env_url) {
+               const states = await base44.entities.AvatarHomeState.filter({ avatarId: hostId });
+               let targetEnvUrl = null;
+
+               if (states && states.length > 0 && states[0].currentEnvironmentId) {
+                   const savedId = states[0].currentEnvironmentId;
+                   if (savedId !== 'default_room') {
+                       try {
+                           const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
+                           if (layouts && layouts.length > 0 && layouts[0].environment_url) {
+                               targetEnvUrl = layouts[0].environment_url;
+                           }
+                       } catch (e) {}
+
+                       if (!targetEnvUrl) {
+                           const models = await base44.entities.Model3D.list();
+                           const fbxs = await base44.entities.ModelFBX.list();
+                           const all = [...(models || []), ...(fbxs || [])];
+                           const queries = {
+                               'cyber_loft': ['room 2', 'room2'],
+                               'zen_garden': ['zen', 'garden'],
+                               'mars_outpost': ['mars', 'outpost']
+                           };
+                           if (queries[savedId]) {
+                               const found = all.find(m => queries[savedId].some(q => (m.name || '').toLowerCase().includes(q)));
+                               if (found?.file_url) targetEnvUrl = found.file_url;
+                           }
+                       }
+                   } else {
+                       const models = await base44.entities.Model3D.list();
+                       const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+                       if (room1Asset?.file_url) targetEnvUrl = room1Asset.file_url;
+                   }
+               }
+               
+               if (!targetEnvUrl) {
+                   // Fallback to PlayerState env_url if we couldn't resolve home state
+                   const hostState = await base44.entities.PlayerState.get(hostId);
+                   if (hostState && hostState.env_url) targetEnvUrl = hostState.env_url;
+               }
+
+               if (targetEnvUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
-                       detail: { envUrl: hostState.env_url }
+                       detail: { envUrl: targetEnvUrl }
                    }));
                }
            } catch (err) {
