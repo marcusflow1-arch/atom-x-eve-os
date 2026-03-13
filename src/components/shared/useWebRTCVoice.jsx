@@ -70,6 +70,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
                 }
             });
             audioRefs.current = {};
+            pendingCandidates.current = {};
         };
 
         function createPeerConnection(peerId) {
