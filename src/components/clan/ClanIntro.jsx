@@ -19,7 +19,29 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     const [viewState, setViewState] = useState('hero'); // 'hero' | 'browse'
     const [searchTerm, setSearchTerm] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [newClanData, setNewClanData] = useState({ name: '', description: '', isPrivate: false });
+    const [newClanData, setNewClanData] = useState({ 
+        name: '', tag: '', motto: '', description: '',
+        playstyles: [], genres: [], gameTags: [], activities: [],
+        icon: '', banner: '', primaryColor: '#0f1419', secondaryColor: '#22d3ee',
+        recruitmentStatus: 'Public', sizeLimit: '100', customRoles: [],
+        searchTags: [], enableStronghold: false,
+        clanAchievements: [
+            { title: 'First Steps', description: 'Create your division', completed: true },
+            { title: 'Gather the Squad', description: 'Reach 10 members', completed: false }
+        ]
+    });
+
+    const PREDEFINED_PLAYSTYLES = ['Casual', 'Hardcore', 'Competitive', 'Social', 'Roleplay', 'PvP', 'PvE', 'Achievement Hunting', 'Speedrunning'];
+    const PREDEFINED_GENRES = ['RPG', 'Shooter', 'Strategy', 'MMO', 'Adventure', 'Fighting', 'Horror', 'Racing', 'Simulation'];
+    const PREDEFINED_ACTIVITIES = ['Achievement Farming', 'Questing', 'PvP Battles', 'Dungeon Runs', 'Exploration', 'Speedruns', 'Competitive Rankings', 'Story Progression'];
+
+    const toggleArrayItem = (arrayField, item) => {
+        setNewClanData(prev => {
+            const arr = prev[arrayField];
+            if (arr.includes(item)) return { ...prev, [arrayField]: arr.filter(i => i !== item) };
+            return { ...prev, [arrayField]: [...arr, item] };
+        });
+    };
     const [selectedClan, setSelectedClan] = useState(null);
     const [selectedGameFilter, setSelectedGameFilter] = useState('All');
 
