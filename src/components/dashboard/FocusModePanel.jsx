@@ -1284,27 +1284,30 @@ export function LibraryBannerSection({
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
-          {/* Top Row: Env Hub | Memories | Calendar Box */}
+          {/* Top Row: Env Hub | Memories | Friends | Home | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-24">
             {/* Environment Hub */}
             <div className="w-[368px] h-full flex-shrink-0">
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
             </div>
 
-            {/* Memories (Now Friends) */}
-            <div 
-              ref={scrollRef}
-              className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
-              style={{ scrollbarWidth: 'none' }}
-            >
+            {/* Flex spacer to push remaining items to the right */}
+            <div className="flex-1 min-w-0" />
+
+            {/* Memories */}
+            <div className="flex flex-shrink-0 items-center gap-2 h-full px-2">
               <button
                 onClick={() => setShowMemoriesDrawer(true)}
-                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider mr-2 flex-shrink-0 transition-colors flex flex-col items-center justify-center gap-0.5"
+                className="text-white/40 hover:text-cyan-300 text-[8px] uppercase tracking-wider transition-colors flex flex-col items-center justify-center gap-0.5"
               >
                 <span className="text-xl leading-none">📷</span>
                 <span className="leading-none">Memories</span>
               </button>
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
+            </div>
+
+            {/* Friends (with placeholders) & Home */}
+            <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {onlineFriends.map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
                   <FriendReference 
@@ -1317,13 +1320,19 @@ export function LibraryBannerSection({
                   />
                 </div>
               ))}
-              <div className="flex-shrink-0">
+              
+              {/* Invisible Placeholders for Friends */}
+              {[...Array(Math.max(0, 5 - onlineFriends.length))].map((_, i) => (
+                <div key={`empty-${i}`} className="w-16 h-16 rounded-lg bg-transparent border border-white/5 flex-shrink-0" />
+              ))}
+
+              <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
               </div>
             </div>
 
             {/* Calendar Box */}
-            <div className="flex-1 min-w-0 h-full">
+            <div className="w-[368px] h-full flex-shrink-0">
               {calendarBox}
             </div>
           </div>
