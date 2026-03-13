@@ -98,7 +98,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
           whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
           whileTap={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="w-[282px] flex flex-col justify-center cursor-pointer group transition-colors relative overflow-hidden p-4 px-6"
+          className="w-[282px] flex flex-col justify-center cursor-pointer group transition-colors relative overflow-hidden pl-6 pr-8 py-4"
         >
           {/* Updates Header */}
           <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/20 w-max">
