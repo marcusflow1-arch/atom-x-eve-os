@@ -2,11 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Users, Volume2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export default function ActiveVoiceControls({ room, onLeave }) {
+    const { user } = useAuth();
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
     const [talking, setTalking] = useState(false);
+
+    const participantIds = room?.participants?.map(p => p.id) || [];
+    useWebRTCVoice(room?.id, user, isMuted, isDeafened, participantIds);
 
     // Simulate speaking indicator
     useEffect(() => {

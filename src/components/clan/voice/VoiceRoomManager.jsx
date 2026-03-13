@@ -34,6 +34,12 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     }, [activeRoomId]);
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
+
+    const activeRoom = rooms.find(r => r.id === activeRoomId);
+    const participantIds = activeRoom?.participants?.map(p => p.id) || [];
+    import('@/components/shared/useWebRTCVoice').then(m => {
+        // Can't use hook dynamically easily without wrapping. We need to import it at the top.
+    });
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newRoomTopic, setNewRoomTopic] = useState('');
     const [previewRoomId, setPreviewRoomId] = useState(null);
