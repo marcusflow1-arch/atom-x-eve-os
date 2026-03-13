@@ -1668,7 +1668,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [ownedGames, setOwnedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpdatesOverlay, setShowUpdatesOverlay] = useState(false);
-  const [activeInvite, setActiveInvite] = useState(null);
 
   // Transition State
   const [showScrollTransition, setShowScrollTransition] = useState(false);
