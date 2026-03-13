@@ -81,7 +81,7 @@ export default function MultiplayerSystem({ envUrl }) {
 
                if (targetEnvUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
-                       detail: { envUrl: targetEnvUrl }
+                       detail: { envUrl: targetEnvUrl, layoutData: targetLayout, envId: states[0]?.currentEnvironmentId }
                    }));
                }
            } catch (err) {
