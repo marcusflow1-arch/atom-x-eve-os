@@ -92,18 +92,26 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
             pc.ontrack = (event) => {
                 if (!audioRefs.current[peerId]) {
-                    const audio = new Audio();
+                    const audio = document.createElement('audio');
                     audio.autoplay = true;
+                    document.body.appendChild(audio);
                     audioRefs.current[peerId] = audio;
                 }
                 audioRefs.current[peerId].srcObject = event.streams[0];
                 audioRefs.current[peerId].muted = isDeafened;
+                
+                // Ensure play is called to bypass some browser autoplay policies
+                audioRefs.current[peerId].play().catch(e => console.log("Audio play blocked by browser policy:", e));
             };
 
             pc.onconnectionstatechange = () => {
                 if (['disconnected', 'failed', 'closed'].includes(pc.connectionState)) {
                     if (audioRefs.current[peerId]) {
+                        audioRefs.current[peerId].pause();
                         audioRefs.current[peerId].srcObject = null;
+                        if (audioRefs.current[peerId].parentNode) {
+                            audioRefs.current[peerId].parentNode.removeChild(audioRefs.current[peerId]);
+                        }
                         delete audioRefs.current[peerId];
                     }
                     delete peersRef.current[peerId];
