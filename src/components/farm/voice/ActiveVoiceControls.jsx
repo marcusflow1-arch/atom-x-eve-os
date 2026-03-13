@@ -11,6 +11,17 @@ export default function ActiveVoiceControls({ room, onLeave }) {
     const [isDeafened, setIsDeafened] = useState(false);
     const [talking, setTalking] = useState(false);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === '`') {
+                e.preventDefault();
+                setIsMuted(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const participantIds = room?.participants?.map(p => p.id) || [];
     useWebRTCVoice(room?.id, user, isMuted, isDeafened, participantIds);
 

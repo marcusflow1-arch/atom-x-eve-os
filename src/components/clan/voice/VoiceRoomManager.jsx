@@ -36,6 +36,17 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === '`') {
+                e.preventDefault();
+                setIsMuted(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const activeRoom = rooms.find(r => r.id === activeRoomId);
     const participantIds = activeRoom?.participants?.map(p => p.id) || [];
     useWebRTCVoice(activeRoomId, user, isMuted, isDeafened, participantIds);

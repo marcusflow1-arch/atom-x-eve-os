@@ -18,7 +18,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const clockRef = useRef(new THREE.Clock());
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [activeInvite, setActiveInvite] = useState(null);
 
   useEffect(() => {
@@ -250,11 +250,16 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
 
         {/* Host Name Badge */}
         {hostName && !isUiVisible && (
-          <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-center gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
-            <span className="text-[9px] font-bold text-white uppercase tracking-wider truncate">
-              {hostName.toLowerCase() === 'my' ? 'My Dashboard' : `${hostName}'s Dashboard`}
-            </span>
+          <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-start gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0 mt-[3px]" />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-white uppercase tracking-wider truncate leading-tight">
+                {hostName.toLowerCase() === 'my' ? 'My' : hostName}
+              </span>
+              <span className="text-[7px] text-white/60 uppercase tracking-wider leading-none mt-0.5">
+                Dashboard
+              </span>
+            </div>
           </div>
         )}
 
