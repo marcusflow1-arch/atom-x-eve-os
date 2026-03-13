@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
+import { toast } from 'react-hot-toast';
 
 export default function MultiplayerSystem({ envUrl }) {
   const { user } = useAuth();
