@@ -63,7 +63,7 @@ export default function MultiplayerSystem({ envUrl }) {
            if (p.player_id !== user.id && (now - p.last_update) < 15000) {
                otherPlayersMap.set(p.player_id, p);
                // Sync environment if joining and host has a different environment
-               if (`world_instance_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+               if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
                        detail: { envUrl: p.env_url }
                    }));
@@ -87,7 +87,7 @@ export default function MultiplayerSystem({ envUrl }) {
               }));
               
               // If we are in someone else's channel and they change their environment, sync to it
-              if (`world_instance_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+              if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
                   window.dispatchEvent(new CustomEvent('changeEnvironment', {
                       detail: { envUrl: p.env_url }
                   }));

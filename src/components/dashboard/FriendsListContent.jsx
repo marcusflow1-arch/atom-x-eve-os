@@ -86,7 +86,7 @@ export default function FriendsListContent() {
       
       // Send invite - they join our local world instance
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `world_instance_${user?.id || 'local'}`, hostId: user?.id }
+        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id }
       }));
     }, 2000);
   };
@@ -112,7 +112,7 @@ export default function FriendsListContent() {
 
     // Connect to their specific multiplayer world instance channel
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: `world_instance_${userObj.id}`, hostId: userObj.id }
+      detail: { channelId: `dashboard_${userObj.id}`, hostId: userObj.id }
     }));
   };
 
@@ -212,6 +212,15 @@ export default function FriendsListContent() {
                 <div className="flex gap-2 mb-1">
                   {activeTab === 'global' ? (
                     <>
+                      <Button 
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => { e.stopPropagation(); handleInviteToDashboard(selectedFriend); }}
+                        className="border-white/20 text-white hover:bg-white/10 px-2"
+                        title="Send Invite"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </Button>
                       <Button 
                         size="sm" 
                         onClick={() => handleJoin(selectedFriend)}
