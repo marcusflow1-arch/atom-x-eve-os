@@ -26,12 +26,27 @@ export default function MultiplayerSystem({ envUrl }) {
   }, [user]);
 
   useEffect(() => {
-    const handleJoin = (e) => {
+    const handleJoin = async (e) => {
       const targetChannel = e.detail.channelId;
+      const hostId = e.detail.hostId;
       if (targetChannel) {
         setCurrentChannel(targetChannel);
         channelRef.current = targetChannel;
         console.log(`[Multiplayer] Joined channel: ${targetChannel}`);
+
+        // Fetch host's environment right away to sync it
+        if (hostId) {
+           try {
+               const hostState = await base44.entities.PlayerState.get(hostId);
+               if (hostState && hostState.env_url) {
+                   window.dispatchEvent(new CustomEvent('changeEnvironment', {
+                       detail: { envUrl: hostState.env_url }
+                   }));
+               }
+           } catch (err) {
+               console.log("Could not fetch host state for env sync", err);
+           }
+        }
       }
     };
     
