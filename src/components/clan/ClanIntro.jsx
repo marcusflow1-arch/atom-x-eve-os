@@ -508,43 +508,304 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
 
             {/* Create Clan Dialog */}
             <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogContent className="bg-[#12141a] border-white/10 text-white rounded-2xl sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold">Establish New Division</DialogTitle>
-                        <DialogDescription className="text-white/50">
-                            Create a new clan to rally your allies and compete for glory.
+                <DialogContent className="bg-[#12141a] border-white/10 text-white rounded-2xl max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+                    <div className="p-6 border-b border-white/10 bg-black/40 flex-shrink-0">
+                        <DialogTitle className="text-3xl font-black tracking-widest text-center">CREATE CLAN</DialogTitle>
+                        <DialogDescription className="text-center text-white/50 mt-2">
+                            Define your division's identity, focus, and visual presence in the Atom X Eve network.
                         </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-6 py-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-white/70">Division Name</label>
-                            <Input 
-                                value={newClanData.name}
-                                onChange={e => setNewClanData({...newClanData, name: e.target.value})}
-                                placeholder="e.g. Shadow Vanguard"
-                                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-white/70">Manifesto</label>
-                            <Input 
-                                value={newClanData.description}
-                                onChange={e => setNewClanData({...newClanData, description: e.target.value})}
-                                placeholder="What does your clan stand for?"
-                                className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
-                            />
-                        </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="text-white/50 hover:text-white">Cancel</Button>
+                    
+                    <div className="flex-1 overflow-y-auto p-8 space-y-12 custom-scrollbar">
+                        
+                        {/* 1. Clan Identity */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Shield className="w-5 h-5" /> Clan Identity
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Clan Name *</label>
+                                    <Input 
+                                        value={newClanData.name}
+                                        onChange={e => setNewClanData({...newClanData, name: e.target.value})}
+                                        placeholder="e.g. Shadow Vanguard"
+                                        className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Clan Tag (3-5 chars)</label>
+                                    <Input 
+                                        value={newClanData.tag}
+                                        onChange={e => setNewClanData({...newClanData, tag: e.target.value})}
+                                        placeholder="e.g. [AXE]"
+                                        maxLength={5}
+                                        className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50 uppercase"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium text-white/70">Clan Motto</label>
+                                    <Input 
+                                        value={newClanData.motto}
+                                        onChange={e => setNewClanData({...newClanData, motto: e.target.value})}
+                                        placeholder="e.g. Masters of Every World"
+                                        className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <label className="text-sm font-medium text-white/70">Clan Description</label>
+                                    <textarea 
+                                        value={newClanData.description}
+                                        onChange={e => setNewClanData({...newClanData, description: e.target.value})}
+                                        placeholder="Describe your clan's goals, culture, and requirements..."
+                                        className="w-full h-32 rounded-md bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 p-3 resize-none text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 2. Clan Playstyle */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Target className="w-5 h-5" /> Clan Playstyle
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                                {PREDEFINED_PLAYSTYLES.map(style => (
+                                    <button
+                                        key={style}
+                                        onClick={() => toggleArrayItem('playstyles', style)}
+                                        className={`px-4 py-2 rounded-full border transition-all text-sm font-medium ${
+                                            newClanData.playstyles.includes(style)
+                                                ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                    >
+                                        {style}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* 3. Games and Genres */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Zap className="w-5 h-5" /> Games & Genres
+                            </h3>
+                            <div className="space-y-6">
+                                <div>
+                                    <p className="text-sm font-medium text-white/70 mb-3">Preferred Genres</p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {PREDEFINED_GENRES.map(genre => (
+                                            <button
+                                                key={genre}
+                                                onClick={() => toggleArrayItem('genres', genre)}
+                                                className={`px-3 py-1.5 rounded border transition-all text-xs font-medium ${
+                                                    newClanData.genres.includes(genre)
+                                                        ? 'bg-purple-500/20 border-purple-400 text-purple-300'
+                                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                }`}
+                                            >
+                                                {genre}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-white/70 mb-3">Preferred Atom XE Games (Select from library)</p>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto custom-scrollbar p-2 border border-white/5 rounded-xl bg-black/20">
+                                        {allGames?.map(game => (
+                                            <div 
+                                                key={game.id}
+                                                onClick={() => toggleArrayItem('gameTags', game.title)}
+                                                className={`p-2 rounded border cursor-pointer flex items-center gap-2 transition-all ${
+                                                    newClanData.gameTags.includes(game.title)
+                                                        ? 'bg-cyan-900/30 border-cyan-500/50'
+                                                        : 'bg-white/5 border-transparent hover:bg-white/10'
+                                                }`}
+                                            >
+                                                <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-slate-800">
+                                                    {game.cover_image && <img src={game.cover_image} alt="" className="w-full h-full object-cover" />}
+                                                </div>
+                                                <span className="text-xs font-medium truncate text-white/90">{game.title}</span>
+                                            </div>
+                                        ))}
+                                        {(!allGames || allGames.length === 0) && <p className="text-xs text-white/40 col-span-full">No games available in library</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 4. Clan Activities */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Trophy className="w-5 h-5" /> Primary Clan Activities
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                                {PREDEFINED_ACTIVITIES.map(activity => (
+                                    <button
+                                        key={activity}
+                                        onClick={() => toggleArrayItem('activities', activity)}
+                                        className={`px-4 py-2 rounded-lg border transition-all text-sm font-medium ${
+                                            newClanData.activities.includes(activity)
+                                                ? 'bg-amber-500/20 border-amber-400 text-amber-300'
+                                                : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                        }`}
+                                    >
+                                        {activity}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* 5. Visual Identity */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Shield className="w-5 h-5" /> Visual Identity
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Banner Image URL</label>
+                                    <Input 
+                                        value={newClanData.banner}
+                                        onChange={e => setNewClanData({...newClanData, banner: e.target.value})}
+                                        placeholder="https://... (1920x500 recommended)"
+                                        className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                    />
+                                    {newClanData.banner && (
+                                        <div className="mt-2 h-20 rounded-lg overflow-hidden border border-white/10">
+                                            <img src={newClanData.banner} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Emblem Image URL</label>
+                                    <Input 
+                                        value={newClanData.icon}
+                                        onChange={e => setNewClanData({...newClanData, icon: e.target.value})}
+                                        placeholder="https://... (Square recommended)"
+                                        className="bg-white/5 border-white/10 text-white focus:border-cyan-500/50"
+                                    />
+                                    {newClanData.icon && (
+                                        <div className="mt-2 w-16 h-16 rounded-lg overflow-hidden border border-white/10 mx-auto">
+                                            <img src={newClanData.icon} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Primary Color</label>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="color" 
+                                            value={newClanData.primaryColor}
+                                            onChange={e => setNewClanData({...newClanData, primaryColor: e.target.value})}
+                                            className="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
+                                        />
+                                        <Input 
+                                            value={newClanData.primaryColor}
+                                            onChange={e => setNewClanData({...newClanData, primaryColor: e.target.value})}
+                                            className="bg-white/5 border-white/10 text-white flex-1 uppercase font-mono"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-white/70">Secondary Color</label>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="color" 
+                                            value={newClanData.secondaryColor}
+                                            onChange={e => setNewClanData({...newClanData, secondaryColor: e.target.value})}
+                                            className="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
+                                        />
+                                        <Input 
+                                            value={newClanData.secondaryColor}
+                                            onChange={e => setNewClanData({...newClanData, secondaryColor: e.target.value})}
+                                            className="bg-white/5 border-white/10 text-white flex-1 uppercase font-mono"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* 6. Recruitment & Settings */}
+                        <section>
+                            <h3 className="text-xl font-bold text-cyan-400 mb-6 flex items-center gap-2 border-b border-white/10 pb-2">
+                                <Users className="w-5 h-5" /> Privacy & Recruitment
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <label className="text-sm font-medium text-white/70">Recruitment Status</label>
+                                    <div className="flex flex-col gap-2">
+                                        {['Public', 'Request to Join', 'Invite Only'].map(status => (
+                                            <div 
+                                                key={status}
+                                                onClick={() => setNewClanData({...newClanData, recruitmentStatus: status})}
+                                                className={`p-3 rounded-lg border cursor-pointer flex items-center gap-3 transition-all ${
+                                                    newClanData.recruitmentStatus === status
+                                                        ? 'bg-cyan-900/30 border-cyan-500 text-white'
+                                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                                                }`}
+                                            >
+                                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${newClanData.recruitmentStatus === status ? 'border-cyan-400' : 'border-white/30'}`}>
+                                                    {newClanData.recruitmentStatus === status && <div className="w-2 h-2 rounded-full bg-cyan-400" />}
+                                                </div>
+                                                <span className="font-medium">{status}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-white/70">Member Limit</label>
+                                        <Select 
+                                            value={newClanData.sizeLimit} 
+                                            onValueChange={(val) => setNewClanData({...newClanData, sizeLimit: val})}
+                                        >
+                                            <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-[#12141a] border-white/10 text-white">
+                                                <SelectItem value="50">50 Members</SelectItem>
+                                                <SelectItem value="100">100 Members</SelectItem>
+                                                <SelectItem value="250">250 Members</SelectItem>
+                                                <SelectItem value="9999">Unlimited</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div 
+                                        className="mt-6 p-4 rounded-xl border border-white/10 bg-white/5 flex items-start gap-3 cursor-pointer hover:bg-white/10 transition-colors"
+                                        onClick={() => setNewClanData({...newClanData, enableStronghold: !newClanData.enableStronghold})}
+                                    >
+                                        <div className={`w-5 h-5 mt-0.5 rounded border flex flex-shrink-0 items-center justify-center ${newClanData.enableStronghold ? 'bg-cyan-500 border-cyan-400' : 'border-white/30'}`}>
+                                            {newClanData.enableStronghold && <span className="text-black font-bold text-xs">✓</span>}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-white mb-1">Enable Clan Stronghold</p>
+                                            <p className="text-xs text-white/50">Provisions a 3D persistent lobby environment for your division to gather.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+                    
+                    {/* Footer Actions */}
+                    <div className="p-6 border-t border-white/10 bg-black/60 flex justify-end gap-4 flex-shrink-0">
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => setIsCreateOpen(false)} 
+                            className="text-white/50 hover:text-white hover:bg-white/5 px-6"
+                        >
+                            Cancel
+                        </Button>
                         <Button 
                             onClick={() => createClanMutation.mutate(newClanData)}
                             disabled={createClanMutation.isPending || !newClanData.name}
-                            className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold"
+                            className="bg-cyan-600 hover:bg-cyan-500 text-white font-black tracking-wider px-10 h-12 shadow-[0_0_20px_rgba(8,145,178,0.4)]"
                         >
-                            {createClanMutation.isPending ? 'Establishing...' : 'Initialize Division'}
+                            {createClanMutation.isPending ? 'ESTABLISHING...' : 'CREATE CLAN'}
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>
