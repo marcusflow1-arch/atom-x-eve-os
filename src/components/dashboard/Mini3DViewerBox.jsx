@@ -268,7 +268,17 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         )}
 
         {/* Voice Chat Icon */}
-        <div className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md">
+        <div 
+          className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md cursor-pointer hover:bg-white/10 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            setVoiceEnabled(v => {
+              const newState = !v;
+              window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
+              return newState;
+            });
+          }}
+        >
            <Mic className={`w-3.5 h-3.5 ${voiceEnabled ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'text-slate-400/50'}`} />
         </div>
 
