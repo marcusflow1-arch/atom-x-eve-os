@@ -1353,35 +1353,34 @@ function OnlineUsersDropdown({ onSelectEnv }) {
   const [joiningId, setJoiningId] = useState(null);
   const [invitedUsers, setInvitedUsers] = useState({});
 
-  // Query actual users
+  // Query actual users via PlayerState for real-time multiplayer presence
   const { data: dbUsers } = useQuery({
     queryKey: ['all_users_for_online_list'],
-    queryFn: () => base44.entities.User.list(),
-    refetchInterval: 10000, // Refresh every 10 seconds to get real-time presence
+    queryFn: () => base44.entities.PlayerState.list(),
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   React.useEffect(() => {
     if (!dbUsers) return;
 
     const now = new Date();
-    const isOnline = (u) => {
-      if (u.id === user?.id) return true; // Always show self
-      if (u.presence_status === 'online' && u.last_seen) {
-        const lastSeen = new Date(u.last_seen);
-        return (now - lastSeen) < 120000; // Consider online if seen in last 2 mins
+    const isOnline = (p) => {
+      if (p.player_id === user?.id) return true; // Always show self
+      if (p.last_update) {
+        return (now.getTime() - p.last_update) < 120000; // Consider online if updated in last 2 mins
       }
-      return false; // Actually filter by real-time presence!
+      return true; // Fallback if no last_update
     };
 
     // Filter to only show users who are actually online
-    const usersList = dbUsers.filter(isOnline).map(u => ({
-      id: u.id,
-      name: u.full_name || u.username || u.email?.split('@')[0] || 'Unknown',
-      avatar: u.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
-      status: 'online',
-      isMe: u.id === user?.id,
-      modelUrl: u.active_model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-      envUrl: u.current_activity?.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+    const usersList = dbUsers.filter(isOnline).map(p => ({
+      id: p.player_id,
+      name: p.display_name || 'Unknown',
+      avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
+      status: p.status || 'online',
+      isMe: p.player_id === user?.id,
+      modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+      envUrl: p.env_url || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
     }));
 
     // Ensure current user is always at the top
