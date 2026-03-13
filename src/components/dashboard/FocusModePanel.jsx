@@ -1190,64 +1190,93 @@ export function LibraryBannerSection({
   navBoxes, calendarBox, intelligenceFeed
 }) {
   const envDropdownRef = useRef(null);
-  const [activeReference, setActiveReference] = useState(null);
-  const [references, setReferences] = useState([]);
+  const [activeFriend, setActiveFriend] = useState(null);
+  const [onlineFriends, setOnlineFriends] = useState([]);
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
   const scrollRef = useRef(null);
+  const { user } = useAuth();
+  const [invitedUsers, setInvitedUsers] = useState({});
 
-
+  const { data: dbUsers } = useQuery({
+    queryKey: ['all_users_for_online_list_banner'],
+    queryFn: () => base44.entities.PlayerState.list(),
+    refetchInterval: 5000,
+  });
 
   useEffect(() => {
-    const fetchBackgrounds = async () => {
-      try {
-        const backgrounds = await base44.entities.HeroBackground.list();
-        
-        // Initial mock data
-        let initialRefs = [
-          { id: 1, title: 'Final Stand', thumbnail: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', type: 'death', background: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/0d9e757d8_unnamed.jpg', game: 'Borderlands' },
-          { id: 2, title: 'Boss Victory', thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920', game: 'Cyberpunk 2088' },
-          { id: 3, title: 'Epic Battle', thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200', type: 'battle', background: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920', game: 'Shadow Realm' },
-          { id: 4, title: 'Fallen Hero', thumbnail: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=200', type: 'death', background: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=1920', game: 'Dark Souls' },
-          { id: 5, title: 'Champion', thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=200', type: 'victory', background: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920', game: 'Stellar Odyssey' },
-        ];
-
-        // Add fetched backgrounds
-        if (backgrounds && backgrounds.data) {
-          const plasmaWater = backgrounds.data.find(bg => bg.title === 'Plasma-Water' || bg.title === 'Plasma Water');
-          if (plasmaWater) {
-            initialRefs.push({
-              id: plasmaWater.id,
-              title: 'Plasma Water',
-              thumbnail: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=200',
-              type: 'victory',
-              background: plasmaWater.video_url,
-              game: 'Hero Theme',
-              isVideo: true
-            });
-          }
-        }
-        
-        setReferences(initialRefs);
-      } catch (error) {
-        console.error("Failed to fetch backgrounds", error);
+    if (!dbUsers) return;
+    const now = new Date();
+    const isOnline = (p) => {
+      if (p.player_id === user?.id) return false;
+      if (p.last_update) {
+        return (now.getTime() - p.last_update) < 120000;
       }
+      return true;
     };
-    
-    fetchBackgrounds();
-  }, []);
 
-  const handleReferenceClick = (reference) => {
-    setActiveReference(reference);
-    if (onBackgroundChange) {
-      onBackgroundChange(reference.background);
+    const usersList = [];
+    const seenIds = new Set();
+    
+    dbUsers.filter(isOnline).forEach(p => {
+      if (!seenIds.has(p.player_id)) {
+        seenIds.add(p.player_id);
+        usersList.push({
+          id: p.player_id,
+          name: p.display_name || 'Unknown',
+          avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
+          status: p.status || 'online',
+          envUrl: p.env_url
+        });
+      }
+    });
+
+    setOnlineFriends(usersList.slice(0, 5));
+  }, [dbUsers, user]);
+
+  const handleFriendClick = (friend) => {
+    setActiveFriend(activeFriend?.id === friend.id ? null : friend);
+  };
+
+  const handleJoin = (u) => {
+    setActiveFriend(null);
+    if (onSelectEnv) {
+      onSelectEnv({
+        id: `joined_${u.id}`,
+        modelUrl: u.envUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+      });
     }
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name }
+    }));
+  };
+
+  const handleInvite = (u) => {
+    setInvitedUsers(prev => ({ ...prev, [u.id]: 'inviting' }));
+    setTimeout(() => {
+      setInvitedUsers(prev => ({ ...prev, [u.id]: 'accepted' }));
+      window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
+      }));
+      setActiveFriend(null);
+    }, 2000);
+  };
+
+  const handlePartyInvite = (u) => {
+    setActiveFriend(null);
+    // You can add party invite logic/toast here later
   };
 
   const handleHomeClick = () => {
-    setActiveReference(null);
-    if (onBackgroundChange) {
-      onBackgroundChange(null);
+    setActiveFriend(null);
+    if (onSelectEnv) {
+      onSelectEnv({
+        id: 'default_room',
+        modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+      });
     }
+    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+      detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
+    }));
   };
 
   return (
