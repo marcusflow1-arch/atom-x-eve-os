@@ -10,7 +10,7 @@ export default function MultiplayerSystem({ envUrl }) {
   
   useEffect(() => {
     if (user?.id) {
-      const defaultChannel = `world_instance_${user.id}`;
+      const defaultChannel = `dashboard_${user.id}`;
       setCurrentChannel(defaultChannel);
       channelRef.current = defaultChannel;
       
