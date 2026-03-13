@@ -7,7 +7,7 @@ import { base44 } from '@/api/base44Client';
 import ReactorBridge from '../admin/reactor/ReactorBridge';
 import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
 
-// Removed WebGL info log workaround to save space
+
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
