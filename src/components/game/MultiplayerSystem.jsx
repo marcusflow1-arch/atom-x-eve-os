@@ -1,13 +1,26 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useWebRTCVoice } from '@/components/shared/useWebRTCVoice';
 
 export default function MultiplayerSystem({ envUrl }) {
   const { user } = useAuth();
   const [currentChannel, setCurrentChannel] = useState(null);
+  const [participantIds, setParticipantIds] = useState([]);
+  const [micEnabled, setMicEnabled] = useState(true);
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
   const channelRef = useRef(null);
   const hostGraceTimerRef = useRef(Date.now());
+
+  useWebRTCVoice(currentChannel, user, !micEnabled, false, participantIds);
+
+  useEffect(() => {
+    const handleMicToggle = (e) => {
+      setMicEnabled(e.detail.enabled);
+    };
+    window.addEventListener('toggleDashboardMic', handleMicToggle);
+    return () => window.removeEventListener('toggleDashboardMic', handleMicToggle);
+  }, []);
   
   useEffect(() => {
     if (user?.id) {
