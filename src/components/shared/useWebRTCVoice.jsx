@@ -60,6 +60,9 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             Object.values(audioRefs.current).forEach(audio => {
                 audio.pause();
                 audio.srcObject = null;
+                if (audio.parentNode) {
+                    audio.parentNode.removeChild(audio);
+                }
             });
             audioRefs.current = {};
         };
