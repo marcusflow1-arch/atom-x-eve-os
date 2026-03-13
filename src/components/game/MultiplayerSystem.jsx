@@ -201,7 +201,11 @@ export default function MultiplayerSystem({ envUrl }) {
             state.anim !== lastPushState.anim;
 
         // Push if moved significantly, OR every 8 seconds to keep connection alive
-        if (hasMoved || now - lastPushTime > 8000) {
+        const timeSinceLastPush = now - lastPushTime;
+        const forceKeepAlive = timeSinceLastPush > 8000;
+        
+        // Rate limit the push to max 1 per 1.5 seconds to avoid "Rate limit exceeded"
+        if ((hasMoved && timeSinceLastPush > 1500) || forceKeepAlive) {
             lastPushTime = now;
             lastPushState = { ...state };
 
