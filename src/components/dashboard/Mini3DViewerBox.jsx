@@ -8,7 +8,7 @@ const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/pub
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
 
-export default function Mini3DViewerBox({ isUiVisible = false }) {
+export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const containerRef = useRef(null);
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -216,7 +216,7 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
         
         {/* Incoming Invite Notification */}
         {activeInvite && !isUiVisible && (
-          <div className="absolute top-2 left-2 z-30 bg-black/60 rounded-lg p-2 border border-purple-500/50 backdrop-blur-md flex flex-col gap-1.5 shadow-lg w-[140px]">
+          <div className="absolute top-10 left-2 z-30 bg-black/60 rounded-lg p-2 border border-purple-500/50 backdrop-blur-md flex flex-col gap-1.5 shadow-lg w-[140px]">
             <div className="flex items-start gap-2">
                <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5">?</div>
                <span className="text-[10px] text-white font-bold leading-tight">Would you like to join {activeInvite.fromUser?.friend_name}?</span>
@@ -245,6 +245,16 @@ export default function Mini3DViewerBox({ isUiVisible = false }) {
                 <Check className="w-3 h-3" />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Host Name Badge */}
+        {hostName && !isUiVisible && (
+          <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-center gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+            <span className="text-[9px] font-bold text-white uppercase tracking-wider truncate">
+              {hostName.toLowerCase() === 'my' ? 'My Dashboard' : `${hostName}'s Dashboard`}
+            </span>
           </div>
         )}
 

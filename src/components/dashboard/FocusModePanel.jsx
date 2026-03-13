@@ -1436,7 +1436,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
 
       // Connect to their world instance channel
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `dashboard_${u.id}`, hostId: u.id }
+        detail: { channelId: `dashboard_${u.id}`, hostId: u.id, hostName: u.name }
       }));
     }, 1500);
   };
@@ -1449,7 +1449,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
       
       // Simulate them joining us
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id }
+        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id, hostName: user?.full_name || 'My' }
       }));
     }, 2000);
   };

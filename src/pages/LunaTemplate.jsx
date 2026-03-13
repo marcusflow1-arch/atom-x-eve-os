@@ -170,6 +170,26 @@ export default function LunaTemplate() {
   const [showQuestBook, setShowQuestBook] = useState(true);
   const [showCardCollection, setShowCardCollection] = useState(true);
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
+  const [currentHostName, setCurrentHostName] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setCurrentHostName(user.full_name || user.username || 'My');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const handleJoin = (e) => {
+      const { hostId, hostName } = e.detail;
+      if (hostId === user?.id || !hostId) {
+        setCurrentHostName(user?.full_name || user?.username || 'My');
+      } else if (hostName) {
+        setCurrentHostName(hostName);
+      }
+    };
+    window.addEventListener('joinMultiplayerChannel', handleJoin);
+    return () => window.removeEventListener('joinMultiplayerChannel', handleJoin);
+  }, [user]);
 
   useEffect(() => {
     const toggleQB = () => setShowQuestBook(v => !v);
@@ -562,7 +582,7 @@ export default function LunaTemplate() {
                left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
-          <Mini3DViewerBox isUiVisible={uiVisible} />
+          <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
           {!avatarFocusMode && !uiVisible && (
             <>
