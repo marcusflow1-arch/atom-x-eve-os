@@ -42,11 +42,13 @@ export default function MultiplayerSystem({ envUrl }) {
 
                if (states && states.length > 0 && states[0].currentEnvironmentId) {
                    const savedId = states[0].currentEnvironmentId;
+                   let targetLayout = null;
                    if (savedId !== 'default_room') {
                        try {
                            const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
                            if (layouts && layouts.length > 0 && layouts[0].environment_url) {
                                targetEnvUrl = layouts[0].environment_url;
+                               targetLayout = layouts[0];
                            }
                        } catch (e) {}
 
