@@ -279,7 +279,11 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
             });
           }}
         >
-           <Mic className={`w-3.5 h-3.5 ${voiceEnabled ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]' : 'text-slate-400/50'}`} />
+           {voiceEnabled ? (
+             <Mic className="w-3.5 h-3.5 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" />
+           ) : (
+             <MicOff className="w-3.5 h-3.5 text-red-400/80" />
+           )}
         </div>
 
         {isUiVisible && (
