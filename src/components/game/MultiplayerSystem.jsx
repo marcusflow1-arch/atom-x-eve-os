@@ -53,10 +53,11 @@ export default function MultiplayerSystem({ envUrl }) {
            try {
                const states = await base44.entities.AvatarHomeState.filter({ avatarId: hostId });
                let targetEnvUrl = null;
+               let targetLayout = null;
 
                if (states && states.length > 0 && states[0].currentEnvironmentId) {
                    const savedId = states[0].currentEnvironmentId;
-                   let targetLayout = null;
+                   
                    if (savedId !== 'default_room') {
                        try {
                            const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
@@ -89,8 +90,12 @@ export default function MultiplayerSystem({ envUrl }) {
                
                if (!targetEnvUrl) {
                    // Fallback to PlayerState env_url if we couldn't resolve home state
-                   const hostState = await base44.entities.PlayerState.get(hostId);
-                   if (hostState && hostState.env_url) targetEnvUrl = hostState.env_url;
+                   try {
+                       const hostState = await base44.entities.PlayerState.get(hostId);
+                       if (hostState && hostState.env_url) targetEnvUrl = hostState.env_url;
+                   } catch (e) {
+                       console.log("PlayerState fallback failed", e);
+                   }
                }
 
                if (targetEnvUrl) {
