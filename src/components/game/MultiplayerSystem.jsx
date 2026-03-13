@@ -158,6 +158,7 @@ export default function MultiplayerSystem({ envUrl }) {
        window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
          detail: { players: Array.from(otherPlayersMap.values()) }
        }));
+       setParticipantIds(Array.from(otherPlayersMap.keys()));
     }).catch(e => console.error("[Multiplayer] init error", e));
 
     // 2. Real-time subscription to PlayerState changes
@@ -170,6 +171,7 @@ export default function MultiplayerSystem({ envUrl }) {
               window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
                  detail: { players: Array.from(otherPlayersMap.values()) }
               }));
+              setParticipantIds(Array.from(otherPlayersMap.keys()));
               
               // If we are in someone else's channel and they change their environment, sync to it
               if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
