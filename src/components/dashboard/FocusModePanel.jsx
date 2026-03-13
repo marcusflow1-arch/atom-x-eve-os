@@ -1428,7 +1428,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
 
       // Connect to their world instance channel
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `world_instance_${u.id}`, hostId: u.id }
+        detail: { channelId: `dashboard_${u.id}`, hostId: u.id }
       }));
     }, 1500);
   };
