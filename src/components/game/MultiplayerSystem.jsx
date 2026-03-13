@@ -239,11 +239,17 @@ export default function MultiplayerSystem({ envUrl }) {
             };
 
             // Non-blocking update so tick is fast
-            base44.entities.PlayerState.update(user.id, updateData).catch(async (err) => {
-              if (err?.status === 404 || err?.message?.includes('not found')) {
-                await base44.entities.PlayerState.create({ id: user.id, ...updateData }).catch(e => console.log(e));
-              }
-            });
+            if (localEntityId) {
+                base44.entities.PlayerState.update(localEntityId, updateData).catch(err => {
+                    if (err?.status === 404 || err?.message?.includes('not found')) {
+                        localEntityId = null;
+                    }
+                });
+            } else {
+                base44.entities.PlayerState.create(updateData).then(res => {
+                    if (res && res.id) localEntityId = res.id;
+                }).catch(e => console.log(e));
+            }
         }
         
         // Clean up stale remote players locally (timeout after 15s)
