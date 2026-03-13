@@ -131,6 +131,8 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             }
         }
 
+        initiateCallRef.current = initiateCall;
+
         async function handleSignal(signal) {
             const peerId = signal.sender_id;
             try {
