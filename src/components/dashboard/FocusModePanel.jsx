@@ -1754,20 +1754,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                          <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
                        </div>
                      </div>
-                     <div className="flex items-center gap-2 mt-1 px-1">
-                        <button 
-                           onClick={() => window.dispatchEvent(new Event('toggleLiveFeed'))}
-                           className="text-white/60 hover:text-white transition-colors p-1"
-                        >
-                           <span className="block w-3 h-0.5 bg-current"></span>
-                        </button>
-                        <button 
-                           onClick={() => window.dispatchEvent(new Event('toggleLiveFeed'))}
-                           className="text-white/60 hover:text-white transition-colors p-1"
-                        >
-                           <X className="w-4 h-4" />
-                        </button>
-                     </div>
+
                   </div>
                 }
               />
