@@ -6,6 +6,7 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
     const peersRef = useRef({});
     const audioRefs = useRef({});
     const initiateCallRef = useRef(null);
+    const pendingCandidates = useRef({});
 
     useEffect(() => {
         if (!roomId || !user) return;
