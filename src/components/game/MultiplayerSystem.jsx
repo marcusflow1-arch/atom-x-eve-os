@@ -7,6 +7,7 @@ export default function MultiplayerSystem({ envUrl }) {
   const [currentChannel, setCurrentChannel] = useState(null);
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
   const channelRef = useRef(null);
+  const hostGraceTimerRef = useRef(Date.now());
   
   useEffect(() => {
     if (user?.id) {
