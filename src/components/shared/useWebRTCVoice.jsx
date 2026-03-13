@@ -185,11 +185,11 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
         if (!roomId || !user) return;
         participantIds.forEach(pid => {
             if (pid !== user.id && !peersRef.current[pid]) {
-                // someone new joined, wait for them to send an offer, or initiate call if we want
-                // Actually, wait: we shouldn't both initiate. The one who joins should initiate.
-                // Let's rely on the initWebRTC initiating call to EXISTING participants.
-                // So newly joined participant will initiate call to US.
-                // We don't strictly need to do anything here except maybe ensure they are registered.
+                // To avoid race conditions, only one side initiates the call.
+                // We can arbitrarily choose the one with the larger ID to initiate.
+                if (user.id > pid && initiateCallRef.current) {
+                    initiateCallRef.current(pid);
+                }
             }
         });
     }, [participantIds, roomId, user?.id]);
