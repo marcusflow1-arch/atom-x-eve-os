@@ -220,20 +220,22 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         
         {/* Incoming Invite Notification */}
         {activeInvite && !isUiVisible && (
-          <div className="absolute top-2 left-2 right-2 z-30 bg-black/60 rounded-lg p-2 border border-cyan-500/50 backdrop-blur-md flex flex-col gap-1.5 shadow-lg">
-            <div className="flex items-start gap-2">
-               <div className="w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5">?</div>
-               <span className="text-[10px] text-white font-bold leading-tight">Would you like to join {activeInvite.fromUser?.friend_name}?</span>
+          <div className="absolute top-2 left-2 right-2 z-30 bg-black/80 rounded-lg p-2 border border-cyan-500/50 backdrop-blur-xl flex flex-col gap-1.5 shadow-2xl">
+            <div className="flex items-start gap-1.5">
+               <div className="w-4 h-4 rounded-full bg-cyan-500 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5">!</div>
+               <span className="text-[10px] text-white font-bold leading-tight break-words">Join {activeInvite.fromUser?.friend_name}'s Luna?</span>
             </div>
-            <div className="flex justify-between gap-2 mt-1">
+            <div className="flex justify-between gap-1.5 mt-1">
               <button 
                 onClick={(e) => {
                    e.stopPropagation();
                    setActiveInvite(null);
+                   window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } }));
                 }}
                 className="flex-1 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/40 text-[10px] font-bold border border-red-500/30 transition-colors flex justify-center items-center"
+                title="Decline"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
               <button 
                 onClick={(e) => {
@@ -245,8 +247,9 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
                    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
                 }}
                 className="flex-1 py-1 rounded bg-green-500/20 text-green-400 hover:bg-green-500/40 text-[10px] font-bold border border-green-500/30 transition-colors flex justify-center items-center"
+                title="Accept"
               >
-                <Check className="w-3 h-3" />
+                <Check className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
