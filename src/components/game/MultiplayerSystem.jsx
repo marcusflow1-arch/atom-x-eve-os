@@ -193,7 +193,9 @@ export default function MultiplayerSystem({ envUrl }) {
               setParticipantIds(Array.from(otherPlayersMap.keys()));
               
               // If we are in someone else's channel and they change their environment, sync to it
-              if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+              const hostIdMatch = currentChannel.match(/^(?:dashboard_|world_instance_)(.+)$/);
+              const hostId = hostIdMatch ? hostIdMatch[1] : null;
+              if (p.player_id === hostId && p.env_url && p.env_url !== envUrl) {
                   window.dispatchEvent(new CustomEvent('changeEnvironment', {
                       detail: { envUrl: p.env_url }
                   }));
