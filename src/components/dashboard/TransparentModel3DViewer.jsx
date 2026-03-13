@@ -1883,6 +1883,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       });
       spawnedAIModelsRef.current.clear();
       if (modelRef.current?.userData?._hurricaneCleanup) modelRef.current.userData._hurricaneCleanup();
+      
+      loadedEnvUrlRef.current = null;
+      if (containerRef.current && renderer.domElement && containerRef.current.contains(renderer.domElement)) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
       renderer.dispose();
     };
   }, [adminAnimations, keybinds, spawnableAIModels]);
