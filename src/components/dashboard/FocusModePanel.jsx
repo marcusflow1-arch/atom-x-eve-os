@@ -1332,7 +1332,7 @@ export function LibraryBannerSection({
             </div>
 
             {/* Calendar Box */}
-            <div className="w-[690px] h-full flex-shrink-0">
+            <div className="w-[600px] h-full flex-shrink-0">
               {calendarBox}
             </div>
           </div>
