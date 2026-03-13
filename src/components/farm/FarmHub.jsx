@@ -19,6 +19,7 @@ const GENRE_PILLS = [
   { id: 'survival', label: 'Survival', icon: Gamepad2 },
 ];
 
+import ActiveVoiceControls from './voice/ActiveVoiceControls';
 export default function FarmHub({ onSelectGame }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('all');
