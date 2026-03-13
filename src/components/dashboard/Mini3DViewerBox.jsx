@@ -32,7 +32,11 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === '`') {
-        setVoiceEnabled(v => !v);
+        setVoiceEnabled(v => {
+          const newState = !v;
+          window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
+          return newState;
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
