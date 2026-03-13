@@ -253,7 +253,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         )}
 
         {/* Host Name Badge */}
-        {hostName && !isUiVisible && (
+        {hostName && !isUiVisible && !activeInvite && (
           <div className="absolute top-2 left-2 z-20 bg-black/60 backdrop-blur-md rounded px-2 py-1.5 border border-white/10 flex items-start gap-1.5 shadow-lg pointer-events-none max-w-[150px]">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0 mt-[3px]" />
             <div className="flex flex-col">
