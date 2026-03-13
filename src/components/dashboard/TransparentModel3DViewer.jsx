@@ -1834,16 +1834,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
           } else if (pData && !pData.loading) {
             pData.targetPos.set(p.x, p.y, p.z);
             pData.targetYaw = p.yaw;
-            if (pData.targetAnim !== p.anim) {
-              pData.targetAnim = p.anim;
-              if (pData.actions && pData.actions[p.anim]) {
-                if (pData.activeActionName && pData.actions[pData.activeActionName]) {
-                  pData.actions[pData.activeActionName].fadeOut(0.2);
-                }
-                pData.actions[p.anim].reset().fadeIn(0.2).play();
-                pData.activeActionName = p.anim;
-              }
-            }
+            pData.targetAnim = p.anim;
           }
         });
       };
