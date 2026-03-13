@@ -150,7 +150,7 @@ export default function MultiplayerSystem({ envUrl }) {
     base44.entities.PlayerState.filter({ channel_id: currentChannel }).then(others => {
        if (!isSubscribed) return;
        const now = Date.now();
-       const hostIdMatch = currentChannel.match(/^dashboard_(.+)$/);
+       const hostIdMatch = currentChannel.match(/^(?:dashboard_|world_instance_)(.+)$/);
        const hostId = hostIdMatch ? hostIdMatch[1] : null;
        let hostFound = false;
 
@@ -160,7 +160,7 @@ export default function MultiplayerSystem({ envUrl }) {
                if (p.player_id === hostId) hostFound = true;
                
                // Sync environment if joining and host has a different environment
-               if (`dashboard_${p.player_id}` === currentChannel && p.env_url && p.env_url !== envUrl) {
+               if (p.player_id === hostId && p.env_url && p.env_url !== envUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
                        detail: { envUrl: p.env_url }
                    }));
