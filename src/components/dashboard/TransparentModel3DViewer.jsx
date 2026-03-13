@@ -7,7 +7,12 @@ import { base44 } from '@/api/base44Client';
 import ReactorBridge from '../admin/reactor/ReactorBridge';
 import { attachWeapon, attachEffect } from '../3d/WeaponAttachmentSystem';
 
-
+const cleanMesh = (c) => {
+  if (!c.isMesh) return;
+  c.receiveShadow = true;
+  // Disable castShadow for SkinnedMesh to prevent WebGL bone limit crashes on some devices
+  c.castShadow = !c.isSkinnedMesh;
+};
 
 export default function TransparentModel3DViewer({ modelUrl, weaponModel, triggerAnimation, backgroundUrl, roomModelUrl, activeScene, isStatsOpen, playerSpawn, useMeshCollision, equippedWeaponUrl, drawEffectUrl }) {
   const containerRef = useRef(null);
