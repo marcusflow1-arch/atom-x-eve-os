@@ -41,7 +41,13 @@ Deno.serve(async (req) => {
 
         // --- CREATE CLAN ---
         if (action === 'create_clan') {
-            const { name, description, icon, banner, gameTags, isPrivate } = data;
+            const { 
+                name, tag, motto, description, 
+                playstyles, genres, gameTags, activities, 
+                icon, banner, primaryColor, secondaryColor, 
+                recruitmentStatus, sizeLimit, customRoles, 
+                searchTags, enableStronghold, clanAchievements 
+            } = data;
             
             if (!name || name.trim().length === 0) {
                 return new Response(JSON.stringify({ success: false, error: 'Clan name is required' }), { 
@@ -51,12 +57,25 @@ Deno.serve(async (req) => {
 
             const newDivision = await base44.asServiceRole.entities.Division.create({
                 name: name.trim(),
+                tag: tag || '',
+                motto: motto || '',
                 description: description || '',
                 leaderId: user.id,
+                playstyles: playstyles || [],
+                genres: genres || [],
+                gameTags: gameTags || [],
+                activities: activities || [],
                 icon: icon || '',
                 banner: banner || '',
-                gameTags: gameTags || [],
-                isPrivate: isPrivate || false,
+                primaryColor: primaryColor || '#000000',
+                secondaryColor: secondaryColor || '#000000',
+                recruitmentStatus: recruitmentStatus || 'Public',
+                sizeLimit: parseInt(sizeLimit) || 100,
+                isPrivate: recruitmentStatus === 'Invite Only' || recruitmentStatus === 'Request to Join',
+                customRoles: customRoles || [],
+                searchTags: searchTags || [],
+                enableStronghold: enableStronghold || false,
+                clanAchievements: clanAchievements || [],
                 level: 1,
                 xp: 0,
                 reputation: 0,
