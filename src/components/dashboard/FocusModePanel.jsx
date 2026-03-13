@@ -1291,9 +1291,6 @@ export function LibraryBannerSection({
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
             </div>
 
-            {/* Flex spacer to push remaining items to the right */}
-            <div className="flex-1 min-w-0" />
-
             {/* Memories */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full px-2">
               <button
@@ -1305,6 +1302,9 @@ export function LibraryBannerSection({
               </button>
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
             </div>
+
+            {/* Flex spacer to push remaining items to the right */}
+            <div className="flex-1 min-w-0" />
 
             {/* Friends (with placeholders) & Home */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">

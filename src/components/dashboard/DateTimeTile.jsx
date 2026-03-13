@@ -29,7 +29,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
 
   return (
     <div
-      className="w-full flex-1 rounded-full relative overflow-hidden border border-white/10"
+      className="w-full flex-1 rounded-2xl relative overflow-hidden border border-white/10"
       style={{
         background: 'rgba(255, 255, 255, 0.05)',
         backdropFilter: 'blur(20px) saturate(150%)',
@@ -41,7 +41,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       <div className="relative h-full flex flex-row items-stretch">
         
         {/* Left Side: Calendar */}
-        <div className="flex-1 pl-8 pr-6 py-4 flex items-center gap-4 overflow-hidden relative">
+        <div className="flex-1 p-4 px-6 flex items-center gap-4 overflow-hidden relative">
           
           {/* Calendar Button */}
           <button
@@ -98,7 +98,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
           whileHover={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
           whileTap={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
           onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="w-[282px] flex flex-col justify-center cursor-pointer group transition-colors relative overflow-hidden pl-6 pr-8 py-4"
+          className="w-[282px] flex flex-col justify-center cursor-pointer group transition-colors relative overflow-hidden p-4 px-6"
         >
           {/* Updates Header */}
           <div className="flex items-center gap-2 mb-2 pb-1 border-b border-white/20 w-max">
