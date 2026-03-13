@@ -111,9 +111,17 @@ export default function FriendsListContent() {
       }));
     }
 
+    const targetChannel = userObj.channel_id || `dashboard_${userObj.id}`;
+    let targetHostId = userObj.id;
+    if (targetChannel.startsWith('dashboard_')) {
+      targetHostId = targetChannel.replace('dashboard_', '');
+    } else if (targetChannel.startsWith('world_instance_')) {
+      targetHostId = targetChannel.replace('world_instance_', '');
+    }
+
     // Connect to their specific multiplayer world instance channel
     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-      detail: { channelId: `dashboard_${userObj.id}`, hostId: userObj.id }
+      detail: { channelId: targetChannel, hostId: targetHostId }
     }));
   };
 
