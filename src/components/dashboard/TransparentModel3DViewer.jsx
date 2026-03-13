@@ -1842,9 +1842,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
               });
             }
           } else if (pData && !pData.loading) {
-            pData.targetPos.set(p.x, p.y, p.z);
-            pData.targetYaw = p.yaw;
-            pData.targetAnim = p.anim;
+            if (!pData.positionBuffer) pData.positionBuffer = [];
+            pData.positionBuffer.push({ t: performance.now(), pos: new THREE.Vector3(p.x, p.y, p.z), yaw: p.yaw, anim: p.anim });
+            if (pData.positionBuffer.length > 10) pData.positionBuffer.shift();
           }
         });
       };
