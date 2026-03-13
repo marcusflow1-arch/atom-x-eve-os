@@ -352,9 +352,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
             const models = assets.filter(a => {
                const name = (a.name || '').toLowerCase();
                return name.endsWith('.glb') || name.endsWith('.gltf') || name.endsWith('.fbx');
-            });
+            }).slice(0, 3); // Limit to prevent WebGL context crash
             
-            models.forEach(model => {
+            for (const model of models) {
                const mUrl = model.url;
                const lower = mUrl.toLowerCase();
                if (lower.endsWith('.fbx')) {
@@ -362,7 +362,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
                } else {
                   new GLTFLoader().load(mUrl, (gltf) => onLoaded(gltf.scene, true));
                }
-            });
+               await new Promise(r => setTimeout(r, 200));
+            }
         } catch (e) {
             console.error("Failed to load Room 7 assets", e);
         }
