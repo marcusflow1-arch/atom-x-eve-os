@@ -220,12 +220,39 @@ export default function MultiplayerSystem({ envUrl }) {
         
         // Clean up stale remote players locally (timeout after 15s)
         let changed = false;
+        let hostPresent = false;
+        const hostIdMatch = currentChannel.match(/^dashboard_(.+)$/);
+        const hostId = hostIdMatch ? hostIdMatch[1] : null;
+
         for (const [id, p] of otherPlayersMap.entries()) {
             if (now - p.last_update > 15000) {
                 otherPlayersMap.delete(id);
                 changed = true;
+            } else {
+                if (id === hostId) hostPresent = true;
             }
         }
+        
+        // If we are a guest, verify the host is still here
+        if (hostId && hostId !== user.id) {
+             if (hostPresent) {
+                 hostGraceTimerRef.current = null; // Host is here
+             } else {
+                 if (!hostGraceTimerRef.current) {
+                     hostGraceTimerRef.current = now;
+                 }
+                 if (now - hostGraceTimerRef.current > 10000) {
+                     // Host missing for 10 seconds, disconnect
+                     console.log("[Multiplayer] Host left or timed out. Disconnecting guest.");
+                     hostGraceTimerRef.current = null;
+                     window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
+                         detail: { channelId: `dashboard_${user.id}`, hostId: user.id }
+                     }));
+                     return; // stop further processing for this tick
+                 }
+             }
+        }
+
         if (changed) {
             window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
               detail: { players: Array.from(otherPlayersMap.values()) }
@@ -238,7 +265,7 @@ export default function MultiplayerSystem({ envUrl }) {
     };
 
     tick();
-    const interval = setInterval(tick, 1000);
+    const interval = setInterval(tick, 300);
 
     return () => {
       isSubscribed = false;
