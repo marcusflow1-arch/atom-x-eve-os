@@ -1080,52 +1080,68 @@ function EnvironmentHubTile({ isOpen, onToggle }) {
   );
 }
 
-// Game Reference - clickable scene moments from games that change the Luna dashboard background
-function GameReference({ reference, onClick, isActive, isHomeButton }) {
-  if (isHomeButton) {
-    return (
+// Friend Reference - clickable friends that show join/invite options
+function FriendReference({ friend, isActive, onClick, onJoin, onInvite, onPartyInvite }) {
+  return (
+    <div className="relative">
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-        className="relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 border-white/20 hover:border-cyan-400/50 transition-all flex-shrink-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20"
+        onClick={() => onClick(friend)}
+        className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
+          isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
+        }`}
       >
-        <div className="w-full h-full flex items-center justify-center">
-          <Home className="w-6 h-6 text-white/80" />
-        </div>
+        <img 
+          src={friend.avatar} 
+          alt={friend.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
         <div className="absolute bottom-1 left-1 right-1">
-          <p className="text-white text-[7px] font-bold truncate text-center">Home</p>
+          <p className="text-white text-[7px] font-bold truncate text-center">{friend.name}</p>
         </div>
+        <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+          friend.status === 'online' ? 'bg-green-500' : 'bg-slate-500'
+        }`} />
       </motion.div>
-    );
-  }
+      
+      {/* Options dropdown when active */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 5 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-32 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-1.5 shadow-xl z-50 flex flex-col gap-1"
+          >
+            <button onClick={(e) => { e.stopPropagation(); onJoin(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
+              Join Dashboard
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
+              Invite to Dashboard
+            </button>
+            <button onClick={(e) => { e.stopPropagation(); onPartyInvite(friend); }} className="w-full text-left px-2 py-1.5 hover:bg-white/10 rounded text-[9px] text-white transition-colors">
+              Invite to Party
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
+function HomeReference({ onClick }) {
   return (
-    <motion.div
+    <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      onClick={() => onClick(reference)}
-      className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all flex-shrink-0 ${
-        isActive ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
-      }`}
+      onClick={onClick}
+      className="w-16 h-16 rounded-lg border-2 border-white/20 hover:border-cyan-400/50 flex flex-col items-center justify-center gap-1 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 transition-all flex-shrink-0"
     >
-      <img 
-        src={reference.thumbnail} 
-        alt={reference.title}
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-      <div className="absolute bottom-1 left-1 right-1">
-        <p className="text-white text-[7px] font-bold truncate">{reference.title}</p>
-      </div>
-      {/* Scene type indicator */}
-      <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-        reference.type === 'death' ? 'bg-red-500' :
-        reference.type === 'victory' ? 'bg-green-500' :
-        reference.type === 'battle' ? 'bg-orange-500' :
-        'bg-blue-500'
-      }`} />
-    </motion.div>
+      <Home className="w-6 h-6 text-white/80" />
+      <span className="text-[7px] font-bold text-white/80 uppercase tracking-wider">Home</span>
+    </motion.button>
   );
 }
 
