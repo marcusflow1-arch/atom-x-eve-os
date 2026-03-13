@@ -970,14 +970,24 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         remotePlayersRef.current.forEach(pData => {
           if (pData.mixer) pData.mixer.update(delta);
           if (pData.model && !pData.loading) {
-            // Smooth, frame-rate independent interpolation
-            const lerpFactor = Math.min(1, delta * 12);
-            pData.model.position.lerp(pData.targetPos, lerpFactor);
-            
-            // Simple yaw interpolation
-            const currentQuat = pData.model.quaternion;
-            const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), pData.targetYaw);
-            currentQuat.slerp(targetQuat, lerpFactor);
+            const mesh = pData.model, target = pData.targetPos, dt = delta;
+            const dist = mesh.position.distanceTo(target);
+            let animToPlay = pData.targetAnim || 'idle';
+            if (dist > 0.02) animToPlay = pData.actions['running'] ? 'running' : (pData.actions['run'] ? 'run' : animToPlay);
+            else if (dist <= 0.02 && (animToPlay === 'running' || animToPlay === 'run')) animToPlay = 'idle';
+            if (!animToPlay || !pData.actions[animToPlay]) animToPlay = 'idle';
+            if (pData.activeActionName !== animToPlay && pData.actions && pData.actions[animToPlay]) {
+              if (pData.activeActionName && pData.actions[pData.activeActionName]) pData.actions[pData.activeActionName].fadeOut(0.2);
+              pData.actions[animToPlay].reset().fadeIn(0.2).play();
+              pData.activeActionName = animToPlay;
+            }
+            mesh.position.x += (target.x - mesh.position.x) * dt * 8;
+            mesh.position.y += (target.y - mesh.position.y) * dt * 8;
+            mesh.position.z += (target.z - mesh.position.z) * dt * 8;
+            let diff = pData.targetYaw - mesh.rotation.y;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            mesh.rotation.y += diff * dt * 6;
           }
         });
 
