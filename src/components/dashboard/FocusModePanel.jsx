@@ -1441,7 +1441,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
       
       // Simulate them joining us
       window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', {
-        detail: { channelId: `world_instance_${user?.id || 'local'}`, hostId: user?.id }
+        detail: { channelId: `dashboard_${user?.id || 'local'}`, hostId: user?.id }
       }));
     }, 2000);
   };
