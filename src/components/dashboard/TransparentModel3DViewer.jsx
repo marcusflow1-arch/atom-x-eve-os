@@ -967,27 +967,28 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (!activeModel) { renderer.render(scene, camera); return; }
 
         // Update remote players
-        remotePlayersRef.current.forEach(pData => {
-          if (pData.mixer) pData.mixer.update(delta);
-          if (pData.model && !pData.loading) {
-            const mesh = pData.model, target = pData.targetPos, dt = delta;
-            const dist = mesh.position.distanceTo(target);
-            let animToPlay = pData.targetAnim || 'idle';
-            if (dist > 0.02) animToPlay = pData.actions['running'] ? 'running' : (pData.actions['run'] ? 'run' : animToPlay);
-            else if (dist <= 0.02 && (animToPlay === 'running' || animToPlay === 'run')) animToPlay = 'idle';
-            if (!animToPlay || !pData.actions[animToPlay]) animToPlay = 'idle';
-            if (pData.activeActionName !== animToPlay && pData.actions && pData.actions[animToPlay]) {
-              if (pData.activeActionName && pData.actions[pData.activeActionName]) pData.actions[pData.activeActionName].fadeOut(0.2);
-              pData.actions[animToPlay].reset().fadeIn(0.2).play();
-              pData.activeActionName = animToPlay;
+        const rt = performance.now() - 100;
+        remotePlayersRef.current.forEach(p => {
+          if (p.mixer) p.mixer.update(delta);
+          if (p.model && !p.loading && p.positionBuffer?.length) {
+            const m = p.model, buf = p.positionBuffer;
+            let p0 = buf[0], p1 = buf[buf.length - 1];
+            for (let i = 0; i < buf.length - 1; i++) if (buf[i].t <= rt && buf[i+1].t >= rt) { p0 = buf[i]; p1 = buf[i+1]; break; }
+            let ip = p1.pos.clone(), iy = p1.yaw, an = p1.anim || 'idle';
+            if (p0.t !== p1.t && rt >= p0.t && rt <= p1.t) {
+              ip.lerpVectors(p0.pos, p1.pos, (rt - p0.t) / (p1.t - p0.t));
+              let d = p1.yaw - p0.yaw;
+              while(d < -Math.PI) d += Math.PI * 2; while(d > Math.PI) d -= Math.PI * 2;
+              iy = p0.yaw + d * ((rt - p0.t) / (p1.t - p0.t));
+            } else if (rt < p0.t) { ip.copy(p0.pos); iy = p0.yaw; an = p0.anim || 'idle'; }
+            if (m.position.distanceTo(ip) > 0.02) an = p.actions['running'] ? 'running' : (p.actions['run'] ? 'run' : an);
+            else if (an === 'running' || an === 'run') an = 'idle';
+            if (!an || !p.actions[an]) an = 'idle';
+            if (p.activeActionName !== an && p.actions[an]) {
+              if (p.actions[p.activeActionName]) p.actions[p.activeActionName].fadeOut(0.2);
+              p.actions[an].reset().fadeIn(0.2).play(); p.activeActionName = an;
             }
-            mesh.position.x += (target.x - mesh.position.x) * dt * 8;
-            mesh.position.y += (target.y - mesh.position.y) * dt * 8;
-            mesh.position.z += (target.z - mesh.position.z) * dt * 8;
-            let diff = pData.targetYaw - mesh.rotation.y;
-            while (diff < -Math.PI) diff += Math.PI * 2;
-            while (diff > Math.PI) diff -= Math.PI * 2;
-            mesh.rotation.y += diff * dt * 6;
+            m.position.copy(ip); m.rotation.y = iy;
           }
         });
 
