@@ -265,7 +265,7 @@ export default function MultiplayerSystem({ envUrl }) {
     };
 
     tick();
-    const interval = setInterval(tick, 300);
+    const interval = setInterval(tick, 50);
 
     return () => {
       isSubscribed = false;
