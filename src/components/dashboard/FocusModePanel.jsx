@@ -1372,16 +1372,24 @@ function OnlineUsersDropdown({ onSelectEnv }) {
       return true; // Fallback if no last_update
     };
 
-    // Filter to only show users who are actually online
-    const usersList = dbUsers.filter(isOnline).map(p => ({
-      id: p.player_id,
-      name: p.display_name || 'Unknown',
-      avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
-      status: p.status || 'online',
-      isMe: p.player_id === user?.id,
-      modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-      envUrl: p.env_url || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
-    }));
+    // Filter to only show users who are actually online and remove duplicates
+    const usersList = [];
+    const seenIds = new Set();
+    
+    dbUsers.filter(isOnline).forEach(p => {
+      if (!seenIds.has(p.player_id)) {
+        seenIds.add(p.player_id);
+        usersList.push({
+          id: p.player_id,
+          name: p.display_name || 'Unknown',
+          avatar: p.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.player_id}`,
+          status: p.status || 'online',
+          isMe: p.player_id === user?.id,
+          modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
+          envUrl: p.env_url || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx'
+        });
+      }
+    });
 
     // Ensure current user is always at the top
     const meIndex = usersList.findIndex(u => u.isMe);
