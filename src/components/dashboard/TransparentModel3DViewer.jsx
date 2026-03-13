@@ -970,12 +970,14 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         remotePlayersRef.current.forEach(pData => {
           if (pData.mixer) pData.mixer.update(delta);
           if (pData.model && !pData.loading) {
-            pData.model.position.lerp(pData.targetPos, 0.1);
+            // Smooth, frame-rate independent interpolation
+            const lerpFactor = Math.min(1, delta * 12);
+            pData.model.position.lerp(pData.targetPos, lerpFactor);
             
             // Simple yaw interpolation
             const currentQuat = pData.model.quaternion;
             const targetQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), pData.targetYaw);
-            currentQuat.slerp(targetQuat, 0.1);
+            currentQuat.slerp(targetQuat, lerpFactor);
           }
         });
 
