@@ -1291,7 +1291,7 @@ export function LibraryBannerSection({
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
             </div>
 
-            {/* Memories */}
+            {/* Memories (Now Friends) */}
             <div 
               ref={scrollRef}
               className="flex flex-shrink-0 items-center gap-2 overflow-x-auto h-full px-2" 
@@ -1305,17 +1305,20 @@ export function LibraryBannerSection({
                 <span className="leading-none">Memories</span>
               </button>
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
-              {references.map((ref) => (
-                <div key={ref.id} className="flex-shrink-0">
-                  <GameReference 
-                    reference={ref} 
-                    onClick={handleReferenceClick}
-                    isActive={activeReference?.id === ref.id}
+              {onlineFriends.map((friend) => (
+                <div key={friend.id} className="flex-shrink-0">
+                  <FriendReference 
+                    friend={friend} 
+                    onClick={handleFriendClick}
+                    onJoin={handleJoin}
+                    onInvite={handleInvite}
+                    onPartyInvite={handlePartyInvite}
+                    isActive={activeFriend?.id === friend.id}
                   />
                 </div>
               ))}
               <div className="flex-shrink-0">
-                <GameReference isHomeButton={true} onClick={handleHomeClick} />
+                <HomeReference onClick={handleHomeClick} />
               </div>
             </div>
 
