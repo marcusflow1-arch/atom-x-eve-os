@@ -43,6 +43,10 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
 
             } catch (err) {
                 console.error("Failed to init WebRTC voice", err);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    // Dispatch event for UI to show a toast or message
+                    window.dispatchEvent(new CustomEvent('webrtcPermissionDenied'));
+                }
             }
         };
 
