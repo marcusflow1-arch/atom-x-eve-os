@@ -434,9 +434,15 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const handleEnvChange = (e) => {
-      const url = e.detail?.envUrl;
-      if (url) {
-        setRoomModelUrl(url);
+      const { envUrl, layoutData, envId } = e.detail || {};
+      if (envUrl) {
+        setRoomModelUrl(envUrl);
+        if (layoutData !== undefined) {
+          setActiveScene(layoutData);
+        }
+        if (envId) {
+          setCurrentEnvId(envId);
+        }
       }
     };
     window.addEventListener('changeEnvironment', handleEnvChange);
