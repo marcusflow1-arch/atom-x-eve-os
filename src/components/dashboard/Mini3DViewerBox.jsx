@@ -44,8 +44,14 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         });
       }
     };
+    const handleMicDisabled = () => setVoiceEnabled(false);
+    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('dashboardMicDisabled', handleMicDisabled);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('dashboardMicDisabled', handleMicDisabled);
+    };
   }, []);
 
   useEffect(() => {
