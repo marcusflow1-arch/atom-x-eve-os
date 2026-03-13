@@ -272,6 +272,7 @@ export default function MultiplayerSystem({ envUrl }) {
             window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
               detail: { players: Array.from(otherPlayersMap.values()) }
             }));
+            setParticipantIds(Array.from(otherPlayersMap.keys()));
         }
 
       } catch (e) {
