@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import AvatarStatCard from './AvatarStatCard';
-import { Mic, Check, X } from 'lucide-react';
+import { Mic, MicOff, Check, X } from 'lucide-react';
 
 const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
 const C1_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
