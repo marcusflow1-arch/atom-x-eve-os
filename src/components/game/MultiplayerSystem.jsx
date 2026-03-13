@@ -19,8 +19,21 @@ export default function MultiplayerSystem({ envUrl }) {
     const handleMicToggle = (e) => {
       setMicEnabled(e.detail.enabled);
     };
+    const handlePermissionDenied = () => {
+      toast.error('Microphone access denied. Please allow microphone access to use voice chat.', {
+        duration: 4000,
+        position: 'top-center'
+      });
+      setMicEnabled(false);
+      window.dispatchEvent(new CustomEvent('dashboardMicDisabled'));
+    };
+    
     window.addEventListener('toggleDashboardMic', handleMicToggle);
-    return () => window.removeEventListener('toggleDashboardMic', handleMicToggle);
+    window.addEventListener('webrtcPermissionDenied', handlePermissionDenied);
+    return () => {
+      window.removeEventListener('toggleDashboardMic', handleMicToggle);
+      window.removeEventListener('webrtcPermissionDenied', handlePermissionDenied);
+    };
   }, []);
   
   useEffect(() => {
