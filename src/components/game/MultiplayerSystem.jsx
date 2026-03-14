@@ -303,10 +303,15 @@ export default function MultiplayerSystem({ envUrl }) {
                         localEntityId = null;
                     }
                 });
-            } else {
+            } else if (!isCreatingEntity) {
+                isCreatingEntity = true;
                 base44.entities.PlayerState.create(updateData).then(res => {
                     if (res && res.id) localEntityId = res.id;
-                }).catch(e => console.log(e));
+                    isCreatingEntity = false;
+                }).catch(e => {
+                    console.log(e);
+                    isCreatingEntity = false;
+                });
             }
         }
         
