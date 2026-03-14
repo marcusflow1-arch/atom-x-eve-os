@@ -1364,9 +1364,11 @@ export function LibraryBannerSection({
               onClick={() => setShowMemoriesDrawer(false)}
             />
             <motion.div
-              initial={{ x: 340, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 340, opacity: 0 }}
+              initial={{ x: memoriesExpanded ? '100vw' : 340, opacity: 0 }} 
+              animate={{ x: 0, opacity: 1, width: memoriesExpanded ? '90vw' : '20rem' }} 
+              exit={{ x: memoriesExpanded ? '100vw' : 340, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-80 z-[9999] flex flex-col rounded-l-3xl"
+              className="fixed top-0 right-0 bottom-0 z-[9999] flex flex-col rounded-l-3xl"
               style={{
                 background: 'rgba(100, 120, 140, 0.12)',
                 backdropFilter: 'blur(30px) saturate(150%)',
@@ -1375,6 +1377,14 @@ export function LibraryBannerSection({
                 boxShadow: '-4px 0 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
               }}
             >
+              {/* Expand Toggle */}
+              <button
+                onClick={() => setMemoriesExpanded(prev => !prev)}
+                className="absolute top-1/2 -left-6 -translate-y-1/2 w-6 h-20 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-l-xl border-y border-l border-white/20 flex items-center justify-center z-10 transition-colors"
+              >
+                {memoriesExpanded ? <ChevronRight className="w-4 h-4 text-white" /> : <ChevronLeft className="w-4 h-4 text-white" />}
+              </button>
+
               <div className="p-6 flex items-center justify-between border-b border-white/10 flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">📷</span>
