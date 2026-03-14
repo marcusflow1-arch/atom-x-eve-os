@@ -229,13 +229,16 @@ export default function MultiplayerSystem({ envUrl }) {
         const now = Date.now();
         const state = localStateRef.current;
         
+        const envUrlCurrent = envUrlRef.current || '';
+        
         // Calculate diff to avoid spamming the database with updates when idle
         const hasMoved = 
             Math.abs(state.x - (lastPushState.x || 0)) > 0.05 ||
             Math.abs(state.y - (lastPushState.y || 0)) > 0.05 ||
             Math.abs(state.z - (lastPushState.z || 0)) > 0.05 ||
             Math.abs(state.yaw - (lastPushState.yaw || 0)) > 0.1 ||
-            state.anim !== lastPushState.anim;
+            state.anim !== lastPushState.anim ||
+            envUrlCurrent !== (lastPushState.envUrl || '');
 
         // Push if moved significantly, OR every 8 seconds to keep connection alive
         const timeSinceLastPush = now - lastPushTime;
@@ -244,7 +247,7 @@ export default function MultiplayerSystem({ envUrl }) {
         // Rate limit the push to max 1 per 1.5 seconds to avoid "Rate limit exceeded"
         if ((hasMoved && timeSinceLastPush > 1500) || forceKeepAlive) {
             lastPushTime = now;
-            lastPushState = { ...state };
+            lastPushState = { ...state, envUrl: envUrlCurrent };
 
             const myModelUrl = localStorage.getItem('luna_active_character') === 'c1' 
               ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
@@ -256,7 +259,7 @@ export default function MultiplayerSystem({ envUrl }) {
               avatar_url: user.avatar_url || '',
               model_url: myModelUrl,
               channel_id: currentChannel,
-              env_url: envUrl || '',
+              env_url: envUrlCurrent,
               last_update: now,
               status: 'online',
               x: state.x,
