@@ -1193,6 +1193,7 @@ export function LibraryBannerSection({
   const [activeFriend, setActiveFriend] = useState(null);
   const [onlineFriends, setOnlineFriends] = useState([]);
   const [showMemoriesDrawer, setShowMemoriesDrawer] = useState(false);
+  const [memoriesExpanded, setMemoriesExpanded] = useState(false);
   const scrollRef = useRef(null);
   const { user } = useAuth();
   const [invitedUsers, setInvitedUsers] = useState({});
