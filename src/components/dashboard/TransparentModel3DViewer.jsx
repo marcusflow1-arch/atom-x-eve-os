@@ -27,6 +27,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const keysPressed = useRef({});
   const envRef = useRef(null);
   const loadedEnvUrlRef = useRef(null);
+  const envLoadIdRef = useRef(0);
   const playerSpawnRef = useRef(playerSpawn || { x: 0, y: -0.5, z: 0 });
   const useMeshCollisionRef = useRef(useMeshCollision || false);
   const envCollidersRef = useRef([]);
