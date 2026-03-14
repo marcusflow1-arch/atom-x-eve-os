@@ -12,6 +12,11 @@ export default function MultiplayerSystem({ envUrl }) {
   const localStateRef = useRef({ x: 0, y: -0.5, z: 0, yaw: 0, anim: 'idle' });
   const channelRef = useRef(null);
   const hostGraceTimerRef = useRef(Date.now());
+  const envUrlRef = useRef(envUrl);
+
+  useEffect(() => {
+    envUrlRef.current = envUrl;
+  }, [envUrl]);
 
   useWebRTCVoice(currentChannel, user, !micEnabled, false, participantIds);
 
