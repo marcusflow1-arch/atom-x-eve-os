@@ -409,6 +409,7 @@ export default function MultiplayerSystem({ envUrl }) {
       isSubscribed = false;
       clearInterval(interval);
       if (unsubscribe) unsubscribe();
+      window.removeEventListener('webrtcMovementUpdate', handleWebRTCMovement);
     };
   }, [user?.id, currentChannel]);
 
