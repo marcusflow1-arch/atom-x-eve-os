@@ -294,9 +294,13 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     }
 
     loadedEnvUrlRef.current = url;
+    const currentLoadId = Date.now() + Math.random();
+    envLoadIdRef.current = currentLoadId;
     if (!url) return;
 
     const onLoaded = (obj, isSubAsset = false) => {
+      if (envLoadIdRef.current !== currentLoadId) return;
+
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
@@ -325,7 +329,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
       obj.traverse(cleanMesh);
 
-      if (sceneRef.current && loadedEnvUrlRef.current === url) {
+      if (sceneRef.current) {
         if (!envRef.current) {
           envRef.current = new THREE.Group();
           sceneRef.current.add(envRef.current);
