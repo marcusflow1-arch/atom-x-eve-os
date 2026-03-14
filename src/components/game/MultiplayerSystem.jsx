@@ -371,7 +371,7 @@ export default function MultiplayerSystem({ envUrl }) {
       clearInterval(interval);
       if (unsubscribe) unsubscribe();
     };
-  }, [user, currentChannel]);
+  }, [user?.id, currentChannel]);
 
   return null;
 }
