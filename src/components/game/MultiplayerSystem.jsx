@@ -199,7 +199,21 @@ export default function MultiplayerSystem({ envUrl }) {
        setParticipantIds(Array.from(otherPlayersMap.keys()));
     }).catch(e => console.error("[Multiplayer] init error", e));
 
-    // 2. Real-time subscription to PlayerState changes
+    // Real-time listener for WebRTC DataChannel movement
+    const handleWebRTCMovement = (e) => {
+        if (!isSubscribed) return;
+        const p = e.detail;
+        if (p.player_id !== user.id) {
+            otherPlayersMap.set(p.player_id, { ...otherPlayersMap.get(p.player_id), ...p });
+            window.dispatchEvent(new CustomEvent('multiplayerPlayersUpdate', {
+                detail: { players: Array.from(otherPlayersMap.values()) }
+            }));
+            setParticipantIds(Array.from(otherPlayersMap.keys()));
+        }
+    };
+    window.addEventListener('webrtcMovementUpdate', handleWebRTCMovement);
+
+    // 2. Real-time subscription to PlayerState changes (mostly for joins/leaves/environment now)
     const unsubscribe = base44.entities.PlayerState.subscribe((event) => {
       if (!isSubscribed) return;
       if (event.type === 'create' || event.type === 'update') {
