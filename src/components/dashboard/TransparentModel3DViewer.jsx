@@ -953,7 +953,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         if (!activeModel) { renderer.render(scene, camera); return; }
 
         // Update remote players
-        const rt = performance.now() - 100;
+        const rt = performance.now() - 25; // Reduced render delay to 25ms for tighter responsiveness
         remotePlayersRef.current.forEach(p => {
           if (p.mixer) p.mixer.update(delta);
           if (p.model && !p.loading && p.positionBuffer?.length) {
