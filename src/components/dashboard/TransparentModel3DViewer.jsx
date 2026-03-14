@@ -365,6 +365,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
             }).slice(0, 3); // Limit to prevent WebGL context crash
             
             for (const model of models) {
+               if (envLoadIdRef.current !== currentLoadId) return;
                const mUrl = model.url;
                const lower = mUrl.toLowerCase();
                if (lower.endsWith('.fbx')) {
