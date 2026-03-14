@@ -150,17 +150,18 @@ export default function MultiplayerSystem({ envUrl }) {
     base44.entities.PlayerState.filter({ channel_id: currentChannel }).then(others => {
        if (!isSubscribed) return;
        const now = Date.now();
-       const hostIdMatch = currentChannel.match(/^(?:dashboard_|world_instance_)(.+)$/);
+       const isDashboard = currentChannel.startsWith('dashboard_');
+       const hostIdMatch = isDashboard ? currentChannel.match(/^dashboard_(.+)$/) : null;
        const hostId = hostIdMatch ? hostIdMatch[1] : null;
        let hostFound = false;
 
        others.forEach(p => {
            if (p.player_id !== user.id && (now - p.last_update) < 15000) {
                otherPlayersMap.set(p.player_id, p);
-               if (p.player_id === hostId) hostFound = true;
+               if (hostId && p.player_id === hostId) hostFound = true;
                
                // Sync environment if joining and host has a different environment
-               if (p.player_id === hostId && p.env_url && p.env_url !== envUrl) {
+               if (hostId && p.player_id === hostId && p.env_url && p.env_url !== envUrl) {
                    window.dispatchEvent(new CustomEvent('changeEnvironment', {
                        detail: { envUrl: p.env_url }
                    }));
