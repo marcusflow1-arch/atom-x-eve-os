@@ -21,10 +21,7 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
   const animIdRef = useRef(null);
   const [activeChar, setActiveChar] = useState(localStorage.getItem('luna_active_character') || 'ybot');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  // Setting a mock invite by default so you can see the UI in the editor
-  const [activeInvite, setActiveInvite] = useState({
-    fromUser: { id: 'demo_user', friend_name: 'Alex', envUrl: null }
-  });
+  const [activeInvite, setActiveInvite] = useState(null);
 
   useEffect(() => {
      const handleInvite = (e) => setActiveInvite(e.detail);
