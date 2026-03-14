@@ -97,6 +97,17 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             });
             peersRef.current[peerId] = pc;
 
+            // Create Data Channel for this peer
+            const dataChannel = pc.createDataChannel('gameData', {
+                ordered: false, // UDP-like, fast
+                maxRetransmits: 0
+            });
+            setupDataChannel(dataChannel, peerId);
+
+            pc.ondatachannel = (event) => {
+                setupDataChannel(event.channel, peerId);
+            };
+
             if (localStreamRef.current) {
                 localStreamRef.current.getTracks().forEach(track => {
                     pc.addTrack(track, localStreamRef.current);
