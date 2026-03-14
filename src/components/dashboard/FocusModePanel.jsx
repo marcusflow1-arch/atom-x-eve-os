@@ -1396,11 +1396,12 @@ export function LibraryBannerSection({
               </div>
               <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
                 <MemoriesDrawer
-                  references={references}
-                  activeReference={activeReference}
-                  onSelectReference={handleReferenceClick}
+                  references={[]}
+                  activeReference={null}
+                  onSelectReference={() => {}}
                   onHomeClick={handleHomeClick}
                   onClose={() => setShowMemoriesDrawer(false)}
+                  isExpanded={memoriesExpanded}
                 />
               </div>
             </motion.div>
