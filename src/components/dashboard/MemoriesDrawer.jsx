@@ -4,7 +4,7 @@ import { Play, Check, Home, X } from 'lucide-react';
 
 
 
-export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose }) {
+export default function MemoriesDrawer({ references = [], activeReference, onSelectReference, onHomeClick, onClose, isExpanded }) {
   const [activeTab, setActiveTab] = useState('screenshots');
 
   const screenshots = references.filter(r => !r.isVideo);
