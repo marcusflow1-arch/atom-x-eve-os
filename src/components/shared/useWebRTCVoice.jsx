@@ -89,6 +89,26 @@ export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds
             pendingCandidates.current = {};
         };
 
+        function setupDataChannel(channel, peerId) {
+            dataChannelsRef.current[peerId] = channel;
+            channel.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'movement') {
+                        // Dispatch custom event to be picked up by MultiplayerSystem
+                        window.dispatchEvent(new CustomEvent('webrtcMovementUpdate', {
+                            detail: { ...data.payload, player_id: peerId }
+                        }));
+                    }
+                } catch (e) {
+                    console.error("Failed to parse data channel message", e);
+                }
+            };
+            channel.onclose = () => {
+                delete dataChannelsRef.current[peerId];
+            };
+        }
+
         function createPeerConnection(peerId) {
             if (peersRef.current[peerId]) return peersRef.current[peerId];
 
