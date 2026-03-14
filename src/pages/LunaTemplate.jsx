@@ -345,7 +345,7 @@ export default function LunaTemplate() {
       } catch (e) { console.error('Error loading env pref', e); }
     };
     loadUserEnv();
-  }, [user]);
+  }, [user?.id]);
 
   const handleEnvSelect = async (env) => {
     if (env.isSkybox) {
