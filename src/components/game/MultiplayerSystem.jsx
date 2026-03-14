@@ -240,6 +240,7 @@ export default function MultiplayerSystem({ envUrl }) {
     let lastPushTime = 0;
     let lastPushState = { x: null, y: null, z: null, yaw: null, anim: null };
     let localEntityId = null;
+    let isCreatingEntity = false;
 
     // Find our existing state first
     base44.entities.PlayerState.filter({ player_id: user.id }).then(res => {
