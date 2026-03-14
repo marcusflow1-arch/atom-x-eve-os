@@ -271,8 +271,8 @@ export default function MultiplayerSystem({ envUrl }) {
         const timeSinceLastPush = now - lastPushTime;
         const forceKeepAlive = timeSinceLastPush > 8000;
         
-        // Rate limit the push to max 1 per 1.5 seconds to avoid "Rate limit exceeded"
-        if ((hasMoved && timeSinceLastPush > 1500) || forceKeepAlive) {
+        // Only write to DB for presence/environment sync every 5s, NOT movement
+        if (forceKeepAlive || envUrlCurrent !== (lastPushState.envUrl || '')) {
             lastPushTime = now;
             lastPushState = { ...state, envUrl: envUrlCurrent };
 
@@ -289,6 +289,7 @@ export default function MultiplayerSystem({ envUrl }) {
               env_url: envUrlCurrent,
               last_update: now,
               status: 'online',
+              // We omit x,y,z,yaw,anim from DB to save payload size, but we keep them just in case
               x: state.x,
               y: state.y,
               z: state.z,
@@ -296,7 +297,7 @@ export default function MultiplayerSystem({ envUrl }) {
               anim: state.anim
             };
 
-            // Non-blocking update so tick is fast
+            // Non-blocking DB update for presence
             if (localEntityId) {
                 base44.entities.PlayerState.update(localEntityId, updateData).catch(err => {
                     if (err?.status === 404 || err?.message?.includes('not found')) {
@@ -311,6 +312,30 @@ export default function MultiplayerSystem({ envUrl }) {
                 }).catch(e => {
                     console.log(e);
                     isCreatingEntity = false;
+                });
+            }
+        }
+
+        // WebRTC DataChannel Real-time Broadcast for Movement (20-30 times per sec if moved)
+        if (hasMoved) {
+            lastPushState = { ...state, envUrl: envUrlCurrent };
+            if (window.webrtcBroadcast) {
+                window.webrtcBroadcast({
+                    type: 'movement',
+                    payload: {
+                        x: state.x,
+                        y: state.y,
+                        z: state.z,
+                        yaw: state.yaw,
+                        anim: state.anim,
+                        last_update: now,
+                        // Include basic info so peers know who this is
+                        display_name: user.full_name || user.username || 'Player',
+                        avatar_url: user.avatar_url || '',
+                        model_url: localStorage.getItem('luna_active_character') === 'c1' 
+                            ? 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx'
+                            : 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx'
+                    }
                 });
             }
         }
