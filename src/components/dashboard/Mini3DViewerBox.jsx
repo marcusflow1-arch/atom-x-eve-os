@@ -228,21 +228,21 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         
         {/* Incoming Invite Notification */}
         {activeInvite && !isUiVisible && (
-          <div className="absolute bottom-2 left-2 right-2 z-30 bg-black/60 backdrop-blur-md rounded-lg p-2 border border-white/10 flex items-center justify-between gap-2 shadow-lg">
-            <span className="text-[11px] text-white font-medium truncate">
-              Join {activeInvite.fromUser?.friend_name}?
+          <div className="absolute bottom-2 left-2 right-2 z-30 flex items-center justify-between gap-2 px-1">
+            <span className="text-[11px] text-white font-bold drop-shadow-md truncate">
+              Join {activeInvite.fromUser?.friend_name} dashboard?
             </span>
-            <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-2 flex-shrink-0 drop-shadow-md">
               <button 
                 onClick={(e) => {
                    e.stopPropagation();
                    setActiveInvite(null);
                    window.dispatchEvent(new CustomEvent('rejectInvite', { detail: { userId: activeInvite.fromUser?.id } }));
                 }}
-                className="w-6 h-6 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/40 flex justify-center items-center transition-colors"
+                className="text-red-500 hover:text-red-400 flex justify-center items-center transition-colors"
                 title="Decline"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" strokeWidth={3} />
               </button>
               <button 
                 onClick={(e) => {
@@ -253,10 +253,10 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
                    }
                    window.dispatchEvent(new CustomEvent('joinMultiplayerChannel', { detail: { channelId: `world_instance_${activeInvite.fromUser.id}`, hostId: activeInvite.fromUser.id } }));
                 }}
-                className="w-6 h-6 rounded-full bg-green-500/20 text-green-400 hover:bg-green-500/40 flex justify-center items-center transition-colors"
+                className="text-green-500 hover:text-green-400 flex justify-center items-center transition-colors"
                 title="Accept"
               >
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" strokeWidth={3} />
               </button>
             </div>
           </div>
