@@ -278,7 +278,8 @@ export default function MultiplayerSystem({ envUrl }) {
         // Clean up stale remote players locally (timeout after 15s)
         let changed = false;
         let hostPresent = false;
-        const hostIdMatch = currentChannel.match(/^(?:dashboard_|world_instance_)(.+)$/);
+        const isDashboard = currentChannel.startsWith('dashboard_');
+        const hostIdMatch = isDashboard ? currentChannel.match(/^dashboard_(.+)$/) : null;
         const hostId = hostIdMatch ? hostIdMatch[1] : null;
 
         for (const [id, p] of otherPlayersMap.entries()) {
@@ -286,7 +287,7 @@ export default function MultiplayerSystem({ envUrl }) {
                 otherPlayersMap.delete(id);
                 changed = true;
             } else {
-                if (id === hostId) hostPresent = true;
+                if (hostId && id === hostId) hostPresent = true;
             }
         }
         
