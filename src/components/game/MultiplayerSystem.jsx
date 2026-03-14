@@ -56,7 +56,7 @@ export default function MultiplayerSystem({ envUrl }) {
         }
       });
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     const handleJoin = async (e) => {
