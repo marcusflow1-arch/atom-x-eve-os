@@ -4,9 +4,25 @@ import { base44 } from '@/api/base44Client';
 export function useWebRTCVoice(roomId, user, isMuted, isDeafened, participantIds = []) {
     const localStreamRef = useRef(null);
     const peersRef = useRef({});
+    const dataChannelsRef = useRef({});
     const audioRefs = useRef({});
     const initiateCallRef = useRef(null);
     const pendingCandidates = useRef({});
+
+    // Expose a method to broadcast data to all peers
+    useEffect(() => {
+        window.webrtcBroadcast = (data) => {
+            const msg = JSON.stringify(data);
+            Object.values(dataChannelsRef.current).forEach(dc => {
+                if (dc.readyState === 'open') {
+                    dc.send(msg);
+                }
+            });
+        };
+        return () => {
+            delete window.webrtcBroadcast;
+        };
+    }, []);
 
     useEffect(() => {
         if (!roomId || !user) return;
