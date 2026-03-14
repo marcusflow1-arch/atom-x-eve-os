@@ -166,10 +166,23 @@ export default function MultiplayerSystem({ envUrl }) {
                if (hostId && p.player_id === hostId) hostFound = true;
                
                // Sync environment if joining and host has a different environment
-               if (hostId && p.player_id === hostId && p.env_url && p.env_url !== envUrl) {
-                   window.dispatchEvent(new CustomEvent('changeEnvironment', {
-                       detail: { envUrl: p.env_url }
-                   }));
+               if (hostId && p.player_id === hostId && p.env_url && p.env_url !== envUrlRef.current) {
+                   base44.entities.AvatarHomeState.filter({ avatarId: hostId }).then(async states => {
+                      let targetLayout = null;
+                      let targetEnvId = null;
+                      if (states && states.length > 0 && states[0].currentEnvironmentId) {
+                          targetEnvId = states[0].currentEnvironmentId;
+                          if (targetEnvId !== 'default_room') {
+                              try {
+                                  const layouts = await base44.entities.SceneLayout.filter({ id: targetEnvId });
+                                  if (layouts && layouts.length > 0) targetLayout = layouts[0];
+                              } catch(e) {}
+                          }
+                      }
+                      window.dispatchEvent(new CustomEvent('changeEnvironment', {
+                          detail: { envUrl: p.env_url, layoutData: targetLayout, envId: targetEnvId }
+                      }));
+                  });
                }
            }
        });
