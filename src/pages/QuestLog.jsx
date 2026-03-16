@@ -187,7 +187,22 @@ export default function QuestLog() {
               
               <div className="absolute inset-0 p-8 flex flex-col justify-center items-start">
                 <Badge className="mb-3 bg-white/10 hover:bg-white/20 text-white border-white/10 backdrop-blur-md">{activeGame.genre}</Badge>
-                <h2 className="text-4xl font-bold text-white mb-2">{activeGame.title}</h2>
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-4xl font-bold text-white">{activeGame.title}</h2>
+                  <button 
+                    onClick={() => {
+                      localStorage.setItem('luna_pinned_card_game_name', activeGame.title);
+                      localStorage.setItem('luna_pinned_card_game_genre', activeGame.genre);
+                      window.dispatchEvent(new Event('storage'));
+                      navigate(createPageUrl('GenreMastery'));
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 transition-all group border border-cyan-500/20 hover:border-cyan-500/40 mt-1"
+                    title="View game cards"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round" className="group-hover:scale-110 transition-transform"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                    <span className="text-xs font-bold uppercase tracking-widest">Cards</span>
+                  </button>
+                </div>
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2 text-white/60 text-sm">
                     <Clock className="w-4 h-4" />
