@@ -256,6 +256,114 @@ export default function CardCollectionBrowser() {
     }
   }, [selectedGame]);
 
+  // RENDER ORIGINAL UI (For Card Collection Base Page)
+  if (window.location.pathname.toLowerCase().includes('cardcollection')) {
+    // Basic restore of the exact UI layout from the original Card Collection page as requested.
+    return (
+      <div className="w-full flex flex-col items-center">
+        {/* Title - Clickable for Full Page */}
+        <div className="w-full flex justify-center items-center gap-2 mb-3">
+          <button 
+            onClick={() => {
+               // Switches back to 'Cards Unlocked' UI mode if needed
+            }}
+            className="group"
+          >
+            <h3 
+              className="text-[12.5px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform" 
+              style={{ 
+                background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'
+              }}
+            >
+              Cards Unlocked
+            </h3>
+          </button>
+  
+          <div className="w-4 h-4 border border-white/40 rounded flex items-center justify-center text-white/40 flex-shrink-0">
+            <span className="text-[10px] font-bold leading-none">?</span>
+          </div>
+  
+          <button 
+            className="group"
+          >
+            <h3 
+              className="text-[12.5px] font-extrabold uppercase tracking-widest text-center group-hover:scale-105 transition-transform truncate max-w-[120px]" 
+              style={{ 
+                background: 'linear-gradient(180deg, #E2E8F0 0%, #94A3B8 45%, #0F172A 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))',
+                opacity: 0.6
+              }}
+            >
+              {selectedGame || 'Cyberpunk 2077'}
+            </h3>
+          </button>
+        </div>
+  
+        {/* Genre Name - scroll over this to change genre */}
+        <div
+          className="mb-3 cursor-pointer select-none relative flex items-center justify-center gap-3 group"
+        >
+          <ChevronLeft className={`w-3.5 h-3.5 transition-opacity text-white/0 opacity-0`} />
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={selectedGenre}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className={`text-sm font-bold uppercase tracking-[0.2em] text-white/60`}
+            >
+              {selectedGenre === 'All' ? 'Fear' : selectedGenre}
+            </motion.span>
+          </AnimatePresence>
+          <ChevronRight className={`w-3.5 h-3.5 transition-opacity text-white/0 opacity-0`} />
+        </div>
+  
+        {/* Cards Area */}
+        <div className="relative w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-4 gap-2"
+            >
+              {visibleCards.slice(0, 4).map((card) => {
+                return (
+                  <motion.div
+                    key={card.id}
+                    whileHover={{ scale: 1.06, y: -3 }}
+                    className={`aspect-[2.5/3.5] rounded-lg overflow-hidden cursor-pointer border border-slate-500/40 transition-shadow relative group`}
+                    style={{ background: 'linear-gradient(135deg, rgba(30,40,55,0.95), rgba(15,23,42,0.98))' }}
+                  >
+                    <div className="absolute inset-0 overflow-hidden">
+                      <img src={card.image} alt="" className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                    </div>
+                    <div className="relative h-full flex flex-col p-1.5">
+                      <span className={`text-[7px] font-bold uppercase tracking-wider text-slate-400`}>{card.rarity}</span>
+                      <div className="flex-1 flex items-center justify-center">
+                        <span className="text-2xl">{card.icon}</span>
+                      </div>
+                      <p className="text-white font-bold text-[9px] truncate text-center">{card.name}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
+
+  // RENDER "UNLOCK CARDS" UI (The one we just built with 15/70/15 layout)
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
@@ -268,12 +376,7 @@ export default function CardCollectionBrowser() {
             <div className="mb-4 px-3 flex flex-col gap-2">
               <button 
                 onClick={() => {
-                   // This simulates the behavior where the full "Card Collection" view opens when clicking "Cards Unlocked" 
-                   // However based on instructions, this view SHOULD be the default, so we'll leave it as is 
-                   // Or provide an explicit "Unlock Cars" UI if requested, but user said: 
-                   // "The menu that displayed all your cards I Did not want you to change that menu the menu I was talking about is when you click on The word unlock cards"
-                   // Reverting the "Cards Unlocked" specific override for now. 
-                   // We'll restore the default grid to act as 'Unlock Cards'
+                   // Optional action
                 }}
               />
             </div>
