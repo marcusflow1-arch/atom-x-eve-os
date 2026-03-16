@@ -520,11 +520,15 @@ export default function CardCollectionBrowser() {
         </div>
         
       </div>
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </DragDropContext>
+              <style>{`
+                .no-scrollbar::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+            </DragDropContext>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
