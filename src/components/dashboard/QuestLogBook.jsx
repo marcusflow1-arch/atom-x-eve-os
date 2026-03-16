@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { BookOpen, X, Search, Filter, Gamepad2, Pin, Trophy, Map, Zap, ChevronRight, Swords, Target, Crosshair } from 'lucide-react';
+import { BookOpen, X, Search, Filter, Gamepad2, Pin, Trophy, Map, Zap, ChevronRight, Swords, Target, Crosshair, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
