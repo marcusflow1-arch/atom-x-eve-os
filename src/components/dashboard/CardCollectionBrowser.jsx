@@ -106,6 +106,7 @@ const CardUI = ({ card, small }) => {
 };
 
 export default function CardCollectionBrowser() {
+  const [showFullView, setShowFullView] = useState(false);
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedGame, setSelectedGame] = useState(null);
   const [gamesHovered, setGamesHovered] = useState(false);
