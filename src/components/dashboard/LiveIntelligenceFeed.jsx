@@ -539,10 +539,11 @@ export default function LiveIntelligenceFeed() {
         <AnimatePresence>
           {isExpanded && (
             <motion.div
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 'calc(100% - 360px)' }}
-              exit={{ opacity: 0, width: 0 }}
-              className="border-r border-white/10 flex flex-col h-full bg-black/20 overflow-hidden flex-shrink-0"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 30 }}
+              transition={{ duration: 0.3 }}
+              className="border-r border-white/10 flex flex-col h-full bg-black/20 overflow-hidden flex-1 min-w-0"
             >
               {activeTab === 'market' ? (
                 <MarketExpandedView />
