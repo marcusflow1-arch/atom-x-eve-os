@@ -258,7 +258,7 @@ export default function CardCollectionBrowser() {
   }, [selectedGame]);
 
   // RENDER ORIGINAL UI (For Card Collection Base Page)
-  if (window.location.pathname.toLowerCase().includes('cardcollection')) {
+  if (!showFullView) {
     // Basic restore of the exact UI layout from the original Card Collection page as requested.
     return (
       <div className="w-full flex flex-col items-center">
@@ -266,7 +266,7 @@ export default function CardCollectionBrowser() {
         <div className="w-full flex justify-center items-center gap-2 mb-3">
           <button 
             onClick={() => {
-               // Switches back to 'Cards Unlocked' UI mode if needed
+               setShowFullView(true);
             }}
             className="group"
           >
