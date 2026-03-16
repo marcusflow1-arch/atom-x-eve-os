@@ -219,6 +219,20 @@ export default function QuestLogBook() {
               {pinnedGame.title}
             </h3>
           </button>
+
+          <button 
+            onClick={() => {
+              localStorage.setItem('luna_pinned_card_game_name', pinnedGame.title);
+              localStorage.setItem('luna_pinned_card_game_genre', pinnedGame.genre);
+              window.dispatchEvent(new Event('storage'));
+              navigate(createPageUrl('GenreMastery'));
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 transition-all ml-1 group border border-cyan-500/20 hover:border-cyan-500/40"
+            title="View game cards"
+          >
+            <CreditCard className="w-3 h-3 group-hover:scale-110 transition-transform" />
+            <span className="text-[9px] font-bold uppercase tracking-widest">Cards</span>
+          </button>
         </div>
 
         {/* Book — layered backing for depth, then glass pages on top */}
