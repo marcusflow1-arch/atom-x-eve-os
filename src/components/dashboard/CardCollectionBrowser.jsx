@@ -360,13 +360,20 @@ export default function CardCollectionBrowser() {
           </AnimatePresence>
         </div>
       </div>
-    );
-  }
 
-  // RENDER "UNLOCK CARDS" UI (The one we just built with 15/70/15 layout)
-  return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
+      {/* RENDER "UNLOCK CARDS" OVERLAY (15/70/15 layout) */}
+      <AnimatePresence>
+        {showFullView && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed z-[70] left-0 right-0 bg-[#080808]/95 backdrop-blur-3xl shadow-2xl border-t border-white/10"
+            style={{ top: '80px', bottom: '0px' }}
+          >
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
         
         {/* LEFT - 15% (Genres & Games) */}
         <div className="w-[15%] h-full flex flex-col border-r border-white/10 overflow-y-auto no-scrollbar relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
