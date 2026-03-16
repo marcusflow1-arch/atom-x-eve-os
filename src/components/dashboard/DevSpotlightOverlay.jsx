@@ -191,7 +191,7 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
 }
 
 export default function DevSpotlightOverlay({ onClose }) {
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(true);
   const { addToCart } = useCart();
   const [activeView, setActiveView] = useState('developer'); // 'developer' | 'blackmarket' | 'tradingpost'
   const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
