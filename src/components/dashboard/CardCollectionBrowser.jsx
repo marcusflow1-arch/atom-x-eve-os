@@ -258,9 +258,8 @@ export default function CardCollectionBrowser() {
   }, [selectedGame]);
 
   // RENDER ORIGINAL UI (For Card Collection Base Page)
-  if (!showFullView) {
-    // Basic restore of the exact UI layout from the original Card Collection page as requested.
-    return (
+  return (
+    <>
       <div className="w-full flex flex-col items-center">
         {/* Title - Clickable for Full Page */}
         <div className="w-full flex justify-center items-center gap-2 mb-3">
