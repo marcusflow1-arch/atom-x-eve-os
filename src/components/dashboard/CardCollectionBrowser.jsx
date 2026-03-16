@@ -370,7 +370,7 @@ export default function CardCollectionBrowser() {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed z-[70] left-0 right-0 bg-[#080808]/95 backdrop-blur-3xl shadow-2xl border-t border-white/10"
-            style={{ top: '80px', bottom: '0px' }}
+            style={{ top: '80px', bottom: '48px' }}
           >
             <DragDropContext onDragEnd={onDragEnd}>
               <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
