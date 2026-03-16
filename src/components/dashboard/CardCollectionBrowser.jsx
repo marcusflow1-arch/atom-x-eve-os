@@ -377,9 +377,12 @@ export default function CardCollectionBrowser() {
             <div className="mb-4 px-3 flex flex-col gap-2">
               <button 
                 onClick={() => {
-                   // Optional action
+                   setShowFullView(false);
                 }}
-              />
+                className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-white/40 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors border border-white/10"
+              >
+                <ChevronLeft className="w-4 h-4" /> Back
+              </button>
             </div>
 
             <div 
