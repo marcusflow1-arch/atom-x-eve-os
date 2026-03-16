@@ -520,13 +520,40 @@ export default function LiveIntelligenceFeed() {
   }
 
   return (
-    <div className="flex flex-col items-end gap-3 pointer-events-auto h-full">
+    <div className="flex flex-col items-end gap-3 pointer-events-auto h-full relative">
+      {/* Expanded Content Area (Absolute positioned to slide out to the left) */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-0 bottom-0 right-[372px] rounded-2xl overflow-hidden font-sans border border-white/10"
+            style={{
+              width: 'calc(100vw - 860px)',
+              background: 'rgba(20, 26, 38, 0.95)',
+              backdropFilter: 'blur(24px)',
+              boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6)',
+            }}
+          >
+            {activeTab === 'market' ? (
+              <MarketExpandedView />
+            ) : activeTab === 'settings' ? (
+              <SettingsExpandedView feedSettings={feedSettings} setFeedSettings={setFeedSettings} />
+            ) : (
+              <MissionsExpandedView selectedGame={selectedMissionGame} onSelectGame={setSelectedMissionGame} />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0, y: -10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1, width: isExpanded ? 'calc(100vw - 480px)' : 360 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
-        className="flex flex-row font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full"
+        className="w-[360px] flex flex-col font-sans relative overflow-hidden flex-shrink-0 rounded-2xl h-full"
         style={{
           background: 'rgba(20, 26, 38, 0.75)',
           backdropFilter: 'blur(24px)',
@@ -535,29 +562,8 @@ export default function LiveIntelligenceFeed() {
           boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
         }}
       >
-        {/* Expanded Content Area */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 30 }}
-              transition={{ duration: 0.3 }}
-              className="border-r border-white/10 flex flex-col h-full bg-black/20 overflow-hidden flex-1 min-w-0"
-            >
-              {activeTab === 'market' ? (
-                <MarketExpandedView />
-              ) : activeTab === 'settings' ? (
-                <SettingsExpandedView feedSettings={feedSettings} setFeedSettings={setFeedSettings} />
-              ) : (
-                <MissionsExpandedView selectedGame={selectedMissionGame} onSelectGame={setSelectedMissionGame} />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Original Feed Content (Standard View) */}
-        <div className="w-[360px] flex flex-col h-full flex-shrink-0 relative">
+        <div className="w-full flex flex-col h-full flex-shrink-0 relative">
           {/* Expand Toggle Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
