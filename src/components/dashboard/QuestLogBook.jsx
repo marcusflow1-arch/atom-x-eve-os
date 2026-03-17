@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { createPortal } from 'react-dom';
+import QuestLog from '../../pages/QuestLog';
 import { BookOpen, X, Search, Filter, Gamepad2, Pin, Trophy, Map, Zap, ChevronRight, Swords, Target, Crosshair, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -138,6 +140,9 @@ function BookPage({ quests, tiltDirection }) {
 
 export default function QuestLogBook() {
   const navigate = useNavigate();
+  const [showFullView, setShowFullView] = useState(false);
+  const [fullViewGame, setFullViewGame] = useState(null);
+  
   // Read persisted pinned game from localStorage
   const [pinnedGameId, setPinnedGameId] = useState(() => localStorage.getItem('luna_pinned_quest_game') || 'cyberpunk');
   
@@ -185,7 +190,10 @@ export default function QuestLogBook() {
         {/* Title - Clickable to Navigate to Full Page */}
         <div className="flex items-center justify-center gap-2 mb-3 w-full">
           <button 
-            onClick={() => navigate(createPageUrl('QuestLog'))}
+            onClick={() => {
+              setFullViewGame(null);
+              setShowFullView(true);
+            }}
             className="group"
           >
             <h3
@@ -204,7 +212,10 @@ export default function QuestLogBook() {
           <BookOpen className="w-4 h-4 text-white/40 flex-shrink-0" />
           
           <button 
-            onClick={() => navigate(createPageUrl('QuestLog') + '?game=' + pinnedGameId)}
+            onClick={() => {
+              setFullViewGame(pinnedGameId);
+              setShowFullView(true);
+            }}
             className="group"
           >
             <h3
@@ -283,6 +294,24 @@ export default function QuestLogBook() {
           </div>
         </div>
       </div>
+
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {showFullView && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed z-[9999] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
+              style={{ top: '80px', bottom: '48px' }}
+            >
+              <QuestLog isEmbedded={true} onClose={() => setShowFullView(false)} initialGame={fullViewGame} />
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

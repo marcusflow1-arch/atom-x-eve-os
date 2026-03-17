@@ -56,10 +56,16 @@ const GAMES_DATA = [
   }
 ];
 
-export default function QuestLog() {
+export default function QuestLog({ isEmbedded, onClose, initialGame }) {
   const navigate = useNavigate();
-  const [activeGameId, setActiveGameId] = useState('cyberpunk');
+  const [activeGameId, setActiveGameId] = useState(initialGame || 'cyberpunk');
   const [pinnedGameId, setPinnedGameId] = useState(() => localStorage.getItem('luna_pinned_quest_game') || 'cyberpunk');
+
+  useEffect(() => {
+    if (initialGame) {
+      setActiveGameId(initialGame);
+    }
+  }, [initialGame]);
   const [genreFilter, setGenreFilter] = useState('All');
   const [hoveredQuest, setHoveredQuest] = useState(null);
 
@@ -80,7 +86,7 @@ export default function QuestLog() {
   return (
     <PageErrorBoundary pageName="QuestLog">
       <div 
-        className="min-h-screen w-full bg-[#0f1115] text-white pt-24 px-8 pb-8 flex flex-col"
+        className={isEmbedded ? "w-full h-full p-6 flex flex-col overflow-hidden bg-[#0f1115] text-white" : "min-h-screen w-full bg-[#0f1115] text-white pt-24 px-8 pb-8 flex flex-col"}
         style={{
           backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(20, 24, 30, 1) 0%, rgba(15, 17, 21, 1) 90%)'
         }}
@@ -104,11 +110,11 @@ export default function QuestLog() {
             </div>
             
             <Button 
-              onClick={() => navigate(createPageUrl('LunaTemplate'))} 
+              onClick={() => isEmbedded && onClose ? onClose() : navigate(createPageUrl('LunaTemplate'))} 
               variant="outline" 
               className="border-white/10 hover:bg-white/5"
             >
-              Back to Dashboard
+              {isEmbedded ? 'Close' : 'Back to Dashboard'}
             </Button>
           </div>
         </div>
