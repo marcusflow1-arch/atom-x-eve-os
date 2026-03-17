@@ -525,7 +525,9 @@ export default function CardCollectionBrowser() {
             </DragDropContext>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }
