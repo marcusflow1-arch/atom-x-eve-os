@@ -363,16 +363,17 @@ export default function CardCollectionBrowser() {
       </div>
 
       {/* RENDER "UNLOCK CARDS" OVERLAY (15/70/15 layout) */}
-      <AnimatePresence>
-        {showFullView && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed z-[100] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
-            style={{ top: '64px', bottom: '0px' }}
-          >
+      {createPortal(
+        <AnimatePresence>
+          {showFullView && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed z-[9999] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
+              style={{ top: '64px', bottom: '0px' }}
+            >
             <DragDropContext onDragEnd={onDragEnd}>
               <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
         
