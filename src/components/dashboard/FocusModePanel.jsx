@@ -28,6 +28,7 @@ import EnvironmentSelector from '@/components/avatarHome/EnvironmentSelector';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 import MemoriesDrawer from '@/components/dashboard/MemoriesDrawer';
 import EnvHubDrawer from '@/components/dashboard/EnvHubDrawer';
+import QuickChangeEnvDrawer from '@/components/dashboard/QuickChangeEnvDrawer';
 import DateTimeTile from '@/components/dashboard/DateTimeTile';
 import SystemUpdatesBox from '@/components/dashboard/SystemUpdatesBox';
 import SystemUpdatesDrawer from '@/components/dashboard/SystemUpdatesDrawer';
