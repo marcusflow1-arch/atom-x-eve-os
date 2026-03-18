@@ -140,6 +140,7 @@ export default function SystemUpdatesDrawer({ open, onClose }) {
                   <p className="text-white/30 text-xs mt-1">No new updates available</p>
                 </div>
               )}
+              </div>
             </div>
           </motion.div>
         </>
