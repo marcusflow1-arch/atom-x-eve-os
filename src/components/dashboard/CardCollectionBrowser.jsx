@@ -418,21 +418,29 @@ export default function CardCollectionBrowser() {
                     >
                       <div 
                         ref={gamesScrollRef}
-                        className="flex items-center gap-3 px-3 py-2 overflow-x-auto ml-2 border-l-2 border-white/10"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        className="flex items-center py-4 overflow-x-auto w-full snap-x snap-mandatory"
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', padding: '0 calc(50% - 4.5rem)' }}
                         onMouseEnter={() => setGamesHovered(true)}
                         onMouseLeave={() => setGamesHovered(false)}
                       >
-                        {MOCK_GAMES_BY_GENRE[genre].map(game => (
+                        {MOCK_GAMES_BY_GENRE[genre].map(game => {
+                          const cards = GENRE_CARDS[genre] || [];
+                          const gameCard = cards.find(c => c.game === game);
+                          const image = gameCard ? gameCard.image : 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=200';
+
+                          return (
                           <div 
                             key={game}
                             data-game={game}
                             onClick={() => setSelectedGame(game)}
-                            className={`flex-shrink-0 text-xs px-2 py-1 rounded cursor-pointer whitespace-nowrap transition-colors ${selectedGame === game ? 'bg-cyan-500/20 text-cyan-300' : 'text-white/50 hover:text-white/80'}`}
+                            className={`flex-shrink-0 w-32 mx-2 flex flex-col items-center gap-2 cursor-pointer transition-all duration-300 snap-center ${selectedGame === game ? 'scale-110 opacity-100 z-10' : 'scale-90 opacity-40 hover:opacity-70 z-0'}`}
                           >
-                            {game}
+                            <img src={image} alt={game} className={`w-full aspect-video object-cover rounded-lg border ${selectedGame === game ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'border-white/10'}`} />
+                            <span className={`text-[11px] font-bold text-center w-full truncate px-1 ${selectedGame === game ? 'text-cyan-300' : 'text-white/50'}`}>
+                              {game}
+                            </span>
                           </div>
-                        ))}
+                        )})}
                       </div>
                     </motion.div>
                   )}
@@ -442,14 +450,14 @@ export default function CardCollectionBrowser() {
           </div>
         </div>
         
-        {/* CENTER - 70% (Cards) */}
-        <div className="w-[70%] h-full flex flex-col p-6 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* CENTER - 58% (Cards) */}
+        <div className="w-[58%] h-full flex flex-col p-6 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <Droppable droppableId="center" isDropDisabled={true}>
             {(provided) => (
               <div 
                 ref={provided.innerRef} 
                 {...provided.droppableProps}
-                className="grid grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 content-start"
+                className="grid grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3 content-start"
               >
                  {visibleCards.map((card, index) => (
                    <Draggable key={`center-${card.id}`} draggableId={card.id} index={index}>
@@ -471,8 +479,8 @@ export default function CardCollectionBrowser() {
           </Droppable>
         </div>
         
-        {/* RIGHT - 15% (Pinned Cards) */}
-        <div className="w-[15%] h-full flex flex-col border-l border-white/10 bg-black/20 p-4 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* RIGHT - 21% (Pinned Cards) */}
+        <div className="w-[21%] h-full flex flex-col border-l border-white/10 bg-black/20 p-4 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
            <div className="text-center mb-4">
               <h3 className="text-sm font-bold uppercase tracking-widest text-cyan-400">{selectedGenre}</h3>
               <div className="w-full h-px bg-white/20 mt-2"></div>
