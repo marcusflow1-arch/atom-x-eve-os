@@ -916,7 +916,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
                            playerStatsRef.current.hp = playerStatsRef.current.maxHp; // Auto revive for now
                        }
                        // Sync state
-                       window.dispatchEvent(new CustomEvent('syncPlayerStats'));
+                       window.dispatchEvent(new CustomEvent('localHpChange'));
                    }
                 }, 600); // 600ms delay for impact
 
