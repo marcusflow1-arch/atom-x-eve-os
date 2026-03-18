@@ -362,7 +362,7 @@ export default function CardCollectionBrowser() {
         </div>
       </div>
 
-      {/* RENDER "UNLOCK CARDS" OVERLAY (15/70/15 layout) */}
+      {/* RENDER "UNLOCK CARDS" OVERLAY (21/58/21 layout) */}
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {showFullView && (
