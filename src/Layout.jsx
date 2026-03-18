@@ -309,6 +309,7 @@ function LayoutContent({ children, currentPageName }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [socialHubOpen, setSocialHubOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [auraStreamsDrawerOpen, setAuraStreamsDrawerOpen] = useState(false);
   const { openCart, getCartCount } = useCart();
   const [showGuidedTour, setShowGuidedTour] = useState(false);
 
