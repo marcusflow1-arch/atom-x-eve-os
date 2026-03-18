@@ -26,20 +26,99 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
   ];
 
   const initialModules = [
-    { id: 'shop', title: 'Shop System', icon: ShoppingCart, status: 'Unlocked' },
-    { id: 'ai_npc', title: 'AI / NPC System', icon: Bot, status: 'Unlocked' },
-    { id: 'portals', title: 'Portals / Travel', icon: Map, status: 'Unlocked' },
-    { id: 'skill_zones', title: 'Skill Zones', icon: Shield, status: 'Locked' },
-    { id: 'resources', title: 'Resource Generators', icon: Cpu, status: 'Locked' },
-    { id: 'structures', title: 'Structures / Buildings', icon: Box, status: 'Unlocked' }
+    { 
+      id: 'wardrobe', title: 'Wardrobe', icon: Shirt, 
+      upgrades: [
+        { id: 'w1', name: 'Upgrade Clothing Racks', unlocked: true },
+        { id: 'w2', name: 'Upgrade Color Customization', unlocked: true },
+        { id: 'w3', name: 'Upgrade Advanced Fabrics', unlocked: false },
+        { id: 'w4', name: 'Upgrade Holographic Mirrors', unlocked: false }
+      ]
+    },
+    { 
+      id: 'housing', title: 'Housing', icon: Home, 
+      upgrades: [
+        { id: 'h1', name: 'Upgrade Basic Living Quarters', unlocked: true },
+        { id: 'h2', name: 'Upgrade Furniture Tools', unlocked: false },
+        { id: 'h3', name: 'Upgrade Trophy Display', unlocked: false },
+        { id: 'h4', name: 'Upgrade Floor Plan', unlocked: false }
+      ]
+    },
+    { 
+      id: 'cars', title: 'Car Collection', icon: Car, 
+      upgrades: [
+        { id: 'c1', name: 'Upgrade Garage Space', unlocked: true },
+        { id: 'c2', name: 'Upgrade Tuning Shop', unlocked: false },
+        { id: 'c3', name: 'Upgrade Paint Booth', unlocked: false },
+        { id: 'c4', name: 'Upgrade Test Track', unlocked: false }
+      ]
+    },
+    { 
+      id: 'equipment', title: 'Equipment', icon: Shield, 
+      upgrades: [
+        { id: 'e1', name: 'Upgrade Basic Armory', unlocked: true },
+        { id: 'e2', name: 'Upgrade Weapon Racks', unlocked: false },
+        { id: 'e3', name: 'Upgrade Enchantment Station', unlocked: false },
+        { id: 'e4', name: 'Upgrade Forge', unlocked: false }
+      ]
+    },
+    { 
+      id: 'market', title: 'Marketplace', icon: ShoppingCart, 
+      upgrades: [
+        { id: 'm1', name: 'Upgrade Local Kiosks', unlocked: true },
+        { id: 'm2', name: 'Upgrade Global Trade Terminal', unlocked: false },
+        { id: 'm3', name: 'Upgrade Black Market Access', unlocked: false },
+        { id: 'm4', name: 'Upgrade Auction House', unlocked: false }
+      ]
+    },
+    { 
+      id: 'training', title: 'Training Room', icon: Swords, 
+      upgrades: [
+        { id: 't1', name: 'Upgrade Dummy Targets', unlocked: true },
+        { id: 't2', name: 'Upgrade AI Sparring Bots', unlocked: false },
+        { id: 't3', name: 'Upgrade Simulation Hazards', unlocked: false },
+        { id: 't4', name: 'Upgrade Combat Analytics', unlocked: false }
+      ]
+    },
+    { 
+      id: 'cards', title: 'Card Collection', icon: Layers, 
+      upgrades: [
+        { id: 'cc1', name: 'Upgrade Deck Builder', unlocked: true },
+        { id: 'cc2', name: 'Upgrade Holographic Displays', unlocked: false },
+        { id: 'cc3', name: 'Upgrade Trading Binders', unlocked: false }
+      ]
+    },
+    { 
+      id: 'ai_npc', title: 'AI / NPC System', icon: Bot, 
+      upgrades: [
+        { id: 'a1', name: 'Upgrade Basic Pathfinding', unlocked: true },
+        { id: 'a2', name: 'Upgrade Dialog Trees', unlocked: false },
+        { id: 'a3', name: 'Upgrade Companion Logic', unlocked: false }
+      ]
+    },
+    { 
+      id: 'portals', title: 'Portals & Travel', icon: Map, 
+      upgrades: [
+        { id: 'p1', name: 'Upgrade Local Teleporters', unlocked: true },
+        { id: 'p2', name: 'Upgrade Cross-Realm Gates', unlocked: false },
+        { id: 'p3', name: 'Upgrade Starship Dock', unlocked: false }
+      ]
+    },
   ];
 
   const [modules, setModules] = useState(initialModules);
+  const [selectedModuleId, setSelectedModuleId] = useState(initialModules[0].id);
 
-  const handleModuleAction = (modId, currentStatus) => {
-    if (currentStatus === 'Locked') {
-      setModules(prev => prev.map(m => m.id === modId ? { ...m, status: 'Unlocked' } : m));
-    }
+  const selectedModule = modules.find(m => m.id === selectedModuleId);
+
+  const handleUpgradeToggle = (modId, upId) => {
+    setModules(prev => prev.map(m => {
+      if (m.id !== modId) return m;
+      return {
+        ...m,
+        upgrades: m.upgrades.map(u => u.id === upId ? { ...u, unlocked: !u.unlocked } : u)
+      };
+    }));
   };
 
   if (!open || typeof document === 'undefined') return null;
