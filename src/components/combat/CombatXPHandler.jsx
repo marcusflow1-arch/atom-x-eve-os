@@ -69,6 +69,7 @@ export default function CombatXPHandler() {
         }
 
         // Level up global
+        let leveledUp = false;
         safety = 0;
         let threshold = xpToNextLevel(globalLevel);
         while (globalXp >= threshold && safety < 100) {
@@ -76,6 +77,7 @@ export default function CombatXPHandler() {
           globalLevel += 1;
           threshold = xpToNextLevel(globalLevel);
           safety++;
+          leveledUp = true;
         }
 
         await base44.entities.AvatarProgression.update(record.id, {
@@ -86,6 +88,12 @@ export default function CombatXPHandler() {
         });
 
         console.log(`[CombatXP] +${xp} XP → ${genreName} (Lv${g.level}), Global Lv${globalLevel}`);
+        
+        window.dispatchEvent(new CustomEvent('syncPlayerStats'));
+        
+        if (leveledUp) {
+          window.dispatchEvent(new CustomEvent('avatarLevelUp'));
+        }
       } catch (err) {
         console.error('[CombatXP] Failed to save XP:', err);
       }
