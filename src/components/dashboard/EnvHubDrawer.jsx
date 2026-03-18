@@ -414,14 +414,14 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
 
             {/* RIGHT PANEL (35%) - Live Environment Preview */}
             <div className="w-[35%] h-full relative overflow-hidden bg-black flex flex-col">
-              {/* Image Preview with Parallax-like scale */}
-              <motion.div 
-                className="absolute inset-0"
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <img src={selectedEnv.image} alt={selectedEnv.name} className="w-full h-full object-cover opacity-60" />
-              </motion.div>
+              {/* 3D Room Viewer */}
+              <div className="absolute inset-0 opacity-80">
+                 {selectedEnv?.modelUrl ? (
+                   <MiniRoomViewer roomUrl={selectedEnv.modelUrl} />
+                 ) : (
+                   <img src={selectedEnv?.image} alt={selectedEnv?.name} className="w-full h-full object-cover opacity-60" />
+                 )}
+              </div>
               
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/60" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
