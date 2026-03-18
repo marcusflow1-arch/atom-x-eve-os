@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { Globe, X, ChevronLeft, ChevronRight, Settings, Image as ImageIcon, Box, Bot, Shield, Cpu, ShoppingCart, Map, Lock, Unlock, Zap, Eye, Play, PenTool } from 'lucide-react';
+import { Globe, X, ChevronLeft, ChevronRight, Settings, Image as ImageIcon, Box, Bot, Shield, Cpu, ShoppingCart, Map, Lock, Unlock, Zap, Eye, Play, PenTool, Shirt, Home, Car, Swords, Layers } from 'lucide-react';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 
 export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv }) {
