@@ -68,7 +68,8 @@ export default function SystemUpdatesDrawer({ open, onClose }) {
             </div>
 
             {/* Content List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 relative" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto p-8 relative" style={{ scrollbarWidth: 'none' }}>
+              <div className="max-w-4xl mx-auto space-y-4">
               {isLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <div className="w-8 h-8 border-2 border-white/15 border-t-cyan-400 rounded-full animate-spin" />
