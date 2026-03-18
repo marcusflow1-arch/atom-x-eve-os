@@ -95,25 +95,44 @@ function MiniRoomViewer({ roomUrl }) {
 }
 
 export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv }) {
-  const [selectedEnv, setSelectedEnv] = useState({
-    id: 'cyber_hub',
-    name: 'Cyber Hub',
-    level: 12,
-    xp: 4500,
-    maxXp: 5000,
-    status: 'Active',
-    thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400',
-    capacity: '8/10',
-    energy: '450/500',
-    slots: '3/5',
-    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920'
-  });
+  const [selectedEnv, setSelectedEnv] = useState(null);
+  const [envList, setEnvList] = useState([]);
 
-  const envList = [
-    { id: 'cyber_hub', name: 'Cyber Hub', level: 12, xp: 4500, maxXp: 5000, status: 'Active', thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920' },
-    { id: 'training_zone', name: 'Training Zone', level: 5, xp: 1200, maxXp: 2000, status: 'Locked', thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920' },
-    { id: 'room_1', name: 'Room 1', level: 1, xp: 0, maxXp: 1000, status: 'Available', thumbnail: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920' }
-  ];
+  useEffect(() => {
+    if (!open) return;
+    const fetchEnvs = async () => {
+      try {
+        const allModels = await base44.entities.Model3D.list();
+        const rooms = allModels.filter(m => m.name && m.name.toLowerCase().includes('room'));
+        
+        const mapped = rooms.map((m, idx) => ({
+          id: m.id,
+          name: m.name,
+          level: (idx % 10) + 1,
+          xp: Math.floor(Math.random() * 5000),
+          maxXp: 5000,
+          status: 'Available',
+          thumbnail: m.thumbnail_url || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400',
+          image: m.thumbnail_url || 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920',
+          modelUrl: m.file_url,
+          capacity: '8/10',
+          energy: '450/500',
+          slots: '3/5',
+        }));
+        
+        if (mapped.length > 0) {
+          setEnvList(mapped);
+          if (!selectedEnv) {
+             const current = mapped.find(e => e.id === currentEnvId) || mapped[0];
+             setSelectedEnv(current);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch environments", e);
+      }
+    };
+    fetchEnvs();
+  }, [open, currentEnvId]);
 
   const initialModules = [
     { 
