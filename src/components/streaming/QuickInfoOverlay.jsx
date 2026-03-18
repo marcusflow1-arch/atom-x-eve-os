@@ -1477,9 +1477,9 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
                                    
                                    return filtered.map((card) => (
                                       <ShinyCard 
-                                         key={card.id}
-                                         onClick={() => setSelectedMysteryCard(card.id)}
-                                         className="aspect-[2/3] w-full bg-white/5 border border-white/10 rounded-lg flex items-center justify-center relative overflow-hidden transition-all hover:scale-105 cursor-pointer hover:border-white/30 group/card shadow-sm"
+                                        key={card.id}
+                                        onClick={() => setSelectedMysteryCard(card.id)}
+                                        className="aspect-[2/3] w-3/4 mx-auto bg-white/5 border border-white/10 rounded-lg flex items-center justify-center relative overflow-hidden transition-all hover:scale-105 cursor-pointer hover:border-white/30 group/card shadow-sm"
                                       >
                                          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity" />
                                          <span className="text-white/20 text-xs font-light">?</span>
