@@ -1298,7 +1298,7 @@ export function LibraryBannerSection({
           <div className="flex items-center gap-4 w-full h-24">
             {/* Environment Hub */}
             <div className="w-[330px] h-full flex-shrink-0">
-              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} />
+              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} onQuickChangeToggle={onQuickChangeToggle} />
             </div>
 
             {/* Memories */}
