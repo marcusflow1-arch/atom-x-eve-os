@@ -444,11 +444,24 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
 
               {/* Action Overlay at bottom */}
               <div className="absolute bottom-12 left-8 right-8 z-10 flex flex-col gap-3">
-                <button className="w-full py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] flex items-center justify-center gap-3 group">
+                <button 
+                  onClick={() => {
+                    if (onSelectEnv && selectedEnv) {
+                      onSelectEnv({
+                        id: selectedEnv.id,
+                        name: selectedEnv.name,
+                        modelUrl: selectedEnv.modelUrl,
+                        isSkybox: false
+                      });
+                      onClose();
+                    }
+                  }}
+                  className="w-full py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] flex items-center justify-center gap-3 group cursor-pointer"
+                >
                   <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
                   Enter World
                 </button>
-                <button className="w-full py-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+                <button className="w-full py-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/10 transition-colors flex items-center justify-center gap-2 cursor-pointer">
                   <PenTool className="w-4 h-4" />
                   Edit Mode
                 </button>
