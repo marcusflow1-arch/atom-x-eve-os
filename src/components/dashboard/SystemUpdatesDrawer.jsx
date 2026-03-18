@@ -30,21 +30,20 @@ export default function SystemUpdatesDrawer({ open, onClose }) {
 
           {/* Drawer */}
           <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 w-[420px] z-[9999] flex flex-col rounded-l-3xl overflow-hidden"
+            className="fixed left-0 right-0 z-[9999] flex flex-col overflow-hidden"
             style={{
               top: '64px',
               bottom: '48px',
               background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 16, 28, 0.95) 100%)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
               borderTop: '1px solid rgba(255, 255, 255, 0.05)',
               borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-              boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 0 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
               pointerEvents: 'all'
             }}
             onClick={(e) => e.stopPropagation()}
