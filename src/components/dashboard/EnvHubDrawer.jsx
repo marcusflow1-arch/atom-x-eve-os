@@ -323,8 +323,8 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                   <span className="text-[10px] font-bold text-white uppercase tracking-wider">Live Preview</span>
                 </div>
-                <div className="flex flex-col gap-2">
-                  {modules.filter(m => m.status === 'Unlocked').map(m => (
+                <div className="flex flex-col gap-2 max-h-[60%] overflow-hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {modules.filter(m => m.upgrades.some(u => u.unlocked)).map(m => (
                     <div key={`preview-${m.id}`} className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/30">
                       <m.icon className="w-3 h-3 text-cyan-400" />
                       <span className="text-[10px] font-bold text-cyan-100 uppercase tracking-wider">{m.title} Active</span>
