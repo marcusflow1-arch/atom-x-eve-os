@@ -1705,6 +1705,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [showCalendar, setShowCalendar] = useState(false);
   const openCalendar = () => setShowCalendar(true);
   const [showEnvDrawer, setShowEnvDrawer] = useState(false);
+  const [showQuickChangeDrawer, setShowQuickChangeDrawer] = useState(false);
   const [envDrawerExpanded, setEnvDrawerExpanded] = useState(false);
 
   // Toggle Skill Tree dropdown with 'O' key and custom event
