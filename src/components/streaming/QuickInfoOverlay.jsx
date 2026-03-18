@@ -1463,7 +1463,7 @@ export default function QuickInfoOverlay({ open, item, onClose, onPlay, onStream
 
                           {/* Cards List (Dense Grid) */}
                           <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
-                             <div className="grid grid-cols-5 gap-2 content-start pb-4">
+                             <div className="grid grid-cols-7 gap-1 content-start pb-4">
                                 {(() => {
                                    const list = Array.from({ length: 40 }).map((_, i) => {
                                      const types = ['ability', 'gear', 'companion', 'environment'];
