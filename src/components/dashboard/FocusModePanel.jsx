@@ -1046,10 +1046,10 @@ function Large3DCard({ card, isActive }) {
 }
 
 // Environment Hub Tile Component - now a dropdown trigger
-function EnvironmentHubTile({ isOpen, onToggle }) {
+function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle }) {
   return (
-    <button 
-      className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
+    <div 
+      className="w-full h-full rounded-xl overflow-hidden relative group"
       style={{
         background: isOpen
           ? 'linear-gradient(145deg, rgba(18,32,52,0.98) 0%, rgba(10,20,36,0.99) 100%)'
@@ -1060,23 +1060,32 @@ function EnvironmentHubTile({ isOpen, onToggle }) {
         boxShadow: isOpen ? '0 0 16px rgba(125,211,252,0.12), inset 0 1px 0 rgba(125,211,252,0.1)' : 'inset 0 1px 0 rgba(125,211,252,0.05)',
         transition: 'all 0.3s ease'
       }}
-      onClick={onToggle}
     >
-      <img 
-        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
-        alt="Environment Hub"
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-      <div className="absolute bottom-3 left-3 right-3">
-        <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
-          <Globe className="w-4 h-4 text-cyan-400" />
-          Environment Hub
-        </h4>
-        <p className="text-white/50 text-[10px]">Change your 3D world</p>
-      </div>
-    </button>
+      <button className="absolute inset-0 w-full h-full cursor-pointer" onClick={onToggle}>
+        <img 
+          src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
+          alt="Environment Hub"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+        <div className="absolute bottom-3 left-3 right-3 text-left">
+          <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
+            <Globe className="w-4 h-4 text-cyan-400" />
+            Environment Hub
+          </h4>
+          <p className="text-white/50 text-[10px]">Change your 3D world</p>
+        </div>
+      </button>
+      
+      <button 
+        onClick={(e) => { e.stopPropagation(); onQuickChangeToggle(); }}
+        className="absolute top-2 right-2 w-7 h-7 rounded-md bg-white/10 hover:bg-cyan-500/30 border border-white/20 flex items-center justify-center z-10 transition-colors cursor-pointer group-hover:bg-white/20"
+        title="Quick Change Environments"
+      >
+        <LibraryIcon className="w-3.5 h-3.5 text-white" />
+      </button>
+    </div>
   );
 }
 
