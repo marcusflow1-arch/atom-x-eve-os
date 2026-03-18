@@ -69,6 +69,7 @@ export default function AvatarProgressionBox() {
     try {
         const updated = await base44.entities.AvatarProgression.update(next.id, next);
         setRecord(updated);
+        window.dispatchEvent(new CustomEvent('syncPlayerStats'));
     } catch (e) {
         console.error("Save failed", e);
     } finally {
