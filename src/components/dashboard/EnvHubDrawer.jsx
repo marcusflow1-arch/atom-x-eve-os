@@ -239,65 +239,66 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
               </div>
 
               {/* MAIN CONTENT AREA */}
-              <div className="flex-1 overflow-y-auto p-8" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <h3 className="text-sm font-bold text-white/60 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <div className="flex-1 p-8 flex flex-col min-h-0">
+                <h3 className="text-sm font-bold text-white/60 uppercase tracking-widest mb-6 flex items-center gap-2 flex-shrink-0">
                   <Settings className="w-4 h-4" /> Feature Modules
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  {modules.map((mod, i) => {
-                    const Icon = mod.icon;
-                    const isUnlocked = mod.status === 'Unlocked';
-                    return (
-                      <motion.div
-                        key={mod.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className={`group relative rounded-xl overflow-hidden border ${isUnlocked ? 'border-white/10' : 'border-red-500/20'} transition-all`}
-                        style={{
-                          background: isUnlocked ? 'linear-gradient(135deg, rgba(30,40,50,0.4) 0%, rgba(15,20,30,0.6) 100%)' : 'rgba(20,10,10,0.4)',
-                          boxShadow: isUnlocked ? '0 4px 20px rgba(0,0,0,0.2)' : 'none',
-                        }}
-                      >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${isUnlocked ? 'from-cyan-500/5' : 'from-red-500/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                        
-                        <div className="p-5 flex flex-col h-full relative z-10">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className={`w-10 h-10 rounded-lg ${isUnlocked ? 'bg-white/5 border-white/10' : 'bg-red-500/10 border-red-500/20'} border flex items-center justify-center transition-colors duration-300`}>
-                              <Icon className={`w-5 h-5 ${isUnlocked ? 'text-cyan-400' : 'text-red-400'}`} />
-                            </div>
-                            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                              {isUnlocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
-                              {mod.status}
-                            </div>
+                <div className="flex-1 flex gap-8 min-h-0 overflow-hidden">
+                  {/* LEFT HALF: Module Options */}
+                  <div className="w-1/2 overflow-y-auto pr-4 space-y-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {modules.map(mod => {
+                      const isSelected = mod.id === selectedModuleId;
+                      const Icon = mod.icon;
+                      return (
+                        <button
+                          key={mod.id}
+                          onClick={() => setSelectedModuleId(mod.id)}
+                          className={`w-full text-left flex items-center gap-4 p-4 rounded-xl transition-all border ${isSelected ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_15px_rgba(34,211,238,0.15)]' : 'bg-transparent border-transparent hover:bg-white/5'}`}
+                        >
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${isSelected ? 'bg-white/5 border-white/10' : 'bg-transparent border-transparent'} transition-colors`}>
+                            <Icon className={`w-5 h-5 ${isSelected ? 'text-cyan-400' : 'text-white/40'}`} />
                           </div>
-                          
-                          <h4 className={`text-base font-bold mb-4 ${isUnlocked ? 'text-white' : 'text-white/60'}`}>{mod.title}</h4>
-                          
-                          <div className="mt-auto flex gap-2">
-                            {isUnlocked ? (
-                              <>
-                                <button className="flex-1 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-xs font-bold text-white transition-all flex items-center justify-center gap-2">
-                                  Manage
-                                </button>
-                                <button className="flex-1 py-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-bold text-cyan-400 transition-all flex items-center justify-center gap-2">
-                                  <Zap className="w-3 h-3" /> Upgrade
-                                </button>
-                              </>
-                            ) : (
-                              <button 
-                                onClick={() => handleModuleAction(mod.id, mod.status)}
-                                className="w-full py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-bold text-red-400 transition-all flex items-center justify-center gap-2"
+                          <span className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-white/40'}`}>{mod.title}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* RIGHT HALF: Upgrades */}
+                  <div className="w-1/2 overflow-y-auto pl-4 space-y-2 relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <AnimatePresence mode="wait">
+                      {selectedModule && (
+                        <motion.div
+                          key={selectedModule.id}
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="flex flex-col gap-2"
+                        >
+                          {selectedModule.upgrades.map((upgrade, idx) => {
+                            const isUnlocked = upgrade.unlocked;
+                            return (
+                              <div 
+                                key={upgrade.id}
+                                onClick={() => handleUpgradeToggle(selectedModule.id, upgrade.id)}
+                                className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer group border ${isUnlocked ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-transparent border-transparent hover:bg-white/5'}`}
                               >
-                                Unlock Module
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                                <div className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${isUnlocked ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]' : 'bg-white/20'}`} />
+                                <span className={`text-sm font-semibold transition-colors ${isUnlocked ? 'text-white' : 'text-white/40 group-hover:text-white/60'}`}>
+                                  {upgrade.name}
+                                </span>
+                                {!isUnlocked && (
+                                  <Lock className="w-3 h-3 ml-auto text-white/20 group-hover:text-white/40 transition-colors" />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
               </div>
             </div>
