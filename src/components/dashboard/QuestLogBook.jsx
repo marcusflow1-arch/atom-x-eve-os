@@ -303,8 +303,8 @@ export default function QuestLogBook() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed z-[9999] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
-              style={{ top: '80px', bottom: '48px' }}
+              className="fixed z-[35] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
+              style={{ top: '64px', bottom: '48px' }}
             >
               <QuestLog isEmbedded={true} onClose={() => setShowFullView(false)} initialGame={fullViewGame} />
             </motion.div>
