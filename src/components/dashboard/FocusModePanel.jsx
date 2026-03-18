@@ -1813,6 +1813,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 onSelectEnv={onSelectEnv}
                 showEnvDropdown={false}
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
+                onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
                 navBoxes={
                   <BottomNavBoxes 
                     navigate={navigate} 
