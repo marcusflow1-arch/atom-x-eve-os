@@ -582,7 +582,9 @@ function LayoutContent({ children, currentPageName }) {
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
       {/* Global Library Sidebar trigger (hidden on Aura, Entertainment, Library) */}
-      <LibrarySidebar />
+      {!location.pathname.toLowerCase().includes('/aura') && (
+        <LibrarySidebar />
+      )}
 
 
 
