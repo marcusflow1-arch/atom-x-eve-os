@@ -259,23 +259,27 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
               {/* Selected Environment Summary (Fixed) */}
               <div className="p-4 border-b border-white/10 bg-white/[0.02]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                    <img src={selectedEnv.thumbnail} alt={selectedEnv.name} className="w-full h-full object-cover" />
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0 bg-black/40">
+                    {selectedEnv?.thumbnail && <img src={selectedEnv.thumbnail} alt={selectedEnv.name} className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold truncate text-white">{selectedEnv.name}</h3>
-                    <p className={`text-[10px] font-semibold uppercase tracking-wider ${selectedEnv.status === 'Active' ? 'text-cyan-400' : selectedEnv.status === 'Locked' ? 'text-red-400' : 'text-green-400'}`}>
-                      {selectedEnv.status}
+                    <h3 className="text-sm font-bold truncate text-white">{selectedEnv?.name || 'Loading...'}</h3>
+                    <p className={`text-[10px] font-semibold uppercase tracking-wider ${selectedEnv?.status === 'Active' ? 'text-cyan-400' : selectedEnv?.status === 'Locked' ? 'text-red-400' : 'text-green-400'}`}>
+                      {selectedEnv?.status || ''}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-bold text-white/60">LVL {selectedEnv.level}</span>
-                  <span className="text-[9px] text-white/40">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
-                </div>
+                {selectedEnv && (
+                  <>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-bold text-white/60">LVL {selectedEnv.level}</span>
+                      <span className="text-[9px] text-white/40">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* List of Environments */}
@@ -287,18 +291,21 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                       key={env.id}
                       onClick={() => {
                         setSelectedEnv(env);
-                        if (onSelectEnv) onSelectEnv(env);
                       }}
-                      className={`flex flex-col p-2 rounded-lg transition-all border text-left ${selectedEnv.id === env.id ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-transparent border-transparent hover:bg-white/5'}`}
+                      className={`flex flex-col p-2 rounded-lg transition-all border text-left ${selectedEnv?.id === env.id ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-transparent border-transparent hover:bg-white/5'}`}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
-                        <img src={env.thumbnail} alt={env.name} className="w-6 h-6 rounded object-cover border border-white/10" />
-                        <span className={`text-xs font-bold truncate ${selectedEnv.id === env.id ? 'text-cyan-400' : 'text-white/80'}`}>{env.name}</span>
+                        {env.thumbnail ? (
+                          <img src={env.thumbnail} alt={env.name} className="w-6 h-6 rounded object-cover border border-white/10" />
+                        ) : (
+                          <div className="w-6 h-6 rounded border border-white/10 bg-black/40" />
+                        )}
+                        <span className={`text-xs font-bold truncate ${selectedEnv?.id === env.id ? 'text-cyan-400' : 'text-white/80'}`}>{env.name}</span>
                       </div>
                       <div className="flex items-center justify-between w-full">
                         <span className="text-[9px] font-bold text-white/50">LVL {env.level}</span>
                         <div className="flex-1 ml-2 mr-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full transition-all duration-500 ${selectedEnv.id === env.id ? 'bg-cyan-400' : 'bg-white/30'}`} style={{ width: `${(env.xp / env.maxXp) * 100}%` }} />
+                          <div className={`h-full rounded-full transition-all duration-500 ${selectedEnv?.id === env.id ? 'bg-cyan-400' : 'bg-white/30'}`} style={{ width: `${(env.xp / env.maxXp) * 100}%` }} />
                         </div>
                       </div>
                     </button>
@@ -315,35 +322,39 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                   <div>
                     <h1 className="text-3xl font-black tracking-wide text-white drop-shadow-lg flex items-center gap-3">
                       <Globe className="w-8 h-8 text-cyan-400" />
-                      {selectedEnv.name}
+                      {selectedEnv?.name || 'Loading...'}
                     </h1>
-                    <div className="flex items-center gap-4 mt-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20">LEVEL {selectedEnv.level}</span>
-                        <span className="text-xs text-white/50">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
+                    {selectedEnv && (
+                      <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20">LEVEL {selectedEnv.level}</span>
+                          <span className="text-xs text-white/50">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
+                        </div>
+                        <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
+                        </div>
                       </div>
-                      <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
-                      </div>
-                    </div>
+                    )}
                   </div>
                   
-                  <div className="flex items-center gap-6 bg-black/40 p-4 rounded-xl border border-white/5">
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Capacity</span>
-                      <span className="text-sm font-bold text-white">{selectedEnv.capacity}</span>
+                  {selectedEnv && (
+                    <div className="flex items-center gap-6 bg-black/40 p-4 rounded-xl border border-white/5">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Capacity</span>
+                        <span className="text-sm font-bold text-white">{selectedEnv.capacity}</span>
+                      </div>
+                      <div className="w-px h-8 bg-white/10" />
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Energy</span>
+                        <span className="text-sm font-bold text-amber-400">{selectedEnv.energy}</span>
+                      </div>
+                      <div className="w-px h-8 bg-white/10" />
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Slots</span>
+                        <span className="text-sm font-bold text-white">{selectedEnv.slots}</span>
+                      </div>
                     </div>
-                    <div className="w-px h-8 bg-white/10" />
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Energy</span>
-                      <span className="text-sm font-bold text-amber-400">{selectedEnv.energy}</span>
-                    </div>
-                    <div className="w-px h-8 bg-white/10" />
-                    <div className="flex flex-col items-end">
-                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Slots</span>
-                      <span className="text-sm font-bold text-white">{selectedEnv.slots}</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
