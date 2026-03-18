@@ -377,8 +377,8 @@ export default function CardCollectionBrowser() {
             <DragDropContext onDragEnd={onDragEnd}>
               <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent min-h-[500px]">
         
-        {/* LEFT - 15% (Genres & Games) */}
-        <div className="w-[15%] h-full flex flex-col border-r border-white/10 overflow-y-auto no-scrollbar relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* LEFT - 21% (Genres & Games) */}
+        <div className="w-[21%] h-full flex flex-col border-r border-white/10 overflow-y-auto no-scrollbar relative" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex flex-col gap-1 py-4 px-2">
             
             {/* Back button (Optional if they want to navigate out like the screenshot) */}
