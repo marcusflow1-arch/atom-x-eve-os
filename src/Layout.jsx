@@ -24,6 +24,7 @@ import GuidedTour from './components/onboarding/GuidedTour';
 import { ViewModeProvider, useViewMode } from './components/mobile/ViewModeContext';
 import ViewModeToggle from './components/mobile/ViewModeToggle';
 import MobileLayoutShell from './components/mobile/MobileLayoutShell';
+import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsDrawer';
 
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
