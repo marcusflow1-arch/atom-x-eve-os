@@ -51,10 +51,46 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const floatingTextsRef = useRef([]);
   const floatingTextContainerRef = useRef(null);
 
+  const fetchPlayerStats = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (!user) return;
+      const rows = await base44.entities.AvatarProgression.filter({ user_id: user.id });
+      if (rows.length > 0) {
+        const record = rows[0];
+        const maxHp = record.stats?.hp || 100;
+        const attack = 25 + (record.stats?.strength || 10) * 2;
+        
+        setPlayerStats(prev => {
+          const newStats = {
+            level: record.global_level || 1,
+            xp: Math.round(record.global_xp || 0),
+            hp: prev.hp === prev.maxHp ? maxHp : Math.min(prev.hp, maxHp),
+            maxHp: maxHp,
+            attack: attack,
+          };
+          playerStatsRef.current = newStats;
+          return newStats;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to load stats for 3d viewer', e);
+    }
+  };
+
   useEffect(() => {
-    const onSync = () => setPlayerStats({ ...playerStatsRef.current });
+    fetchPlayerStats();
+    const onSync = () => fetchPlayerStats();
+    
+    // Custom event to handle local HP changes immediately
+    const onLocalHpChange = () => setPlayerStats({ ...playerStatsRef.current });
+    
     window.addEventListener('syncPlayerStats', onSync);
-    return () => window.removeEventListener('syncPlayerStats', onSync);
+    window.addEventListener('localHpChange', onLocalHpChange);
+    return () => {
+      window.removeEventListener('syncPlayerStats', onSync);
+      window.removeEventListener('localHpChange', onLocalHpChange);
+    };
   }, []);
   
   const skyboxModelRef = useRef(null);
