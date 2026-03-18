@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
-import { Globe, X, ChevronLeft, ChevronRight, Settings, Image as ImageIcon, Box, Bot, Shield, Cpu, ShoppingCart, Map } from 'lucide-react';
+import { Globe, X, ChevronLeft, ChevronRight, Settings, Image as ImageIcon, Box, Bot, Shield, Cpu, ShoppingCart, Map, Lock, Unlock, Zap, Eye, Play, PenTool } from 'lucide-react';
 import EnvironmentHub from '@/components/environment/EnvironmentHub';
 
 export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv }) {
@@ -15,24 +15,32 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
     thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400',
     capacity: '8/10',
     energy: '450/500',
-    slots: '3/5'
+    slots: '3/5',
+    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920'
   });
 
   const envList = [
-    { id: 'cyber_hub', name: 'Cyber Hub', level: 12, xp: 4500, maxXp: 5000, status: 'Active', thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400' },
-    { id: 'training_zone', name: 'Training Zone', level: 5, xp: 1200, maxXp: 2000, status: 'Locked', thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400' },
-    { id: 'room_1', name: 'Room 1', level: 1, xp: 0, maxXp: 1000, status: 'Available', thumbnail: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400' }
+    { id: 'cyber_hub', name: 'Cyber Hub', level: 12, xp: 4500, maxXp: 5000, status: 'Active', thumbnail: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=400', image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920' },
+    { id: 'training_zone', name: 'Training Zone', level: 5, xp: 1200, maxXp: 2000, status: 'Locked', thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920' },
+    { id: 'room_1', name: 'Room 1', level: 1, xp: 0, maxXp: 1000, status: 'Available', thumbnail: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400', image: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1920' }
   ];
 
-  const modules = [
-    { id: 'skybox', title: 'Skybox Editor', icon: ImageIcon, desc: 'Change environment visuals and atmosphere.', action: 'Configure' },
-    { id: 'structure', title: 'Structure Builder', icon: Box, desc: 'Add shops, buildings, and portals.', action: 'Build' },
-    { id: 'ai_npc', title: 'AI/NPC System', icon: Bot, desc: 'Assign AI agents or companions to this zone.', action: 'Manage' },
-    { id: 'skill_zones', title: 'Skill Zones', icon: Shield, desc: 'Configure training areas and combat arenas.', action: 'Edit' },
-    { id: 'resources', title: 'Resource Systems', icon: Cpu, desc: 'Manage generators, farms, and economy.', action: 'Optimize' },
-    { id: 'marketplace', title: 'Marketplace Access', icon: ShoppingCart, desc: 'Link commerce modules to this world.', action: 'Open' },
-    { id: 'fast_travel', title: 'Fast Travel / Portal', icon: Map, desc: 'Setup teleportation and routing nodes.', action: 'Route' }
+  const initialModules = [
+    { id: 'shop', title: 'Shop System', icon: ShoppingCart, status: 'Unlocked' },
+    { id: 'ai_npc', title: 'AI / NPC System', icon: Bot, status: 'Unlocked' },
+    { id: 'portals', title: 'Portals / Travel', icon: Map, status: 'Unlocked' },
+    { id: 'skill_zones', title: 'Skill Zones', icon: Shield, status: 'Locked' },
+    { id: 'resources', title: 'Resource Generators', icon: Cpu, status: 'Locked' },
+    { id: 'structures', title: 'Structures / Buildings', icon: Box, status: 'Unlocked' }
   ];
+
+  const [modules, setModules] = useState(initialModules);
+
+  const handleModuleAction = (modId, currentStatus) => {
+    if (currentStatus === 'Locked') {
+      setModules(prev => prev.map(m => m.id === modId ? { ...m, status: 'Unlocked' } : m));
+    }
+  };
 
   if (!open || typeof document === 'undefined') return null;
 
@@ -48,8 +56,8 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
           style={{ top: '64px', bottom: '48px', pointerEvents: 'all' }}
         >
           <div className="flex w-full h-full text-white font-sans overflow-hidden bg-transparent">
-            {/* LEFT PANEL (15%) */}
-            <div className="w-[15%] h-full flex flex-col border-r border-white/10 bg-black/40 overflow-hidden relative">
+            {/* LEFT PANEL (15%) - Environment Navigation */}
+            <div className="w-[15%] h-full flex flex-col border-r border-white/10 bg-black/60 overflow-hidden relative backdrop-blur-md">
               {/* Back / Close button */}
               <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <button 
@@ -68,7 +76,9 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold truncate text-white">{selectedEnv.name}</h3>
-                    <p className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">{selectedEnv.status}</p>
+                    <p className={`text-[10px] font-semibold uppercase tracking-wider ${selectedEnv.status === 'Active' ? 'text-cyan-400' : selectedEnv.status === 'Locked' ? 'text-red-400' : 'text-green-400'}`}>
+                      {selectedEnv.status}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mb-1">
@@ -76,7 +86,7 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                   <span className="text-[9px] text-white/40">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
                 </div>
                 <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
+                  <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
                 </div>
               </div>
 
@@ -87,7 +97,10 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                   {envList.map(env => (
                     <button
                       key={env.id}
-                      onClick={() => setSelectedEnv(env)}
+                      onClick={() => {
+                        setSelectedEnv(env);
+                        if (onSelectEnv) onSelectEnv(env);
+                      }}
                       className={`flex flex-col p-2 rounded-lg transition-all border text-left ${selectedEnv.id === env.id ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-transparent border-transparent hover:bg-white/5'}`}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
@@ -97,7 +110,7 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                       <div className="flex items-center justify-between w-full">
                         <span className="text-[9px] font-bold text-white/50">LVL {env.level}</span>
                         <div className="flex-1 ml-2 mr-1 h-1 bg-white/10 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${selectedEnv.id === env.id ? 'bg-cyan-400' : 'bg-white/30'}`} style={{ width: `${(env.xp / env.maxXp) * 100}%` }} />
+                          <div className={`h-full rounded-full transition-all duration-500 ${selectedEnv.id === env.id ? 'bg-cyan-400' : 'bg-white/30'}`} style={{ width: `${(env.xp / env.maxXp) * 100}%` }} />
                         </div>
                       </div>
                     </button>
@@ -106,72 +119,102 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
               </div>
             </div>
 
-            {/* RIGHT PANEL (85%) */}
-            <div className="w-[85%] h-full flex flex-col relative" style={{ background: 'radial-gradient(circle at 50% 0%, rgba(30,40,60,0.4) 0%, transparent 70%)' }}>
+            {/* CENTER PANEL (50%) - Feature Control System */}
+            <div className="w-[50%] h-full flex flex-col relative border-r border-white/10 bg-[#0a0d14]">
               {/* TOP BAR */}
-              <div className="h-[12%] min-h-[80px] border-b border-white/10 px-8 flex items-center justify-between flex-shrink-0 bg-black/20">
-                <div>
-                  <h1 className="text-3xl font-black tracking-wide text-white drop-shadow-lg flex items-center gap-3">
-                    <Globe className="w-8 h-8 text-cyan-400" />
-                    {selectedEnv.name}
-                  </h1>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20">LEVEL {selectedEnv.level}</span>
-                      <span className="text-xs text-white/50">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
+              <div className="h-[15%] min-h-[100px] border-b border-white/10 px-8 flex flex-col justify-center flex-shrink-0 bg-white/[0.02]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-3xl font-black tracking-wide text-white drop-shadow-lg flex items-center gap-3">
+                      <Globe className="w-8 h-8 text-cyan-400" />
+                      {selectedEnv.name}
+                    </h1>
+                    <div className="flex items-center gap-4 mt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-cyan-400 bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20">LEVEL {selectedEnv.level}</span>
+                        <span className="text-xs text-white/50">{selectedEnv.xp} / {selectedEnv.maxXp} XP</span>
+                      </div>
+                      <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-400 rounded-full transition-all duration-500" style={{ width: `${(selectedEnv.xp / selectedEnv.maxXp) * 100}%` }} />
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Capacity</span>
-                    <span className="text-sm font-bold text-white">{selectedEnv.capacity}</span>
-                  </div>
-                  <div className="w-px h-8 bg-white/10" />
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Energy</span>
-                    <span className="text-sm font-bold text-amber-400">{selectedEnv.energy}</span>
-                  </div>
-                  <div className="w-px h-8 bg-white/10" />
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Slots</span>
-                    <span className="text-sm font-bold text-white">{selectedEnv.slots}</span>
+                  
+                  <div className="flex items-center gap-6 bg-black/40 p-4 rounded-xl border border-white/5">
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Capacity</span>
+                      <span className="text-sm font-bold text-white">{selectedEnv.capacity}</span>
+                    </div>
+                    <div className="w-px h-8 bg-white/10" />
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Energy</span>
+                      <span className="text-sm font-bold text-amber-400">{selectedEnv.energy}</span>
+                    </div>
+                    <div className="w-px h-8 bg-white/10" />
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Slots</span>
+                      <span className="text-sm font-bold text-white">{selectedEnv.slots}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* MAIN CONTENT AREA */}
               <div className="flex-1 overflow-y-auto p-8" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                <div className="grid grid-cols-3 lg:grid-cols-4 gap-4 content-start">
+                <h3 className="text-sm font-bold text-white/60 uppercase tracking-widest mb-6 flex items-center gap-2">
+                  <Settings className="w-4 h-4" /> Feature Modules
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
                   {modules.map((mod, i) => {
                     const Icon = mod.icon;
+                    const isUnlocked = mod.status === 'Unlocked';
                     return (
                       <motion.div
                         key={mod.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="group relative rounded-xl overflow-hidden cursor-pointer"
+                        className={`group relative rounded-xl overflow-hidden border ${isUnlocked ? 'border-white/10' : 'border-red-500/20'} transition-all`}
                         style={{
-                          background: 'linear-gradient(135deg, rgba(30,40,50,0.6) 0%, rgba(15,20,30,0.8) 100%)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                          background: isUnlocked ? 'linear-gradient(135deg, rgba(30,40,50,0.4) 0%, rgba(15,20,30,0.6) 100%)' : 'rgba(20,10,10,0.4)',
+                          boxShadow: isUnlocked ? '0 4px 20px rgba(0,0,0,0.2)' : 'none',
                         }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${isUnlocked ? 'from-cyan-500/5' : 'from-red-500/5'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                         
-                        <div className="p-5 flex flex-col h-full min-h-[160px] relative z-10">
-                          <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-cyan-400/50 transition-all duration-300">
-                            <Icon className="w-5 h-5 text-cyan-400" />
+                        <div className="p-5 flex flex-col h-full relative z-10">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className={`w-10 h-10 rounded-lg ${isUnlocked ? 'bg-white/5 border-white/10' : 'bg-red-500/10 border-red-500/20'} border flex items-center justify-center transition-colors duration-300`}>
+                              <Icon className={`w-5 h-5 ${isUnlocked ? 'text-cyan-400' : 'text-red-400'}`} />
+                            </div>
+                            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${isUnlocked ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                              {isUnlocked ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                              {mod.status}
+                            </div>
                           </div>
                           
-                          <h4 className="text-base font-bold text-white mb-2">{mod.title}</h4>
-                          <p className="text-xs text-white/50 leading-relaxed flex-1">{mod.desc}</p>
+                          <h4 className={`text-base font-bold mb-4 ${isUnlocked ? 'text-white' : 'text-white/60'}`}>{mod.title}</h4>
                           
-                          <button className="mt-4 w-full py-2 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/50 text-xs font-bold text-white transition-all">
-                            {mod.action}
-                          </button>
+                          <div className="mt-auto flex gap-2">
+                            {isUnlocked ? (
+                              <>
+                                <button className="flex-1 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-xs font-bold text-white transition-all flex items-center justify-center gap-2">
+                                  Manage
+                                </button>
+                                <button className="flex-1 py-2.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-bold text-cyan-400 transition-all flex items-center justify-center gap-2">
+                                  <Zap className="w-3 h-3" /> Upgrade
+                                </button>
+                              </>
+                            ) : (
+                              <button 
+                                onClick={() => handleModuleAction(mod.id, mod.status)}
+                                className="w-full py-2.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-bold text-red-400 transition-all flex items-center justify-center gap-2"
+                              >
+                                Unlock Module
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </motion.div>
                     );
@@ -179,6 +222,59 @@ export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv 
                 </div>
               </div>
             </div>
+
+            {/* RIGHT PANEL (35%) - Live Environment Preview */}
+            <div className="w-[35%] h-full relative overflow-hidden bg-black flex flex-col">
+              {/* Image Preview with Parallax-like scale */}
+              <motion.div 
+                className="absolute inset-0"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <img src={selectedEnv.image} alt={selectedEnv.name} className="w-full h-full object-cover opacity-60" />
+              </motion.div>
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/60" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)]" />
+
+              {/* Status Indicators overlaid on preview */}
+              <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10 pointer-events-none">
+                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">Live Preview</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {modules.filter(m => m.status === 'Unlocked').map(m => (
+                    <div key={`preview-${m.id}`} className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-cyan-500/30">
+                      <m.icon className="w-3 h-3 text-cyan-400" />
+                      <span className="text-[10px] font-bold text-cyan-100 uppercase tracking-wider">{m.title} Active</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Overlay at bottom */}
+              <div className="absolute bottom-12 left-8 right-8 z-10 flex flex-col gap-3">
+                <button className="w-full py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] flex items-center justify-center gap-3 group">
+                  <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform" />
+                  Enter World
+                </button>
+                <button className="w-full py-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/20 text-white font-bold uppercase tracking-widest text-xs hover:bg-white/10 transition-colors flex items-center justify-center gap-2">
+                  <PenTool className="w-4 h-4" />
+                  Edit Mode
+                </button>
+              </div>
+
+              {/* Target Reticle decoration */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/10 rounded-full flex items-center justify-center pointer-events-none">
+                <div className="w-2 h-2 bg-cyan-400/50 rounded-full" />
+                <div className="absolute top-0 w-px h-4 bg-white/20" />
+                <div className="absolute bottom-0 w-px h-4 bg-white/20" />
+                <div className="absolute left-0 w-4 h-px bg-white/20" />
+                <div className="absolute right-0 w-4 h-px bg-white/20" />
+              </div>
+            </div>
+
           </div>
         </motion.div>
       )}
