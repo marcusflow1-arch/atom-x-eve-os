@@ -1,8 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Globe, X, ChevronLeft, ChevronRight, Settings, Image as ImageIcon, Box, Bot, Shield, Cpu, ShoppingCart, Map, Lock, Unlock, Zap, Eye, Play, PenTool, Shirt, Home, Car, Swords, Layers } from 'lucide-react';
-import EnvironmentHub from '@/components/environment/EnvironmentHub';
+import { base44 } from '@/api/base44Client';
+import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+
+function MiniRoomViewer({ roomUrl }) {
+  const containerRef = useRef(null);
+  const rendererRef = useRef(null);
+  const sceneRef = useRef(null);
+  const cameraRef = useRef(null);
+  const roomModelRef = useRef(null);
+  const reqFrameRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const scene = new THREE.Scene();
+    sceneRef.current = scene;
+    scene.background = new THREE.Color(0x080808);
+    scene.fog = new THREE.FogExp2(0x080808, 0.05);
+
+    const camera = new THREE.PerspectiveCamera(50, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 500);
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    containerRef.current.innerHTML = '';
+    containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    dirLight.position.set(5, 10, 5);
+    scene.add(dirLight);
+
+    const animate = () => {
+      reqFrameRef.current = requestAnimationFrame(animate);
+      if (roomModelRef.current) {
+        roomModelRef.current.rotation.y += 0.002;
+      }
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(reqFrameRef.current);
+      renderer.dispose();
+      containerRef.current?.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!sceneRef.current || !roomUrl) return;
+
+    if (roomModelRef.current) {
+      sceneRef.current.remove(roomModelRef.current);
+      roomModelRef.current = null;
+    }
+
+    const onLoaded = (obj) => {
+      const box = new THREE.Box3().setFromObject(obj);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      if (maxDim > 0) {
+        obj.scale.setScalar(10 / maxDim);
+      }
+      
+      const box2 = new THREE.Box3().setFromObject(obj);
+      const center = box2.getCenter(new THREE.Vector3());
+      obj.position.set(-center.x, -center.y, -center.z);
+
+      roomModelRef.current = new THREE.Group();
+      roomModelRef.current.add(obj);
+      sceneRef.current.add(roomModelRef.current);
+    };
+
+    const lower = roomUrl.toLowerCase();
+    if (lower.endsWith('.fbx')) {
+      new FBXLoader().load(roomUrl, onLoaded);
+    } else if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
+      new GLTFLoader().load(roomUrl, (gltf) => onLoaded(gltf.scene));
+    }
+  }, [roomUrl]);
+
+  return <div ref={containerRef} className="w-full h-full pointer-events-none" />;
+}
 
 export default function EnvHubDrawer({ open, onClose, currentEnvId, onSelectEnv }) {
   const [selectedEnv, setSelectedEnv] = useState({
