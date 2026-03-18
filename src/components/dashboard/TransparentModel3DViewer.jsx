@@ -1274,9 +1274,8 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         const pLevel = playerStatsRef.current.level;
         const enemyLevel = Math.max(1, pLevel + Math.floor(Math.random() * 2) - 1); // Player level +/- 1
         
-        // Level 1 -> 10 dmg, Level 2 -> 50 dmg, Level 3 -> 100 dmg
         const attackDmg = enemyLevel === 1 ? 10 : (enemyLevel === 2 ? 50 : 50 * Math.pow(1.5, enemyLevel - 2));
-        const combatMaxHP = 2 + (enemyLevel * 3); // Hits to kill scales up
+        const combatMaxHP = 2 + (enemyLevel * 3);
         
         const aiProfile = aiModelDef.ai_profile || {};
         const instanceRecord = {
