@@ -1205,7 +1205,7 @@ function LayoutContent({ children, currentPageName }) {
         }} />
       )}
 
-      <AuraWatchedStreamsDrawer isOpen={auraStreamsDrawerOpen} onClose={() => setAuraStreamsDrawerOpen(false)} />
+
 
       {/* Dev Tools Panel */}
       <DevTools />
