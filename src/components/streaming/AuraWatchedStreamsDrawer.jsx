@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, MonitorPlay } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, MonitorPlay, Star } from 'lucide-react';
 
 export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
+  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+  const [selectedSpotlightProfile, setSelectedSpotlightProfile] = useState(null);
+
   // Simulate real-time data fetching structure
   const [data, setData] = useState({
     recentGames: [],
     mostViewed: [],
     newStreamers: [],
-    recommended: []
+    recommended: [],
+    spotlight: []
   });
 
   useEffect(() => {
