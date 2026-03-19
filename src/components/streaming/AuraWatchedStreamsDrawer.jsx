@@ -239,6 +239,45 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
               />
             </div>
           </motion.div>
+
+          <AnimatePresence>
+            {showSpotlightPanel && (
+              <motion.div
+                initial={{ x: -260, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -260, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed top-0 left-[300px] bottom-0 w-[260px] z-[100] flex flex-col border-r border-white/10"
+                style={{
+                  background: 'rgba(20, 24, 30, 0.8)',
+                  backdropFilter: 'blur(30px) saturate(150%)',
+                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                  boxShadow: '4px 0 30px rgba(0, 0, 0, 0.3)'
+                }}
+              >
+                <div className="p-4 shrink-0 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    Spotlight Profiles
+                  </h2>
+                  <button onClick={() => setShowSpotlightPanel(false)} className="text-white/40 hover:text-white transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto py-4 px-3 space-y-2 custom-scrollbar">
+                  {data.spotlight.map(player => (
+                    <div key={player.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-yellow-400/30 cursor-pointer transition-all group">
+                      <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full border border-yellow-400/30 group-hover:border-yellow-400 transition-colors shrink-0 object-cover" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white text-sm font-bold truncate group-hover:text-yellow-400 transition-colors">{player.name}</h4>
+                        <p className="text-yellow-400/70 text-[9px] font-bold uppercase tracking-wider truncate mt-0.5">{player.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
