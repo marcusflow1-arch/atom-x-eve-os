@@ -1969,11 +1969,12 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
         currentEnvId={currentEnvId}
         onSelectEnv={onSelectEnv}
       />
-
-      {/* Bottom Section - Grid layout */}
-
-      {/* Outside box: bottom-left Skills & AI Passives (shown in Inventory view) */}
-
+      <QuickChangeEnvDrawer
+        open={showQuickChangeDrawer}
+        onClose={() => setShowQuickChangeDrawer(false)}
+        currentEnvId={currentEnvId}
+        onSelectEnv={onSelectEnv}
+      />
       <div className="hidden">
         {/* Left: Library Area */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
