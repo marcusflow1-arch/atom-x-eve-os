@@ -153,11 +153,18 @@ export default function CommunityPage() {
         if (sectionParam) setActiveSection(sectionParam);
         
         if (gameTitle && allGames.length) {
-            // Fix: Allow switching games if URL param changes, even if activeGame is already set
+            // Allow switching games if URL param changes, even if activeGame is already set
             if (!activeGame || activeGame.title.toLowerCase() !== gameTitle.toLowerCase()) {
                 const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
-                if (match) setActiveGame(match);
+                if (match) {
+                    setActiveGame(match);
+                    setSelectedPost(null); // Always clear selected post when navigating to a game via URL
+                }
             }
+        } else if (!gameTitle && allGames.length) {
+            // No game param — go back to game hub
+            setActiveGame(null);
+            setSelectedPost(null);
         }
     }, [location.search, allGames, activeGame]);
 
