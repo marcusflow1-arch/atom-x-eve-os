@@ -131,7 +131,16 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
     });
 
 
-    // (duplicate hooks removed)
+    const allGameTags = useMemo(() => {
+        return Array.from(new Set((clans || []).flatMap(c => c.gameTags || []))).sort();
+    }, [clans]);
+
+    const filteredClans = clans?.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              c.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesGame = selectedGameFilter === 'All' || (c.gameTags && c.gameTags.includes(selectedGameFilter));
+        return matchesSearch && matchesGame;
+    }) || [];
 
     const isMember = (clanId) => myMemberships?.some(m => m.clan_id === clanId);
 
@@ -158,17 +167,6 @@ export default function ClanIntro({ onClanCreated, onClanJoined }) {
             </div>
         );
     }
-
-    const allGameTags = useMemo(() => {
-        return Array.from(new Set((clans || []).flatMap(c => c.gameTags || []))).sort();
-    }, [clans]);
-
-    const filteredClans = clans?.filter(c => {
-        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                              c.description?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesGame = selectedGameFilter === 'All' || (c.gameTags && c.gameTags.includes(selectedGameFilter));
-        return matchesSearch && matchesGame;
-    }) || [];
 
     return (
         <div className="min-h-screen w-full relative overflow-hidden bg-[#0a0c10] text-white font-sans">
