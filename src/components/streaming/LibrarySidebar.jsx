@@ -226,7 +226,7 @@ export default function LibrarySidebar() {
               {quickNavGames.slice(0, 2).map((game) => (
                 <button
                   key={`clan_${game.id}`}
-                  onClick={() => window.location.href = `/Clan?game=${encodeURIComponent(game.name)}`}
+                  onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
                   className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
                   title={`${game.name} Clan Chat`}
                 >
