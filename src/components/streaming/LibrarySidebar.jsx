@@ -182,10 +182,7 @@ export default function LibrarySidebar() {
           {/* Aura Specific Button */}
           {isAura && (
             <button
-              onClick={() => {
-                setIsOpen(true);
-                setActiveSub('aura');
-              }}
+              onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
               className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
               title="Watched Streams"
             >
