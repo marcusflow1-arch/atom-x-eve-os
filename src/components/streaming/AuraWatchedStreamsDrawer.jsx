@@ -136,15 +136,16 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
     return (
       <div className="mb-6">
         <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-2 px-3">{title}</h3>
-        <div className="space-y-0.5 px-1">
+        <div className={`space-y-0.5 px-1 transition-all duration-300 ${showAll ? 'max-h-[250px] overflow-y-auto custom-scrollbar' : ''}`}>
           {visibleItems.map(renderItem)}
         </div>
         {items.length > defaultLimit && (
           <button 
             onClick={() => setShowAll(!showAll)}
-            className="text-cyan-400/80 hover:text-cyan-300 text-xs font-medium px-3 py-1.5 mt-1 w-full text-left transition-colors flex items-center gap-1 hover:bg-white/5 rounded-lg"
+            className="text-cyan-400/80 hover:text-cyan-300 text-xs font-medium px-3 py-1.5 mt-1 w-full text-left transition-colors flex items-center justify-between hover:bg-white/5 rounded-lg group"
           >
-            {showAll ? 'Show Less' : 'Show More'}
+            <span>{showAll ? 'Show Less' : 'Show More'}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showAll ? 'rotate-180' : ''}`} />
           </button>
         )}
       </div>
