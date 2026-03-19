@@ -243,19 +243,35 @@ export default function ClanPage() {
             const params = new URLSearchParams(location.search);
             const gameQuery = params.get('game');
             if (gameQuery) {
-                // Find game by name
-                const games = await base44.entities.Game.filter({ title: gameQuery });
-                if (games.length > 0) {
+                let foundGame = null;
+                
+                if (gameQuery === 'global_chat') {
+                    foundGame = {
+                      id: 'global_chat',
+                      title: 'ATOM X EVE',
+                      genre: 'Social',
+                      cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
+                      isGlobalChat: true
+                    };
+                } else {
+                    // Find game by name
+                    const games = await base44.entities.Game.filter({ title: gameQuery });
+                    if (games.length > 0) foundGame = games[0];
+                }
+
+                if (foundGame) {
                     const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games_chat');
                     if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
-                    setSelectedGame(games[0]);
+                    setSelectedGame(foundGame);
                     
-                    // Add to recent clan games
-                    const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
-                    const newRecent = [games[0], ...recent.filter(g => g.id !== games[0].id)].slice(0, 5);
-                    localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
-                    // Dispatch event for sidebar to update
-                    window.dispatchEvent(new Event('recentClanGamesUpdated'));
+                    if (!foundGame.isGlobalChat) {
+                        // Add to recent clan games
+                        const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
+                        const newRecent = [foundGame, ...recent.filter(g => g.id !== foundGame.id)].slice(0, 5);
+                        localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
+                        // Dispatch event for sidebar to update
+                        window.dispatchEvent(new Event('recentClanGamesUpdated'));
+                    }
                     
                     // Clear the query param so back button works without refreshing
                     navigate('/Clan', { replace: true });
