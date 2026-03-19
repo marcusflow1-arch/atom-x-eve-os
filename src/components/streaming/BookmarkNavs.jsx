@@ -10,22 +10,23 @@ const mockClanGames = [
   { id: '3', name: 'WoW', image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=100&q=80' },
 ];
 
-const mockClanChats = [
-  { id: 'c1', name: 'Raid Planning' },
-  { id: 'c2', name: 'General Chat' },
-  { id: 'c3', name: 'LFG PvP' },
+const mockClanGamesList = [
+  { id: 'g1', name: 'Destiny 2' },
+  { id: 'g2', name: 'Warframe' },
+  { id: 'g3', name: 'WoW' },
+  { id: 'g4', name: 'Cyberpunk 2077' },
 ];
 
 const mockForumTopics = [
-  { id: 'f1', name: 'Builds', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=100&q=80' },
-  { id: 'f2', name: 'Lore', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=100&q=80' },
-  { id: 'f3', name: 'Support', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=100&q=80' },
+  { id: 'f1', name: 'Elden Ring', image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=100&q=80' },
+  { id: 'f2', name: 'Valorant', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=100&q=80' },
+  { id: 'f3', name: 'Cyberpunk', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' },
 ];
 
-const mockForumPages = [
-  { id: 'p1', name: 'Elden Ring Best Katana' },
-  { id: 'p2', name: 'Cyberpunk 2.0 Notes' },
-  { id: 'p3', name: 'Valorant Patch 7.0' },
+const mockForumGamesList = [
+  { id: 'p1', name: 'Elden Ring' },
+  { id: 'p2', name: 'Cyberpunk 2077' },
+  { id: 'p3', name: 'Valorant' },
 ];
 
 export const ClanBookmarkNav = () => {
