@@ -69,6 +69,13 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
         { id: 'rc3', name: 'StoryTeller', avatar: 'https://i.pravatar.cc/150?u=12', game: 'The Witcher 3', viewers: '4.2K', isLive: true },
         { id: 'rc4', name: 'CozyGamer', avatar: 'https://i.pravatar.cc/150?u=4', game: 'Persona 5', viewers: '3.4K', isLive: true },
         { id: 'rc5', name: 'LoreMaster', avatar: 'https://i.pravatar.cc/150?u=17', game: 'Dark Souls 3', viewers: '9.1K', isLive: true },
+      ],
+      spotlight: [
+        { id: 'sp1', name: 'AuraChampion', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&q=80', title: 'Top Ranked Player' },
+        { id: 'sp2', name: 'SpeedDemon', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', title: 'World Record Holder' },
+        { id: 'sp3', name: 'BuildMaster', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&q=80', title: 'Creative Genius' },
+        { id: 'sp4', name: 'LoreExplorer', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&q=80', title: 'Completionist' },
+        { id: 'sp5', name: 'NinjaSniper', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&q=80', title: 'Aim Legend' },
       ]
     });
   }, []);
