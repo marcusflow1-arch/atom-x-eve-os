@@ -195,6 +195,21 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+              <div className="mb-6 px-3">
+                <div className="flex items-center justify-between border border-yellow-500/20 bg-yellow-500/5 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-yellow-400">
+                    <Star className="w-4 h-4 fill-yellow-400/20" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider">Players in the spotlight</h3>
+                  </div>
+                  <button 
+                    onClick={() => setShowSpotlightPanel(!showSpotlightPanel)} 
+                    className={`w-7 h-7 rounded flex items-center justify-center transition-all ${showSpotlightPanel ? 'bg-yellow-500 text-black' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40'}`}
+                  >
+                    <ChevronRight className={`w-4 h-4 transition-transform ${showSpotlightPanel ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+              </div>
+
               <Section 
                 title="Recently Watched Games" 
                 items={data.recentGames} 
