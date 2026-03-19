@@ -81,7 +81,7 @@ export default function LibrarySidebar() {
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
   const panel = new URLSearchParams(location.search).get('panel');
-  const isAura = pathname.includes('/streaming');
+  const isAura = pathname.includes('/aura') || pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
   
