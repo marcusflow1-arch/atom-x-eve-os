@@ -168,16 +168,32 @@ export default function LibrarySidebar() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3"
         >
-          {/* Toggle Quest Book Button */}
-          <button
-            onClick={() => window.dispatchEvent(new Event('toggleQuestBook'))}
-            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-            title="Toggle Quest Book"
-          >
-            <Book className="w-4 h-4" />
-          </button>
+          {/* Luna Dashboard Specific Buttons */}
+          {pathname.includes('/lunatemplate') && (
+            <button
+              onClick={() => window.dispatchEvent(new Event('toggleQuestBook'))}
+              className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+              title="Toggle Quest Book"
+            >
+              <Book className="w-4 h-4" />
+            </button>
+          )}
 
-          {/* Original Library Button */}
+          {/* Aura Specific Button */}
+          {isAura && (
+            <button
+              onClick={() => {
+                setIsOpen(true);
+                setActiveSub('aura');
+              }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
+              title="Watched Streams"
+            >
+              <Tv className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Original Library Button (Always visible unless hidden by parent conditions) */}
           <button
             onClick={() => setIsOpen(true)}
             className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
@@ -186,14 +202,16 @@ export default function LibrarySidebar() {
             <Library className="w-5 h-5" />
           </button>
 
-          {/* Toggle Card Collection Button */}
-          <button
-            onClick={() => window.dispatchEvent(new Event('toggleCardCollection'))}
-            className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-            title="Toggle Card Collection"
-          >
-            <Layers className="w-4 h-4" />
-          </button>
+          {/* Luna Dashboard Specific Buttons */}
+          {pathname.includes('/lunatemplate') && (
+            <button
+              onClick={() => window.dispatchEvent(new Event('toggleCardCollection'))}
+              className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+              title="Toggle Card Collection"
+            >
+              <Layers className="w-4 h-4" />
+            </button>
+          )}
         </motion.div>
       )}
 
