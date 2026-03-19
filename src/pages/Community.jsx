@@ -151,11 +151,38 @@ export default function CommunityPage() {
         const gameTitle = params.get('game');
         const sectionParam = params.get('section');
         if (sectionParam) setActiveSection(sectionParam);
-        if (gameTitle && allGames.length && !activeGame) {
-            const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
-            if (match) setActiveGame(match);
+        
+        if (gameTitle && allGames.length) {
+            // Fix: Allow switching games if URL param changes, even if activeGame is already set
+            if (!activeGame || activeGame.title.toLowerCase() !== gameTitle.toLowerCase()) {
+                const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
+                if (match) setActiveGame(match);
+            }
         }
     }, [location.search, allGames, activeGame]);
+
+    // Save visited game to Recent Forum Games
+    useEffect(() => {
+        if (activeGame) {
+            try {
+                const stored = JSON.parse(localStorage.getItem('recent_forum_games') || '[]');
+                // Remove if exists to avoid duplicates
+                const filtered = stored.filter(g => g.name !== activeGame.title);
+                // Add to front
+                const toSave = [{
+                    id: activeGame.id,
+                    name: activeGame.title,
+                    image: activeGame.cover_image || activeGame.banner_image || activeGame.image
+                }, ...filtered].slice(0, 5);
+                
+                localStorage.setItem('recent_forum_games', JSON.stringify(toSave));
+                // Dispatch event so LibrarySidebar can update immediately
+                window.dispatchEvent(new Event('recentForumGamesUpdated'));
+            } catch (e) {
+                console.error("Failed to save recent forum game", e);
+            }
+        }
+    }, [activeGame]);
 
     // Apply filters to games
     useEffect(() => {
