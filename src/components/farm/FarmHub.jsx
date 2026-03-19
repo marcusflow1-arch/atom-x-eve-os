@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import FarmHubGameCard from './FarmHubGameCard';
 import FarmHubFeaturedHero from './FarmHubFeaturedHero';
+import { useNavigate } from 'react-router-dom';
 
 const GENRE_PILLS = [
   { id: 'all', label: 'All Games', icon: Globe },
@@ -20,6 +21,7 @@ const GENRE_PILLS = [
 ];
 
 export default function FarmHub({ onSelectGame }) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState('all');
   const [isListening, setIsListening] = useState(false);
@@ -88,7 +90,15 @@ export default function FarmHub({ onSelectGame }) {
         {/* Title + Stats Row */}
         <div className="flex items-end justify-between mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl font-extrabold text-white tracking-tight">Farm Hub</h1>
+            <div className="flex items-baseline gap-4">
+              <h1 className="text-4xl font-extrabold text-white tracking-tight">Farm Hub</h1>
+              <button 
+                onClick={() => navigate('/Community')} 
+                className="text-lg font-medium text-white/50 hover:text-white underline decoration-2 decoration-cyan-500 underline-offset-4 transition-all"
+              >
+                Forms
+              </button>
+            </div>
             <p className="text-white/40 text-base mt-1">Find your community. Join the harvest.</p>
           </motion.div>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-center gap-6">
