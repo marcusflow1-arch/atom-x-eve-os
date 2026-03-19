@@ -201,6 +201,54 @@ export default function LibrarySidebar() {
             </button>
           )}
 
+          {isClan && (
+            <>
+              {quickNavGames.slice(0, 2).map((game) => (
+                <button
+                  key={`clan_${game.id}`}
+                  onClick={() => window.location.href = `/Clan?game=${encodeURIComponent(game.name)}`}
+                  className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                  title={`${game.name} Clan Chat`}
+                >
+                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
+              <button
+                onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
+                title="Clan Quick Menu"
+              >
+                <UsersIcon className="w-4 h-4" />
+              </button>
+              <div className="w-6 h-px bg-white/10 my-1" />
+            </>
+          )}
+
+          {isForum && (
+            <>
+              {quickNavGames.slice(0, 2).map((game) => (
+                <button
+                  key={`forum_${game.id}`}
+                  onClick={() => window.location.href = `/Community?game=${encodeURIComponent(game.name)}`}
+                  className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                  title={`${game.name} Forum`}
+                >
+                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ))}
+              <button
+                onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
+                title="Forum Quick Menu"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </button>
+              <div className="w-6 h-px bg-white/10 my-1" />
+            </>
+          )}
+
           {/* Original Library Button (Always visible unless hidden by parent conditions) */}
           <button
             onClick={() => setIsOpen(true)}
