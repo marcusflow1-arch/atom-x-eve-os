@@ -92,7 +92,7 @@ export default function LibrarySidebar() {
   
   const isGenreMastery = pathname.includes('/genremastery');
   
-  const shouldShow = !(isAura || isEntertainment || isLibraryPage || isGenreMastery || overlayActive);
+  const shouldShow = !(isEntertainment || isLibraryPage || isGenreMastery || overlayActive);
 
   // Close right-side overlay whenever the left pull-out tab closes
   useEffect(() => {
