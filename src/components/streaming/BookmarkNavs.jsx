@@ -162,19 +162,19 @@ export const ForumBookmarkNav = () => {
             >
               <div className="p-3 border-b border-white/10 flex items-center gap-2 bg-white/[0.02] shrink-0 w-[240px]">
                 <Hash className="w-4 h-4 text-green-400" />
-                <span className="text-xs font-bold text-white tracking-wide">Recent Topics</span>
+                <span className="text-xs font-bold text-white tracking-wide">Recent Games</span>
               </div>
               <div className="max-h-60 overflow-y-auto p-2 space-y-1 w-[240px]" style={{ scrollbarWidth: 'none' }}>
-                {mockForumPages.map(page => (
+                {mockForumGamesList.map(game => (
                   <div 
-                    key={page.id} 
+                    key={game.id} 
                     onClick={() => {
                       navigate(createPageUrl('Community'));
                       setIsPagesOpen(false);
                     }}
                     className="flex flex-col justify-center p-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors text-sm text-white/80 hover:text-white"
                   >
-                    <span className="truncate">{page.name}</span>
+                    <span className="truncate">{game.name}</span>
                   </div>
                 ))}
               </div>
