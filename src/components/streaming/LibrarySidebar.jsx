@@ -132,6 +132,7 @@ export default function LibrarySidebar() {
   ];
   
   const quickNavGames = recentClanGames.length > 0 ? recentClanGames : defaultQuickNavGames;
+  const quickNavForumGames = recentForumGames.length > 0 ? recentForumGames : defaultQuickNavGames;
   
   // We want the sidebar to be available on more pages now that it has the Friends List
   // Removing the strict page restrictions to allow it to be accessed generally if needed, 
