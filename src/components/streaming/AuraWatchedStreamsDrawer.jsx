@@ -65,6 +65,13 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
         { id: 'rc3', name: 'StoryTeller', avatar: 'https://i.pravatar.cc/150?u=12', game: 'The Witcher 3', viewers: '4.2K', isLive: true },
         { id: 'rc4', name: 'CozyGamer', avatar: 'https://i.pravatar.cc/150?u=4', game: 'Persona 5', viewers: '3.4K', isLive: true },
         { id: 'rc5', name: 'LoreMaster', avatar: 'https://i.pravatar.cc/150?u=17', game: 'Dark Souls 3', viewers: '9.1K', isLive: true },
+      ],
+      spotlight: [
+        { id: 'sp1', name: 'MasterChief', avatar: 'https://i.pravatar.cc/150?u=18', description: 'Legendary Halo Player', followers: '100K' },
+        { id: 'sp2', name: 'Ninja', avatar: 'https://i.pravatar.cc/150?u=19', description: 'FPS God', followers: '20M' },
+        { id: 'sp3', name: 'Shroud', avatar: 'https://i.pravatar.cc/150?u=20', description: 'Human Aimbot', followers: '10M' },
+        { id: 'sp4', name: 'Faker', avatar: 'https://i.pravatar.cc/150?u=21', description: 'Unkillable Demon King', followers: '5M' },
+        { id: 'sp5', name: 'TenZ', avatar: 'https://i.pravatar.cc/150?u=22', description: 'Valorant Prodigy', followers: '4M' },
       ]
     });
   }, []);
