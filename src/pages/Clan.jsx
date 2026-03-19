@@ -506,6 +506,11 @@ export default function ClanPage() {
                                        userId={user?.id}
                                        onSelectGame={(game) => {
                                             setSelectedGame(game);
+                                            // Add to recent clan games
+                                            const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
+                                            const newRecent = [game, ...recent.filter(g => g.id !== game.id)].slice(0, 5);
+                                            localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
+                                            window.dispatchEvent(new Event('recentClanGamesUpdated'));
                                         }} 
                                     />
                                 </div>
