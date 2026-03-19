@@ -583,10 +583,8 @@ function LayoutContent({ children, currentPageName }) {
       {/* Global Styles - Extracted to reduce inline violations */}
       <style dangerouslySetInnerHTML={{ __html: globalStyles }} />
 
-      {/* Global Library Sidebar trigger (hidden on Aura, Entertainment, Library) */}
-      {!location.pathname.toLowerCase().includes('/aura') && (
-        <LibrarySidebar />
-      )}
+      {/* Global Library Sidebar trigger (hidden on Entertainment, Library) */}
+      <LibrarySidebar />
 
 
 
