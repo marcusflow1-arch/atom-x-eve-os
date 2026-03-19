@@ -85,6 +85,8 @@ export default function LibrarySidebar() {
   const isAura = pathname.includes('/aura') || pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
+  const isClan = pathname.includes('/clan');
+  const isForum = pathname.includes('/community') || pathname.includes('/forum');
   
   // We want the sidebar to be available on more pages now that it has the Friends List
   // Removing the strict page restrictions to allow it to be accessed generally if needed, 
