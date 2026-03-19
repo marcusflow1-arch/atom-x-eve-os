@@ -166,6 +166,10 @@ export default function CommunityPage() {
                 if (sectionParam) setActiveSection(sectionParam);
                 processedLocationKey.current = location.key;
             }
+        } else if (!gameTitle && allGames.length) {
+            setActiveGame(null);
+            setSelectedPost(null);
+            processedLocationKey.current = location.key;
         }
     }, [location.search, location.key, allGames]);
 
