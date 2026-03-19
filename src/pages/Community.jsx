@@ -335,9 +335,10 @@ export default function CommunityPage() {
     };
 
     const handleSelectGame = (game) => {
-        // Update URL so the state syncs and back button works natively
-        navigate(`${location.pathname}?game=${encodeURIComponent(game.title)}`);
-        setSearchQuery(''); // Clear global search when entering a game
+        setActiveGame(game);
+        setSelectedPost(null);
+        setActiveSection('all');
+        setSearchQuery('');
     }
 
     const setShowCreateForm = (value) => {
