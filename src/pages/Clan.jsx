@@ -239,6 +239,30 @@ export default function ClanPage() {
     // Restore state logic (Navigation OR Last Known State)
     useEffect(() => {
         const restoreState = async () => {
+            // 0. Highest Priority: Query parameter ?game=
+            const params = new URLSearchParams(location.search);
+            const gameQuery = params.get('game');
+            if (gameQuery) {
+                // Find game by name
+                const games = await base44.entities.Game.filter({ title: gameQuery });
+                if (games.length > 0) {
+                    const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games_chat');
+                    if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+                    setSelectedGame(games[0]);
+                    
+                    // Add to recent clan games
+                    const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
+                    const newRecent = [games[0], ...recent.filter(g => g.id !== games[0].id)].slice(0, 5);
+                    localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
+                    // Dispatch event for sidebar to update
+                    window.dispatchEvent(new Event('recentClanGamesUpdated'));
+                    
+                    // Clear the query param so back button works without refreshing
+                    navigate('/Clan', { replace: true });
+                }
+                return;
+            }
+
             // 1. Priority: Explicit Navigation State (Returning from Farm Page)
             if (location.state?.restoreGameId) {
                 const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
