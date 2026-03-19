@@ -223,7 +223,16 @@ export default function LibrarySidebar() {
 
           {isClan && (
             <>
-              {quickNavGames.slice(0, 2).map((game) => (
+              <button
+                onClick={() => navigate('/Clan?game=global_chat')}
+                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                title={`Atom X Eve Global Clan Chat`}
+              >
+                <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                <div className="absolute inset-0 bg-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+              
+              {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 2).map((game) => (
                 <button
                   key={`clan_${game.id}`}
                   onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
