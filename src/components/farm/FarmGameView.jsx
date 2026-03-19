@@ -143,7 +143,7 @@ export default function FarmGameView({ game, onBack }) {
               >
                 <MessageSquare className="w-3.5 h-3.5" /> Forum
               </Button>
-              <Button size="sm" className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/25 text-xs h-8 gap-1.5 rounded-full">
+              <Button size="sm" onClick={() => setShowCreatePostModal(true)} className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/25 text-xs h-8 gap-1.5 rounded-full">
                 <Plus className="w-3.5 h-3.5" /> New Post
               </Button>
             </div>
