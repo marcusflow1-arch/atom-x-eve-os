@@ -1,164 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronRight, MonitorPlay, Star } from 'lucide-react';
+import { X, ChevronDown, MonitorPlay, Star, Users, Radio } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 
 export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
-  const [showSpotlightPanel, setShowSpotlightPanel] = useState(false);
+  const navigate = useNavigate();
+  const [games, setGames] = useState([]);
+  const [streams, setStreams] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [expandedGameId, setExpandedGameId] = useState(null);
 
-  // Simulate real-time data fetching structure
-  const [data, setData] = useState({
-    recentGames: [],
-    mostViewed: [],
-    newStreamers: [],
-    recommended: [],
-    spotlight: []
-  });
-
+  // Fetch real data when drawer opens
   useEffect(() => {
-    // Reset spotlight panel when closing drawer
-    if (!isOpen) setShowSpotlightPanel(false);
+    if (!isOpen) return;
+    setLoading(true);
+    Promise.all([
+      base44.entities.Game.list('-original_year', 20).catch(() => []),
+      base44.entities.Stream.filter({ is_live: true }, '-viewer_count', 30).catch(() => [])
+    ]).then(([gRes, sRes]) => {
+      const g = gRes?.data || gRes || [];
+      const s = sRes?.data || sRes || [];
+      setGames(g.slice(0, 12));
+      setStreams(s);
+    }).finally(() => setLoading(false));
   }, [isOpen]);
 
-  useEffect(() => {
-    // In a real implementation, this would fetch from a live API/WebSocket
-    setData({
-      recentGames: [
-        { 
-          id: 'g1', 
-          name: 'Cyberpunk 2077', 
-          image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80',
-          streamers: [
-            { id: 'g1_s1', name: 'NeonRunner', viewers: '12K', avatar: 'https://i.pravatar.cc/150?u=1' },
-            { id: 'g1_s2', name: 'VTheMerc', viewers: '2.1K', avatar: 'https://i.pravatar.cc/150?u=5' }
-          ]
-        },
-        { 
-          id: 'g2', 
-          name: 'Elden Ring', 
-          image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=100&q=80',
-          streamers: [
-            { id: 'g2_s1', name: 'TarnishedPro', viewers: '8.5K', avatar: 'https://i.pravatar.cc/150?u=2' },
-            { id: 'g2_s2', name: 'LetMeSolo', viewers: '15K', avatar: 'https://i.pravatar.cc/150?u=6' }
-          ]
-        },
-        { 
-          id: 'g3', 
-          name: 'Valorant', 
-          image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=100&q=80',
-          streamers: [
-            { id: 'g3_s1', name: 'AimBot', viewers: '1.5K', avatar: 'https://i.pravatar.cc/150?u=13' }
-          ]
-        }
-      ],
-      mostViewed: [
-        { id: 'mv1', name: 'GuildMaster', avatar: 'https://i.pravatar.cc/150?u=3', game: 'World of Warcraft', viewers: '45K', isLive: true },
-        { id: 'mv2', name: 'EsportsLive', avatar: 'https://i.pravatar.cc/150?u=14', game: 'Valorant', viewers: '120K', isLive: true },
-        { id: 'mv3', name: 'TarnishedPro', avatar: 'https://i.pravatar.cc/150?u=2', game: 'Elden Ring', viewers: '8.5K', isLive: true },
-        { id: 'mv4', name: 'NeonRunner', avatar: 'https://i.pravatar.cc/150?u=1', game: 'Cyberpunk 2077', viewers: '12K', isLive: true },
-        { id: 'mv5', name: 'ProGamerX', avatar: 'https://i.pravatar.cc/150?u=15', game: 'Apex Legends', viewers: '32K', isLive: true },
-      ],
-      newStreamers: [
-        { id: 'ns1', name: 'PixelHunter', avatar: 'https://i.pravatar.cc/150?u=7', game: 'Indie Showcase', viewers: '1.2K', isLive: true },
-        { id: 'ns2', name: 'RetroGamer', avatar: 'https://i.pravatar.cc/150?u=8', game: 'Super Mario 64', viewers: '800', isLive: true },
-        { id: 'ns3', name: 'SpeedyJ', avatar: 'https://i.pravatar.cc/150?u=9', game: 'Sonic Odyssey', viewers: '450', isLive: true },
-        { id: 'ns4', name: 'CasualDan', avatar: 'https://i.pravatar.cc/150?u=16', game: 'Stardew Valley', viewers: '200', isLive: true },
-      ],
-      recommended: [
-        { id: 'rc1', name: 'StrategyKing', avatar: 'https://i.pravatar.cc/150?u=10', game: 'Civilization VI', viewers: '5.6K', isLive: true },
-        { id: 'rc2', name: 'FPSGod', avatar: 'https://i.pravatar.cc/150?u=11', game: 'Valorant', viewers: '22K', isLive: true },
-        { id: 'rc3', name: 'StoryTeller', avatar: 'https://i.pravatar.cc/150?u=12', game: 'The Witcher 3', viewers: '4.2K', isLive: true },
-        { id: 'rc4', name: 'CozyGamer', avatar: 'https://i.pravatar.cc/150?u=4', game: 'Persona 5', viewers: '3.4K', isLive: true },
-        { id: 'rc5', name: 'LoreMaster', avatar: 'https://i.pravatar.cc/150?u=17', game: 'Dark Souls 3', viewers: '9.1K', isLive: true },
-      ],
-      spotlight: [
-        { id: 'sp1', name: 'AuraChampion', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&q=80', title: 'Top Ranked Player' },
-        { id: 'sp2', name: 'SpeedDemon', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80', title: 'World Record Holder' },
-        { id: 'sp3', name: 'BuildMaster', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150&q=80', title: 'Creative Genius' },
-        { id: 'sp4', name: 'LoreExplorer', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&q=80', title: 'Completionist' },
-        { id: 'sp5', name: 'NinjaSniper', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&q=80', title: 'Aim Legend' },
-      ]
-    });
-  }, []);
-
-  const StreamerRow = ({ streamer }) => (
-    <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group">
-      <div className="relative shrink-0">
-        <img src={streamer.avatar} alt={streamer.name} className="w-8 h-8 rounded-full object-cover border border-white/10 group-hover:border-cyan-500/50 transition-colors" />
-        {streamer.isLive && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-[2px] border-[#0d1117]" />}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center">
-          <h4 className="text-white text-sm font-semibold truncate group-hover:text-cyan-300 transition-colors">{streamer.name}</h4>
-          {streamer.isLive && (
-            <div className="flex items-center gap-1.5 text-white/90 text-[10px] font-bold">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-              {streamer.viewers}
-            </div>
-          )}
-        </div>
-        <p className="text-white/50 text-[11px] truncate">{streamer.game}</p>
-      </div>
-    </div>
-  );
-
-  const GameRow = ({ game }) => {
-    const [expanded, setExpanded] = useState(false);
-    return (
-      <div className="space-y-1">
-        <div 
-          className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer transition-colors group"
-          onClick={() => setExpanded(!expanded)}
-        >
-          <img src={game.image} alt={game.name} className="w-8 h-10 rounded object-cover border border-white/10 group-hover:border-cyan-500/50 transition-colors shrink-0" />
-          <div className="flex-1 min-w-0">
-            <h4 className="text-white text-sm font-semibold truncate group-hover:text-cyan-300 transition-colors">{game.name}</h4>
-          </div>
-          <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-        </div>
-        <AnimatePresence>
-          {expanded && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden space-y-1 pl-4 border-l border-white/5 ml-4 mt-1"
-            >
-              {game.streamers.map(s => <StreamerRow key={s.id} streamer={{...s, game: game.name, isLive: true}} />)}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+  // Map streams to games
+  const gamesWithStreamers = games.map(game => {
+    const relatedStreams = streams.filter(s =>
+      s.game_id === game.id || s.game === game.title || s.game_title === game.title
     );
+    return { ...game, liveStreamers: relatedStreams };
+  });
+
+  const handleGameNameClick = (game) => {
+    onClose();
+    // Navigate to Aura page — StreamingGamesLive will show the game's streamers via selectedGame state
+    // We pass state so the Aura page can open GameStreamersView for this game
+    navigate(createPageUrl('Aura'), {
+      state: { openGame: { id: game.id, title: game.title, image: game.cover_image, cover_image: game.cover_image } }
+    });
   };
 
-  const Section = ({ title, items, renderItem, defaultLimit = 3 }) => {
-    const [showAll, setShowAll] = useState(false);
-    const visibleItems = showAll ? items : items.slice(0, defaultLimit);
+  const handleStreamerClick = (stream) => {
+    onClose();
+    if (stream.streamer_id) {
+      navigate(createPageUrl('StreamWatch') + `?id=${stream.streamer_id}`);
+    }
+  };
 
-    if (!items || items.length === 0) return null;
-
-    return (
-      <div className="mb-6">
-        <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-2 px-3">{title}</h3>
-        <div className={`space-y-0.5 px-1 ${showAll ? 'max-h-[220px] overflow-y-auto custom-scrollbar border-y border-white/5 py-1' : ''}`}>
-          {visibleItems.map(renderItem)}
-        </div>
-        {items.length > defaultLimit && (
-          <button 
-            onClick={() => setShowAll(!showAll)}
-            className="text-cyan-400/80 hover:text-cyan-300 text-xs font-medium px-3 py-1.5 mt-1 w-full text-left transition-colors flex items-center gap-1 hover:bg-white/5 rounded-lg"
-          >
-            {showAll ? 'Show Less' : 'Show More'}
-          </button>
-        )}
-      </div>
-    );
+  const toggleExpand = (gameId) => {
+    setExpandedGameId(prev => prev === gameId ? null : gameId);
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -166,6 +67,8 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
             onClick={onClose}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
+
+          {/* Drawer */}
           <motion.div
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
@@ -173,7 +76,7 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed top-0 left-0 bottom-0 w-[300px] z-[101] flex flex-col border-r border-white/10"
             style={{
-              background: 'rgba(100, 120, 140, 0.12)',
+              background: 'rgba(10, 14, 20, 0.92)',
               backdropFilter: 'blur(30px) saturate(150%)',
               WebkitBackdropFilter: 'blur(30px) saturate(150%)',
               boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset -1px 0 0 rgba(255, 255, 255, 0.05)'
@@ -185,7 +88,7 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
                 <MonitorPlay className="w-5 h-5 text-cyan-400" />
                 <h2 className="text-lg font-bold text-white tracking-wide">Aura Streams</h2>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
               >
@@ -193,91 +96,116 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
               </button>
             </div>
 
-            {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
-              <div className="mb-6 px-3">
-                <div className="flex items-center justify-between border border-yellow-500/20 bg-yellow-500/5 rounded-xl p-3">
-                  <div className="flex items-center gap-2 text-yellow-400">
-                    <Star className="w-4 h-4 fill-yellow-400/20" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider">Players in the spotlight</h3>
-                  </div>
-                  <button 
-                    onClick={() => setShowSpotlightPanel(!showSpotlightPanel)} 
-                    className={`w-7 h-7 rounded flex items-center justify-center transition-all ${showSpotlightPanel ? 'bg-yellow-500 text-black' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/40'}`}
-                  >
-                    <ChevronRight className={`w-4 h-4 transition-transform ${showSpotlightPanel ? 'rotate-180' : ''}`} />
-                  </button>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto py-3 custom-scrollbar">
+              {loading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
                 </div>
-              </div>
+              ) : (
+                <>
+                  <p className="text-white/30 text-[10px] font-bold uppercase tracking-wider px-4 mb-2">
+                    Games — click name to see streamers
+                  </p>
+                  <div className="space-y-0.5 px-2">
+                    {gamesWithStreamers.map(game => (
+                      <div key={game.id} className="rounded-xl overflow-hidden">
+                        {/* Game Row */}
+                        <div className="flex items-center gap-3 p-2 hover:bg-white/5 transition-colors group">
+                          {/* Game image — just decorative */}
+                          <img
+                            src={game.cover_image || game.banner_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80'}
+                            alt={game.title}
+                            className="w-8 h-10 rounded object-cover border border-white/10 shrink-0"
+                          />
 
-              <Section 
-                title="Recently Watched Games" 
-                items={data.recentGames} 
-                renderItem={(game) => <GameRow key={game.id} game={game} />}
-                defaultLimit={2}
-              />
-              
-              <Section 
-                title="Most Viewed" 
-                items={data.mostViewed} 
-                renderItem={(streamer) => <StreamerRow key={streamer.id} streamer={streamer} />}
-                defaultLimit={3}
-              />
+                          {/* Game name — navigates to streamers list */}
+                          <button
+                            onClick={() => handleGameNameClick(game)}
+                            className="flex-1 text-left min-w-0"
+                          >
+                            <span className="text-white text-sm font-semibold truncate block group-hover:text-cyan-300 transition-colors">
+                              {game.title}
+                            </span>
+                            {game.liveStreamers.length > 0 ? (
+                              <span className="text-red-400 text-[10px] flex items-center gap-1 mt-0.5">
+                                <Radio className="w-2.5 h-2.5" />
+                                {game.liveStreamers.length} live
+                              </span>
+                            ) : (
+                              <span className="text-white/30 text-[10px]">No active streams</span>
+                            )}
+                          </button>
 
-              <Section 
-                title="New Streamers" 
-                items={data.newStreamers} 
-                renderItem={(streamer) => <StreamerRow key={streamer.id} streamer={streamer} />}
-                defaultLimit={2}
-              />
+                          {/* Arrow — only shown if there are streamers, expands/collapses */}
+                          {game.liveStreamers.length > 0 && (
+                            <button
+                              onClick={() => toggleExpand(game.id)}
+                              className="w-6 h-6 flex items-center justify-center text-white/40 hover:text-white transition-colors shrink-0"
+                            >
+                              <ChevronDown className={`w-4 h-4 transition-transform ${expandedGameId === game.id ? 'rotate-180' : ''}`} />
+                            </button>
+                          )}
+                        </div>
 
-              <Section 
-                title="Recommended For You" 
-                items={data.recommended} 
-                renderItem={(streamer) => <StreamerRow key={streamer.id} streamer={streamer} />}
-                defaultLimit={3}
-              />
+                        {/* Expandable Streamer List */}
+                        <AnimatePresence>
+                          {expandedGameId === game.id && game.liveStreamers.length > 0 && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden ml-4 pl-3 border-l border-white/10 space-y-1 pb-1"
+                            >
+                              {game.liveStreamers.map(stream => (
+                                <button
+                                  key={stream.id}
+                                  onClick={() => handleStreamerClick(stream)}
+                                  className="w-full flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-white/5 transition-colors group text-left"
+                                >
+                                  <div className="relative shrink-0">
+                                    <div className="w-7 h-7 rounded-full bg-white/10 border border-white/10 flex items-center justify-center overflow-hidden">
+                                      <Users className="w-3.5 h-3.5 text-white/40" />
+                                    </div>
+                                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border border-[#0a0e14]" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-white text-xs font-medium truncate group-hover:text-cyan-300 transition-colors">
+                                      {stream.title || `Stream #${stream.id?.slice(0, 6)}`}
+                                    </p>
+                                    <p className="text-white/30 text-[10px]">
+                                      {stream.viewer_count ? `${stream.viewer_count.toLocaleString()} watching` : 'Live'}
+                                    </p>
+                                  </div>
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ))}
+
+                    {gamesWithStreamers.length === 0 && (
+                      <div className="text-center py-12 text-white/30 text-sm">
+                        No games available
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer — Go to Aura */}
+            <div className="p-3 border-t border-white/5 shrink-0">
+              <button
+                onClick={() => { onClose(); navigate(createPageUrl('Aura')); }}
+                className="w-full py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2"
+              >
+                <Radio className="w-4 h-4" />
+                Open Aura Streaming
+              </button>
             </div>
           </motion.div>
-
-          <AnimatePresence>
-            {showSpotlightPanel && (
-              <motion.div
-                initial={{ x: -260, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -260, opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 left-[300px] bottom-0 w-[260px] z-[100] flex flex-col border-r border-white/10"
-                style={{
-                  background: 'rgba(20, 24, 30, 0.8)',
-                  backdropFilter: 'blur(30px) saturate(150%)',
-                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                  boxShadow: '4px 0 30px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div className="p-4 shrink-0 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    Spotlight Profiles
-                  </h2>
-                  <button onClick={() => setShowSpotlightPanel(false)} className="text-white/40 hover:text-white transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto py-4 px-3 space-y-2 custom-scrollbar">
-                  {data.spotlight.map(player => (
-                    <div key={player.id} className="flex items-center gap-3 p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-yellow-400/30 cursor-pointer transition-all group">
-                      <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full border border-yellow-400/30 group-hover:border-yellow-400 transition-colors shrink-0 object-cover" />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white text-sm font-bold truncate group-hover:text-yellow-400 transition-colors">{player.name}</h4>
-                        <p className="text-yellow-400/70 text-[9px] font-bold uppercase tracking-wider truncate mt-0.5">{player.title}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
