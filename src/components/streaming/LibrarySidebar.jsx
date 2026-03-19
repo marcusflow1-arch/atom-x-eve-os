@@ -863,7 +863,7 @@ export default function LibrarySidebar() {
         isOpen={quickGamesDrawer.open} 
         onClose={() => setQuickGamesDrawer({ ...quickGamesDrawer, open: false })} 
         type={quickGamesDrawer.type} 
-        games={quickNavGames} 
+        games={quickGamesDrawer.type === 'forum' ? quickNavForumGames : quickNavGames} 
       />
 
       {/* Expanded Inventory Panel */}
