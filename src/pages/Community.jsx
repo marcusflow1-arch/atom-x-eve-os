@@ -531,6 +531,8 @@ export default function CommunityPage() {
                                             size="icon"
                                             onClick={() => {
                                                 navigate(location.pathname); // Clear URL params
+                                                setActiveGame(null);
+                                                setSelectedPost(null);
                                                 setSelectedGenre('All Games');
                                                 setActiveSection('all');
                                             }}
