@@ -140,7 +140,7 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
     return (
       <div className="mb-6">
         <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-2 px-3">{title}</h3>
-        <div className="space-y-0.5 px-1">
+        <div className={`space-y-0.5 px-1 ${showAll ? 'max-h-[220px] overflow-y-auto custom-scrollbar border-y border-white/5 py-1' : ''}`}>
           {visibleItems.map(renderItem)}
         </div>
         {items.length > defaultLimit && (
