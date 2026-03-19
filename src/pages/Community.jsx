@@ -145,25 +145,27 @@ export default function CommunityPage() {
         fetchGames();
     }, []);
 
+    const processedLocationKey = useRef(null);
+
     // Support deep links via URL params (?game=Title&section=general_discussion)
     useEffect(() => {
+        if (processedLocationKey.current === location.key && allGames.length > 0) {
+            return;
+        }
+
         const params = new URLSearchParams(location.search);
         const gameTitle = params.get('game');
         const sectionParam = params.get('section');
-        if (sectionParam) setActiveSection(sectionParam);
         
         if (gameTitle && allGames.length) {
             // Allow switching games if URL param changes
             const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
             if (match) {
                 setActiveGame(match);
-                // Clear selected post when URL changes (like clicking the sidebar quick link again)
                 setSelectedPost(null);
+                if (sectionParam) setActiveSection(sectionParam);
+                processedLocationKey.current = location.key;
             }
-        } else if (!gameTitle && allGames.length) {
-            // No game param — go back to game hub
-            setActiveGame(null);
-            setSelectedPost(null);
         }
     }, [location.search, location.key, allGames]);
 
