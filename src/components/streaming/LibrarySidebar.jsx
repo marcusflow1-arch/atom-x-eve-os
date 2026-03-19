@@ -275,7 +275,7 @@ export default function LibrarySidebar() {
 
           {isForum && (
             <>
-              {quickNavGames.slice(0, 2).map((game) => (
+              {quickNavForumGames.slice(0, 2).map((game) => (
                 <button
                   key={`forum_${game.id}`}
                   onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
