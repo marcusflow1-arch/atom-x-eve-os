@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Search, Flame, Users as UsersIcon, Clock3, Sparkles, LayoutGrid, Gamepad2, Radio } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
