@@ -21,6 +21,7 @@ export default function FarmGameView({ game, onBack }) {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeVoiceRoom, setActiveVoiceRoom] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
   const videoRef = useRef(null);
 
   const setActiveTopic = (topic) => {
