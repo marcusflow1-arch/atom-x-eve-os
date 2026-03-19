@@ -172,6 +172,12 @@ export default function FarmGameView({ game, onBack }) {
       <AnimatePresence>
         {activeVoiceRoom && <ActiveVoiceControls room={activeVoiceRoom} onLeave={handleLeaveVoice} />}
       </AnimatePresence>
+
+      <CreatePostModal 
+        open={showCreatePostModal} 
+        onClose={() => setShowCreatePostModal(false)}
+        topic={activeTopic || 'achievements'}
+      />
     </div>
   );
 }
