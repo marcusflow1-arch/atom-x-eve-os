@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, MonitorPlay } from 'lucide-react';
+import { X, ChevronDown, ChevronRight, MonitorPlay, Star } from 'lucide-react';
 
 export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
+  const [showSpotlightPanel, setShowSpotlightPanel] = useState(false);
+
   // Simulate real-time data fetching structure
   const [data, setData] = useState({
     recentGames: [],
     mostViewed: [],
     newStreamers: [],
-    recommended: []
+    recommended: [],
+    spotlight: []
   });
+
+  useEffect(() => {
+    // Reset spotlight panel when closing drawer
+    if (!isOpen) setShowSpotlightPanel(false);
+  }, [isOpen]);
 
   useEffect(() => {
     // In a real implementation, this would fetch from a live API/WebSocket
