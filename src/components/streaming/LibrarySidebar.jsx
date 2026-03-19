@@ -24,6 +24,24 @@ export default function LibrarySidebar() {
   const [pendingRewardGame, setPendingRewardGame] = useState(null);
   const [showLeftNav, setShowLeftNav] = useState(true);
   const [quickGamesDrawer, setQuickGamesDrawer] = useState({ open: false, type: null });
+  const [recentClanGames, setRecentClanGames] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadRecentGames = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
+        setRecentClanGames(stored.map(g => ({
+          id: g.id,
+          name: g.title || g.name,
+          image: g.cover_image || g.cover
+        })));
+      } catch(e) {}
+    };
+    loadRecentGames();
+    window.addEventListener('recentClanGamesUpdated', loadRecentGames);
+    return () => window.removeEventListener('recentClanGamesUpdated', loadRecentGames);
+  }, []);
 
   useEffect(() => {
     const onOpen = () => setOverlayActive(true);
