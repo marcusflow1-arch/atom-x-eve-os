@@ -44,11 +44,11 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
           />
           <motion.div
-            initial={{ x: '100%' }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 w-[400px] z-[101] flex flex-col border-l border-white/10"
+            className="fixed top-0 left-0 bottom-0 w-[400px] z-[101] flex flex-col border-r border-white/10"
             style={{
               background: 'rgba(15, 20, 30, 0.95)',
               backdropFilter: 'blur(20px)',

@@ -313,6 +313,12 @@ function LayoutContent({ children, currentPageName }) {
   const { openCart, getCartCount } = useCart();
   const [showGuidedTour, setShowGuidedTour] = useState(false);
 
+  useEffect(() => {
+    const handler = () => setAuraStreamsDrawerOpen(true);
+    window.addEventListener('openAuraStreamsDrawer', handler);
+    return () => window.removeEventListener('openAuraStreamsDrawer', handler);
+  }, []);
+
   // Show guided tour on first login
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -1192,6 +1198,8 @@ function LayoutContent({ children, currentPageName }) {
           />
         )}
       </AnimatePresence>
+
+      <AuraWatchedStreamsDrawer isOpen={auraStreamsDrawerOpen} onClose={() => setAuraStreamsDrawerOpen(false)} />
 
       {/* Guided Tour for First-Time Users */}
       {showGuidedTour && (
