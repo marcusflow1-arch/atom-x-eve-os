@@ -55,10 +55,13 @@ export default function GameStreamersView({ game, onClose }) {
   useEffect(() => {
     const loadStreamers = async () => {
       try {
-        const streams = await base44.entities.Stream.filter({ 
-          game_id: game.id,
-          is_live: true 
-        });
+        // Find streams matching either game_id or game title (since sometimes relations aren't perfect)
+        const allLiveStreams = await base44.entities.Stream.filter({ is_live: true });
+        const streams = allLiveStreams.filter(s => 
+          s.game_id === game.id || 
+          s.game === game.title || 
+          s.game_title === game.title
+        );
         
         const streamersData = [];
         for (const stream of streams) {
