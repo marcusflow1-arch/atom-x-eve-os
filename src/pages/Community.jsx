@@ -153,13 +153,14 @@ export default function CommunityPage() {
         if (sectionParam) setActiveSection(sectionParam);
         
         if (gameTitle && allGames.length) {
-            // Allow switching games if URL param changes, even if activeGame is already set
-            if (!activeGame || activeGame.title.toLowerCase() !== gameTitle.toLowerCase()) {
-                const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
-                if (match) {
+            // Allow switching games if URL param changes
+            const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
+            if (match) {
+                if (!activeGame || activeGame.title.toLowerCase() !== gameTitle.toLowerCase()) {
                     setActiveGame(match);
-                    setSelectedPost(null); // Always clear selected post when navigating to a game via URL
                 }
+                // Always clear selected post when navigating to a game via URL quick link
+                setSelectedPost(null);
             }
         } else if (!gameTitle && allGames.length) {
             // No game param — go back to game hub
