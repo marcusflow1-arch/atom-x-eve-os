@@ -1,18 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, ChevronRight, MonitorPlay, Star } from 'lucide-react';
+import { X, ChevronDown, MonitorPlay } from 'lucide-react';
 
 export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
-  const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
-  const [selectedSpotlightProfile, setSelectedSpotlightProfile] = useState(null);
-
   // Simulate real-time data fetching structure
   const [data, setData] = useState({
     recentGames: [],
     mostViewed: [],
     newStreamers: [],
-    recommended: [],
-    spotlight: []
+    recommended: []
   });
 
   useEffect(() => {
@@ -65,13 +61,6 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
         { id: 'rc3', name: 'StoryTeller', avatar: 'https://i.pravatar.cc/150?u=12', game: 'The Witcher 3', viewers: '4.2K', isLive: true },
         { id: 'rc4', name: 'CozyGamer', avatar: 'https://i.pravatar.cc/150?u=4', game: 'Persona 5', viewers: '3.4K', isLive: true },
         { id: 'rc5', name: 'LoreMaster', avatar: 'https://i.pravatar.cc/150?u=17', game: 'Dark Souls 3', viewers: '9.1K', isLive: true },
-      ],
-      spotlight: [
-        { id: 'sp1', name: 'MasterChief', avatar: 'https://i.pravatar.cc/150?u=18', description: 'Legendary Halo Player', followers: '100K' },
-        { id: 'sp2', name: 'Ninja', avatar: 'https://i.pravatar.cc/150?u=19', description: 'FPS God', followers: '20M' },
-        { id: 'sp3', name: 'Shroud', avatar: 'https://i.pravatar.cc/150?u=20', description: 'Human Aimbot', followers: '10M' },
-        { id: 'sp4', name: 'Faker', avatar: 'https://i.pravatar.cc/150?u=21', description: 'Unkillable Demon King', followers: '5M' },
-        { id: 'sp5', name: 'TenZ', avatar: 'https://i.pravatar.cc/150?u=22', description: 'Valorant Prodigy', followers: '4M' },
       ]
     });
   }, []);
@@ -136,16 +125,15 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
     return (
       <div className="mb-6">
         <h3 className="text-white/60 text-xs font-bold uppercase tracking-wider mb-2 px-3">{title}</h3>
-        <div className={`space-y-0.5 px-1 transition-all duration-300 ${showAll ? 'max-h-[250px] overflow-y-auto custom-scrollbar' : ''}`}>
+        <div className="space-y-0.5 px-1">
           {visibleItems.map(renderItem)}
         </div>
         {items.length > defaultLimit && (
           <button 
             onClick={() => setShowAll(!showAll)}
-            className="text-cyan-400/80 hover:text-cyan-300 text-xs font-medium px-3 py-1.5 mt-1 w-full text-left transition-colors flex items-center justify-between hover:bg-white/5 rounded-lg group"
+            className="text-cyan-400/80 hover:text-cyan-300 text-xs font-medium px-3 py-1.5 mt-1 w-full text-left transition-colors flex items-center gap-1 hover:bg-white/5 rounded-lg"
           >
-            <span>{showAll ? 'Show Less' : 'Show More'}</span>
-            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showAll ? 'rotate-180' : ''}`} />
+            {showAll ? 'Show Less' : 'Show More'}
           </button>
         )}
       </div>
@@ -192,19 +180,6 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
-              <div className="mb-6 flex items-center justify-between px-3">
-                <div className="flex items-center gap-2 text-amber-400">
-                  <Star className="w-4 h-4 fill-amber-400/20" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider">Players in the Spotlight</h3>
-                </div>
-                <button 
-                  onClick={() => setIsSpotlightOpen(!isSpotlightOpen)}
-                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-                >
-                  <ChevronRight className={`w-4 h-4 text-white/60 transition-transform duration-300 ${isSpotlightOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </div>
-
               <Section 
                 title="Recently Watched Games" 
                 items={data.recentGames} 
@@ -234,79 +209,6 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
               />
             </div>
           </motion.div>
-
-          {/* Spotlight Extension Panel */}
-          <AnimatePresence>
-            {isSpotlightOpen && (
-              <motion.div
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 bottom-0 left-[300px] w-[300px] z-[100] flex flex-col border-r border-white/10 rounded-r-3xl overflow-hidden"
-                style={{
-                  background: 'rgba(15, 20, 30, 0.85)',
-                  backdropFilter: 'blur(30px) saturate(150%)',
-                  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                  boxShadow: '4px 0 30px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                <div className="p-4 shrink-0 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
-                  <div className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-400 fill-amber-400/20" />
-                    <h2 className="text-lg font-bold text-white tracking-wide">Spotlight</h2>
-                  </div>
-                  <button 
-                    onClick={() => setIsSpotlightOpen(false)}
-                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
-                  >
-                    <X className="w-4 h-4 text-white/60" />
-                  </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                  {!selectedSpotlightProfile ? (
-                    <div className="p-2 space-y-1">
-                      {data.spotlight.map(player => (
-                        <div 
-                          key={player.id} 
-                          onClick={() => setSelectedSpotlightProfile(player)}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 cursor-pointer transition-colors group"
-                        >
-                          <img src={player.avatar} alt={player.name} className="w-10 h-10 rounded-full object-cover border border-white/20 group-hover:border-amber-400/50 transition-colors" />
-                          <div>
-                            <h4 className="text-white font-bold text-sm group-hover:text-amber-400 transition-colors">{player.name}</h4>
-                            <p className="text-white/50 text-xs">{player.followers} Followers</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-6 flex flex-col items-center">
-                       <button onClick={() => setSelectedSpotlightProfile(null)} className="self-start text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-1 mb-6 hover:text-cyan-300 transition-colors">
-                         <ChevronDown className="w-4 h-4 rotate-90" />
-                         Back to list
-                       </button>
-                       <div className="relative mb-4">
-                         <img src={selectedSpotlightProfile.avatar} className="w-24 h-24 rounded-full object-cover border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.3)]" />
-                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full border border-black/50 uppercase tracking-widest shadow-lg">
-                           #1
-                         </div>
-                       </div>
-                       <h3 className="text-2xl font-black text-white tracking-wide mb-1">{selectedSpotlightProfile.name}</h3>
-                       <p className="text-amber-400/80 text-sm font-medium mb-6">{selectedSpotlightProfile.followers} Followers</p>
-                       <p className="text-white/70 text-sm text-center bg-white/5 p-4 rounded-xl border border-white/10 leading-relaxed shadow-inner">
-                         {selectedSpotlightProfile.description}
-                       </p>
-                       <button className="mt-8 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-black uppercase tracking-wider rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.4)] hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] hover:scale-[1.02]">
-                         View Full Profile
-                       </button>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
