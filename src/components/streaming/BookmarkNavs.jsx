@@ -83,12 +83,12 @@ export const ClanBookmarkNav = () => {
             >
               <div className="p-3 border-b border-white/10 flex items-center gap-2 bg-white/[0.02] shrink-0 w-[240px]">
                 <MessagesSquare className="w-4 h-4 text-blue-400" />
-                <span className="text-xs font-bold text-white tracking-wide">Recent Chats</span>
+                <span className="text-xs font-bold text-white tracking-wide">Recent Games</span>
               </div>
               <div className="max-h-60 overflow-y-auto p-2 space-y-1 w-[240px]" style={{ scrollbarWidth: 'none' }}>
-                {mockClanChats.map(chat => (
+                {mockClanGamesList.map(game => (
                   <div 
-                    key={chat.id} 
+                    key={game.id} 
                     onClick={() => {
                       navigate(createPageUrl('Clan'));
                       setIsChatsOpen(false);
@@ -96,7 +96,7 @@ export const ClanBookmarkNav = () => {
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 text-sm text-white/80 hover:text-white cursor-pointer transition-colors"
                   >
                     <Hash className="w-3 h-3 text-white/40 shrink-0" />
-                    <span className="truncate">{chat.name}</span>
+                    <span className="truncate">{game.name}</span>
                   </div>
                 ))}
               </div>
