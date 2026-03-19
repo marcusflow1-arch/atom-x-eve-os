@@ -1049,16 +1049,7 @@ function LayoutContent({ children, currentPageName }) {
                             </Droppable>
                           </DragDropContext>
 
-                          {/* Watch Streams Button (Aura only) */}
-                          {location.pathname.toLowerCase().includes('/aura') && (
-                            <button
-                              onClick={() => setAuraStreamsDrawerOpen(true)}
-                              className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-purple-500/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30 hover:text-white flex items-center gap-2"
-                            >
-                              <Radio className="w-4 h-4" />
-                              Watched Streams
-                            </button>
-                          )}
+
 
                           {/* Discord */}
                           <a
