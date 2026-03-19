@@ -108,11 +108,13 @@ export default function LibrarySidebar() {
   const isClan = pathname.includes('/clan');
   const isForum = pathname.includes('/community');
 
-  const quickNavGames = [
+  const defaultQuickNavGames = [
     { id: 'g1', name: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' },
     { id: 'g2', name: 'Elden Ring', image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=100&q=80' },
     { id: 'g3', name: 'Valorant', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=100&q=80' }
   ];
+  
+  const quickNavGames = recentClanGames.length > 0 ? recentClanGames : defaultQuickNavGames;
   
   // We want the sidebar to be available on more pages now that it has the Friends List
   // Removing the strict page restrictions to allow it to be accessed generally if needed, 
