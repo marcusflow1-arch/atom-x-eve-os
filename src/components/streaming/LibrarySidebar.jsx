@@ -194,11 +194,17 @@ export default function LibrarySidebar() {
           {/* Original Library Button (Always visible unless hidden by parent conditions) */}
           <button
             onClick={() => setIsOpen(true)}
-            className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+            className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
             title="Library & Friends"
           >
             <Library className="w-5 h-5" />
           </button>
+
+          {/* Clan Bookmark Nav Component */}
+          <ClanBookmarkNav />
+
+          {/* Forum Bookmark Nav Component */}
+          <ForumBookmarkNav />
 
           {/* Luna Dashboard Specific Buttons */}
           {pathname.includes('/lunatemplate') && (
