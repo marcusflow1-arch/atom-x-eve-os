@@ -156,10 +156,8 @@ export default function CommunityPage() {
             // Allow switching games if URL param changes
             const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
             if (match) {
-                if (!activeGame || activeGame.title.toLowerCase() !== gameTitle.toLowerCase()) {
-                    setActiveGame(match);
-                }
-                // Always clear selected post when navigating to a game via URL quick link
+                setActiveGame(match);
+                // Clear selected post when URL changes (like clicking the sidebar quick link again)
                 setSelectedPost(null);
             }
         } else if (!gameTitle && allGames.length) {
@@ -167,7 +165,7 @@ export default function CommunityPage() {
             setActiveGame(null);
             setSelectedPost(null);
         }
-    }, [location.search, allGames, activeGame]);
+    }, [location.search, location.key, allGames]);
 
     // Save visited game to Recent Forum Games
     useEffect(() => {
