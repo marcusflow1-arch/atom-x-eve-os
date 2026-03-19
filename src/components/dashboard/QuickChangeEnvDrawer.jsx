@@ -36,11 +36,11 @@ export default function QuickChangeEnvDrawer({ open, onClose, currentEnvId, onSe
             style={{ pointerEvents: 'all' }}
           />
           <motion.div
-            initial={{ x: '-100%' }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-[15vw] min-w-[200px] z-[9999] flex flex-col border-r border-white/10"
+            className="fixed top-0 right-0 bottom-0 w-[15vw] min-w-[200px] z-[9999] flex flex-col border-l border-white/10"
             style={{
               background: 'rgba(10, 14, 20, 0.95)',
               backdropFilter: 'blur(30px) saturate(150%)',
