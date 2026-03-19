@@ -35,7 +35,8 @@ export default function StreamingGamesLive() {
   const [volume, setVolume] = useState(70);
   const [showPlayerSettings, setShowPlayerSettings] = useState(false);
   const [isSettingsMaximized, setIsSettingsMaximized] = useState(false);
-  const [selectedGame, setSelectedGame] = useState(null);
+  const location = useLocation();
+  const [selectedGame, setSelectedGame] = useState(location.state?.openGame || null);
 
   // Epic Moments demo clips
   const epicClips = [
