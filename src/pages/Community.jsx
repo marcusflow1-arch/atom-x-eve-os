@@ -527,8 +527,7 @@ export default function CommunityPage() {
                                             variant="ghost" 
                                             size="icon"
                                             onClick={() => {
-                                                setActiveGame(null);
-                                                setSelectedPost(null);
+                                                navigate(location.pathname); // Clear URL params
                                                 setSelectedGenre('All Games');
                                                 setActiveSection('all');
                                             }}
