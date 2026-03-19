@@ -25,6 +25,7 @@ export default function LibrarySidebar() {
   const [showLeftNav, setShowLeftNav] = useState(true);
   const [quickGamesDrawer, setQuickGamesDrawer] = useState({ open: false, type: null });
   const [recentClanGames, setRecentClanGames] = useState([]);
+  const [recentForumGames, setRecentForumGames] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,22 @@ export default function LibrarySidebar() {
     loadRecentGames();
     window.addEventListener('recentClanGamesUpdated', loadRecentGames);
     return () => window.removeEventListener('recentClanGamesUpdated', loadRecentGames);
+  }, []);
+
+  useEffect(() => {
+    const loadRecentForumGames = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('recent_forum_games') || '[]');
+        setRecentForumGames(stored.map(g => ({
+          id: g.id,
+          name: g.title || g.name,
+          image: g.image || g.cover_image || g.cover
+        })));
+      } catch(e) {}
+    };
+    loadRecentForumGames();
+    window.addEventListener('recentForumGamesUpdated', loadRecentForumGames);
+    return () => window.removeEventListener('recentForumGamesUpdated', loadRecentForumGames);
   }, []);
 
   useEffect(() => {
