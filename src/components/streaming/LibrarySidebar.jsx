@@ -810,6 +810,14 @@ export default function LibrarySidebar() {
         )}
       </AnimatePresence>
 
+      {/* Quick Games Drawer */}
+      <QuickGamesDrawer 
+        isOpen={quickGamesDrawer.open} 
+        onClose={() => setQuickGamesDrawer({ ...quickGamesDrawer, open: false })} 
+        type={quickGamesDrawer.type} 
+        games={quickNavGames} 
+      />
+
       {/* Expanded Inventory Panel */}
       <AnimatePresence>
         {isExpandedInventory && isOpen && (
