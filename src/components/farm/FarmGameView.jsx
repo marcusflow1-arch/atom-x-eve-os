@@ -10,6 +10,7 @@ import FarmTopicSelector from './FarmTopicSelector';
 import FarmTopicContent from './FarmTopicContent';
 import VoiceRoomPreviewModal from './voice/VoiceRoomPreviewModal';
 import ActiveVoiceControls from './voice/ActiveVoiceControls';
+import CreatePostModal from './CreatePostModal';
 
 import { toast } from 'sonner';
 
