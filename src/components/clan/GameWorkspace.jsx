@@ -167,25 +167,20 @@ export default function GameWorkspace({ game, clan, onBack, initialZone, onGoMai
                 }}
             >
                 {/* Header */}
-                <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center gap-2 mb-4 -ml-2">
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={onBack}
-                            className="text-white/50 hover:text-white gap-2"
-                        >
-                            <ArrowLeft className="w-4 h-4" /> Back to Clan
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            size="sm" 
+                <div className="p-5 border-b border-white/10">
+                    <div className="flex flex-col gap-2 mb-5">
+                        <button 
                             onClick={game?.isGlobalChat ? onQuickSwitch : onGoMainChat}
-                            className="text-white/70 hover:text-white gap-2"
-                            title={game?.isGlobalChat ? (quickSwitchLabel ? `Back to ${quickSwitchLabel}` : 'Back to previous chat') : 'Go to Atom x Eve main chat'}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 transition-all text-sm font-bold text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)] group"
                         >
-                            <Hash className="w-4 h-4" /> {game?.isGlobalChat ? (quickSwitchLabel || 'Previous Chat') : 'Atom x Eve'}
-                        </Button>
+                            <Hash className="w-4 h-4 group-hover:scale-110 transition-transform" /> {game?.isGlobalChat ? (quickSwitchLabel ? `Back to ${quickSwitchLabel}` : 'Back to Game Chat') : 'Atom X Eve Main Chat'}
+                        </button>
+                        <button 
+                            onClick={onBack}
+                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-sm font-bold text-white/70 hover:text-white group"
+                        >
+                            <Gamepad2 className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> All Clan Game Chats
+                        </button>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 shadow-lg">
