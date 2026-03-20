@@ -266,6 +266,7 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
                       </div>
                     )}
                   </div>
+                  </section>
                 </>
               )}
             </div>
