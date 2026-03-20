@@ -157,16 +157,26 @@ export default function CommunityPage() {
         const gameTitle = params.get('game');
         const sectionParam = params.get('section');
         
-        if (gameTitle && allGames.length) {
+        if (gameTitle && allGames.length > 0) {
             // Allow switching games if URL param changes
-            const match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
-            if (match) {
-                setActiveGame(match);
-                setSelectedPost(null);
-                if (sectionParam) setActiveSection(sectionParam);
-                processedLocationKey.current = location.key;
+            let match = allGames.find(g => String(g.title).toLowerCase() === gameTitle.toLowerCase());
+            
+            if (!match) {
+                // Mock game fallback so the user can still visit the forum
+                match = {
+                    id: 'mock_' + gameTitle.replace(/\s+/g, '_').toLowerCase(),
+                    title: gameTitle,
+                    genre: 'General',
+                    cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=80'
+                };
             }
-        } else if (!gameTitle && allGames.length) {
+            
+            setActiveGame(match);
+            setSelectedPost(null);
+            if (sectionParam) setActiveSection(sectionParam);
+            processedLocationKey.current = location.key;
+            
+        } else if (!gameTitle && allGames.length > 0) {
             setActiveGame(null);
             setSelectedPost(null);
             processedLocationKey.current = location.key;
