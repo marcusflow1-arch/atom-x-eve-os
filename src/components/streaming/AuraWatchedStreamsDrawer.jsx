@@ -60,6 +60,10 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
     setExpandedGameId(prev => prev === gameId ? null : gameId);
   };
 
+  const newStreamers = streams.slice(0, 5); // mock new streamers
+  const mostWatched = [...streams].sort((a,b) => b.viewer_count - a.viewer_count).slice(0, 5); // mock most watched
+  const recentWatched = streams.slice(0, 5); // mock recent watched
+
   return (
     <AnimatePresence>
       {isOpen && (
