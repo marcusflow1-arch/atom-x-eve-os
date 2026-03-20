@@ -61,8 +61,11 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
   };
 
   const newStreamers = streams.slice(0, 5); // mock new streamers
-  const mostWatched = [...streams].sort((a,b) => b.viewer_count - a.viewer_count).slice(0, 5); // mock most watched
-  const recentWatched = streams.slice(0, 5); // mock recent watched
+  const recommendedStreamers = streams.slice(0, 3); // mock recommended
+  const recentWatched = streams.slice(1, 4); // mock recent watched
+  const popularStreams = [...streams].sort((a,b) => b.viewer_count - a.viewer_count).slice(0, 4); // mock most watched
+  const topStreamedGames = games.slice(0, 3); // mock top streamed
+  const newGames = games.slice(3, 6); // mock new games
 
   return (
     <AnimatePresence>
