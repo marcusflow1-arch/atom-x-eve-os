@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Gamepad2, Pin, Trophy, ChevronRight, Target, Crosshair, Swords, Zap, CheckCircle2, Clock, Calendar, Star } from 'lucide-react';
+import { Search, Filter, Gamepad2, Pin, Trophy, ChevronRight, Target, Crosshair, Swords, Zap, CheckCircle2, Clock, Calendar, Star, ChevronDown, ShieldAlert, CircleDot, FileText, CheckSquare, Hexagon, ArrowLeft, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
