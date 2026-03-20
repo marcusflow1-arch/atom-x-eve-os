@@ -105,18 +105,84 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
               </button>
             </div>
 
+            {/* Top Button for New Streamers */}
+            <div className="p-4 border-b border-white/5">
+                <button 
+                  onClick={() => setShowNewStreamers(!showNewStreamers)}
+                  className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all border ${
+                    showNewStreamers 
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.3)]' 
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 hover:text-white border-white/10'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  New Streamers
+                </button>
+            </div>
+
             {/* Content */}
-            <div className="flex-1 overflow-y-auto py-3 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto py-3 custom-scrollbar space-y-6">
               {loading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
                 </div>
               ) : (
                 <>
-                  <p className="text-white/30 text-[10px] font-bold uppercase tracking-wider px-4 mb-2">
-                    Games — click name to see streamers
-                  </p>
-                  <div className="space-y-0.5 px-2">
+                  {/* Recent Watch */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3 px-4">
+                        <Clock className="w-4 h-4 text-blue-400" />
+                        <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Recent Watch</h3>
+                    </div>
+                    <div className="space-y-1 px-2">
+                        {recentWatched.map(stream => (
+                            <button
+                                key={`rw_${stream.id}`}
+                                onClick={() => handleStreamerClick(stream)}
+                                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group text-left"
+                            >
+                                <img src={stream.preview_image_url || 'https://source.unsplash.com/random/100x100?face'} className="w-8 h-8 rounded-full border border-white/10" alt="streamer" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white text-sm font-semibold truncate group-hover:text-blue-300 transition-colors">{stream.title || `Stream #${stream.id?.slice(0, 6)}`}</p>
+                                    <p className="text-white/40 text-[10px] truncate">{stream.game_id || 'Variety'}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                  </section>
+
+                  {/* Most Streamers Watched */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3 px-4">
+                        <TrendingUp className="w-4 h-4 text-orange-400" />
+                        <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Most Watched</h3>
+                    </div>
+                    <div className="space-y-1 px-2">
+                        {mostWatched.map(stream => (
+                            <button
+                                key={`mw_${stream.id}`}
+                                onClick={() => handleStreamerClick(stream)}
+                                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group text-left"
+                            >
+                                <img src={stream.preview_image_url || 'https://source.unsplash.com/random/100x100?face'} className="w-8 h-8 rounded-full border border-white/10" alt="streamer" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white text-sm font-semibold truncate group-hover:text-orange-300 transition-colors">{stream.title || `Stream #${stream.id?.slice(0, 6)}`}</p>
+                                    <p className="text-white/40 text-[10px] flex items-center gap-1">
+                                        <Radio className="w-3 h-3 text-red-500" /> {stream.viewer_count || 0} viewers
+                                    </p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                  </section>
+
+                  {/* Browse by Game */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3 px-4">
+                        <MonitorPlay className="w-4 h-4 text-cyan-400" />
+                        <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">Browse by Game</h3>
+                    </div>
+                    <div className="space-y-0.5 px-2">
                     {gamesWithStreamers.map(game => (
                       <div key={game.id} className="rounded-xl overflow-hidden">
                         {/* Game Row */}
