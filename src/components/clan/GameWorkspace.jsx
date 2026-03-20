@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     ArrowLeft, Map as MapIcon, Wheat, Brain, Users, MessageSquare, Mic, 
     Settings, Shield, Sword, Target, ChevronRight, Hash,
-    Plus, Video, Headphones, UserPlus, Send, X, FileText
+    Plus, Video, Headphones, UserPlus, Send, X, FileText, Gamepad2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
