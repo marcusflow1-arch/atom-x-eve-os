@@ -282,6 +282,66 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
               </button>
             </div>
           </motion.div>
+
+          {/* Connected Pullout Menu: New Streamers */}
+          <AnimatePresence>
+            {showNewStreamers && (
+                <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="fixed top-0 bottom-0 left-[300px] w-[300px] z-[100] flex flex-col border-r border-white/10"
+                    style={{
+                        background: 'rgba(15, 20, 26, 0.95)',
+                        backdropFilter: 'blur(30px) saturate(150%)',
+                        WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                        boxShadow: '20px 0 50px rgba(0, 0, 0, 0.5), inset 1px 0 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
+                    <div className="p-4 shrink-0 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
+                        <div className="flex items-center gap-3">
+                            <Sparkles className="w-5 h-5 text-cyan-400" />
+                            <h2 className="text-lg font-bold text-white tracking-wide">New Streamers</h2>
+                        </div>
+                        <button
+                            onClick={() => setShowNewStreamers(false)}
+                            className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"
+                        >
+                            <X className="w-4 h-4 text-white/60" />
+                        </button>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto py-3 px-2 custom-scrollbar space-y-2">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+                            </div>
+                        ) : newStreamers.length > 0 ? (
+                            newStreamers.map(stream => (
+                                <button
+                                    key={`ns_${stream.id}`}
+                                    onClick={() => handleStreamerClick(stream)}
+                                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 border border-transparent hover:border-cyan-500/30 transition-all group text-left relative overflow-hidden"
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <img src={stream.preview_image_url || 'https://source.unsplash.com/random/100x100?face'} className="w-10 h-10 rounded-full border-2 border-white/10 group-hover:border-cyan-400 transition-colors z-10 object-cover" alt="streamer" />
+                                    <div className="flex-1 min-w-0 z-10">
+                                        <p className="text-white text-sm font-semibold truncate group-hover:text-cyan-300 transition-colors">{stream.title || `Stream #${stream.id?.slice(0, 6)}`}</p>
+                                        <p className="text-white/50 text-[10px] truncate mt-0.5">{stream.game_id || 'Variety'}</p>
+                                    </div>
+                                    <Badge className="z-10 bg-cyan-500/20 text-cyan-300 border-none text-[9px] px-1.5 py-0.5">NEW</Badge>
+                                </button>
+                            ))
+                        ) : (
+                            <div className="text-center py-12 text-white/30 text-sm">
+                                No new streamers found.
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
