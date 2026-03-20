@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronDown, MonitorPlay, Star, Users, Radio } from 'lucide-react';
+import { X, ChevronDown, MonitorPlay, Star, Users, Radio, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
+import { Badge } from '@/components/ui/badge';
 
 export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
@@ -11,10 +12,14 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
   const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState(null);
+  const [showNewStreamers, setShowNewStreamers] = useState(false);
 
   // Fetch real data when drawer opens
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setShowNewStreamers(false);
+      return;
+    }
     setLoading(true);
     Promise.all([
       base44.entities.Game.list('-original_year', 20).catch(() => []),
