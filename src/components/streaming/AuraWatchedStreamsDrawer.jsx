@@ -176,7 +176,7 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
                     </div>
                   </section>
 
-                  {/* Browse by Game */}
+                  {/* Browse by Game section */}
                   <section>
                     <div className="flex items-center gap-2 mb-3 px-4">
                         <MonitorPlay className="w-4 h-4 text-cyan-400" />
