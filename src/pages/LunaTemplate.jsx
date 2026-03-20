@@ -216,6 +216,12 @@ export default function LunaTemplate() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleSkillTree = () => setShowSkillTreeBlankUI(prev => !prev);
+    window.addEventListener('toggleSkillTree', handleSkillTree);
+    return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
+  }, []);
+
   // Hardcoded assets for System Reboot
   const [modelUrl, setModelUrl] = useState(null);
   const [roomModelUrl, setRoomModelUrl] = useState(null);
