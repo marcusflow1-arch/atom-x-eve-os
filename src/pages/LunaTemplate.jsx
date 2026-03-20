@@ -171,6 +171,7 @@ export default function LunaTemplate() {
   const [showCardCollection, setShowCardCollection] = useState(true);
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
   const [currentHostName, setCurrentHostName] = useState(null);
+  const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
 
   useEffect(() => {
     if (user) {
