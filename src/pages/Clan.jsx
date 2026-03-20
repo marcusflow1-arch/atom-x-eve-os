@@ -416,6 +416,7 @@ export default function ClanPage() {
                         className="absolute inset-0 z-50 flex flex-col"
                     >
                         <GameWorkspace 
+                                                key={selectedGame.id}
                                                 game={selectedGame} 
                                                 clan={clanForRender} 
                                                 initialZone={initialZone}
