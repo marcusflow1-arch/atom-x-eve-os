@@ -484,78 +484,42 @@ async function _learnSingleFile(pf) {
 
   // Add a 3-minute timeout to prevent silent stalling
   const llmPromise = base44.integrations.Core.InvokeLLM({
-    prompt: `You are an EXHAUSTIVE knowledge extraction engine for a game development platform (React, Three.js, TailwindCSS, Base44).
-
-A developer has given you a file to LEARN from. Your job is to extract EVERY SINGLE piece of useful knowledge with MAXIMUM DEPTH AND DETAIL. Leave nothing out. This analysis will be the permanent reference for this file — it must be comprehensive enough to reconstruct the file's purpose, logic, and patterns from your analysis alone.
+    prompt: `You are an ADVANCED LEARNING ENGINE for a game development platform.
+Your primary directive is: Learn everything from the file, store the knowledge, and use that for your own basic understanding.
+Do not just summarize. You must break down, examine, and absorb the core principles, patterns, and logic so you fully comprehend it as part of your core knowledge base.
 
 FILE: "${pf.name}" (${pf.category} file, ${(pf.size / 1024).toFixed(1)} KB)
 
 ${contentForAI ? `--- FILE CONTENT ---\n${contentForAI.substring(0, 50000)}\n--- END ---\n\n` : ''}
 
-Respond with ALL of the following sections. Be EXTREMELY thorough in every section:
+Perform a complete breakdown and return the following EXHAUSTIVE analysis:
 
-## Summary
-A detailed 3-5 paragraph summary covering: what this file is, its purpose in the project, its relationship to other systems, key design decisions visible in the code, and any notable patterns or anti-patterns.
+## Complete Comprehension
+3-5 detailed paragraphs explaining what you have learned from this file for your own understanding. What are the underlying mechanics and logic?
 
-## Architecture & Structure
-- File organization and module structure
-- Dependencies and imports (list every one with purpose)
-- Export structure (what is exported and why)
-- Class/function hierarchy
-- State management patterns used
-- Component lifecycle and data flow
+## Architecture & Design Patterns
+How is the system built? What structural patterns are used?
+
+## Core Mechanics & Breakdown
+Break down the complex logic into digestable principles. What exactly makes this file tick?
 
 ## Key Knowledge Extracted
-- EVERY function, class, method, and variable with its purpose
-- All constants, configurations, and magic numbers with explanations
-- Every API endpoint, route, or external service interaction
-- All data structures, schemas, types, and interfaces
-- Business logic rules and conditions
-- Error handling strategies
-- Performance optimizations present
-- Security considerations
+List every significant function, class, variable, constant, and configuration option. Explain what each one does and why it matters.
 
-## Data Models & Schemas
-- All data structures with field-by-field documentation
-- Relationships between data models
-- Validation rules and constraints
-- Default values and their reasoning
+## Code Patterns & Snippets (Verbatim)
+Extract the most important/complex code blocks exactly as they are. This is crucial reference material for your memory.
 
-## Code Patterns & Snippets
-Extract EVERY reusable pattern found. For each one provide:
-- The complete code snippet in a code block
-- An explanation of what it does and when to use it
-- Any gotchas or edge cases
+## Data Structures & Schemas
+Document every JSON structure, type definition, database schema, or data model found.
 
-## API & Integration Points
-- Every external API call with method, URL, headers, body format
-- WebSocket connections and event handlers
-- Third-party library usage patterns
-- Database queries and operations
-- Authentication and authorization flows
+## Actionable Integration
+How you would use this knowledge going forward to build similar systems or interface with it.
 
-## UI/UX Patterns (if applicable)
-- Component composition patterns
-- Styling approaches and theme usage
-- Animation and transition patterns
-- Responsive design breakpoints
-- Accessibility features
-
-## Integration Guide
-Step-by-step guide on how to use this knowledge in a React + Three.js + TailwindCSS + Base44 project. Include:
-- Prerequisites and setup
-- Import statements needed
-- Configuration required
-- Example usage code
-- Common pitfalls to avoid
-
-## Cross-References
-- What other files/modules this likely connects to
-- What systems depend on this
-- Related patterns in the broader codebase
+## Dependencies
+External libraries, APIs, or assets required.
 
 ## Tags
-15-25 single-word tags covering technology, domain, patterns, and concepts (e.g., "react", "three.js", "animation", "state-management", "api", "game-data", "shader", "physics", "ui-component")`,
+15-25 single-word tags covering technology, domain, patterns, and concepts.`,
     file_urls: fileUrls.length > 0 ? fileUrls : undefined,
   });
 

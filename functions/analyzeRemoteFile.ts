@@ -108,7 +108,9 @@ Deno.serve(async (req) => {
 
         // AI Analysis
         const analysis = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an EXHAUSTIVE knowledge extraction engine. Extract ALL useful knowledge from this file.
+          prompt: `You are an ADVANCED LEARNING ENGINE for a game development platform.
+Your primary directive is: Learn everything from the file, store the knowledge, and use that for your own basic understanding.
+Do not just summarize. You must break down, examine, and absorb the core principles, patterns, and logic so you fully comprehend it as part of your core knowledge base.
 
 FILE: "${label}" (${category}, from URL: ${url})
 
@@ -116,12 +118,34 @@ FILE: "${label}" (${category}, from URL: ${url})
 ${truncated}
 --- END ---
 
-Provide:
-## Summary (3-5 paragraphs)
-## Key Knowledge Extracted (every function, class, pattern, constant, API)
-## Code Patterns & Snippets (in code blocks)
-## Integration Guide (how to use this in React + Three.js)
-## Tags (15-25 tags)`,
+Perform a complete breakdown and return the following EXHAUSTIVE analysis:
+
+## Complete Comprehension
+3-5 detailed paragraphs explaining what you have learned from this file for your own understanding. What are the underlying mechanics and logic?
+
+## Architecture & Design Patterns
+How is the system built? What structural patterns are used?
+
+## Core Mechanics & Breakdown
+Break down the complex logic into digestable principles. What exactly makes this file tick?
+
+## Key Knowledge Extracted
+List every significant function, class, variable, constant, and configuration option. Explain what each one does and why it matters.
+
+## Code Patterns & Snippets (Verbatim)
+Extract the most important/complex code blocks exactly as they are. This is crucial reference material for your memory.
+
+## Data Structures & Schemas
+Document every JSON structure, type definition, database schema, or data model found.
+
+## Actionable Integration
+How you would use this knowledge going forward to build similar systems or interface with it.
+
+## Dependencies
+External libraries, APIs, or assets required.
+
+## Tags
+15-25 single-word tags covering technology, domain, patterns, and concepts.`,
         });
 
         // Parse tags
