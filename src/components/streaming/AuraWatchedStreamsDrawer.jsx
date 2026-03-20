@@ -234,17 +234,17 @@ export default function AuraWatchedStreamsDrawer({ isOpen, onClose }) {
                         <Sparkles className="w-4 h-4 text-purple-400" />
                         <h3 className="text-xs font-bold text-white/60 uppercase tracking-widest">New Games</h3>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 px-4">
+                    <div className="space-y-1 px-2">
                         {newGames.map(game => (
                             <button
                                 key={`ng_${game.id}`}
                                 onClick={() => handleGameNameClick(game)}
-                                className="group relative aspect-[3/4] rounded-lg overflow-hidden border border-white/10 hover:border-purple-400/50 transition-colors"
+                                className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group text-left"
                             >
-                                <img src={game.cover_image || game.banner_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100'} alt={game.title} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-                                <div className="absolute bottom-1 left-1 right-1">
-                                    <p className="text-[9px] font-bold text-white truncate text-center">{game.title}</p>
+                                <img src={game.cover_image || game.banner_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100'} alt={game.title} className="w-8 h-8 rounded-md border border-white/10 object-cover" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-white text-sm font-semibold truncate group-hover:text-purple-300 transition-colors">{game.title}</p>
+                                    <p className="text-white/40 text-[10px] truncate">{game.genre || 'Game'}</p>
                                 </div>
                             </button>
                         ))}
