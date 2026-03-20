@@ -254,9 +254,19 @@ export default function ClanPage() {
                       isGlobalChat: true
                     };
                 } else {
-                    // Find game by name
-                    const games = await base44.entities.Game.filter({ title: gameQuery });
-                    if (games.length > 0) foundGame = games[0];
+                    // Find game by name (case insensitive)
+                    const games = await base44.entities.Game.list();
+                    foundGame = games.find(g => String(g.title).toLowerCase() === String(gameQuery).toLowerCase());
+                    
+                    if (!foundGame) {
+                        // Fallback to a mock game if not found in DB
+                        foundGame = {
+                            id: 'mock_' + gameQuery.replace(/\s+/g, '_').toLowerCase(),
+                            title: gameQuery,
+                            genre: 'General',
+                            cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=600&q=80'
+                        };
+                    }
                 }
 
                 if (foundGame) {
