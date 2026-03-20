@@ -323,7 +323,7 @@ export default function ClanPage() {
         if (clanForRender && user) {
             restoreState();
         }
-    }, [location.state, clanForRender?.id, user?.id]); // Only run when clan/user loads
+    }, [location.search, location.state, clanForRender?.id, user?.id]); // Re-run when query params change
 
     // Keyboard Navigation for XMB
     useEffect(() => {
