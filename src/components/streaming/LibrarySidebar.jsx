@@ -251,7 +251,7 @@ export default function LibrarySidebar() {
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
               </button>
               
-              {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 2).map((game) => (
+              {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
                 <button
                   key={`clan_${game.id}`}
                   onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
