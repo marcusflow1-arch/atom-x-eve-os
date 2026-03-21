@@ -60,6 +60,7 @@ export default function CreatePostModal({ open, onClose, topic, gameTitle, gameI
       community: selectedTopic,
       type: postType,
       game_title: gameTitle || '',
+      is_farm_hub: true,
     });
 
     onCreated?.({ 
