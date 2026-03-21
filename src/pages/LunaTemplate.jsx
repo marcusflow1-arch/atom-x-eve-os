@@ -612,7 +612,31 @@ export default function LunaTemplate() {
             </>
           )}
 
-
+          <AnimatePresence>
+            {avatarFocusMode && !uiVisible && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col gap-3 mt-2"
+              >
+                {['AI Story', 'AI Battle', 'Leaderboard', 'Stats', 'Live'].map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
+                    className={`w-full py-4 rounded-xl border transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center font-bold ${
+                      activeAvatarFocusView === opt
+                        ? 'bg-cyan-500/20 border-cyan-400/50 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]'
+                        : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
