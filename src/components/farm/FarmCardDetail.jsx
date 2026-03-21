@@ -17,7 +17,7 @@ const ACTION_TABS = [
   { id: 'discuss', label: 'Discuss', icon: MessageCircle },
 ];
 
-export default function FarmCardDetail({ card, activeTopic }) {
+export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
   const [activeTab, setActiveTab] = useState(activeTopic || 'guide');
   const [chatInput, setChatInput] = useState('');
 
