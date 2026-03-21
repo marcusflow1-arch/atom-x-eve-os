@@ -274,7 +274,7 @@ export default function CommunityPage() {
         if (!activeGame) return;
         setLoadingRight(true);
         try {
-            let filter = { game_title: activeGame.title };
+            let filter = { game_title: activeGame.title, is_farm_hub: { $ne: true } };
             let sort = '-created_date';
 
             if (hotFilter === 'hot' || hotFilter === 'trending') sort = '-score';
