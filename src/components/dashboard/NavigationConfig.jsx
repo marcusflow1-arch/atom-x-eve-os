@@ -19,7 +19,6 @@ export const NAV_HIERARCHY = [
         icon: Home,
         path: createPageUrl('LunaTemplate'),
         subPages: [
-            { name: 'Season Pass', icon: Crown, path: createPageUrl('SeasonalPass') },
             { name: 'Clan', icon: Users, path: createPageUrl('Clan') },
             { name: 'Forum', icon: MessageSquare, path: createPageUrl('Community') },
         ]
