@@ -226,7 +226,7 @@ export default function CommunityPage() {
     const fetchPosts = useCallback(async () => {
         setLoading(true);
         try {
-            let filter = {};
+            let filter = { is_farm_hub: { $ne: true } };
             let sort = '-created_date';
 
             if (sortBy === 'popular') sort = '-score';
