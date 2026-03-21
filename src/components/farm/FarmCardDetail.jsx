@@ -299,3 +299,40 @@ function DiscussTab({ card, chatInput, setChatInput }) {
     </div>
   );
 }
+
+function FarmHubFeed({ gameTitle, activeTopic }) {
+  const { data: posts, isLoading } = useQuery({
+    queryKey: ['farm_hub_posts', gameTitle, activeTopic],
+    queryFn: async () => {
+      let filter = { is_farm_hub: true, game_title: gameTitle };
+      if (activeTopic) {
+        filter.community = activeTopic;
+      }
+      return await base44.entities.Post.filter(filter, '-created_date', 50);
+    },
+    enabled: !!gameTitle,
+  });
+
+  return (
+    <div className="h-full p-6 overflow-y-auto custom-scrollbar flex flex-col">
+      <h2 className="text-xl font-bold text-white mb-6 capitalize">{activeTopic || 'All'} Discussions</h2>
+      <div className="flex-1">
+        {isLoading ? (
+          <div className="flex justify-center py-10"><div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" /></div>
+        ) : posts?.length > 0 ? (
+          <div className="space-y-4">
+            {posts.map(post => (
+              <PostCard key={post.id} post={post} onVote={() => {}} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 text-white/40 bg-white/5 rounded-2xl border border-white/5 border-dashed">
+            <MessageCircle className="w-10 h-10 mx-auto text-white/20 mb-4" />
+            <p className="font-medium text-white/60 mb-1">No discussions yet</p>
+            <p className="text-xs">Be the first to start a topic in this section!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
