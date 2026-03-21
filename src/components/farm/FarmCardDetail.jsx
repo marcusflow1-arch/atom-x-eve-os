@@ -4,6 +4,9 @@ import { Trophy, Users, MessageCircle, Video, AlertCircle, Plus, UserPlus, Mic, 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import PostCard from '@/components/community/PostCard';
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 const ACTION_TABS = [
   { id: 'guide', label: 'Guide', icon: Trophy },
