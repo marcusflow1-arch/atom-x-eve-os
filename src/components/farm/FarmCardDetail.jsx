@@ -32,17 +32,7 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
   }, [activeTopic]);
 
   if (!card) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <Trophy className="w-7 h-7 text-white/15" />
-          </div>
-          <p className="text-white/30 text-sm font-medium mb-1">Select a card</p>
-          <p className="text-white/15 text-xs">Choose an achievement from the left to see guides, farm queues, and discussions.</p>
-        </div>
-      </div>
-    );
+    return <FarmHubFeed gameTitle={gameTitle} activeTopic={activeTopic} />;
   }
 
   const RARITY_GRADIENT = {
