@@ -1157,41 +1157,7 @@ function HomeReference({ onClick }) {
 
 // Bottom Nav Header (Replaces Quick Actions)
 function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree, showLive }) {
-  const actions = [
-    { id: 'ai-story', label: 'AI Story', icon: BookOpen, image: 'https://images.unsplash.com/photo-1516542076529-1ea3854896f2?w=400', onClick: () => navigate(createPageUrl('AIStory')) },
-    { id: 'ai-battle', label: 'AI Battle', icon: Swords, image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400', onClick: () => navigate(createPageUrl('AIBattle')) },
-    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', onClick: () => navigate(createPageUrl('Leaderboard')) },
-    { id: 'live', label: 'Live', icon: Radio, image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', onClick: onLiveClick, active: showLive },
-    { id: 'skill-tree', label: 'Skill Tree', icon: Zap, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', onClick: onSkillTreeClick, active: showSkillTree },
-  ];
-
-  return (
-    <div className="w-full flex justify-center pointer-events-auto h-[64px]">
-      <div className="flex justify-between gap-2 w-full">
-        {actions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <motion.button
-              key={action.id}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={action.onClick}
-              className={`relative w-16 h-16 rounded-lg overflow-hidden group shadow-md border-2 flex-shrink-0 transition-all ${
-                action.active ? 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]' : 'border-white/10 hover:border-white/30'
-              }`}
-            >
-              <img src={action.image} alt={action.label} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-50 transition-opacity duration-300" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-              <div className="absolute inset-0 p-1 flex flex-col items-center justify-center text-center gap-1.5">
-                <Icon className={`w-5 h-5 drop-shadow-md transition-colors ${action.active ? 'text-cyan-400' : 'text-white/80'}`} />
-                <span className="text-white font-bold text-[7px] leading-tight drop-shadow-md max-w-[90%] mx-auto">{action.label}</span>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-    </div>
-  );
+  return null;
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
