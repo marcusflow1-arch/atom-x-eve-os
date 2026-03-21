@@ -177,6 +177,8 @@ export default function FarmGameView({ game, onBack }) {
         open={showCreatePostModal} 
         onClose={() => setShowCreatePostModal(false)}
         topic={activeTopic || 'achievements'}
+        gameTitle={game.title}
+        gameId={game.id}
       />
     </div>
   );
