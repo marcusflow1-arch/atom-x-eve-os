@@ -27,7 +27,7 @@ export default function FarmTopicContent({ topic, gameId, gameTitle, isOwned, on
 
       {/* RIGHT: Detail Panel */}
       <div className="flex-1 h-full overflow-hidden">
-        <FarmCardDetail card={selectedCard} activeTopic={topic} />
+        <FarmCardDetail card={selectedCard} activeTopic={topic} gameTitle={gameTitle} />
       </div>
     </div>
   );
