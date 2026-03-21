@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { TOPICS } from './FarmTopicSelector';
 import { useAuth } from '@/lib/AuthContext';
+import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const POST_TYPES = [
   { id: 'discussion', label: 'General Discussion' },
@@ -17,8 +19,9 @@ const POST_TYPES = [
   { id: 'bug', label: 'Bug Report' },
 ];
 
-export default function CreatePostModal({ open, onClose, topic, onCreated }) {
+export default function CreatePostModal({ open, onClose, topic, gameTitle, gameId, onCreated }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedTopic, setSelectedTopic] = useState(topic || 'achievements');
@@ -27,6 +30,19 @@ export default function CreatePostModal({ open, onClose, topic, onCreated }) {
   useEffect(() => {
     if (topic) setSelectedTopic(topic);
   }, [topic]);
+
+  const createPostMutation = useMutation({
+    mutationFn: (newPost) => base44.entities.Post.create(newPost),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+      toast.success('Posted successfully!');
+      setTitle(''); setContent('');
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create post');
+    }
+  });
 
   const handleSubmit = () => {
     if (!title.trim()) { toast.error('Title is required'); return; }
@@ -38,16 +54,20 @@ export default function CreatePostModal({ open, onClose, topic, onCreated }) {
       return;
     }
 
+    createPostMutation.mutate({
+      title: title.trim(),
+      content: content.trim(),
+      community: selectedTopic,
+      type: postType,
+      game_title: gameTitle || '',
+    });
+
     onCreated?.({ 
       title: title.trim(), 
       content: content.trim(), 
       topic: selectedTopic,
       type: postType 
     });
-    
-    toast.success('Discussion posted!');
-    setTitle(''); setContent('');
-    onClose();
   };
 
   if (!open) return null;
