@@ -10,6 +10,7 @@ import { TOPICS } from './FarmTopicSelector';
 import { useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const POST_TYPES = [
   { id: 'discussion', label: 'General Discussion' },
