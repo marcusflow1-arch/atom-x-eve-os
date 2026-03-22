@@ -209,25 +209,26 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         <>
           {/* Back layers */}
           <div
-            className="absolute inset-x-2 rounded-2xl pointer-events-none"
+            className="absolute -inset-x-2 rounded-2xl pointer-events-none"
             style={{
-              top: '6px', bottom: '-6px', transform: 'translateZ(-12px)',
+              top: '-4px', bottom: '-4px', transform: 'translateZ(-12px)',
               background: 'linear-gradient(135deg, rgba(15, 20, 30, 0.9) 0%, rgba(10, 15, 20, 0.95) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: '0 6px 20px rgba(0,0,0,0.5)',
             }}
           />
           <div
-            className="absolute inset-x-1 rounded-2xl pointer-events-none"
+            className="absolute -inset-x-1 rounded-2xl pointer-events-none"
             style={{
-              top: '3px', bottom: '-3px', transform: 'translateZ(-6px)',
+              top: '-2px', bottom: '-2px', transform: 'translateZ(-6px)',
               background: 'linear-gradient(135deg, rgba(20, 25, 35, 0.9) 0%, rgba(15, 20, 25, 0.95) 100%)',
               border: '1px solid rgba(255, 255, 255, 0.07)', boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
             }}
           />
           {/* Spine */}
           <div
-            className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-5 rounded-sm pointer-events-none z-30"
+            className="absolute left-1/2 -translate-x-1/2 w-6 rounded-sm pointer-events-none z-30"
             style={{
+              top: '-4px', bottom: '-4px',
               background: 'linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(255,255,255,0.06) 35%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.06) 65%, rgba(0,0,0,0.4) 100%)',
               boxShadow: 'inset 2px 0 4px rgba(0,0,0,0.4), inset -2px 0 4px rgba(0,0,0,0.4), 0 0 12px rgba(0,0,0,0.5)',
             }}
