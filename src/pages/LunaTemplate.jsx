@@ -576,15 +576,18 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
-    <div
-      className="min-h-screen text-white p-8 pt-0 overflow-hidden relative"
-      style={{
+    <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
+      {/* 5% Left Area for Global Icons */}
+      <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
+
+      {/* 95% Main Area */}
+      <div className="flex-1 relative h-full overflow-hidden" style={{
         backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundColor: '#080808'
       }}>
+        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
 
 
 
@@ -1923,6 +1926,8 @@ export default function LunaTemplate() {
         }
       </AnimatePresence>
 
+        </div>
+      </div>
     </div>
     </GlassPageFrame>
     </PageErrorBoundary>

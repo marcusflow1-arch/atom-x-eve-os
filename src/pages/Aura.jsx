@@ -14,14 +14,20 @@ export default function Aura() {
   return (
     <GlassPageFrame bottomContent={<AuraBottomNav />}>
     <SideAccessMenu />
-    <div className="w-full min-h-screen bg-[#0f1419] relative">
-      {/* Main Content */}
-      <div className="pt-20 pb-24">
-        <StreamingGamesLive />
-      </div>
+    <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
+      {/* 5% Left Area for Global Icons */}
+      <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
 
-      {/* Sidebars & Overlays */}
-      <LibrarySidebar />
+      {/* 95% Main Area */}
+      <div className="flex-1 relative h-full overflow-y-auto">
+        {/* Main Content */}
+        <div className="pt-20 pb-24 min-h-screen">
+          <StreamingGamesLive />
+        </div>
+
+        {/* Sidebars & Overlays */}
+        <LibrarySidebar />
+      </div>
     </div>
     </GlassPageFrame>
   );
