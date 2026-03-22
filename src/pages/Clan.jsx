@@ -610,6 +610,7 @@ export default function ClanPage() {
                 </div>
             </div>
             </div>
+            </div>
         </div>
         </GlassPageFrame>
     );
