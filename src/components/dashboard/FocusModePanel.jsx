@@ -1668,7 +1668,6 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   const [isPlaying, setIsPlaying] = useState(true);
   const [volume, setVolume] = useState(80);
   const [showStreamSettings, setShowStreamSettings] = useState(false);
-  const [showSkillTree, setShowSkillTree] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const openCalendar = () => setShowCalendar(true);
   const [showEnvDrawer, setShowEnvDrawer] = useState(false);
