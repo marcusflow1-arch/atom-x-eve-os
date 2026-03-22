@@ -53,15 +53,30 @@ export default function AvatarStatCard() {
 
   return (
     <div
-      className="rounded-2xl overflow-hidden flex-shrink-0 flex flex-col"
+      className="rounded-r-2xl rounded-l-none overflow-hidden flex-shrink-0 flex flex-col relative"
       style={{
         background: 'rgba(22, 27, 38, 0.85)',
         border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderLeft: 'none',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
         height: '280px',
         width: '190px',
+        transformOrigin: 'left center',
+        transform: 'rotateY(-8deg)',
       }}
     >
+      {/* Page shading for right page */}
+      <div className="absolute top-0 bottom-0 w-[2px] left-0 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.04), rgba(255,255,255,0.08))' }}
+      />
+      <div
+        className="absolute top-0 bottom-0 pointer-events-none z-10 left-0 w-8"
+        style={{
+          background: 'linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
+          borderRadius: '12px 0 0 12px',
+        }}
+      />
+
       {/* Name & Rank Header */}
       <div className="px-3 pt-3 pb-2 border-b border-white/6 flex justify-between items-start">
         <div className="flex-1 min-w-0 pr-2">
