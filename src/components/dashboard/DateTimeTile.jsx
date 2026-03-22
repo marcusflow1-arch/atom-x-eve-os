@@ -40,7 +40,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-50" />
       <div className="relative h-full flex flex-row items-stretch">
         
-        <div className="flex-1 p-3 px-5 flex items-center gap-4 overflow-hidden relative">
+        <div className="flex-1 p-2.5 px-4 flex items-center gap-3 overflow-hidden relative">
           {/* Calendar Button */}
           <button
             onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
@@ -52,30 +52,31 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
 
           {/* Date, Time, Reminders, Updates */}
           <div className="flex flex-col justify-center flex-1 min-w-0 relative h-full">
-            {/* Top Right System Update Button */}
-            <div className="absolute top-0 right-0 z-20">
+            
+            <div className="flex items-center justify-between w-full mb-0.5">
+              {/* Date above */}
+              <div className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest truncate">
+                {dateString}
+              </div>
+              
+              {/* Top Right System Updates Button */}
               <button 
                 onClick={(e) => { e.stopPropagation(); onClick(); }} 
-                className="flex items-center gap-1.5 text-white/60 hover:text-white transition-colors group px-2 py-1 rounded hover:bg-white/5"
+                className="flex items-center gap-1.5 text-white/60 hover:text-white transition-colors group px-1.5 py-0.5 rounded hover:bg-white/5 z-20"
               >
-                <span className="text-[9px] uppercase tracking-wider font-bold">System Update</span>
+                <span className="text-[9px] uppercase tracking-wider font-bold">System Updates</span>
                 <Settings className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-500" />
               </button>
             </div>
-
-            {/* Date above */}
-            <div className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest mb-1 truncate mt-1">
-              {dateString}
-            </div>
             
             {/* Time and Info split */}
-            <div className="flex items-center gap-4 w-full">
+            <div className="flex items-center gap-3 w-full">
               <div className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none flex-shrink-0">
                 {timeString}
               </div>
               
               {/* Reminders & Updates Area */}
-              <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-4 h-8 mt-1 pr-12">
+              <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-3 h-8">
                 {/* Reminders Side */}
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <div className="flex items-center gap-1 mb-0.5">
