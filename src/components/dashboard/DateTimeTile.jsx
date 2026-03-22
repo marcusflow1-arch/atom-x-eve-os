@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar as CalendarIcon, Bell } from 'lucide-react';
+import { Calendar as CalendarIcon, Bell, Settings } from 'lucide-react';
 
 export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
   const [time, setTime] = useState(new Date());
