@@ -1156,7 +1156,7 @@ function HomeReference({ onClick }) {
 }
 
 // Bottom Nav Header (Replaces Quick Actions)
-function BottomNavBoxes({ navigate, onLiveClick, onSkillTreeClick, showSkillTree, showLive }) {
+function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
   return null;
 }
 
