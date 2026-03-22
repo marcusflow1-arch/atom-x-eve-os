@@ -651,7 +651,7 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.95 }}
             transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-            className="fixed z-10 pointer-events-auto overflow-hidden flex flex-col"
+            className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
             style={{
               left: '440px',
               top: '80px',
@@ -766,7 +766,7 @@ export default function LunaTemplate() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="fixed right-8 z-30 overflow-hidden pointer-events-none"
+            className="absolute right-8 z-30 overflow-hidden pointer-events-none"
             style={{
               left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
