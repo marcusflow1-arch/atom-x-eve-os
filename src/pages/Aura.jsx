@@ -24,8 +24,6 @@ export default function Aura() {
           <StreamingGamesLive />
         </div>
 
-        {/* Sidebars & Overlays */}
-        <LibrarySidebar />
       </div>
     </div>
     </GlassPageFrame>
