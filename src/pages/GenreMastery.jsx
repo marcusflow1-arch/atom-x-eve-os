@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
-  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll
+  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -147,7 +147,21 @@ export default function GenreMastery({ onClose }) {
     <GlassPageFrame>
       <div className="flex w-full h-full">
         {/* 3% Left Sidebar for Global Icons */}
-        <div className="w-[3%] flex-shrink-0" />
+        <div className="w-[3%] flex-shrink-0 relative z-50 flex flex-col items-center justify-center gap-4 bg-black/20 border-r border-white/10 backdrop-blur-sm">
+           <button 
+             onClick={() => navigate(createPageUrl('Store') + '?subview=library')} 
+             className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all group shadow-lg"
+             title="Library"
+           >
+             <Library className="w-5 h-5 text-white/50 group-hover:text-cyan-400 transition-colors" />
+           </button>
+           <button 
+             className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all group shadow-lg"
+             title="Friends"
+           >
+             <Users className="w-5 h-5 text-white/50 group-hover:text-green-400 transition-colors" />
+           </button>
+        </div>
         
         {/* 97% Main Content Area */}
         <div className="w-[97%] h-screen text-white font-sans overflow-hidden relative flex flex-col"
