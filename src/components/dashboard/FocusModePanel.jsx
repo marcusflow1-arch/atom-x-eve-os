@@ -1839,11 +1839,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                         <X className="w-3 h-3 text-white/60" />
                       </button>
 
-                      {showSkillTree && (
-                        <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                          <AvatarProgressionBox />
-                        </div>
-                      )}
+
 
                       {showFriendsDropdown && (
                         <div className="h-full overflow-hidden">
