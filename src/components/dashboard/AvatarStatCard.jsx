@@ -75,16 +75,7 @@ export default function AvatarStatCard() {
           </div>
         </div>
 
-        {/* Skill Tree Button */}
-        <div className="flex flex-col items-center group cursor-pointer" onClick={(e) => {
-          e.stopPropagation();
-          window.dispatchEvent(new CustomEvent('toggleSkillTree'));
-        }}>
-          <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 group-hover:bg-white/10 group-hover:border-cyan-400/50 flex items-center justify-center transition-all">
-            <Network className="w-4 h-4 text-white/70 group-hover:text-cyan-400" />
-          </div>
-          <span className="text-[8px] font-bold text-white/60 mt-1 uppercase tracking-wider group-hover:text-cyan-400 transition-colors">Skill Tree</span>
-        </div>
+
       </div>
 
       {/* Scores & Profile Info */}
