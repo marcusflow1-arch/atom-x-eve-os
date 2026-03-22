@@ -1763,9 +1763,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 navBoxes={
                   <BottomNavBoxes 
                     navigate={navigate} 
-                    onLiveClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
-                    onSkillTreeClick={() => { setShowLiveDropdown(false); setShowFriendsDropdown(false); setShowSkillTree((v) => !v); }}
-                    showSkillTree={showSkillTree}
+                    onLiveClick={() => { setShowFriendsDropdown(false); setShowLiveDropdown((v) => !v); }}
                     showLive={showLiveDropdown}
                   />
                 }
