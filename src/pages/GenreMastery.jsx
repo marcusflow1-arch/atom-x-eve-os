@@ -145,13 +145,18 @@ export default function GenreMastery({ onClose }) {
 
   return (
     <GlassPageFrame>
-      <div className="h-screen w-full text-white font-sans overflow-hidden relative flex flex-col"
-        style={{
-          backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-          backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'
-        }}
-      >
-        {/* Dark overlay */}
+      <div className="flex w-full h-full">
+        {/* 3% Left Sidebar for Global Icons */}
+        <div className="w-[3%] flex-shrink-0" />
+        
+        {/* 97% Main Content Area */}
+        <div className="w-[97%] h-screen text-white font-sans overflow-hidden relative flex flex-col"
+          style={{
+            backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
+            backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'
+          }}
+        >
+          {/* Dark overlay */}
         <div className="absolute inset-0 bg-black/60 z-0" />
         <div className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} opacity-[0.06] z-0`} />
 
