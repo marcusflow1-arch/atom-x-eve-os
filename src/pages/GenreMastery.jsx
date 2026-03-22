@@ -371,6 +371,7 @@ export default function GenreMastery({ onClose }) {
           </div>
         </div>
       </div>
+      </div>
     </GlassPageFrame>
   );
 }
