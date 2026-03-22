@@ -1790,7 +1790,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
               <div className="relative mt-3" style={{ height: '512px' }}>
                 {/* OVERLAY: Skill Tree / Friends / Live — fills the open space exactly */}
                 <AnimatePresence>
-                  {(showSkillTree || showFriendsDropdown || showLiveDropdown) && (
+                  {(showFriendsDropdown || showLiveDropdown) && (
                     <motion.div
                       key="panel-overlay"
                       initial={{ opacity: 0 }}
@@ -1802,9 +1802,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                         background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
                         backdropFilter: 'blur(24px)',
                         WebkitBackdropFilter: 'blur(24px)',
-                        border: showSkillTree
-                          ? '1px solid rgba(34,211,238,0.30)'
-                          : showFriendsDropdown
+                        border: showFriendsDropdown
                           ? '1px solid rgba(74,222,128,0.30)'
                           : '1px solid rgba(248,113,113,0.30)',
                         boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
@@ -1812,7 +1810,7 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                     >
                       {/* Close button */}
                       <button
-                        onClick={() => { setShowSkillTree(false); setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
+                        onClick={() => { setShowFriendsDropdown(false); setShowLiveDropdown(false); }}
                         className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
                       >
                         <X className="w-3 h-3 text-white/60" />
