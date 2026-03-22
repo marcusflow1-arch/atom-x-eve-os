@@ -367,11 +367,11 @@ export default function CommunityPage() {
         <PageErrorBoundary pageName="Community">
         <GlassPageFrame>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
-            {/* 3% Left Area for Global Icons */}
-            <div className="w-[3%] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
+            {/* 5% Left Area for Global Icons */}
+            <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
 
-            {/* 97% Main Area */}
-            <div className="w-[97%] flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
+            {/* 95% Main Area */}
+            <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
