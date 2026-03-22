@@ -1924,6 +1924,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
       </div>
 
+      {/* DevSpotlightRibbon — aligned perfectly to the left edge of FocusModePanel */}
+      <div className="pointer-events-auto absolute bottom-0 left-0 z-50">
+        <DevSpotlightRibbon onOpenOverlay={onOpenDevSpotlight} />
+      </div>
     </div>
   );
 }
