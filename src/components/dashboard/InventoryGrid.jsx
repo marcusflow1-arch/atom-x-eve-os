@@ -162,9 +162,6 @@ export default function InventoryGrid({ equippedItems, handleBoxClick }) {
             })}
           </div>
         </div>
-        <div className="mt-4 w-full">
-          <AIAttributesBox />
-        </div>
       </div>
     </motion.div>
   );
