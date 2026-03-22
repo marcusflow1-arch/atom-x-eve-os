@@ -1901,7 +1901,7 @@ export default function LunaTemplate() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-40"
+            className="absolute inset-0 z-40"
             style={{
               background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
             }}>

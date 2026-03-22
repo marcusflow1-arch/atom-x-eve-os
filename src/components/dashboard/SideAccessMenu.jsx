@@ -255,7 +255,7 @@ export default function SideAccessMenu() {
       {/* Trigger Button - Floating on Left Edge */}
       {!isExpanded && !activeItem && (
         <motion.div
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex items-center"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-40 flex items-center"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -272,7 +272,7 @@ export default function SideAccessMenu() {
       {/* Expanded Menu - Slide out */}
       <AnimatePresence>
         {(isExpanded || activeItem) && (
-          <div ref={menuRef} className="fixed left-0 top-1/2 -translate-y-1/2 z-40 flex h-[600px]">
+          <div ref={menuRef} className="absolute left-0 top-1/2 -translate-y-1/2 z-40 flex h-[600px]">
             {/* Menu List */}
             <motion.div
               initial={{ x: -100, opacity: 0 }}
