@@ -278,37 +278,24 @@ export default function Mini3DViewerBox({ isUiVisible = false, hostName }) {
         )}
 
         {/* Voice Chat Icon */}
-        <div 
-          className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md cursor-pointer hover:bg-white/10 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            setVoiceEnabled(v => {
-              const newState = !v;
-              window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
-              return newState;
-            });
-          }}
-        >
-           {voiceEnabled ? (
-             <Mic className="w-3.5 h-3.5 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" />
-           ) : (
-             <MicOff className="w-3.5 h-3.5 text-red-400/80" />
-           )}
-        </div>
-
-        {isUiVisible && (
-          <button 
-            className="absolute top-4 right-4 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center gap-2 border border-white/20 z-10 transition-colors text-white text-xs font-bold uppercase tracking-wider"
+        {!isUiVisible && (
+          <div 
+            className="absolute top-2 right-2 z-20 bg-black/40 rounded-full p-1 border border-white/10 backdrop-blur-md cursor-pointer hover:bg-white/10 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
-              window.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }));
+              setVoiceEnabled(v => {
+                const newState = !v;
+                window.dispatchEvent(new CustomEvent('toggleDashboardMic', { detail: { enabled: newState } }));
+                return newState;
+              });
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Back
-          </button>
+             {voiceEnabled ? (
+               <Mic className="w-3.5 h-3.5 text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]" />
+             ) : (
+               <MicOff className="w-3.5 h-3.5 text-red-400/80" />
+             )}
+          </div>
         )}
       </div>
 
