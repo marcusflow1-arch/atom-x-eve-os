@@ -807,7 +807,7 @@ export default function LunaTemplate() {
               animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
               exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`fixed bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
+              className={`absolute bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
                 'inset-0' :
                 'left-0 rounded-3xl'}`
               }
@@ -958,7 +958,7 @@ export default function LunaTemplate() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              className="absolute right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
               style={{
                 top: '80px',
                 bottom: '48px',
@@ -1067,7 +1067,7 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
+            className="absolute inset-0 z-40"
           >
             <Achievements 
               showCloseButton={true} 
@@ -1080,7 +1080,7 @@ export default function LunaTemplate() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full h-screen pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
+            className="w-full h-full pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
           >
 {!showAvatarProgression && (
             <>
@@ -1502,7 +1502,7 @@ export default function LunaTemplate() {
       {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
       {clickedSlot && (
         <div 
-          className="fixed inset-0 z-[60]"
+          className="absolute inset-0 z-[60]"
           key="inventory-panel-container"
         >
           <InventoryPanel
