@@ -19,7 +19,7 @@ import LimitedEditionDisplay from './LimitedEditionDisplay';
 import EntertainmentRow from './EntertainmentRow';
 import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
 import StreamChatBox from '@/components/streaming/StreamChatBox';
-import AvatarProgressionBox from '@/components/avatar/AvatarProgressionBox';
+
 import StatsPopupOverlay from '@/components/dashboard/StatsPopupOverlay';
 import FriendsDropdown from '@/components/dashboard/FriendsDropdown';
 import InventoryEquipOverlay from '@/components/profile/InventoryEquipOverlay';
