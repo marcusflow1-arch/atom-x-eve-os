@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
-import LibrarySidebar from '@/components/streaming/LibrarySidebar';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
