@@ -1530,7 +1530,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
               style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
             >
               <div className="flex-1 overflow-y-auto p-8">
@@ -1563,7 +1563,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
               style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
 
               <div className="flex-1 overflow-y-auto">
@@ -1597,7 +1597,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
               style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
 
               <div className="flex-1 overflow-y-auto">
@@ -1637,7 +1637,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 z-50 flex flex-col p-8"
+              className="absolute inset-0 z-50 flex flex-col p-8"
               style={{
                 background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
                 backdropFilter: 'blur(16px) saturate(140%)',
@@ -1688,7 +1688,7 @@ export default function LunaTemplate() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-0 z-50 flex flex-col p-8"
+              className="absolute inset-0 z-50 flex flex-col p-8"
               style={{
                 background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
                 backdropFilter: 'blur(40px) saturate(180%)',

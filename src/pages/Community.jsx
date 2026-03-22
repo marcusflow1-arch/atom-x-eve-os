@@ -373,7 +373,7 @@ export default function CommunityPage() {
             {/* 95% Main Area */}
             <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
             {/* Ambient Background */}
-            <div className="fixed inset-0 pointer-events-none">
+            <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
                 <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
             </div>
