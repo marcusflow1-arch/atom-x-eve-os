@@ -371,17 +371,9 @@ export default function CommunityPage() {
             setSelectedPost(null);
             setSelectedGenre('All Games');
             setActiveSection('all');
-        } else if (tabId === 'discussion') {
-            if (lastActiveGame) {
-                setActiveGame(lastActiveGame);
-            } else if (filteredGames.length > 0) {
-                // If no last active game, just pick the first one from the list to show discussions
-                const gameToSelect = filteredGames[0];
-                setActiveGame(gameToSelect);
-                setLastActiveGame(gameToSelect);
-            } else {
-                showError("Please select a game from the hub first.");
-            }
+        } else if (tabId === 'farm_hub') {
+            // Navigate to the Farm page
+            navigate(createPageUrl('Farm'));
         }
     };
 
@@ -395,7 +387,7 @@ export default function CommunityPage() {
 
     return (
         <PageErrorBoundary pageName="Community">
-        <GlassPageFrame bottomContent={<ForumBottomNav activeTab={activeGame ? 'discussion' : 'hub'} onTabSelect={handleTabSelect} />}>
+        <GlassPageFrame bottomContent={<ForumBottomNav activeTab="hub" onTabSelect={handleTabSelect} />}>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 5% Left Area for Global Icons */}
             <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm`}>

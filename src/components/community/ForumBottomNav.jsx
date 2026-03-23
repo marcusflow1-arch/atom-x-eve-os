@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Grid } from 'lucide-react';
+import { Wheat, Grid } from 'lucide-react';
 
 export default function ForumBottomNav({ activeTab, onTabSelect }) {
   const Item = ({ active, icon: Icon, label, id }) => (
@@ -18,8 +18,8 @@ export default function ForumBottomNav({ activeTab, onTabSelect }) {
 
   return (
     <div className="flex items-center justify-center gap-2 w-full">
-      <Item icon={MessageSquare} label="Discussion" id="discussion" active={activeTab === 'discussion'} />
       <Item icon={Grid} label="Forum Hub" id="hub" active={activeTab === 'hub'} />
+      <Item icon={Wheat} label="Farm Hub" id="farm_hub" active={activeTab === 'farm_hub'} />
     </div>
   );
 }
