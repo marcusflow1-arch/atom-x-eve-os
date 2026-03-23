@@ -6,7 +6,6 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
-import { BookOpen } from 'lucide-react';
 
 export default function Aura() {
   const navigate = useNavigate();
