@@ -368,7 +368,22 @@ export default function CommunityPage() {
         <GlassPageFrame>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 5% Left Area for Global Icons */}
-            <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
+            <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
+                
+                {/* Recent Forums Section */}
+                <div className="flex flex-col items-center w-full px-2 mt-20">
+                  <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Recent<br/>Forums</span>
+                  <div className="w-8 h-px bg-white/20 mb-4" />
+                  
+                  <div className="flex flex-col gap-3 w-full items-center">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                        <span className="text-white/30 text-lg font-bold">?</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+            </div>
 
             {/* 95% Main Area */}
             <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
