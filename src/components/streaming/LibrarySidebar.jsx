@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -27,7 +27,14 @@ export default function LibrarySidebar() {
   const [recentClanGames, setRecentClanGames] = useState([]);
   const [recentForumGames, setRecentForumGames] = useState([]);
   const [sidebarMode, setSidebarMode] = useState('context');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleToggle = (e) => setIsSidebarCollapsed(e.detail);
+    window.addEventListener('sidebarCollapseChange', handleToggle);
+    return () => window.removeEventListener('sidebarCollapseChange', handleToggle);
+  }, []);
 
   useEffect(() => {
     const loadRecentGames = () => {
@@ -219,89 +226,93 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 top-[136px] z-[70] flex flex-col items-center gap-3 w-10"
+              className={`absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 ${isSidebarCollapsed ? 'top-1/2 -translate-y-1/2 opacity-90' : 'top-[136px] opacity-100'}`}
             >
-              <button 
-                onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-              >
-                 {sidebarMode === 'context' ? (
-                   isClan ? <>Recently<br/>Visited</> : 
-                   isForum ? <>Recent<br/>Forums</> : 
-                   <>Recent<br/>Cards</>
-                 ) : <>Recently<br/>Played</>}
-              </button>
-              <div className="w-8 h-px bg-white/20 -mt-1" />
-
-              {/* The 5 boxes */}
-              {sidebarMode === 'context' ? (
+              {!isSidebarCollapsed && (
                 <>
-                  {isClan && (
-                    <>
-                      <button
-                        onClick={() => navigate('/Clan?game=global_chat')}
-                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                        title={`Atom X Eve Global Clan Chat`}
-                      >
-                        <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
-                      </button>
-                      
-                      {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
-                        <button
-                          key={`clan_${game.id}`}
-                          onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Clan Chat`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
+                  <button 
+                    onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
+                    className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+                  >
+                     {sidebarMode === 'context' ? (
+                       isClan ? <>Recently<br/>Visited</> : 
+                       isForum ? <>Recent<br/>Forums</> : 
+                       <>Recent<br/>Cards</>
+                     ) : <>Recently<br/>Played</>}
+                  </button>
+                  <div className="w-8 h-px bg-white/20 -mt-1" />
 
-                  {isForum && (
+                  {/* The 5 boxes */}
+                  {sidebarMode === 'context' ? (
                     <>
-                      {quickNavForumGames.slice(0, 5).map((game) => (
-                        <button
-                          key={`forum_${game.id}`}
-                          onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Forum`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
+                      {isClan && (
+                        <>
+                          <button
+                            onClick={() => navigate('/Clan?game=global_chat')}
+                            className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                            title={`Atom X Eve Global Clan Chat`}
+                          >
+                            <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                            <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                          </button>
+                          
+                          {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
+                            <button
+                              key={`clan_${game.id}`}
+                              onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
+                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                              title={`${game.name} Clan Chat`}
+                            >
+                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          ))}
+                        </>
+                      )}
 
-                  {isGenreMastery && (
+                      {isForum && (
+                        <>
+                          {quickNavForumGames.slice(0, 5).map((game) => (
+                            <button
+                              key={`forum_${game.id}`}
+                              onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
+                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                              title={`${game.name} Forum`}
+                            >
+                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          ))}
+                        </>
+                      )}
+
+                      {isGenreMastery && (
+                        <>
+                          {[1, 2, 3, 4, 5].map(i => (
+                            <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                              <span className="text-white/30 text-lg font-bold">C</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </>
+                  ) : (
                     <>
                       {[1, 2, 3, 4, 5].map(i => (
-                        <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                          <span className="text-white/30 text-lg font-bold">C</span>
+                        <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                          <span className="text-white/30 text-lg font-bold">?</span>
                         </div>
                       ))}
                     </>
                   )}
-                </>
-              ) : (
-                <>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-white/30 text-lg font-bold">?</span>
-                    </div>
-                  ))}
+
+                  {/* Navigation Buttons placed directly under the boxes! */}
+                  <div className="w-8 h-px bg-white/10 my-1" />
                 </>
               )}
 
-              {/* Navigation Buttons placed directly under the boxes! */}
-              <div className="w-8 h-px bg-white/10 my-1" />
-
-              {isClan && (
+              {isClan && !isSidebarCollapsed && (
                 <button
                   onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
                   className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
@@ -311,7 +322,7 @@ export default function LibrarySidebar() {
                 </button>
               )}
 
-              {isForum && (
+              {isForum && !isSidebarCollapsed && (
                 <button
                   onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
                   className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
@@ -321,14 +332,30 @@ export default function LibrarySidebar() {
                 </button>
               )}
 
-              {/* Original Library Button */}
-              <button
-                onClick={() => setIsOpen(true)}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1 mt-1"
-                title="Library & Friends"
-              >
-                <Library className="w-5 h-5" />
-              </button>
+              {/* Original Library Button with Restore Arrow */}
+              <div className="relative flex items-center">
+                <button
+                  onClick={() => setIsOpen(true)}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1 mt-1"
+                  title="Library & Friends"
+                >
+                  <Library className="w-5 h-5" />
+                </button>
+                
+                {/* RESTORE ARROW */}
+                {isSidebarCollapsed && (
+                  <button
+                    onClick={() => {
+                        localStorage.setItem('sidebarCollapsed', 'false');
+                        window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: false }));
+                    }}
+                    className="absolute left-[44px] top-1/2 -translate-y-1/2 w-6 h-10 bg-black/60 border border-white/20 border-l-0 rounded-r-xl flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md shadow-lg"
+                    title="Restore Sidebar"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
             </motion.div>
           )}
