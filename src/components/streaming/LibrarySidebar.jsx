@@ -26,6 +26,7 @@ export default function LibrarySidebar() {
   const [quickGamesDrawer, setQuickGamesDrawer] = useState({ open: false, type: null });
   const [recentClanGames, setRecentClanGames] = useState([]);
   const [recentForumGames, setRecentForumGames] = useState([]);
+  const [recentFarmGames, setRecentFarmGames] = useState([]);
   const [sidebarMode, setSidebarMode] = useState('context');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const navigate = useNavigate();
@@ -66,6 +67,22 @@ export default function LibrarySidebar() {
     loadRecentForumGames();
     window.addEventListener('recentForumGamesUpdated', loadRecentForumGames);
     return () => window.removeEventListener('recentForumGamesUpdated', loadRecentForumGames);
+  }, []);
+
+  useEffect(() => {
+    const loadRecentFarmGames = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem('recent_farm_games') || '[]');
+        setRecentFarmGames(stored.map(g => ({
+          id: g.id,
+          name: g.title || g.name,
+          image: g.image || g.cover_image || g.cover
+        })));
+      } catch(e) {}
+    };
+    loadRecentFarmGames();
+    window.addEventListener('recentFarmGamesUpdated', loadRecentFarmGames);
+    return () => window.removeEventListener('recentFarmGamesUpdated', loadRecentFarmGames);
   }, []);
 
   useEffect(() => {
@@ -142,6 +159,7 @@ export default function LibrarySidebar() {
   
   const quickNavGames = recentClanGames.length > 0 ? recentClanGames : defaultQuickNavGames;
   const quickNavForumGames = recentForumGames.length > 0 ? recentForumGames : defaultQuickNavGames;
+  const quickNavFarmGames = recentFarmGames.length > 0 ? recentFarmGames : defaultQuickNavGames;
   
   // We want the sidebar to be available on more pages now that it has the Friends List
   // Removing the strict page restrictions to allow it to be accessed generally if needed, 
@@ -291,7 +309,7 @@ export default function LibrarySidebar() {
 
                       {isFarm && (
                         <>
-                          {quickNavForumGames.slice(0, 5).map((game) => (
+                          {quickNavFarmGames.slice(0, 5).map((game) => (
                             <button
                               key={`farm_${game.id}`}
                               onClick={() => navigate(`/Farm?gameId=${game.id}`)}

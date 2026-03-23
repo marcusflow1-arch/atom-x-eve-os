@@ -16,6 +16,26 @@ export default function FarmPage() {
     const [view, setView] = useState('hub'); // 'hub' | 'game'
     const [selectedGame, setSelectedGame] = useState(null);
 
+    // Save visited game to Recent Farm Games
+    useEffect(() => {
+        if (selectedGame) {
+            try {
+                const stored = JSON.parse(localStorage.getItem('recent_farm_games') || '[]');
+                const filtered = stored.filter(g => g.name !== selectedGame.title);
+                const toSave = [{
+                    id: selectedGame.id,
+                    name: selectedGame.title,
+                    image: selectedGame.cover_image || selectedGame.banner_image || selectedGame.image || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80"
+                }, ...filtered].slice(0, 5);
+                
+                localStorage.setItem('recent_farm_games', JSON.stringify(toSave));
+                window.dispatchEvent(new Event('recentFarmGamesUpdated'));
+            } catch (e) {
+                console.error("Failed to save recent farm game", e);
+            }
+        }
+    }, [selectedGame]);
+
     // Handle Deep Linking & Navigation Entry
     useEffect(() => {
         const gameId = searchParams.get('gameId');
