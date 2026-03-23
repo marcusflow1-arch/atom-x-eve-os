@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import FarmHub from '@/components/farm/FarmHub';
 import FarmGameView from '@/components/farm/FarmGameView';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { getFarmGameById } from '@/components/farm/farmData';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import ForumBottomNav from '@/components/community/ForumBottomNav';
+import { createPageUrl } from '@/utils';
 
 export default function FarmPage() {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [view, setView] = useState('hub'); // 'hub' | 'game'
     const [selectedGame, setSelectedGame] = useState(null);
@@ -43,8 +48,17 @@ export default function FarmPage() {
         setTimeout(() => setSelectedGame(null), 300);
     };
 
+    const handleTabSelect = (tabId) => {
+        if (tabId === 'hub') {
+            navigate(createPageUrl('Community'));
+        } else if (tabId === 'farm_hub') {
+            handleBackToHub();
+        }
+    };
+
     return (
         <PageErrorBoundary pageName="Farm">
+            <GlassPageFrame bottomContent={<ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} />}>
             <div 
                 className="min-h-screen text-white overflow-hidden relative"
                 style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
@@ -85,6 +99,7 @@ export default function FarmPage() {
                     </AnimatePresence>
                 </div>
             </div>
+            </GlassPageFrame>
         </PageErrorBoundary>
     );
 }
