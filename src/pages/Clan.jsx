@@ -503,25 +503,28 @@ export default function ClanPage() {
 
             {/* 3. XMB Horizontal Navigation Axis - Centered top */}
             <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
-                <div className="flex items-center gap-8">
-                    {XMB_MODES.map((mode, index) => {
-                        const isActive = index === activeModeIndex;
-
-                        if (mode.restricted && !isPrivileged) return null;
-
+                <div className="flex items-center">
+                    {XMB_MODES.filter(mode => !mode.restricted || isPrivileged).map((mode, mappedIndex) => {
+                        const originalIndex = XMB_MODES.findIndex(m => m.id === mode.id);
+                        const isActive = originalIndex === activeModeIndex;
                         return (
-                            <button 
-                                key={mode.id}
-                                onClick={() => setActiveModeIndex(index)}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${
-                                    isActive 
-                                        ? 'bg-white/15 text-white border border-white/20' 
-                                        : 'text-white/50 hover:text-white/80'
-                                }`}
-                            >
-                                <mode.icon className="w-4 h-4" />
-                                <span className="text-sm font-medium">{mode.label}</span>
-                            </button>
+                            <React.Fragment key={mode.id}>
+                                {mappedIndex > 0 && <div className="w-px h-5 bg-white/10 mx-2" />}
+                                <button 
+                                    onClick={() => setActiveModeIndex(originalIndex)}
+                                    className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+                                        isActive 
+                                            ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]' 
+                                            : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+                                    }`}
+                                >
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+                                    )}
+                                    <mode.icon className="w-4 h-4" />
+                                    <span>{mode.label}</span>
+                                </button>
+                            </React.Fragment>
                         );
                     })}
                 </div>

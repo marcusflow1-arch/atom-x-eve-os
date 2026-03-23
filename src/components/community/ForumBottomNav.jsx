@@ -2,24 +2,41 @@ import React from 'react';
 import { Wheat, Grid } from 'lucide-react';
 
 export default function ForumBottomNav({ activeTab, onTabSelect }) {
-  const Item = ({ active, icon: Icon, label, id }) => (
-    <button
-      onClick={() => onTabSelect(id)}
-      className={`px-4 h-9 rounded-full inline-flex items-center gap-2 text-sm font-semibold transition-all border backdrop-blur-md ${
-        active
-          ? 'bg-white/20 border-white/30 text-white shadow-[0_2px_12px_rgba(0,0,0,0.25)]'
-          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-      }`}
-    >
-      <Icon className="w-4 h-4" />
-      <span>{label}</span>
-    </button>
-  );
-
   return (
-    <div className="flex items-center justify-center gap-2 w-full">
-      <Item icon={Grid} label="Forum Hub" id="hub" active={activeTab === 'hub'} />
-      <Item icon={Wheat} label="Farm Hub" id="farm_hub" active={activeTab === 'farm_hub'} />
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="flex items-center">
+        <button
+          onClick={() => onTabSelect('hub')}
+          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+            activeTab === 'hub'
+              ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]'
+              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {activeTab === 'hub' && (
+            <div className="absolute inset-0 bg-emerald-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+          )}
+          <Grid className="w-4 h-4" />
+          <span>Forum Hub</span>
+        </button>
+
+        <div className="w-px h-5 bg-white/10 mx-2" />
+
+        <button
+          onClick={() => onTabSelect('farm_hub')}
+          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+            activeTab === 'farm_hub'
+              ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]'
+              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {activeTab === 'farm_hub' && (
+            <div className="absolute inset-0 bg-yellow-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+          )}
+          <Wheat className="w-4 h-4" />
+          <span>Farm Hub</span>
+        </button>
+      </div>
     </div>
   );
 }

@@ -10,25 +10,58 @@ export default function AuraBottomNav() {
   const isHome = path.includes('/streaminghome');
   const isAura = path.includes('/aura') && !isHome;
 
-  const Item = ({ active, icon: Icon, label, to }) => (
-    <button
-      onClick={() => navigate(to)}
-      className={`px-4 h-9 rounded-full inline-flex items-center gap-2 text-sm font-semibold transition-all border backdrop-blur-md ${
-        active
-          ? 'bg-white/20 border-white/30 text-white shadow-[0_2px_12px_rgba(0,0,0,0.25)]'
-          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-      }`}
-    >
-      <Icon className="w-4 h-4" />
-      <span>{label}</span>
-    </button>
-  );
-
   return (
-    <div className="flex items-center justify-center gap-2 w-full">
-      <Item icon={Compass} label="Discover" to={createPageUrl('Discover')} active={isDiscover} />
-      <Item icon={Home} label="Home" to={createPageUrl('StreamingHome')} active={isHome} />
-      <Item icon={Radio} label="Aura" to={createPageUrl('Aura')} active={isAura} />
+    <div className="flex items-center justify-center w-full h-full">
+      <div className="flex items-center">
+        <button
+          onClick={() => navigate(createPageUrl('Discover'))}
+          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+            isDiscover
+              ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]'
+              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {isDiscover && (
+            <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+          )}
+          <Compass className="w-4 h-4" />
+          <span>Discover</span>
+        </button>
+
+        <div className="w-px h-5 bg-white/10 mx-2" />
+
+        <button
+          onClick={() => navigate(createPageUrl('StreamingHome'))}
+          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+            isHome
+              ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]'
+              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {isHome && (
+            <div className="absolute inset-0 bg-white/10 blur-md rounded-full -z-10 pointer-events-none" />
+          )}
+          <Home className="w-4 h-4" />
+          <span>Home</span>
+        </button>
+
+        <div className="w-px h-5 bg-white/10 mx-2" />
+
+        <button
+          onClick={() => navigate(createPageUrl('Aura'))}
+          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+            isAura
+              ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]'
+              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+          }`}
+        >
+          {isAura && (
+            <div className="absolute inset-0 bg-purple-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+          )}
+          <Radio className="w-4 h-4" />
+          <span>Aura</span>
+        </button>
+      </div>
     </div>
   );
 }
