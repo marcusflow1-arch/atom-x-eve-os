@@ -12,6 +12,7 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
+import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
@@ -151,7 +152,7 @@ export default function GenreMastery({ onClose }) {
   }, [selectedGenre]);
 
   return (
-    <GlassPageFrame>
+    <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} />}>
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
         <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/10'} flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm`}>
@@ -206,39 +207,6 @@ export default function GenreMastery({ onClose }) {
               onSelect={setSelectedGenre}
             />
 
-            {/* Fade divider right */}
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            {/* Right: Achievements + Skill Tree buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => setRightPanel(rightPanel === 'achievements' ? 'games' : 'achievements')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
-                  rightPanel === 'achievements'
-                    ? 'bg-yellow-500/15 border-yellow-400/30 text-yellow-300 shadow-[0_0_12px_rgba(234,179,8,0.1)]'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <Trophy className="w-4 h-4" />
-                <span>Achievements</span>
-              </button>
-
-              <button
-                onClick={() => setRightPanel(rightPanel === 'skilltree' ? 'games' : 'skilltree')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border whitespace-nowrap ${
-                  rightPanel === 'skilltree'
-                    ? 'bg-white/12 border-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.06)]'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <Layers className="w-4 h-4" />
-                <span>Skill Tree</span>
-              </button>
-            </div>
           </div>
         </div>
 
