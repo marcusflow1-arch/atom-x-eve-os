@@ -26,6 +26,7 @@ export default function LibrarySidebar() {
   const [quickGamesDrawer, setQuickGamesDrawer] = useState({ open: false, type: null });
   const [recentClanGames, setRecentClanGames] = useState([]);
   const [recentForumGames, setRecentForumGames] = useState([]);
+  const [sidebarMode, setSidebarMode] = useState('context');
   const navigate = useNavigate();
 
   useEffect(() => {

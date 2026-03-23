@@ -147,20 +147,7 @@ export default function GenreMastery({ onClose }) {
     <GlassPageFrame>
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
-        <div className="w-[5%] flex-shrink-0 relative z-50 flex flex-col items-center gap-4 bg-black/20 border-r border-white/10 backdrop-blur-sm py-6">
-           <div className="flex flex-col items-center w-full px-2 mt-20">
-             <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Recent<br/>Cards</span>
-             <div className="w-8 h-px bg-white/20 mb-4" />
-             
-             <div className="flex flex-col gap-3 w-full items-center">
-               {[1, 2, 3, 4, 5].map(i => (
-                 <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                   <span className="text-white/30 text-lg font-bold">?</span>
-                 </div>
-               ))}
-             </div>
-           </div>
-        </div>
+        <div className="w-[5%] flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 border-r border-white/10 backdrop-blur-sm"></div>
         
         {/* 95% Main Content Area */}
         <div className="w-[95%] h-screen text-white font-sans overflow-hidden relative flex flex-col"
