@@ -25,6 +25,7 @@ import HotTopicsSidebar from '../components/community/HotTopicsSidebar';
 import GameBanner from '../components/community/GameBanner';
 import { getWallpaperFor } from '../components/community/gameWallpapers';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
+import ForumBottomNav from '../components/community/ForumBottomNav';
 
 // Mock Genres configuration matching Store/Marketplace
 const GENRE_CONFIG = [
@@ -63,6 +64,7 @@ export default function CommunityPage() {
     
     // Initialize activeGame from navigation state if available
     const [activeGame, setActiveGame] = useState(location.state?.selectedGame || null); 
+    const [lastActiveGame, setLastActiveGame] = useState(null);
     const [sortBy, setSortBy] = useState('newest');
     const [hotFilter, setHotFilter] = useState('none');
     const [rightPosts, setRightPosts] = useState([]);
@@ -357,10 +359,31 @@ export default function CommunityPage() {
 
     const handleSelectGame = (game) => {
         setActiveGame(game);
+        setLastActiveGame(game);
         setSelectedPost(null);
         setActiveSection('all');
         setSearchQuery('');
     }
+
+    const handleTabSelect = (tabId) => {
+        if (tabId === 'hub') {
+            setActiveGame(null);
+            setSelectedPost(null);
+            setSelectedGenre('All Games');
+            setActiveSection('all');
+        } else if (tabId === 'discussion') {
+            if (lastActiveGame) {
+                setActiveGame(lastActiveGame);
+            } else if (filteredGames.length > 0) {
+                // If no last active game, just pick the first one from the list to show discussions
+                const gameToSelect = filteredGames[0];
+                setActiveGame(gameToSelect);
+                setLastActiveGame(gameToSelect);
+            } else {
+                showError("Please select a game from the hub first.");
+            }
+        }
+    };
 
     const setShowCreateForm = (value) => {
         if (value && !isAuthenticated) {
@@ -372,7 +395,7 @@ export default function CommunityPage() {
 
     return (
         <PageErrorBoundary pageName="Community">
-        <GlassPageFrame>
+        <GlassPageFrame bottomContent={<ForumBottomNav activeTab={activeGame ? 'discussion' : 'hub'} onTabSelect={handleTabSelect} />}>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 5% Left Area for Global Icons */}
             <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm`}>
