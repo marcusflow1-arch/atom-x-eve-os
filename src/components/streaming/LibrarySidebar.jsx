@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -132,6 +132,7 @@ export default function LibrarySidebar() {
   const isLibraryPage = pathname.includes('/library');
   const isClan = pathname.includes('/clan');
   const isForum = pathname.includes('/community');
+  const isFarm = pathname.includes('/farm');
 
   const defaultQuickNavGames = [
     { id: 'g1', name: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' },
@@ -220,8 +221,8 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Combined Sidebar for Clan/Forum/Cards */}
-          {(isClan || isForum || isGenreMastery) && (
+          {/* Combined Sidebar for Clan/Forum/Cards/Farm */}
+          {(isClan || isForum || isGenreMastery || isFarm) && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -237,6 +238,7 @@ export default function LibrarySidebar() {
                      {sidebarMode === 'context' ? (
                        isClan ? <>Recently<br/>Visited</> : 
                        isForum ? <>Recent<br/>Forums</> : 
+                       isFarm ? <>Recent<br/>Farm Hub</> :
                        <>Recent<br/>Cards</>
                      ) : <>Recently<br/>Played</>}
                   </button>
@@ -287,6 +289,22 @@ export default function LibrarySidebar() {
                         </>
                       )}
 
+                      {isFarm && (
+                        <>
+                          {quickNavForumGames.slice(0, 5).map((game) => (
+                            <button
+                              key={`farm_${game.id}`}
+                              onClick={() => navigate(`/Farm?gameId=${game.id}`)}
+                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                              title={`${game.name} Farm`}
+                            >
+                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </button>
+                          ))}
+                        </>
+                      )}
+
                       {isGenreMastery && (
                         <>
                           {[1, 2, 3, 4, 5].map(i => (
@@ -332,6 +350,16 @@ export default function LibrarySidebar() {
                 </button>
               )}
 
+              {isFarm && !isSidebarCollapsed && (
+                <button
+                  onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 backdrop-blur-lg shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300"
+                  title="Quick Farming Hub"
+                >
+                  <Wheat className="w-4 h-4" />
+                </button>
+              )}
+
               {/* Original Library Button with Restore Arrow */}
               <div className="relative flex items-center">
                 <button
@@ -360,8 +388,8 @@ export default function LibrarySidebar() {
             </motion.div>
           )}
 
-          {/* Center Group: Navigation Buttons ONLY for non-Clan/Forum/Cards pages */}
-          {(!isClan && !isForum && !isGenreMastery) && (
+          {/* Center Group: Navigation Buttons ONLY for non-Clan/Forum/Cards/Farm pages */}
+          {(!isClan && !isForum && !isGenreMastery && !isFarm) && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}

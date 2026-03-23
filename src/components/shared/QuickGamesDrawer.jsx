@@ -1,23 +1,26 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, MessageSquare, Gamepad2, ChevronRight } from 'lucide-react';
+import { X, Users, MessageSquare, Gamepad2, ChevronRight, Wheat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function QuickGamesDrawer({ isOpen, onClose, type, games }) {
   const navigate = useNavigate();
   
   const isClan = type === 'clan';
-  const title = isClan ? 'Recent Clan Chats' : 'Recent Forum Hubs';
-  const Icon = isClan ? Users : MessageSquare;
-  const themeColor = isClan ? 'text-blue-400' : 'text-emerald-400';
-  const themeBorder = isClan ? 'border-blue-500/30' : 'border-emerald-500/30';
-  const themeBg = isClan ? 'bg-blue-500/10' : 'bg-emerald-500/10';
+  const isFarm = type === 'farm';
+  const title = isClan ? 'Recent Clan Chats' : isFarm ? 'Recent Farm Hubs' : 'Recent Forum Hubs';
+  const Icon = isClan ? Users : isFarm ? Wheat : MessageSquare;
+  const themeColor = isClan ? 'text-blue-400' : isFarm ? 'text-yellow-400' : 'text-emerald-400';
+  const themeBorder = isClan ? 'border-blue-500/30' : isFarm ? 'border-yellow-500/30' : 'border-emerald-500/30';
+  const themeBg = isClan ? 'bg-blue-500/10' : isFarm ? 'bg-yellow-500/10' : 'bg-emerald-500/10';
 
   const handleGameClick = (game) => {
     onClose();
     // Navigate to the respective page with the game query param
     if (isClan) {
       navigate(`/Clan?game=${encodeURIComponent(game.name)}`);
+    } else if (isFarm) {
+      navigate(`/Farm?gameId=${game.id}`);
     } else {
       navigate(`/Community?game=${encodeURIComponent(game.name)}`);
     }
@@ -80,7 +83,7 @@ export default function QuickGamesDrawer({ isOpen, onClose, type, games }) {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-white text-sm font-bold truncate group-hover:text-white/90 transition-colors">{game.name}</h4>
                     <p className="text-white/40 text-[10px] mt-1 truncate">
-                      {isClan ? 'View Clan Chat' : 'View Game Forum'}
+                      {isClan ? 'View Clan Chat' : isFarm ? 'View Game Farm' : 'View Game Forum'}
                     </p>
                   </div>
                   <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors shrink-0" />
