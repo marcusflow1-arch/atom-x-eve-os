@@ -120,12 +120,15 @@ export default function LunaBottomNav() {
         <div className="flex items-center">
           <button
             onClick={() => handleTabClick('library')}
-            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
               activeTab === 'library'
-                ? 'text-cyan-400 bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]'
+                : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
             }`}
           >
+            {activeTab === 'library' && (
+              <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+            )}
             <Library className="w-4 h-4" />
             <span>Library</span>
           </button>
@@ -134,12 +137,15 @@ export default function LunaBottomNav() {
 
           <button
             onClick={() => handleTabClick('home')}
-            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
               activeTab === 'home'
-                ? 'text-white bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                ? 'text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]'
+                : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
             }`}
           >
+            {activeTab === 'home' && (
+              <div className="absolute inset-0 bg-white/10 blur-md rounded-full -z-10 pointer-events-none" />
+            )}
             <Home className="w-4 h-4" />
             <span>Home</span>
           </button>
@@ -148,12 +154,15 @@ export default function LunaBottomNav() {
 
           <button
             onClick={() => handleTabClick('environment')}
-            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
               activeTab === 'environment'
-                ? 'text-purple-400 bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                ? 'text-purple-400 drop-shadow-[0_0_10px_rgba(192,132,252,0.8)]'
+                : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
             }`}
           >
+            {activeTab === 'environment' && (
+              <div className="absolute inset-0 bg-purple-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+            )}
             <Globe className="w-4 h-4" />
             <span>Environment Hubs</span>
           </button>
