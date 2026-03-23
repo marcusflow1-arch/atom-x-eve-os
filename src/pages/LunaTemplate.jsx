@@ -72,6 +72,7 @@ import FriendsListContent from '../components/dashboard/FriendsListContent';
 import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
+import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -572,7 +573,7 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-    <GlassPageFrame>
+    <GlassPageFrame bottomContent={<LunaBottomNav />}>
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
