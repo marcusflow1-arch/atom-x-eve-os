@@ -116,42 +116,48 @@ export default function LunaBottomNav() {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center justify-center gap-3 w-full h-full">
-        <button
-          onClick={() => handleTabClick('library')}
-          className={`px-5 h-9 rounded-full inline-flex items-center gap-2 text-sm font-semibold transition-all border backdrop-blur-md ${
-            activeTab === 'library'
-              ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-              : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-          }`}
-        >
-          <Library className="w-4 h-4" />
-          <span>Library</span>
-        </button>
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="flex items-center">
+          <button
+            onClick={() => handleTabClick('library')}
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+              activeTab === 'library'
+                ? 'text-cyan-400 bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Library className="w-4 h-4" />
+            <span>Library</span>
+          </button>
 
-        <button
-          onClick={() => handleTabClick('home')}
-          className={`px-5 h-9 rounded-full inline-flex items-center gap-2 text-sm font-semibold transition-all border backdrop-blur-md ${
-            activeTab === 'home'
-              ? 'bg-white/20 border-white/30 text-white shadow-[0_2px_12px_rgba(0,0,0,0.25)]'
-              : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-          }`}
-        >
-          <Home className="w-4 h-4" />
-          <span>Home</span>
-        </button>
+          <div className="w-px h-5 bg-white/10 mx-2" />
 
-        <button
-          onClick={() => handleTabClick('environment')}
-          className={`px-5 h-9 rounded-full inline-flex items-center gap-2 text-sm font-semibold transition-all border backdrop-blur-md ${
-            activeTab === 'environment'
-              ? 'bg-purple-500/20 border-purple-400/50 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-              : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
-          }`}
-        >
-          <Globe className="w-4 h-4" />
-          <span>Environment Hubs</span>
-        </button>
+          <button
+            onClick={() => handleTabClick('home')}
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+              activeTab === 'home'
+                ? 'text-white bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Home className="w-4 h-4" />
+            <span>Home</span>
+          </button>
+
+          <div className="w-px h-5 bg-white/10 mx-2" />
+
+          <button
+            onClick={() => handleTabClick('environment')}
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 rounded-lg mx-1 ${
+              activeTab === 'environment'
+                ? 'text-purple-400 bg-black/60 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_4px_10px_rgba(0,0,0,0.5)]'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            <span>Environment Hubs</span>
+          </button>
+        </div>
       </div>
     </>
   );
