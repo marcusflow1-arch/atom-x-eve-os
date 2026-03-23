@@ -211,57 +211,90 @@ export default function LibrarySidebar() {
     <>
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
-        <motion.div
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3"
-        >
-          {/* Luna Dashboard Specific Buttons */}
-          {pathname.includes('/lunatemplate') && (
-            <button
-              onClick={() => window.dispatchEvent(new Event('toggleQuestBook'))}
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-              title="Toggle Quest Book"
+        <>
+          {/* Top Group: Recent Games for Clan/Forum */}
+          {(isClan || isForum) && (
+            <motion.div
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="absolute left-6 top-32 mt-4 z-[70] flex flex-col items-center gap-3 w-10"
             >
-              <Book className="w-4 h-4" />
-            </button>
+              {isClan && (
+                <>
+                  <button
+                    onClick={() => navigate('/Clan?game=global_chat')}
+                    className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                    title={`Atom X Eve Global Clan Chat`}
+                  >
+                    <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                    <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                  </button>
+                  
+                  {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
+                    <button
+                      key={`clan_${game.id}`}
+                      onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
+                      className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                      title={`${game.name} Clan Chat`}
+                    >
+                      <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                </>
+              )}
+
+              {isForum && (
+                <>
+                  {quickNavForumGames.slice(0, 5).map((game) => (
+                    <button
+                      key={`forum_${game.id}`}
+                      onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
+                      className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                      title={`${game.name} Forum`}
+                    >
+                      <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                </>
+              )}
+            </motion.div>
           )}
 
-          {/* Aura Specific Button */}
-          {isAura && (
-            <button
-              onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
-              title="Watched Streams"
-            >
-              <Tv className="w-4 h-4" />
-            </button>
-          )}
-
-          {isClan && (
-            <>
+          {/* Center Group: Navigation Buttons */}
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10"
+          >
+            {/* Luna Dashboard Specific Buttons */}
+            {pathname.includes('/lunatemplate') && (
               <button
-                onClick={() => navigate('/Clan?game=global_chat')}
-                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                title={`Atom X Eve Global Clan Chat`}
+                onClick={() => window.dispatchEvent(new Event('toggleQuestBook'))}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+                title="Toggle Quest Book"
               >
-                <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                <Book className="w-4 h-4" />
               </button>
-              
-              {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
-                <button
-                  key={`clan_${game.id}`}
-                  onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                  className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                  title={`${game.name} Clan Chat`}
-                >
-                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              ))}
+            )}
+
+            {/* Aura Specific Button */}
+            {isAura && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
+                title="Watched Streams"
+              >
+                <Tv className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Quick Menus for Clan/Forum */}
+            {isClan && (
               <button
                 onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
                 className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
@@ -269,23 +302,9 @@ export default function LibrarySidebar() {
               >
                 <UsersIcon className="w-4 h-4" />
               </button>
-              <div className="w-6 h-px bg-white/10 my-1" />
-            </>
-          )}
+            )}
 
-          {isForum && (
-            <>
-              {quickNavForumGames.slice(0, 5).map((game) => (
-                <button
-                  key={`forum_${game.id}`}
-                  onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                  className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                  title={`${game.name} Forum`}
-                >
-                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
-              ))}
+            {isForum && (
               <button
                 onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
                 className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
@@ -293,30 +312,29 @@ export default function LibrarySidebar() {
               >
                 <MessageSquare className="w-4 h-4" />
               </button>
-              <div className="w-6 h-px bg-white/10 my-1" />
-            </>
-          )}
+            )}
 
-          {/* Original Library Button (Always visible unless hidden by parent conditions) */}
-          <button
-            onClick={() => setIsOpen(true)}
-            className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-            title="Library & Friends"
-          >
-            <Library className="w-5 h-5" />
-          </button>
-
-          {/* Luna Dashboard Specific Buttons */}
-          {pathname.includes('/lunatemplate') && (
+            {/* Original Library Button (Always visible unless hidden by parent conditions) */}
             <button
-              onClick={() => window.dispatchEvent(new Event('toggleCardCollection'))}
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-              title="Toggle Card Collection"
+              onClick={() => setIsOpen(true)}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1"
+              title="Library & Friends"
             >
-              <Layers className="w-4 h-4" />
+              <Library className="w-5 h-5" />
             </button>
-          )}
-        </motion.div>
+
+            {/* Luna Dashboard Specific Buttons */}
+            {pathname.includes('/lunatemplate') && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('toggleCardCollection'))}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
+                title="Toggle Card Collection"
+              >
+                <Layers className="w-4 h-4" />
+              </button>
+            )}
+          </motion.div>
+        </>
       )}
 
       {/* Show UI Button */}
