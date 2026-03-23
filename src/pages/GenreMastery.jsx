@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
-  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users
+  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -87,7 +87,14 @@ export default function GenreMastery({ onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => setIsSidebarCollapsed(e.detail);
+    window.addEventListener('sidebarCollapseChange', handler);
+    return () => window.removeEventListener('sidebarCollapseChange', handler);
+  }, []);
 
   const { data: allGames = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games-for-genre-mastery'],
@@ -147,10 +154,23 @@ export default function GenreMastery({ onClose }) {
     <GlassPageFrame>
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
-        <div className="w-[5%] flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 border-r border-white/10 backdrop-blur-sm"></div>
+        <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/10'} flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm`}>
+            {!isSidebarCollapsed && (
+                <button
+                    onClick={() => {
+                        localStorage.setItem('sidebarCollapsed', 'true');
+                        window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: true }));
+                    }}
+                    className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md z-50 shadow-lg"
+                    title="Collapse Sidebar"
+                >
+                    <ChevronLeft className="w-4 h-4 -ml-1" />
+                </button>
+            )}
+        </div>
         
-        {/* 95% Main Content Area */}
-        <div className="w-[95%] h-screen text-white font-sans overflow-hidden relative flex flex-col"
+        {/* Main Content Area */}
+        <div className="flex-1 h-screen text-white font-sans overflow-hidden relative flex flex-col"
           style={{
             backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
             backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: '#050505'

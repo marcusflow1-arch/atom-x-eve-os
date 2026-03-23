@@ -12,7 +12,7 @@ import {
     Gamepad2, Star, Trophy, Target, Users, 
     Grid, ChevronRight, Hash, Crosshair, 
     Shield, Sparkles, Car, Skull, Monitor,
-    Video, Image, Palette, Newspaper, Book, Wheat, BookOpen
+    Video, Image, Palette, Newspaper, Book, Wheat, BookOpen, ChevronLeft
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -67,6 +67,13 @@ export default function CommunityPage() {
     const [hotFilter, setHotFilter] = useState('none');
     const [rightPosts, setRightPosts] = useState([]);
     const [loadingRight, setLoadingRight] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+
+    useEffect(() => {
+        const handler = (e) => setIsSidebarCollapsed(e.detail);
+        window.addEventListener('sidebarCollapseChange', handler);
+        return () => window.removeEventListener('sidebarCollapseChange', handler);
+    }, []);
 
     // Sync activeGame when location state changes (e.g. from Clan navigation)
     useEffect(() => {
@@ -368,7 +375,20 @@ export default function CommunityPage() {
         <GlassPageFrame>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
             {/* 5% Left Area for Global Icons */}
-            <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
+            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm`}>
+                {!isSidebarCollapsed && (
+                    <button
+                        onClick={() => {
+                            localStorage.setItem('sidebarCollapsed', 'true');
+                            window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: true }));
+                        }}
+                        className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md z-50 shadow-lg"
+                        title="Collapse Sidebar"
+                    >
+                        <ChevronLeft className="w-4 h-4 -ml-1" />
+                    </button>
+                )}
+            </div>
 
             {/* 95% Main Area */}
             <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">

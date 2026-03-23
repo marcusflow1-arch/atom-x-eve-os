@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { 
     Shield, Gamepad2, MessageSquare, Mic, 
     ClipboardList, Settings, Crown, Users, 
-    Wifi, Activity, Zap, Search, Plus, ArrowLeft, BookOpen
+    Wifi, Activity, Zap, Search, Plus, ArrowLeft, BookOpen, ChevronLeft
 } from 'lucide-react';
 import ClanGameSelector from '@/components/clan/ClanGameSelector';
 import GameWorkspace from '@/components/clan/GameWorkspace';
@@ -48,6 +48,13 @@ export default function ClanPage() {
     // Entry gate state (authoritative)
     const [entryState, setEntryState] = useState('pending'); // 'pending' | 'intro' | 'clan'
     const [preselectedClanId, setPreselectedClanId] = useState(null);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+
+    useEffect(() => {
+        const handler = (e) => setIsSidebarCollapsed(e.detail);
+        window.addEventListener('sidebarCollapseChange', handler);
+        return () => window.removeEventListener('sidebarCollapseChange', handler);
+    }, []);
 
     // Removed: do not persist activeClanId to localStorage
 
@@ -400,7 +407,20 @@ export default function ClanPage() {
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
             {/* 5% Left Area for Global Icons */}
-            <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm"></div>
+            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm`}>
+                {!isSidebarCollapsed && (
+                    <button
+                        onClick={() => {
+                            localStorage.setItem('sidebarCollapsed', 'true');
+                            window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: true }));
+                        }}
+                        className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md z-50 shadow-lg"
+                        title="Collapse Sidebar"
+                    >
+                        <ChevronLeft className="w-4 h-4 -ml-1" />
+                    </button>
+                )}
+            </div>
 
             {/* 95% Main Clan Area */}
             <div className="flex-1 relative h-full">
