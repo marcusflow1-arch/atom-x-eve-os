@@ -16,24 +16,14 @@ import ClanOverview from '@/components/clan/ClanOverview';
 import ClanChat from '@/components/clan/ClanChat';
 import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
-import ClanTreasuryPage from '@/components/clan/ClanTreasuryPage.jsx';
-import ClanSchedulePage from '@/components/clan/ClanSchedulePage.jsx';
-import MemberList from '@/components/clan/MemberList';
+import ClanStronghold from '@/components/clan/ClanStronghold';
+import ClanBottomNav from '@/components/clan/ClanBottomNav';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-
-// XMB Mode Items Configuration
-const XMB_MODES = [
-    { id: 'overview', label: 'Overview', icon: Shield },
-    { id: 'games_chat', label: 'Games Chat', icon: MessageSquare },
-    { id: 'treasury', label: 'Treasury', icon: Zap },
-    { id: 'schedule', label: 'Schedule', icon: ClipboardList },
-    { id: 'roster', label: 'Roster', icon: Users },
-];
 
 export default function ClanPage() {
     const { user, updatePresenceContext } = useAuth();
@@ -42,7 +32,8 @@ export default function ClanPage() {
     const queryClient = useQueryClient();
     // Active clan is derived from confirmed memberships only
     const [activeClanId, setActiveClanId] = useState(null);
-    const [activeModeIndex, setActiveModeIndex] = useState(0); // Index in XMB_MODES
+    const [bottomTab, setBottomTab] = useState('home'); // 'home' | 'games_chat'
+    const [isRosterOpen, setIsRosterOpen] = useState(false);
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
   const [lastChatGame, setLastChatGame] = useState(null); // For quick switch back from global chat
     const [initialZone, setInitialZone] = useState(null);
@@ -279,8 +270,7 @@ export default function ClanPage() {
                 }
 
                 if (foundGame) {
-                    const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games_chat');
-                    if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+                    setBottomTab('games_chat');
                     setSelectedGame(foundGame);
                     
                     if (!foundGame.isGlobalChat) {
@@ -300,8 +290,7 @@ export default function ClanPage() {
 
             // 1. Priority: Explicit Navigation State (Returning from Farm Page)
             if (location.state?.restoreGameId) {
-                const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
-                if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+                setBottomTab('games_chat');
 
                 const game = await base44.entities.Game.get(location.state.restoreGameId);
                 if (game) {
@@ -325,8 +314,7 @@ export default function ClanPage() {
                     const game = await base44.entities.Game.get(user.current_activity.id);
                     if (game) {
                         // Switch to Games tab
-                        const gamesIndex = XMB_MODES.findIndex(m => m.id === 'games');
-                        if (gamesIndex !== -1) setActiveModeIndex(gamesIndex);
+                        setBottomTab('games_chat');
                         
                         setSelectedGame(game);
                         if (user.current_activity.zoneId) {
@@ -344,26 +332,7 @@ export default function ClanPage() {
         }
     }, [location.search, location.state, clanForRender?.id, user?.id]); // Re-run when query params change
 
-    // Keyboard Navigation for XMB
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (!clanForRender?.id) return;
-
-            if (e.key === 'ArrowRight') {
-                setActiveModeIndex(prev => {
-                    let next = prev + 1;
-                    if (next >= XMB_MODES.length) return prev;
-                    if (XMB_MODES[next].restricted && !isPrivileged) return prev;
-                    return next;
-                });
-            } else if (e.key === 'ArrowLeft') {
-                setActiveModeIndex(prev => Math.max(prev - 1, 0));
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeClan, isPrivileged]);
+    // Keyboard Navigation removed for Bottom Nav layout
 
     // Render Logic
     if (isTransitioning) {
