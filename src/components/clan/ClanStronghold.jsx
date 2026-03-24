@@ -207,11 +207,11 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
               
               {/* Roster Content */}
               <motion.div
-                initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[50%] z-40 pointer-events-auto bg-black/70 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl flex flex-col"
+                className="absolute top-[180px] bottom-[110px] left-[360px] right-[390px] z-40 pointer-events-auto bg-black/70 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl flex flex-col min-w-[300px]"
               >
                 <MemberList clan={clan} fullView={true} noBorder={true} />
               </motion.div>
