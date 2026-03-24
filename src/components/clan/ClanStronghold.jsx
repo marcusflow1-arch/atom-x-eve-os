@@ -200,11 +200,12 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
             {isRosterOpen && (
               <motion.div
                 initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 320, opacity: 1 }}
+                animate={{ width: "calc(100vw - 750px)", opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                className="h-full overflow-hidden border-r border-white/10"
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                className="h-full overflow-hidden border-r border-white/10 bg-black/40"
               >
-                <div className="w-[320px] h-full">
+                <div style={{ width: "calc(100vw - 750px)" }} className="min-w-[400px] h-full">
                   <MemberList clan={clan} fullView={true} noBorder={true} />
                 </div>
               </motion.div>
