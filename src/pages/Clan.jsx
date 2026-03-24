@@ -396,185 +396,84 @@ export default function ClanPage() {
             {/* 95% Main Clan Area */}
             <div className="flex-1 relative h-full">
 
-            {/* Ambient Glow Effects */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
-                <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-slate-300/5 rounded-full blur-[120px]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-200/3 rounded-full blur-[180px]" />
-            </div>
-
-            {/* Game Workspace Overlay */}
-            <AnimatePresence>
-                {selectedGame && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute inset-0 z-50 flex flex-col"
-                    >
-                        <GameWorkspace 
-                                                key={selectedGame.id}
-                                                game={selectedGame} 
-                                                clan={clanForRender} 
-                                                initialZone={initialZone}
-                                                onBack={() => {
-                                                    setSelectedGame(null);
-                                                    setInitialZone(null);
-                                                }} 
-                                                onGoMainChat={() => {
-                                                    if (selectedGame && !selectedGame.isGlobalChat) {
-                                                      setLastChatGame(selectedGame);
-                                                    }
-                                                    setSelectedGame({
-                                                      id: 'global_chat',
-                                                      title: 'Adam X Eve',
-                                                      genre: 'Social',
-                                                      cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
-                                                      isGlobalChat: true
-                                                    });
-                                                }}
-                                                quickSwitchLabel={lastChatGame?.title}
-                                                onQuickSwitch={() => { if (lastChatGame) setSelectedGame(lastChatGame); }}
-                                            />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* 1. Dynamic Background Layer */}
-            <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
-                {clanForRender?.banner && (
-                    <img 
-                        src={clanForRender.banner} 
-                        className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-110" 
-                        alt="Background" 
-                    />
-                )}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-            </div>
-
-            {/* 2. Clan Info - Top Left under header */}
-            <div className="absolute top-20 left-8 z-30">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md overflow-hidden">
-                        {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-6 h-6 text-white/50" />}
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-white">{clanForRender?.name || 'Entering Division'}</h2>
-                        <div className="flex items-center gap-2 text-xs text-white/50">
-                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}</span>
-                        </div>
-                    </div>
-                </div>
-                
-
-            </div>
-
-            {/* 3. XMB Horizontal Navigation Axis - Centered top */}
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center">
-                <div className="flex items-center">
-                    {XMB_MODES.filter(mode => !mode.restricted || isPrivileged).map((mode, mappedIndex) => {
-                        const originalIndex = XMB_MODES.findIndex(m => m.id === mode.id);
-                        const isActive = originalIndex === activeModeIndex;
-                        return (
-                            <React.Fragment key={mode.id}>
-                                {mappedIndex > 0 && <div className="w-px h-5 bg-white/10 mx-2" />}
-                                <button 
-                                    onClick={() => setActiveModeIndex(originalIndex)}
-                                    className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-                                        isActive 
-                                            ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]' 
-                                            : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-                                    }`}
-                                >
-                                    {isActive && (
-                                        <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-                                    )}
-                                    <mode.icon className="w-4 h-4" />
-                                    <span>{mode.label}</span>
-                                </button>
-                            </React.Fragment>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* 4. Vertical Contextual Axis (Content Area) - Starts just under nav tabs */}
-            <div className="absolute top-36 left-0 right-0 bottom-20 z-20 overflow-hidden">
-                <div className="h-full w-full mx-auto px-4 flex flex-col items-center">
-                    <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait">
+                    {bottomTab === 'home' && (
                         <motion.div
-                            key={activeModeIndex}
+                            key="home"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0"
+                        >
+                            <ClanStronghold 
+                                clan={clanForRender} 
+                                activeVoiceRooms={activeVoiceRooms} 
+                                isRosterOpen={isRosterOpen} 
+                            />
+                        </motion.div>
+                    )}
+                    {bottomTab === 'games_chat' && (
+                        <motion.div
+                            key="games_chat"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full h-full flex flex-col items-center"
+                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden"
                         >
-                            {/* Content based on Active Mode */}
-                            {XMB_MODES[activeModeIndex].id === 'overview' && (
-                                <div className="w-full h-full">
-                                    <ClanOverview 
-                                       clan={clanForRender} 
-                                       activeVoiceRooms={activeVoiceRooms}
-                                       onChangeTab={(tab) => {
-                                            console.log("Navigating to", tab);
-                                        }} 
-                                    />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'games_chat' && (
-                                <div className="w-full h-full">
-                                    <ClanGameSelector 
-                                       clanId={clanForRender?.id} 
-                                       userId={user?.id}
-                                       onSelectGame={(game) => {
-                                            setSelectedGame(game);
-                                            // Add to recent clan games
-                                            const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
-                                            const newRecent = [game, ...recent.filter(g => g.id !== game.id)].slice(0, 5);
-                                            localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
-                                            window.dispatchEvent(new Event('recentClanGamesUpdated'));
-                                        }} 
-                                    />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'treasury' && (
-                                <div className="w-full h-full">
-                                    <ClanTreasuryPage clan={clanForRender} />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'schedule' && (
-                                <div className="w-full h-full">
-                                    <ClanSchedulePage clan={clanForRender} />
-                                </div>
-                            )}
-
-                            {XMB_MODES[activeModeIndex].id === 'roster' && (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <div className="w-[75%] h-[75%] relative">
-                                        <MemberList clan={clanForRender} fullView={true} />
-                                    </div>
-                                </div>
-                            )}
+                            <ClanGameSelector 
+                               clanId={clanForRender?.id} 
+                               userId={user?.id}
+                               onSelectGame={(game) => {
+                                    setSelectedGame(game);
+                                    const recent = JSON.parse(localStorage.getItem('recent_clan_games') || '[]');
+                                    const newRecent = [game, ...recent.filter(g => g.id !== game.id)].slice(0, 5);
+                                    localStorage.setItem('recent_clan_games', JSON.stringify(newRecent));
+                                    window.dispatchEvent(new Event('recentClanGamesUpdated'));
+                                }} 
+                            />
                         </motion.div>
-                    </AnimatePresence>
-                </div>
-            </div>
+                    )}
+                </AnimatePresence>
 
-                    {/* 5. Bottom Status Bar & Global Actions */}
-            <div className="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none">
-                <div className="flex gap-6 text-xs font-medium text-white/30">
-                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500/50" /> Voice Systems Normal</span>
-                    <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500/50" /> Network Stable</span>
-                </div>
-                
-                <div className="flex items-center gap-4 pointer-events-auto">
+                {/* Game Workspace Overlay */}
+                <AnimatePresence>
+                    {selectedGame && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute inset-0 z-50 flex flex-col"
+                        >
+                            <GameWorkspace 
+                                key={selectedGame.id}
+                                game={selectedGame} 
+                                clan={clanForRender} 
+                                initialZone={initialZone}
+                                onBack={() => {
+                                    setSelectedGame(null);
+                                    setInitialZone(null);
+                                }} 
+                                onGoMainChat={() => {
+                                    if (selectedGame && !selectedGame.isGlobalChat) {
+                                      setLastChatGame(selectedGame);
+                                    }
+                                    setSelectedGame({
+                                      id: 'global_chat',
+                                      title: 'Adam X Eve',
+                                      genre: 'Social',
+                                      cover_image: 'https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=1200',
+                                      isGlobalChat: true
+                                    });
+                                }}
+                                quickSwitchLabel={lastChatGame?.title}
+                                onQuickSwitch={() => { if (lastChatGame) setSelectedGame(lastChatGame); }}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Bottom Global Actions */}
+                <div className="absolute bottom-[80px] left-6 z-30">
                     {/* Disband (Leader Only) or Leave (Everyone else) */}
                     {clanForRender && (
                         isLeader ? (
@@ -586,7 +485,7 @@ export default function ClanPage() {
                                         disbandClanMutation.mutate();
                                     }
                                 }}
-                                className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs"
+                                className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs shadow-lg"
                             >
                                 Disband Clan
                             </Button>
@@ -599,18 +498,23 @@ export default function ClanPage() {
                                         leaveClanMutation.mutate();
                                     }
                                 }}
-                                className="bg-white/5 hover:bg-white/10 text-white/60 border-white/10 text-xs"
+                                className="bg-black/50 backdrop-blur-md hover:bg-white/10 text-white/60 border-white/10 text-xs shadow-lg"
                             >
                                 Leave Clan
                             </Button>
                         )
                     )}
-                    
-                    <div className="text-right">
-                        <p className="text-white/20 text-[10px] uppercase tracking-[0.2em]">Atom x Eve System OS</p>
-                    </div>
                 </div>
-            </div>
+
+                {/* Bottom Header Bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-black/40 backdrop-blur-2xl border-t border-white/10 z-40 pointer-events-auto">
+                    <ClanBottomNav 
+                        activeTab={bottomTab} 
+                        onTabSelect={setBottomTab} 
+                        isRosterOpen={isRosterOpen}
+                        onToggleRoster={() => setIsRosterOpen(!isRosterOpen)}
+                    />
+                </div>
             </div>
         </div>
         </GlassPageFrame>
