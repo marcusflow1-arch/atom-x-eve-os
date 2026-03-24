@@ -421,6 +421,103 @@ export default function ClanPage() {
                             />
                         </motion.div>
                     )}
+                    {bottomTab === 'treasury' && (
+                        <motion.div
+                            key="treasury"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden"
+                        >
+                            <ClanTreasuryPage clan={clanForRender} />
+                        </motion.div>
+                    )}
+                    {bottomTab === 'schedule' && (
+                        <motion.div
+                            key="schedule"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden"
+                        >
+                            <ClanSchedulePage clan={clanForRender} />
+                        </motion.div>
+                    )}
+                    {bottomTab === 'upgrades' && (
+                        <motion.div
+                            key="upgrades"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-20 left-0 right-0 bottom-20 overflow-hidden p-8 lg:p-12 max-w-[1200px] mx-auto"
+                        >
+                            {/* Render Upgrades section similar to overview */}
+                            <div className="bg-white/[0.02] backdrop-blur-2xl border border-white/5 rounded-3xl p-8 h-full overflow-y-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <h3 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                                        <Activity className="w-6 h-6 text-blue-400" /> Research & Upgrades
+                                    </h3>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5">
+                                        <div className="text-sm text-white/50 mb-2 uppercase tracking-wider">Command Center</div>
+                                        <div className="text-2xl font-bold text-white mb-4">Tier 3</div>
+                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                                            <div className="h-full w-[72%] bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-white/50 mb-6">
+                                            <span>72% to Tier 4</span>
+                                            <span>Est. 3 days</span>
+                                        </div>
+                                        <Button className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30">
+                                            Contribute Resources
+                                        </Button>
+                                    </div>
+                                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5">
+                                        <div className="text-sm text-white/50 mb-2 uppercase tracking-wider">Armory</div>
+                                        <div className="text-2xl font-bold text-white mb-4">Tier 2</div>
+                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                                            <div className="h-full w-[45%] bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-white/50 mb-6">
+                                            <span>45% to Tier 3</span>
+                                            <span>Est. 5 days</span>
+                                        </div>
+                                        <Button className="w-full bg-orange-600/20 hover:bg-orange-600/40 text-orange-400 border border-orange-500/30">
+                                            Contribute Resources
+                                        </Button>
+                                    </div>
+                                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5">
+                                        <div className="text-sm text-white/50 mb-2 uppercase tracking-wider">Barracks</div>
+                                        <div className="text-2xl font-bold text-white mb-4">Tier 1</div>
+                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                                            <div className="h-full w-[15%] bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-white/50 mb-6">
+                                            <span>15% to Tier 2</span>
+                                            <span>Est. 12 days</span>
+                                        </div>
+                                        <Button className="w-full bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-500/30">
+                                            Contribute Resources
+                                        </Button>
+                                    </div>
+                                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5">
+                                        <div className="text-sm text-white/50 mb-2 uppercase tracking-wider">Vault</div>
+                                        <div className="text-2xl font-bold text-white mb-4">Tier 4 (Max)</div>
+                                        <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-4">
+                                            <div className="h-full w-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-white/50 mb-6">
+                                            <span className="text-cyan-400">Max level reached</span>
+                                        </div>
+                                        <Button disabled className="w-full bg-white/5 text-white/30 border border-white/10">
+                                            Fully Upgraded
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                     {bottomTab === 'games_chat' && (
                         <motion.div
                             key="games_chat"
@@ -515,15 +612,7 @@ export default function ClanPage() {
                     )}
                 </div>
 
-                {/* Bottom Header Bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-black/40 backdrop-blur-2xl border-t border-white/10 z-40 pointer-events-auto">
-                    <ClanBottomNav 
-                        activeTab={bottomTab} 
-                        onTabSelect={setBottomTab} 
-                        isRosterOpen={isRosterOpen}
-                        onToggleRoster={() => setIsRosterOpen(!isRosterOpen)}
-                    />
-                </div>
+                {/* Bottom Header Bar - Handled by GlassPageFrame bottomContent */}
             </div>
         </div>
         </GlassPageFrame>
