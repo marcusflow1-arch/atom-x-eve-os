@@ -77,19 +77,18 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
         <div className="absolute top-[140px] left-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
           
           {/* Strong Code Upgrades Dropdown */}
-          <div className="relative w-full z-30">
+          <div className="relative w-full z-30" ref={upgradesDropdownRef}>
             <button
-              onClick={() => {
-                const e = new CustomEvent('toggleStrongholdUpgradesMenu');
-                window.dispatchEvent(e);
-              }}
+              onClick={() => setUpgradesOpen(v => !v)}
               className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group"
               style={{
-                background: 'rgba(200, 210, 220, 0.08)',
+                background: upgradesOpen ? 'rgba(200, 210, 220, 0.14)' : 'rgba(200, 210, 220, 0.08)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(255, 255, 255, 0.10)',
-                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.04)'
+                border: `1px solid ${upgradesOpen ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.10)'}`,
+                boxShadow: upgradesOpen 
+                  ? '0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+                  : 'inset 0 1px 0 rgba(255, 255, 255, 0.04)'
               }}
             >
               <div className="flex items-center gap-3">
@@ -101,13 +100,78 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
                   2/2
                 </span>
               </div>
-              <motion.div>
-                <ImageIcon className="w-4 h-4 text-[#A0A8B4]" />
+              <motion.div animate={{ rotate: upgradesOpen ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                <ChevronDown className="w-4 h-4 text-[#A0A8B4]" />
               </motion.div>
             </button>
 
-            {/* Simulated Dropdown Menu (Inline for simplicity) */}
-            <StrongholdUpgradesDropdown environmentUrl={environmentUrl} setEnvironmentUrl={setEnvironmentUrl} />
+            {/* Dropdown Panel */}
+            <AnimatePresence>
+              {upgradesOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="overflow-hidden rounded-2xl absolute top-full left-0 right-0"
+                  style={{
+                    background: 'rgba(180, 190, 200, 0.08)',
+                    backdropFilter: 'blur(30px) saturate(140%)',
+                    WebkitBackdropFilter: 'blur(30px) saturate(140%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+                  }}
+                >
+                  <div className="p-3 max-h-[320px] overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setEnvironmentUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx');
+                          setUpgradesOpen(false);
+                        }}
+                        className={`relative w-full aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 border group text-left ${environmentUrl.includes('ddff') ? 'border-white/40 ring-1 ring-white/20' : 'border-white/[0.06] hover:border-white/20'}`}
+                      >
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80" alt="Hangar" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        {environmentUrl.includes('ddff') && (
+                          <div className="absolute top-1.5 right-1.5 bg-white/90 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+                            <Check className="w-2.5 h-2.5" /> ACTIVE
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2 pt-4">
+                          <span className={`text-xs font-semibold truncate block ${environmentUrl.includes('ddff') ? 'text-white' : 'text-white/80'}`}>Hangar</span>
+                          <span className="text-[9px] text-white/40 truncate block">Primary Base</span>
+                        </div>
+                      </motion.button>
+
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setEnvironmentUrl('virtual_room_7.glb');
+                          setUpgradesOpen(false);
+                        }}
+                        className={`relative w-full aspect-[16/10] rounded-xl overflow-hidden transition-all duration-300 border group text-left ${environmentUrl.includes('virtual_room') ? 'border-white/40 ring-1 ring-white/20' : 'border-white/[0.06] hover:border-white/20'}`}
+                      >
+                        <img src="https://images.unsplash.com/photo-1515630278258-407f66498911?w=400&q=80" alt="Room 7" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        {environmentUrl.includes('virtual_room') && (
+                          <div className="absolute top-1.5 right-1.5 bg-white/90 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-sm">
+                            <Check className="w-2.5 h-2.5" /> ACTIVE
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2 pt-4">
+                          <span className={`text-xs font-semibold truncate block ${environmentUrl.includes('virtual_room') ? 'text-white' : 'text-white/80'}`}>Room 7</span>
+                          <span className="text-[9px] text-white/40 truncate block">Virtual Deck</span>
+                        </div>
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Current Status Widget (Disconnected, below) */}
