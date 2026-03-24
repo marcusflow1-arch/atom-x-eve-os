@@ -63,34 +63,48 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
         {/* Left Side Widgets */}
         <div className="absolute top-[140px] left-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
           
-          {/* Stronghold Upgrades Widget */}
-          <GlassWidget>
+          {/* Strong Code Upgrades Dropdown */}
+          <div className="relative w-full z-30">
+            <button
+              onClick={() => {
+                const e = new CustomEvent('toggleStrongholdUpgradesMenu');
+                window.dispatchEvent(e);
+              }}
+              className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group"
+              style={{
+                background: 'rgba(200, 210, 220, 0.08)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.04)'
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <Zap className="w-4 h-4 text-[#A0A8B4]" />
+                <span className="text-[#CCCCCC] text-sm font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                  Strong Code Upgrades
+                </span>
+                <span className="text-[10px] text-white/30 font-mono uppercase tracking-wider ml-2 bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                  2/2
+                </span>
+              </div>
+              <motion.div>
+                <ImageIcon className="w-4 h-4 text-[#A0A8B4]" />
+              </motion.div>
+            </button>
+
+            {/* Simulated Dropdown Menu (Inline for simplicity) */}
+            <StrongholdUpgradesDropdown environmentUrl={environmentUrl} setEnvironmentUrl={setEnvironmentUrl} />
+          </div>
+
+          {/* Current Status Widget (Disconnected, below) */}
+          <GlassWidget className="mt-2">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
-                <Zap className="w-4 h-4 text-blue-400" /> Stronghold Upgrades
+                <Activity className="w-4 h-4 text-green-400" /> Current Status
               </h3>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-white/50 hover:text-white bg-white/5 rounded-full">
-                <Settings className="w-3 h-3" />
-              </Button>
             </div>
             
-            {/* Environment select */}
-            <div className="grid grid-cols-2 gap-2 mb-5">
-              <button 
-                className={`border rounded-xl p-2 text-xs transition-colors flex items-center justify-center gap-2 ${environmentUrl.includes('ddff') ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
-                onClick={() => setEnvironmentUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx')}
-              >
-                <ImageIcon className="w-3 h-3" /> Hangar
-              </button>
-              <button 
-                className={`border rounded-xl p-2 text-xs transition-colors flex items-center justify-center gap-2 ${environmentUrl.includes('virtual_room') ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'}`}
-                onClick={() => setEnvironmentUrl('virtual_room_7.glb')}
-              >
-                <ImageIcon className="w-3 h-3" /> Room 7
-              </button>
-            </div>
-
-            {/* Facilities */}
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-[10px] font-medium text-white/70 mb-1.5 uppercase tracking-wider">
@@ -126,7 +140,11 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
             </Button>
           </GlassWidget>
 
-          {/* Schedule Widget */}
+        </div>
+
+        {/* Right Side Widgets */}
+        <div className="absolute top-20 right-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
+          {/* Schedule Widget (Moved here, replacing Treasury) */}
           <GlassWidget>
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
@@ -157,38 +175,6 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
             </div>
             <Button className="w-full mt-3 bg-white/5 hover:bg-white/10 text-white/70 border border-transparent text-xs py-1 h-8 rounded-xl">
               View Calendar
-            </Button>
-          </GlassWidget>
-
-        </div>
-
-        {/* Right Side Widgets */}
-        <div className="absolute top-20 right-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
-          {/* Treasury Widget */}
-          <GlassWidget>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xs font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
-                <Coins className="w-4 h-4 text-amber-400" /> Treasury
-              </h3>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-xl p-3 shadow-inner">
-                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <Zap className="w-3 h-3" /> Credits
-                </div>
-                <div className="text-xl font-black text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]">1.45M</div>
-              </div>
-              <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-xl p-3 shadow-inner">
-                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                  <Box className="w-3 h-3" /> Materials
-                </div>
-                <div className="text-xl font-black text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.5)]">3,240</div>
-              </div>
-            </div>
-            
-            <Button className="w-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs py-1 h-9 rounded-xl font-bold shadow-[0_0_15px_rgba(245,158,11,0.15)] transition-all hover:shadow-[0_0_20px_rgba(245,158,11,0.25)]">
-              Contribute Resources
             </Button>
           </GlassWidget>
         </div>
