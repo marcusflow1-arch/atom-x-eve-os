@@ -194,7 +194,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
         </div>
 
         {/* Bottom Right: Unified Chat & Roster */}
-        <div className="absolute bottom-[20px] right-8 h-[400px] flex pointer-events-auto items-end shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl">
+        <div className="absolute bottom-[90px] right-8 h-[380px] flex pointer-events-auto items-end shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl">
           {/* Roster Extension */}
           <AnimatePresence>
             {isRosterOpen && (
