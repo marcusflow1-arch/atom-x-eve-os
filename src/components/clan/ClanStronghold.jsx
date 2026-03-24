@@ -11,6 +11,14 @@ import { Button } from '@/components/ui/button';
 export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen }) {
   const [environmentUrl, setEnvironmentUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx');
 
+  React.useEffect(() => {
+    const handleEnvChange = (e) => {
+      setEnvironmentUrl(e.detail);
+    };
+    window.addEventListener('changeStrongholdEnv', handleEnvChange);
+    return () => window.removeEventListener('changeStrongholdEnv', handleEnvChange);
+  }, []);
+
   const { data: members } = useQuery({
     queryKey: ['clanMembers', clan?.id],
     queryFn: async () => {
