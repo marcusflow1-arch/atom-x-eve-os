@@ -74,7 +74,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
       <div className="absolute inset-0 z-20 pointer-events-none p-6">
         
         {/* Left Side Widgets */}
-        <div className="absolute top-[140px] left-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
+        <div className="absolute bottom-[130px] left-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
           
           {/* Strong Code Upgrades Dropdown */}
           <div className="relative w-full z-30" ref={upgradesDropdownRef}>
@@ -109,11 +109,11 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
             <AnimatePresence>
               {upgradesOpen && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                  animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: 8 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className="overflow-hidden rounded-2xl absolute top-full left-0 right-0"
+                  className="overflow-hidden rounded-2xl absolute bottom-full left-0 right-0 origin-bottom"
                   style={{
                     background: 'rgba(180, 190, 200, 0.08)',
                     backdropFilter: 'blur(30px) saturate(140%)',
