@@ -103,12 +103,9 @@ export default function ClanChat({ clan, channel, myRole }) {
 
     return (
         <div 
-            className="flex flex-col h-full rounded-r-3xl overflow-hidden"
+            className="flex flex-col h-full overflow-hidden"
             style={{
                 background: 'rgba(255, 255, 255, 0.02)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.2)'
             }}
         >
             {/* Header */}

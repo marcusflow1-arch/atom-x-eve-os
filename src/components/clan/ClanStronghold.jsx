@@ -153,7 +153,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
                 className="h-full overflow-hidden border-r border-white/10"
               >
                 <div className="w-[320px] h-full">
-                  <MemberList clan={clan} fullView={true} />
+                  <MemberList clan={clan} fullView={true} noBorder={true} />
                 </div>
               </motion.div>
             )}

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
-export default function MemberList({ clan, fullView = false }) {
+export default function MemberList({ clan, fullView = false, noBorder = false }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [showInviteModal, setShowInviteModal] = useState(false);
@@ -106,7 +106,7 @@ export default function MemberList({ clan, fullView = false }) {
     // Full view mode for the Members page
     if (fullView) {
         return (
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-sm h-full overflow-hidden flex flex-col">
+            <div className={`h-full overflow-hidden flex flex-col ${noBorder ? '' : 'bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-sm'}`}>
                 {/* Header */}
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center justify-between">
