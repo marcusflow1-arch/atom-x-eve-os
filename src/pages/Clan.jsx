@@ -499,6 +499,38 @@ export default function ClanPage() {
                                         <Activity className="w-6 h-6 text-blue-400" /> Research & Upgrades
                                     </h3>
                                 </div>
+                                <div className="mb-10">
+                                    <h4 className="text-sm font-bold text-white/50 uppercase tracking-widest mb-4">Environment Settings</h4>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <Button 
+                                            variant="outline" 
+                                            className="justify-start bg-white/5 border-white/10 hover:bg-white/10 text-sm h-12"
+                                            onClick={() => {
+                                                // Trigger event to change environment
+                                                window.dispatchEvent(new CustomEvent('changeStrongholdEnv', { detail: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx' }));
+                                            }}
+                                        >
+                                            Base Hangar
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="justify-start bg-white/5 border-white/10 hover:bg-white/10 text-sm h-12"
+                                            onClick={() => {
+                                                window.dispatchEvent(new CustomEvent('changeStrongholdEnv', { detail: 'virtual_room_7.glb' }));
+                                            }}
+                                        >
+                                            Virtual Room 7
+                                        </Button>
+                                        <Button 
+                                            variant="outline" 
+                                            className="justify-start bg-white/5 border-white/10 hover:bg-white/10 text-sm h-12"
+                                        >
+                                            Add Storage Unit
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <h4 className="text-sm font-bold text-white/50 uppercase tracking-widest mb-4">Facilities</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5">
                                         <div className="text-sm text-white/50 mb-2 uppercase tracking-wider">Command Center</div>
