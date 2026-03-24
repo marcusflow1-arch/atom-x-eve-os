@@ -108,25 +108,25 @@ export default function MemberList({ clan, fullView = false, noBorder = false })
         return (
             <div className={`h-full overflow-hidden flex flex-col ${noBorder ? '' : 'bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-sm'}`}>
                 {/* Header */}
-                <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center justify-between">
+                <div className={`border-b border-white/10 flex-shrink-0 ${noBorder ? 'h-16 px-6 flex items-center' : 'p-6'}`}>
+                    <div className="flex items-center justify-between w-full">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                <Users className="w-6 h-6 text-green-400" />
+                            <div className={`rounded-xl bg-green-500/20 flex items-center justify-center ${noBorder ? 'w-8 h-8' : 'w-12 h-12'}`}>
+                                <Users className={`${noBorder ? 'w-4 h-4' : 'w-6 h-6'} text-green-400`} />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-white">Clan Members</h2>
-                                <p className="text-white/50 text-sm">{onlineMembers.length} members in {clan.name}</p>
+                                <h2 className={`${noBorder ? 'text-md' : 'text-2xl'} font-bold text-white tracking-wide`}>{noBorder ? 'Roster' : 'Clan Members'}</h2>
+                                {!noBorder && <p className="text-white/50 text-sm">{onlineMembers.length} members in {clan.name}</p>}
                             </div>
                         </div>
                         {/* Add Member Button */}
                         {(isLeader || officers.some(o => o.userId === user?.id)) && (
                             <Button 
                                 onClick={() => setShowInviteModal(true)}
-                                className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                                className={`bg-green-600 hover:bg-green-700 text-white gap-2 ${noBorder ? 'h-8 px-3 text-xs' : ''}`}
                             >
-                                <Plus className="w-4 h-4" />
-                                Add Member
+                                <Plus className="w-3 h-3" />
+                                {noBorder ? 'Add' : 'Add Member'}
                             </Button>
                         )}
                     </div>
