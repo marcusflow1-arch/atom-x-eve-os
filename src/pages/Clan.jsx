@@ -403,7 +403,48 @@ export default function ClanPage() {
             </div>
 
             {/* 95% Main Clan Area */}
-            <div className="flex-1 relative h-full">
+            <div className="flex-1 relative h-full pt-16">
+
+                {/* Clan Info & Stats - Top Left under header */}
+                <div className="absolute top-20 left-8 z-30 pointer-events-auto">
+                    <div className="flex items-center gap-6 mb-3">
+                        <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-2 pr-4 shadow-lg">
+                            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
+                                {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-5 h-5 text-white/50" />}
+                            </div>
+                            <div>
+                                <h2 className="text-sm font-bold text-white tracking-wider uppercase leading-tight">{clanForRender?.name || 'Entering Division'}</h2>
+                                <div className="flex items-center gap-2 text-[10px] text-white/50 mt-0.5">
+                                    <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
+                                    <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
+                                    <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="hidden lg:flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2.5 shadow-lg">
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-white/40 uppercase tracking-widest">Treasury</span>
+                                <span className="text-xs font-bold text-amber-400 flex items-center gap-1"><Zap className="w-3 h-3" /> 1.45M</span>
+                            </div>
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-white/40 uppercase tracking-widest">Power</span>
+                                <span className="text-xs font-bold text-cyan-400 flex items-center gap-1"><Activity className="w-3 h-3" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
+                            </div>
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-white/40 uppercase tracking-widest">Rank</span>
+                                <span className="text-xs font-bold text-purple-400 flex items-center gap-1"><Shield className="w-3 h-3" /> Gold III</span>
+                            </div>
+                            <div className="w-px h-5 bg-white/10 mx-1" />
+                            <div className="flex flex-col">
+                                <span className="text-[9px] text-white/40 uppercase tracking-widest">Resources</span>
+                                <span className="text-xs font-bold text-green-400 flex items-center gap-1">3,240</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <AnimatePresence mode="wait">
                     {bottomTab === 'home' && (
