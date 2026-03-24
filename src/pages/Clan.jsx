@@ -376,7 +376,14 @@ export default function ClanPage() {
     }
 
     return (
-        <GlassPageFrame>
+        <GlassPageFrame bottomContent={
+            <ClanBottomNav 
+                activeTab={bottomTab} 
+                onTabSelect={setBottomTab} 
+                isRosterOpen={isRosterOpen}
+                onToggleRoster={() => setIsRosterOpen(!isRosterOpen)}
+            />
+        }>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
             {/* 5% Left Area for Global Icons */}
