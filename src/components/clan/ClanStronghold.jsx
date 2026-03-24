@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import TransparentModel3DViewer from '@/components/dashboard/TransparentModel3DViewer';
 import ClanChat from '@/components/clan/ClanChat';
 import MemberList from '@/components/clan/MemberList';
+import { useRef } from 'react';
 import { Shield, Crown, Users, Coins, Zap, Calendar, Settings, Image as ImageIcon, Box, Activity, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
