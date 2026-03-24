@@ -49,9 +49,9 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
     <div className="absolute inset-0 overflow-hidden">
       {/* 3D Environment Background */}
       <div className="absolute inset-0 z-0 pointer-events-auto">
-        <TransparentModel3DViewer 
+        {/* <TransparentModel3DViewer 
           roomModelUrl={environmentUrl}
-        />
+        /> */}
       </div>
 
       {/* Subtle Overlay to make UI readable */}
