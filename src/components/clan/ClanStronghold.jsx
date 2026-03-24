@@ -5,11 +5,24 @@ import { base44 } from '@/api/base44Client';
 import TransparentModel3DViewer from '@/components/dashboard/TransparentModel3DViewer';
 import ClanChat from '@/components/clan/ClanChat';
 import MemberList from '@/components/clan/MemberList';
-import { Shield, Crown, Users, Coins, Zap, Calendar, Settings, Image as ImageIcon, Box } from 'lucide-react';
+import { Shield, Crown, Users, Coins, Zap, Calendar, Settings, Image as ImageIcon, Box, Activity, ChevronDown, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen }) {
   const [environmentUrl, setEnvironmentUrl] = useState('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx');
+  const [upgradesOpen, setUpgradesOpen] = useState(false);
+  const upgradesDropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!upgradesOpen) return;
+    const handler = (e) => {
+      if (upgradesDropdownRef.current && !upgradesDropdownRef.current.contains(e.target)) {
+        setUpgradesOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [upgradesOpen]);
 
   React.useEffect(() => {
     const handleEnvChange = (e) => {
