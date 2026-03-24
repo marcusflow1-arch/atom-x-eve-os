@@ -193,27 +193,35 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
           </GlassWidget>
         </div>
 
-        {/* Bottom Right: Unified Chat & Roster */}
-        <div className="absolute bottom-[90px] right-8 h-[380px] flex pointer-events-auto items-end shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl">
-          {/* Roster Extension */}
-          <AnimatePresence>
-            {isRosterOpen && (
+        {/* Roster Popup */}
+        <AnimatePresence>
+          {isRosterOpen && (
+            <>
+              {/* Shaded Background */}
               <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: "calc(100vw - 750px)", opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm z-30 pointer-events-auto"
+              />
+              
+              {/* Roster Content */}
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.95 }}
                 transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                className="h-full overflow-hidden border-r border-white/10 bg-black/40"
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[50%] z-40 pointer-events-auto bg-black/70 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl flex flex-col"
               >
-                <div style={{ width: "calc(100vw - 750px)" }} className="min-w-[400px] h-full">
-                  <MemberList clan={clan} fullView={true} noBorder={true} />
-                </div>
+                <MemberList clan={clan} fullView={true} noBorder={true} />
               </motion.div>
-            )}
-          </AnimatePresence>
+            </>
+          )}
+        </AnimatePresence>
 
-          {/* Clan Chat */}
-          <div className="w-[350px] h-full flex flex-col">
+        {/* Bottom Right: Clan Chat */}
+        <div className="absolute bottom-[90px] right-8 w-[350px] h-[380px] flex pointer-events-auto shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl z-20">
+          <div className="flex-1 flex flex-col">
             {generalChannel ? (
               <ClanChat clan={clan} channel={generalChannel} />
             ) : (
