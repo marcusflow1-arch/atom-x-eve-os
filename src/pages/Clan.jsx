@@ -18,6 +18,7 @@ import VoiceRoomManager from '@/components/clan/voice/VoiceRoomManager';
 import ClanIntro from '@/components/clan/ClanIntro';
 import ClanTreasuryPage from '@/components/clan/ClanTreasuryPage.jsx';
 import ClanSchedulePage from '@/components/clan/ClanSchedulePage.jsx';
+import MemberList from '@/components/clan/MemberList';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ const XMB_MODES = [
     { id: 'games_chat', label: 'Games Chat', icon: MessageSquare },
     { id: 'treasury', label: 'Treasury', icon: Zap },
     { id: 'schedule', label: 'Schedule', icon: ClipboardList },
+    { id: 'roster', label: 'Roster', icon: Users },
 ];
 
 export default function ClanPage() {
@@ -581,6 +583,14 @@ export default function ClanPage() {
                             {XMB_MODES[activeModeIndex].id === 'schedule' && (
                                 <div className="w-full h-full">
                                     <ClanSchedulePage clan={clanForRender} />
+                                </div>
+                            )}
+
+                            {XMB_MODES[activeModeIndex].id === 'roster' && (
+                                <div className="w-full h-full flex items-center justify-center">
+                                    <div className="w-[75%] h-[75%] relative">
+                                        <MemberList clan={clanForRender} fullView={true} />
+                                    </div>
                                 </div>
                             )}
                         </motion.div>

@@ -106,7 +106,7 @@ export default function MemberList({ clan, fullView = false }) {
     // Full view mode for the Members page
     if (fullView) {
         return (
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-sm h-full overflow-hidden">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 shadow-sm h-full overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export default function MemberList({ clan, fullView = false }) {
                 </Dialog>
                 
                 {/* Members Grid */}
-                <div className="p-6 overflow-y-auto max-h-[calc(100vh-250px)]">
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {onlineMembers.map(m => {
                             const roleColors = {
