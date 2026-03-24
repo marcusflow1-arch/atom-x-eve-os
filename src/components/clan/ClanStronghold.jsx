@@ -142,7 +142,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
         </GlassWidget>
 
         {/* Bottom Right: Unified Chat & Roster */}
-        <div className="absolute bottom-[80px] right-6 h-[400px] flex gap-2 pointer-events-auto items-end">
+        <div className="absolute bottom-[80px] right-6 h-[400px] flex pointer-events-auto items-end shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-xl">
           {/* Roster Extension */}
           <AnimatePresence>
             {isRosterOpen && (
@@ -150,7 +150,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
                 initial={{ width: 0, opacity: 0 }}
                 animate={{ width: 320, opacity: 1 }}
                 exit={{ width: 0, opacity: 0 }}
-                className="h-full overflow-hidden"
+                className="h-full overflow-hidden border-r border-white/10"
               >
                 <div className="w-[320px] h-full">
                   <MemberList clan={clan} fullView={true} />
@@ -160,7 +160,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
           </AnimatePresence>
 
           {/* Clan Chat */}
-          <div className="w-[350px] h-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+          <div className="w-[350px] h-full flex flex-col">
             {generalChannel ? (
               <ClanChat clan={clan} channel={generalChannel} />
             ) : (
