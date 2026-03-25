@@ -93,23 +93,22 @@ export default function LunaBottomNav() {
       <AnimatePresence>
         {selectedItem && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-8"
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            className="fixed left-1/2 z-[100] w-full max-w-2xl"
             style={{ 
-              background: 'radial-gradient(circle at center, rgba(10,15,25,0.7) 0%, rgba(0,0,0,0.9) 100%)',
-              backdropFilter: 'blur(8px)'
+              bottom: '340px', // Positioned above the library drawer
+              transform: 'translateX(-50%)',
+              perspective: '1000px'
             }}
-            onClick={() => setSelectedItem(null)}
           >
             <div 
-              className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10"
+              className="relative w-full rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10"
               style={{
                 background: 'linear-gradient(135deg, rgba(15,20,30,0.95) 0%, rgba(10,15,25,0.98) 100%)',
                 backdropFilter: 'blur(20px)'
               }}
-              onClick={(e) => e.stopPropagation()}
             >
               {/* Cover Image Header */}
               <div className="relative h-64 w-full">
