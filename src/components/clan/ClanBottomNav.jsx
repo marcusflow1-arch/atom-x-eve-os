@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, Users, MessageSquare, TrendingUp, Zap, ClipboardList } from 'lucide-react';
 
-export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, onToggleRoster }) {
+export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, onToggleRoster, isStrongholdEnabled }) {
   return (
     <div className="flex items-center justify-center w-full h-full">
       <div className="flex items-center">
