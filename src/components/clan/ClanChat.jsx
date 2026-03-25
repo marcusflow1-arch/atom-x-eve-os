@@ -4,13 +4,13 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Hash, MoreVertical, Search, Bell, Megaphone, Trash2, Shield, ShieldAlert, Crown } from 'lucide-react';
+import { Send, Hash, MoreVertical, Search, Bell, Megaphone, Trash2, Shield, ShieldAlert, Crown, Maximize2, Minimize2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function ClanChat({ clan, channel, myRole }) {
+export default function ClanChat({ clan, channel, myRole, isExpanded, onToggleExpand }) {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [message, setMessage] = useState('');
@@ -134,6 +134,16 @@ export default function ClanChat({ clan, channel, myRole }) {
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-white/40 hover:text-white hover:bg-white/5">
                         <Bell className="w-4 h-4" />
                     </Button>
+                    {onToggleExpand && (
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={onToggleExpand}
+                            className="h-8 w-8 text-white/40 hover:text-white hover:bg-white/5 ml-1"
+                        >
+                            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                        </Button>
+                    )}
                 </div>
             </div>
 
