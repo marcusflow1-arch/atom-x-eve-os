@@ -1261,14 +1261,14 @@ export function LibraryBannerSection({
       {/* Game Banner + Memories */}
       <div ref={envDropdownRef} className="w-full h-full">
         <div className="flex flex-col gap-3 w-full h-full relative">
-          {/* Top Row: Env Hub | Memories | Friends | Home | Calendar Box */}
+          {/* Top Row: Env Hub | Memories | Friends | Home | Online Users | Spacer | Calendar Box */}
           <div className="flex items-center gap-4 w-full h-24">
-            {/* Environment Hub */}
-            <div className="w-[330px] h-full flex-shrink-0">
+            {/* Environment Hub - Reduced by 25% */}
+            <div className="w-[247px] h-full flex-shrink-0">
               <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} onQuickChangeToggle={onQuickChangeToggle} />
             </div>
 
-            {/* Memories */}
+            {/* Memories & Line */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full px-2">
               <button
                 onClick={() => setShowMemoriesDrawer(true)}
@@ -1280,10 +1280,7 @@ export function LibraryBannerSection({
               <div className="w-px h-8 bg-white/10 mx-1 flex-shrink-0" />
             </div>
 
-            {/* Flex spacer to push remaining items to the right */}
-            <div className="flex-1 min-w-0" />
-
-            {/* Friends (with placeholders) & Home */}
+            {/* Friends (with placeholders) & Home & Online Users Dropdown */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {onlineFriends.map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
@@ -1306,10 +1303,18 @@ export function LibraryBannerSection({
               <div className="flex-shrink-0 ml-2">
                 <HomeReference onClick={handleHomeClick} />
               </div>
+              
+              {/* Planet Icon / Online Users Dropdown moved here next to Home */}
+              <div className="flex-shrink-0 ml-2 flex items-center justify-center">
+                <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
+              </div>
             </div>
 
-            {/* Calendar Box */}
-            <div className="flex-[2] min-w-[350px] max-w-[500px] h-full">
+            {/* Flex spacer to push remaining items to the right */}
+            <div className="flex-1 min-w-0" />
+
+            {/* Calendar Box - Expanded (Removed max-w-[500px]) */}
+            <div className="flex-[3] min-w-[400px] h-full">
               {calendarBox}
             </div>
           </div>
@@ -1769,16 +1774,10 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 }
                 intelligenceFeed={<LiveIntelligenceFeed />}
                 calendarBox={
-                  <div className="flex flex-col items-end gap-2 w-full">
-                     <div className="flex items-stretch gap-3 w-full justify-end h-full">
-                       <div className="flex items-center justify-center">
-                         <OnlineUsersDropdown onSelectEnv={onSelectEnv} />
-                       </div>
-                       <div className="flex-1 min-w-0 h-full">
-                         <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
-                       </div>
-                     </div>
-
+                  <div className="flex w-full h-full">
+                    <div className="flex-1 min-w-0 h-full">
+                      <DateTimeTile onClick={handleDateTimeClick} onCalendarClick={onOpenCalendar || openCalendar} />
+                    </div>
                   </div>
                 }
               />

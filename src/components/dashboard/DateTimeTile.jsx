@@ -43,43 +43,43 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
         {/* Calendar Button (Left) */}
         <button
           onClick={(e) => { e.stopPropagation(); onCalendarClick(); }}
-          className="w-10 h-10 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all shadow-lg group pointer-events-auto cursor-pointer"
+          className="w-12 h-12 flex-shrink-0 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all shadow-lg group pointer-events-auto cursor-pointer"
           title="Calendar"
         >
-          <CalendarIcon className="w-4 h-4 text-white/80 group-hover:text-white" />
+          <CalendarIcon className="w-5 h-5 text-white/80 group-hover:text-white" />
         </button>
 
         {/* Content (Middle) */}
         <div className="flex-1 min-w-0 flex flex-col justify-center h-full py-2">
           {/* Top row: Date + Updates Button */}
           <div className="flex items-center justify-between w-full mb-1">
-            <div className="text-[10px] font-bold text-cyan-300 uppercase tracking-widest truncate mr-2">
+            <div className="text-xs font-bold text-cyan-300 uppercase tracking-widest truncate mr-2">
               {dateString}
             </div>
             
             <button 
               onClick={(e) => { e.stopPropagation(); onClick(); }} 
-              className="flex items-center gap-1.5 text-cyan-300 hover:text-cyan-100 transition-colors group px-2 py-0.5 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 z-20 flex-shrink-0 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)] pointer-events-auto"
+              className="flex items-center gap-1.5 text-cyan-300 hover:text-cyan-100 transition-colors group px-3 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 z-20 flex-shrink-0 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)] pointer-events-auto"
             >
-              <span className="text-[9px] uppercase tracking-wider font-bold">System Updates</span>
-              <Settings className="w-3 h-3 group-hover:rotate-90 transition-transform duration-500" />
+              <span className="text-[11px] uppercase tracking-wider font-bold">System Updates</span>
+              <Settings className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-500" />
             </button>
           </div>
 
           {/* Bottom row: Time + Info split */}
-          <div className="flex items-center gap-3 w-full">
-            <div className="text-3xl font-black text-white tracking-tighter drop-shadow-md leading-none flex-shrink-0">
+          <div className="flex items-center gap-4 w-full">
+            <div className="text-4xl font-black text-white tracking-tighter drop-shadow-md leading-none flex-shrink-0">
               {timeString}
             </div>
             
-            <div className="flex-1 flex items-stretch gap-3 overflow-hidden border-l border-white/10 pl-3 h-8">
+            <div className="flex-1 flex items-stretch gap-4 overflow-hidden border-l border-white/10 pl-4 h-10">
               {/* Reminders Side */}
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <Bell className="w-2.5 h-2.5 text-amber-400" />
-                  <span className="text-[8px] uppercase tracking-wider text-amber-400/80 font-bold truncate">0 Reminders</span>
+                <div className="flex items-center gap-1 mb-1">
+                  <Bell className="w-3 h-3 text-amber-400" />
+                  <span className="text-[10px] uppercase tracking-wider text-amber-400/80 font-bold truncate">0 Reminders</span>
                 </div>
-                <div className="relative w-full h-4 overflow-hidden">
+                <div className="relative w-full h-5 overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentReminderIdx}
@@ -87,7 +87,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3 }}
-                      className="absolute inset-0 text-[10px] text-white/80 font-medium truncate"
+                      className="absolute inset-0 text-xs text-white/80 font-medium truncate"
                     >
                       {reminders[currentReminderIdx]}
                     </motion.div>
@@ -100,11 +100,11 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
 
               {/* Updates Side */}
               <div className="flex-1 min-w-0 hidden sm:flex flex-col justify-center">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-                  <span className="text-[8px] uppercase tracking-wider text-green-400/80 font-bold">Status</span>
+                <div className="flex items-center gap-1 mb-1">
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
+                  <span className="text-[10px] uppercase tracking-wider text-green-400/80 font-bold">Status</span>
                 </div>
-                <div className="text-[10px] text-white/80 font-medium truncate">
+                <div className="text-xs text-white/80 font-medium truncate">
                   All Systems Go
                 </div>
               </div>
