@@ -34,6 +34,9 @@ import { useDashboardMode } from '../components/dashboard/DashboardModeContext';
 import UserInterfaceView from '../components/dashboard/views/UserInterfaceView';
 import PinGamesContent from '../components/dashboard/PinGamesContent';
 import StreamingDiscovery from '../components/streaming/StreamingDiscovery';
+import StreamPlayerBox from '@/components/streaming/StreamPlayerBox';
+import StreamChatBox from '@/components/streaming/StreamChatBox';
+import StreamSetupPanel from '@/components/streaming/StreamSetupPanel';
 import SocialHub from '../components/dashboard/SocialHub';
 import UserProfileOverlay from '../components/profile/UserProfileOverlay';
 import FriendInteractionPanel from '../components/friends/FriendInteractionPanel';
@@ -173,6 +176,13 @@ export default function LunaTemplate() {
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
+
+  // Stream Player State
+  const [isLive, setIsLive] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(80);
+  const [showStreamSettings, setShowStreamSettings] = useState(false);
+  const [settingsMaximized, setSettingsMaximized] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -705,7 +715,32 @@ export default function LunaTemplate() {
                   <Leaderboard isEmbedded={true} />
                 </div>
               )}
-              {activeAvatarFocusView === 'Live' && <StreamingDiscovery />}
+              {activeAvatarFocusView === 'Live' && (
+                <div className="absolute inset-0 flex gap-4 p-6 pt-0">
+                  <div className="flex-1 min-w-0 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden">
+                    <StreamPlayerBox
+                      isLive={isLive}
+                      onToggleLive={() => setIsLive(!isLive)}
+                      isPlaying={isPlaying}
+                      onTogglePlay={() => setIsPlaying(!isPlaying)}
+                      volume={volume}
+                      onVolumeChange={setVolume}
+                      onOpenSettings={() => setShowStreamSettings(true)}
+                      settingsOpen={showStreamSettings}
+                      onCloseSettings={() => setShowStreamSettings(false)}
+                      isSettingsMaximized={settingsMaximized}
+                      onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
+                    />
+                  </div>
+                  <div className="w-[320px] bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden flex-shrink-0">
+                    {isLive ? (
+                      <StreamChatBox isLive={isLive} />
+                    ) : (
+                      <StreamSetupPanel onStartStream={() => { setIsLive(true); setIsPlaying(true); }} />
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
