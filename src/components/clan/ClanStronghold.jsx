@@ -185,10 +185,15 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen, i
         </AnimatePresence>
 
         {/* Bottom Right: Clan Chat */}
-        <div className="absolute bottom-[90px] right-8 w-[350px] h-[380px] flex pointer-events-auto shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl z-20">
-          <div className="flex-1 flex flex-col">
+        <div className={`absolute bottom-[90px] right-8 ${isChatExpanded ? 'left-[360px]' : 'w-[450px]'} h-[380px] flex pointer-events-auto shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl z-20 transition-all duration-500 ease-in-out`}>
+          <div className="flex-1 flex flex-col min-w-0">
             {generalChannel ? (
-              <ClanChat clan={clan} channel={generalChannel} />
+              <ClanChat 
+                clan={clan} 
+                channel={generalChannel} 
+                isExpanded={isChatExpanded} 
+                onToggleExpand={() => setIsChatExpanded(!isChatExpanded)} 
+              />
             ) : (
               <div className="flex-1 flex items-center justify-center text-white/50">No channel available</div>
             )}
