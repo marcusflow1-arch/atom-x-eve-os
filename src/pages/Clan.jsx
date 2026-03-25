@@ -714,38 +714,40 @@ export default function ClanPage() {
                 </AnimatePresence>
 
                 {/* Bottom Global Actions */}
-                <div className="absolute bottom-[80px] left-6 z-30">
-                    {/* Disband (Leader Only) or Leave (Everyone else) */}
-                    {clanForRender && (
-                        isLeader ? (
-                            <Button 
-                                size="sm" 
-                                variant="destructive" 
-                                onClick={() => {
-                                    if(confirm("Are you sure you want to disband this clan? This cannot be undone.")) {
-                                        disbandClanMutation.mutate();
-                                    }
-                                }}
-                                className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs shadow-lg"
-                            >
-                                Disband Clan
-                            </Button>
-                        ) : (
-                            <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => {
-                                    if(confirm("Are you sure you want to leave this clan?")) {
-                                        leaveClanMutation.mutate();
-                                    }
-                                }}
-                                className="bg-black/50 backdrop-blur-md hover:bg-white/10 text-white/60 border-white/10 text-xs shadow-lg"
-                            >
-                                Leave Clan
-                            </Button>
-                        )
-                    )}
-                </div>
+                {bottomTab === 'home' && (
+                    <div className="absolute bottom-[80px] left-6 z-30">
+                        {/* Disband (Leader Only) or Leave (Everyone else) */}
+                        {clanForRender && (
+                            isLeader ? (
+                                <Button 
+                                    size="sm" 
+                                    variant="destructive" 
+                                    onClick={() => {
+                                        if(confirm("Are you sure you want to disband this clan? This cannot be undone.")) {
+                                            disbandClanMutation.mutate();
+                                        }
+                                    }}
+                                    className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs shadow-lg"
+                                >
+                                    Disband Clan
+                                </Button>
+                            ) : (
+                                <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => {
+                                        if(confirm("Are you sure you want to leave this clan?")) {
+                                            leaveClanMutation.mutate();
+                                        }
+                                    }}
+                                    className="bg-black/50 backdrop-blur-md hover:bg-white/10 text-white/60 border-white/10 text-xs shadow-lg"
+                                >
+                                    Leave Clan
+                                </Button>
+                            )
+                        )}
+                    </div>
+                )}
 
                 {/* Bottom Header Bar - Handled by GlassPageFrame bottomContent */}
             </div>
