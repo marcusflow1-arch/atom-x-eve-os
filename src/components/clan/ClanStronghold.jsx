@@ -76,7 +76,6 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
         
         {/* Left Side Widgets */}
         <div className="absolute bottom-[130px] left-8 w-[320px] flex flex-col gap-4 pointer-events-auto">
-          
           {/* Current Status Widget (Disconnected, below) */}
           <GlassWidget className="mt-2">
             <div className="flex justify-between items-center mb-4">
@@ -114,12 +113,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen })
                 </div>
               </div>
             </div>
-            
-            <Button className="w-full mt-5 bg-white/10 hover:bg-white/15 text-white border border-white/10 text-xs py-1 h-8 rounded-xl shadow-lg">
-              Manage Facilities
-            </Button>
           </GlassWidget>
-
         </div>
 
         {/* Right Side Widgets */}
