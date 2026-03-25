@@ -96,9 +96,11 @@ export default function LunaBottomNav() {
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            className="fixed left-1/2 z-[100] w-full max-w-2xl"
+            className="fixed z-[100] w-[460px]"
             style={{ 
-              bottom: '340px', // Positioned above the library drawer
+              bottom: '330px', // Positioned precisely above the library drawer
+              left: '50%',
+              marginLeft: '-10px', // Minor offset adjustment to perfectly center between Side and Live feeds
               transform: 'translateX(-50%)',
               perspective: '1000px'
             }}
@@ -111,57 +113,57 @@ export default function LunaBottomNav() {
               }}
             >
               {/* Cover Image Header */}
-              <div className="relative h-64 w-full">
+              <div className="relative h-48 w-full">
                 <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,15,25,0.98)] via-[rgba(10,15,25,0.6)] to-transparent" />
                 <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 backdrop-blur-md z-10">
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Content */}
-              <div className="p-8 -mt-16 relative z-10 flex gap-8">
+              <div className="p-6 -mt-12 relative z-10 flex gap-5">
                 {/* Left Side: Thumbnail / Capsule */}
-                <div className="w-48 flex-shrink-0 hidden md:block">
-                  <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border-2 border-white/10 shadow-2xl">
+                <div className="w-32 flex-shrink-0 hidden sm:block">
+                  <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-2xl">
                     <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
                   </div>
                 </div>
 
                 {/* Right Side: Details */}
-                <div className="flex-1 pt-8 md:pt-0 flex flex-col justify-between">
+                <div className="flex-1 pt-6 sm:pt-0 flex flex-col justify-between">
                   <div>
-                    <h2 className="text-3xl font-black text-white tracking-wide mb-2">{selectedItem.displayTitle}</h2>
-                    <div className="flex gap-2 mb-4">
-                      <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-cyan-300 font-bold uppercase tracking-wider">{selectedItem.genre || 'Action'}</span>
-                      <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-white/50 font-bold uppercase tracking-wider">{selectedItem.original_year || '2024'}</span>
+                    <h2 className="text-2xl font-black text-white tracking-wide mb-2 leading-tight">{selectedItem.displayTitle}</h2>
+                    <div className="flex gap-2 mb-3">
+                      <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">{selectedItem.genre || 'Action'}</span>
+                      <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-white/50 font-bold uppercase tracking-wider">{selectedItem.original_year || '2024'}</span>
                     </div>
-                    <p className="text-white/70 text-sm leading-relaxed mb-6 line-clamp-3">
+                    <p className="text-white/70 text-xs leading-relaxed mb-5 line-clamp-3">
                       {selectedItem.description || 'Dive into an immersive world where every decision shapes your destiny. Experience breathtaking visuals and thrilling gameplay in this highly acclaimed title.'}
                     </p>
                   </div>
                   
                   {/* Actions */}
-                  <div className="flex gap-4">
+                  <div className="flex gap-3">
                     <button 
                       onClick={() => {
                         setSelectedItem(null);
                         navigate(createPageUrl('Library'));
                       }}
-                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
                     >
-                      <Play className="w-5 h-5 fill-current" />
-                      Play Now
+                      <Play className="w-4 h-4 fill-current" />
+                      Play
                     </button>
                     <button 
                       onClick={() => {
                         setSelectedItem(null);
                         navigate(createPageUrl('GameDetail') + '?id=' + selectedItem.id + '&from=library');
                       }}
-                      className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-all"
+                      className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all"
                     >
-                      <Info className="w-5 h-5" />
-                      Game Info
+                      <Info className="w-4 h-4" />
+                      Info
                     </button>
                   </div>
                 </div>
