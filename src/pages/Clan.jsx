@@ -405,44 +405,48 @@ export default function ClanPage() {
             {/* 95% Main Clan Area */}
             <div className="flex-1 relative h-full pt-16">
 
-                {/* Clan Info & Stats - Top Left under header */}
-                <div className="absolute top-20 left-8 z-30 pointer-events-auto">
-                    <div className="flex items-center gap-6 mb-3">
-                        <div className="flex items-center gap-5 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-4 pr-8 shadow-lg">
-                            <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
-                                {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-10 h-10 text-white/50" />}
-                            </div>
-                            <div className="flex flex-col justify-center">
-                                <h2 className="text-2xl font-black text-white tracking-wider uppercase leading-tight mb-2">{clanForRender?.name || 'Entering Division'}</h2>
-                                <div className="flex items-center gap-4 text-sm font-medium text-white/60">
-                                    <span className="flex items-center gap-1.5"><Crown className="w-4 h-4 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
-                                    <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-cyan-500" /> {members?.length || 0}/50</span>
-                                    <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
+                {bottomTab === 'home' && (
+                    <>
+                        {/* Clan Info & Stats - Top Left under header */}
+                        <div className="absolute top-20 left-8 z-30 pointer-events-auto">
+                            <div className="flex items-center gap-6 mb-3">
+                                <div className="flex items-center gap-5 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-4 pr-8 shadow-lg">
+                                    <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
+                                        {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-10 h-10 text-white/50" />}
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <h2 className="text-2xl font-black text-white tracking-wider uppercase leading-tight mb-2">{clanForRender?.name || 'Entering Division'}</h2>
+                                        <div className="flex items-center gap-4 text-sm font-medium text-white/60">
+                                            <span className="flex items-center gap-1.5"><Crown className="w-4 h-4 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
+                                            <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-cyan-500" /> {members?.length || 0}/50</span>
+                                            <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Central Stats - Top Middle */}
-                <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex gap-4">
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                        <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Treasury</span>
-                        <span className="text-xl font-black text-amber-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-5 h-5" /> 1.45M</span>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                        <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Power</span>
-                        <span className="text-xl font-black text-cyan-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-5 h-5" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                        <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Rank</span>
-                        <span className="text-xl font-black text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-5 h-5" /> Gold III</span>
-                    </div>
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                        <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Resources</span>
-                        <span className="text-xl font-black text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
-                    </div>
-                </div>
+                        {/* Central Stats - Top Middle */}
+                        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex gap-4">
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Treasury</span>
+                                <span className="text-xl font-black text-amber-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-5 h-5" /> 1.45M</span>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Power</span>
+                                <span className="text-xl font-black text-cyan-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-5 h-5" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Rank</span>
+                                <span className="text-xl font-black text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-5 h-5" /> Gold III</span>
+                            </div>
+                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Resources</span>
+                                <span className="text-xl font-black text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 <AnimatePresence mode="wait">
                     {bottomTab === 'home' && (
