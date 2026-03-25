@@ -428,23 +428,37 @@ export default function ClanPage() {
                         </div>
 
                         {/* Central Stats - Top Middle */}
-                        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex gap-4">
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Treasury</span>
-                                <span className="text-xl font-black text-amber-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-5 h-5" /> 1.45M</span>
+                        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex flex-col items-center gap-4">
+                            <div className="flex gap-4">
+                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                    <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Treasury</span>
+                                    <span className="text-xl font-black text-amber-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"><Zap className="w-5 h-5" /> 1.45M</span>
+                                </div>
+                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                    <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Power</span>
+                                    <span className="text-xl font-black text-cyan-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-5 h-5" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
+                                </div>
+                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                    <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Rank</span>
+                                    <span className="text-xl font-black text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-5 h-5" /> Gold III</span>
+                                </div>
+                                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
+                                    <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Resources</span>
+                                    <span className="text-xl font-black text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
+                                </div>
                             </div>
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Power</span>
-                                <span className="text-xl font-black text-cyan-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]"><Activity className="w-5 h-5" /> {Math.floor((members?.length || 1) * 1250).toLocaleString()}</span>
-                            </div>
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Rank</span>
-                                <span className="text-xl font-black text-purple-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"><Shield className="w-5 h-5" /> Gold III</span>
-                            </div>
-                            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl px-8 py-3 shadow-lg flex flex-col items-center min-w-[120px]">
-                                <span className="text-xs text-white/60 uppercase tracking-widest mb-1.5 font-medium">Resources</span>
-                                <span className="text-xl font-black text-green-400 flex items-center gap-1.5 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">3,240</span>
-                            </div>
+                            
+                            {/* Stronghold Toggle Box */}
+                            <button
+                                onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
+                                className={`px-6 py-2 rounded-xl border backdrop-blur-md shadow-lg transition-all flex items-center justify-center gap-2 w-[180px] ${
+                                    isStrongholdEnabled 
+                                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
+                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                }`}
+                            >
+                                <span className="text-xs font-bold uppercase tracking-widest">Stronghold</span>
+                            </button>
                         </div>
                     </>
                 )}
@@ -462,6 +476,7 @@ export default function ClanPage() {
                                 clan={clanForRender} 
                                 activeVoiceRooms={activeVoiceRooms} 
                                 isRosterOpen={isRosterOpen} 
+                                isStrongholdEnabled={isStrongholdEnabled}
                             />
                         </motion.div>
                     )}
