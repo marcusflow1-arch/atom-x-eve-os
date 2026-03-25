@@ -39,6 +39,7 @@ export default function ClanPage() {
     const [selectedGame, setSelectedGame] = useState(null); // Track selected game for workspace
   const [lastChatGame, setLastChatGame] = useState(null); // For quick switch back from global chat
     const [initialZone, setInitialZone] = useState(null);
+    const [isStrongholdEnabled, setIsStrongholdEnabled] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     // Entry gate state (authoritative)
     const [entryState, setEntryState] = useState('pending'); // 'pending' | 'intro' | 'clan'
