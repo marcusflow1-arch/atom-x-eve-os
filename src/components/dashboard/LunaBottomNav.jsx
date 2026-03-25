@@ -98,13 +98,16 @@ export default function LunaBottomNav() {
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
             className="fixed z-[100] w-[460px]"
             style={{ 
-              bottom: '330px', // Positioned precisely above the library drawer
+              bottom: '250px', // Positioned closer to the library drawer
               left: '50%',
-              marginLeft: '-10px', // Minor offset adjustment to perfectly center between Side and Live feeds
+              marginLeft: '-140px', // Moved further left to center perfectly in the open 3D space
               transform: 'translateX(-50%)',
               perspective: '1000px'
             }}
           >
+            {/* Ambient Shade Effect behind the box */}
+            <div className="absolute inset-[-100px] bg-black/80 blur-[50px] rounded-[100px] -z-10 pointer-events-none" />
+
             <div 
               className="relative w-full rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10"
               style={{
