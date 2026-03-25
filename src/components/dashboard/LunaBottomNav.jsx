@@ -99,9 +99,7 @@ export default function LunaBottomNav() {
             className="fixed z-[100] w-[460px]"
             style={{ 
               bottom: '250px', // Positioned closer to the library drawer
-              left: '50%',
-              marginLeft: '-140px', // Moved further left to center perfectly in the open 3D space
-              transform: 'translateX(-50%)',
+              left: '440px', // Aligns exactly with the right edge of the Quest Book and Environment Hub
               perspective: '1000px'
             }}
           >
