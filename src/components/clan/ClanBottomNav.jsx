@@ -17,7 +17,7 @@ export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, on
             <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
           )}
           <Home className="w-4 h-4" />
-          <span>Stronghold</span>
+          <span>{isStrongholdEnabled ? 'Stronghold' : 'Homepage'}</span>
         </button>
 
         <div className="w-px h-5 bg-white/10 mx-2" />
