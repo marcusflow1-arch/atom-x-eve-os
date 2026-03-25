@@ -684,7 +684,7 @@ export default function ClanPage() {
 
                 {/* Game Workspace Overlay */}
                 <AnimatePresence>
-                    {selectedGame && (
+                    {bottomTab === 'games_chat' && selectedGame && (
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
