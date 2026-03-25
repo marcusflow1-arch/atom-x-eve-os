@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600' },
@@ -19,6 +21,8 @@ export default function LunaBottomNav() {
   const [activeTab, setActiveTab] = useState('home');
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     base44.entities.Game.list().then(setGames);
@@ -59,7 +63,13 @@ export default function LunaBottomNav() {
       if (i < currentItems.length) {
         const item = currentItems[i];
         slots.push(
-          <div key={item.id || i} className="flex-1 aspect-[16/9] rounded-xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-cyan-400/50 transition-all shadow-lg">
+          <div 
+            key={item.id || i} 
+            onClick={() => {
+              if (activeTab === 'library') setSelectedItem(item);
+            }}
+            className="flex-1 aspect-[16/9] rounded-xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-cyan-400/50 transition-all shadow-lg"
+          >
             <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
             <div className="absolute bottom-3 left-3 right-3 text-center">
@@ -80,6 +90,88 @@ export default function LunaBottomNav() {
 
   return (
     <>
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-8"
+            style={{ 
+              background: 'radial-gradient(circle at center, rgba(10,15,25,0.7) 0%, rgba(0,0,0,0.9) 100%)',
+              backdropFilter: 'blur(8px)'
+            }}
+            onClick={() => setSelectedItem(null)}
+          >
+            <div 
+              className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10"
+              style={{
+                background: 'linear-gradient(135deg, rgba(15,20,30,0.95) 0%, rgba(10,15,25,0.98) 100%)',
+                backdropFilter: 'blur(20px)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Cover Image Header */}
+              <div className="relative h-64 w-full">
+                <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,15,25,0.98)] via-[rgba(10,15,25,0.6)] to-transparent" />
+                <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 backdrop-blur-md z-10">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-8 -mt-16 relative z-10 flex gap-8">
+                {/* Left Side: Thumbnail / Capsule */}
+                <div className="w-48 flex-shrink-0 hidden md:block">
+                  <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border-2 border-white/10 shadow-2xl">
+                    <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
+                  </div>
+                </div>
+
+                {/* Right Side: Details */}
+                <div className="flex-1 pt-8 md:pt-0 flex flex-col justify-between">
+                  <div>
+                    <h2 className="text-3xl font-black text-white tracking-wide mb-2">{selectedItem.displayTitle}</h2>
+                    <div className="flex gap-2 mb-4">
+                      <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-cyan-300 font-bold uppercase tracking-wider">{selectedItem.genre || 'Action'}</span>
+                      <span className="px-2 py-1 rounded bg-white/5 border border-white/10 text-xs text-white/50 font-bold uppercase tracking-wider">{selectedItem.original_year || '2024'}</span>
+                    </div>
+                    <p className="text-white/70 text-sm leading-relaxed mb-6 line-clamp-3">
+                      {selectedItem.description || 'Dive into an immersive world where every decision shapes your destiny. Experience breathtaking visuals and thrilling gameplay in this highly acclaimed title.'}
+                    </p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => {
+                        setSelectedItem(null);
+                        navigate(createPageUrl('Library'));
+                      }}
+                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                    >
+                      <Play className="w-5 h-5 fill-current" />
+                      Play Now
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setSelectedItem(null);
+                        navigate(createPageUrl('GameDetail') + '?id=' + selectedItem.id + '&from=library');
+                      }}
+                      className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold flex items-center justify-center gap-2 transition-all"
+                    >
+                      <Info className="w-5 h-5" />
+                      Game Info
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
