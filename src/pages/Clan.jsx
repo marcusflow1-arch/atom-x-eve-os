@@ -379,7 +379,13 @@ export default function ClanPage() {
         <GlassPageFrame bottomContent={
             <ClanBottomNav 
                 activeTab={bottomTab} 
-                onTabSelect={setBottomTab} 
+                onTabSelect={(tab) => {
+                    setBottomTab(tab);
+                    if (tab !== 'games_chat') {
+                        setSelectedGame(null);
+                        setInitialZone(null);
+                    }
+                }} 
                 isRosterOpen={isRosterOpen}
                 onToggleRoster={() => setIsRosterOpen(!isRosterOpen)}
             />
