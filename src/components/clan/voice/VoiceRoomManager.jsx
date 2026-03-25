@@ -25,14 +25,23 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [activeRoomId, setActiveRoomId] = useState(null);
     const isClanWide = !gameId; // If no gameId, it's clan-wide
 
+    const queryClient = useQueryClient();
+
+    const { data: rooms = [] } = useQuery({
+        queryKey: ['voiceRooms', clanId, gameId],
+        queryFn: () => base44.entities.VoiceRoom.filter(isClanWide ? { clanId } : { clanId, gameId }),
+    });
+
+    useEntitySubscription('VoiceRoom', ['voiceRooms', clanId, gameId]);
+
     useEffect(() => {
         if (activeRoomId) {
-            const room = rooms.find(r => r.id === activeRoomId);
             base44.auth.updateMe({ voice_room_id: activeRoomId });
         } else {
             base44.auth.updateMe({ voice_room_id: null });
         }
     }, [activeRoomId]);
+
     const [isMuted, setIsMuted] = useState(false);
     const [isDeafened, setIsDeafened] = useState(false);
 
@@ -50,6 +59,7 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const activeRoom = rooms.find(r => r.id === activeRoomId);
     const participantIds = activeRoom?.participants?.map(p => p.id) || [];
     useWebRTCVoice(activeRoomId, user, isMuted, isDeafened, participantIds);
+    
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newRoomTopic, setNewRoomTopic] = useState('');
     const [previewRoomId, setPreviewRoomId] = useState(null);
@@ -58,20 +68,6 @@ export default function VoiceRoomManager({ clanId, gameId }) {
     const [isPrivate, setIsPrivate] = useState(false);
     const [maxUsers, setMaxUsers] = useState(10);
     const [linkedObjective, setLinkedObjective] = useState('');
-
-    const queryClient = useQueryClient();
-
-    // Import hook if not already imported (it's not at top level, assuming standard import behaviour or using dynamic import?) 
-    // Wait, I can't import inside function. I missed adding the import statement at the top.
-    // I will fix imports in a separate call or do it here if possible.
-    // Let's assume I will fix imports next.
-    
-    const { data: rooms = [] } = useQuery({
-        queryKey: ['voiceRooms', clanId, gameId],
-        queryFn: () => base44.entities.VoiceRoom.filter(isClanWide ? { clanId } : { clanId, gameId }),
-    });
-
-    useEntitySubscription('VoiceRoom', ['voiceRooms', clanId, gameId]);
 
     // Check permissions
     const { data: clanMember } = useQuery({
