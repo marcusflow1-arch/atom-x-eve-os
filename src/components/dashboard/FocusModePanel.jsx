@@ -1310,11 +1310,8 @@ export function LibraryBannerSection({
               </div>
             </div>
 
-            {/* Flex spacer to push remaining items to the right */}
-            <div className="flex-1 min-w-0" />
-
-            {/* Calendar Box - Expanded (Removed max-w-[500px]) */}
-            <div className="flex-[3] min-w-[400px] h-full">
+            {/* Calendar Box - Expanded to fill remaining space */}
+            <div className="flex-1 min-w-[400px] h-full">
               {calendarBox}
             </div>
           </div>
