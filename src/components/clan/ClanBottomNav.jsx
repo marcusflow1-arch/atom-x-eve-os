@@ -1,7 +1,7 @@
 import React from 'react';
-import { Home, Users, MessageSquare, TrendingUp, Zap, ClipboardList } from 'lucide-react';
+import { Home, Users, MessageSquare, TrendingUp, Zap, ClipboardList, Shield } from 'lucide-react';
 
-export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, onToggleRoster, isStrongholdEnabled }) {
+export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, onToggleRoster, isStrongholdEnabled, isPrivileged }) {
   return (
     <div className="flex items-center justify-center w-full h-full">
       <div className="flex items-center">
@@ -37,56 +37,25 @@ export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, on
           <span>Roster</span>
         </button>
 
-        <div className="w-px h-5 bg-white/10 mx-2" />
-
-        <button
-          onClick={() => onTabSelect('treasury')}
-          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            activeTab === 'treasury'
-              ? 'text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]'
-              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-          }`}
-        >
-          {activeTab === 'treasury' && (
-            <div className="absolute inset-0 bg-amber-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-          )}
-          <Zap className="w-4 h-4" />
-          <span>Treasury</span>
-        </button>
-
-        <div className="w-px h-5 bg-white/10 mx-2" />
-
-        <button
-          onClick={() => onTabSelect('schedule')}
-          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            activeTab === 'schedule'
-              ? 'text-blue-400 drop-shadow-[0_0_10px_rgba(96,165,250,0.8)]'
-              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-          }`}
-        >
-          {activeTab === 'schedule' && (
-            <div className="absolute inset-0 bg-blue-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-          )}
-          <ClipboardList className="w-4 h-4" />
-          <span>Schedule</span>
-        </button>
-
-        <div className="w-px h-5 bg-white/10 mx-2" />
-
-        <button
-          onClick={() => onTabSelect('upgrades')}
-          className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            activeTab === 'upgrades'
-              ? 'text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]'
-              : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
-          }`}
-        >
-          {activeTab === 'upgrades' && (
-            <div className="absolute inset-0 bg-emerald-400/20 blur-md rounded-full -z-10 pointer-events-none" />
-          )}
-          <TrendingUp className="w-4 h-4" />
-          <span>Upgrades</span>
-        </button>
+        {isPrivileged && (
+          <>
+            <div className="w-px h-5 bg-white/10 mx-2" />
+            <button
+              onClick={() => onTabSelect('admin_overview')}
+              className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+                activeTab === 'admin_overview'
+                  ? 'text-red-400 drop-shadow-[0_0_10px_rgba(248,113,113,0.8)]'
+                  : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+              }`}
+            >
+              {activeTab === 'admin_overview' && (
+                <div className="absolute inset-0 bg-red-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+              )}
+              <Shield className="w-4 h-4" />
+              <span>Admin Overview</span>
+            </button>
+          </>
+        )}
 
         <div className="w-px h-5 bg-white/10 mx-2" />
 
