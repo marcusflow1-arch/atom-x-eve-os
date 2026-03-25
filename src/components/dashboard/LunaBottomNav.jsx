@@ -99,17 +99,17 @@ export default function LunaBottomNav() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="absolute flex items-center justify-center p-4 pointer-events-none"
               style={{ 
-                top: '240px',
-                bottom: '280px',
-                left: '420px',
-                right: '360px',
+                top: '160px',
+                bottom: '300px',
+                left: '450px',
+                right: '380px',
               }}
             >
               <div 
-                className="relative w-full h-full max-h-[360px] max-w-2xl rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10 flex flex-col pointer-events-auto"
+                className="relative w-full h-full max-h-[420px] max-w-3xl rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(34,211,238,0.15)] border border-white/10 flex flex-col pointer-events-auto"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(15,20,30,0.95) 0%, rgba(10,15,25,0.98) 100%)',
-                  backdropFilter: 'blur(20px)'
+                  background: 'linear-gradient(135deg, rgba(15,20,30,0.90) 0%, rgba(10,15,25,0.95) 100%)',
+                  backdropFilter: 'blur(24px)'
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
