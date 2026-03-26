@@ -1175,7 +1175,7 @@ export function LibraryBannerSection({
   const [invitedUsers, setInvitedUsers] = useState({});
 
   const { data: dbUsers } = useQuery({
-    queryKey: ['all_users_for_online_list_banner'],
+    queryKey: ['all_users_for_online_list'],
     queryFn: () => base44.entities.PlayerState.list(),
     refetchInterval: 5000,
   });
@@ -1694,27 +1694,33 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
   };
 
   // Fetch games for bottom Library section
-  useEffect(() => {
-    const fetchGames = async () => {
-      let userGames = [];
-      const testGameAlpha = allMockGames['test_game_alpha'];
+  const { data: allGamesFromDb } = useQuery({
+    queryKey: ['all_games_focus_panel'],
+    queryFn: () => base44.entities.Game.list(),
+    enabled: !!isAuthenticated,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (isAuthenticated) {
-        const allGamesFromDb = await base44.entities.Game.list();
-        const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
-        const ownedIds = user?.purchased_items || [];
-        userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
-        if (testGameAlpha) userGames.unshift(testGameAlpha);
-      } else {
-        if (testGameAlpha) userGames.push(testGameAlpha);
-        userGames = [...userGames, ...Object.values(allMockGames).slice(0, 20)];
-      }
-      
-      setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
-      setLoading(false);
-    };
-    fetchGames();
-  }, [user, isAuthenticated]);
+  const purchasedItemsStr = JSON.stringify(user?.purchased_items || []);
+
+  useEffect(() => {
+    let userGames = [];
+    const testGameAlpha = allMockGames['test_game_alpha'];
+
+    if (isAuthenticated) {
+      if (!allGamesFromDb) return;
+      const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+      const ownedIds = JSON.parse(purchasedItemsStr);
+      userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
+      if (testGameAlpha) userGames.unshift(testGameAlpha);
+    } else {
+      if (testGameAlpha) userGames.push(testGameAlpha);
+      userGames = [...userGames, ...Object.values(allMockGames).slice(0, 20)];
+    }
+    
+    setOwnedGames(Array.from(new Map(userGames.map(g => [g.id, g])).values()));
+    setLoading(false);
+  }, [isAuthenticated, purchasedItemsStr, allGamesFromDb]);
 
   // Compute games by genre - map to ALL_GENRES
   const gamesByGenre = useMemo(() => {
