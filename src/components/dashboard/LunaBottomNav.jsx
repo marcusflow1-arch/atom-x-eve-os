@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ export default function LunaBottomNav() {
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [quickActionItem, setQuickActionItem] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -65,16 +66,57 @@ export default function LunaBottomNav() {
         slots.push(
           <div 
             key={item.id || i} 
+            className={`flex-1 relative cursor-pointer group transition-all duration-300 z-0 ${quickActionItem === item.id ? 'z-50' : ''}`}
             onClick={() => {
-              if (activeTab === 'library') setSelectedItem(item);
+              if (activeTab === 'library') {
+                if (quickActionItem === item.id) setQuickActionItem(null);
+                else setQuickActionItem(item.id);
+              }
             }}
-            className="flex-1 aspect-[16/9] rounded-xl overflow-hidden relative cursor-pointer group border border-white/10 hover:border-cyan-400/50 transition-all shadow-lg"
+            onDoubleClick={() => {
+              if (activeTab === 'library') {
+                setSelectedItem(item);
+                setQuickActionItem(null);
+              }
+            }}
           >
-            <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3 text-center">
-              <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
+            <div className={`aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg transition-all ${
+              quickActionItem === item.id ? 'border-2 border-cyan-400' : 'border border-white/10 group-hover:border-cyan-400/50'
+            }`}>
+              <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 text-center">
+                <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
+              </div>
             </div>
+
+            {/* Quick Actions Extension */}
+            <AnimatePresence>
+              {quickActionItem === item.id && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute top-full left-0 right-0 pt-2 flex gap-2"
+                >
+                  <div className="flex-1 bg-[rgba(15,20,30,0.95)] backdrop-blur-xl border border-cyan-400/30 rounded-lg p-1.5 flex gap-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(createPageUrl('Library')); }}
+                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-1.5 rounded text-xs flex items-center justify-center gap-1.5 transition-colors"
+                    >
+                      <Play className="w-3 h-3 fill-current" /> Play
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate(createPageUrl('GameDetail') + '?id=' + item.id + '&from=library'); }}
+                      className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded flex items-center justify-center transition-colors"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         );
       } else {
