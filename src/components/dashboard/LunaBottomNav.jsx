@@ -30,6 +30,8 @@ export default function LunaBottomNav() {
   }, []);
 
   const handleTabClick = (tab) => {
+    setSelectedItem(null);
+    setQuickActionItem(null);
     if (tab === 'home') {
       setActiveTab('home');
     } else {
@@ -69,6 +71,7 @@ export default function LunaBottomNav() {
             className={`flex-1 relative cursor-pointer group transition-all duration-300 z-0 ${quickActionItem === item.id ? 'z-50' : ''}`}
             onClick={() => {
               if (activeTab === 'library') {
+                setSelectedItem(null);
                 if (quickActionItem === item.id) setQuickActionItem(null);
                 else setQuickActionItem(item.id);
               }
@@ -94,11 +97,11 @@ export default function LunaBottomNav() {
             <AnimatePresence>
               {quickActionItem === item.id && (
                 <motion.div
-                  initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-full left-0 right-0 pt-2 flex gap-2"
+                  className="absolute bottom-full left-0 right-0 pb-2 flex gap-2"
                 >
                   <div className="flex-1 bg-[rgba(15,20,30,0.95)] backdrop-blur-xl border border-cyan-400/30 rounded-lg p-1.5 flex gap-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                     <button 
@@ -156,20 +159,15 @@ export default function LunaBottomNav() {
                 backdropFilter: 'blur(20px)'
               }}
             >
-              {/* Cover Image Header */}
-              <div className="relative h-48 w-full">
-                <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[rgba(10,15,25,0.98)] via-[rgba(10,15,25,0.6)] to-transparent" />
-                <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 w-8 h-8 bg-black/50 hover:bg-black/80 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 backdrop-blur-md z-10">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+              <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 w-8 h-8 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors border border-white/10 backdrop-blur-md z-50">
+                <X className="w-4 h-4" />
+              </button>
 
               {/* Content Grid */}
-              <div className="p-8 -mt-12 relative z-10 flex gap-8">
+              <div className="p-6 relative z-10 flex gap-6">
                 {/* Column 1: Game Details */}
-                <div className="flex gap-6 w-[420px] flex-shrink-0">
-                  <div className="w-36 flex-shrink-0 hidden sm:block">
+                <div className="flex gap-5 w-[380px] flex-shrink-0">
+                  <div className="w-32 flex-shrink-0 hidden sm:block">
                     <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-2xl">
                       <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
                     </div>
@@ -196,10 +194,10 @@ export default function LunaBottomNav() {
                   </div>
                 </div>
 
-                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0 mt-6" />
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
 
                 {/* Column 2: Stats & Achievements */}
-                <div className="w-[340px] flex-shrink-0 flex flex-col gap-6 pt-6 sm:pt-0">
+                <div className="w-[300px] flex-shrink-0 flex flex-col gap-5 pt-2">
                   {/* Quick Stats Strip */}
                   <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3 shadow-inner">
                     <div className="text-center flex-1">
@@ -262,10 +260,10 @@ export default function LunaBottomNav() {
                   </div>
                 </div>
 
-                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0 mt-6" />
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
 
                 {/* Column 3: Social & News */}
-                <div className="flex-1 flex flex-col gap-6 pt-6 sm:pt-0 min-w-0">
+                <div className="flex-1 flex flex-col gap-5 pt-2 min-w-0 pr-8">
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between text-white/90 border-b border-white/10 pb-2">
                       <div className="flex items-center gap-2">
