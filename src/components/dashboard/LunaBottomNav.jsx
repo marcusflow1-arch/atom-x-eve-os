@@ -188,7 +188,7 @@ export default function LunaBottomNav() {
                         <Play className="w-4 h-4 fill-current" /> Play Game
                       </button>
                       <button onClick={() => { setSelectedItem(null); navigate(createPageUrl('GameDetail') + '?id=' + selectedItem.id + '&from=library'); }} className="px-5 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all">
-                        <Info className="w-4 h-4" /> Details
+                        <Settings className="w-4 h-4" /> Settings
                       </button>
                     </div>
                   </div>
@@ -196,127 +196,103 @@ export default function LunaBottomNav() {
 
                 <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
 
-                {/* Column 2: Stats & Achievements */}
-                <div className="w-[300px] flex-shrink-0 flex flex-col gap-5 pt-2">
-                  {/* Quick Stats Strip */}
-                  <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl p-3 shadow-inner">
-                    <div className="text-center flex-1">
-                      <div className="flex items-center justify-center gap-1 mb-0.5 text-white/50">
-                        <Clock className="w-3 h-3" />
-                        <p className="text-[9px] uppercase tracking-wider font-bold">Time Played</p>
-                      </div>
-                      <p className="text-white text-sm font-black tracking-wide">124<span className="text-white/50 text-xs font-medium">h</span></p>
+                {/* Column 2: Community & LFG */}
+                <div className="w-[340px] flex-shrink-0 flex flex-col gap-4 pt-2">
+                  {/* Game Stats */}
+                  <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-3 shadow-inner">
+                    <div className="flex-1 text-center border-r border-white/10 pr-2">
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-0.5">Playing Now</p>
+                      <p className="text-cyan-400 text-lg font-black tracking-wide">24,502</p>
                     </div>
-                    <div className="w-px h-6 bg-white/10" />
-                    <div className="text-center flex-1">
-                      <div className="flex items-center justify-center gap-1 mb-0.5 text-white/50">
-                        <Calendar className="w-3 h-3" />
-                        <p className="text-[9px] uppercase tracking-wider font-bold">Last Played</p>
-                      </div>
-                      <p className="text-white text-sm font-black tracking-wide">Today</p>
-                    </div>
-                    <div className="w-px h-6 bg-white/10" />
-                    <div className="text-center flex-1">
-                      <div className="flex items-center justify-center gap-1 mb-0.5 text-white/50">
-                        <Activity className="w-3 h-3" />
-                        <p className="text-[9px] uppercase tracking-wider font-bold">Completion</p>
-                      </div>
-                      <p className="text-cyan-400 text-sm font-black tracking-wide">68%</p>
+                    <div className="flex-1 text-center">
+                      <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-0.5">Downloads</p>
+                      <p className="text-white text-lg font-black tracking-wide">1.2M</p>
                     </div>
                   </div>
 
-                  <div className="flex-1 flex flex-col gap-4">
-                    <div className="flex items-center justify-between text-white/90 border-b border-white/10 pb-2">
-                      <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4 text-yellow-400" />
-                        <h3 className="text-xs font-bold tracking-widest uppercase">Top Achievements</h3>
-                      </div>
-                      <span className="text-[10px] text-white/50 font-medium bg-white/5 px-2 py-0.5 rounded border border-white/5">12 / 42</span>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2.5">
-                      <div className="group bg-gradient-to-r from-white/5 to-transparent hover:from-white/10 border border-white/10 hover:border-white/20 rounded-xl p-2.5 flex items-center gap-3 transition-all cursor-pointer">
-                        <div className="w-10 h-10 rounded-lg border border-yellow-400/30 bg-yellow-400/10 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(250,204,21,0.1)] group-hover:scale-105 transition-transform">
-                          <Star className="w-5 h-5 text-yellow-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-white text-xs font-bold truncate mb-0.5 group-hover:text-yellow-400 transition-colors">First Blood</p>
-                          <p className="text-white/40 text-[10px] truncate">Complete the tutorial mission.</p>
-                        </div>
-                      </div>
-                      <div className="group bg-gradient-to-r from-white/5 to-transparent hover:from-white/10 border border-white/10 hover:border-white/20 rounded-xl p-2.5 flex items-center gap-3 transition-all cursor-pointer">
-                        <div className="w-10 h-10 rounded-lg border border-cyan-400/30 bg-cyan-400/10 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(34,211,238,0.1)] group-hover:scale-105 transition-transform">
-                          <Trophy className="w-5 h-5 text-cyan-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-white text-xs font-bold truncate mb-0.5 group-hover:text-cyan-400 transition-colors">Sharpshooter</p>
-                          <p className="text-white/40 text-[10px] truncate">Achieve 100 headshots.</p>
-                        </div>
-                      </div>
-                      <button className="text-cyan-400 hover:text-cyan-300 text-[10px] font-bold uppercase tracking-wider mt-1 text-left w-max flex items-center gap-1 group">
-                        View All Progress <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
-
-                {/* Column 3: Social & News */}
-                <div className="flex-1 flex flex-col gap-5 pt-2 min-w-0 pr-8">
-                  <div className="flex flex-col gap-4">
+                  {/* LFG List */}
+                  <div className="flex-1 flex flex-col gap-3 overflow-hidden">
                     <div className="flex items-center justify-between text-white/90 border-b border-white/10 pb-2">
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-green-400" />
-                        <h3 className="text-xs font-bold tracking-widest uppercase">Live Network</h3>
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[9px] text-green-400 font-bold uppercase tracking-wider">Online</span>
+                        <h3 className="text-xs font-bold tracking-widest uppercase">Looking For Party</h3>
                       </div>
                     </div>
+                    
+                    <div className="flex-1 overflow-y-auto pr-1 space-y-2 custom-scrollbar">
+                      {/* Mock LFG Item 1 */}
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-[9px] font-bold">AK</div>
+                            <span className="text-xs font-bold text-white">AtomKiller</span>
+                          </div>
+                          <span className="text-[9px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded">Lvl 42</span>
+                        </div>
+                        <div className="text-[10px] text-cyan-300 bg-cyan-900/10 px-2 py-1 rounded border border-cyan-900/20">
+                          Looking for: <span className="text-cyan-100">"Sharpshooter" Achievement</span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <button className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 text-[9px] font-bold py-1 rounded transition-colors">Join</button>
+                          <button className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 border border-white/10 text-[9px] font-bold py-1 rounded transition-colors">Message</button>
+                          <button className="px-2 bg-white/5 hover:bg-white/10 text-white/60 border border-white/10 text-[9px] font-bold py-1 rounded transition-colors">+</button>
+                        </div>
+                      </div>
 
-                    <div className="group bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-xl p-3.5 transition-all">
-                       <p className="text-[10px] text-white/50 uppercase tracking-wider font-bold mb-3">Friends Playing Now</p>
-                       <div className="flex items-center justify-between">
-                         <div className="flex -space-x-2">
-                           <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" className="w-9 h-9 rounded-full border-2 border-[rgba(15,20,30,0.95)] object-cover shadow-lg" alt="Friend 1" />
-                           <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop" className="w-9 h-9 rounded-full border-2 border-[rgba(15,20,30,0.95)] object-cover shadow-lg" alt="Friend 2" />
-                           <img src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop" className="w-9 h-9 rounded-full border-2 border-[rgba(15,20,30,0.95)] object-cover shadow-lg" alt="Friend 3" />
-                           <div className="w-9 h-9 rounded-full border-2 border-[rgba(15,20,30,0.95)] bg-slate-800 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">+2</div>
-                         </div>
-                         <button className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-xs font-bold text-white transition-all shadow-sm hover:shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:scale-105">
-                           Join Party
-                         </button>
-                       </div>
+                      {/* Mock LFG Item 2 */}
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-pink-500/20 border border-pink-500/30 flex items-center justify-center text-[9px] font-bold">EC</div>
+                            <span className="text-xs font-bold text-white">EveCommander</span>
+                          </div>
+                          <span className="text-[9px] text-green-400 bg-green-900/10 px-1.5 py-0.5 rounded border border-green-900/20">Friend</span>
+                        </div>
+                        <div className="text-[10px] text-purple-300 bg-purple-900/10 px-2 py-1 rounded border border-purple-900/20">
+                          Looking for: <span className="text-purple-100">Co-op Campaign</span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <button className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 text-[9px] font-bold py-1 rounded transition-colors">Join Party</button>
+                          <button className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 border border-white/10 text-[9px] font-bold py-1 rounded transition-colors">Message</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-4 flex-1">
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
+
+                {/* Column 3: Updates & Info */}
+                <div className="flex-1 flex flex-col gap-4 pt-2 min-w-0 pr-8">
+                  <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between text-white/90 border-b border-white/10 pb-2">
                       <div className="flex items-center gap-2">
                         <Newspaper className="w-4 h-4 text-blue-400" />
-                        <h3 className="text-xs font-bold tracking-widest uppercase">Latest Update</h3>
+                        <h3 className="text-xs font-bold tracking-widest uppercase">Game Updates</h3>
                       </div>
-                      <span className="text-[10px] text-white/50 font-medium">2 days ago</span>
+                      <span className="text-[10px] text-white/50 font-medium">v1.4.2</span>
                     </div>
 
-                    <div className="group flex-1 bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20 hover:border-blue-500/40 rounded-xl p-5 cursor-pointer transition-all relative overflow-hidden flex flex-col justify-center shadow-inner">
-                      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase tracking-wider rounded">Patch Notes</span>
-                        <span className="text-blue-400/60 text-[10px] font-bold">v1.4.2</span>
-                      </div>
-                      
-                      <h4 className="text-white text-base font-bold mb-2 group-hover:text-blue-300 transition-colors">Season 4 is Live!</h4>
-                      <p className="text-white/60 text-xs leading-relaxed line-clamp-2 mb-4">
-                        Experience new multiplayer maps, a fully reworked weapon progression system, and unlock the brand new Battle Pass rewards.
-                      </p>
-                      
-                      <div className="mt-auto flex items-center gap-1.5 text-blue-400 text-[10px] font-bold uppercase tracking-wider">
-                        Read Full Notes <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                      </div>
+                    <div className="group bg-gradient-to-br from-blue-500/5 to-transparent border border-white/10 hover:border-blue-500/30 rounded-xl p-4 cursor-pointer transition-all">
+                       <div className="flex items-center gap-2 mb-2">
+                          <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase tracking-wider rounded">Patch Notes</span>
+                          <span className="text-white/30 text-[9px]">2 days ago</span>
+                       </div>
+                       <h4 className="text-white text-sm font-bold mb-1.5 group-hover:text-blue-300 transition-colors">Season 4: Cyber Dawn</h4>
+                       <p className="text-white/60 text-[11px] leading-relaxed line-clamp-3 mb-3">
+                          New Cybernetic implants available in the marketplace. Fixed issues with party synchronization in ranked matches. Added 3 new maps.
+                       </p>
+                       <div className="flex items-center gap-1.5 text-blue-400 text-[9px] font-bold uppercase tracking-wider">
+                          Read More <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                       </div>
+                    </div>
+
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex items-start gap-3">
+                       <div className="mt-1 w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                       <div>
+                          <p className="text-white text-xs font-bold mb-0.5">Server Maintenance</p>
+                          <p className="text-white/50 text-[10px] leading-relaxed">Scheduled for tomorrow at 03:00 AM UTC. Downtime approx 2h.</p>
+                       </div>
                     </div>
                   </div>
                 </div>
