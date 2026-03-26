@@ -465,9 +465,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     // --- MOUSE CONTROLS (Right click orbit + zoom) ---
     const onMouseDown = (e) => {
-      // Ignore clicks on UI elements (buttons, links, inputs, scrollable areas)
-      if (e.target.closest('button, a, input, [role="button"], .overflow-y-auto')) {
-        if (e.target.tagName.toLowerCase() !== 'canvas') return;
+      // Allow interaction if it's the canvas itself, otherwise block on UI elements
+      if (e.target.tagName?.toLowerCase() !== 'canvas' && e.target.closest('button, a, input, [role="button"], .overflow-y-auto, .overflow-auto, .scroll-auto')) {
+        return;
       }
       if (e.button === 0 || e.button === 2) {
         isDraggingRef.current = true;
@@ -484,8 +484,10 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
-      // Ignore scroll on UI elements
-      if (e.target.closest('.overflow-y-auto, .overflow-auto, .scroll-auto')) return;
+      // Allow zooming if hovering over the canvas itself, otherwise block on scrolling UI elements
+      if (e.target.tagName?.toLowerCase() !== 'canvas' && e.target.closest('.overflow-y-auto, .overflow-auto, .scroll-auto')) {
+        return;
+      }
       
       const orbit = cameraOrbitRef.current;
       orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
