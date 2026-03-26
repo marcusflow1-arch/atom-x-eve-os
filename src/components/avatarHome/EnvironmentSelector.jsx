@@ -4,7 +4,7 @@ import { Lock, Check, Globe, Loader2, ChevronDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
-export default function EnvironmentSelector({ currentEnvId, onSelect }) {
+export default function EnvironmentSelector({ currentEnvId, onSelect, isEnvironmentActive, onToggleEnvironment }) {
   const { user } = useAuth();
   const [environments, setEnvironments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -107,10 +107,24 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
 
   return (
     <div className="w-full relative z-30 pointer-events-auto" ref={dropdownRef}>
+      {/* Top Left Toggle */}
+      {onToggleEnvironment && (
+        <button
+          onClick={onToggleEnvironment}
+          className={`absolute -top-3 left-2 z-10 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest border transition-all ${
+            isEnvironmentActive 
+              ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30' 
+              : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white'
+          }`}
+        >
+          Luna Dashboard
+        </button>
+      )}
+      
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(v => !v)}
-        className="w-full flex items-center justify-between px-5 py-3 rounded-2xl transition-all duration-300 group"
+        className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 group mt-2"
         style={{
           background: isOpen ? 'rgba(200, 210, 220, 0.14)' : 'rgba(200, 210, 220, 0.08)',
           backdropFilter: 'blur(24px)',
@@ -122,10 +136,17 @@ export default function EnvironmentSelector({ currentEnvId, onSelect }) {
         }}
       >
         <div className="flex items-center gap-3">
-          <Globe className="w-4 h-4 text-[#A0A8B4]" />
-          <span className="text-[#CCCCCC] text-sm font-medium" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-            {activeEnv?.name || '3D Environments'}
-          </span>
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round" className="text-[#A0A8B4]"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="text-white text-sm font-bold tracking-wide" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+              Environment Hub
+            </span>
+            <span className="text-white/50 text-[10px]">
+              Change your 3D world
+            </span>
+          </div>
           <span className="text-[10px] text-white/30 font-mono uppercase tracking-wider ml-2">
             {environments.filter(e => !e.isLocked).length}/{environments.length}
           </span>

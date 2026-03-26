@@ -76,6 +76,7 @@ import ExpandedGenreView from '../components/dashboard/ExpandedGenreView';
 import InventoryGrid from '../components/dashboard/InventoryGrid';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
+import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
 
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
@@ -176,6 +177,7 @@ export default function LunaTemplate() {
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
+  const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
 
   // Stream Player State
   const [isLive, setIsLive] = useState(false);
@@ -583,7 +585,7 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-    <GlassPageFrame bottomContent={<LunaBottomNav />}>
+    <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} />}>
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
@@ -748,34 +750,37 @@ export default function LunaTemplate() {
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
-        <div
-          className="fixed inset-0 z-0 pointer-events-auto"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100vw',
-            height: '100vh',
-            // Ensure background image container doesn't move, only this 3D view container is affected
-            // but the transform is inside TransparentModel3DViewer, so this wrapper stays put.
-          }}>
-
-          <TransparentModel3DViewer 
-            modelUrl={modelUrl} 
-            weaponModel={weaponModelUrl} 
-            triggerAnimation={triggerAnimation} 
-            backgroundUrl={bannerBackgroundUrl} 
-            roomModelUrl={roomModelUrl} 
-            activeScene={activeScene}
-            isStatsOpen={stageMode === 'stats'}
-            playerSpawn={playerSpawn}
-            useMeshCollision={useMeshCollision}
-            equippedWeaponUrl={weaponModelUrl}
-            drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb"
-          />
-        </div>
-      }
+      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements && (
+        <>
+          <div
+            className="fixed inset-0 z-0 pointer-events-auto"
+            style={{
+              display: isEnvironmentActive ? 'flex' : 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100vw',
+              height: '100vh',
+            }}>
+            <TransparentModel3DViewer 
+              modelUrl={modelUrl} 
+              weaponModel={weaponModelUrl} 
+              triggerAnimation={triggerAnimation} 
+              backgroundUrl={bannerBackgroundUrl} 
+              roomModelUrl={roomModelUrl} 
+              activeScene={activeScene}
+              isStatsOpen={stageMode === 'stats'}
+              playerSpawn={playerSpawn}
+              useMeshCollision={useMeshCollision}
+              equippedWeaponUrl={weaponModelUrl}
+              drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb"
+            />
+          </div>
+          
+          <AnimatePresence>
+            {!isEnvironmentActive && <LunaDashboardOfflineView />}
+          </AnimatePresence>
+        </>
+      )}
 
       {/* Focus Mode Background Overlay - Removed to show custom background */}
 
@@ -1242,7 +1247,12 @@ export default function LunaTemplate() {
             >
               {/* Always-visible default content — EnvironmentSelector only, DevSpotlight moved to right column */}
               <div className="flex flex-col gap-4">
-                <EnvironmentSelector currentEnvId={currentEnvId} onSelect={handleEnvSelect} />
+                <EnvironmentSelector 
+                  currentEnvId={currentEnvId} 
+                  onSelect={handleEnvSelect} 
+                  isEnvironmentActive={isEnvironmentActive}
+                  onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
+                />
                 {/* Open space below — Stats/Friends/Live overlay fills this exactly */}
                 <div style={{ height: '140px' }} />
               </div>
