@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -96,10 +96,11 @@ export default function LunaBottomNav() {
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50 }}
-            className="fixed z-[100] w-[460px]"
+            className="fixed z-[100]"
             style={{ 
               bottom: '250px', // Positioned closer to the library drawer
               left: '440px', // Aligns exactly with the right edge of the Quest Book and Environment Hub
+              right: '440px', // Extends to the Live Feed on the right
               perspective: '1000px'
             }}
           >
@@ -122,52 +123,121 @@ export default function LunaBottomNav() {
                 </button>
               </div>
 
-              {/* Content */}
-              <div className="p-6 -mt-12 relative z-10 flex gap-5">
-                {/* Left Side: Thumbnail / Capsule */}
-                <div className="w-32 flex-shrink-0 hidden sm:block">
-                  <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-2xl">
-                    <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
+              {/* Content Grid */}
+              <div className="p-6 -mt-12 relative z-10 flex gap-8">
+                {/* Left Side: Thumbnail & Details */}
+                <div className="flex gap-5 w-[420px] flex-shrink-0">
+                  {/* Thumbnail / Capsule */}
+                  <div className="w-32 flex-shrink-0 hidden sm:block">
+                    <div className="w-full aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-2xl">
+                      <img src={selectedItem.displayImage || selectedItem.cover_image} alt={selectedItem.displayTitle} className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex-1 pt-6 sm:pt-0 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-2xl font-black text-white tracking-wide mb-2 leading-tight">{selectedItem.displayTitle}</h2>
+                      <div className="flex gap-2 mb-3">
+                        <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">{selectedItem.genre || 'Action'}</span>
+                        <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-white/50 font-bold uppercase tracking-wider">{selectedItem.original_year || '2024'}</span>
+                      </div>
+                      <p className="text-white/70 text-xs leading-relaxed mb-5 line-clamp-3">
+                        {selectedItem.description || 'Dive into an immersive world where every decision shapes your destiny. Experience breathtaking visuals and thrilling gameplay in this highly acclaimed title.'}
+                      </p>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => {
+                          setSelectedItem(null);
+                          navigate(createPageUrl('Library'));
+                        }}
+                        className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                      >
+                        <Play className="w-4 h-4 fill-current" />
+                        Play
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedItem(null);
+                          navigate(createPageUrl('GameDetail') + '?id=' + selectedItem.id + '&from=library');
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+                      >
+                        <Info className="w-4 h-4" />
+                        Info
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Side: Details */}
-                <div className="flex-1 pt-6 sm:pt-0 flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-white tracking-wide mb-2 leading-tight">{selectedItem.displayTitle}</h2>
-                    <div className="flex gap-2 mb-3">
-                      <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-cyan-300 font-bold uppercase tracking-wider">{selectedItem.genre || 'Action'}</span>
-                      <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] text-white/50 font-bold uppercase tracking-wider">{selectedItem.original_year || '2024'}</span>
+                {/* Right Side: Additional Info (Achievements, News) */}
+                <div className="flex-1 flex gap-6 pt-6 sm:pt-0">
+                  {/* Achievements Column */}
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-white/90">
+                      <Trophy className="w-4 h-4 text-yellow-400" />
+                      <h3 className="text-sm font-bold tracking-wide uppercase">Achievements</h3>
                     </div>
-                    <p className="text-white/70 text-xs leading-relaxed mb-5 line-clamp-3">
-                      {selectedItem.description || 'Dive into an immersive world where every decision shapes your destiny. Experience breathtaking visuals and thrilling gameplay in this highly acclaimed title.'}
-                    </p>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-3 h-full">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-yellow-400/20 border border-yellow-400/30 flex items-center justify-center flex-shrink-0">
+                          <Star className="w-5 h-5 text-yellow-400" />
+                        </div>
+                        <div>
+                          <p className="text-white text-xs font-bold">First Blood</p>
+                          <p className="text-white/50 text-[10px]">Complete the tutorial mission.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-cyan-400/20 border border-cyan-400/30 flex items-center justify-center flex-shrink-0">
+                          <Star className="w-5 h-5 text-cyan-400" />
+                        </div>
+                        <div>
+                          <p className="text-white text-xs font-bold">Sharpshooter</p>
+                          <p className="text-white/50 text-[10px]">Achieve 100 headshots.</p>
+                        </div>
+                      </div>
+                      <div className="mt-auto pt-2 border-t border-white/10 text-center">
+                        <span className="text-cyan-400 text-[10px] font-bold uppercase cursor-pointer hover:text-cyan-300">View All 42 Achievements</span>
+                      </div>
+                    </div>
                   </div>
-                  
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => {
-                        setSelectedItem(null);
-                        navigate(createPageUrl('Library'));
-                      }}
-                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)]"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      Play
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setSelectedItem(null);
-                        navigate(createPageUrl('GameDetail') + '?id=' + selectedItem.id + '&from=library');
-                      }}
-                      className="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-                    >
-                      <Info className="w-4 h-4" />
-                      Info
-                    </button>
+
+                  {/* News & Updates Column */}
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="flex items-center gap-2 text-white/90">
+                      <Newspaper className="w-4 h-4 text-blue-400" />
+                      <h3 className="text-sm font-bold tracking-wide uppercase">Latest Updates</h3>
+                    </div>
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-3 h-full">
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <Calendar className="w-3 h-3 text-blue-400" />
+                            <span className="text-blue-400 text-[9px] font-bold uppercase">Patch 1.4.2</span>
+                          </div>
+                          <p className="text-white text-xs font-medium line-clamp-2">New multiplayer maps added and weapon balancing adjustments.</p>
+                          <p className="text-white/40 text-[10px] mt-1">2 days ago</p>
+                        </div>
+                      </div>
+                      <div className="w-full h-px bg-white/10"></div>
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <Calendar className="w-3 h-3 text-purple-400" />
+                            <span className="text-purple-400 text-[9px] font-bold uppercase">Event</span>
+                          </div>
+                          <p className="text-white text-xs font-medium line-clamp-2">Double XP Weekend starts this Friday! Gear up.</p>
+                          <p className="text-white/40 text-[10px] mt-1">1 week ago</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
               </div>
             </div>
           </motion.div>
