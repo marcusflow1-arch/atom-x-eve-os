@@ -837,6 +837,8 @@ export default function LunaTemplate() {
                  currentEnvId={currentEnvId}
                  onSelectEnv={handleEnvSelect}
                  onOpenDevSpotlight={() => setShowDevSpotlight(true)}
+                 isEnvironmentActive={isEnvironmentActive}
+                 onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
                 />
             </div>
           </motion.div>

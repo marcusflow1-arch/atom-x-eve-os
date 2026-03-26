@@ -1047,7 +1047,7 @@ function Large3DCard({ card, isActive }) {
 }
 
 // Environment Hub Tile Component - now a dropdown trigger
-function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle }) {
+function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
   return (
     <div 
       className="w-full h-full rounded-xl overflow-hidden relative group"
@@ -1070,6 +1070,16 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }}
+          className="absolute top-2 left-2 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 border border-white/10 text-white text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-all z-10 flex items-center gap-1.5 group-hover:border-cyan-400/50 cursor-pointer"
+        >
+          {isEnvironmentActive ? (
+            <><div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" /> Luna Dashboard</>
+          ) : (
+            <><div className="w-1.5 h-1.5 rounded-full bg-white/40" /> Luna Dashboard</>
+          )}
+        </button>
         <div className="absolute bottom-3 left-3 right-3 text-left">
           <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
             <Globe className="w-4 h-4 text-cyan-400" />
@@ -1163,7 +1173,7 @@ function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)
 export function LibraryBannerSection({ 
   games, onBackgroundChange, currentEnvId, onSelectEnv, showEnvDropdown, setShowEnvDropdown, onQuickChangeToggle,
-  navBoxes, calendarBox, intelligenceFeed
+  navBoxes, calendarBox, intelligenceFeed, isEnvironmentActive, onToggleEnvironment
 }) {
   const envDropdownRef = useRef(null);
   const [activeFriend, setActiveFriend] = useState(null);
@@ -1265,7 +1275,13 @@ export function LibraryBannerSection({
           <div className="flex items-center gap-4 w-full h-24">
             {/* Environment Hub - Reduced by 25% */}
             <div className="w-[247px] h-full flex-shrink-0">
-              <EnvironmentHubTile isOpen={showEnvDropdown} onToggle={() => setShowEnvDropdown(v => !v)} onQuickChangeToggle={onQuickChangeToggle} />
+              <EnvironmentHubTile 
+                isOpen={showEnvDropdown} 
+                onToggle={() => setShowEnvDropdown(v => !v)} 
+                onQuickChangeToggle={onQuickChangeToggle}
+                isEnvironmentActive={isEnvironmentActive}
+                onToggleEnvironment={onToggleEnvironment}
+              />
             </div>
 
             {/* Memories & Line */}
@@ -1649,7 +1665,7 @@ const AddToCalendarButton = ({ onClick, clanIcon }) => (
 );
 
 // Main Export
-export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight }) {
+export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onToggleStats, currentEnvId, onSelectEnv, onOpenDevSpotlight, isEnvironmentActive, onToggleEnvironment }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1768,6 +1784,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
                 showEnvDropdown={false}
                 setShowEnvDropdown={() => setShowEnvDrawer(true)}
                 onQuickChangeToggle={() => setShowQuickChangeDrawer(true)}
+                isEnvironmentActive={isEnvironmentActive}
+                onToggleEnvironment={onToggleEnvironment}
                 navBoxes={
                   <BottomNavBoxes 
                     navigate={navigate} 
