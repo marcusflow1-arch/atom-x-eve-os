@@ -314,24 +314,99 @@ function FarmHubFeed({ gameTitle, activeTopic }) {
   });
 
   return (
-    <div className="h-full p-6 overflow-y-auto custom-scrollbar flex flex-col">
-      <h2 className="text-xl font-bold text-white mb-6 capitalize">{activeTopic || 'All'} Discussions</h2>
-      <div className="flex-1">
-        {isLoading ? (
-          <div className="flex justify-center py-10"><div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" /></div>
-        ) : posts?.length > 0 ? (
-          <div className="space-y-4">
-            {posts.map(post => (
-              <PostCard key={post.id} post={post} onVote={() => {}} />
+    <div className="h-full p-4 flex flex-col md:flex-row gap-6 overflow-hidden">
+      {/* 70% Main Content */}
+      <div className="flex-[7] flex flex-col h-full bg-white/[0.02] border border-white/[0.05] rounded-2xl overflow-hidden shadow-lg">
+        <div className="flex-shrink-0 p-6 border-b border-white/[0.05] flex items-center justify-between bg-black/20">
+          <div>
+            <h2 className="text-xl font-black text-white capitalize tracking-wide">{activeTopic || 'All'} Discussions</h2>
+            <p className="text-xs text-white/40 mt-1">Join the conversation and share your strategies</p>
+          </div>
+          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+            <Plus className="w-4 h-4 mr-1.5" /> New Post
+          </Button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          {isLoading ? (
+            <div className="flex justify-center py-10"><div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" /></div>
+          ) : posts?.length > 0 ? (
+            <div className="space-y-4">
+              {posts.map(post => (
+                <PostCard key={post.id} post={post} onVote={() => {}} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-white/40 bg-white/[0.02] rounded-2xl border border-white/5 border-dashed">
+              <MessageCircle className="w-12 h-12 mx-auto text-white/20 mb-4" />
+              <p className="text-base font-medium text-white/60 mb-2">No discussions yet</p>
+              <p className="text-sm">Be the first to start a topic in this section!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 30% Sidebar */}
+      <div className="flex-[3] flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar pr-2 pb-2">
+        {/* Info Box */}
+        <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
+          <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-cyan-400" /> About This Hub
+          </h3>
+          <p className="text-xs text-white/50 leading-relaxed mb-4 relative z-10">
+            Welcome to the Farm Hub for <span className="text-white/80 font-semibold">{gameTitle}</span>. Discuss strategies, find groups, and share your progress with the community.
+          </p>
+          <div className="flex items-center gap-4 text-xs text-white/60 relative z-10">
+            <div className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded-md"><Users className="w-3.5 h-3.5 text-cyan-400" /> 1.2k Online</div>
+            <div className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded-md"><MessageCircle className="w-3.5 h-3.5 text-purple-400" /> {posts?.length || 0} Posts</div>
+          </div>
+        </div>
+
+        {/* Topics Box */}
+        <div className="bg-white/[0.02] border border-white/[0.05] rounded-2xl p-5 shadow-lg">
+          <h3 className="text-sm font-bold text-white mb-4">Popular Topics</h3>
+          <div className="space-y-2">
+            {[
+              { label: 'Guides & Strategies', icon: Trophy, color: 'text-yellow-400' },
+              { label: 'Farm Queue', icon: Users, color: 'text-cyan-400' },
+              { label: 'Recruitment', icon: UserPlus, color: 'text-green-400' },
+              { label: 'Bug Reports', icon: AlertCircle, color: 'text-red-400' },
+              { label: 'Media & Content', icon: Video, color: 'text-purple-400' }
+            ].map((topic, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-black/20 border border-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.08] cursor-pointer transition-all group">
+                <div className="flex items-center gap-3">
+                  <topic.icon className={`w-4 h-4 ${topic.color} opacity-70 group-hover:opacity-100 transition-opacity`} />
+                  <span className="text-xs font-medium text-white/70 group-hover:text-white transition-colors">{topic.label}</span>
+                </div>
+                <Badge variant="outline" className="text-[10px] border-white/10 text-white/40 bg-black/40">{Math.floor(Math.random() * 50) + 1}</Badge>
+              </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-20 text-white/40 bg-white/5 rounded-2xl border border-white/5 border-dashed">
-            <MessageCircle className="w-10 h-10 mx-auto text-white/20 mb-4" />
-            <p className="font-medium text-white/60 mb-1">No discussions yet</p>
-            <p className="text-xs">Be the first to start a topic in this section!</p>
+        </div>
+
+        {/* Top Contributor */}
+        <div className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-white/[0.05] rounded-2xl p-5 shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80')] bg-cover bg-center opacity-10 mix-blend-overlay" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center backdrop-blur-md">
+                <Trophy className="w-5 h-5 text-yellow-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Top Contributor</h3>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider">This Week</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-black/30 p-3 rounded-xl backdrop-blur-md border border-white/5">
+              <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-xs font-bold text-cyan-300 ring-2 ring-cyan-500/30">A</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-white font-semibold truncate">AtomPlayer99</p>
+                <p className="text-[10px] text-cyan-400 font-mono">+450 Rep</p>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
