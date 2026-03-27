@@ -1231,7 +1231,11 @@ export default function Layout({ children, currentPageName }) {
     setTimeout(() => {
       setShowIntro(false);
       sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-      navigate(createPageUrl('LunaTemplate'));
+      if (!localStorage.getItem('atom_eve_character_created')) {
+        navigate(createPageUrl('CharacterCreation'));
+      } else {
+        navigate(createPageUrl('LunaTemplate'));
+      }
     }, 400);
   };
 
