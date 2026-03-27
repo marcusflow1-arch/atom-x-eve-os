@@ -23,14 +23,14 @@ export default function ClanBottomNav({ activeTab, onTabSelect, isRosterOpen, on
         <div className="w-px h-5 bg-white/10 mx-2" />
 
         <button
-          onClick={onToggleRoster}
+          onClick={() => onTabSelect('roster')}
           className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
-            isRosterOpen
+            activeTab === 'roster'
               ? 'text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]'
               : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
           }`}
         >
-          {isRosterOpen && (
+          {activeTab === 'roster' && (
             <div className="absolute inset-0 bg-yellow-400/20 blur-md rounded-full -z-10 pointer-events-none" />
           )}
           <Users className="w-4 h-4" />

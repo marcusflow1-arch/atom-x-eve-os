@@ -19,6 +19,7 @@ import ClanIntro from '@/components/clan/ClanIntro';
 import ClanStronghold from '@/components/clan/ClanStronghold';
 import ClanBottomNav from '@/components/clan/ClanBottomNav';
 import ClanAdminOverview from '@/components/clan/ClanAdminOverview';
+import ClanRosterPage from '@/components/clan/ClanRosterPage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -511,6 +512,17 @@ export default function ClanPage() {
                                     window.dispatchEvent(new Event('recentClanGamesUpdated'));
                                 }} 
                             />
+                        </motion.div>
+                    )}
+                    {bottomTab === 'roster' && (
+                        <motion.div
+                            key="roster"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-20 left-4 right-4 bottom-24 overflow-hidden rounded-2xl shadow-2xl border border-white/10"
+                        >
+                            <ClanRosterPage clan={clanForRender} currentUserRole={currentUserRole} />
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -158,31 +158,7 @@ export default function ClanStronghold({ clan, activeVoiceRooms, isRosterOpen, i
           </GlassWidget>
         </div>
 
-        {/* Roster Popup */}
-        <AnimatePresence>
-          {isRosterOpen && (
-            <>
-              {/* Shaded Background */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm z-30 pointer-events-auto"
-              />
-              
-              {/* Roster Content */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                className="absolute top-[180px] bottom-[110px] left-[360px] right-[390px] z-40 pointer-events-auto bg-black/70 border border-white/10 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-2xl flex flex-col min-w-[300px]"
-              >
-                <MemberList clan={clan} fullView={true} noBorder={true} />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+
 
         {/* Bottom Right: Clan Chat */}
         <div className={`absolute bottom-[90px] right-8 ${isChatExpanded ? 'left-[360px]' : 'w-[450px]'} h-[380px] flex pointer-events-auto shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black/60 backdrop-blur-xl z-20 transition-all duration-500 ease-in-out`}>
