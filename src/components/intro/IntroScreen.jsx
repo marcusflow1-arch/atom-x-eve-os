@@ -48,15 +48,7 @@ export default function IntroScreen({ onComplete }) {
             autoPlay 
             muted={false}
             playsInline
-            onEnded={() => {
-              // Mark intro as seen but send to character creation first
-              sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-              if (!localStorage.getItem('atom_eve_character_created')) {
-                window.location.href = '/CharacterCreation';
-              } else {
-                onComplete();
-              }
-            }}
+            onEnded={onComplete}
           />
         </div>
 

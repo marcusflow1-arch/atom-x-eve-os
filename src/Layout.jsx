@@ -483,9 +483,15 @@ function LayoutContent({ children, currentPageName }) {
     '/dashboard'
   ], []);
 
-  // Redirect legacy locations to LunaTemplate
+  // Redirect legacy locations to LunaTemplate and enforce character creation
   useEffect(() => {
     const p = location.pathname.toLowerCase();
+    
+    if (!localStorage.getItem('atom_eve_character_created') && !p.includes('charactercreation')) {
+      navigate(createPageUrl('CharacterCreation'), { replace: true });
+      return;
+    }
+
     if (p === '/' || p.endsWith('/dashboard') || legacyPaths.includes(p)) {
       navigate(createPageUrl('LunaTemplate'), { replace: true });
     }

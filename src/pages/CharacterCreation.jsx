@@ -39,7 +39,7 @@ export default function CharacterCreation() {
     localStorage.setItem('atom_eve_avatar_config', JSON.stringify(avatarConfig));
     localStorage.setItem('atom_eve_character_created', 'true');
     setTimeout(() => {
-      navigate(createPageUrl('OnboardingHome'));
+      navigate(createPageUrl('LunaTemplate'));
     }, 1200);
   };
 
@@ -105,7 +105,7 @@ export default function CharacterCreation() {
         </div>
 
         <button
-          onClick={() => { localStorage.setItem('atom_eve_character_created', 'skipped'); navigate(createPageUrl('OnboardingHome')); }}
+          onClick={() => { localStorage.setItem('atom_eve_character_created', 'skipped'); navigate(createPageUrl('LunaTemplate')); }}
           className="text-white/30 hover:text-white/60 text-sm transition-colors tracking-wider"
         >
           Skip →
