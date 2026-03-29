@@ -20,6 +20,7 @@ import ClanStronghold from '@/components/clan/ClanStronghold';
 import ClanBottomNav from '@/components/clan/ClanBottomNav';
 import ClanAdminOverview from '@/components/clan/ClanAdminOverview';
 import ClanRosterPage from '@/components/clan/ClanRosterPage';
+import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -415,6 +416,7 @@ export default function ClanPage() {
 
             {/* 95% Main Clan Area */}
             <div className="flex-1 relative h-full pt-16">
+                <SidebarOverlays className="absolute top-[16px] left-6 right-6 bottom-[100px] z-[80]" />
 
                 {bottomTab === 'home' && (
                     <>

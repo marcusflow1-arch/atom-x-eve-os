@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
@@ -210,6 +211,7 @@ export default function GenreMastery({ onClose }) {
           </div>
         </div>
 
+        <SidebarOverlays className="absolute top-[104px] left-6 right-6 bottom-[80px] z-[80]" />
         {/* ═══ MAIN CONTENT: Games List + Right Panel ═══ */}
         <div className="flex-1 flex min-h-0 relative z-10">
           {/* LEFT: Games List (always visible) */}

@@ -78,6 +78,7 @@ import TransparentModel3DViewer from '../components/dashboard/TransparentModel3D
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
+import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
   {
@@ -615,6 +616,7 @@ export default function LunaTemplate() {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}>
+        <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
         <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
 
 
