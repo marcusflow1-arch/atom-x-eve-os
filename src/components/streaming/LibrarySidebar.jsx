@@ -239,220 +239,176 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Combined Sidebar for Clan/Forum/Cards/Farm */}
-          {(isClan || isForum || isGenreMastery || isFarm) && (
+          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
+          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 ${isSidebarCollapsed ? 'top-1/2 -translate-y-1/2 opacity-90' : 'top-[136px] opacity-100'}`}
+              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[136px] opacity-100"
             >
-              {!isSidebarCollapsed && (
+              <button 
+                onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
+                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+              >
+                 {sidebarMode === 'context' ? (
+                   isClan ? <>Recently<br/>Visited</> : 
+                   isForum ? <>Recent<br/>Forums</> : 
+                   isFarm ? <>Recent<br/>Farm Hub</> :
+                   <>Recent<br/>Cards</>
+                 ) : <>Recently<br/>Played</>}
+              </button>
+              <div className="w-8 h-px bg-white/20 -mt-1" />
+
+              {/* The 5 boxes */}
+              {sidebarMode === 'context' ? (
                 <>
-                  <button 
-                    onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                    className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-                  >
-                     {sidebarMode === 'context' ? (
-                       isClan ? <>Recently<br/>Visited</> : 
-                       isForum ? <>Recent<br/>Forums</> : 
-                       isFarm ? <>Recent<br/>Farm Hub</> :
-                       <>Recent<br/>Cards</>
-                     ) : <>Recently<br/>Played</>}
-                  </button>
-                  <div className="w-8 h-px bg-white/20 -mt-1" />
-
-                  {/* The 5 boxes */}
-                  {sidebarMode === 'context' ? (
+                  {isClan && (
                     <>
-                      {isClan && (
-                        <>
-                          <button
-                            onClick={() => navigate('/Clan?game=global_chat')}
-                            className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                            title={`Atom X Eve Global Clan Chat`}
-                          >
-                            <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                            <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
-                          </button>
-                          
-                          {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
-                            <button
-                              key={`clan_${game.id}`}
-                              onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                              title={`${game.name} Clan Chat`}
-                            >
-                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {isForum && (
-                        <>
-                          {quickNavForumGames.slice(0, 5).map((game) => (
-                            <button
-                              key={`forum_${game.id}`}
-                              onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                              title={`${game.name} Forum`}
-                            >
-                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {isFarm && (
-                        <>
-                          {quickNavFarmGames.slice(0, 5).map((game) => (
-                            <button
-                              key={`farm_${game.id}`}
-                              onClick={() => navigate(`/Farm?gameId=${game.id}`)}
-                              className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                              title={`${game.name} Farm`}
-                            >
-                              <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
-                          ))}
-                        </>
-                      )}
-
-                      {isGenreMastery && (
-                        <>
-                          {[1, 2, 3, 4, 5].map(i => (
-                            <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                              <span className="text-white/30 text-lg font-bold">C</span>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                          <span className="text-white/30 text-lg font-bold">?</span>
-                        </div>
+                      <button
+                        onClick={() => navigate('/Clan?game=global_chat')}
+                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                        title={`Atom X Eve Global Clan Chat`}
+                      >
+                        <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                        <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                      </button>
+                      
+                      {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
+                        <button
+                          key={`clan_${game.id}`}
+                          onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
+                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          title={`${game.name} Clan Chat`}
+                        >
+                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                       ))}
                     </>
                   )}
 
-                  {/* Navigation Buttons placed directly under the boxes! */}
-                  <div className="w-8 h-px bg-white/10 my-1" />
+                  {isForum && (
+                    <>
+                      {quickNavForumGames.slice(0, 5).map((game) => (
+                        <button
+                          key={`forum_${game.id}`}
+                          onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
+                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          title={`${game.name} Forum`}
+                        >
+                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {isFarm && (
+                    <>
+                      {quickNavFarmGames.slice(0, 5).map((game) => (
+                        <button
+                          key={`farm_${game.id}`}
+                          onClick={() => navigate(`/Farm?gameId=${game.id}`)}
+                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          title={`${game.name} Farm`}
+                        >
+                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {isGenreMastery && (
+                    <>
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                          <span className="text-white/30 text-lg font-bold">C</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                      <span className="text-white/30 text-lg font-bold">?</span>
+                    </div>
+                  ))}
                 </>
               )}
-
-              {isClan && !isSidebarCollapsed && (
-                <button
-                  onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
-                  title="Clan Quick Menu"
-                >
-                  <UsersIcon className="w-4 h-4" />
-                </button>
-              )}
-
-              {isForum && !isSidebarCollapsed && (
-                <button
-                  onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
-                  title="Forum Quick Menu"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                </button>
-              )}
-
-              {isFarm && !isSidebarCollapsed && (
-                <button
-                  onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 backdrop-blur-lg shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300"
-                  title="Quick Farming Hub"
-                >
-                  <Wheat className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Original Library Button with Restore Arrow */}
-              <div className="relative flex items-center">
-                <button
-                  onClick={() => setIsOpen(true)}
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1 mt-1"
-                  title="Library & Friends"
-                >
-                  <Library className="w-5 h-5" />
-                </button>
-                
-                {/* RESTORE ARROW */}
-                {isSidebarCollapsed && (
-                  <button
-                    onClick={() => {
-                        localStorage.setItem('sidebarCollapsed', 'false');
-                        window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: false }));
-                    }}
-                    className="absolute left-[44px] top-1/2 -translate-y-1/2 w-6 h-10 bg-black/60 border border-white/20 border-l-0 rounded-r-xl flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md shadow-lg"
-                    title="Restore Sidebar"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {/* Roster Button - Placed below Library button */}
-              {isClan && !isSidebarCollapsed && (
-                <button
-                  onClick={() => window.dispatchEvent(new Event('toggleClanRoster'))}
-                  className="w-12 h-12 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all bg-black/50 hover:bg-white/10 text-white/60 border-white/10 hover:border-yellow-400/50 hover:shadow-[0_0_10px_rgba(250,204,21,0.2)] -ml-1 mt-2 group"
-                  title="Roster"
-                >
-                  <UsersIcon className="w-4 h-4 group-hover:text-yellow-400 transition-colors" />
-                  <span className="text-[7px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-yellow-400 transition-colors">Roster</span>
-                </button>
-              )}
-
             </motion.div>
           )}
 
-          {/* Center Group: Navigation Buttons ONLY for non-Clan/Forum/Cards/Farm pages */}
-          {(!isClan && !isForum && !isGenreMastery && !isFarm) && (
-            <motion.div
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10"
-            >
-              {/* Top Slot Customizable Button */}
-              {pathname.includes('/lunatemplate') && (
-                <div className="relative group">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Top Widget">
-                    <Book className="w-4 h-4" />
-                  </div>
-                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'questBook'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Quest Book"><Book className="w-4 h-4 text-white" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
-                  </div>
+          {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+          >
+            {/* Top Slot Customizable Button (Luna only) */}
+            {pathname.includes('/lunatemplate') && (
+              <div className="relative group">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Top Widget">
+                  <Book className="w-4 h-4" />
                 </div>
-              )}
+                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'questBook'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Quest Book"><Book className="w-4 h-4 text-white" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                </div>
+              </div>
+            )}
 
-              {/* Aura Specific Button */}
-              {isAura && (
-                <button
-                  onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
-                  title="Watched Streams"
-                >
-                  <Tv className="w-4 h-4" />
-                </button>
-              )}
+            {/* Quick menu buttons for Clan/Forum/Farm */}
+            {isClan && !isSidebarCollapsed && (
+              <button
+                onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg shadow-[0_0_15px_rgba(59,130,246,0.2)] hover:bg-blue-500/20 hover:scale-105 transition-all duration-300"
+                title="Clan Quick Menu"
+              >
+                <UsersIcon className="w-4 h-4" />
+              </button>
+            )}
 
-              {/* Original Library Button */}
+            {isForum && !isSidebarCollapsed && (
+              <button
+                onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300"
+                title="Forum Quick Menu"
+              >
+                <MessageSquare className="w-4 h-4" />
+              </button>
+            )}
+
+            {isFarm && !isSidebarCollapsed && (
+              <button
+                onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 backdrop-blur-lg shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300"
+                title="Quick Farming Hub"
+              >
+                <Wheat className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Aura Specific Button */}
+            {isAura && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
+                className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg shadow-[0_0_15px_rgba(168,85,247,0.2)] hover:bg-purple-500/20 hover:scale-105 transition-all duration-300"
+                title="Watched Streams"
+              >
+                <Tv className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Original Library Button with Restore Arrow */}
+            <div className="relative flex items-center">
               <button
                 onClick={() => setIsOpen(true)}
                 className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1"
@@ -460,23 +416,49 @@ export default function LibrarySidebar() {
               >
                 <Library className="w-5 h-5" />
               </button>
-
-              {/* Bottom Slot Customizable Button */}
-              {pathname.includes('/lunatemplate') && (
-                <div className="relative group">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
-                    <Layers className="w-4 h-4" />
-                  </div>
-                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
-                  </div>
-                </div>
+              
+              {/* RESTORE ARROW */}
+              {isSidebarCollapsed && (
+                <button
+                  onClick={() => {
+                      localStorage.setItem('sidebarCollapsed', 'false');
+                      window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: false }));
+                  }}
+                  className="absolute left-[44px] top-1/2 -translate-y-1/2 w-6 h-10 bg-black/60 border border-white/20 border-l-0 rounded-r-xl flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md shadow-lg"
+                  title="Restore Sidebar"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               )}
-            </motion.div>
-          )}
+            </div>
+
+            {/* Roster Button for Clan */}
+            {isClan && !isSidebarCollapsed && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('toggleClanRoster'))}
+                className="w-12 h-12 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all bg-black/50 hover:bg-white/10 text-white/60 border-white/10 hover:border-yellow-400/50 hover:shadow-[0_0_10px_rgba(250,204,21,0.2)] -ml-1 mt-1 group"
+                title="Roster"
+              >
+                <UsersIcon className="w-4 h-4 group-hover:text-yellow-400 transition-colors" />
+                <span className="text-[7px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-yellow-400 transition-colors">Roster</span>
+              </button>
+            )}
+
+            {/* Bottom Slot Customizable Button (Luna only) */}
+            {pathname.includes('/lunatemplate') && (
+              <div className="relative group mt-1">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                </div>
+              </div>
+            )}
+          </motion.div>
         </>
       )}
 

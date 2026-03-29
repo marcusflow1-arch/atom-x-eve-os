@@ -23,34 +23,7 @@ export default function AuraLeftSidebar() {
         </div>
       </div>
 
-      {/* Middle buttons */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full px-2">
-        <button 
-          onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-          className="w-14 h-14 rounded-xl border border-transparent hover:border-cyan-400/50 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center gap-1 transition-all group shadow-lg"
-          title="Libraries"
-        >
-          <Library className="w-5 h-5 text-white/60 group-hover:text-cyan-400" />
-          <span className="text-[8px] font-bold uppercase tracking-wider text-white/50 group-hover:text-cyan-400 mt-0.5">Library</span>
-        </button>
 
-        <button 
-          className="w-14 h-14 rounded-xl border border-transparent hover:border-green-400/50 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center gap-1 transition-all group shadow-lg"
-          title="Friends"
-        >
-          <Users className="w-5 h-5 text-white/60 group-hover:text-green-400" />
-          <span className="text-[8px] font-bold uppercase tracking-wider text-white/50 group-hover:text-green-400 mt-0.5">Friends</span>
-        </button>
-
-        <button 
-          onClick={() => navigate(createPageUrl('Aura'))}
-          className="w-14 h-14 rounded-xl border border-transparent hover:border-pink-400/50 bg-white/5 hover:bg-white/10 flex flex-col items-center justify-center gap-1 transition-all group shadow-lg"
-          title="Watch Streams"
-        >
-          <PlaySquare className="w-5 h-5 text-white/60 group-hover:text-pink-400" />
-          <span className="text-[8px] font-bold uppercase tracking-wider text-white/50 group-hover:text-pink-400 mt-0.5 text-center leading-tight">Watch<br/>Streams</span>
-        </button>
-      </div>
 
     </div>
   );
