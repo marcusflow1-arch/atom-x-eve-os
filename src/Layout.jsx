@@ -336,7 +336,7 @@ function LayoutContent({ children, currentPageName }) {
       const saved = localStorage.getItem('nav_order');
       if (saved) {
         let parsed = JSON.parse(saved);
-        parsed = parsed.filter(id => id !== 'entertainment' && id !== 'settings');
+        parsed = parsed.filter(id => id !== 'entertainment' && id !== 'settings' && id !== 'library');
         // Ensure 'cards' is included (may be missing from older saved orders)
         if (!parsed.includes('cards')) {
           const forumIdx = parsed.indexOf('forum');
@@ -349,7 +349,7 @@ function LayoutContent({ children, currentPageName }) {
         return parsed;
       }
     } catch(e) {}
-    return ['home', 'library', 'clan', 'forum', 'cards', 'aura'];
+    return ['home', 'clan', 'forum', 'cards', 'aura'];
   });
 
   const onNavDragEnd = (result) => {
@@ -383,15 +383,6 @@ function LayoutContent({ children, currentPageName }) {
             className={btnClass(isHomePage)}
           >
             {isHomePage ? 'Store' : 'Home'}
-          </button>
-        );
-      case 'library':
-        return (
-          <button
-            onClick={() => navigate(createPageUrl('Library'))}
-            className={btnClass(location.pathname.toLowerCase().includes('/library'))}
-          >
-            Library
           </button>
         );
       case 'clan':
@@ -942,14 +933,6 @@ function LayoutContent({ children, currentPageName }) {
                             Store
                           </button>
 
-                          <button
-                            onClick={() => navigate(createPageUrl('Library'))}
-                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                          >
-                            <Gamepad2 className="w-4 h-4" />
-                            Library
-                          </button>
-
                           <div className="h-6 w-px bg-white/10 mx-1"></div>
 
                           <button
@@ -980,9 +963,6 @@ function LayoutContent({ children, currentPageName }) {
                           </button>
                           <button onClick={() => navigate(createPageUrl('Store'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
                             <ShoppingBag className="w-4 h-4" /> Store
-                          </button>
-                          <button onClick={() => navigate(createPageUrl('Library'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                            <Gamepad2 className="w-4 h-4" /> Library
                           </button>
                           <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
                             <Trophy className="w-4 h-4" /> Cards
