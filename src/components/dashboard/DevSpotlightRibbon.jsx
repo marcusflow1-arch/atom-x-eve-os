@@ -27,12 +27,12 @@ function MysteryBox() {
 
   const backBoxStyle = {
     background: isClicked 
-      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%)' 
-      : 'linear-gradient(135deg, rgba(200, 210, 225, 0.04) 0%, rgba(160, 175, 195, 0.02) 100%)',
-    backdropFilter: 'blur(12px) saturate(100%)',
-    WebkitBackdropFilter: 'blur(12px) saturate(100%)',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    boxShadow: isClicked ? 'inset 0 0 20px rgba(0,0,0,0.8)' : '0 2px 10px rgba(0,0,0,0.1)'
+      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%)' 
+      : 'linear-gradient(135deg, rgba(15, 20, 30, 0.8) 0%, rgba(5, 10, 15, 0.9) 100%)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    boxShadow: isClicked ? 'inset 0 0 20px rgba(0,0,0,0.8)' : '0 15px 30px rgba(0,0,0,0.5)'
   };
 
   return (
@@ -52,21 +52,21 @@ function MysteryBox() {
         className="absolute inset-0 rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none"
         style={{ ...backBoxStyle, transformOrigin: 'top' }}
         animate={{ 
-          scale: 0.9, 
-          y: -12, 
-          z: -50,
+          scale: 0.85, 
+          y: -28, 
+          z: -40,
           rotateX: isClicked ? -10 : 0, 
-          opacity: 0.5
+          opacity: 0.8
         }}
       >
-        <span className="text-white/10 text-xl font-bold">?</span>
+        <span className="text-white/30 text-xl font-bold">?</span>
       </motion.div>
 
       {/* Foreground Box */}
       <AnimatePresence>
         <motion.div
           key={activeIndex}
-          initial={{ opacity: 0.5, scale: 0.9, y: -12, z: -50, rotateX: 0 }}
+          initial={{ opacity: 0.8, scale: 0.85, y: -28, z: -40, rotateX: 0 }}
           animate={{ 
             opacity: 1, 
             scale: isHovered ? 1.02 : 1, 
@@ -114,7 +114,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="w-full flex flex-col items-start gap-2">
+    <div className="w-full flex flex-col items-start gap-2 pt-6">
       {/* Title above — left-aligned */}
       <div className="flex items-center gap-2 ml-1">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
