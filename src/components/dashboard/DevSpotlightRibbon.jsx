@@ -47,7 +47,33 @@ function MysteryBox() {
       }}
       onClick={handleClick}
     >
-      {/* Background Box (The next item) */}
+      {/* Background Box 3 (Farthest) */}
+      <motion.div
+        className="absolute inset-0 rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none"
+        style={{ ...backBoxStyle, transformOrigin: 'top' }}
+        animate={{ 
+          scale: 0.75, 
+          y: -44, 
+          z: -120,
+          rotateX: isClicked ? -4 : 0, 
+          opacity: 0.2
+        }}
+      />
+
+      {/* Background Box 2 (Middle) */}
+      <motion.div
+        className="absolute inset-0 rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none"
+        style={{ ...backBoxStyle, transformOrigin: 'top' }}
+        animate={{ 
+          scale: 0.80, 
+          y: -36, 
+          z: -80,
+          rotateX: isClicked ? -7 : 0, 
+          opacity: 0.5
+        }}
+      />
+
+      {/* Background Box 1 (The next item) */}
       <motion.div
         className="absolute inset-0 rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none"
         style={{ ...backBoxStyle, transformOrigin: 'top' }}
