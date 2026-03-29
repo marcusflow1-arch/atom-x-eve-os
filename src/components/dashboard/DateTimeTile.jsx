@@ -59,10 +59,9 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
             
             <button 
               onClick={(e) => { e.stopPropagation(); onClick(); }} 
-              className="flex items-center gap-1.5 text-cyan-300 hover:text-cyan-100 transition-colors group px-3 py-1 rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 z-20 flex-shrink-0 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)] pointer-events-auto"
+              className="flex items-center justify-center w-7 h-7 text-cyan-300 hover:text-cyan-100 transition-colors group rounded border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 z-20 flex-shrink-0 cursor-pointer shadow-[0_0_10px_rgba(34,211,238,0.1)] pointer-events-auto"
             >
-              <span className="text-[11px] uppercase tracking-wider font-bold">System Updates</span>
-              <Settings className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-500" />
+              <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
             </button>
           </div>
 
@@ -95,19 +94,7 @@ export default function DateTimeTile({ onClick, onCalendarClick = () => {} }) {
                 </div>
               </div>
 
-              {/* Vertical Divider */}
-              <div className="w-px bg-white/10 h-full hidden sm:block" />
 
-              {/* Updates Side */}
-              <div className="flex-1 min-w-0 hidden sm:flex flex-col justify-center">
-                <div className="flex items-center gap-1 mb-1">
-                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-                  <span className="text-[10px] uppercase tracking-wider text-green-400/80 font-bold">Status</span>
-                </div>
-                <div className="text-xs text-white/80 font-medium truncate">
-                  All Systems Go
-                </div>
-              </div>
             </div>
           </div>
         </div>
