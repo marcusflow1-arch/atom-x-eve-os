@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function FriendsNetworkWidget({ styleOverride = {} }) {
   const boxStyle = {
@@ -11,29 +11,43 @@ export default function FriendsNetworkWidget({ styleOverride = {} }) {
     ...styleOverride
   };
 
+  const friendsList = [
+    { id: 1, name: 'Shadow_Striker', status: 'online', game: 'Cyberpunk 2088', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' },
+    { id: 2, name: 'CyberVixen', status: 'online', game: 'Final Fantasy XIV', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+    { id: 3, name: 'GhostReaper', status: 'idle', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' },
+    { id: 4, name: 'IronFist', status: 'offline', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150' },
+    { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150' },
+  ];
+
   return (
     <div 
-      className="w-full h-full rounded-2xl p-3 flex flex-col gap-2 overflow-hidden relative group hover:border-white/20 transition-colors pointer-events-auto"
+      className="w-full h-full rounded-2xl p-6 flex flex-col gap-4 overflow-hidden relative group hover:border-white/20 transition-colors pointer-events-auto"
       style={boxStyle}
     >
-      <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-2">
-        <Users className="w-3.5 h-3.5 text-blue-400" />
-        <h3 className="text-white font-bold tracking-wider uppercase text-[10px]">Friends Network</h3>
+      <div className="flex items-center gap-2 mb-2">
+        <User className="w-5 h-5 text-blue-400" />
+        <h3 className="text-sm font-bold text-white/50 uppercase tracking-widest">Online Friends</h3>
+        <span className="ml-auto text-xs text-white/40">{friendsList.length} total</span>
       </div>
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-        {[
-          { name: "Shadow_Striker", action: "Unlocked Legendary Sword", time: "10m ago", color: "text-orange-400" },
-          { name: "CyberVixen", action: "Started streaming", time: "1h ago", color: "text-purple-400" },
-          { name: "NovaStar", action: "Reached Level 50", time: "2h ago", color: "text-green-400" },
-          { name: "IronFist", action: "Defeated the Abyss Boss", time: "5h ago", color: "text-red-400" },
-          { name: "GhostReaper", action: "Defeated the Abyss Boss", time: "5h ago", color: "text-red-400" }
-        ].map((news, i) => (
-          <div key={i} className="flex gap-2 items-start mb-3">
-            <div className="w-6 h-6 rounded-full bg-white/10 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-white/90">{news.name}</p>
-              <p className={`text-[10px] ${news.color}`}>{news.action}</p>
-              <p className="text-[8px] text-white/40 mt-0.5">{news.time}</p>
+      
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+        {friendsList.map(friend => (
+          <div 
+            key={friend.id} 
+            className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
+          >
+            <div className="relative">
+              <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-lg object-cover" />
+              <div className={`absolute -bottom-1.5 -right-1.5 w-4 h-4 rounded-full border-[3px] border-[#0a0e14] ${
+                friend.status === 'online' ? 'bg-green-500' : 
+                friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+              }`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-base font-semibold truncate">{friend.name}</p>
+              <p className="text-white/50 text-sm truncate mt-0.5">
+                {friend.game ? <span className="text-blue-300">{friend.game}</span> : <span className="capitalize">{friend.status}</span>}
+              </p>
             </div>
           </div>
         ))}
