@@ -403,6 +403,18 @@ export default function LibrarySidebar() {
                 )}
               </div>
 
+              {/* Roster Button - Placed below Library button */}
+              {isClan && !isSidebarCollapsed && (
+                <button
+                  onClick={() => window.dispatchEvent(new Event('toggleClanRoster'))}
+                  className="w-12 h-12 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all bg-black/50 hover:bg-white/10 text-white/60 border-white/10 hover:border-yellow-400/50 hover:shadow-[0_0_10px_rgba(250,204,21,0.2)] -ml-1 mt-2 group"
+                  title="Roster"
+                >
+                  <UsersIcon className="w-4 h-4 group-hover:text-yellow-400 transition-colors" />
+                  <span className="text-[7px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-yellow-400 transition-colors">Roster</span>
+                </button>
+              )}
+
             </motion.div>
           )}
 
