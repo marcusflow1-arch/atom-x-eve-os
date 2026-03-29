@@ -1,42 +1,104 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 function MysteryBox() {
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    if (isClicked) return;
+    setIsClicked(true);
+    setTimeout(() => setIsClicked(false), 200);
+    setActiveIndex(prev => prev + 1);
+  };
+
+  const frontBoxStyle = {
+    background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 100%)',
+    backdropFilter: 'blur(24px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+    border: '1px solid rgba(255, 255, 255, 0.10)',
+    boxShadow: isHovered ?
+    '0 6px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)' :
+    '0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+  };
+
+  const backBoxStyle = {
+    background: isClicked 
+      ? 'linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%)' 
+      : 'linear-gradient(135deg, rgba(200, 210, 225, 0.04) 0%, rgba(160, 175, 195, 0.02) 100%)',
+    backdropFilter: 'blur(12px) saturate(100%)',
+    WebkitBackdropFilter: 'blur(12px) saturate(100%)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    boxShadow: isClicked ? 'inset 0 0 20px rgba(0,0,0,0.8)' : '0 2px 10px rgba(0,0,0,0.1)'
+  };
 
   return (
-    <motion.div
+    <div 
+      className="relative w-[226px] h-[84px] flex-shrink-0 cursor-pointer group"
+      style={{ perspective: 1200 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {setIsHovered(false);setMousePos({ x: 0.5, y: 0.5 });}}
       onMouseMove={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
         setMousePos({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
       }}
-      whileHover={{ y: -2, scale: 1.04 }}
-      className="w-[226px] flex-shrink-0 rounded-xl flex items-center justify-center cursor-pointer relative overflow-hidden"
-      style={{
-        height: '84px',
-        background: 'linear-gradient(135deg, rgba(200, 210, 225, 0.08) 0%, rgba(160, 175, 195, 0.05) 100%)',
-        backdropFilter: 'blur(24px) saturate(150%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-        border: '1px solid rgba(255, 255, 255, 0.10)',
-        boxShadow: isHovered ?
-        '0 6px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)' :
-        '0 2px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
-      }}>
+      onClick={handleClick}
+    >
+      {/* Background Box (The next item) */}
+      <motion.div
+        className="absolute inset-0 rounded-xl flex items-center justify-center transition-all duration-300 pointer-events-none"
+        style={{ ...backBoxStyle, transformOrigin: 'top' }}
+        animate={{ 
+          scale: 0.9, 
+          y: -12, 
+          z: -50,
+          rotateX: isClicked ? -10 : 0, 
+          opacity: 0.5
+        }}
+      >
+        <span className="text-white/10 text-xl font-bold">?</span>
+      </motion.div>
 
-      <div
-        className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-        style={{
-          opacity: isHovered ? 0.8 : 0.3,
-          background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.06) 0%, transparent 60%)`
-        }} />
-
-      <span className="text-white/20 text-xl font-bold relative z-10">?</span>
-    </motion.div>);
-
+      {/* Foreground Box */}
+      <AnimatePresence>
+        <motion.div
+          key={activeIndex}
+          initial={{ opacity: 0.5, scale: 0.9, y: -12, z: -50, rotateX: 0 }}
+          animate={{ 
+            opacity: 1, 
+            scale: isHovered ? 1.02 : 1, 
+            y: isHovered ? -2 : 0, 
+            z: 0,
+            rotateX: 0 
+          }}
+          exit={{ 
+            opacity: 0, 
+            scale: 1.05, 
+            y: 40, 
+            z: 50,
+            rotateX: -60, 
+            filter: 'blur(8px)',
+            transition: { duration: 0.4, ease: "easeIn" }
+          }}
+          transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+          className="absolute inset-0 rounded-xl flex items-center justify-center overflow-hidden origin-bottom"
+          style={frontBoxStyle}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+            style={{
+              opacity: isHovered ? 0.8 : 0.3,
+              background: `radial-gradient(ellipse 120% 80% at ${mousePos.x * 100}% ${mousePos.y * 100}%, rgba(255,255,255,0.06) 0%, transparent 60%)`
+            }} 
+          />
+          <span className="text-white/20 text-xl font-bold relative z-10">?</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export default function DevSpotlightRibbon({ onOpenOverlay }) {
