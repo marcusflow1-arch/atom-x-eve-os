@@ -3,27 +3,34 @@ import { motion } from 'framer-motion';
 import { Users, Gamepad2, Brain, Trophy, Star, Newspaper } from 'lucide-react';
 
 export default function LunaDashboardOfflineView() {
+  const boxStyle = {
+    background: 'linear-gradient(135deg, rgba(15, 20, 30, 0.7) 0%, rgba(8, 12, 18, 0.85) 100%)',
+    backdropFilter: 'blur(30px) saturate(150%)',
+    WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 15px 35px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.05)'
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.4 }}
-      className="absolute inset-0 z-10 flex items-center justify-center pointer-events-auto pt-[210px] pl-[390px] pr-[390px] pb-[120px]"
+      className="absolute z-10 flex items-center justify-center pointer-events-auto"
+      style={{
+        left: '420px',
+        right: '120px',
+        top: '100px',
+        bottom: '120px'
+      }}
     >
-      {/* AAA liquid glass background just around the UI */}
-      <div 
-        className="w-full h-full max-w-5xl max-h-[600px] rounded-3xl p-6 grid grid-cols-3 grid-rows-2 gap-4"
-        style={{
-          background: 'linear-gradient(135deg, rgba(20, 25, 35, 0.4) 0%, rgba(10, 15, 25, 0.6) 100%)',
-          backdropFilter: 'blur(30px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)'
-        }}
-      >
+      <div className="w-full h-full max-w-[1100px] max-h-[600px] grid grid-cols-3 grid-rows-2 gap-6">
         {/* Box 1: Friends News */}
-        <div className="col-span-1 row-span-2 rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col gap-3 overflow-hidden relative group hover:bg-white/10 transition-colors">
+        <div 
+          className="col-span-1 row-span-2 rounded-3xl p-5 flex flex-col gap-4 overflow-hidden relative group hover:border-white/20 transition-colors"
+          style={boxStyle}
+        >
           <div className="flex items-center gap-2 border-b border-white/10 pb-2">
             <Users className="w-4 h-4 text-blue-400" />
             <h3 className="text-white font-bold tracking-wider uppercase text-xs">Friends Network</h3>
@@ -48,8 +55,11 @@ export default function LunaDashboardOfflineView() {
         </div>
 
         {/* Box 2: Latest Games */}
-        <div className="col-span-1 row-span-1 rounded-2xl bg-white/5 border border-white/10 p-4 relative overflow-hidden group hover:bg-white/10 transition-colors flex flex-col">
-          <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
+        <div 
+          className="col-span-1 row-span-1 rounded-3xl p-5 relative overflow-hidden group hover:border-white/20 transition-colors flex flex-col"
+          style={boxStyle}
+        >
+          <div className="flex items-center gap-2 border-b border-white/10 pb-3 mb-4">
             <Gamepad2 className="w-4 h-4 text-cyan-400" />
             <h3 className="text-white font-bold tracking-wider uppercase text-xs">Store Highlights</h3>
           </div>
@@ -66,52 +76,73 @@ export default function LunaDashboardOfflineView() {
         </div>
 
         {/* Box 3: AI Interaction */}
-        <div className="col-span-1 row-span-1 rounded-2xl bg-gradient-to-br from-emerald-900/30 to-teal-900/10 border border-emerald-500/20 p-4 flex flex-col hover:border-emerald-500/40 transition-colors">
-          <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-2 mb-3">
-            <Brain className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-emerald-100 font-bold tracking-wider uppercase text-xs">AI Companion</h3>
+        <div 
+          className="col-span-1 row-span-1 rounded-3xl p-5 flex flex-col hover:border-emerald-500/40 transition-colors"
+          style={{
+            ...boxStyle,
+            background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.6) 0%, rgba(2, 44, 34, 0.8) 100%)',
+            borderColor: 'rgba(16, 185, 129, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2 border-b border-emerald-500/20 pb-3 mb-4">
+            <Brain className="w-5 h-5 text-emerald-400" />
+            <h3 className="text-emerald-100 font-bold tracking-wider uppercase text-sm">AI Companion</h3>
           </div>
-          <p className="text-emerald-200/70 text-xs mb-3 leading-relaxed flex-1 overflow-y-auto custom-scrollbar">
+          <p className="text-emerald-200/70 text-sm mb-4 leading-relaxed flex-1 overflow-y-auto custom-scrollbar">
             Interact with your AI to align their personality with yours. Train them to become your perfect digital reflection.
           </p>
-          <button className="mt-auto w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-bold rounded-lg border border-emerald-500/30 transition-all text-xs">
+          <button className="mt-auto w-full py-2.5 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 font-bold rounded-xl border border-emerald-500/30 transition-all text-sm shadow-lg">
             Start Interaction
           </button>
         </div>
 
         {/* Box 4: Latest Achievement Cards */}
-        <div className="col-span-1 row-span-1 rounded-2xl bg-white/5 border border-white/10 p-4 hover:bg-white/10 transition-colors flex flex-col">
-          <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
-            <Trophy className="w-4 h-4 text-yellow-400" />
-            <h3 className="text-white font-bold tracking-wider uppercase text-xs">New Achievements</h3>
+        <div 
+          className="col-span-1 row-span-1 rounded-3xl p-5 hover:border-yellow-500/40 transition-colors flex flex-col"
+          style={{
+            ...boxStyle,
+            background: 'linear-gradient(135deg, rgba(113, 63, 18, 0.6) 0%, rgba(66, 32, 6, 0.8) 100%)',
+            borderColor: 'rgba(234, 179, 8, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2 border-b border-yellow-500/20 pb-3 mb-4">
+            <Trophy className="w-5 h-5 text-yellow-400" />
+            <h3 className="text-white font-bold tracking-wider uppercase text-sm">New Achievements</h3>
           </div>
           <div className="flex justify-around items-center flex-1">
             {[1, 2, 3].map(i => (
-              <div key={i} className="w-14 h-20 rounded bg-gradient-to-b from-yellow-500/20 to-orange-500/10 border border-yellow-500/30 flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
-                <Star className="w-5 h-5 text-yellow-500/50" />
+              <div key={i} className="w-16 h-24 rounded-lg bg-gradient-to-b from-yellow-500/30 to-orange-500/10 border border-yellow-500/40 flex items-center justify-center shadow-lg hover:scale-105 transition-transform cursor-pointer">
+                <Star className="w-6 h-6 text-yellow-500/60 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
               </div>
             ))}
           </div>
         </div>
 
         {/* Box 5: AI News */}
-        <div className="col-span-1 row-span-1 rounded-2xl bg-white/5 border border-white/10 p-4 hover:bg-white/10 transition-colors flex flex-col">
-          <div className="flex items-center gap-2 border-b border-white/10 pb-2 mb-3">
-            <Newspaper className="w-4 h-4 text-pink-400" />
-            <h3 className="text-white font-bold tracking-wider uppercase text-xs">System Intel</h3>
+        <div 
+          className="col-span-1 row-span-1 rounded-3xl p-5 hover:border-pink-500/40 transition-colors flex flex-col"
+          style={{
+            ...boxStyle,
+            background: 'linear-gradient(135deg, rgba(131, 24, 67, 0.6) 0%, rgba(76, 5, 25, 0.8) 100%)',
+            borderColor: 'rgba(236, 72, 153, 0.2)'
+          }}
+        >
+          <div className="flex items-center gap-2 border-b border-pink-500/20 pb-3 mb-4">
+            <Newspaper className="w-5 h-5 text-pink-400" />
+            <h3 className="text-white font-bold tracking-wider uppercase text-sm">System Intel</h3>
           </div>
-          <ul className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-white/80">Major Engine update rolling out next week.</p>
+          <ul className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pink-400 mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
+              <p className="text-sm text-pink-100/80 leading-snug">Major Engine update rolling out next week.</p>
             </li>
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-white/80">New customizable avatars entering the marketplace.</p>
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pink-400 mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
+              <p className="text-sm text-pink-100/80 leading-snug">New customizable avatars entering the marketplace.</p>
             </li>
-            <li className="flex items-start gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-pink-400 mt-1.5 flex-shrink-0" />
-              <p className="text-sm text-white/80">Clan matchmaking features improved by 40%.</p>
+            <li className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-pink-400 mt-1.5 flex-shrink-0 shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
+              <p className="text-sm text-pink-100/80 leading-snug">Clan matchmaking features improved by 40%.</p>
             </li>
           </ul>
         </div>
