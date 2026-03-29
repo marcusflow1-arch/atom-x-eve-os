@@ -390,7 +390,7 @@ export default function ClanPage() {
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
             {/* 5% Left Area for Global Icons */}
-            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm`}>
+            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6`}>
                 {!isSidebarCollapsed && (
                     <button
                         onClick={() => {
@@ -402,6 +402,24 @@ export default function ClanPage() {
                     >
                         <ChevronLeft className="w-4 h-4 -ml-1" />
                     </button>
+                )}
+
+                {/* Roster Button Box */}
+                {!isSidebarCollapsed && (
+                    <div className="mt-20 w-full px-2 flex flex-col items-center">
+                        <button
+                            onClick={() => setBottomTab(bottomTab === 'roster' ? 'home' : 'roster')}
+                            className={`w-14 h-14 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
+                                bottomTab === 'roster' 
+                                    ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50 shadow-[0_0_15px_rgba(250,204,21,0.3)]' 
+                                    : 'bg-black/50 hover:bg-white/10 text-white/60 border-white/10 hover:border-cyan-400/50 hover:shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                            }`}
+                            title="Roster"
+                        >
+                            <Users className="w-5 h-5" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5">Roster</span>
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -565,51 +583,36 @@ export default function ClanPage() {
                 </AnimatePresence>
 
                 {/* Bottom Global Actions */}
-                {(bottomTab === 'home' || bottomTab === 'roster') && (
+                {(bottomTab === 'home' || bottomTab === 'roster') && clanForRender && (
                     <div className="absolute bottom-[80px] left-6 z-30 flex flex-col gap-3">
                         {/* Disband (Leader Only) or Leave (Everyone else) */}
-                        {clanForRender && (
-                            isLeader ? (
-                                <Button 
-                                    size="sm" 
-                                    variant="destructive" 
-                                    onClick={() => {
-                                        if(confirm("Are you sure you want to disband this clan? This cannot be undone.")) {
-                                            disbandClanMutation.mutate();
-                                        }
-                                    }}
-                                    className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs shadow-lg justify-start"
-                                >
-                                    Disband Clan
-                                </Button>
-                            ) : (
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => {
-                                        if(confirm("Are you sure you want to leave this clan?")) {
-                                            leaveClanMutation.mutate();
-                                        }
-                                    }}
-                                    className="bg-black/50 backdrop-blur-md hover:bg-white/10 text-white/60 border-white/10 text-xs shadow-lg justify-start"
-                                >
-                                    Leave Clan
-                                </Button>
-                            )
+                        {isLeader ? (
+                            <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                onClick={() => {
+                                    if(confirm("Are you sure you want to disband this clan? This cannot be undone.")) {
+                                        disbandClanMutation.mutate();
+                                    }
+                                }}
+                                className="bg-red-900/20 hover:bg-red-900/40 text-red-500 border border-red-500/20 text-xs shadow-lg justify-start"
+                            >
+                                Disband Clan
+                            </Button>
+                        ) : (
+                            <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => {
+                                    if(confirm("Are you sure you want to leave this clan?")) {
+                                        leaveClanMutation.mutate();
+                                    }
+                                }}
+                                className="bg-black/50 backdrop-blur-md hover:bg-white/10 text-white/60 border-white/10 text-xs shadow-lg justify-start"
+                            >
+                                Leave Clan
+                            </Button>
                         )}
-                        <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => setBottomTab(bottomTab === 'roster' ? 'home' : 'roster')}
-                            className={`backdrop-blur-md text-xs shadow-lg flex items-center justify-start gap-2 ${
-                                bottomTab === 'roster' 
-                                    ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50 hover:bg-yellow-400/30' 
-                                    : 'bg-black/50 hover:bg-white/10 text-white/60 border-white/10'
-                            }`}
-                        >
-                            <Users className="w-4 h-4" />
-                            {bottomTab === 'roster' ? 'Close Roster' : 'Roster'}
-                        </Button>
                     </div>
                 )}
 
