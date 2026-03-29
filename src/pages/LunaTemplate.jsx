@@ -77,7 +77,7 @@ import InventoryGrid from '../components/dashboard/InventoryGrid';
 import TransparentModel3DViewer from '../components/dashboard/TransparentModel3DViewer';
 import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOfflineView';
-
+import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
   {
@@ -172,8 +172,8 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
-  const [showQuestBook, setShowQuestBook] = useState(true);
-  const [showCardCollection, setShowCardCollection] = useState(true);
+  const [slot1Content, setSlot1Content] = useState('questBook');
+  const [slot2Content, setSlot2Content] = useState('cardCollection');
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
@@ -206,13 +206,13 @@ export default function LunaTemplate() {
   }, [user]);
 
   useEffect(() => {
-    const toggleQB = () => setShowQuestBook(v => !v);
-    const toggleCC = () => setShowCardCollection(v => !v);
-    window.addEventListener('toggleQuestBook', toggleQB);
-    window.addEventListener('toggleCardCollection', toggleCC);
+    const h1 = (e) => setSlot1Content(e.detail);
+    const h2 = (e) => setSlot2Content(e.detail);
+    window.addEventListener('setSlot1Content', h1);
+    window.addEventListener('setSlot2Content', h2);
     return () => {
-      window.removeEventListener('toggleQuestBook', toggleQB);
-      window.removeEventListener('toggleCardCollection', toggleCC);
+      window.removeEventListener('setSlot1Content', h1);
+      window.removeEventListener('setSlot2Content', h2);
     };
   }, []);
 
@@ -629,18 +629,10 @@ export default function LunaTemplate() {
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
           {!avatarFocusMode && !uiVisible && (
-            <>
-              {showQuestBook && (
-                <div className="w-full" style={{ transform: 'scale(1.15)', transformOrigin: 'top left' }}>
-                  <QuestLogBook />
-                </div>
-              )}
-              {showCardCollection && (
-                <div className="w-full" style={{ marginTop: '24px' }}>
-                  <CardCollectionBrowser />
-                </div>
-              )}
-            </>
+            <div className="flex flex-col gap-6">
+              {slot1Content!=='none'&&<div className="w-full" style={slot1Content==='questBook'?{transform:'scale(1.15)',transformOrigin:'top left',marginBottom:24}:{height:380,marginBottom:12}}>{slot1Content==='questBook'?<QuestLogBook/>:slot1Content==='friendsList'?<FriendsNetworkWidget/>:<div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {slot2Content!=='none'&&<div className="w-full" style={slot2Content==='cardCollection'?{}:{height:380}}>{slot2Content==='cardCollection'?<CardCollectionBrowser/>:slot2Content==='friendsList'?<FriendsNetworkWidget/>:<div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+            </div>
           )}
 
           <AnimatePresence>

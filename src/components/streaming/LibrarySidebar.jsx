@@ -426,15 +426,19 @@ export default function LibrarySidebar() {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10"
             >
-              {/* Luna Dashboard Specific Buttons */}
+              {/* Top Slot Customizable Button */}
               {pathname.includes('/lunatemplate') && (
-                <button
-                  onClick={() => window.dispatchEvent(new Event('toggleQuestBook'))}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-                  title="Toggle Quest Book"
-                >
-                  <Book className="w-4 h-4" />
-                </button>
+                <div className="relative group">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Top Widget">
+                    <Book className="w-4 h-4" />
+                  </div>
+                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'questBook'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Quest Book"><Book className="w-4 h-4 text-white" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                  </div>
+                </div>
               )}
 
               {/* Aura Specific Button */}
@@ -457,15 +461,19 @@ export default function LibrarySidebar() {
                 <Library className="w-5 h-5" />
               </button>
 
-              {/* Luna Dashboard Specific Buttons */}
+              {/* Bottom Slot Customizable Button */}
               {pathname.includes('/lunatemplate') && (
-                <button
-                  onClick={() => window.dispatchEvent(new Event('toggleCardCollection'))}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300"
-                  title="Toggle Card Collection"
-                >
-                  <Layers className="w-4 h-4" />
-                </button>
+                <div className="relative group">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                  </div>
+                </div>
               )}
             </motion.div>
           )}
