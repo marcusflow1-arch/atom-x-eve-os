@@ -21,6 +21,7 @@ import StreamChatBox from '@/components/streaming/StreamChatBox';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
+import AuraLeftSidebar from '@/components/streaming/AuraLeftSidebar';
 
 export default function StreamingHome() {
   const { user } = useAuth();
@@ -56,7 +57,10 @@ export default function StreamingHome() {
   return (
     <GlassPageFrame bottomContent={<AuraBottomNav />}>
       <SideAccessMenu />
-      <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8 relative">
+      <div className="h-screen w-full flex relative overflow-hidden bg-[#0f1419]">
+        <AuraLeftSidebar />
+        <div className="flex-1 relative h-full overflow-y-auto">
+          <div className="w-full min-h-full pt-20 pb-24 px-4 md:px-8 relative">
 
         {/* Edit Mode Grid Overlay */}
         <AnimatePresence>
@@ -229,6 +233,9 @@ export default function StreamingHome() {
               <StreamerCardDetailModal card={selectedCard} onClose={() => setSelectedCard(null)} />
             )}
           </AnimatePresence>
+        </div>
+
+          </div>
         </div>
 
         {/* Edit Mode Toolbar */}
