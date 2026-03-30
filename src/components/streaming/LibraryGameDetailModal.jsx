@@ -21,8 +21,12 @@ export default function LibraryGameDetailModal({ game, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed top-0 left-[320px] right-0 bottom-0 z-[69] shadow-2xl flex flex-col overflow-hidden"
-      style={glassStyle}
+      className="fixed left-[320px] right-0 z-[69] shadow-2xl flex flex-col overflow-hidden"
+      style={{
+        ...glassStyle,
+        top: '64px',
+        bottom: '52px',
+      }}
     >
       {/* Header with Game Title and Close Button */}
       <div className="flex items-center justify-between p-6 border-b border-white/10">
