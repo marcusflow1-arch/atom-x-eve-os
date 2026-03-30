@@ -509,12 +509,13 @@ export default function LibrarySidebar() {
                 style={{
                   left: '80px',
                   top: '64px',
-                  bottom: '0px',
+                  bottom: '48px',
                   width: '240px',
                   background: 'rgba(255, 255, 255, 0.03)',
                   backdropFilter: 'blur(50px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(50px) saturate(200%)',
                   boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
+                  borderBottom: 'none',
                 }}
               >
                 {/* Header */}
