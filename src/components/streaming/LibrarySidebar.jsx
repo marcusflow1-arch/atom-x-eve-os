@@ -10,7 +10,6 @@ import QuickGamesDrawer from '@/components/shared/QuickGamesDrawer';
 import { MessageSquare, Users as UsersIcon } from 'lucide-react';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
-import ExpandedSidebarMenu from './ExpandedSidebarMenu';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,8 +29,6 @@ export default function LibrarySidebar() {
   const [recentFarmGames, setRecentFarmGames] = useState([]);
   const [sidebarMode, setSidebarMode] = useState('context');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
-  const [expandedMenuOpen, setExpandedMenuOpen] = useState(false);
-  const [expandedMenuType, setExpandedMenuType] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -450,10 +447,7 @@ export default function LibrarySidebar() {
             {/* Friends & Library overlay buttons — shown on all pages */}
             <div className="w-8 h-px bg-white/10 my-1" />
             <button
-              onClick={() => {
-                setExpandedMenuType('friends');
-                setExpandedMenuOpen(true);
-              }}
+              onClick={() => window.dispatchEvent(new Event('toggleFriendsFullOverlay'))}
               className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
               title="Friends"
             >
@@ -461,10 +455,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => {
-                setExpandedMenuType('library');
-                setExpandedMenuOpen(true);
-              }}
+              onClick={() => window.dispatchEvent(new Event('toggleLibraryFullOverlay'))}
               className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
               title="Library"
             >
@@ -1056,13 +1047,6 @@ export default function LibrarySidebar() {
         onPlay={handlePlay}
         onStream={handleStream}
         onMoreInfo={handleMoreInfo}
-      />
-
-      {/* Expanded Sidebar Menu (replaces the full overlays) */}
-      <ExpandedSidebarMenu 
-        isOpen={expandedMenuOpen} 
-        type={expandedMenuType} 
-        onClose={() => setExpandedMenuOpen(false)} 
       />
     </>
   );
