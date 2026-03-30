@@ -350,8 +350,19 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-row items-stretch gap-0 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            style={{
+              background: expandedPanel ? 'rgba(8, 12, 20, 0.92)' : 'transparent',
+              backdropFilter: expandedPanel ? 'blur(30px) saturate(180%)' : 'none',
+              WebkitBackdropFilter: expandedPanel ? 'blur(30px) saturate(180%)' : 'none',
+              border: expandedPanel ? '1px solid rgba(255,255,255,0.1)' : 'none',
+              borderRadius: expandedPanel ? '16px' : '0',
+              boxShadow: expandedPanel ? '4px 0 30px rgba(0,0,0,0.5)' : 'none',
+              maxHeight: '70vh',
+            }}
           >
+            {/* Left column: all the icon buttons */}
+            <div className="flex flex-col items-center gap-3 py-3 px-1 flex-shrink-0 w-12">
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="relative group">
@@ -446,10 +457,10 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Friends & Library expand buttons — shown on all pages */}
+            {/* Friends & Library expand buttons */}
             <div className="w-8 h-px bg-white/10 my-1" />
             <button
-              onClick={() => setExpandedPanel(p => p === 'friends' ? null : 'friends')}
+              onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'friends'
                   ? 'border-green-400/50 bg-green-500/20 text-green-400'
@@ -461,7 +472,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => setExpandedPanel(p => p === 'library' ? null : 'library')}
+              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'library'
                   ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -473,27 +484,37 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
             </button>
 
-            {/* Inline expand panel */}
+            {/* Bottom Slot Customizable Button (Luna only) */}
+            {pathname.includes('/lunatemplate') && (
+              <div className="relative group mt-1">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                </div>
+              </div>
+            )}
+            </div>{/* end left column */}
+
+            {/* Right expanded panel — inline extension of the same bar */}
             <AnimatePresence>
               {expandedPanel && (
                 <motion.div
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 260, opacity: 1 }}
+                  animate={{ width: 240, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="absolute left-[52px] top-1/2 -translate-y-1/2 z-[80] overflow-hidden"
-                  style={{
-                    background: 'rgba(8, 12, 20, 0.92)',
-                    backdropFilter: 'blur(30px) saturate(180%)',
-                    WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '0 16px 16px 0',
-                    boxShadow: '4px 0 30px rgba(0,0,0,0.5)',
-                    maxHeight: '70vh',
-                  }}
+                  className="flex flex-col overflow-hidden flex-shrink-0"
+                  style={{ maxHeight: '70vh' }}
                 >
-                  <div className="w-[260px] flex flex-col" style={{ maxHeight: '70vh' }}>
-                    {/* Panel Header */}
+                  {/* Vertical divider line */}
+                  <div className="w-px bg-white/15 self-stretch mx-0" />
+                  <div className="w-[240px] flex flex-col" style={{ maxHeight: '70vh' }}>
+                    {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
                       <span className="text-xs font-bold uppercase tracking-widest text-white/70">
                         {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
@@ -502,7 +523,6 @@ export default function LibrarySidebar() {
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-
                     {/* Scrollable list */}
                     <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
                       {expandedPanel === 'friends' && friendsList.map(friend => (
@@ -520,13 +540,10 @@ export default function LibrarySidebar() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
-                              <p className="text-white/40 text-[10px] truncate">
-                                {friend.game ? friend.game : friend.status}
-                              </p>
+                              <p className="text-white/40 text-[10px] truncate">{friend.game ? friend.game : friend.status}</p>
                             </div>
                             <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === friend.id ? 'rotate-90' : ''}`} />
                           </button>
-                          {/* Dropdown */}
                           <AnimatePresence>
                             {openDropdown === friend.id && (
                               <motion.div
@@ -552,7 +569,6 @@ export default function LibrarySidebar() {
                           </AnimatePresence>
                         </div>
                       ))}
-
                       {expandedPanel === 'library' && libraryGames.map((game, i) => (
                         <div key={game.id || i} className="relative">
                           <button
@@ -568,7 +584,6 @@ export default function LibrarySidebar() {
                             </div>
                             <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
                           </button>
-                          {/* Dropdown */}
                           <AnimatePresence>
                             {openDropdown === (game.id || i) && (
                               <motion.div
@@ -599,21 +614,6 @@ export default function LibrarySidebar() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Bottom Slot Customizable Button (Luna only) */}
-            {pathname.includes('/lunatemplate') && (
-              <div className="relative group mt-1">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
-                  <Layers className="w-4 h-4" />
-                </div>
-                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
-                </div>
-              </div>
-            )}
           </motion.div>
         </>
       )}

@@ -82,6 +82,32 @@ export default function ItemWorkstation({ item, onClose }) {
     y.set(0);
   }
 
+  const rarityColors = {
+    Common: { base: '#64748b', glow: '#94a3b8', dark: '#475569' },
+    Uncommon: { base: '#10b981', glow: '#34d399', dark: '#059669' },
+    Rare: { base: '#3b82f6', glow: '#60a5fa', dark: '#2563eb' },
+    Epic: { base: '#a855f7', glow: '#c084fc', dark: '#9333ea' },
+    Legendary: { base: '#f97316', glow: '#fb923c', dark: '#ea580c' },
+    Mythical: { base: '#ec4899', glow: '#f472b6', dark: '#db2777' },
+    Chosen: { base: '#eab308', glow: '#facc15', dark: '#ca8a04' },
+  };
+
+  const actions = [
+    { id: 'enchant', label: 'Enchant', icon: Zap, color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/50' },
+    { id: 'combine', label: 'Combine', icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
+    { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
+    { id: 'ascend', label: 'Ascend', icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
+  ];
+
+  const availablePerks = [
+    { id: 'fire', name: 'Fire Damage', icon: '🔥', effect: '+15% Fire DMG' },
+    { id: 'ice', name: 'Frost Strike', icon: '❄️', effect: 'Freeze enemies' },
+    { id: 'lightning', name: 'Chain Lightning', icon: '⚡', effect: 'AoE Shock' },
+    { id: 'poison', name: 'Toxic Curse', icon: '☠️', effect: 'DoT Poison' },
+    { id: 'crit', name: 'Critical Edge', icon: '💥', effect: '+25% Crit Rate' },
+    { id: 'lifesteal', name: 'Vampiric', icon: '🩸', effect: '10% Lifesteal' },
+  ];
+
   if (!item) return null;
 
   const handleTrain = () => {
