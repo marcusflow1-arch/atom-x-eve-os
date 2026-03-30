@@ -112,6 +112,13 @@ export default function LibrarySidebar() {
     { id: 3, name: 'GhostReaper', status: 'idle', avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150' },
     { id: 4, name: 'IronFist', status: 'offline', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150' },
     { id: 5, name: 'NovaStar', status: 'online', game: 'League of Legends', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150' },
+    { id: 6, name: 'VoidKnight', status: 'online', game: 'Elden Ring', avatar: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150' },
+    { id: 7, name: 'NeonPulse', status: 'idle', game: 'Valorant', avatar: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=150' },
+    { id: 8, name: 'ArcLight', status: 'online', game: 'Apex Legends', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150' },
+    { id: 9, name: 'DarkOracle', status: 'offline', avatar: 'https://images.unsplash.com/photo-1628157588553-5eckhart?w=150' },
+    { id: 10, name: 'StarForge', status: 'online', game: 'Starfield', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150' },
+    { id: 11, name: 'BlazeCaster', status: 'online', game: 'Diablo IV', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
+    { id: 12, name: 'SilverWolf', status: 'idle', game: 'World of Warcraft', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' },
   ];
 
   // Mock Data
@@ -498,7 +505,7 @@ export default function LibrarySidebar() {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="fixed z-[69] flex flex-col overflow-hidden"
                 style={{
-                  left: '72px',
+                  left: '80px',
                   top: '64px',
                   bottom: '0',
                   width: '240px',
