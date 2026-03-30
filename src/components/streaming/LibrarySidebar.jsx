@@ -502,12 +502,11 @@ export default function LibrarySidebar() {
                   top: '64px',
                   bottom: '0',
                   width: '240px',
-                  background: 'rgba(8, 12, 20, 0.82)',
-                  backdropFilter: 'blur(30px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(30px) saturate(180%)',
-                  borderLeft: '1px solid rgba(255,255,255,0.12)',
-                  borderRight: '1px solid rgba(255,255,255,0.06)',
-                  boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+                  borderLeft: '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
                 }}
               >
                 {/* Header */}
