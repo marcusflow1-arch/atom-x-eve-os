@@ -460,24 +460,7 @@ export default function LibrarySidebar() {
               </div>
             )}
 
-            {/* Friends & Library overlay buttons — shown on all pages */}
-            <div className="w-8 h-px bg-white/10 my-1" />
-            <button
-              onClick={() => { setIsOpen(true); setActiveSub('friends'); }}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
-              title="Friends"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
-            </button>
-            <button
-              onClick={() => { setIsOpen(true); setActiveSub('library'); }}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
-              title="Library"
-            >
-              <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
-            </button>
+
           </motion.div>
         </>
       )}
