@@ -444,10 +444,28 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Bottom Slot Customizable Button (Luna only) */}
+            {/* Friends & Library overlay buttons — shown on all pages */}
             <div className="w-8 h-px bg-white/10 my-1" />
+            <button
+              onClick={() => window.dispatchEvent(new Event('toggleFriendsFullOverlay'))}
+              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
+              title="Friends"
+            >
+              <UsersIcon className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new Event('toggleLibraryFullOverlay'))}
+              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
+              title="Library"
+            >
+              <Library className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
+            </button>
+
+            {/* Bottom Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
-              <div className="relative group mt-1 mb-1">
+              <div className="relative group mt-1">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
                   <Layers className="w-4 h-4" />
                 </div>
@@ -459,8 +477,6 @@ export default function LibrarySidebar() {
                 </div>
               </div>
             )}
-
-
           </motion.div>
         </>
       )}
@@ -497,11 +513,7 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className={`absolute top-0 left-0 bottom-0 z-[70] overflow-hidden flex flex-col transition-[width] duration-300 ${
-          (activeSub === 'friends' || activeSub === 'library') 
-            ? 'w-[480px] sm:w-[576px]' 
-            : 'w-80 sm:w-96'
-        }`}
+        className="absolute top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col"
         style={{ 
           background: 'rgba(10, 14, 20, 0.5)',
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -554,7 +566,38 @@ export default function LibrarySidebar() {
                 </button>
               ))}
             </div>
-            {activeSub === 'friends' && null}
+            {activeSub === 'friends' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="w-4 h-4 text-blue-400" />
+                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Online Friends</h3>
+                  <span className="ml-auto text-[10px] text-white/40">{friendsList.length} total</span>
+                </div>
+                <div className="space-y-3">
+                  {friendsList.map(friend => (
+                    <div 
+                      key={friend.id} 
+                      onClick={() => openOverlay({ type: 'friend', ...friend })}
+                      className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
+                    >
+                      <div className="relative">
+                        <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0e14] ${
+                          friend.status === 'online' ? 'bg-green-500' : 
+                          friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                        }`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">{friend.name}</p>
+                        <p className="text-white/50 text-xs truncate">
+                          {friend.game ? <span className="text-blue-300">{friend.game}</span> : <span className="capitalize">{friend.status}</span>}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {activeSub === 'aura' && (
               <>
                 {/* Recently Watched Games */}
@@ -613,7 +656,54 @@ export default function LibrarySidebar() {
                 </section>
               </>
             )}
-            {activeSub === 'library' && null}
+            {activeSub === 'library' && (
+              <>
+                {/* Library Games Only */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
+                    <div className="ml-auto flex items-center gap-3">
+                        <span className="text-[10px] text-white/40 mr-1">{libraryGames.length} total</span>
+                        <div 
+                          onClick={(e) => { e.stopPropagation(); setIsExpandedLibrary(!isExpandedLibrary); }}
+                          className="flex items-center gap-2 cursor-pointer group"
+                        >
+                            <span className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 pb-px group-hover:border-cyan-400 transition-colors">Full Library</span>
+                            <div className={`p-1 rounded hover:bg-white/10 transition-colors ${isExpandedLibrary ? 'text-cyan-400 bg-white/10' : 'text-white/40'}`}>
+                                <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isExpandedLibrary ? 'rotate-180' : ''}`} />
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {libraryGames.map((game, i) => (
+                      <div
+                        key={`lib_${game.id || 'x'}_${i}`}
+                        onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
+                        className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
+                      >
+                        {/* Small Icon */}
+                        <div className="flex-shrink-0 text-white/40 group-hover:text-cyan-400 transition-colors">
+                          <Gamepad2 className="w-4 h-4" />
+                        </div>
+
+                        {/* Picture of the game */}
+                        <div className="relative w-12 h-16 flex-shrink-0 rounded-md overflow-hidden bg-black/50">
+                          <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover" />
+                        </div>
+
+                        {/* Text to the right */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-white font-medium text-sm truncate group-hover:text-cyan-100 transition-colors">{game.title || game.name}</h4>
+                          <p className="text-white/40 text-xs truncate">Ready to play</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </>
+            )}
             {activeSub === 'entertainment' && (
               <>
                 {/* Streaming / Entertainment Apps */}
