@@ -460,7 +460,19 @@ export default function LibrarySidebar() {
               </div>
             )}
 
-
+            <div className="w-8 h-px bg-white/10 my-1" />
+            <button
+              onClick={() => { setIsOpen(true); setActiveSub('friends'); }}
+              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
+            >
+              <span className="text-sm font-bold opacity-50">?</span>
+            </button>
+            <button
+              onClick={() => { setIsOpen(true); setActiveSub('library'); }}
+              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center border border-white/10 bg-white/5 text-white/60 hover:text-white hover:border-white/40 hover:bg-white/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105 mt-1"
+            >
+              <span className="text-sm font-bold opacity-50">?</span>
+            </button>
           </motion.div>
         </>
       )}
