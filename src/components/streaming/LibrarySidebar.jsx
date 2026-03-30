@@ -509,7 +509,7 @@ export default function LibrarySidebar() {
                 style={{
                   left: '80px',
                   top: '64px',
-                  bottom: '48px',
+                  bottom: '52px',
                   width: '240px',
                   background: 'rgba(255, 255, 255, 0.03)',
                   backdropFilter: 'blur(50px) saturate(200%)',
