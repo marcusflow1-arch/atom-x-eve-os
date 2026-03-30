@@ -9,6 +9,7 @@ import { playItem } from '@/functions/playItem';
 import QuickGamesDrawer from '@/components/shared/QuickGamesDrawer';
 import { MessageSquare, Users as UsersIcon } from 'lucide-react';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
+import FriendProfileOverlay from './FriendProfileOverlay';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
 
 export default function LibrarySidebar() {
@@ -31,6 +32,7 @@ export default function LibrarySidebar() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const [expandedPanel, setExpandedPanel] = useState(null); // 'friends' | 'library' | null
   const [openDropdown, setOpenDropdown] = useState(null); // id of item with open dropdown
+  const [viewingFriend, setViewingFriend] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -556,12 +558,12 @@ export default function LibrarySidebar() {
                             className="overflow-hidden bg-white/5 border-t border-b border-white/5"
                           >
                             {[
-                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400' },
+                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setViewingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Message', icon: Msg, color: 'text-green-400' },
                               { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
                               { label: 'Join', icon: LogIn, color: 'text-purple-400' },
                             ].map(action => (
-                              <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                              <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
                                 <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
                                 <span className="text-white/70 text-xs">{action.label}</span>
                               </button>
@@ -714,7 +716,7 @@ export default function LibrarySidebar() {
                   {friendsList.map(friend => (
                     <div 
                       key={friend.id} 
-                      onClick={() => openOverlay({ type: 'friend', ...friend })}
+                      onClick={() => setViewingFriend(friend)}
                       className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
                     >
                       <div className="relative">
@@ -1175,6 +1177,11 @@ export default function LibrarySidebar() {
           />
         )}
       </AnimatePresence>
+
+      {/* Friend Profile Overlay */}
+      {viewingFriend && (
+        <FriendProfileOverlay friend={viewingFriend} onClose={() => setViewingFriend(null)} />
+      )}
 
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
       <QuickInfoOverlay
