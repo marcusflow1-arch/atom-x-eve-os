@@ -522,6 +522,22 @@ export default function LibrarySidebar() {
           borderRight: '1px solid rgba(165, 243, 252, 0.15)'
         }}
       >
+        {(activeSub === 'library' || activeSub === 'friends') ? (
+            <div className="relative w-full h-full">
+                <button 
+                    onClick={() => setIsOpen(false)}
+                    className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors z-10"
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(4px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                >
+                    <X className="w-3 h-3" />
+                </button>
+            </div>
+        ) : (
+        <>
         {/* Header */}
         <div className="p-6 pt-8 border-b border-white/5 flex items-center gap-3 bg-gradient-to-r from-indigo-600/20 to-transparent relative">
             <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
@@ -529,9 +545,9 @@ export default function LibrarySidebar() {
             </div>
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">
-                    {activeSub === 'aura' ? 'Recently Watched' : activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'friends' ? 'Friends' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
+                    {activeSub === 'aura' ? 'Recently Watched' : activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
                 </h2>
-                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'friends' ? 'Online & Offline' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
+                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
@@ -551,10 +567,8 @@ export default function LibrarySidebar() {
             {/* Sub-pages (Library | Aurora) */}
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mb-4">
               {[
-                { id: 'library', label: 'Library' },
                 { id: 'aura', label: 'Aura' },
                 { id: 'entertainment', label: 'Entertain' },
-                { id: 'friends', label: 'Friends' },
                 { id: 'inventory', label: 'Rewards' },
               ].map((tab) => (
                 <button
@@ -566,11 +580,6 @@ export default function LibrarySidebar() {
                 </button>
               ))}
             </div>
-            {activeSub === 'friends' && (
-              <div className="w-full h-full min-h-[400px] border border-dashed border-white/20 rounded-xl flex items-center justify-center p-8 text-white/40 font-bold tracking-widest uppercase">
-                Friends Box
-              </div>
-            )}
             {activeSub === 'aura' && (
               <>
                 {/* Recently Watched Games */}
@@ -628,11 +637,6 @@ export default function LibrarySidebar() {
                   </div>
                 </section>
               </>
-            )}
-            {activeSub === 'library' && (
-              <div className="w-full h-full min-h-[400px] border border-dashed border-white/20 rounded-xl flex items-center justify-center p-8 text-white/40 font-bold tracking-widest uppercase">
-                Library Box
-              </div>
             )}
             {activeSub === 'entertainment' && (
               <>
@@ -752,7 +756,8 @@ export default function LibrarySidebar() {
                 <Play className="w-3 h-3" /> {activeSub === 'aura' ? 'Open Stream History' : 'View Full History'}
             </button>
         </div>
-
+        </>
+        )}
       </motion.div>
 
       {/* Expanded Library Grid Panel */}
