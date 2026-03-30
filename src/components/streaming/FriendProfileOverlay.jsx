@@ -58,14 +58,14 @@ export default function FriendProfileOverlay({ friend, onClose }) {
         style={{
           left: '320px',   // 80px sidebar + 240px friends panel
           top: '64px',
-          bottom: '48px',
+          bottom: '56px',
           right: 0,
           ...glassStyle,
         }}
       >
         {/* Header bar */}
         <div
-          className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-white/[0.05]"
+          className="flex items-center justify-between px-5 py-3 flex-shrink-0"
           style={{ background: 'rgba(255,255,255,0.025)' }}
         >
           <div className="flex items-center gap-2.5">

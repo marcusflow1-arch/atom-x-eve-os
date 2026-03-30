@@ -509,17 +509,16 @@ export default function LibrarySidebar() {
                 style={{
                   left: '80px',
                   top: '64px',
-                  bottom: '48px',
+                  bottom: '56px',
                   width: '240px',
                   background: 'rgba(255, 255, 255, 0.03)',
                   backdropFilter: 'blur(50px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-                  borderLeft: '1px solid rgba(255,255,255,0.08)',
                   boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
                 }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
                   <span className="text-xs font-bold uppercase tracking-widest text-white/70">
                     {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
                   </span>
