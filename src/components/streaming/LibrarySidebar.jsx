@@ -567,35 +567,8 @@ export default function LibrarySidebar() {
               ))}
             </div>
             {activeSub === 'friends' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <User className="w-4 h-4 text-blue-400" />
-                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Online Friends</h3>
-                  <span className="ml-auto text-[10px] text-white/40">{friendsList.length} total</span>
-                </div>
-                <div className="space-y-3">
-                  {friendsList.map(friend => (
-                    <div 
-                      key={friend.id} 
-                      onClick={() => openOverlay({ type: 'friend', ...friend })}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
-                    >
-                      <div className="relative">
-                        <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-lg object-cover" />
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0e14] ${
-                          friend.status === 'online' ? 'bg-green-500' : 
-                          friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
-                        }`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-semibold truncate">{friend.name}</p>
-                        <p className="text-white/50 text-xs truncate">
-                          {friend.game ? <span className="text-blue-300">{friend.game}</span> : <span className="capitalize">{friend.status}</span>}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="w-full h-full min-h-[400px] border border-dashed border-white/20 rounded-xl flex items-center justify-center p-8 text-white/40 font-bold tracking-widest uppercase">
+                Friends Box
               </div>
             )}
             {activeSub === 'aura' && (
@@ -657,52 +630,9 @@ export default function LibrarySidebar() {
               </>
             )}
             {activeSub === 'library' && (
-              <>
-                {/* Library Games Only */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                    <div className="ml-auto flex items-center gap-3">
-                        <span className="text-[10px] text-white/40 mr-1">{libraryGames.length} total</span>
-                        <div 
-                          onClick={(e) => { e.stopPropagation(); setIsExpandedLibrary(!isExpandedLibrary); }}
-                          className="flex items-center gap-2 cursor-pointer group"
-                        >
-                            <span className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 pb-px group-hover:border-cyan-400 transition-colors">Full Library</span>
-                            <div className={`p-1 rounded hover:bg-white/10 transition-colors ${isExpandedLibrary ? 'text-cyan-400 bg-white/10' : 'text-white/40'}`}>
-                                <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isExpandedLibrary ? 'rotate-180' : ''}`} />
-                            </div>
-                        </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {libraryGames.map((game, i) => (
-                      <div
-                        key={`lib_${game.id || 'x'}_${i}`}
-                        onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
-                        className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
-                      >
-                        {/* Small Icon */}
-                        <div className="flex-shrink-0 text-white/40 group-hover:text-cyan-400 transition-colors">
-                          <Gamepad2 className="w-4 h-4" />
-                        </div>
-
-                        {/* Picture of the game */}
-                        <div className="relative w-12 h-16 flex-shrink-0 rounded-md overflow-hidden bg-black/50">
-                          <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover" />
-                        </div>
-
-                        {/* Text to the right */}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-white font-medium text-sm truncate group-hover:text-cyan-100 transition-colors">{game.title || game.name}</h4>
-                          <p className="text-white/40 text-xs truncate">Ready to play</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </>
+              <div className="w-full h-full min-h-[400px] border border-dashed border-white/20 rounded-xl flex items-center justify-center p-8 text-white/40 font-bold tracking-widest uppercase">
+                Library Box
+              </div>
             )}
             {activeSub === 'entertainment' && (
               <>
