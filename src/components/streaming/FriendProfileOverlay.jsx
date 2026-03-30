@@ -1,4 +1,5 @@
 import React from 'react';
+import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star } from 'lucide-react';
 
@@ -91,13 +92,13 @@ export default function FriendProfileOverlay({ friend, onClose }) {
           >
             {/* Avatar */}
             <div className="relative h-44 flex-shrink-0 overflow-hidden">
-              <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover object-top" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#060910cc] via-transparent to-transparent" />
-              <div className="absolute bottom-2.5 left-3">
+              <MiniAvatarViewer className="w-full h-full" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#060910cc] via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-2.5 left-3 pointer-events-none">
                 <p className="text-white font-bold text-base leading-tight">{friend.name}</p>
                 <p className="text-white/45 text-[10px]">Recruit · Lvl 5</p>
               </div>
-              <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center"
+              <div className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center pointer-events-none"
                 style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.10)' }}>
                 <Star className="w-3.5 h-3.5 text-yellow-400" />
               </div>
