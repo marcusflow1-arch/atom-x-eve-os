@@ -350,19 +350,8 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-row items-stretch gap-0 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
-            style={{
-              background: expandedPanel ? 'rgba(8, 12, 20, 0.92)' : 'transparent',
-              backdropFilter: expandedPanel ? 'blur(30px) saturate(180%)' : 'none',
-              WebkitBackdropFilter: expandedPanel ? 'blur(30px) saturate(180%)' : 'none',
-              border: expandedPanel ? '1px solid rgba(255,255,255,0.1)' : 'none',
-              borderRadius: expandedPanel ? '16px' : '0',
-              boxShadow: expandedPanel ? '4px 0 30px rgba(0,0,0,0.5)' : 'none',
-              maxHeight: '70vh',
-            }}
+            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
-            {/* Left column: all the icon buttons */}
-            <div className="flex flex-col items-center gap-3 py-3 px-1 flex-shrink-0 w-12">
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="relative group">
@@ -429,8 +418,6 @@ export default function LibrarySidebar() {
               >
                 <Library className="w-5 h-5" />
               </button>
-              
-              {/* RESTORE ARROW */}
               {isSidebarCollapsed && (
                 <button
                   onClick={() => {
@@ -498,123 +485,130 @@ export default function LibrarySidebar() {
                 </div>
               </div>
             )}
-            </div>{/* end left column */}
-
-            {/* Right expanded panel — inline extension of the same bar */}
-            <AnimatePresence>
-              {expandedPanel && (
-                <motion.div
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 240, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  className="flex flex-col overflow-hidden flex-shrink-0"
-                  style={{ maxHeight: '70vh' }}
-                >
-                  {/* Vertical divider line */}
-                  <div className="w-px bg-white/15 self-stretch mx-0" />
-                  <div className="w-[240px] flex flex-col" style={{ maxHeight: '70vh' }}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
-                      <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                        {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
-                      </span>
-                      <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    {/* Scrollable list */}
-                    <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
-                      {expandedPanel === 'friends' && friendsList.map(friend => (
-                        <div key={friend.id} className="relative">
-                          <button
-                            onClick={() => setOpenDropdown(openDropdown === friend.id ? null : friend.id)}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
-                          >
-                            <div className="relative flex-shrink-0">
-                              <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-cover" />
-                              <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#08120a] ${
-                                friend.status === 'online' ? 'bg-green-500' :
-                                friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
-                              }`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
-                              <p className="text-white/40 text-[10px] truncate">{friend.game ? friend.game : friend.status}</p>
-                            </div>
-                            <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === friend.id ? 'rotate-90' : ''}`} />
-                          </button>
-                          <AnimatePresence>
-                            {openDropdown === friend.id && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden bg-white/5 border-t border-b border-white/5"
-                              >
-                                {[
-                                  { label: 'Profile', icon: UserCircle, color: 'text-blue-400' },
-                                  { label: 'Message', icon: Msg, color: 'text-green-400' },
-                                  { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
-                                  { label: 'Join', icon: LogIn, color: 'text-purple-400' },
-                                ].map(action => (
-                                  <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
-                                    <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
-                                    <span className="text-white/70 text-xs">{action.label}</span>
-                                  </button>
-                                ))}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                      {expandedPanel === 'library' && libraryGames.map((game, i) => (
-                        <div key={game.id || i} className="relative">
-                          <button
-                            onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
-                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
-                          >
-                            <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
-                              <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
-                              <p className="text-white/40 text-[10px]">Ready to play</p>
-                            </div>
-                            <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
-                          </button>
-                          <AnimatePresence>
-                            {openDropdown === (game.id || i) && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden bg-white/5 border-t border-b border-white/5"
-                              >
-                                {[
-                                  { label: 'Play', icon: Play, color: 'text-cyan-400' },
-                                  { label: 'Details', icon: Search, color: 'text-blue-400' },
-                                  { label: 'Achievements', icon: Trophy, color: 'text-yellow-400' },
-                                  { label: 'Remove', icon: Trash2, color: 'text-red-400' },
-                                ].map(action => (
-                                  <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
-                                    <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
-                                    <span className="text-white/70 text-xs">{action.label}</span>
-                                  </button>
-                                ))}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </motion.div>
+
+          {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
+          <AnimatePresence>
+            {expandedPanel && (
+              <motion.div
+                key="expanded-panel"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                className="fixed z-[69] flex flex-col overflow-hidden"
+                style={{
+                  left: '72px',
+                  top: '64px',
+                  bottom: '0',
+                  width: '240px',
+                  background: 'rgba(8, 12, 20, 0.82)',
+                  backdropFilter: 'blur(30px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+                  borderLeft: '1px solid rgba(255,255,255,0.12)',
+                  borderRight: '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+                  <span className="text-xs font-bold uppercase tracking-widest text-white/70">
+                    {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
+                  </span>
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {/* Scrollable list */}
+                <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
+                  {expandedPanel === 'friends' && friendsList.map(friend => (
+                    <div key={friend.id} className="relative">
+                      <button
+                        onClick={() => setOpenDropdown(openDropdown === friend.id ? null : friend.id)}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                      >
+                        <div className="relative flex-shrink-0">
+                          <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-cover" />
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#08120a] ${
+                            friend.status === 'online' ? 'bg-green-500' :
+                            friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                          }`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
+                          <p className="text-white/40 text-[10px] truncate">{friend.game ? friend.game : friend.status}</p>
+                        </div>
+                        <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === friend.id ? 'rotate-90' : ''}`} />
+                      </button>
+                      <AnimatePresence>
+                        {openDropdown === friend.id && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden bg-white/5 border-t border-b border-white/5"
+                          >
+                            {[
+                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400' },
+                              { label: 'Message', icon: Msg, color: 'text-green-400' },
+                              { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
+                              { label: 'Join', icon: LogIn, color: 'text-purple-400' },
+                            ].map(action => (
+                              <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                                <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
+                                <span className="text-white/70 text-xs">{action.label}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                  {expandedPanel === 'library' && libraryGames.map((game, i) => (
+                    <div key={game.id || i} className="relative">
+                      <button
+                        onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                      >
+                        <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
+                          <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
+                          <p className="text-white/40 text-[10px]">Ready to play</p>
+                        </div>
+                        <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
+                      </button>
+                      <AnimatePresence>
+                        {openDropdown === (game.id || i) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden bg-white/5 border-t border-b border-white/5"
+                          >
+                            {[
+                              { label: 'Play', icon: Play, color: 'text-cyan-400' },
+                              { label: 'Details', icon: Search, color: 'text-blue-400' },
+                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400' },
+                              { label: 'Remove', icon: Trash2, color: 'text-red-400' },
+                            ].map(action => (
+                              <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                                <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
+                                <span className="text-white/70 text-xs">{action.label}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 
