@@ -406,24 +406,7 @@ export default function CommunityPage() {
             </div>
 
             {/* 95% Main Area */}
-            {/* Standardized Header Box - Identical position/size as Clan */}
-            {!activeGame && (
-                <div className="absolute top-20 left-8 z-30 pointer-events-auto w-fit">
-                    <div className="flex items-center gap-6 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-4 pr-8 shadow-lg">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center overflow-hidden border border-white/20">
-                            <MessageSquare className="w-10 h-10 text-white/80" />
-                        </div>
-                        <div className="flex flex-col justify-center">
-                            <h2 className="text-2xl font-black text-white tracking-wider uppercase leading-tight mb-2">Community Forum</h2>
-                            <div className="flex items-center gap-4 text-sm font-medium text-white/60">
-                                <span className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4 text-blue-400" /> Discussions</span>
-                                <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-cyan-500" /> {posts.length} Posts</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-            <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-[64px]">
+            <div className="flex-1 relative h-full overflow-y-auto p-4 sm:p-8 pt-40">
             {/* Ambient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px]" />
@@ -432,7 +415,15 @@ export default function CommunityPage() {
 
             <div className="relative z-10 max-w-[1600px] mx-auto h-[calc(100vh-8rem)] flex flex-col gap-6">
                 
-
+                {/* Header Section (Title) - Now at the top */}
+                {!activeGame && (
+                    <div className="flex items-center gap-4 px-2 mt-12 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <MessageSquare className="w-4 h-4" />
+                        </div>
+                        <h1 className="text-xl font-bold tracking-wide text-white">GAMES DISCUSSION</h1>
+                    </div>
+                )}
 
                 {/* Genre Filter Bar + Search - Moved Below Header */}
                 {!activeGame && (
