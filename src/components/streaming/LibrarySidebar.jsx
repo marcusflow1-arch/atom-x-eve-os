@@ -11,6 +11,7 @@ import { MessageSquare, Users as UsersIcon } from 'lucide-react';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import FriendProfileOverlay from './FriendProfileOverlay';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
+import LibraryGameDetailModal from './LibraryGameDetailModal';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function LibrarySidebar() {
   const [expandedPanel, setExpandedPanel] = useState(null); // 'friends' | 'library' | null
   const [openDropdown, setOpenDropdown] = useState(null); // id of item with open dropdown
   const [viewingFriend, setViewingFriend] = useState(null);
+  const [detailGame, setDetailGame] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -421,7 +423,7 @@ export default function LibrarySidebar() {
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
-                onClick={() => setIsOpen(true)}
+                onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
                 className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1"
                 title="Library & Friends"
               >
@@ -456,7 +458,7 @@ export default function LibrarySidebar() {
             {/* Friends & Library expand buttons */}
             <div className="w-8 h-px bg-white/10 my-1" />
             <button
-              onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); }}
+              onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'friends'
                   ? 'border-green-400/50 bg-green-500/20 text-green-400'
@@ -468,7 +470,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); }}
+              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'library'
                   ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -598,12 +600,12 @@ export default function LibrarySidebar() {
                             className="overflow-hidden bg-white/5 border-t border-b border-white/5"
                           >
                             {[
-                              { label: 'Play', icon: Play, color: 'text-cyan-400' },
-                              { label: 'Details', icon: Search, color: 'text-blue-400' },
-                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400' },
-                              { label: 'Remove', icon: Trash2, color: 'text-red-400' },
+                              { label: 'Play', icon: Play, color: 'text-cyan-400', action: null },
+                              { label: 'Details', icon: Search, color: 'text-blue-400', action: () => { setDetailGame(game); setOpenDropdown(null); } },
+                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400', action: null },
+                              { label: 'Remove', icon: Trash2, color: 'text-red-400', action: null },
                             ].map(action => (
-                              <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                              <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
                                 <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
                                 <span className="text-white/70 text-xs">{action.label}</span>
                               </button>
@@ -1181,6 +1183,11 @@ export default function LibrarySidebar() {
       {/* Friend Profile Overlay */}
       {viewingFriend && (
         <FriendProfileOverlay friend={viewingFriend} onClose={() => setViewingFriend(null)} />
+      )}
+
+      {/* Library Game Detail Modal */}
+      {detailGame && (
+        <LibraryGameDetailModal game={detailGame} onClose={() => setDetailGame(null)} />
       )}
 
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
