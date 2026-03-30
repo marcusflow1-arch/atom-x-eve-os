@@ -58,7 +58,7 @@ export default function CommunityPage() {
     const [posts, setPosts] = useState([]);
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showCreateForm, useStateShowCreateForm] = useState(false);
+    const [showCreateForm, _setShowCreateForm] = useState(false);
     const [selectedPost, setSelectedPost] = useState(null);
     const [activeSection, setActiveSection] = useState('all'); // Filter for topics
     
@@ -332,7 +332,7 @@ export default function CommunityPage() {
 
         try {
             await base44.entities.Post.create(postData);
-            useStateShowCreateForm(false);
+            _setShowCreateForm(false);
             fetchPosts();
             showSuccess('Post created successfully!');
         } catch (error) {
@@ -382,7 +382,7 @@ export default function CommunityPage() {
              showError("Please sign in to create posts.");
              return;
         }
-        useStateShowCreateForm(value);
+        _setShowCreateForm(value);
     }
 
     return (
@@ -787,7 +787,7 @@ export default function CommunityPage() {
                     <PostComposer
                         isOpen={showCreateForm}
                         onSubmit={handleCreatePost}
-                        onCancel={() => useStateShowCreateForm(false)}
+                        onCancel={() => _setShowCreateForm(false)}
                         initialType={activeGame ? 'game_discussion' : 'general_discussion'}
                         initialGameTitle={activeGame ? activeGame.title : ''}
                         initialGameGenre={activeGame ? activeGame.genre : ''}

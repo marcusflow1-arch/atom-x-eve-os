@@ -85,16 +85,9 @@ export default function AvatarModel({ modelUrl }) {
   const groupRef = useRef();
   const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
 
-  // Handle Custom GLB Loading
-  let gltf = null;
-  if (modelUrl) {
-    // This hook suspends automatically, handled by parent Suspense
-    try {
-        gltf = useLoader(GLTFLoader, modelUrl);
-    } catch (e) {
-        console.error("Failed to load custom model", e);
-    }
-  }
+  // Handle Custom GLB Loading - useLoader must be called unconditionally
+  const gltfResult = useLoader(GLTFLoader, modelUrl || '__SKIP__', (loader) => loader);
+  const gltf = modelUrl ? gltfResult : null;
 
   // Animation Mixer for Custom Models
   const mixerRef = useRef();

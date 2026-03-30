@@ -69,6 +69,7 @@ const LibrarySidebarItem = ({ game, isSelected, onSelect, onPlay }) => (
 // Luna Game Detail Panel (now unused - kept as reference, replaced by LibraryGameOverlay)
 const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements, onShowGameDetails }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [videoMode, setVideoMode] = useState('gameplay');
   
   if (!game) {
     return (
@@ -93,8 +94,6 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
     { id: 'community', label: 'Community', icon: Users },
     { id: 'streamer_affiliate', label: 'Streamer Affiliate', icon: Radio },
   ];
-
-  const [videoMode, setVideoMode] = useState('gameplay'); // 'gameplay', 'card_demo', 'ability_preview'
 
   return (
     <div className="h-full flex flex-col">

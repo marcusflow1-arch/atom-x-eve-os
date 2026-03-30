@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -29,6 +29,8 @@ export default function LibrarySidebar() {
   const [recentFarmGames, setRecentFarmGames] = useState([]);
   const [sidebarMode, setSidebarMode] = useState('context');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
+  const [expandedPanel, setExpandedPanel] = useState(null); // 'friends' | 'library' | null
+  const [openDropdown, setOpenDropdown] = useState(null); // id of item with open dropdown
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -444,24 +446,159 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Friends & Library overlay buttons — shown on all pages */}
+            {/* Friends & Library expand buttons — shown on all pages */}
             <div className="w-8 h-px bg-white/10 my-1" />
             <button
-              onClick={() => window.dispatchEvent(new Event('toggleFriendsFullOverlay'))}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
+              onClick={() => setExpandedPanel(p => p === 'friends' ? null : 'friends')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                expandedPanel === 'friends'
+                  ? 'border-green-400/50 bg-green-500/20 text-green-400'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
+              }`}
               title="Friends"
             >
               <UsersIcon className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => window.dispatchEvent(new Event('toggleLibraryFullOverlay'))}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
+              onClick={() => setExpandedPanel(p => p === 'library' ? null : 'library')}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                expandedPanel === 'library'
+                  ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
+              }`}
               title="Library"
             >
               <Library className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
             </button>
+
+            {/* Inline expand panel */}
+            <AnimatePresence>
+              {expandedPanel && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: 260, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="absolute left-[52px] top-1/2 -translate-y-1/2 z-[80] overflow-hidden"
+                  style={{
+                    background: 'rgba(8, 12, 20, 0.92)',
+                    backdropFilter: 'blur(30px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '0 16px 16px 0',
+                    boxShadow: '4px 0 30px rgba(0,0,0,0.5)',
+                    maxHeight: '70vh',
+                  }}
+                >
+                  <div className="w-[260px] flex flex-col" style={{ maxHeight: '70vh' }}>
+                    {/* Panel Header */}
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
+                      <span className="text-xs font-bold uppercase tracking-widest text-white/70">
+                        {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
+                      </span>
+                      <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Scrollable list */}
+                    <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
+                      {expandedPanel === 'friends' && friendsList.map(friend => (
+                        <div key={friend.id} className="relative">
+                          <button
+                            onClick={() => setOpenDropdown(openDropdown === friend.id ? null : friend.id)}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                          >
+                            <div className="relative flex-shrink-0">
+                              <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-cover" />
+                              <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#08120a] ${
+                                friend.status === 'online' ? 'bg-green-500' :
+                                friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
+                              <p className="text-white/40 text-[10px] truncate">
+                                {friend.game ? friend.game : friend.status}
+                              </p>
+                            </div>
+                            <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === friend.id ? 'rotate-90' : ''}`} />
+                          </button>
+                          {/* Dropdown */}
+                          <AnimatePresence>
+                            {openDropdown === friend.id && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden bg-white/5 border-t border-b border-white/5"
+                              >
+                                {[
+                                  { label: 'Profile', icon: UserCircle, color: 'text-blue-400' },
+                                  { label: 'Message', icon: Msg, color: 'text-green-400' },
+                                  { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
+                                  { label: 'Join', icon: LogIn, color: 'text-purple-400' },
+                                ].map(action => (
+                                  <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                                    <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
+                                    <span className="text-white/70 text-xs">{action.label}</span>
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
+
+                      {expandedPanel === 'library' && libraryGames.map((game, i) => (
+                        <div key={game.id || i} className="relative">
+                          <button
+                            onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                          >
+                            <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
+                              <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
+                              <p className="text-white/40 text-[10px]">Ready to play</p>
+                            </div>
+                            <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
+                          </button>
+                          {/* Dropdown */}
+                          <AnimatePresence>
+                            {openDropdown === (game.id || i) && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden bg-white/5 border-t border-b border-white/5"
+                              >
+                                {[
+                                  { label: 'Play', icon: Play, color: 'text-cyan-400' },
+                                  { label: 'Details', icon: Search, color: 'text-blue-400' },
+                                  { label: 'Achievements', icon: Trophy, color: 'text-yellow-400' },
+                                  { label: 'Remove', icon: Trash2, color: 'text-red-400' },
+                                ].map(action => (
+                                  <button key={action.label} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
+                                    <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
+                                    <span className="text-white/70 text-xs">{action.label}</span>
+                                  </button>
+                                ))}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Bottom Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (

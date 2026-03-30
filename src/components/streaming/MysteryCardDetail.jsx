@@ -206,6 +206,7 @@ const BlacksmithView = ({ card }) => {
   const rotateX = useTransform(mouseY, [-150, 150], [12, -12]);
   const rotateY = useTransform(mouseX, [-150, 150], [-12, 12]);
   const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
+  const shineBackground = useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`);
 
   const handleCardMouseMove = ({ currentTarget, clientX, clientY }) => {
     const { left, top, width, height } = currentTarget.getBoundingClientRect();
@@ -362,8 +363,8 @@ const BlacksmithView = ({ card }) => {
                      <img src={card?.image} alt="" className="w-full h-full object-cover" />
 
                      <motion.div
-                       className="absolute inset-0 pointer-events-none mix-blend-overlay"
-                       style={{ background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.35) ${val}%, transparent 100%)`) }}
+                         className="absolute inset-0 pointer-events-none mix-blend-overlay"
+                         style={{ background: shineBackground }}
                      />
 
                      <div className="absolute top-4 left-3 right-3 flex items-center justify-between">

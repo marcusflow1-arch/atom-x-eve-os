@@ -31,12 +31,10 @@ export default function ItemWorkstation({ item, onClose }) {
   
   const maxLevel = getMaxLevel(item?.rarity);
 
-  if (!item) return null;
-
   // Combine state (two slots for same-game cards)
   const [combineSlot, setCombineSlot] = useState(null);
   const [combineQuantity, setCombineQuantity] = useState(1);
-  const [inventoryCards, setInventoryCards] = useState(() => 
+  const [inventoryCards, setInventoryCards] = useState(() =>
     Array.from({ length: 18 }, (_, i) => ({
       id: `duplicate-${i}`,
       name: item?.name,
@@ -61,32 +59,6 @@ export default function ItemWorkstation({ item, onClose }) {
     }));
   }, [item]);
 
-  const rarityColors = {
-    Common: { base: '#64748b', glow: '#94a3b8', dark: '#475569' },
-    Uncommon: { base: '#10b981', glow: '#34d399', dark: '#059669' },
-    Rare: { base: '#3b82f6', glow: '#60a5fa', dark: '#2563eb' },
-    Epic: { base: '#a855f7', glow: '#c084fc', dark: '#9333ea' },
-    Legendary: { base: '#f97316', glow: '#fb923c', dark: '#ea580c' },
-    Mythical: { base: '#ec4899', glow: '#f472b6', dark: '#db2777' },
-    Chosen: { base: '#eab308', glow: '#facc15', dark: '#ca8a04' },
-  };
-
-  const actions = [
-    { id: 'enchant', label: 'Enchant', icon: Zap, color: 'text-purple-400', bg: 'bg-purple-500/20', border: 'border-purple-500/50' },
-    { id: 'combine', label: 'Combine', icon: ArrowLeftRight, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/50' },
-    { id: 'train', label: 'Train', icon: Swords, color: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/50' },
-    { id: 'ascend', label: 'Ascend', icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/20', border: 'border-yellow-500/50' },
-  ];
-
-  const availablePerks = [
-    { id: 'fire', name: 'Fire Damage', icon: '🔥', effect: '+15% Fire DMG' },
-    { id: 'ice', name: 'Frost Strike', icon: '❄️', effect: 'Freeze enemies' },
-    { id: 'lightning', name: 'Chain Lightning', icon: '⚡', effect: 'AoE Shock' },
-    { id: 'poison', name: 'Toxic Curse', icon: '☠️', effect: 'DoT Poison' },
-    { id: 'crit', name: 'Critical Edge', icon: '💥', effect: '+25% Crit Rate' },
-    { id: 'lifesteal', name: 'Vampiric', icon: '🩸', effect: '10% Lifesteal' },
-  ];
-
   // Tilt Logic
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -95,6 +67,7 @@ export default function ItemWorkstation({ item, onClose }) {
   const rotateX = useTransform(mouseY, [-150, 150], [15, -15]);
   const rotateY = useTransform(mouseX, [-150, 150], [-15, 15]);
   const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
+  const shineBackground = useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`);
 
   function handleMouseMove({ currentTarget, clientX, clientY }) {
     const { left, top, width, height } = currentTarget.getBoundingClientRect();
@@ -108,6 +81,8 @@ export default function ItemWorkstation({ item, onClose }) {
     x.set(0);
     y.set(0);
   }
+
+  if (!item) return null;
 
   const handleTrain = () => {
     const cost = 500;
@@ -360,10 +335,10 @@ export default function ItemWorkstation({ item, onClose }) {
 
                 {/* Shine Effect */}
                 <motion.div 
-                  className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
-                  style={{
-                    background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
-                  }}
+                   className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
+                   style={{
+                     background: shineBackground
+                   }}
                 />
 
                 {/* Card Info Overlays */}
