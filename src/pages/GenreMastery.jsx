@@ -182,6 +182,22 @@ export default function GenreMastery({ onClose }) {
         <div className="absolute inset-0 bg-black/60 z-0" />
         <div className={`absolute inset-0 bg-gradient-to-br ${selectedGenre.color} opacity-[0.06] z-0`} />
 
+        {/* Standardized Header Box - Identical position/size as Clan */}
+        <div className="absolute top-20 left-8 z-30 pointer-events-auto">
+            <div className="flex items-center gap-6 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-4 pr-8 shadow-lg">
+                <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center overflow-hidden border border-white/20`}>
+                    {selectedGenre.icon && React.createElement(selectedGenre.icon, { className: 'w-10 h-10 text-white/80' })}
+                </div>
+                <div className="flex flex-col justify-center">
+                    <h2 className="text-2xl font-black text-white tracking-wider uppercase leading-tight mb-2">{selectedGenre.name} Mastery</h2>
+                    <div className="flex items-center gap-4 text-sm font-medium text-white/60">
+                        <span className="flex items-center gap-1.5"><Trophy className="w-4 h-4 text-amber-500" /> Level {selectedGenre.level}/{selectedGenre.maxLevel}</span>
+                        <span className="flex items-center gap-1.5"><Gamepad2 className="w-4 h-4 text-cyan-500" /> {gameData.length} Games</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {/* ═══ SUB-NAV BAR (below global header) ═══ */}
         <div className="relative z-10 flex-shrink-0 mt-16">
           <div className="flex items-center px-6 py-2 gap-0"
