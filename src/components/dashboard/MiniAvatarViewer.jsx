@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { base44 } from '@/api/base44Client';
 
-export default function MiniAvatarViewer({ size = 80 }) {
+export default function MiniAvatarViewer({ size = 80, fill = false, style }) {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
 
@@ -18,8 +18,12 @@ export default function MiniAvatarViewer({ size = 80 }) {
     const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
     camera.position.set(0, 1.2, 2.5);
 
+    const w = fill ? (containerRef.current.clientWidth || 220) : size;
+    const h = fill ? (containerRef.current.clientHeight || 256) : size;
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(size, size);
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
@@ -131,13 +135,8 @@ export default function MiniAvatarViewer({ size = 80 }) {
   return (
     <div 
       ref={containerRef} 
-      className="rounded-lg overflow-hidden"
-      style={{ 
-        width: size, 
-        height: size,
-        background: 'rgba(20, 20, 30, 0.6)',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
-      }} 
+      className="overflow-hidden"
+      style={fill ? { width: '100%', height: '100%', ...style } : { width: size, height: size, background: 'rgba(20, 20, 30, 0.6)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', ...style }} 
     />
   );
 }

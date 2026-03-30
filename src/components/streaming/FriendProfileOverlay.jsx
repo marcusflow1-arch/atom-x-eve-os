@@ -58,7 +58,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
         style={{
           left: '320px',   // 80px sidebar + 240px friends panel
           top: '64px',
-          bottom: '56px',
+          bottom: '52px',
           right: 0,
           ...glassStyle,
         }}
@@ -91,8 +91,8 @@ export default function FriendProfileOverlay({ friend, onClose }) {
             style={{ scrollbarWidth: 'none' }}
           >
             {/* Avatar */}
-            <div className="relative h-44 flex-shrink-0 overflow-hidden">
-              <MiniAvatarViewer className="w-full h-full" />
+            <div className="relative h-64 flex-shrink-0 overflow-hidden">
+              <MiniAvatarViewer fill />
               <div className="absolute inset-0 bg-gradient-to-t from-[#060910cc] via-transparent to-transparent pointer-events-none" />
               <div className="absolute bottom-2.5 left-3 pointer-events-none">
                 <p className="text-white font-bold text-base leading-tight">{friend.name}</p>
