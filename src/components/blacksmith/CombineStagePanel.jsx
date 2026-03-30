@@ -341,7 +341,7 @@ export default function CombineStagePanel({ item, onCombine }) {
             card={dropZoneCard} 
             onRemove={() => setDropZoneCard(null)}
             onClick={handleDropZoneClick}
-            hasSelection={!!dropZoneCard}
+            hasSelection={!!selectedCard && !dropZoneCard}
           />
 
           {/* Arrow */}

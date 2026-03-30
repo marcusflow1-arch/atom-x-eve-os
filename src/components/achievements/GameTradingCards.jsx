@@ -53,10 +53,6 @@ const CardComponent = ({ card, onClick }) => {
   const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
   const rotateX = useTransform(mouseY, [-0.5, 0.5], [25, -25]);
   const rotateY = useTransform(mouseX, [-0.5, 0.5], [-25, 25]);
-  
-  // Create static transforms that we conditionally apply during render
-  const specialOpacity = useTransform(rotateX, (val) => Math.abs(val) / 50 + 0.3);
-  const specialTransform = useTransform(mouseX, [-0.5, 0.5], ["translateX(-120%)", "translateX(120%)"]);
 
   function handleMouseMove(event) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -137,9 +133,9 @@ const CardComponent = ({ card, onClick }) => {
       {isSpecialCard && !isEmptyCard && (
         <motion.div 
           style={{
-            opacity: specialOpacity,
+            opacity: useTransform(rotateX, (val) => Math.abs(val) / 50 + 0.3),
             background: "linear-gradient(105deg, transparent 15%, rgba(147,197,253,0.6) 20%, rgba(253,224,71,0.7) 25%, rgba(251,191,36,0.5) 30%, transparent 35%)",
-            transform: specialTransform,
+            transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-120%)", "translateX(120%)"]),
           }}
           className="absolute inset-0 z-10 pointer-events-none mix-blend-screen"
         />

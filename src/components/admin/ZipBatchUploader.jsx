@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Archive, Upload, Loader2, CheckCircle2, XCircle, AlertTriangle,
-  Trash2, Play, FileArchive, FolderOpen, X, Brain, SkipForward, RefreshCw
+  Trash2, Play, FileArchive, FolderOpen, X, Brain, SkipForward
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

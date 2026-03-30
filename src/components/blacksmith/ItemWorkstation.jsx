@@ -31,6 +31,8 @@ export default function ItemWorkstation({ item, onClose }) {
   
   const maxLevel = getMaxLevel(item?.rarity);
 
+  if (!item) return null;
+
   // Combine state (two slots for same-game cards)
   const [combineSlot, setCombineSlot] = useState(null);
   const [combineQuantity, setCombineQuantity] = useState(1);
@@ -58,8 +60,6 @@ export default function ItemWorkstation({ item, onClose }) {
       combineStage: Math.floor(Math.random() * 5) + 1
     }));
   }, [item]);
-
-  if (!item) return null;
 
   const rarityColors = {
     Common: { base: '#64748b', glow: '#94a3b8', dark: '#475569' },
@@ -95,7 +95,6 @@ export default function ItemWorkstation({ item, onClose }) {
   const rotateX = useTransform(mouseY, [-150, 150], [15, -15]);
   const rotateY = useTransform(mouseX, [-150, 150], [-15, 15]);
   const shineX = useTransform(mouseX, [-150, 150], [0, 100]);
-  const shineBg = useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`);
 
   function handleMouseMove({ currentTarget, clientX, clientY }) {
     const { left, top, width, height } = currentTarget.getBoundingClientRect();
@@ -362,7 +361,9 @@ export default function ItemWorkstation({ item, onClose }) {
                 {/* Shine Effect */}
                 <motion.div 
                   className="absolute inset-0 z-20 pointer-events-none mix-blend-overlay"
-                  style={{ background: shineBg }}
+                  style={{
+                    background: useTransform(shineX, val => `linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.4) ${val}%, transparent 100%)`)
+                  }}
                 />
 
                 {/* Card Info Overlays */}

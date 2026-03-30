@@ -80,8 +80,23 @@ function HandItem({ type }) {
   return null;
 }
 
-function CustomModel({ url }) {
-  const gltf = useLoader(GLTFLoader, url);
+// --- Main Avatar Component ---
+export default function AvatarModel({ modelUrl }) {
+  const groupRef = useRef();
+  const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
+
+  // Handle Custom GLB Loading
+  let gltf = null;
+  if (modelUrl) {
+    // This hook suspends automatically, handled by parent Suspense
+    try {
+        gltf = useLoader(GLTFLoader, modelUrl);
+    } catch (e) {
+        console.error("Failed to load custom model", e);
+    }
+  }
+
+  // Animation Mixer for Custom Models
   const mixerRef = useRef();
   
   useEffect(() => {
@@ -95,32 +110,23 @@ function CustomModel({ url }) {
     }
   }, [gltf]);
 
-  useFrame((state, delta) => {
-    if (mixerRef.current) {
-        mixerRef.current.update(delta);
-    }
-  });
-
-  return <primitive object={gltf.scene} scale={1.5} />;
-}
-
-// --- Main Avatar Component ---
-export default function AvatarModel({ modelUrl }) {
-  const groupRef = useRef();
-  const equipped = useAvatarStore((state) => state?.equipped || { head: 'none', body: 'base', accessory: 'none', hand: 'none' });
-
+  // Frame Loop
   useFrame((state, delta) => {
     if (groupRef.current) {
         // Simple idle rotation
         groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
+    // Update animation mixer
+    if (mixerRef.current) {
+        mixerRef.current.update(delta);
+    }
   });
 
   // Render Custom Model if available
-  if (modelUrl) {
+  if (modelUrl && gltf) {
     return (
         <group ref={groupRef} position={[0, -1, 0]}>
-            <CustomModel url={modelUrl} />
+            <primitive object={gltf.scene} scale={1.5} />
         </group>
     );
   }

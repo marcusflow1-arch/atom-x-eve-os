@@ -152,6 +152,7 @@ Return strictly JSON matching the provided schema with a 'nodes' array as the ro
         );
       case "image":
         return (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             key={idx}
             src={p.src || "https://images.unsplash.com/photo-1495567720989-cebdbdd97913?w=1200"}

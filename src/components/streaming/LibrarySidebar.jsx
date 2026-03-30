@@ -239,27 +239,26 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Top Section: Boxes only */}
-          {!isSidebarCollapsed && (
+          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
+          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-5 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[104px] opacity-100"
+              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[136px] opacity-100"
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight w-16"
+                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
               >
                  {sidebarMode === 'context' ? (
                    isClan ? <>Recently<br/>Visited</> : 
                    isForum ? <>Recent<br/>Forums</> : 
                    isFarm ? <>Recent<br/>Farm Hub</> :
-                   isGenreMastery ? <>Recent<br/>Cards</> :
-                   <>Recently<br/>Played</>
+                   <>Recent<br/>Cards</>
                  ) : <>Recently<br/>Played</>}
               </button>
-              <div className="w-8 h-px bg-white/20" />
+              <div className="w-8 h-px bg-white/20 -mt-1" />
 
               {/* The 5 boxes */}
               {sidebarMode === 'context' ? (
@@ -349,7 +348,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`fixed left-5 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 top-1/2 -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
@@ -488,7 +487,7 @@ export default function LibrarySidebar() {
           initial={{ x: -50 }}
           animate={{ x: 0 }}
           onClick={() => setShowLeftNav(true)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
           title="Show UI"
         >
           <Eye className="w-3 h-3" />
@@ -503,7 +502,7 @@ export default function LibrarySidebar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[65]"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-[65]"
           />
         )}
       </AnimatePresence>
@@ -514,7 +513,7 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="fixed top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col"
+        className="absolute top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col"
         style={{ 
           background: 'rgba(10, 14, 20, 0.5)',
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -834,7 +833,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`fixed top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
+                className={`absolute top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
                 style={{
                   background: 'rgba(12, 16, 24, 0.6)',
                   backdropFilter: 'blur(40px) saturate(180%)',
@@ -897,7 +896,7 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-0 right-0 bottom-0 w-[400px] xl:w-[500px] z-[69] shadow-2xl flex flex-col overflow-hidden"
+                className="absolute top-0 right-0 bottom-0 w-[400px] xl:w-[500px] z-[69] shadow-2xl flex flex-col overflow-hidden"
                 style={{
                   background: 'rgba(15, 20, 26, 0.65)',
                   backdropFilter: 'blur(40px) saturate(180%)',

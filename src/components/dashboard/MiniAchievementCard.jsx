@@ -10,16 +10,6 @@ export default function MiniAchievementCard({ achievement, size = 50 }) {
   const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
   const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
   const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
-  
-  const glossBg = useTransform(
-    mouseX, 
-    [-0.5, 0.5], 
-    [
-      "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 55%, transparent 80%)",
-      "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 55%, transparent 80%)"
-    ]
-  );
-  const glossTransform = useTransform(mouseX, [-0.5, 0.5], ["translateX(-50%)", "translateX(50%)"]);
 
   // Return null if no achievement provided
   if (!achievement) return null;
@@ -87,8 +77,15 @@ export default function MiniAchievementCard({ achievement, size = 50 }) {
           className="absolute inset-0 pointer-events-none z-10"
           style={{
             opacity: isHovered ? 0.6 : 0.2,
-            background: glossBg,
-            transform: glossTransform,
+            background: useTransform(
+              mouseX, 
+              [-0.5, 0.5], 
+              [
+                "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 55%, transparent 80%)",
+                "linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.4) 45%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 55%, transparent 80%)"
+              ]
+            ),
+            transform: useTransform(mouseX, [-0.5, 0.5], ["translateX(-50%)", "translateX(50%)"]),
           }}
         />
 
