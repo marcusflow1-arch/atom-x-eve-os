@@ -444,28 +444,10 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Friends & Library overlay buttons — shown on all pages */}
-            <div className="w-8 h-px bg-white/10 my-1" />
-            <button
-              onClick={() => { setIsOpen(true); setActiveSub('library'); }}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
-              title="Library"
-            >
-              <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
-            </button>
-            <button
-              onClick={() => { setIsOpen(true); setActiveSub('friends'); }}
-              className="w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10 backdrop-blur-lg shadow-lg transition-all hover:scale-105"
-              title="Friends"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Friends</span>
-            </button>
-
             {/* Bottom Slot Customizable Button (Luna only) */}
+            <div className="w-8 h-px bg-white/10 my-1" />
             {pathname.includes('/lunatemplate') && (
-              <div className="relative group mt-1">
+              <div className="relative group mt-1 mb-1">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
                   <Layers className="w-4 h-4" />
                 </div>
@@ -477,6 +459,8 @@ export default function LibrarySidebar() {
                 </div>
               </div>
             )}
+
+
           </motion.div>
         </>
       )}
@@ -513,7 +497,11 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="absolute top-0 left-0 bottom-0 w-[450px] z-[70] overflow-hidden flex flex-col"
+        className={`absolute top-0 left-0 bottom-0 z-[70] overflow-hidden flex flex-col transition-[width] duration-300 ${
+          (activeSub === 'friends' || activeSub === 'library') 
+            ? 'w-[480px] sm:w-[576px]' 
+            : 'w-80 sm:w-96'
+        }`}
         style={{ 
           background: 'rgba(10, 14, 20, 0.5)',
           backdropFilter: 'blur(40px) saturate(180%)',
@@ -522,22 +510,6 @@ export default function LibrarySidebar() {
           borderRight: '1px solid rgba(165, 243, 252, 0.15)'
         }}
       >
-        {(activeSub === 'library' || activeSub === 'friends') ? (
-            <div className="relative w-full h-full">
-                <button 
-                    onClick={() => setIsOpen(false)}
-                    className="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full text-white/50 hover:text-white transition-colors z-10"
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(4px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}
-                >
-                    <X className="w-3 h-3" />
-                </button>
-            </div>
-        ) : (
-        <>
         {/* Header */}
         <div className="p-6 pt-8 border-b border-white/5 flex items-center gap-3 bg-gradient-to-r from-indigo-600/20 to-transparent relative">
             <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
@@ -545,9 +517,9 @@ export default function LibrarySidebar() {
             </div>
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">
-                    {activeSub === 'aura' ? 'Recently Watched' : activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
+                    {activeSub === 'aura' ? 'Recently Watched' : activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'friends' ? 'Friends' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
                 </h2>
-                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
+                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'friends' ? 'Online & Offline' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
@@ -567,8 +539,10 @@ export default function LibrarySidebar() {
             {/* Sub-pages (Library | Aurora) */}
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mb-4">
               {[
+                { id: 'library', label: 'Library' },
                 { id: 'aura', label: 'Aura' },
                 { id: 'entertainment', label: 'Entertain' },
+                { id: 'friends', label: 'Friends' },
                 { id: 'inventory', label: 'Rewards' },
               ].map((tab) => (
                 <button
@@ -580,6 +554,7 @@ export default function LibrarySidebar() {
                 </button>
               ))}
             </div>
+            {activeSub === 'friends' && null}
             {activeSub === 'aura' && (
               <>
                 {/* Recently Watched Games */}
@@ -638,6 +613,7 @@ export default function LibrarySidebar() {
                 </section>
               </>
             )}
+            {activeSub === 'library' && null}
             {activeSub === 'entertainment' && (
               <>
                 {/* Streaming / Entertainment Apps */}
@@ -756,8 +732,7 @@ export default function LibrarySidebar() {
                 <Play className="w-3 h-3" /> {activeSub === 'aura' ? 'Open Stream History' : 'View Full History'}
             </button>
         </div>
-        </>
-        )}
+
       </motion.div>
 
       {/* Expanded Library Grid Panel */}
@@ -768,7 +743,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`absolute top-0 bottom-0 left-[450px] z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
+                className={`absolute top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
                 style={{
                   background: 'rgba(12, 16, 24, 0.6)',
                   backdropFilter: 'blur(40px) saturate(180%)',
