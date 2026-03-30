@@ -94,8 +94,6 @@ const LunaGamePanel = ({ game, isStreaming, onPlay, onStream, onShowAchievements
     { id: 'streamer_affiliate', label: 'Streamer Affiliate', icon: Radio },
   ];
 
-  const [videoMode, setVideoMode] = useState('gameplay'); // 'gameplay', 'card_demo', 'ability_preview'
-
   return (
     <div className="h-full flex flex-col">
       {/* Hero Section */}
@@ -511,6 +509,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [activeDetailTab, setActiveDetailTab] = useState('content');
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
+  const [videoMode, setVideoMode] = useState('gameplay');
 
   const handleStreamGame = async (game) => {
     try {
