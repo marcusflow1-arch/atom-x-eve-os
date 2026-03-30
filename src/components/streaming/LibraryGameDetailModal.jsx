@@ -54,10 +54,10 @@ export default function LibraryGameDetailModal({ game, onClose }) {
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className="fixed z-[68] flex flex-col overflow-hidden"
         style={{
-          right: 0,
+          left: '320px',
           top: '64px',
           bottom: '52px',
-          width: '380px',
+          right: 0,
           ...glassStyle,
         }}
       >
