@@ -821,7 +821,7 @@ export default function LibrarySidebar() {
                     {libraryGames.map((game, i) => (
                       <div
                         key={`lib_${game.id || 'x'}_${i}`}
-                        onClick={() => openOverlay({ type: 'game', id: game.id, title: game.title || game.name, image: game.cover || game.cover_image })}
+                        onClick={() => { setPreviewGame(game); setIsExpandedLibrary(true); }}
                         className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
                       >
                         {/* Small Icon */}
@@ -1006,7 +1006,7 @@ export default function LibrarySidebar() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.03 }}
-                            onClick={() => setPreviewGame(game)}
+                            onClick={() => { setPreviewGame(game); setIsExpandedLibrary(true); }}
                             className={`group relative aspect-[3/4] rounded-xl overflow-hidden bg-white/5 border cursor-pointer transition-all duration-300 ${previewGame?.id === game.id ? 'border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)] ring-2 ring-cyan-400/20' : 'border-white/10 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]'}`}
                         >
                             <img 
