@@ -205,6 +205,8 @@ export default function LibrarySidebar() {
       setIsExpandedInventory(false);
       setInventoryDetailItem(null);
       setPendingRewardGame(null);
+      setTradingFriend(null);
+      setViewingFriend(null);
     }
   }, [isOpen]);
 
@@ -601,7 +603,7 @@ export default function LibrarySidebar() {
                       </button>
                     )}
                   </div>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); setSelectedEntertainmentApp(null); setShowAddLink(false); setTradingFriend(null); setViewingFriend(null); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>

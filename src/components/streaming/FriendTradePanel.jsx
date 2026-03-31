@@ -68,6 +68,15 @@ export default function FriendTradePanel({ friend, onClose }) {
   };
 
   return (
+    <>
+    {/* Backdrop — click outside to close */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 z-[70] bg-black/40"
+    />
     <motion.div
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
@@ -258,5 +267,6 @@ export default function FriendTradePanel({ friend, onClose }) {
         </div>
       </div>
     </motion.div>
+    </>
   );
 }
