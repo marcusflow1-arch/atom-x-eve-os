@@ -361,6 +361,8 @@ export default function LibrarySidebar() {
                   ))}
                 </>
               )}
+              {/* Separator below last box */}
+              <div className="mt-1 w-8 h-px bg-white/20" />
             </motion.div>
           )}
 
