@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { useState, useEffect } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
