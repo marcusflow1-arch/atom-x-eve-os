@@ -166,79 +166,81 @@ export default function FriendInteractionPanel({ friend, onClose, currentUserId 
 
         {/* Content */}
         <div className="p-6 max-h-96 overflow-y-auto">
-          {activeTab === 'profile' && (
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-slate-400 uppercase font-bold">Status</label>
-                <p className="text-white capitalize">{friend.status}</p>
-              </div>
-              {friend.current_game && (
+          <AnimatePresence mode="wait">
+            {activeTab === 'profile' && (
+              <motion.div key="profile" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
                 <div>
-                  <label className="text-xs text-slate-400 uppercase font-bold">Playing</label>
-                  <p className="text-white">{friend.current_game}</p>
+                  <label className="text-xs text-slate-400 uppercase font-bold">Status</label>
+                  <p className="text-white capitalize">{friend.status}</p>
                 </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'messages' && (
-            <div className="space-y-4">
-              <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender_id === currentUserId
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white/10 text-white'
-                    }`}>
-                      <p className="text-sm">{msg.content}</p>
-                      <p className="text-xs opacity-60 mt-1">
-                        {new Date(msg.created_date).toLocaleTimeString()}
-                      </p>
-                    </div>
+                {friend.current_game && (
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Playing</label>
+                    <p className="text-white">{friend.current_game}</p>
                   </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
-                />
-                <button
-                  onClick={sendMessage}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          )}
+                )}
+              </motion.div>
+            )}
 
-          {activeTab === 'actions' && (
-            <div className="space-y-3">
-              <button
-                onClick={inviteToParty}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
-              >
-                <Users className="w-5 h-5 text-blue-400" />
-                <span>Invite to Party</span>
-              </button>
-              <button
-                onClick={removeFriend}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
-              >
-                <UserMinus className="w-5 h-5" />
-                <span>Remove Friend</span>
-              </button>
-            </div>
-          )}
+            {activeTab === 'messages' && (
+              <motion.div key="messages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-4">
+                <div className="space-y-3 max-h-64 overflow-y-auto mb-4">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                        msg.sender_id === currentUserId
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-white/10 text-white'
+                      }`}>
+                        <p className="text-sm">{msg.content}</p>
+                        <p className="text-xs opacity-60 mt-1">
+                          {new Date(msg.created_date).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                    placeholder="Type a message..."
+                    className="flex-1 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-blue-500"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white transition-colors"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'actions' && (
+              <motion.div key="actions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="space-y-3">
+                <button
+                  onClick={inviteToParty}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+                >
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span>Invite to Party</span>
+                </button>
+                <button
+                  onClick={removeFriend}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-red-400 transition-colors"
+                >
+                  <UserMinus className="w-5 h-5" />
+                  <span>Remove Friend</span>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.div>
     </motion.div>
