@@ -273,17 +273,17 @@ export default function FriendTradePanel({ friend, onClose }) {
           </button>
         </div>
 
-        {/* Body */}
+        {/* Body - 70/30 Split */}
         <div className="flex flex-1 overflow-hidden min-h-0">
 
-          {/* ── LEFT: Game + Inventory Browser (75%) ─────────────────────────── */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0"
+          {/* ── LEFT: Game Library + Inventory (70%) ─────────────────────────── */}
+          <div style={{ flex: '0 0 70%' }} className="flex flex-col overflow-hidden min-h-0"
             style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
 
-            {/* Games Grid */}
+            {/* Games Grid - Card Style */}
             <div className="flex-shrink-0 px-4 pt-3 pb-2">
               <p className="text-[8px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Your Games ({GAMES_WITH_CARDS.length})</p>
-              <div className="grid grid-cols-4 gap-2.5">
+              <div className="grid grid-cols-6 gap-3" style={{ scrollbarWidth: 'none' }}>
                 {GAMES_WITH_CARDS.map(game => (
                   <button
                     key={game.id}
@@ -292,16 +292,32 @@ export default function FriendTradePanel({ friend, onClose }) {
                       setSearchQuery('');
                       setSelectedCategory(null);
                     }}
-                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl transition-all hover:scale-105"
+                    className="relative group flex flex-col rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
                     style={{
-                      background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'rgba(100,120,140,0.12)',
-                      border: selectedGame === game.id ? '1px solid rgba(34,211,238,0.35)' : '1px solid rgba(255,255,255,0.12)',
-                      backdropFilter: 'blur(20px)',
-                      boxShadow: selectedGame === game.id ? '0 0 20px rgba(34,211,238,0.2)' : 'inset 0 1px 0 rgba(255,255,255,0.08)',
+                      aspectRatio: '3/4',
+                      background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'transparent',
+                      border: selectedGame === game.id ? '2px solid rgba(34,211,238,0.5)' : '2px solid transparent',
+                      boxShadow: selectedGame === game.id ? '0 0 20px rgba(34,211,238,0.3)' : 'none',
                     }}
                   >
-                    <img src={game.cover} alt={game.name} className="w-9 h-9 rounded-lg object-cover ring-1.5" style={{ ringColor: selectedGame === game.id ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.15)' }} />
-                    <span className="text-[7px] font-bold text-center leading-tight line-clamp-2 px-0.5" style={{ color: selectedGame === game.id ? '#67e8f9' : 'rgba(255,255,255,0.7)' }}>{game.name}</span>
+                    {/* Full Cover Image */}
+                    <img 
+                      src={game.cover} 
+                      alt={game.name} 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    />
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    {/* Game Name Below */}
+                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                      <span className="text-[9px] font-bold text-white text-center block leading-tight line-clamp-2 drop-shadow-lg">
+                        {game.name}
+                      </span>
+                    </div>
+                    {/* Selection Glow */}
+                    {selectedGame === game.id && (
+                      <div className="absolute inset-0 border-2 border-cyan-400/60 rounded-xl" style={{ boxShadow: 'inset 0 0 20px rgba(34,211,238,0.4)' }} />
+                    )}
                   </button>
                 ))}
               </div>
@@ -345,7 +361,7 @@ export default function FriendTradePanel({ friend, onClose }) {
               )}
             </AnimatePresence>
 
-            {/* Items Grid */}
+            {/* Items Grid - Scrollable with 2-row capacity */}
             <div className="flex-1 overflow-y-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
               <AnimatePresence mode="wait">
                 {selectedGame ? (
@@ -356,7 +372,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                     <p className="text-[8px] font-black uppercase tracking-widest mb-2.5 mt-2 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       {filteredCards.length} Item{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
-                    <div className="grid grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-5 gap-2">
                       {filteredCards.map(card => (
                         <div
                           key={card.id}
@@ -390,8 +406,8 @@ export default function FriendTradePanel({ friend, onClose }) {
             </div>
           </div>
 
-          {/* ── RIGHT: Trade Workspace (25%) ──────────────────────────────────── */}
-          <div style={{ flex: '0 0 25%' }} className="flex flex-col overflow-hidden min-h-0">
+          {/* ── RIGHT: Trade Workspace (30%) ──────────────────────────────────── */}
+          <div style={{ flex: '0 0 30%' }} className="flex flex-col overflow-hidden min-h-0">
 
             {/* THEIR OFFER — 50% */}
             <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 50%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
