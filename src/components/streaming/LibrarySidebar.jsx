@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2 } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -10,6 +10,7 @@ import QuickGamesDrawer from '@/components/shared/QuickGamesDrawer';
 import { MessageSquare, Users as UsersIcon } from 'lucide-react';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import FriendProfileOverlay from './FriendProfileOverlay';
+import FriendTradePanel from './FriendTradePanel';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
 
@@ -34,6 +35,7 @@ export default function LibrarySidebar() {
   const [expandedPanel, setExpandedPanel] = useState(null); // 'friends' | 'library' | null
   const [openDropdown, setOpenDropdown] = useState(null); // id of item with open dropdown
   const [viewingFriend, setViewingFriend] = useState(null);
+  const [tradingFriend, setTradingFriend] = useState(null);
   const [detailGame, setDetailGame] = useState(null);
   const [fullLibraryDetailGame, setFullLibraryDetailGame] = useState(null);
   const [isExpandedRewardsInventory, setIsExpandedRewardsInventory] = useState(false);
@@ -636,6 +638,7 @@ export default function LibrarySidebar() {
                             {[
                               { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setViewingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Message', icon: Msg, color: 'text-green-400' },
+                              { label: 'Trade', icon: ArrowLeftRight, color: 'text-emerald-400', action: () => { setTradingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
                               { label: 'Join', icon: LogIn, color: 'text-purple-400' },
                             ].map(action => (
@@ -1653,6 +1656,13 @@ export default function LibrarySidebar() {
             initialGameName={pendingRewardGame}
             leftOffset="320px"
           />
+        )}
+      </AnimatePresence>
+
+      {/* Friend Trade Panel */}
+      <AnimatePresence>
+        {tradingFriend && (
+          <FriendTradePanel friend={tradingFriend} onClose={() => setTradingFriend(null)} />
         )}
       </AnimatePresence>
 
