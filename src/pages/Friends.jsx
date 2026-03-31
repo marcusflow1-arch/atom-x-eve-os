@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { lunarDashboardInvite } from '@/functions/lunarDashboardInvite';
 
 // --- Sub-components ---
 
@@ -213,6 +214,50 @@ export default function FriendsPage() {
   const filteredFriends = activeTab === 'all' ? friends :
                          activeTab === 'online' ? friends.filter(f => f.status === 'online') :
                          friends.filter(f => f.current_game);
+
+  // Action Handlers
+  const handleInviteToLunar = async () => {
+    if (!selectedFriend) return;
+    try {
+      const response = await lunarDashboardInvite({
+        action: 'invite',
+        friend_id: selectedFriend.friend_id,
+        friend_email: null // Could add email input modal if needed
+      });
+      if (response.data.success) {
+        // Update local state to show invited status
+        setFriends(prev => prev.map(f => 
+          f.id === selectedFriend.id 
+            ? { ...f, lunar_dashboard_invited: true }
+            : f
+        ));
+        alert('Invited ' + selectedFriend.friend_name + ' to your Lunar Dashboard!');
+      }
+    } catch (err) {
+      console.error('Invite failed:', err);
+      alert('Failed to send invitation');
+    }
+  };
+
+  const handleJoinLunar = async () => {
+    if (!selectedFriend) return;
+    try {
+      const response = await lunarDashboardInvite({
+        action: 'join',
+        friend_id: selectedFriend.friend_id
+      });
+      if (response.data.success) {
+        // Navigate to friend's Lunar Dashboard
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('friendId', selectedFriend.friend_id);
+        urlParams.set('view', 'lunar');
+        navigate('/LunaTemplate?' + urlParams.toString());
+      }
+    } catch (err) {
+      console.error('Join failed:', err);
+      alert('Failed to join Lunar Dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#0f1419] text-white font-sans overflow-hidden relative selection:bg-cyan-500/30">
@@ -443,12 +488,17 @@ export default function FriendsPage() {
                 </div>
 
                 {/* Bottom Action Row */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <ActionButton 
+                    icon={Users} 
+                    label="Invite to Lunar" 
+                    primary 
+                    onClick={handleInviteToLunar} 
+                  />
                   <ActionButton 
                     icon={Gamepad2} 
-                    label="Join Game" 
-                    primary 
-                    onClick={() => console.log('Join')} 
+                    label="Join Lunar" 
+                    onClick={handleJoinLunar} 
                   />
                   <ActionButton 
                     icon={Mic} 
@@ -459,11 +509,6 @@ export default function FriendsPage() {
                     icon={MessageSquare} 
                     label="Message" 
                     onClick={() => console.log('Message')} 
-                  />
-                  <ActionButton 
-                    icon={Users} 
-                    label="Compare" 
-                    onClick={() => console.log('Compare')} 
                   />
                 </div>
 
