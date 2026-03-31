@@ -519,7 +519,7 @@ export default function LibrarySidebar() {
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
-            {expandedPanel && expandedPanel !== 'fullLibrary' && (
+            {(expandedPanel === 'friends' || expandedPanel === 'library' || expandedPanel === 'fullLibrary') && (
               <motion.div
                 key="expanded-panel"
                 initial={{ x: -20, opacity: 0 }}
@@ -545,16 +545,20 @@ export default function LibrarySidebar() {
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">
                       {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
                     </span>
-                    {expandedPanel === 'library' && (
+                    {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && (
                       <button
-                        onClick={() => { setExpandedPanel('fullLibrary'); setOpenDropdown(null); }}
-                        className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 hover:border-cyan-400 transition-colors pb-px"
+                        onClick={() => setExpandedPanel(expandedPanel === 'fullLibrary' ? 'library' : 'fullLibrary')}
+                        className={`text-[10px] font-medium border-b pb-px transition-colors ${
+                          expandedPanel === 'fullLibrary'
+                            ? 'text-purple-400 border-purple-400'
+                            : 'text-cyan-400 border-cyan-400/60 hover:border-cyan-400'
+                        }`}
                       >
                         Full Library
                       </button>
                     )}
                   </div>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -649,7 +653,7 @@ export default function LibrarySidebar() {
             )}
           </AnimatePresence>
 
-          {/* Full Library Panel — fills remaining space */}
+          {/* Full Library Panel — fills remaining space to the right of library panel */}
           <AnimatePresence>
             {expandedPanel === 'fullLibrary' && (
               <motion.div
@@ -658,12 +662,12 @@ export default function LibrarySidebar() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed z-[69] flex flex-col overflow-hidden"
+                className="fixed z-[68] flex flex-col overflow-hidden"
                 style={{
-                  left: '80px',
+                  left: '320px',
                   top: '64px',
                   bottom: '52px',
-                  right: fullLibraryDetailGame ? '380px' : '0px',
+                  right: fullLibraryDetailGame ? '360px' : '0px',
                   transition: 'right 0.3s ease',
                   background: 'rgba(10, 14, 20, 0.82)',
                   backdropFilter: 'blur(50px) saturate(200%)',
