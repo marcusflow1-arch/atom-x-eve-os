@@ -248,11 +248,11 @@ export default function MessengerApp({ onClose }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 16 }}
       transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-      className="fixed z-[71] flex overflow-hidden"
+      className="fixed z-[71] flex overflow-hidden w-full h-screen"
       style={{
+        top: '0px',
+        left: '0px',
         right: '0px',
-        left: '400px',
-        top: '64px',
         bottom: '0px',
         background: 'linear-gradient(135deg, rgba(6, 8, 16, 0.95) 0%, rgba(10, 12, 22, 0.92) 100%)',
         backdropFilter: 'blur(60px) saturate(200%)',
