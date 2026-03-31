@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -37,6 +37,14 @@ export default function LibrarySidebar() {
   const [detailGame, setDetailGame] = useState(null);
   const [fullLibraryDetailGame, setFullLibraryDetailGame] = useState(null);
   const [isExpandedRewardsInventory, setIsExpandedRewardsInventory] = useState(false);
+  const [selectedEntertainmentApp, setSelectedEntertainmentApp] = useState(null);
+  const [customLinks, setCustomLinks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('custom_streaming_links') || '[]'); } catch { return []; }
+  });
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [newLinkName, setNewLinkName] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [entertainmentFullscreen, setEntertainmentFullscreen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -218,6 +226,11 @@ export default function LibrarySidebar() {
   useEffect(() => {
     if (expandedPanel !== 'fullLibrary') {
       setFullLibraryDetailGame(null);
+    }
+    if (expandedPanel !== 'entertainment') {
+      setSelectedEntertainmentApp(null);
+      setShowAddLink(false);
+      setEntertainmentFullscreen(false);
     }
   }, [expandedPanel]);
 
@@ -518,12 +531,24 @@ export default function LibrarySidebar() {
               <Trophy className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
             </button>
+            <button
+              onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                expandedPanel === 'entertainment'
+                  ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
+              }`}
+              title="Entertainment"
+            >
+              <Tv className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
+            </button>
 
           </motion.div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
-            {(expandedPanel === 'friends' || expandedPanel === 'library' || expandedPanel === 'fullLibrary' || expandedPanel === 'rewards') && (
+            {(expandedPanel === 'friends' || expandedPanel === 'library' || expandedPanel === 'fullLibrary' || expandedPanel === 'rewards' || expandedPanel === 'entertainment') && (
               <motion.div
                 key="expanded-panel"
                 initial={{ x: -20, opacity: 0 }}
@@ -547,7 +572,7 @@ export default function LibrarySidebar() {
                 <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                      {expandedPanel === 'friends' ? 'Friends' : expandedPanel === 'rewards' ? 'Reward / Inventory' : 'My Library'}
+                      {expandedPanel === 'friends' ? 'Friends' : expandedPanel === 'rewards' ? 'Reward / Inventory' : expandedPanel === 'entertainment' ? 'Entertainment' : 'My Library'}
                     </span>
                     {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && (
                       <button
@@ -574,7 +599,7 @@ export default function LibrarySidebar() {
                       </button>
                     )}
                   </div>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); }} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -710,6 +735,97 @@ export default function LibrarySidebar() {
                                 <p className="text-white/40 text-[10px] truncate">{item.rarity} • {item.game}</p>
                               </div>
                               <span className="text-[9px] text-white/30 flex-shrink-0">{item.time}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                  {expandedPanel === 'entertainment' && (() => {
+                    const allServices = [
+                      { name: 'Anime Kai', url: 'https://animekai.to', category: 'Anime' },
+                      { name: 'Watch Cartoons Online', url: 'https://www.wcostream.tv', category: 'Cartoons' },
+                      { name: 'Watch 32', url: 'https://www.watch32.is', category: 'Movies' },
+                      ...customLinks,
+                    ];
+                    return (
+                      <>
+                        <div className="px-4 py-2">
+                          <p className="text-[9px] text-indigo-400/70 font-bold uppercase tracking-widest mb-2">Entertainment Apps</p>
+                          {entertainmentApps.map((app, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedEntertainmentApp(app)}
+                              className={`w-full flex items-center gap-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left ${selectedEntertainmentApp?.name === app.name ? 'bg-white/10' : ''}`}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 overflow-hidden flex-shrink-0">
+                                <img src={app.image} alt={app.name} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-semibold truncate">{app.name}</p>
+                                <p className="text-white/40 text-[10px]">{app.category}</p>
+                              </div>
+                              <ChevronRight className="w-3 h-3 text-white/30 flex-shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                        <div className="w-full h-px bg-white/5 my-1" />
+                        <div className="px-4 py-2">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest flex-1">Other Streaming Services</p>
+                            <button
+                              onClick={() => setShowAddLink(p => !p)}
+                              className="w-5 h-5 rounded-full bg-white/10 hover:bg-indigo-500/30 flex items-center justify-center text-white/60 hover:text-indigo-300 transition-colors"
+                              title="Add link"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                          {showAddLink && (
+                            <div className="mb-3 space-y-1.5">
+                              <input
+                                value={newLinkName}
+                                onChange={e => setNewLinkName(e.target.value)}
+                                placeholder="Name"
+                                className="w-full bg-white/10 text-white text-xs rounded-lg px-3 py-1.5 outline-none border border-white/10 placeholder-white/30"
+                              />
+                              <input
+                                value={newLinkUrl}
+                                onChange={e => setNewLinkUrl(e.target.value)}
+                                placeholder="https://..."
+                                className="w-full bg-white/10 text-white text-xs rounded-lg px-3 py-1.5 outline-none border border-white/10 placeholder-white/30"
+                              />
+                              <button
+                                onClick={() => {
+                                  if (newLinkName && newLinkUrl) {
+                                    const updated = [...customLinks, { name: newLinkName, url: newLinkUrl, category: 'Custom' }];
+                                    setCustomLinks(updated);
+                                    localStorage.setItem('custom_streaming_links', JSON.stringify(updated));
+                                    setNewLinkName('');
+                                    setNewLinkUrl('');
+                                    setShowAddLink(false);
+                                  }
+                                }}
+                                className="w-full py-1.5 rounded-lg bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-300 text-xs font-semibold transition-colors"
+                              >
+                                Add
+                              </button>
+                            </div>
+                          )}
+                          {allServices.map((svc, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedEntertainmentApp(svc)}
+                              className={`w-full flex items-center gap-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left ${selectedEntertainmentApp?.name === svc.name ? 'bg-white/10' : ''}`}
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center flex-shrink-0">
+                                <ExternalLink className="w-3.5 h-3.5 text-white/50" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-semibold truncate">{svc.name}</p>
+                                <p className="text-white/40 text-[10px] truncate">{svc.category}</p>
+                              </div>
+                              <ChevronRight className="w-3 h-3 text-white/30 flex-shrink-0" />
                             </button>
                           ))}
                         </div>
@@ -889,6 +1005,85 @@ export default function LibrarySidebar() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Entertainment App Detail Side Panel */}
+          <AnimatePresence>
+            {expandedPanel === 'entertainment' && selectedEntertainmentApp && !entertainmentFullscreen && (
+              <motion.div
+                key="entertainment-detail"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.25 }}
+                className="fixed z-[70] flex flex-col overflow-hidden"
+                style={{
+                  left: '320px',
+                  top: '64px',
+                  bottom: '52px',
+                  right: '0px',
+                  background: 'rgba(12, 14, 22, 0.88)',
+                  backdropFilter: 'blur(40px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  borderLeft: '1px solid rgba(99, 102, 241, 0.2)',
+                  boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
+                }}
+              >
+                {/* Toolbar */}
+                <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <Tv className="w-4 h-4 text-indigo-400" />
+                    <span className="text-xs font-bold text-white/70 uppercase tracking-widest truncate">{selectedEntertainmentApp.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setEntertainmentFullscreen(true)}
+                      className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors"
+                      title="Fullscreen"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setSelectedEntertainmentApp(null)}
+                      className="text-white/40 hover:text-white transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                {/* Content */}
+                <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
+                  {selectedEntertainmentApp.image ? (
+                    <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-indigo-500/30 shadow-2xl shadow-indigo-500/20">
+                      <img src={selectedEntertainmentApp.image} alt={selectedEntertainmentApp.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-28 h-28 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                      <ExternalLink className="w-12 h-12 text-white/20" />
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <h2 className="text-3xl font-bold text-white mb-1">{selectedEntertainmentApp.name}</h2>
+                    <p className="text-sm text-white/40">{selectedEntertainmentApp.category || 'Streaming'}</p>
+                    <p className="text-xs text-indigo-400/70 mt-1 truncate max-w-xs mx-auto">{selectedEntertainmentApp.url}</p>
+                  </div>
+                  <a
+                    href={selectedEntertainmentApp.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-8 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-sm transition-colors shadow-lg shadow-indigo-500/30"
+                  >
+                    <ExternalLink className="w-4 h-4" /> Open {selectedEntertainmentApp.name}
+                  </a>
+                  <button
+                    onClick={() => setEntertainmentFullscreen(true)}
+                    className="flex items-center gap-2 px-6 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/50 hover:text-white text-xs font-medium transition-colors"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" /> Expand View
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
 
@@ -964,7 +1159,6 @@ export default function LibrarySidebar() {
               {[
                 { id: 'library', label: 'Library' },
                 { id: 'aura', label: 'Aura' },
-                { id: 'entertainment', label: 'Entertain' },
                 { id: 'friends', label: 'Friends' },
                 { id: 'inventory', label: 'Rewards' },
               ].map((tab) => (
@@ -1471,6 +1665,78 @@ export default function LibrarySidebar() {
       {detailGame && (
         <LibraryGameDetailModal game={detailGame} onClose={() => setDetailGame(null)} />
       )}
+
+      {/* Entertainment Fullscreen Overlay */}
+      <AnimatePresence>
+        {entertainmentFullscreen && selectedEntertainmentApp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-x-0 bottom-0 z-[200] flex flex-col"
+            style={{
+              top: '64px',
+              background: 'rgba(8, 10, 18, 0.97)',
+              backdropFilter: 'blur(40px)',
+            }}
+          >
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <Tv className="w-5 h-5 text-indigo-400" />
+                <span className="text-sm font-bold text-white">{selectedEntertainmentApp.name}</span>
+                <span className="text-xs text-white/30">{selectedEntertainmentApp.category}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={selectedEntertainmentApp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Site
+                </a>
+                <button
+                  onClick={() => setEntertainmentFullscreen(false)}
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                  title="Exit fullscreen"
+                >
+                  <Minimize2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => { setEntertainmentFullscreen(false); setSelectedEntertainmentApp(null); }}
+                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center gap-8 p-12">
+              {selectedEntertainmentApp.image ? (
+                <div className="w-48 h-48 rounded-3xl overflow-hidden border-2 border-indigo-500/30 shadow-2xl shadow-indigo-900/50">
+                  <img src={selectedEntertainmentApp.image} alt={selectedEntertainmentApp.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-48 h-48 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center">
+                  <ExternalLink className="w-20 h-20 text-white/20" />
+                </div>
+              )}
+              <div className="text-center">
+                <h1 className="text-5xl font-bold text-white mb-3">{selectedEntertainmentApp.name}</h1>
+                <p className="text-xl text-white/40 mb-2">{selectedEntertainmentApp.category || 'Streaming Service'}</p>
+                <p className="text-sm text-indigo-400/70">{selectedEntertainmentApp.url}</p>
+              </div>
+              <a
+                href={selectedEntertainmentApp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-12 py-4 rounded-2xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-lg transition-colors shadow-2xl shadow-indigo-500/30"
+              >
+                <ExternalLink className="w-6 h-6" /> Open {selectedEntertainmentApp.name}
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
       <QuickInfoOverlay
