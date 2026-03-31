@@ -541,9 +541,19 @@ export default function LibrarySidebar() {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                    {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold uppercase tracking-widest text-white/70">
+                      {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
+                    </span>
+                    {expandedPanel === 'library' && (
+                      <button
+                        onClick={() => { setExpandedPanel('fullLibrary'); setOpenDropdown(null); }}
+                        className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 hover:border-cyan-400 transition-colors pb-px"
+                      >
+                        Full Library
+                      </button>
+                    )}
+                  </div>
                   <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
