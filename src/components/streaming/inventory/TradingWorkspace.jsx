@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 
 import TradingWorkspaceSell from './TradingWorkspaceSell';
 import TradingWorkspaceAuction from './TradingWorkspaceAuction';
-import TradingWorkspaceTrade from './TradingWorkspaceTrade.jsx';
+import TradingWorkspaceTrade from './TradingWorkspaceTrade';
 import TradingWorkspaceBuy from './TradingWorkspaceBuy';
 
 const CATEGORY_CONFIG = {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -17,12 +17,36 @@ const GENRES = [
   { id: 'sports', name: 'Sports', image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600' },
 ];
 
+const MOCK_ACHIEVEMENTS = [
+  { id: 1, title: 'First Blood', desc: 'Get your first kill', icon: Sword, unlocked: true, rarity: 'common' },
+  { id: 2, title: 'Survivor', desc: 'Complete a match without dying', icon: Shield, unlocked: true, rarity: 'uncommon' },
+  { id: 3, title: 'On Fire', desc: 'Get 5 kills in a row', icon: Flame, unlocked: true, rarity: 'rare' },
+  { id: 4, title: 'Sharpshooter', desc: 'Land 100 headshots', icon: Target, unlocked: false, rarity: 'rare' },
+  { id: 5, title: 'Power Surge', desc: 'Activate all abilities in one match', icon: Zap, unlocked: false, rarity: 'epic' },
+  { id: 6, title: 'Champion', desc: 'Win 50 ranked matches', icon: Crown, unlocked: false, rarity: 'epic' },
+  { id: 7, title: 'Legendary', desc: 'Reach max prestige level', icon: Gem, unlocked: false, rarity: 'legendary' },
+  { id: 8, title: 'Ghost', desc: 'Complete a mission undetected', icon: Skull, unlocked: true, rarity: 'uncommon' },
+  { id: 9, title: 'Ace', desc: 'Win a 1v5 situation', icon: Award, unlocked: false, rarity: 'legendary' },
+  { id: 10, title: 'Veteran', desc: 'Play 200 matches', icon: Trophy, unlocked: true, rarity: 'common' },
+  { id: 11, title: 'Speed Demon', desc: 'Complete campaign in under 4 hours', icon: Zap, unlocked: false, rarity: 'epic' },
+  { id: 12, title: 'Collector', desc: 'Unlock all skins', icon: Star, unlocked: false, rarity: 'rare' },
+];
+
+const RARITY_STYLES = {
+  common:    { glow: 'rgba(160,160,160,0.3)', border: 'rgba(180,180,180,0.3)', text: '#aaa' },
+  uncommon:  { glow: 'rgba(80,200,120,0.35)', border: 'rgba(80,200,120,0.35)', text: '#50c878' },
+  rare:      { glow: 'rgba(80,140,255,0.4)',  border: 'rgba(80,140,255,0.4)',  text: '#5b8dff' },
+  epic:      { glow: 'rgba(160,80,255,0.4)',  border: 'rgba(160,80,255,0.4)',  text: '#a050ff' },
+  legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
+};
+
 export default function LunaBottomNav({ isEnvironmentActive }) {
   const [activeTab, setActiveTab] = useState('home');
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quickActionItem, setQuickActionItem] = useState(null);
+  const [achievementItem, setAchievementItem] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +56,7 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
   const handleTabClick = (tab) => {
     setSelectedItem(null);
     setQuickActionItem(null);
+    setAchievementItem(null);
     if (tab === 'home') {
       setActiveTab('home');
     } else {
@@ -71,15 +96,21 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
             className={`flex-1 relative cursor-pointer group transition-all duration-300 z-0 ${quickActionItem === item.id ? 'z-50' : ''}`}
             onClick={() => {
               if (activeTab === 'library') {
-                setSelectedItem(null);
-                if (quickActionItem === item.id) setQuickActionItem(null);
-                else setQuickActionItem(item.id);
+                if (quickActionItem === item.id) {
+                  setQuickActionItem(null);
+                  setAchievementItem(null);
+                } else {
+                  setQuickActionItem(item.id);
+                  setAchievementItem(item);
+                  setSelectedItem(null);
+                }
               }
             }}
             onDoubleClick={() => {
               if (activeTab === 'library') {
                 setSelectedItem(item);
                 setQuickActionItem(null);
+                setAchievementItem(null);
               }
             }}
           >
@@ -135,6 +166,132 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
 
   return (
     <>
+      {/* Achievement View Overlay */}
+      <AnimatePresence>
+        {achievementItem && !selectedItem && (
+          <motion.div
+            key="achievement-panel"
+            initial={{ opacity: 0, scale: 0.95, y: 30 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 30 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="fixed z-[100]"
+            style={{ top: '80px', bottom: '250px', left: '96px', right: '32px' }}
+          >
+            <div
+              className="relative w-full h-full rounded-2xl overflow-hidden flex flex-col"
+              style={{
+                background: 'rgba(8, 12, 20, 0.82)',
+                backdropFilter: 'blur(32px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                boxShadow: '0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)',
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-8 py-5 border-b border-white/10 flex-shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20">
+                    <img src={achievementItem.displayImage} alt={achievementItem.displayTitle} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-0.5">Achievements</p>
+                    <h2 className="text-white text-lg font-black tracking-wide">{achievementItem.displayTitle}</h2>
+                  </div>
+                  <div className="ml-4 px-3 py-1 rounded-full text-xs font-bold" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+                    {MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length} / {MOCK_ACHIEVEMENTS.length} Unlocked
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setAchievementItem(null); setQuickActionItem(null); }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+
+              {/* Achievement Grid */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
+                  {MOCK_ACHIEVEMENTS.map((ach) => {
+                    const style = RARITY_STYLES[ach.rarity];
+                    const Icon = ach.icon;
+                    return (
+                      <motion.div
+                        key={ach.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: ach.id * 0.04 }}
+                        className="relative rounded-2xl p-4 flex flex-col items-center gap-3 cursor-default select-none"
+                        style={{
+                          background: ach.unlocked
+                            ? `linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)`
+                            : 'rgba(255,255,255,0.025)',
+                          backdropFilter: 'blur(20px) saturate(120%)',
+                          WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+                          border: ach.unlocked
+                            ? `1px solid ${style.border}`
+                            : '1px solid rgba(255,255,255,0.06)',
+                          boxShadow: ach.unlocked
+                            ? `0 0 20px ${style.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
+                            : 'none',
+                          filter: ach.unlocked ? 'none' : 'grayscale(1)',
+                          opacity: ach.unlocked ? 1 : 0.38,
+                        }}
+                      >
+                        {/* Icon square */}
+                        <div
+                          className="w-14 h-14 rounded-xl flex items-center justify-center relative overflow-hidden"
+                          style={{
+                            background: ach.unlocked
+                              ? `linear-gradient(135deg, ${style.glow}, rgba(255,255,255,0.06))`
+                              : 'rgba(255,255,255,0.04)',
+                            border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.08)',
+                            boxShadow: ach.unlocked ? `inset 0 0 20px ${style.glow}` : 'none',
+                          }}
+                        >
+                          {ach.unlocked ? (
+                            <Icon className="w-7 h-7" style={{ color: style.text }} />
+                          ) : (
+                            <Lock className="w-6 h-6 text-white/20" />
+                          )}
+                          {/* Transmissive sheen */}
+                          {ach.unlocked && (
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
+                          )}
+                        </div>
+
+                        {/* Text */}
+                        <div className="text-center">
+                          <p className="text-xs font-bold mb-0.5" style={{ color: ach.unlocked ? style.text : 'rgba(255,255,255,0.25)' }}>{ach.title}</p>
+                          <p className="text-[10px] leading-relaxed" style={{ color: ach.unlocked ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)' }}>{ach.desc}</p>
+                        </div>
+
+                        {/* Rarity badge */}
+                        <span
+                          className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                          style={{
+                            background: ach.unlocked ? `${style.glow}` : 'rgba(255,255,255,0.04)',
+                            color: ach.unlocked ? style.text : 'rgba(255,255,255,0.2)',
+                            border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.06)'}`,
+                          }}
+                        >
+                          {ach.rarity}
+                        </span>
+
+                        {/* Liquid glass sheen overlay */}
+                        <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-b from-white/[0.05] via-transparent to-transparent" />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {selectedItem && (
           <motion.div
