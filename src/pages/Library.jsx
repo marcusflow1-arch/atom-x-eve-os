@@ -511,6 +511,18 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
   const [launchingGame, setLaunchingGame] = useState(null);
   const [streamingSession, setStreamingSession] = useState(null);
 
+  // Listen for library close event from navigation
+  useEffect(() => {
+    const handleLibraryClose = () => {
+      // Reset to default view when library is closed/retracted
+      setRightView('details');
+      setSelectedGame(null);
+      setActiveDetailTab('content');
+    };
+    window.addEventListener('libraryPanelClose', handleLibraryClose);
+    return () => window.removeEventListener('libraryPanelClose', handleLibraryClose);
+  }, []);
+
   const handleStreamGame = async (game) => {
     try {
       const res = await base44.functions.invoke('initiateRemotePlay', { game_id: game.id });

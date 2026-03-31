@@ -58,8 +58,16 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
     if (tab === 'home') {
       setActiveTab('home');
     } else {
-      setActiveTab(activeTab === tab ? 'home' : tab);
-      setCurrentRow(0);
+      // If clicking the same tab that's already active, close it (go home)
+      if (activeTab === tab) {
+        setActiveTab('home');
+        // Dispatch event to notify pages to close their panels
+        window.dispatchEvent(new CustomEvent('libraryPanelClose'));
+        window.dispatchEvent(new CustomEvent('environmentPanelClose'));
+      } else {
+        setActiveTab(tab);
+        setCurrentRow(0);
+      }
     }
   };
 
@@ -86,6 +94,21 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
   // When a game is selected, show its achievement cards in the row
   const achievementItems = selectedGame ? MOCK_ACHIEVEMENTS : [];
   const achievementRows = Math.max(1, Math.ceil(achievementItems.length / itemsPerRow));
+
+  // Listen for panel close events
+  useEffect(() => {
+    const handlePanelClose = () => {
+      setSelectedItem(null);
+      setSelectedGame(null);
+      setCurrentRow(0);
+    };
+    window.addEventListener('libraryPanelClose', handlePanelClose);
+    window.addEventListener('environmentPanelClose', handlePanelClose);
+    return () => {
+      window.removeEventListener('libraryPanelClose', handlePanelClose);
+      window.removeEventListener('environmentPanelClose', handlePanelClose);
+    };
+  }, []);
 
   const renderSlots = () => {
     const slots = [];
