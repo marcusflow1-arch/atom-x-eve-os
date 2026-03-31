@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, UserPlus, MessageSquare, Mic, Gamepad2, 
   Trophy, Heart, Zap, Activity, MoreHorizontal, 
-  Search, Bell, Shield, Radio, Sparkles, Sword
+  Search, Bell, Shield, Radio, Sparkles, Sword, X
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
@@ -163,6 +163,10 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [aiPartyMode, setAiPartyMode] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const chatEndRef = useRef(null);
   
   // Refs
   const seededRef = useRef(false);
@@ -259,6 +263,55 @@ export default function FriendsPage() {
     }
   };
 
+  // Chat Handlers
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedFriend) return;
+    
+    const message = {
+      id: Date.now(),
+      text: newMessage,
+      sender: 'me',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      avatar: user?.avatar_url || `https://i.pravatar.cc/150?u=${user?.id}`
+    };
+    
+    setChatMessages(prev => [...prev, message]);
+    setNewMessage('');
+    
+    // Simulate friend reply after 1-3 seconds
+    setTimeout(() => {
+      const replies = [
+        "Hey! What's up?",
+        "I'm down for some games!",
+        "Just finished a match, that was intense!",
+        "Sure, let's party up!",
+        "Give me 5 minutes, grabbing a snack"
+      ];
+      const reply = {
+        id: Date.now() + 1,
+        text: replies[Math.floor(Math.random() * replies.length)],
+        sender: 'friend',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        avatar: selectedFriend.friend_avatar || `https://i.pravatar.cc/150?u=${selectedFriend.friend_id}`
+      };
+      setChatMessages(prev => [...prev, reply]);
+    }, 1000 + Math.random() * 2000);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages]);
+
   return (
     <div className="min-h-screen w-full bg-[#0f1419] text-white font-sans overflow-hidden relative selection:bg-cyan-500/30">
       
@@ -324,7 +377,11 @@ export default function FriendsPage() {
                 key={friend.id} 
                 friend={friend} 
                 isSelected={selectedFriendId === friend.id}
-                onClick={() => setSelectedFriendId(friend.id)}
+                onClick={() => {
+                  setSelectedFriendId(friend.id);
+                  setShowChat(false);
+                  setChatMessages([]);
+                }}
               />
             ))}
           </div>
@@ -349,17 +406,117 @@ export default function FriendsPage() {
           </div>
         </div>
 
-        {/* 3. Right Panel: Cinematic Preview */}
+        {/* 3. Right Panel: Cinematic Preview or Chat */}
         <AnimatePresence mode="wait">
           {selectedFriend && (
             <motion.div 
-              key={selectedFriend.id}
+              key={selectedFriend.id + (showChat ? '-chat' : '-profile')}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="flex-1 relative rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
             >
+              {showChat ? (
+                /* CHAT VIEW */
+                <div className="absolute inset-0 z-10 flex flex-col bg-[#0f1419]/95">
+                  {/* Chat Header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img 
+                          src={selectedFriend.friend_avatar || `https://i.pravatar.cc/150?u=${selectedFriend.friend_id}`}
+                          alt={selectedFriend.friend_name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#0f1419] ${
+                          selectedFriend.status === 'online' ? 'bg-green-500' : 
+                          selectedFriend.status === 'away' ? 'bg-yellow-500' : 'bg-slate-500'
+                        }`} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-white">{selectedFriend.friend_name}</h3>
+                        <p className="text-xs text-white/50">
+                          {selectedFriend.status === 'online' ? 'Online' : 
+                           selectedFriend.status === 'away' ? 'Away' : 'Offline'}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setShowChat(false)}
+                      className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                    >
+                      <X className="w-5 h-5 text-white/70" />
+                    </button>
+                  </div>
+
+                  {/* Chat Messages */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {chatMessages.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-white/30">
+                        <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
+                        <p className="text-sm">Start a conversation with {selectedFriend.friend_name}</p>
+                      </div>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex gap-3 ${msg.sender === 'me' ? 'flex-row-reverse' : ''}`}
+                        >
+                          <img 
+                            src={msg.avatar} 
+                            alt="" 
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className={`max-w-[70%] ${msg.sender === 'me' ? 'items-end' : 'items-start'} flex flex-col`}>
+                            <div 
+                              className={`px-4 py-2.5 rounded-2xl text-sm ${
+                                msg.sender === 'me' 
+                                  ? 'bg-cyan-500/20 text-cyan-100 border border-cyan-500/30 rounded-br-md' 
+                                  : 'bg-white/10 text-white border border-white/10 rounded-bl-md'
+                              }`}
+                            >
+                              {msg.text}
+                            </div>
+                            <span className="text-[10px] text-white/30 mt-1 px-1">{msg.timestamp}</span>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Chat Input */}
+                  <div className="px-6 py-4 border-t border-white/10 bg-black/20">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none focus:border-cyan-500/50 transition-colors"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim()}
+                        className="p-3 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="22" y1="2" x2="11" y2="13"></line>
+                          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* PROFILE VIEW */
+                <>
               {/* Dynamic Background Image */}
               <div className="absolute inset-0 z-0">
                 <img 
@@ -507,12 +664,14 @@ export default function FriendsPage() {
                   />
                   <ActionButton 
                     icon={MessageSquare} 
-                    label="Message" 
-                    onClick={() => console.log('Message')} 
+                    label={showChat ? "Close Chat" : "Message"} 
+                    onClick={() => setShowChat(!showChat)} 
                   />
                 </div>
 
               </div>
+              </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
