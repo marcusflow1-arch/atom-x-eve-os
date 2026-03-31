@@ -470,155 +470,9 @@ export default function LibrarySidebar() {
               </div>
             )}
 
-            {/* Friends & Library expand buttons */}
-            <div className="w-8 h-px bg-white/10 my-1" />
-            <button
-              onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'friends'
-                  ? 'border-green-400/50 bg-green-500/20 text-green-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
-              }`}
-              title="Friends"
-            >
-              <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
-            </button>
-            <button
-              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'library'
-                  ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
-              }`}
-              title="Library"
-            >
-              <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
-            </button>
+
           </motion.div>
 
-          {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
-          <AnimatePresence>
-            {expandedPanel && (
-              <motion.div
-                key="expanded-panel"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                className="fixed z-[69] flex flex-col overflow-hidden"
-                style={{
-                  left: '80px',
-                  top: '64px',
-                  bottom: '52px',
-                  width: '240px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  backdropFilter: 'blur(50px) saturate(200%)',
-                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-                  boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
-                  borderBottom: 'none',
-                }}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-                  <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                    {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
-                  </span>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); }} className="text-white/40 hover:text-white transition-colors">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                {/* Scrollable list */}
-                <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
-                  {expandedPanel === 'friends' && friendsList.map(friend => (
-                    <div key={friend.id} className="relative">
-                      <button
-                        onClick={() => setOpenDropdown(openDropdown === friend.id ? null : friend.id)}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
-                      >
-                        <div className="relative flex-shrink-0">
-                          <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-cover" />
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#08120a] ${
-                            friend.status === 'online' ? 'bg-green-500' :
-                            friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
-                          }`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{friend.name}</p>
-                          <p className="text-white/40 text-[10px] truncate">{friend.game ? friend.game : friend.status}</p>
-                        </div>
-                        <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === friend.id ? 'rotate-90' : ''}`} />
-                      </button>
-                      <AnimatePresence>
-                        {openDropdown === friend.id && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden bg-white/5 border-t border-b border-white/5"
-                          >
-                            {[
-                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setViewingFriend(friend); setOpenDropdown(null); } },
-                              { label: 'Message', icon: Msg, color: 'text-green-400' },
-                              { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
-                              { label: 'Join', icon: LogIn, color: 'text-purple-400' },
-                            ].map(action => (
-                              <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
-                                <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
-                                <span className="text-white/70 text-xs">{action.label}</span>
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-                  {expandedPanel === 'library' && libraryGames.map((game, i) => (
-                    <div key={game.id || i} className="relative">
-                      <button
-                        onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
-                      >
-                        <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
-                          <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
-                          <p className="text-white/40 text-[10px]">Ready to play</p>
-                        </div>
-                        <ChevronRight className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${openDropdown === (game.id || i) ? 'rotate-90' : ''}`} />
-                      </button>
-                      <AnimatePresence>
-                        {openDropdown === (game.id || i) && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden bg-white/5 border-t border-b border-white/5"
-                          >
-                            {[
-                              { label: 'Play', icon: Play, color: 'text-cyan-400', action: null },
-                              { label: 'Details', icon: Search, color: 'text-blue-400', action: () => { setDetailGame(game); setOpenDropdown(null); } },
-                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400', action: null },
-                              { label: 'Remove', icon: Trash2, color: 'text-red-400', action: null },
-                            ].map(action => (
-                              <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
-                                <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
-                                <span className="text-white/70 text-xs">{action.label}</span>
-                              </button>
-                            ))}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </>
       )}
 
@@ -670,9 +524,9 @@ export default function LibrarySidebar() {
             </div>
             <div>
                 <h2 className="text-xl font-bold text-white tracking-wide">
-                    {activeSub === 'aura' ? 'Recently Watched' : activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'friends' ? 'Friends' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
+                    {activeSub === 'entertainment' ? 'Entertainment' : activeSub === 'inventory' ? 'Recent Rewards' : 'My Library'}
                 </h2>
-                <p className="text-xs text-white/40 font-medium">{activeSub === 'aura' ? 'Games & Streamers' : activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'friends' ? 'Online & Offline' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
+                <p className="text-xs text-white/40 font-medium">{activeSub === 'entertainment' ? 'Apps & Channels' : activeSub === 'inventory' ? 'Recently Earned Items & Unlocks' : 'All Games & Recently Played'}</p>
             </div>
             <button 
                 onClick={() => setIsOpen(false)}
@@ -689,13 +543,10 @@ export default function LibrarySidebar() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-            {/* Sub-pages (Library | Aurora) */}
+            {/* Sub-pages */}
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mb-4">
               {[
-                { id: 'library', label: 'Library' },
-                { id: 'aura', label: 'Aura' },
                 { id: 'entertainment', label: 'Entertain' },
-                { id: 'friends', label: 'Friends' },
                 { id: 'inventory', label: 'Rewards' },
               ].map((tab) => (
                 <button
@@ -707,144 +558,7 @@ export default function LibrarySidebar() {
                 </button>
               ))}
             </div>
-            {activeSub === 'friends' && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <User className="w-4 h-4 text-blue-400" />
-                  <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Online Friends</h3>
-                  <span className="ml-auto text-[10px] text-white/40">{friendsList.length} total</span>
-                </div>
-                <div className="space-y-3">
-                  {friendsList.map(friend => (
-                    <div 
-                      key={friend.id} 
-                      onClick={() => setViewingFriend(friend)}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)] transition cursor-pointer"
-                    >
-                      <div className="relative">
-                        <img src={friend.avatar} alt={friend.name} className="w-10 h-10 rounded-lg object-cover" />
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#0a0e14] ${
-                          friend.status === 'online' ? 'bg-green-500' : 
-                          friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'
-                        }`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-semibold truncate">{friend.name}</p>
-                        <p className="text-white/50 text-xs truncate">
-                          {friend.game ? <span className="text-blue-300">{friend.game}</span> : <span className="capitalize">{friend.status}</span>}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {activeSub === 'aura' && (
-              <>
-                {/* Recently Watched Games */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Games</h3>
-                    <span className="ml-auto text-[10px] text-white/40">{recentGames.length} items</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {recentGames.map((game, i) => (
-                      <div
-                        key={`rg_${i}`}
-                        onClick={() => openOverlay({ type: 'game', title: game.name, image: game.image, context: 'aura' })}
-                        className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer hover:border-cyan-400/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] transition"
-                      >
-                        <img src={game.image} alt={game.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
-                          <h4 className="text-white font-bold text-xs leading-snug line-clamp-2">{game.name}</h4>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
 
-                {/* Recently Watched Streamers */}
-                <section>
-                  <div className="flex items-center gap-2 mt-6 mb-3">
-                    <User className="w-4 h-4 text-pink-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Recently Watched Streamers</h3>
-                    <span className="ml-auto text-[10px] text-white/40">{recentChannels.length} channels</span>
-                  </div>
-                  <div className="space-y-3">
-                    {recentChannels.map((ch, idx) => (
-                      <div
-                        key={`rc_${idx}`}
-                        onClick={() => openOverlay({ type: 'stream', title: ch.name, image: ch.avatar, subtitle: ch.game })}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5 hover:border-pink-400/40 hover:shadow-[0_0_15px_rgba(244,114,182,0.2)] transition"
-                      >
-                        <div className="relative">
-                          <img src={ch.avatar} alt={ch.name} className="w-10 h-10 rounded-lg object-cover" />
-                          {ch.isLive && <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-semibold truncate">{ch.name}</p>
-                          <p className="text-white/50 text-xs truncate">{ch.game}</p>
-                        </div>
-                        <div className="text-white/60 text-xs font-mono flex items-center gap-1">
-                          <span className="text-red-500">●</span>
-                          {ch.viewers}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </>
-            )}
-            {activeSub === 'library' && (
-              <>
-                {/* Library Games Only */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest">Library Games</h3>
-                    <div className="ml-auto flex items-center gap-3">
-                        <span className="text-[10px] text-white/40 mr-1">{libraryGames.length} total</span>
-                        <div 
-                          onClick={(e) => { e.stopPropagation(); setIsExpandedLibrary(!isExpandedLibrary); }}
-                          className="flex items-center gap-2 cursor-pointer group"
-                        >
-                            <span className="text-[10px] font-medium text-cyan-400 border-b border-cyan-400/60 pb-px group-hover:border-cyan-400 transition-colors">Full Library</span>
-                            <div className={`p-1 rounded hover:bg-white/10 transition-colors ${isExpandedLibrary ? 'text-cyan-400 bg-white/10' : 'text-white/40'}`}>
-                                <ChevronRight className={`w-3 h-3 transition-transform duration-300 ${isExpandedLibrary ? 'rotate-180' : ''}`} />
-                            </div>
-                        </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {libraryGames.map((game, i) => (
-                      <div
-                        key={`lib_${game.id || 'x'}_${i}`}
-                        onClick={() => { setPreviewGame(game); setIsExpandedLibrary(true); }}
-                        className="flex items-center gap-3 p-2 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 hover:border-cyan-400/30 transition group"
-                      >
-                        {/* Small Icon */}
-                        <div className="flex-shrink-0 text-white/40 group-hover:text-cyan-400 transition-colors">
-                          <Gamepad2 className="w-4 h-4" />
-                        </div>
-
-                        {/* Picture of the game */}
-                        <div className="relative w-12 h-16 flex-shrink-0 rounded-md overflow-hidden bg-black/50">
-                          <img src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop'} alt={game.title || game.name} className="w-full h-full object-cover" />
-                        </div>
-
-                        {/* Text to the right */}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-white font-medium text-sm truncate group-hover:text-cyan-100 transition-colors">{game.title || game.name}</h4>
-                          <p className="text-white/40 text-xs truncate">Ready to play</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </>
-            )}
             {activeSub === 'entertainment' && (
               <>
                 {/* Streaming / Entertainment Apps */}
@@ -960,7 +674,7 @@ export default function LibrarySidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-white/5 bg-black/20">
             <button className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-xs font-bold text-white/60 hover:text-white transition-all flex items-center justify-center gap-2">
-                <Play className="w-3 h-3" /> {activeSub === 'aura' ? 'Open Stream History' : 'View Full History'}
+                <Play className="w-3 h-3" /> View Full History
             </button>
         </div>
 
