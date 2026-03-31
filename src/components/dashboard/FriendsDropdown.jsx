@@ -127,6 +127,7 @@ export default function FriendsDropdown() {
                     friend={friend}
                     selected={selectedFriend?.id === friend.id}
                     onSelect={() => handleFriendClick(friend)}
+                    onMessage={handleOpenMessenger}
                   />
                 ))}
                 {/* Offline */}
@@ -141,6 +142,7 @@ export default function FriendsDropdown() {
                         friend={friend}
                         selected={selectedFriend?.id === friend.id}
                         onSelect={() => handleFriendClick(friend)}
+                        onMessage={handleOpenMessenger}
                         dim
                       />
                     ))}
@@ -276,31 +278,76 @@ export default function FriendsDropdown() {
 }
 
 // Friend Row - compact book-style entry
-const FriendRow = ({ friend, selected, onSelect, dim }) => (
-  <button
-    onClick={onSelect}
-    className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-xl border transition-all text-left ${
-      selected
-        ? 'bg-white/[0.08] border-white/10'
-        : `border-transparent hover:bg-white/[0.04] ${dim ? 'opacity-50' : ''}`
-    }`}
-  >
-    <div className="relative flex-shrink-0">
-      <div className={`w-8 h-8 rounded-lg overflow-hidden ring-1 transition-all ${selected ? 'ring-cyan-400/40' : 'ring-transparent'}`}>
-        <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, dim }) => (
+  <div className={`w-full rounded-xl border transition-all ${
+    selected
+      ? 'bg-white/[0.08] border-white/10'
+      : `border-transparent hover:bg-white/[0.04] ${dim ? 'opacity-50' : ''}`
+  }`}>
+    <button
+      onClick={onSelect}
+      className="w-full flex items-center gap-2.5 px-2 py-2 text-left"
+    >
+      <div className="relative flex-shrink-0">
+        <div className={`w-8 h-8 rounded-lg overflow-hidden ring-1 transition-all ${selected ? 'ring-cyan-400/40' : 'ring-transparent'}`}>
+          <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+        </div>
+        <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black/60 ${STATUS_COLOR[friend.status]}`} />
       </div>
-      <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black/60 ${STATUS_COLOR[friend.status]}`} />
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className={`text-xs font-semibold truncate ${selected ? 'text-white' : 'text-white/75'}`}>{friend.name}</p>
-      {friend.game ? (
-        <p className="text-[9px] text-cyan-300/50 truncate">{friend.game}</p>
-      ) : (
-        <p className="text-[9px] text-white/25 capitalize">{friend.status}</p>
-      )}
-    </div>
-    <span className="text-[9px] text-white/20 flex-shrink-0">Lv.{friend.level}</span>
-  </button>
+      <div className="flex-1 min-w-0">
+        <p className={`text-xs font-semibold truncate ${selected ? 'text-white' : 'text-white/75'}`}>{friend.name}</p>
+        {friend.game ? (
+          <p className="text-[9px] text-cyan-300/50 truncate">{friend.game}</p>
+        ) : (
+          <p className="text-[9px] text-white/25 capitalize">{friend.status}</p>
+        )}
+      </div>
+      <span className="text-[9px] text-white/20 flex-shrink-0">Lv.{friend.level}</span>
+    </button>
+    
+    {/* Action Buttons - shown when selected */}
+    {selected && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: 'auto' }}
+        exit={{ opacity: 0, height: 0 }}
+        className="px-2 pb-2"
+      >
+        <div className="flex gap-1.5 mt-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMessage?.(friend);
+            }}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 transition-colors"
+          >
+            <MessageSquare className="w-3 h-3 text-cyan-400" />
+            <span className="text-[9px] font-medium text-cyan-400">Message</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onInvite?.(friend);
+            }}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 transition-colors"
+          >
+            <UserPlus className="w-3 h-3 text-green-400" />
+            <span className="text-[9px] font-medium text-green-400">Invite</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onTrade?.(friend);
+            }}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors"
+          >
+            <Repeat className="w-3 h-3 text-amber-400" />
+            <span className="text-[9px] font-medium text-amber-400">Trade</span>
+          </button>
+        </div>
+      </motion.div>
+    )}
+  </div>
 );
 
 // Request Row - compact inline
