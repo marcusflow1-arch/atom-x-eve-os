@@ -165,9 +165,6 @@ export default function FriendsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [aiPartyMode, setAiPartyMode] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const chatEndRef = useRef(null);
   
   // Refs
   const seededRef = useRef(false);
@@ -227,10 +224,9 @@ export default function FriendsPage() {
       const response = await lunarDashboardInvite({
         action: 'invite',
         friend_id: selectedFriend.friend_id,
-        friend_email: null // Could add email input modal if needed
+        friend_email: null
       });
       if (response.data.success) {
-        // Update local state to show invited status
         setFriends(prev => prev.map(f => 
           f.id === selectedFriend.id 
             ? { ...f, lunar_dashboard_invited: true }
@@ -244,6 +240,10 @@ export default function FriendsPage() {
     }
   };
 
+  const handleOpenMessenger = () => {
+    setShowChat(true);
+  };
+
   const handleJoinLunar = async () => {
     if (!selectedFriend) return;
     try {
@@ -252,7 +252,6 @@ export default function FriendsPage() {
         friend_id: selectedFriend.friend_id
       });
       if (response.data.success) {
-        // Navigate to friend's Lunar Dashboard
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('friendId', selectedFriend.friend_id);
         urlParams.set('view', 'lunar');
@@ -263,55 +262,6 @@ export default function FriendsPage() {
       alert('Failed to join Lunar Dashboard');
     }
   };
-
-  // Chat Handlers
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedFriend) return;
-    
-    const message = {
-      id: Date.now(),
-      text: newMessage,
-      sender: 'me',
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      avatar: user?.avatar_url || `https://i.pravatar.cc/150?u=${user?.id}`
-    };
-    
-    setChatMessages(prev => [...prev, message]);
-    setNewMessage('');
-    
-    // Simulate friend reply after 1-3 seconds
-    setTimeout(() => {
-      const replies = [
-        "Hey! What's up?",
-        "I'm down for some games!",
-        "Just finished a match, that was intense!",
-        "Sure, let's party up!",
-        "Give me 5 minutes, grabbing a snack"
-      ];
-      const reply = {
-        id: Date.now() + 1,
-        text: replies[Math.floor(Math.random() * replies.length)],
-        sender: 'friend',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        avatar: selectedFriend.friend_avatar || `https://i.pravatar.cc/150?u=${selectedFriend.friend_id}`
-      };
-      setChatMessages(prev => [...prev, reply]);
-    }, 1000 + Math.random() * 2000);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Auto-scroll to bottom of chat
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages]);
 
   return (
     <div className="min-h-screen w-full bg-[#0f1419] text-white font-sans overflow-hidden relative selection:bg-cyan-500/30">
@@ -381,7 +331,6 @@ export default function FriendsPage() {
                 onClick={() => {
                   setSelectedFriendId(friend.id);
                   setShowChat(false);
-                  setChatMessages([]);
                 }}
               />
             ))}
@@ -420,9 +369,15 @@ export default function FriendsPage() {
             >
               {showChat ? (
                 /* CHAT VIEW - Using FriendMessenger Component */
-                <div className="absolute inset-0 z-10 flex items-center justify-center p-8 bg-[#0f1419]/95">
+                <div className="absolute inset-0 z-10 bg-[#0f1419]/95">
                   <FriendMessenger 
-                    friend={selectedFriend}
+                    friend={{
+                      friend_id: selectedFriend.friend_id,
+                      friend_name: selectedFriend.friend_name,
+                      friend_avatar: selectedFriend.friend_avatar,
+                      status: selectedFriend.status,
+                      current_game: selectedFriend.current_game
+                    }}
                     onClose={() => setShowChat(false)}
                   />
                 </div>
@@ -577,7 +532,7 @@ export default function FriendsPage() {
                   <ActionButton 
                     icon={MessageSquare} 
                     label={showChat ? "Close Chat" : "Message"} 
-                    onClick={() => setShowChat(!showChat)} 
+                    onClick={handleOpenMessenger} 
                   />
                 </div>
 

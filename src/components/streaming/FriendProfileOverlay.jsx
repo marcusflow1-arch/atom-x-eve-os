@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star } from 'lucide-react';
+import FriendMessenger from '../friends/FriendMessenger';
 
 const recentGamesData = [
   { name: 'Elden Ring', image: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=200&q=80' },
@@ -42,9 +43,33 @@ const glassStyle = {
 export default function FriendProfileOverlay({ friend, onClose }) {
   if (!friend) return null;
 
+  const [showMessenger, setShowMessenger] = useState(false);
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
+
+  const handleOpenMessenger = () => {
+    setShowMessenger(true);
+  };
+
+  if (showMessenger) {
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowMessenger(false)}>
+        <div onClick={e => e.stopPropagation()}>
+          <FriendMessenger
+            friend={{
+              friend_id: friend.id?.toString() || 'temp',
+              friend_name: friend.name,
+              friend_avatar: friend.avatar,
+              status: friend.status,
+              current_game: friend.game
+            }}
+            onClose={() => setShowMessenger(false)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>
@@ -150,20 +175,28 @@ export default function FriendProfileOverlay({ friend, onClose }) {
 
             {/* Action buttons */}
             <div className="px-3.5 pb-4 flex gap-1.5">
-              {[
-                { label: 'Message', icon: MessageSquare },
-                { label: 'Challenge', icon: Swords },
-                { label: 'Interact', icon: Users },
-              ].map(btn => (
-                <button
-                  key={btn.label}
-                  className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
-                  <btn.icon className="w-3.5 h-3.5 text-white/50" />
-                  <span className="text-white/40 text-[8px]">{btn.label}</span>
-                </button>
-              ))}
+              <button
+                onClick={handleOpenMessenger}
+                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-cyan-400 text-[8px] font-semibold">Message</span>
+              </button>
+              <button
+                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <Swords className="w-3.5 h-3.5 text-white/50" />
+                <span className="text-white/40 text-[8px]">Challenge</span>
+              </button>
+              <button
+                className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <Users className="w-3.5 h-3.5 text-white/50" />
+                <span className="text-white/40 text-[8px]">Interact</span>
+              </button>
             </div>
           </div>
 
