@@ -249,9 +249,9 @@ export default function FriendMessenger({ friend, onClose }) {
       className="fixed z-[71] flex flex-col overflow-hidden"
       style={{
         right: '0px',
-        left: '320px',
+        left: '400px',
         top: '64px',
-        bottom: '52px',
+        bottom: '0px',
         background: 'linear-gradient(135deg, rgba(6, 8, 16, 0.95) 0%, rgba(10, 12, 22, 0.92) 100%)',
         backdropFilter: 'blur(60px) saturate(200%)',
         WebkitBackdropFilter: 'blur(60px) saturate(200%)',
