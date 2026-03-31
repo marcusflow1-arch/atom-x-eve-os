@@ -45,8 +45,7 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [quickActionItem, setQuickActionItem] = useState(null);
-  const [achievementItem, setAchievementItem] = useState(null);
+  const [selectedGame, setSelectedGame] = useState(null); // game whose cards are shown in the row
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,8 +54,7 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
 
   const handleTabClick = (tab) => {
     setSelectedItem(null);
-    setQuickActionItem(null);
-    setAchievementItem(null);
+    setSelectedGame(null);
     if (tab === 'home') {
       setActiveTab('home');
     } else {
@@ -85,72 +83,96 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
 
   const currentItems = items.slice(currentRow * itemsPerRow, (currentRow + 1) * itemsPerRow);
 
+  // When a game is selected, show its achievement cards in the row
+  const achievementItems = selectedGame ? MOCK_ACHIEVEMENTS : [];
+  const achievementRows = Math.max(1, Math.ceil(achievementItems.length / itemsPerRow));
+
   const renderSlots = () => {
     const slots = [];
+    if (selectedGame) {
+      // Show achievement cards
+      const rowAchs = achievementItems.slice(currentRow * itemsPerRow, (currentRow + 1) * itemsPerRow);
+      for (let i = 0; i < itemsPerRow; i++) {
+        if (i < rowAchs.length) {
+          const ach = rowAchs[i];
+          const style = RARITY_STYLES[ach.rarity];
+          const Icon = ach.icon;
+          slots.push(
+            <div
+              key={ach.id}
+              className="flex-1 aspect-[16/9] rounded-xl relative overflow-hidden border cursor-default"
+              style={{
+                background: ach.unlocked
+                  ? `linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)`
+                  : 'rgba(255,255,255,0.03)',
+                border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: ach.unlocked ? `0 0 14px ${style.glow}` : 'none',
+                filter: ach.unlocked ? 'none' : 'grayscale(1)',
+                opacity: ach.unlocked ? 1 : 0.4,
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-2">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: ach.unlocked ? `linear-gradient(135deg, ${style.glow}, rgba(255,255,255,0.06))` : 'rgba(255,255,255,0.04)',
+                    border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  {ach.unlocked ? <Icon className="w-4 h-4" style={{ color: style.text }} /> : <Lock className="w-3.5 h-3.5 text-white/20" />}
+                </div>
+                <p className="text-[9px] font-bold text-center truncate w-full px-1" style={{ color: ach.unlocked ? style.text : 'rgba(255,255,255,0.25)' }}>{ach.title}</p>
+                <span
+                  className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                  style={{
+                    background: ach.unlocked ? style.glow : 'rgba(255,255,255,0.04)',
+                    color: ach.unlocked ? style.text : 'rgba(255,255,255,0.2)',
+                    border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.06)'}`,
+                  }}
+                >{ach.rarity}</span>
+              </div>
+            </div>
+          );
+        } else {
+          slots.push(
+            <div key={`empty-ach-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/5" style={{ background: 'rgba(255,255,255,0.02)' }} />
+          );
+        }
+      }
+      return slots;
+    }
+
     for (let i = 0; i < itemsPerRow; i++) {
       if (i < currentItems.length) {
         const item = currentItems[i];
         slots.push(
           <div 
             key={item.id || i} 
-            className={`flex-1 relative cursor-pointer group transition-all duration-300 z-0 ${quickActionItem === item.id ? 'z-50' : ''}`}
+            className={`flex-1 relative cursor-pointer group transition-all duration-300 ${
+              selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''
+            }`}
             onClick={() => {
               if (activeTab === 'library') {
-                if (quickActionItem === item.id) {
-                  setQuickActionItem(null);
-                  setAchievementItem(null);
-                } else {
-                  setQuickActionItem(item.id);
-                  setAchievementItem(item);
-                  setSelectedItem(null);
-                }
+                setSelectedGame(item);
+                setCurrentRow(0);
+                setSelectedItem(null);
               }
             }}
             onDoubleClick={() => {
               if (activeTab === 'library') {
                 setSelectedItem(item);
-                setQuickActionItem(null);
-                setAchievementItem(null);
+                setSelectedGame(null);
               }
             }}
           >
-            <div className={`aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg transition-all ${
-              quickActionItem === item.id ? 'border-2 border-cyan-400' : 'border border-white/10 group-hover:border-cyan-400/50'
-            }`}>
+            <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg transition-all border border-white/10 group-hover:border-cyan-400/50">
               <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-center">
                 <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
               </div>
             </div>
-
-            {/* Quick Actions Extension */}
-            <AnimatePresence>
-              {quickActionItem === item.id && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute bottom-full left-0 right-0 pb-2 flex gap-2"
-                >
-                  <div className="flex-1 bg-[rgba(15,20,30,0.95)] backdrop-blur-xl border border-cyan-400/30 rounded-lg p-1.5 flex gap-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); navigate(createPageUrl('Library')); }}
-                      className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-1.5 rounded text-xs flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Play className="w-3 h-3 fill-current" /> Play
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); navigate(createPageUrl('GameDetail') + '?id=' + item.id + '&from=library'); }}
-                      className="px-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded flex items-center justify-center transition-colors"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         );
       } else {
@@ -166,132 +188,6 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
 
   return (
     <>
-      {/* Achievement View Overlay */}
-      <AnimatePresence>
-        {achievementItem && !selectedItem && (
-          <motion.div
-            key="achievement-panel"
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 30 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="fixed z-[100]"
-            style={{ top: '80px', bottom: '250px', left: '96px', right: '32px' }}
-          >
-            <div
-              className="relative w-full h-full rounded-2xl overflow-hidden flex flex-col"
-              style={{
-                background: 'rgba(8, 12, 20, 0.82)',
-                backdropFilter: 'blur(32px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-                border: '1px solid rgba(255,255,255,0.10)',
-                boxShadow: '0 0 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)',
-              }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between px-8 py-5 border-b border-white/10 flex-shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/20">
-                    <img src={achievementItem.displayImage} alt={achievementItem.displayTitle} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mb-0.5">Achievements</p>
-                    <h2 className="text-white text-lg font-black tracking-wide">{achievementItem.displayTitle}</h2>
-                  </div>
-                  <div className="ml-4 px-3 py-1 rounded-full text-xs font-bold" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-                    {MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length} / {MOCK_ACHIEVEMENTS.length} Unlocked
-                  </div>
-                </div>
-                <button
-                  onClick={() => { setAchievementItem(null); setQuickActionItem(null); }}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
-
-              {/* Achievement Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="grid grid-cols-4 gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
-                  {MOCK_ACHIEVEMENTS.map((ach) => {
-                    const style = RARITY_STYLES[ach.rarity];
-                    const Icon = ach.icon;
-                    return (
-                      <motion.div
-                        key={ach.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: ach.id * 0.04 }}
-                        className="relative rounded-2xl p-4 flex flex-col items-center gap-3 cursor-default select-none"
-                        style={{
-                          background: ach.unlocked
-                            ? `linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.04) 100%)`
-                            : 'rgba(255,255,255,0.025)',
-                          backdropFilter: 'blur(20px) saturate(120%)',
-                          WebkitBackdropFilter: 'blur(20px) saturate(120%)',
-                          border: ach.unlocked
-                            ? `1px solid ${style.border}`
-                            : '1px solid rgba(255,255,255,0.06)',
-                          boxShadow: ach.unlocked
-                            ? `0 0 20px ${style.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
-                            : 'none',
-                          filter: ach.unlocked ? 'none' : 'grayscale(1)',
-                          opacity: ach.unlocked ? 1 : 0.38,
-                        }}
-                      >
-                        {/* Icon square */}
-                        <div
-                          className="w-14 h-14 rounded-xl flex items-center justify-center relative overflow-hidden"
-                          style={{
-                            background: ach.unlocked
-                              ? `linear-gradient(135deg, ${style.glow}, rgba(255,255,255,0.06))`
-                              : 'rgba(255,255,255,0.04)',
-                            border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.08)',
-                            boxShadow: ach.unlocked ? `inset 0 0 20px ${style.glow}` : 'none',
-                          }}
-                        >
-                          {ach.unlocked ? (
-                            <Icon className="w-7 h-7" style={{ color: style.text }} />
-                          ) : (
-                            <Lock className="w-6 h-6 text-white/20" />
-                          )}
-                          {/* Transmissive sheen */}
-                          {ach.unlocked && (
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
-                          )}
-                        </div>
-
-                        {/* Text */}
-                        <div className="text-center">
-                          <p className="text-xs font-bold mb-0.5" style={{ color: ach.unlocked ? style.text : 'rgba(255,255,255,0.25)' }}>{ach.title}</p>
-                          <p className="text-[10px] leading-relaxed" style={{ color: ach.unlocked ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.15)' }}>{ach.desc}</p>
-                        </div>
-
-                        {/* Rarity badge */}
-                        <span
-                          className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                          style={{
-                            background: ach.unlocked ? `${style.glow}` : 'rgba(255,255,255,0.04)',
-                            color: ach.unlocked ? style.text : 'rgba(255,255,255,0.2)',
-                            border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.06)'}`,
-                          }}
-                        >
-                          {ach.rarity}
-                        </span>
-
-                        {/* Liquid glass sheen overlay */}
-                        <div className="absolute inset-0 rounded-2xl pointer-events-none bg-gradient-to-b from-white/[0.05] via-transparent to-transparent" />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <AnimatePresence>
         {selectedItem && (
           <motion.div
@@ -495,19 +391,45 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
             onWheel={handleWheel}
           >
             <div className="w-full max-w-[1400px] mx-auto mb-4 flex items-center justify-between px-2">
-               <div className="flex items-center gap-3">
-                 {activeTab === 'library' ? <Library className="w-5 h-5 text-cyan-400" /> : <Globe className="w-5 h-5 text-purple-400" />}
-                 <h3 className="text-white font-bold tracking-widest uppercase text-sm">
-                   {activeTab === 'library' ? 'Library Games' : 'Environment Hubs'}
-                 </h3>
-               </div>
-               <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
-                  <span>Row {currentRow + 1} of {totalRows}</span>
-                  <div className="flex gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
-                    <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                    <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-4 h-4" /></button>
-                  </div>
-               </div>
+              <div className="flex items-center gap-3">
+                {selectedGame ? (
+                  <>
+                    <button
+                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
+                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Back
+                    </button>
+                    <div className="w-px h-4 bg-white/20" />
+                    <div className="w-6 h-6 rounded overflow-hidden border border-white/20 flex-shrink-0">
+                      <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
+                    </div>
+                    <h3 className="text-white font-bold tracking-widest uppercase text-sm">{selectedGame.displayTitle} — Achievements</h3>
+                  </>
+                ) : (
+                  <>
+                    {activeTab === 'library' ? <Library className="w-5 h-5 text-cyan-400" /> : <Globe className="w-5 h-5 text-purple-400" />}
+                    <h3 className="text-white font-bold tracking-widest uppercase text-sm">
+                      {activeTab === 'library' ? 'Library Games' : 'Environment Hubs'}
+                    </h3>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
+                {selectedGame && (
+                  <button
+                    onClick={() => navigate(createPageUrl('Library'))}
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg text-xs transition-colors"
+                  >
+                    <Play className="w-3 h-3 fill-current" /> Play {selectedGame.displayTitle}
+                  </button>
+                )}
+                <span>Row {currentRow + 1} of {selectedGame ? achievementRows : totalRows}</span>
+                <div className="flex gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
+                  <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                  <button onClick={() => setCurrentRow(p => Math.min((selectedGame ? achievementRows : totalRows) - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                </div>
+              </div>
             </div>
             <div className="flex gap-4 w-full max-w-[1400px] mx-auto px-2">
               {renderSlots()}
