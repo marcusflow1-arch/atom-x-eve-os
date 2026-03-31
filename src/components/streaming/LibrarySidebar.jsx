@@ -1494,11 +1494,10 @@ export default function LibrarySidebar() {
                                 </div>
                             </div>
                         </motion.div>
-                        ))}
-                        </div>
-                        </div>
-
-                        </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
         )}
       </AnimatePresence>
 
