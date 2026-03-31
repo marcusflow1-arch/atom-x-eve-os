@@ -54,17 +54,19 @@ export default function FriendsDropdown() {
   );
 
   const handleFriendClick = (friend) => {
-    setSelectedFriend(prev => prev?.id === friend.id ? null : friend);
+    setSelectedFriend(friend);
   };
 
   const handleOpenMessenger = (friend) => {
     setSelectedFriend(friend);
     setShowMessenger(true);
+    setShowCallUI(false);
   };
 
   const handleOpenCallUI = (friend) => {
     setSelectedFriend(friend);
     setShowCallUI(true);
+    setShowMessenger(false);
   };
 
   return (
