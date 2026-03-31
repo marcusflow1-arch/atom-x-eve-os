@@ -248,20 +248,13 @@ export default function MessengerApp({ onClose }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 16 }}
       transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-      className="fixed z-[71] flex overflow-hidden w-full h-screen"
+      className="fixed z-[71] inset-0 flex overflow-hidden"
       style={{
-        top: '0px',
-        left: '0px',
-        right: '0px',
-        bottom: '0px',
         background: 'linear-gradient(135deg, rgba(6, 8, 16, 0.95) 0%, rgba(10, 12, 22, 0.92) 100%)',
         backdropFilter: 'blur(60px) saturate(200%)',
         WebkitBackdropFilter: 'blur(60px) saturate(200%)',
-        border: 'none',
-        boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.08)',
       }}
     >
-      {/* Friends Sidebar */}
       <FriendsList
         friends={MOCK_FRIENDS}
         selectedFriendId={selectedFriend.id}
@@ -270,7 +263,6 @@ export default function MessengerApp({ onClose }) {
         setSearchQuery={setSearchQuery}
       />
 
-      {/* Chat Section */}
       <div className="flex-1 flex flex-col">
         <ChatHeader friend={selectedFriend} onClose={onClose} />
         <ChatArea
