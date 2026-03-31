@@ -1686,10 +1686,10 @@ export default function LibrarySidebar() {
             transition={{ duration: 0.25 }}
             className="fixed z-[70] flex flex-col overflow-hidden"
             style={{
+              left: '320px',
               right: '0px',
               top: '64px',
               bottom: '52px',
-              width: '400px',
               background: 'rgba(15, 20, 26, 0.85)',
               backdropFilter: 'blur(40px) saturate(180%)',
               WebkitBackdropFilter: 'blur(40px) saturate(180%)',
