@@ -23,7 +23,7 @@ const MOCK_CHAT_HISTORY = {
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
-export default function FriendMessenger({ friend, onClose, compact = false }) {
+export default function FriendMessenger({ friend, onClose, compact = false, showCallOverlay = false }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -197,7 +197,7 @@ export default function FriendMessenger({ friend, onClose, compact = false }) {
 
   const CallOverlay = ({ type }) => (
     <AnimatePresence>
-      {(onVoiceCall || onVideoCall || onWatchTogether) && (
+      {(showCallOverlay || onVoiceCall || onVideoCall || onWatchTogether) && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -205,7 +205,7 @@ export default function FriendMessenger({ friend, onClose, compact = false }) {
           className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl"
         >
           <div className="text-center space-y-6">
-            {type !== 'watch' && (
+            {type !== 'watch' && !showCallOverlay && (
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -214,18 +214,29 @@ export default function FriendMessenger({ friend, onClose, compact = false }) {
                 <img src={friend?.friend_avatar} alt="" className="w-full h-full object-cover" />
               </motion.div>
             )}
-            
+
+            {showCallOverlay && (
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-cyan-500/50 mx-auto"
+              >
+                <img src={friend?.friend_avatar} alt="" className="w-full h-full object-cover" />
+              </motion.div>
+            )}
+
             <div>
               <h3 className="text-2xl font-bold text-white">{friend?.friend_name}</h3>
               <p className="text-white/50 mt-1">
-                {type === 'voice' && 'Voice Call'}
+                {showCallOverlay && 'Voice Call'}
+                {type === 'voice' && !showCallOverlay && 'Voice Call'}
                 {type === 'video' && 'Video Call'}
                 {type === 'watch' && 'Watching Game'}
                 • 00:{(Date.now() % 60).toString().padStart(2, '0')}
               </p>
             </div>
 
-            {type === 'watch' && (
+            {(type === 'watch' || showCallOverlay) && (
               <div className="w-64 h-36 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl border border-white/10 flex items-center justify-center">
                 <div className="text-center">
                   <Gamepad2 className="w-12 h-12 text-purple-400 mx-auto mb-2" />
@@ -239,7 +250,10 @@ export default function FriendMessenger({ friend, onClose, compact = false }) {
                 <Mic className="w-6 h-6 text-white" />
               </button>
               <button 
-                onClick={handleEndCall}
+                onClick={() => {
+                  handleEndCall();
+                  if (showCallOverlay) onClose();
+                }}
                 className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
               >
                 <PhoneOff className="w-8 h-8 text-white" />
@@ -261,7 +275,7 @@ export default function FriendMessenger({ friend, onClose, compact = false }) {
 
   return (
     <div className={`flex flex-col ${compact ? 'h-full' : 'h-[600px] w-[400px]'} bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden relative`}>
-      <CallOverlay type={onVoiceCall ? 'voice' : onVideoCall ? 'video' : onWatchTogether ? 'watch' : null} />
+      <CallOverlay type={showCallOverlay ? 'voice' : onVoiceCall ? 'voice' : onVideoCall ? 'video' : onWatchTogether ? 'watch' : null} />
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/20 flex-shrink-0">

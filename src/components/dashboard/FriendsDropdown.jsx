@@ -4,7 +4,7 @@ import {
   Users, MessageSquare, UserPlus, Gamepad2,
   Swords, Repeat, Check, X, Search,
   Trophy, Shield, Crosshair, ChevronRight,
-  Video, Mic, Eye
+  Video, Mic, Eye, Phone
 } from 'lucide-react';
 import FriendMessenger from '../friends/FriendMessenger';
 
@@ -47,6 +47,7 @@ export default function FriendsDropdown() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMessenger, setShowMessenger] = useState(false);
+  const [showCallUI, setShowCallUI] = useState(false);
 
   const filteredFriends = MOCK_FRIENDS.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -59,6 +60,11 @@ export default function FriendsDropdown() {
   const handleOpenMessenger = (friend) => {
     setSelectedFriend(friend);
     setShowMessenger(true);
+  };
+
+  const handleOpenCallUI = (friend) => {
+    setSelectedFriend(friend);
+    setShowCallUI(true);
   };
 
   return (
@@ -128,6 +134,7 @@ export default function FriendsDropdown() {
                     selected={selectedFriend?.id === friend.id}
                     onSelect={() => handleFriendClick(friend)}
                     onMessage={handleOpenMessenger}
+                    onCall={handleOpenCallUI}
                   />
                 ))}
                 {/* Offline */}
@@ -143,6 +150,7 @@ export default function FriendsDropdown() {
                         selected={selectedFriend?.id === friend.id}
                         onSelect={() => handleFriendClick(friend)}
                         onMessage={handleOpenMessenger}
+                        onCall={handleOpenCallUI}
                         dim
                       />
                     ))}
@@ -196,6 +204,11 @@ export default function FriendsDropdown() {
                         {MESSENGER_ACTIONS.map(action => (
                           <button
                             key={action.id}
+                            onClick={() => {
+                              if (action.id === 'video') handleOpenCallUI(selectedFriend);
+                              if (action.id === 'voice') handleOpenCallUI(selectedFriend);
+                              if (action.id === 'watch') handleOpenCallUI(selectedFriend);
+                            }}
                             className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border transition-all ${action.bg}`}
                           >
                             <action.icon className={`w-4 h-4 ${action.color}`} />
@@ -217,6 +230,80 @@ export default function FriendsDropdown() {
                         }}
                         onClose={() => setShowMessenger(false)}
                         compact
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Right: Call UI Panel */}
+              <AnimatePresence>
+                {showCallUI && selectedFriend && (
+                  <motion.div
+                    key="call-ui"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: '50%' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="border-l border-white/10 flex flex-col overflow-hidden"
+                  >
+                    {/* Call UI Header */}
+                    <div className="p-4 border-b border-white/10 bg-white/[0.02]">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-cyan-400/30">
+                              <img src={selectedFriend.avatar} alt={selectedFriend.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-black/60 ${STATUS_COLOR[selectedFriend.status]}`} />
+                          </div>
+                          <div>
+                            <h3 className="text-white font-bold text-sm">{selectedFriend.name}</h3>
+                            {selectedFriend.game ? (
+                              <div className="flex items-center gap-1">
+                                <Gamepad2 className="w-3 h-3 text-cyan-400" />
+                                <span className="text-[10px] text-cyan-300/60">{selectedFriend.game}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-white/40 capitalize">{selectedFriend.status}</span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setShowCallUI(false)}
+                          className="w-8 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] flex items-center justify-center transition-colors"
+                        >
+                          <X className="w-4 h-4 text-white/60" />
+                        </button>
+                      </div>
+
+                      {/* Call Actions */}
+                      <div className="flex gap-2">
+                        {MESSENGER_ACTIONS.map(action => (
+                          <button
+                            key={action.id}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border transition-all ${action.bg}`}
+                          >
+                            <action.icon className={`w-4 h-4 ${action.color}`} />
+                            <span className={`text-[10px] font-semibold ${action.color}`}>{action.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Call UI Content - Same as FriendMessenger call overlay */}
+                    <div className="flex-1 overflow-hidden relative">
+                      <FriendMessenger
+                        friend={{
+                          friend_id: selectedFriend.id.toString(),
+                          friend_name: selectedFriend.name,
+                          friend_avatar: selectedFriend.avatar,
+                          status: selectedFriend.status,
+                          current_game: selectedFriend.game
+                        }}
+                        onClose={() => setShowCallUI(false)}
+                        compact
+                        showCallOverlay
                       />
                     </div>
                   </motion.div>
@@ -278,7 +365,7 @@ export default function FriendsDropdown() {
 }
 
 // Friend Row - compact book-style entry
-const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, dim }) => (
+const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, dim, onCall }) => (
   <div className={`w-full rounded-xl border transition-all ${
     selected
       ? 'bg-white/[0.08] border-white/10'
@@ -327,12 +414,12 @@ const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, d
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onInvite?.(friend);
+              onCall?.(friend);
             }}
             className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 transition-colors"
           >
-            <UserPlus className="w-3 h-3 text-green-400" />
-            <span className="text-[9px] font-medium text-green-400">Invite</span>
+            <Phone className="w-3 h-3 text-green-400" />
+            <span className="text-[9px] font-medium text-green-400">Call</span>
           </button>
           <button
             onClick={(e) => {

@@ -41,9 +41,9 @@ const glassStyle = {
 };
 
 export default function FriendProfileOverlay({ friend, onClose }) {
-  if (!friend) return null;
-
   const [showMessenger, setShowMessenger] = useState(false);
+  
+  if (!friend) return null;
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
