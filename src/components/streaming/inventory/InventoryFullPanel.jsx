@@ -49,7 +49,7 @@ function generateInventoryForGame(game) {
   return items;
 }
 
-export default function InventoryFullPanel({ isOpen, onClose, initialGameName, fullScreen = false }) {
+export default function InventoryFullPanel({ isOpen, onClose, initialGameName, fullScreen = false, leftOffset }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [marketItem, setMarketItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,8 +156,8 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className={`fixed top-0 bottom-0 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col ${fullScreen ? 'left-0' : 'left-80 sm:left-96'}`}
-        style={glassStyle}
+        className="fixed top-0 bottom-0 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
+        style={{ ...glassStyle, left: leftOffset !== undefined ? leftOffset : (fullScreen ? '0px' : '384px') }}
       >
         {/* Header */}
         <div className="sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 px-5 py-4 relative">

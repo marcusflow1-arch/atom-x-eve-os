@@ -36,6 +36,7 @@ export default function LibrarySidebar() {
   const [viewingFriend, setViewingFriend] = useState(null);
   const [detailGame, setDetailGame] = useState(null);
   const [fullLibraryDetailGame, setFullLibraryDetailGame] = useState(null);
+  const [isExpandedRewardsInventory, setIsExpandedRewardsInventory] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -503,12 +504,24 @@ export default function LibrarySidebar() {
               <Library className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
             </button>
+            <button
+              onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
+              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                expandedPanel === 'rewards'
+                  ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
+              }`}
+              title="Rewards"
+            >
+              <Trophy className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
+            </button>
 
           </motion.div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
-            {(expandedPanel === 'friends' || expandedPanel === 'library' || expandedPanel === 'fullLibrary') && (
+            {(expandedPanel === 'friends' || expandedPanel === 'library' || expandedPanel === 'fullLibrary' || expandedPanel === 'rewards') && (
               <motion.div
                 key="expanded-panel"
                 initial={{ x: -20, opacity: 0 }}
@@ -532,7 +545,7 @@ export default function LibrarySidebar() {
                 <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">
-                      {expandedPanel === 'friends' ? 'Friends' : 'My Library'}
+                      {expandedPanel === 'friends' ? 'Friends' : expandedPanel === 'rewards' ? 'Reward / Inventory' : 'My Library'}
                     </span>
                     {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && (
                       <button
@@ -546,8 +559,20 @@ export default function LibrarySidebar() {
                         Full Library
                       </button>
                     )}
+                    {expandedPanel === 'rewards' && (
+                      <button
+                        onClick={() => setIsExpandedRewardsInventory(p => !p)}
+                        className={`text-[10px] font-medium border-b pb-px transition-colors ${
+                          isExpandedRewardsInventory
+                            ? 'text-amber-400 border-amber-400'
+                            : 'text-amber-400 border-amber-400/60 hover:border-amber-400'
+                        }`}
+                      >
+                        Inventory
+                      </button>
+                    )}
                   </div>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); }} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -637,6 +662,58 @@ export default function LibrarySidebar() {
                       </AnimatePresence>
                     </div>
                   ))}
+                  {expandedPanel === 'rewards' && (() => {
+                    const rewardItems = [
+                      { name: 'Neural Shock', category: 'ability', rarity: 'Legendary', game: 'Cyberpunk 2088', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-500/10', time: '2h ago' },
+                      { name: 'Void Walker Set', category: 'equipment', rarity: 'Epic', game: 'Elden Ring', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', time: '5h ago' },
+                      { name: 'First Blood', category: 'achievement', rarity: 'Rare', game: 'Valorant', icon: Trophy, color: 'text-yellow-400', bg: 'bg-yellow-500/10', time: '1d ago' },
+                      { name: 'Shadow Blade', category: 'equipment', rarity: 'Legendary', game: 'Elden Ring', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-500/10', time: '2d ago' },
+                      { name: 'Phoenix Companion', category: 'companion', rarity: 'Epic', game: 'Cyberpunk 2088', icon: User, color: 'text-green-400', bg: 'bg-green-500/10', time: '3d ago' },
+                    ];
+                    return (
+                      <>
+                        <div className="px-4 py-2">
+                          <p className="text-[9px] text-amber-400/70 font-bold uppercase tracking-widest mb-2">Recently Unlocked Cards</p>
+                          {rewardItems.filter(r => r.category !== 'achievement').map((item, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setPendingRewardGame(item.game); setIsExpandedRewardsInventory(true); }}
+                              className="w-full flex items-center gap-3 py-2 hover:bg-white/5 rounded-lg transition-colors text-left"
+                            >
+                              <div className={`w-8 h-8 rounded-lg ${item.bg} border border-white/10 flex items-center justify-center flex-shrink-0`}>
+                                <item.icon className={`w-4 h-4 ${item.color}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-semibold truncate">{item.name}</p>
+                                <p className="text-white/40 text-[10px] truncate">{item.rarity} • {item.game}</p>
+                              </div>
+                              <span className="text-[9px] text-white/30 flex-shrink-0">{item.time}</span>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="w-full h-px bg-white/5 my-1" />
+                        <div className="px-4 py-2">
+                          <p className="text-[9px] text-yellow-400/70 font-bold uppercase tracking-widest mb-2">Recent Achievements Unlocked</p>
+                          {rewardItems.filter(r => r.category === 'achievement').map((item, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setPendingRewardGame(item.game); setIsExpandedRewardsInventory(true); }}
+                              className="w-full flex items-center gap-3 py-2 hover:bg-white/5 rounded-lg transition-colors text-left"
+                            >
+                              <div className={`w-8 h-8 rounded-lg ${item.bg} border border-white/10 flex items-center justify-center flex-shrink-0`}>
+                                <item.icon className={`w-4 h-4 ${item.color}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-xs font-semibold truncate">{item.name}</p>
+                                <p className="text-white/40 text-[10px] truncate">{item.rarity} • {item.game}</p>
+                              </div>
+                              <span className="text-[9px] text-white/30 flex-shrink-0">{item.time}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             )}
@@ -1367,6 +1444,18 @@ export default function LibrarySidebar() {
             isOpen={isExpandedInventory && isOpen}
             onClose={() => { setIsExpandedInventory(false); setInventoryDetailItem(null); setPendingRewardGame(null); }}
             initialGameName={pendingRewardGame}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Rewards Inventory Panel */}
+      <AnimatePresence>
+        {isExpandedRewardsInventory && expandedPanel === 'rewards' && (
+          <InventoryFullPanel
+            isOpen={true}
+            onClose={() => { setIsExpandedRewardsInventory(false); setPendingRewardGame(null); }}
+            initialGameName={pendingRewardGame}
+            leftOffset="320px"
           />
         )}
       </AnimatePresence>
