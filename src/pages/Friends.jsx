@@ -219,6 +219,11 @@ export default function FriendsPage() {
                          friends.filter(f => f.current_game);
 
   // Action Handlers
+  const handleClosePanel = () => {
+    setSelectedFriendId(null);
+    setActivePanel(null);
+  };
+
   const handleInviteToLunar = async () => {
     if (!selectedFriend) return;
     try {
@@ -246,12 +251,7 @@ export default function FriendsPage() {
   };
 
   const handlePanelChange = (panel) => {
-    if (panel === 'messenger') {
-      // Close profile when opening messenger
-      setActivePanel('messenger');
-    } else {
-      setActivePanel(panel);
-    }
+    setActivePanel(panel);
   };
 
   const handleJoinLunar = async () => {
@@ -303,7 +303,20 @@ export default function FriendsPage() {
           
           {/* Header */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-black tracking-tighter italic">SOCIAL HUB</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl font-black tracking-tighter italic">SOCIAL HUB</h1>
+              {selectedFriendId && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={handleClosePanel}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5 text-white/70" />
+                </motion.button>
+              )}
+            </div>
             <div className="flex gap-2">
               <button className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
                 <Search className="w-5 h-5 text-white/70" />
@@ -339,9 +352,9 @@ export default function FriendsPage() {
                 friend={friend} 
                 isSelected={selectedFriendId === friend.id}
                 onClick={() => {
-                       setSelectedFriendId(friend.id);
-                       setActivePanel(null);
-                     }}
+                  setSelectedFriendId(friend.id);
+                  setActivePanel(null);
+                }}
               />
             ))}
           </div>
@@ -370,11 +383,11 @@ export default function FriendsPage() {
         <AnimatePresence mode="wait">
           {selectedFriend && (
             <motion.div 
-              key={selectedFriend.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
+              key={`${selectedFriend.id}-${activePanel || 'profile'}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex-1 relative rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
             >
               {activePanel === 'messenger' ? (
@@ -401,162 +414,162 @@ export default function FriendsPage() {
                   />
                 </div>
               ) : (
-                /* PROFILE VIEW */
+                /* DEFAULT PROFILE VIEW */
                 <>
-              {/* Dynamic Background Image */}
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src={selectedFriend.bg_image} 
-                  alt="Background" 
-                  className="w-full h-full object-cover opacity-60 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f1419] via-[#0f1419]/80 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#0f1419]/40 to-[#0f1419]" />
-              </div>
+                  {/* Dynamic Background Image */}
+                  <div className="absolute inset-0 z-0">
+                    <img 
+                      src={selectedFriend.bg_image} 
+                      alt="Background" 
+                      className="w-full h-full object-cover opacity-60 scale-105 group-hover:scale-110 transition-transform duration-[20s]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f1419] via-[#0f1419]/80 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#0f1419]/40 to-[#0f1419]" />
+                  </div>
 
-              {/* Content Container */}
-              <div className="absolute inset-0 z-10 p-12 flex flex-col justify-end">
-                
-                {/* Top Actions (Close/More) */}
-                <div className="absolute top-8 right-8 flex gap-4">
-                  <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
-                    <Bell className="w-5 h-5" />
-                  </button>
-                  <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
-                    <MoreHorizontal className="w-5 h-5" />
-                  </button>
-                </div>
+                  {/* Content Container */}
+                  <div className="absolute inset-0 z-10 p-12 flex flex-col justify-end">
+                    
+                    {/* Top Actions (Close/More) */}
+                    <div className="absolute top-8 right-8 flex gap-4">
+                      <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
+                        <Bell className="w-5 h-5" />
+                      </button>
+                      <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all text-white">
+                        <MoreHorizontal className="w-5 h-5" />
+                      </button>
+                    </div>
 
-                {/* Main Profile Info */}
-                <div className="flex items-end gap-10 mb-12">
-                  {/* Large Avatar */}
-                  <div className="relative group">
-                    <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white/10 shadow-2xl relative z-10">
-                      <img 
-                        src={selectedFriend.friend_avatar || `https://i.pravatar.cc/300?u=${selectedFriend.friend_id}`}
-                        alt={selectedFriend.friend_name}
-                        className="w-full h-full object-cover"
+                    {/* Main Profile Info */}
+                    <div className="flex items-end gap-10 mb-12">
+                      {/* Large Avatar */}
+                      <div className="relative group">
+                        <div className="w-48 h-48 rounded-[3rem] overflow-hidden border-4 border-white/10 shadow-2xl relative z-10">
+                          <img 
+                            src={selectedFriend.friend_avatar || `https://i.pravatar.cc/300?u=${selectedFriend.friend_id}`}
+                            alt={selectedFriend.friend_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {/* Glow effect behind avatar */}
+                        <div className="absolute inset-0 bg-cyan-500/30 blur-[60px] rounded-full z-0 group-hover:bg-cyan-400/50 transition-colors duration-500" />
+                        
+                        {/* Status Badge */}
+                        <div className="absolute -bottom-4 -right-4 bg-black/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 z-20">
+                          <div className={`w-3 h-3 rounded-full ${
+                            selectedFriend.status === 'online' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 
+                            selectedFriend.status === 'away' ? 'bg-yellow-500' : 'bg-slate-500'
+                          }`} />
+                          <span className="font-bold text-sm uppercase tracking-wide">
+                            {selectedFriend.status}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Name & Title */}
+                      <div className="mb-4">
+                        <motion.h2 
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.1 }}
+                          className="text-6xl font-black text-white tracking-tight mb-2 drop-shadow-lg"
+                        >
+                          {selectedFriend.friend_name}
+                        </motion.h2>
+                        <div className="flex items-center gap-4 text-white/60">
+                          <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg">
+                            <Trophy className="w-4 h-4 text-yellow-500" />
+                            <span className="font-mono text-sm">LVL 42</span>
+                          </div>
+                          <span className="w-1 h-1 bg-white/20 rounded-full" />
+                          <span className="text-lg">{selectedFriend.current_game || "Chilling in Lobby"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Grid Layout: Stats & Activity */}
+                    <div className="grid grid-cols-12 gap-6 mb-10">
+                      
+                      {/* Left Column: Stats */}
+                      <div className="col-span-8 grid grid-cols-2 gap-4">
+                        <AICompatibilityMeter score={selectedFriend.ai_compatibility} />
+                        
+                        <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col justify-between group hover:bg-white/5 transition-colors">
+                          <div className="flex items-center gap-2 text-white/60 mb-2">
+                            <Sword className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase">Rivalry Stats</span>
+                          </div>
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <div className="text-2xl font-black text-white">{selectedFriend.rivalry_score}</div>
+                              <div className="text-xs text-white/40">Matches Won</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-2xl font-black text-red-400">12</div>
+                              <div className="text-xs text-white/40">Losses</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="col-span-2 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex items-center justify-between group hover:bg-white/5 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xl font-bold">
+                              {selectedFriend.shared_achievements}
+                            </div>
+                            <div>
+                              <div className="font-bold text-white">Shared Achievements</div>
+                              <div className="text-xs text-white/50">Across 14 Games</div>
+                            </div>
+                          </div>
+                          <div className="flex -space-x-2">
+                            {[1,2,3].map(i => (
+                              <div key={i} className="w-8 h-8 rounded-full bg-white/10 border border-white/20" />
+                            ))}
+                            <div className="w-8 h-8 rounded-full bg-white/5 border border-white/20 flex items-center justify-center text-xs">+5</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Column: Activity Feed */}
+                      <div className="col-span-4 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col gap-2">
+                        <div className="text-xs font-bold text-white/50 uppercase mb-2 flex items-center gap-2">
+                          <Activity className="w-3 h-3" /> Recent Activity
+                        </div>
+                        <div className="space-y-1">
+                          <ActivityItem icon={Trophy} text={`Earned "Legendary" in ${selectedFriend.current_game || 'Apex'}`} time="2m ago" />
+                          <ActivityItem icon={Gamepad2} text="Started playing Starfield" time="2h ago" />
+                          <ActivityItem icon={MessageSquare} text="Commented on your clip" time="5h ago" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Row */}
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <ActionButton 
+                        icon={Users} 
+                        label="Invite to Lunar" 
+                        primary 
+                        onClick={handleInviteToLunar} 
+                      />
+                      <ActionButton 
+                        icon={Gamepad2} 
+                        label="Join Lunar" 
+                        onClick={handleJoinLunar} 
+                      />
+                      <ActionButton 
+                        icon={Mic} 
+                        label="Start Party" 
+                        onClick={() => console.log('Voice')} 
+                      />
+                      <ActionButton 
+                        icon={MessageSquare} 
+                        label={activePanel === 'messenger' ? "Close Chat" : "Message"} 
+                        onClick={handleOpenMessenger} 
                       />
                     </div>
-                    {/* Glow effect behind avatar */}
-                    <div className="absolute inset-0 bg-cyan-500/30 blur-[60px] rounded-full z-0 group-hover:bg-cyan-400/50 transition-colors duration-500" />
-                    
-                    {/* Status Badge */}
-                    <div className="absolute -bottom-4 -right-4 bg-black/80 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full flex items-center gap-2 z-20">
-                      <div className={`w-3 h-3 rounded-full ${
-                        selectedFriend.status === 'online' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 
-                        selectedFriend.status === 'away' ? 'bg-yellow-500' : 'bg-slate-500'
-                      }`} />
-                      <span className="font-bold text-sm uppercase tracking-wide">
-                        {selectedFriend.status}
-                      </span>
-                    </div>
+
                   </div>
-
-                  {/* Name & Title */}
-                  <div className="mb-4">
-                    <motion.h2 
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-6xl font-black text-white tracking-tight mb-2 drop-shadow-lg"
-                    >
-                      {selectedFriend.friend_name}
-                    </motion.h2>
-                    <div className="flex items-center gap-4 text-white/60">
-                      <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-lg">
-                        <Trophy className="w-4 h-4 text-yellow-500" />
-                        <span className="font-mono text-sm">LVL 42</span>
-                      </div>
-                      <span className="w-1 h-1 bg-white/20 rounded-full" />
-                      <span className="text-lg">{selectedFriend.current_game || "Chilling in Lobby"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Grid Layout: Stats & Activity */}
-                <div className="grid grid-cols-12 gap-6 mb-10">
-                  
-                  {/* Left Column: Stats */}
-                  <div className="col-span-8 grid grid-cols-2 gap-4">
-                    <AICompatibilityMeter score={selectedFriend.ai_compatibility} />
-                    
-                    <div className="bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col justify-between group hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-2 text-white/60 mb-2">
-                        <Sword className="w-4 h-4" />
-                        <span className="text-xs font-bold uppercase">Rivalry Stats</span>
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <div className="text-2xl font-black text-white">{selectedFriend.rivalry_score}</div>
-                          <div className="text-xs text-white/40">Matches Won</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-black text-red-400">12</div>
-                          <div className="text-xs text-white/40">Losses</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex items-center justify-between group hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-xl font-bold">
-                          {selectedFriend.shared_achievements}
-                        </div>
-                        <div>
-                          <div className="font-bold text-white">Shared Achievements</div>
-                          <div className="text-xs text-white/50">Across 14 Games</div>
-                        </div>
-                      </div>
-                      <div className="flex -space-x-2">
-                        {[1,2,3].map(i => (
-                          <div key={i} className="w-8 h-8 rounded-full bg-white/10 border border-white/20" />
-                        ))}
-                        <div className="w-8 h-8 rounded-full bg-white/5 border border-white/20 flex items-center justify-center text-xs">+5</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Activity Feed */}
-                  <div className="col-span-4 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col gap-2">
-                    <div className="text-xs font-bold text-white/50 uppercase mb-2 flex items-center gap-2">
-                      <Activity className="w-3 h-3" /> Recent Activity
-                    </div>
-                    <div className="space-y-1">
-                      <ActivityItem icon={Trophy} text={`Earned "Legendary" in ${selectedFriend.current_game || 'Apex'}`} time="2m ago" />
-                      <ActivityItem icon={Gamepad2} text="Started playing Starfield" time="2h ago" />
-                      <ActivityItem icon={MessageSquare} text="Commented on your clip" time="5h ago" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Action Row */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  <ActionButton 
-                    icon={Users} 
-                    label="Invite to Lunar" 
-                    primary 
-                    onClick={handleInviteToLunar} 
-                  />
-                  <ActionButton 
-                    icon={Gamepad2} 
-                    label="Join Lunar" 
-                    onClick={handleJoinLunar} 
-                  />
-                  <ActionButton 
-                    icon={Mic} 
-                    label="Start Party" 
-                    onClick={() => console.log('Voice')} 
-                  />
-                  <ActionButton 
-                    icon={MessageSquare} 
-                    label={activePanel === 'messenger' ? "Close Chat" : "Message"} 
-                    onClick={handleOpenMessenger} 
-                  />
-                </div>
-
-              </div>
-              </>
+                </>
               )}
             </motion.div>
           )}
