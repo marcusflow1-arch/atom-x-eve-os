@@ -246,7 +246,12 @@ export default function FriendsPage() {
   };
 
   const handlePanelChange = (panel) => {
-    setActivePanel(panel);
+    if (panel === 'messenger') {
+      // Close profile when opening messenger
+      setActivePanel('messenger');
+    } else {
+      setActivePanel(panel);
+    }
   };
 
   const handleJoinLunar = async () => {

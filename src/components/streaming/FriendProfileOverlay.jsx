@@ -55,7 +55,9 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
 
   const handleOpenMessenger = () => {
     if (onPanelChange) {
-      onPanelChange('messenger');
+      // Close this profile overlay first before opening messenger
+      onClose();
+      setTimeout(() => onPanelChange('messenger'), 100);
     } else {
       setShowMessenger(true);
     }
