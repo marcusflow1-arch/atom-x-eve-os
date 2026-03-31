@@ -70,14 +70,9 @@ export default function TradingWorkspace({ item, onClose, onBack }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed top-0 bottom-0 left-80 sm:left-96 right-0 z-[72] flex flex-col overflow-hidden"
-      style={{
-        background: 'rgba(8, 12, 18, 0.92)',
-        backdropFilter: 'blur(50px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(50px) saturate(180%)',
-        boxShadow: 'inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
-        borderLeft: '1px solid rgba(165, 243, 252, 0.12)',
-      }}
+      className="fixed left-80 sm:left-96 right-0 z-[72] flex flex-col overflow-hidden"
+      style={{ top: '64px', bottom: '52px', background: 'rgba(8, 12, 18, 0.92)', backdropFilter: 'blur(50px) saturate(180%)', WebkitBackdropFilter: 'blur(50px) saturate(180%)', boxShadow: 'inset 0 0 0 1px rgba(165, 243, 252, 0.08)', borderLeft: '1px solid rgba(165, 243, 252, 0.12)' }}
+
     >
       {/* ═══ TOP BAR: Item Info + Mode Tabs (horizontal, like MMO auction house) ═══ */}
       <div className="flex-shrink-0 border-b border-white/5" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%)' }}>
