@@ -388,7 +388,7 @@ export default function FriendTradePanel({ friend, onClose }) {
             </div>
 
             {/* Vertical Game List - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1.5" style={{ scrollbarWidth: 'none' }}>
               {GAMES_WITH_CARDS.map(game => (
                 <button
                   key={game.id}
@@ -397,21 +397,25 @@ export default function FriendTradePanel({ friend, onClose }) {
                     setSearchQuery('');
                     setSelectedCategory(null);
                   }}
-                  className="w-full relative group rounded-xl overflow-hidden transition-all hover:scale-105"
+                  className="w-full relative group flex items-center gap-2 p-2 rounded-xl transition-all hover:scale-102"
                   style={{
-                    aspectRatio: '3/4',
-                    background: selectedGame === game.id ? 'rgba(34,211,238,0.2)' : 'transparent',
-                    border: selectedGame === game.id ? '2px solid rgba(34,211,238,0.6)' : '2px solid transparent',
-                    boxShadow: selectedGame === game.id ? '0 0 15px rgba(34,211,238,0.35)' : 'none',
+                    background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'rgba(100,120,140,0.08)',
+                    border: selectedGame === game.id ? '1.5px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.08)',
+                    boxShadow: selectedGame === game.id ? '0 0 12px rgba(34,211,238,0.25)' : 'none',
                   }}
                 >
-                  <img src={game.cover} alt={game.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-1.5 text-center">
-                    <span className="text-[8px] font-bold text-white block leading-tight line-clamp-2 drop-shadow-lg">
-                      {game.name}
-                    </span>
+                  {/* Game Icon - Small */}
+                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-white/10">
+                    <img src={game.cover} alt={game.name} className="w-full h-full object-cover" />
                   </div>
+                  {/* Game Name */}
+                  <span className="text-[9px] font-bold text-white/80 group-hover:text-white transition-colors line-clamp-2 leading-tight flex-1 text-left">
+                    {game.name}
+                  </span>
+                  {/* Selection Indicator */}
+                  {selectedGame === game.id && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" style={{ boxShadow: '0 0 8px rgba(34,211,238,0.6)' }} />
+                  )}
                 </button>
               ))}
             </div>
