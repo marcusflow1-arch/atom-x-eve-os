@@ -31,19 +31,20 @@ const achievementCards = [
   { rarity: 'COMMON', color: 'border-white/10', glow: '', bg: 'bg-white/5' },
 ];
 
-// Liquid glass style — slightly darker translucent
+// Liquid glass style - matching friends panel
 const glassStyle = {
-  background: 'rgba(6, 9, 16, 0.72)',
-  backdropFilter: 'blur(60px) saturate(180%)',
-  WebkitBackdropFilter: 'blur(60px) saturate(180%)',
-  borderLeft: '1px solid rgba(255,255,255,0.07)',
-  boxShadow: '0 4px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
+  background: 'rgba(100, 120, 140, 0.12)',
+  backdropFilter: 'blur(30px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+  border: '1px solid rgba(255, 255, 255, 0.10)',
+  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
 };
 
 export default function FriendProfileOverlay({ friend, onClose }) {
+  const [showMessenger, setShowMessenger] = useState(false);
+  
   if (!friend) return null;
 
-  const [showMessenger, setShowMessenger] = useState(false);
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
@@ -79,7 +80,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: 20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="fixed z-[68] flex flex-col overflow-hidden"
+        className="fixed z-[68] flex flex-col overflow-hidden rounded-r-3xl"
         style={{
           left: '320px',   // 80px sidebar + 240px friends panel
           top: '64px',
@@ -90,8 +91,8 @@ export default function FriendProfileOverlay({ friend, onClose }) {
       >
         {/* Header bar */}
         <div
-          className="flex items-center justify-between px-5 py-3 flex-shrink-0"
-          style={{ background: 'rgba(255,255,255,0.025)' }}
+          className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-white/10"
+          style={{ background: 'rgba(100, 120, 140, 0.10)' }}
         >
           <div className="flex items-center gap-2.5">
             <div className={`w-2 h-2 rounded-full ${statusColor}`} />
@@ -130,7 +131,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
             </div>
 
             {/* Stats */}
-            <div className="px-3.5 py-3 space-y-1">
+            <div className="px-3.5 py-3 space-y-1.5">
               {[
                 { label: 'Gamer Score', value: '0' },
                 { label: 'AI Points', value: '0' },
@@ -138,8 +139,8 @@ export default function FriendProfileOverlay({ friend, onClose }) {
                 { label: 'Games Played', value: '0' },
                 { label: 'Achievements', value: '0' },
               ].map(s => (
-                <div key={s.label} className="flex items-center justify-between py-1 border-b border-white/[0.04]">
-                  <span className="text-white/40 text-[10px] flex items-center gap-1.5">
+                <div key={s.label} className="flex items-center justify-between py-1.5 px-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <span className="text-white/50 text-[10px] flex items-center gap-1.5">
                     <TrendingUp className="w-2.5 h-2.5" /> {s.label}
                   </span>
                   <span className="text-white text-[10px] font-semibold">{s.value}</span>
@@ -149,25 +150,22 @@ export default function FriendProfileOverlay({ friend, onClose }) {
 
             {/* Top Genre */}
             <div className="px-3.5 pb-3">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-white/35 text-[9px] uppercase tracking-wider">Top Genre</span>
-                <span className="text-white/40 text-[9px]">Lv. 7</span>
-              </div>
-              <div className="px-2.5 py-1 rounded-lg text-white/70 text-[10px] font-semibold"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-white/30 text-[9px] uppercase tracking-wider mb-1.5">Top Genre</p>
+              <div className="px-2.5 py-1.5 rounded-lg text-white/70 text-[10px] font-semibold"
+                style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 Action
               </div>
             </div>
 
             {/* PUP Rank */}
             <div className="px-3.5 pb-3">
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-1.5">PUP Rank Score</p>
-              <p className="text-yellow-400 font-black text-2xl mb-1">8,420</p>
+              <p className="text-white/30 text-[9px] uppercase tracking-wider mb-1.5">PUP Rank Score</p>
+              <p className="text-yellow-400 font-black text-2xl mb-1.5">8,420</p>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold"
                 style={{ background: 'rgba(59,130,246,0.18)', border: '1px solid rgba(96,165,250,0.35)', color: '#93c5fd' }}>
                 Diamond II
               </span>
-              <div className="w-full h-1 rounded-full mt-2 overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div className="w-full h-1.5 rounded-full mt-2 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                 <div className="h-full rounded-full" style={{ width: '71%', background: 'linear-gradient(to right, #3b82f6, #22d3ee)' }} />
               </div>
               <p className="text-white/25 text-[9px] mt-1">71% to Diamond I</p>
@@ -178,21 +176,21 @@ export default function FriendProfileOverlay({ friend, onClose }) {
               <button
                 onClick={handleOpenMessenger}
                 className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
                 <span className="text-cyan-400 text-[8px] font-semibold">Message</span>
               </button>
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
               >
                 <Swords className="w-3.5 h-3.5 text-white/50" />
                 <span className="text-white/40 text-[8px]">Challenge</span>
               </button>
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}
               >
                 <Users className="w-3.5 h-3.5 text-white/50" />
                 <span className="text-white/40 text-[8px]">Interact</span>
@@ -205,10 +203,10 @@ export default function FriendProfileOverlay({ friend, onClose }) {
 
             {/* Recent Games */}
             <div>
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Recent Games</p>
+              <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Recent Games</p>
               <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {recentGamesData.map((g, i) => (
-                  <div key={i} className="flex-shrink-0 w-14 rounded-lg overflow-hidden border border-white/10 relative group cursor-pointer hover:border-white/25 transition-colors">
+                  <div key={i} className="flex-shrink-0 w-14 rounded-lg overflow-hidden border border-white/10 relative group cursor-pointer hover:border-white/20 transition-colors">
                     <img src={g.image} alt={g.name} className="w-full h-[72px] object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Gamepad2 className="w-3.5 h-3.5 text-white/80" />
@@ -220,7 +218,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
 
             {/* Achievement Cards */}
             <div>
-              <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Achievement Cards</p>
+              <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Achievement Cards</p>
               <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {achievementCards.map((card, i) => (
                   <div key={i}
@@ -239,9 +237,9 @@ export default function FriendProfileOverlay({ friend, onClose }) {
             {/* Trophies + Clip */}
             <div className="grid grid-cols-2 gap-3">
               {/* Trophies */}
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="rounded-xl p-3" style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-white/45 text-[10px] font-semibold flex items-center gap-1.5">
+                  <span className="text-white/50 text-[10px] font-semibold flex items-center gap-1.5">
                     <Trophy className="w-3 h-3" /> Trophies
                   </span>
                   <span className="text-white/30 text-[9px]">4,088 Total</span>
@@ -253,7 +251,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
                     { type: 'Silver', count: 652, color: 'text-slate-300', emoji: '🥈' },
                     { type: 'Bronze', count: '3.3K', color: 'text-amber-600', emoji: '🥉' },
                   ].map(t => (
-                    <div key={t.type} className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <div key={t.type} className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: 'rgba(100, 120, 140, 0.08)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
                       <span className="text-sm">{t.emoji}</span>
                       <div>
                         <p className={`text-xs font-black ${t.color}`}>{t.count}</p>
@@ -265,7 +263,7 @@ export default function FriendProfileOverlay({ friend, onClose }) {
               </div>
 
               {/* Latest Clip */}
-              <div className="rounded-xl overflow-hidden relative cursor-pointer group" style={{ border: '1px solid rgba(255,255,255,0.06)', minHeight: '120px' }}>
+              <div className="rounded-xl overflow-hidden relative cursor-pointer group" style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)', minHeight: '120px' }}>
                 <img
                   src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80"
                   alt="Latest Clip"
@@ -289,8 +287,8 @@ export default function FriendProfileOverlay({ friend, onClose }) {
 
             {/* Top Genres + Status */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-white/35 text-[9px] uppercase tracking-wider mb-2">Top Genres</p>
+              <div className="rounded-xl p-3" style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Top Genres</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['RPG', 'Action', 'Horror', 'Strategy'].map(g => (
                     <span key={g} className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
@@ -301,12 +299,12 @@ export default function FriendProfileOverlay({ friend, onClose }) {
                 </div>
               </div>
 
-              <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="rounded-xl p-3" style={{ background: 'rgba(100, 120, 140, 0.10)', border: '1px solid rgba(255, 255, 255, 0.06)' }}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
+                  <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
                     <img src={friend.avatar} alt="" className="w-full h-full object-cover" />
                   </div>
-                  <span className="text-white/35 text-[9px] uppercase tracking-wider">Status Update</span>
+                  <span className="text-white/30 text-[9px] uppercase tracking-wider">Status Update</span>
                 </div>
                 <p className="text-white/60 text-[10px] italic leading-relaxed">
                   "Going AFK for 30 mins, back for the raid at 9pm!"
