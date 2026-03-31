@@ -503,18 +503,7 @@ export default function LibrarySidebar() {
               <Library className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
             </button>
-            <button
-              onClick={() => { setExpandedPanel(p => p === 'fullLibrary' ? null : 'fullLibrary'); setOpenDropdown(null); setIsOpen(false); setFullLibraryDetailGame(null); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-                expandedPanel === 'fullLibrary'
-                  ? 'border-purple-400/50 bg-purple-500/20 text-purple-400'
-                  : 'border-white/10 bg-white/5 text-white/60 hover:text-purple-400 hover:border-purple-400/40 hover:bg-purple-500/10'
-              }`}
-              title="Full Library"
-            >
-              <Gamepad2 className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Full Lib</span>
-            </button>
+
           </motion.div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
