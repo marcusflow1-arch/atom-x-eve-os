@@ -5,6 +5,7 @@ import {
   Swords, Repeat, Check, X, Search,
   Trophy, Shield, Crosshair, ChevronRight
 } from 'lucide-react';
+import FriendMessenger from '../friends/FriendMessenger';
 
 // Mock Data
 const MOCK_FRIENDS = [
@@ -38,6 +39,7 @@ export default function FriendsDropdown() {
   const [activeTab, setActiveTab] = useState('friends');
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMessenger, setShowMessenger] = useState(false);
 
   const filteredFriends = MOCK_FRIENDS.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -45,6 +47,11 @@ export default function FriendsDropdown() {
 
   const handleFriendClick = (friend) => {
     setSelectedFriend(prev => prev?.id === friend.id ? null : friend);
+  };
+
+  const handleOpenMessenger = (friend) => {
+    setSelectedFriend(friend);
+    setShowMessenger(true);
   };
 
   return (
@@ -175,6 +182,7 @@ export default function FriendsDropdown() {
                         {FRIEND_ACTIONS.map(action => (
                           <button
                             key={action.id}
+                            onClick={() => action.id === 'chat' && handleOpenMessenger(selectedFriend)}
                             className="flex items-center gap-2 px-2 py-2 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.04] hover:border-white/[0.1] transition-all group"
                           >
                             <action.icon className={`w-3.5 h-3.5 ${action.color}`} />
@@ -246,6 +254,39 @@ export default function FriendsDropdown() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Full Messenger Overlay */}
+      <AnimatePresence>
+        {showMessenger && selectedFriend && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMessenger(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="absolute inset-0 z-50 flex items-center justify-center p-8"
+            >
+              <FriendMessenger
+                friend={{
+                  friend_id: selectedFriend.id.toString(),
+                  friend_name: selectedFriend.name,
+                  friend_avatar: selectedFriend.avatar,
+                  status: selectedFriend.status,
+                  current_game: selectedFriend.game
+                }}
+                onClose={() => setShowMessenger(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
