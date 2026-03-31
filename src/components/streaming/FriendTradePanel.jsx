@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowLeftRight, DollarSign, Package, CheckCircle2, Clock,
   AlertTriangle, Plus, Minus, ChevronRight, Gamepad2, Swords,
-  Shield, Zap, Star, Crown, Flame, Users
+  Shield, Zap, Star, Crown, Flame, Users, Search
 } from 'lucide-react';
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
@@ -145,6 +145,8 @@ export default function FriendTradePanel({ friend, onClose }) {
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [tradeStatus, setTradeStatus] = useState('idle');
   const [selectedGame, setSelectedGame] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const dragCard = useRef(null);
 
   // All cards currently in slots
@@ -153,6 +155,13 @@ export default function FriendTradePanel({ friend, onClose }) {
   const inventoryCards = selectedGame
     ? (GAMES_WITH_CARDS.find(g => g.id === selectedGame)?.cards || [])
     : [];
+
+  // Filter cards
+  const filteredCards = inventoryCards.filter(card => {
+    if (selectedCategory && selectedCategory !== 'All' && card.category !== selectedCategory) return false;
+    if (searchQuery && !card.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
 
   // Add card to first empty slot
   const addToSlot = (card) => {
@@ -279,50 +288,84 @@ export default function FriendTradePanel({ friend, onClose }) {
         {/* Body */}
         <div className="flex flex-1 overflow-hidden min-h-0">
 
-          {/* ── LEFT: Game + Inventory Browser ─────────────────────────── */}
-          <div className="w-[230px] flex-shrink-0 flex flex-col overflow-hidden"
+          {/* ── LEFT: Game + Inventory Browser (75%) ─────────────────────────── */}
+          <div className="flex-1 flex flex-col overflow-hidden min-h-0"
             style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
 
-            {/* Game List */}
-            <div className="flex-shrink-0 px-3 pt-3 pb-2">
-              <p className="text-[8px] font-black uppercase tracking-widest mb-2 px-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Your Games</p>
-              <div className="space-y-1">
+            {/* Games Grid */}
+            <div className="flex-shrink-0 px-4 pt-3 pb-2">
+              <p className="text-[8px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Your Games ({GAMES_WITH_CARDS.length})</p>
+              <div className="grid grid-cols-4 gap-2">
                 {GAMES_WITH_CARDS.map(game => (
                   <button
                     key={game.id}
-                    onClick={() => setSelectedGame(selectedGame === game.id ? null : game.id)}
-                    className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl transition-all text-left"
+                    onClick={() => {
+                      setSelectedGame(selectedGame === game.id ? null : game.id);
+                      setSearchQuery('');
+                      setSelectedCategory(null);
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all"
                     style={{
-                      background: selectedGame === game.id ? 'rgba(34,211,238,0.1)' : 'rgba(255,255,255,0.03)',
-                      border: selectedGame === game.id ? '1px solid rgba(34,211,238,0.25)' : '1px solid rgba(255,255,255,0.05)',
+                      background: selectedGame === game.id ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.04)',
+                      border: selectedGame === game.id ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.08)',
                     }}
                   >
-                    <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
-                      <img src={game.cover} alt={game.name} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="text-xs font-semibold truncate flex-1" style={{ color: selectedGame === game.id ? 'rgba(34,211,238,0.9)' : 'rgba(255,255,255,0.6)' }}>{game.name}</span>
-                    <ChevronRight className="w-3 h-3 flex-shrink-0 transition-transform" style={{
-                      color: 'rgba(255,255,255,0.2)',
-                      transform: selectedGame === game.id ? 'rotate(90deg)' : 'rotate(0deg)'
-                    }} />
+                    <img src={game.cover} alt={game.name} className="w-9 h-9 rounded-lg object-cover ring-1 ring-white/10" />
+                    <span className="text-[7px] font-bold text-center leading-tight line-clamp-2" style={{ color: selectedGame === game.id ? '#67e8f9' : 'rgba(255,255,255,0.6)' }}>{game.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Card List for selected game */}
-            <div className="flex-1 overflow-y-auto px-3 pb-3" style={{ scrollbarWidth: 'none' }}>
+            {/* Category Filter + Search */}
+            <AnimatePresence mode="wait">
+              {selectedGame && (
+                <motion.div key="filters"
+                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  className="flex-shrink-0 px-4 pb-2"
+                >
+                  {/* Category Pills */}
+                  <div className="flex gap-1.5 overflow-x-auto mb-2.5" style={{ scrollbarWidth: 'none' }}>
+                    {['All', 'Equipment', 'Ability', 'Companion', 'Achievement'].map(cat => (
+                      <button key={cat}
+                        onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                        className="px-2.5 py-1 rounded-full text-[7px] font-bold whitespace-nowrap flex-shrink-0 transition-all uppercase tracking-widest"
+                        style={{
+                          background: selectedCategory === cat ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)',
+                          border: selectedCategory === cat ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                          color: selectedCategory === cat ? '#67e8f9' : 'rgba(255,255,255,0.5)',
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                    <input type="text" placeholder="Search items..."
+                      value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder-white/20 outline-none"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Items Grid */}
+            <div className="flex-1 overflow-y-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
               <AnimatePresence mode="wait">
-                {selectedGame && (
+                {selectedGame ? (
                   <motion.div key={selectedGame}
                     initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
                   >
-                    <p className="text-[8px] font-black uppercase tracking-widest mb-2 mt-3 px-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                      Cards — double-click or drag
+                    <p className="text-[8px] font-black uppercase tracking-widest mb-2 mt-2 px-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                      {filteredCards.length} Item{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {inventoryCards.map(card => (
+                    <div className="grid grid-cols-4 gap-2">
+                      {filteredCards.map(card => (
                         <div
                           key={card.id}
                           draggable={!slottedIds.has(card.id)}
@@ -344,23 +387,22 @@ export default function FriendTradePanel({ friend, onClose }) {
                       ))}
                     </div>
                   </motion.div>
-                )}
-                {!selectedGame && (
+                ) : (
                   <motion.div key="no-game" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-                    <Gamepad2 className="w-8 h-8 text-white/10" />
-                    <p className="text-xs text-white/20 leading-relaxed">Select a game above<br/>to browse your cards</p>
+                    className="flex flex-col items-center justify-center gap-3 h-full text-center">
+                    <Gamepad2 className="w-12 h-12 text-white/10" />
+                    <p className="text-xs text-white/20 leading-relaxed">Select a game above<br/>to browse your inventory</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* ── RIGHT: Trade Workspace ──────────────────────────────────── */}
-          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {/* ── RIGHT: Trade Workspace (25%) ──────────────────────────────────── */}
+          <div style={{ flex: '0 0 25%' }} className="flex flex-col overflow-hidden min-h-0">
 
-            {/* THEIR OFFER — 25% */}
-            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 25%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* THEIR OFFER — 50% */}
+            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 50%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="px-4 pt-3 pb-1 flex-shrink-0 flex items-center gap-2">
                 <img src={friend.avatar} alt={friend.name} className="w-4 h-4 rounded-full object-cover" />
                 <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(100,160,255,0.7)' }}>{friend.name}'s Offer</p>
@@ -369,26 +411,26 @@ export default function FriendTradePanel({ friend, onClose }) {
                 </span>
               </div>
               <div className="flex-1 overflow-y-auto px-4 pb-2" style={{ scrollbarWidth: 'none' }}>
-                <div className="grid grid-cols-8 gap-1.5">
-                  {Array(SLOT_COUNT).fill(null).map((_, idx) => {
+                <div className="grid grid-cols-4 gap-1">
+                  {Array(4).fill(null).map((_, idx) => {
                     const card = FRIEND_OFFER_CARDS[idx] || null;
                     const r = card ? (RARITY[card.rarity] || RARITY.Common) : null;
                     const Icon = card?.icon || Package;
                     return (
                       <div key={idx}
-                        className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-xl"
+                        className="flex flex-col items-center justify-center gap-1 p-1 rounded-lg"
                         style={{
-                          minHeight: '64px',
+                          minHeight: '60px',
                           background: card ? r.bg : 'rgba(255,255,255,0.02)',
-                          border: card ? `1px solid ${r.border}` : '1.5px dashed rgba(255,255,255,0.06)',
+                          border: card ? `1px solid ${r.border}` : '1px dashed rgba(255,255,255,0.06)',
                           boxShadow: card ? r.glow : 'none',
                           backdropFilter: 'blur(12px)',
                         }}
                       >
                         {card ? (
                           <>
-                            <Icon className="w-3.5 h-3.5" style={{ color: r.text }} />
-                            <p className="text-[8px] font-bold text-center leading-tight" style={{ color: r.text }}>{card.name}</p>
+                            <Icon className="w-3 h-3" style={{ color: r.text }} />
+                            <p className="text-[7px] font-bold text-center leading-tight" style={{ color: r.text }}>{card.name}</p>
                             <span className="text-[6px] uppercase tracking-widest" style={{ color: `${r.text}88` }}>{card.rarity}</span>
                           </>
                         ) : (
@@ -401,15 +443,15 @@ export default function FriendTradePanel({ friend, onClose }) {
               </div>
             </div>
 
-            {/* MY OFFER — 75% */}
-            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 75%' }}>
+            {/* MY OFFER — 50% */}
+            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 50%' }}>
               <div className="px-4 pt-3 pb-1 flex-shrink-0 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-emerald-400" />
                 <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(52,211,153,0.75)' }}>Your Offer</p>
-                <span className="text-[8px] text-white/20 ml-1">({mySlots.filter(Boolean).length}/{SLOT_COUNT} cards)</span>
+                <span className="text-[8px] text-white/20 ml-1">({mySlots.filter(Boolean).length}/{SLOT_COUNT})</span>
               </div>
               <div className="flex-1 overflow-y-auto px-4 pb-2" style={{ scrollbarWidth: 'none' }}>
-                <div className="grid grid-cols-8 gap-1.5">
+                <div className="grid grid-cols-4 gap-1">
                   {mySlots.map((card, idx) => (
                     <TradeSlot
                       key={idx}
@@ -426,50 +468,50 @@ export default function FriendTradePanel({ friend, onClose }) {
 
               {/* Currency row */}
               <div className="flex-shrink-0 px-4 pb-3">
-                <p className="text-[8px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                  <DollarSign className="w-3 h-3" /> Add Currency (AGP)
+                <p className="text-[8px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                  <DollarSign className="w-2.5 h-2.5" /> AGP
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button onClick={() => setMyCash(v => String(Math.max(0, (parseFloat(v)||0) - 500)))}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0"
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <Minus className="w-3 h-3" />
+                    <Minus className="w-2.5 h-2.5" />
                   </button>
-                  <input type="number" value={myCash} onChange={e => setMyCash(e.target.value)} placeholder="0 AGP"
-                    className="flex-1 rounded-lg px-3 py-1.5 text-xs text-white text-center placeholder-white/20 outline-none"
+                  <input type="number" value={myCash} onChange={e => setMyCash(e.target.value)} placeholder="0"
+                    className="flex-1 rounded-lg px-2 py-1 text-xs text-white text-center placeholder-white/20 outline-none"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }} />
                   <button onClick={() => setMyCash(v => String((parseFloat(v)||0) + 500))}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0"
+                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
                     style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-2.5 h-2.5" />
                   </button>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="flex-shrink-0 px-4 pb-4"
+              <div className="flex-shrink-0 px-4 pb-3"
                 style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', background: 'rgba(0,0,0,0.15)' }}>
                 <AnimatePresence>
                   {tradeStatus !== 'idle' && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-xl"
+                      className="flex items-center gap-2 text-[7px] mb-3 px-2 py-1.5 rounded-lg"
                       style={tradeStatus === 'my_confirmed'
                         ? { background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#fcd34d' }
                         : { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
-                      {tradeStatus === 'my_confirmed' && <><AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" /> You confirmed. Click <strong>Confirm Trade</strong> again to lock in.</>}
-                      {tradeStatus === 'waiting_other' && <><Clock className="w-3.5 h-3.5 flex-shrink-0" /> Waiting for {friend.name} to confirm...</>}
+                      {tradeStatus === 'my_confirmed' && <><AlertTriangle className="w-2.5 h-2.5 flex-shrink-0" /> Confirm again</>}
+                      {tradeStatus === 'waiting_other' && <><Clock className="w-2.5 h-2.5 flex-shrink-0" /> Waiting...</>}
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button onClick={handleReset}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-white/40 hover:text-white transition-colors"
+                    className="px-2 py-1.5 rounded-lg text-[7px] font-bold text-white/40 hover:text-white transition-colors flex-1"
                     style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                     Cancel
                   </button>
                   <button onClick={handleConfirmTrade}
                     disabled={!hasOffer || tradeStatus === 'waiting_other'}
-                    className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
+                    className="flex-1 py-1.5 rounded-lg text-[7px] font-bold transition-all"
                     style={
                       tradeStatus === 'waiting_other'
                         ? { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)', color: 'rgba(165,180,252,0.4)', cursor: 'not-allowed' }
@@ -479,12 +521,11 @@ export default function FriendTradePanel({ friend, onClose }) {
                             ? { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
                             : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' }
                     }>
-                    {tradeStatus === 'idle' && '→ Propose Trade'}
-                    {tradeStatus === 'my_confirmed' && '✓ Confirm Trade'}
-                    {tradeStatus === 'waiting_other' && `Waiting for ${friend.name}...`}
+                    {tradeStatus === 'idle' && 'Propose'}
+                    {tradeStatus === 'my_confirmed' && 'Confirm'}
+                    {tradeStatus === 'waiting_other' && 'Wait'}
                   </button>
                 </div>
-                <p className="text-center text-[8px] mt-2" style={{ color: 'rgba(255,255,255,0.15)' }}>Both players must confirm twice to prevent scams</p>
               </div>
             </div>
           </div>
