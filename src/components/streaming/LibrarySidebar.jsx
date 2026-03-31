@@ -1445,7 +1445,7 @@ export default function LibrarySidebar() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -20, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`absolute top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto p-8 transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
+                className={`absolute top-0 bottom-0 left-80 sm:left-96 z-[68] shadow-2xl overflow-y-auto transition-all duration-300 ${previewGame ? 'right-[400px] xl:right-[500px]' : 'right-0'}`}
                 style={{
                   background: 'rgba(12, 16, 24, 0.6)',
                   backdropFilter: 'blur(40px) saturate(180%)',
@@ -1470,7 +1470,8 @@ export default function LibrarySidebar() {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                <div className="px-8 pt-0">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                     {libraryGames.map((game, i) => (
                         <motion.div
                             key={`full_lib_${game.id || i}`}
@@ -1493,10 +1494,11 @@ export default function LibrarySidebar() {
                                 </div>
                             </div>
                         </motion.div>
-                    ))}
-                </div>
+                        ))}
+                        </div>
+                        </div>
 
-            </motion.div>
+                        </motion.div>
         )}
       </AnimatePresence>
 
