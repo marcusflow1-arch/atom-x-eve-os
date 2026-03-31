@@ -10,6 +10,7 @@ import QuickGamesDrawer from '@/components/shared/QuickGamesDrawer';
 import { MessageSquare, Users as UsersIcon } from 'lucide-react';
 import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import FriendProfileOverlay from './FriendProfileOverlay';
+import FriendMessenger from './FriendMessenger';
 import FriendTradePanel from './FriendTradePanel';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
@@ -1673,6 +1674,42 @@ export default function LibrarySidebar() {
       {viewingFriend && (
         <FriendProfileOverlay friend={viewingFriend} onClose={() => setViewingFriend(null)} />
       )}
+
+      {/* Messaging Friend Right Panel */}
+      <AnimatePresence>
+        {messagingFriend && expandedPanel === 'friends' && (
+          <motion.div
+            key="messaging-panel"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed z-[70] flex flex-col overflow-hidden"
+            style={{
+              right: '0px',
+              top: '64px',
+              bottom: '52px',
+              width: '400px',
+              background: 'rgba(15, 20, 26, 0.85)',
+              backdropFilter: 'blur(40px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+              boxShadow: '-6px 0 30px rgba(0,0,0,0.4)',
+              borderLeft: '1px solid rgba(165, 243, 252, 0.15)',
+            }}
+          >
+            <FriendMessenger 
+              friend={{
+                friend_id: messagingFriend.id,
+                friend_name: messagingFriend.name,
+                friend_avatar: messagingFriend.avatar,
+                status: messagingFriend.status,
+                current_game: messagingFriend.game
+              }}
+              onClose={() => setMessagingFriend(null)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Library Game Detail Modal */}
       {detailGame && (
