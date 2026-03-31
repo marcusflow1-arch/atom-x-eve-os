@@ -359,8 +359,8 @@ export default function FriendTradePanel({ friend, onClose }) {
           {/* ── RIGHT: Trade Workspace ──────────────────────────────────── */}
           <div className="flex-1 flex flex-col overflow-hidden min-h-0">
 
-            {/* THEIR OFFER — 30% */}
-            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 30%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            {/* THEIR OFFER — 25% */}
+            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 25%', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <div className="px-4 pt-3 pb-1 flex-shrink-0 flex items-center gap-2">
                 <img src={friend.avatar} alt={friend.name} className="w-4 h-4 rounded-full object-cover" />
                 <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(100,160,255,0.7)' }}>{friend.name}'s Offer</p>
@@ -401,8 +401,8 @@ export default function FriendTradePanel({ friend, onClose }) {
               </div>
             </div>
 
-            {/* MY OFFER — 70% */}
-            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 70%' }}>
+            {/* MY OFFER — 75% */}
+            <div className="flex flex-col overflow-hidden" style={{ flex: '0 0 75%' }}>
               <div className="px-4 pt-3 pb-1 flex-shrink-0 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-emerald-400" />
                 <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(52,211,153,0.75)' }}>Your Offer</p>
