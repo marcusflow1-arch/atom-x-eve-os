@@ -360,7 +360,7 @@ export default function FriendsPage() {
         <AnimatePresence mode="wait">
           {selectedFriend && (
             <motion.div 
-              key={selectedFriend.id + (showChat ? '-chat' : '-profile')}
+              key={selectedFriend.id}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
