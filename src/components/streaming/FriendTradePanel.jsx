@@ -49,7 +49,6 @@ const GAMES_WITH_CARDS = [
   },
 ];
 
-// Friend's mock offer
 const FRIEND_OFFER_CARDS = [
   { id: 'f1', name: 'Radiant Crown',   rarity: 'Legendary', category: 'Achievement', game: 'Valorant', icon: Crown },
   { id: 'f2', name: 'Soul Vessel',     rarity: 'Epic',      category: 'Ability',     game: 'Dark Souls', icon: Star },
@@ -149,21 +148,18 @@ export default function FriendTradePanel({ friend, onClose }) {
   const [searchQuery, setSearchQuery] = useState('');
   const dragCard = useRef(null);
 
-  // All cards currently in slots
   const slottedIds = new Set(mySlots.filter(Boolean).map(c => c.id));
 
   const inventoryCards = selectedGame
     ? (GAMES_WITH_CARDS.find(g => g.id === selectedGame)?.cards || [])
     : [];
 
-  // Filter cards
   const filteredCards = inventoryCards.filter(card => {
     if (selectedCategory && selectedCategory !== 'All' && card.category !== selectedCategory) return false;
     if (searchQuery && !card.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
-  // Add card to first empty slot
   const addToSlot = (card) => {
     if (slottedIds.has(card.id)) return;
     const idx = mySlots.findIndex(s => s === null);
@@ -209,23 +205,13 @@ export default function FriendTradePanel({ friend, onClose }) {
     setTradeStatus('idle');
   };
 
-  // Glass panel styles
-  const glassPanel = {
-    background: 'rgba(255,255,255,0.03)',
-    backdropFilter: 'blur(30px) saturate(160%)',
-    WebkitBackdropFilter: 'blur(30px) saturate(160%)',
-    border: '1px solid rgba(255,255,255,0.07)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
-  };
-
   return (
     <>
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-[70] bg-black/50"
-        style={{ backdropFilter: 'blur(4px)' }}
+        className="fixed inset-0 z-[70] bg-black/15"
       />
 
       {/* Panel */}
@@ -237,10 +223,12 @@ export default function FriendTradePanel({ friend, onClose }) {
         className="fixed z-[71] flex flex-col overflow-hidden"
         style={{
           left: '320px', top: '64px', bottom: '52px', right: 0,
-          background: 'rgba(6, 8, 16, 0.91)',
-          backdropFilter: 'blur(60px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(60px) saturate(200%)',
-          borderLeft: '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(100, 120, 140, 0.08)',
+          backdropFilter: 'blur(30px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(160%)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderLeft: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
         }}
       >
         {/* Trade Complete Overlay */}
@@ -265,14 +253,14 @@ export default function FriendTradePanel({ friend, onClose }) {
 
         {/* Top Bar */}
         <div className="flex items-center justify-between px-5 py-3 flex-shrink-0"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(100,120,140,0.06)' }}>
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.25)' }}>
               <ArrowLeftRight className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <span className="text-xs font-bold text-white/60 uppercase tracking-widest">Secure Trade</span>
             <div className="h-3 w-px bg-white/10" />
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }}>
               <img src={friend.avatar} alt={friend.name} className="w-5 h-5 rounded-full object-cover ring-1 ring-white/20" />
               <span className="text-xs font-bold text-white">{friend.name}</span>
               <span className={`w-2 h-2 rounded-full ${friend.status === 'online' ? 'bg-green-400' : 'bg-yellow-400'}`} />
@@ -280,7 +268,7 @@ export default function FriendTradePanel({ friend, onClose }) {
           </div>
           <button onClick={onClose}
             className="w-7 h-7 rounded-full flex items-center justify-center text-white/30 hover:text-white transition-colors"
-            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -294,8 +282,8 @@ export default function FriendTradePanel({ friend, onClose }) {
 
             {/* Games Grid */}
             <div className="flex-shrink-0 px-4 pt-3 pb-2">
-              <p className="text-[8px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Your Games ({GAMES_WITH_CARDS.length})</p>
-              <div className="grid grid-cols-4 gap-2">
+              <p className="text-[8px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Your Games ({GAMES_WITH_CARDS.length})</p>
+              <div className="grid grid-cols-4 gap-2.5">
                 {GAMES_WITH_CARDS.map(game => (
                   <button
                     key={game.id}
@@ -304,14 +292,16 @@ export default function FriendTradePanel({ friend, onClose }) {
                       setSearchQuery('');
                       setSelectedCategory(null);
                     }}
-                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl transition-all"
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-2xl transition-all hover:scale-105"
                     style={{
-                      background: selectedGame === game.id ? 'rgba(34,211,238,0.12)' : 'rgba(255,255,255,0.04)',
-                      border: selectedGame === game.id ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                      background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'rgba(100,120,140,0.12)',
+                      border: selectedGame === game.id ? '1px solid rgba(34,211,238,0.35)' : '1px solid rgba(255,255,255,0.12)',
+                      backdropFilter: 'blur(20px)',
+                      boxShadow: selectedGame === game.id ? '0 0 20px rgba(34,211,238,0.2)' : 'inset 0 1px 0 rgba(255,255,255,0.08)',
                     }}
                   >
-                    <img src={game.cover} alt={game.name} className="w-9 h-9 rounded-lg object-cover ring-1 ring-white/10" />
-                    <span className="text-[7px] font-bold text-center leading-tight line-clamp-2" style={{ color: selectedGame === game.id ? '#67e8f9' : 'rgba(255,255,255,0.6)' }}>{game.name}</span>
+                    <img src={game.cover} alt={game.name} className="w-9 h-9 rounded-lg object-cover ring-1.5" style={{ ringColor: selectedGame === game.id ? 'rgba(34,211,238,0.4)' : 'rgba(255,255,255,0.15)' }} />
+                    <span className="text-[7px] font-bold text-center leading-tight line-clamp-2 px-0.5" style={{ color: selectedGame === game.id ? '#67e8f9' : 'rgba(255,255,255,0.7)' }}>{game.name}</span>
                   </button>
                 ))}
               </div>
@@ -329,11 +319,13 @@ export default function FriendTradePanel({ friend, onClose }) {
                     {['All', 'Equipment', 'Ability', 'Companion', 'Achievement'].map(cat => (
                       <button key={cat}
                         onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                        className="px-2.5 py-1 rounded-full text-[7px] font-bold whitespace-nowrap flex-shrink-0 transition-all uppercase tracking-widest"
+                        className="px-3 py-1.5 rounded-full text-[7px] font-bold whitespace-nowrap flex-shrink-0 transition-all uppercase tracking-widest hover:scale-105"
                         style={{
-                          background: selectedCategory === cat ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)',
-                          border: selectedCategory === cat ? '1px solid rgba(34,211,238,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                          color: selectedCategory === cat ? '#67e8f9' : 'rgba(255,255,255,0.5)',
+                          background: selectedCategory === cat ? 'rgba(34,211,238,0.15)' : 'rgba(100,120,140,0.1)',
+                          border: selectedCategory === cat ? '1px solid rgba(34,211,238,0.35)' : '1px solid rgba(255,255,255,0.12)',
+                          color: selectedCategory === cat ? '#67e8f9' : 'rgba(255,255,255,0.65)',
+                          backdropFilter: 'blur(20px)',
+                          boxShadow: selectedCategory === cat ? '0 0 12px rgba(34,211,238,0.15)' : 'inset 0 1px 0 rgba(255,255,255,0.06)',
                         }}
                       >
                         {cat}
@@ -343,11 +335,11 @@ export default function FriendTradePanel({ friend, onClose }) {
 
                   {/* Search */}
                   <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                     <input type="text" placeholder="Search items..."
                       value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs text-white placeholder-white/20 outline-none"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      className="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs text-white placeholder-white/30 outline-none transition-all focus:scale-105"
+                      style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(20px)' }} />
                   </div>
                 </motion.div>
               )}
@@ -361,10 +353,10 @@ export default function FriendTradePanel({ friend, onClose }) {
                     initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
                   >
-                    <p className="text-[8px] font-black uppercase tracking-widest mb-2 mt-2 px-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                    <p className="text-[8px] font-black uppercase tracking-widest mb-2.5 mt-2 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       {filteredCards.length} Item{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-4 gap-2.5">
                       {filteredCards.map(card => (
                         <div
                           key={card.id}
@@ -474,15 +466,15 @@ export default function FriendTradePanel({ friend, onClose }) {
                 <div className="flex items-center gap-1">
                   <button onClick={() => setMyCash(v => String(Math.max(0, (parseFloat(v)||0) - 500)))}
                     className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <Minus className="w-2.5 h-2.5" />
                   </button>
                   <input type="number" value={myCash} onChange={e => setMyCash(e.target.value)} placeholder="0"
                     className="flex-1 rounded-lg px-2 py-1 text-xs text-white text-center placeholder-white/20 outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }} />
                   <button onClick={() => setMyCash(v => String((parseFloat(v)||0) + 500))}
                     className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     <Plus className="w-2.5 h-2.5" />
                   </button>
                 </div>
@@ -490,7 +482,7 @@ export default function FriendTradePanel({ friend, onClose }) {
 
               {/* Footer */}
               <div className="flex-shrink-0 px-4 pb-3"
-                style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', background: 'rgba(0,0,0,0.15)' }}>
+                style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px', background: 'rgba(100,120,140,0.08)' }}>
                 <AnimatePresence>
                   {tradeStatus !== 'idle' && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
@@ -506,7 +498,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                 <div className="flex items-center gap-2">
                   <button onClick={handleReset}
                     className="px-2 py-1.5 rounded-lg text-[7px] font-bold text-white/40 hover:text-white transition-colors flex-1"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     Cancel
                   </button>
                   <button onClick={handleConfirmTrade}
@@ -519,7 +511,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                           ? { background: 'rgba(52,211,153,0.85)', color: '#000', boxShadow: '0 0 20px rgba(52,211,153,0.35)' }
                           : hasOffer
                             ? { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
-                            : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' }
+                            : { background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' }
                     }>
                     {tradeStatus === 'idle' && 'Propose'}
                     {tradeStatus === 'my_confirmed' && 'Confirm'}
