@@ -649,31 +649,30 @@ export default function LibrarySidebar() {
             )}
           </AnimatePresence>
 
-          {/* Full Library Panel — game grid with inline detail */}
+          {/* Full Library Panel — fills remaining space */}
           <AnimatePresence>
             {expandedPanel === 'fullLibrary' && (
               <motion.div
                 key="full-library-panel"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: -20, opacity: 0 }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="fixed z-[69] flex flex-col overflow-hidden"
                 style={{
                   left: '80px',
                   top: '64px',
                   bottom: '52px',
-                  width: fullLibraryDetailGame ? '200px' : '300px',
-                  transition: 'width 0.3s ease',
-                  background: 'rgba(10, 14, 20, 0.72)',
+                  right: fullLibraryDetailGame ? '380px' : '0px',
+                  transition: 'right 0.3s ease',
+                  background: 'rgba(10, 14, 20, 0.82)',
                   backdropFilter: 'blur(50px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(50px) saturate(200%)',
                   boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
-                  borderRight: '1px solid rgba(165, 243, 252, 0.10)',
                 }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/5">
+                <div className="flex items-center justify-between px-5 py-3 flex-shrink-0 border-b border-white/5">
                   <div className="flex items-center gap-2">
                     <Library className="w-4 h-4 text-purple-400" />
                     <span className="text-xs font-bold uppercase tracking-widest text-white/70">Full Library</span>
@@ -683,28 +682,40 @@ export default function LibrarySidebar() {
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                {/* Game List */}
-                <div className="flex-1 overflow-y-auto py-2" style={{ scrollbarWidth: 'none' }}>
-                  {libraryGames.map((game, i) => (
-                    <button
-                      key={game.id || i}
-                      onClick={() => setFullLibraryDetailGame(fullLibraryDetailGame?.id === game.id ? null : game)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors text-left ${
-                        fullLibraryDetailGame?.id === game.id ? 'bg-purple-500/10 border-l-2 border-purple-400' : ''
-                      }`}
-                    >
-                      <div className="w-8 h-10 rounded flex-shrink-0 overflow-hidden bg-black/40">
-                        <img src={game.cover || game.cover_image || ''} alt={game.title || game.name} className="w-full h-full object-cover" />
-                      </div>
-                      {!fullLibraryDetailGame && (
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-semibold truncate">{game.title || game.name}</p>
-                          <p className="text-white/40 text-[10px]">Ready to play</p>
+                {/* Game Grid */}
+                <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+                    {libraryGames.map((game, i) => (
+                      <button
+                        key={game.id || i}
+                        onClick={() => setFullLibraryDetailGame(fullLibraryDetailGame?.id === game.id ? null : game)}
+                        className={`group relative aspect-[3/4] rounded-xl overflow-hidden border transition-all duration-200 ${
+                          fullLibraryDetailGame?.id === game.id
+                            ? 'border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.4)] ring-2 ring-purple-400/30'
+                            : 'border-white/10 hover:border-purple-400/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                        }`}
+                      >
+                        <img
+                          src={game.cover || game.cover_image || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&q=80'}
+                          alt={game.title || game.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        {/* Gradient + Name overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-white font-bold text-[10px] leading-tight text-center line-clamp-2 drop-shadow-lg">
+                            {game.title || game.name}
+                          </p>
                         </div>
-                      )}
-                      <ChevronRight className={`w-3 h-3 text-white/30 flex-shrink-0 transition-transform ${fullLibraryDetailGame?.id === game.id ? 'rotate-90 text-purple-400' : ''}`} />
-                    </button>
-                  ))}
+                        {/* Selected indicator */}
+                        {fullLibraryDetailGame?.id === game.id && (
+                          <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-purple-500 flex items-center justify-center">
+                            <ChevronRight className="w-2.5 h-2.5 text-white" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -715,22 +726,21 @@ export default function LibrarySidebar() {
             {expandedPanel === 'fullLibrary' && fullLibraryDetailGame && (
               <motion.div
                 key="full-library-detail"
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.25 }}
-                className="fixed z-[68] flex flex-col overflow-hidden"
+                className="fixed z-[70] flex flex-col overflow-hidden"
                 style={{
-                  left: '280px',
+                  right: '0px',
                   top: '64px',
                   bottom: '52px',
-                  width: '340px',
-                  background: 'rgba(15, 20, 26, 0.65)',
+                  width: '360px',
+                  background: 'rgba(15, 20, 26, 0.75)',
                   backdropFilter: 'blur(40px) saturate(180%)',
                   WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                  boxShadow: '0 4px 30px rgba(0,0,0,0.4)',
-                  borderRight: '1px solid rgba(165, 243, 252, 0.12)',
-                  borderLeft: '1px solid rgba(165, 243, 252, 0.08)',
+                  boxShadow: '-6px 0 30px rgba(0,0,0,0.4)',
+                  borderLeft: '1px solid rgba(168, 85, 247, 0.18)',
                 }}
               >
                 {/* Banner */}
@@ -755,21 +765,29 @@ export default function LibrarySidebar() {
 
                   {/* Action Buttons */}
                   <div className="space-y-2 mb-5">
-                    <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm transition-colors">
-                      <Play className="w-4 h-4 fill-current" /> Play
+                    <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-bold text-sm transition-colors">
+                      <Play className="w-4 h-4 fill-current" /> Play Now
                     </button>
                     <div className="grid grid-cols-3 gap-2">
                       <button className="flex flex-col items-center gap-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors">
                         <ExternalLink className="w-4 h-4" />
                         <span className="text-[9px]">Stream</span>
                       </button>
-                      <button className="flex flex-col items-center gap-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors">
-                        <Trophy className="w-4 h-4 text-yellow-400" />
+                      <button className="flex flex-col items-center gap-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-yellow-400 transition-colors">
+                        <Trophy className="w-4 h-4" />
                         <span className="text-[9px]">Achieve</span>
                       </button>
                       <button className="flex flex-col items-center gap-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white transition-colors">
                         <Settings className="w-4 h-4" />
                         <span className="text-[9px]">Settings</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-cyan-400 transition-colors text-xs">
+                        <Download className="w-3.5 h-3.5" /> Update
+                      </button>
+                      <button className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-400/30 text-white/60 hover:text-red-400 transition-colors text-xs">
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
                       </button>
                     </div>
                   </div>
@@ -784,9 +802,9 @@ export default function LibrarySidebar() {
                     ))}
                   </div>
 
-                  {/* Updates */}
-                  <div className="mb-2">
-                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5"><RefreshCw className="w-3 h-3 text-cyan-400" /> Latest Update</h3>
+                  {/* Latest Update */}
+                  <div>
+                    <h3 className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 flex items-center gap-1.5"><RefreshCw className="w-3 h-3 text-purple-400" /> Latest Update</h3>
                     <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-[10px] text-emerald-400 font-bold">Patch 1.2.0</span>
@@ -795,11 +813,6 @@ export default function LibrarySidebar() {
                       <p className="text-xs text-white/50">New content & balance changes for all classes.</p>
                     </div>
                   </div>
-
-                  {/* Remove */}
-                  <button className="w-full mt-3 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-400/30 text-white/40 hover:text-red-400 transition-colors text-xs flex items-center justify-center gap-2">
-                    <Trash2 className="w-3.5 h-3.5" /> Remove from Library
-                  </button>
                 </div>
               </motion.div>
             )}
