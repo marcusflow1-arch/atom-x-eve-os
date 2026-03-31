@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ArrowLeftRight, DollarSign, Package, CheckCircle2, Clock,
@@ -56,36 +56,116 @@ const FRIEND_OFFER_CARDS = [
 ];
 const FRIEND_CURRENCY = 2500;
 
-// ─── Rarity styles ────────────────────────────────────────────────────────────
+// ─── Rarity styles with gradient borders ──────────────────────────────────────
 const RARITY = {
-  Legendary: { border: 'rgba(250,180,40,0.55)', bg: 'rgba(250,180,40,0.08)', text: '#ffb828', glow: '0 0 14px rgba(250,180,40,0.35)' },
-  Epic:      { border: 'rgba(160,80,255,0.5)',  bg: 'rgba(160,80,255,0.08)', text: '#c060ff', glow: '0 0 14px rgba(160,80,255,0.3)' },
-  Rare:      { border: 'rgba(80,140,255,0.5)',  bg: 'rgba(80,140,255,0.08)', text: '#6090ff', glow: '0 0 14px rgba(80,140,255,0.25)' },
-  Uncommon:  { border: 'rgba(80,200,120,0.45)', bg: 'rgba(80,200,120,0.07)', text: '#50c878', glow: 'none' },
-  Common:    { border: 'rgba(255,255,255,0.12)',bg: 'rgba(255,255,255,0.04)', text: 'rgba(255,255,255,0.5)', glow: 'none' },
+  Legendary: { 
+    border: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
+    borderColors: ['#fbbf24', '#f59e0b', '#d97706'],
+    bg: 'rgba(251,191,36,0.08)', 
+    text: '#fbbf24', 
+    glow: '0 0 16px rgba(251,191,36,0.4)' 
+  },
+  Epic: { 
+    border: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #6d28d9 100%)',
+    borderColors: ['#a855f7', '#7c3aed', '#6d28d9'],
+    bg: 'rgba(168,85,247,0.08)', 
+    text: '#c084fc', 
+    glow: '0 0 16px rgba(168,85,247,0.35)' 
+  },
+  Rare: { 
+    border: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%)',
+    borderColors: ['#3b82f6', '#2563eb', '#1d4ed8'],
+    bg: 'rgba(59,130,246,0.08)', 
+    text: '#60a5fa', 
+    glow: '0 0 16px rgba(59,130,246,0.3)' 
+  },
+  Uncommon: { 
+    border: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)',
+    borderColors: ['#10b981', '#059669', '#047857'],
+    bg: 'rgba(16,185,129,0.07)', 
+    text: '#34d399', 
+    glow: '0 0 12px rgba(16,185,129,0.25)' 
+  },
+  Common: { 
+    border: 'linear-gradient(135deg, #6b7280 0%, #4b5563 50%, #374151 100%)',
+    borderColors: ['#6b7280', '#4b5563', '#374151'],
+    bg: 'rgba(107,114,128,0.04)', 
+    text: '#9ca3af', 
+    glow: 'none' 
+  },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function CardChip({ card, onDoubleClick, dimmed }) {
   const r = RARITY[card.rarity] || RARITY.Common;
   const Icon = card.icon || Package;
+  const [isHovered, setIsHovered] = useState(false);
+  const [transform, setTransform] = useState({ rotateX: 0, rotateY: 0 });
+
+  const handleMouseMove = (e) => {
+    if (!dimmed) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const rotateX = (0.5 - y) * 15;
+      const rotateY = (x - 0.5) * 15;
+      setTransform({ rotateX, rotateY });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setTransform({ rotateX: 0, rotateY: 0 });
+    setIsHovered(false);
+  };
+
   return (
     <div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onDoubleClick={onDoubleClick}
       title={`Double-click to ${dimmed ? 'add' : 'remove'}`}
-      className="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl cursor-pointer select-none transition-all duration-200 hover:scale-[1.04]"
+      className="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl cursor-pointer select-none transition-all duration-200"
       style={{
         background: dimmed ? 'rgba(255,255,255,0.03)' : r.bg,
-        border: `1px solid ${dimmed ? 'rgba(255,255,255,0.08)' : r.border}`,
+        border: dimmed ? '1px solid rgba(255,255,255,0.08)' : 'none',
         boxShadow: dimmed ? 'none' : r.glow,
         opacity: dimmed ? 0.45 : 1,
         backdropFilter: 'blur(12px)',
-        minHeight: '64px',
+        minHeight: '72px',
+        transform: !dimmed ? `perspective(600px) rotateX(${transform.rotateX}deg) rotateY(${transform.rotateY}deg) scale(${isHovered ? 1.06 : 1})` : 'none',
+        transition: 'transform 0.15s ease-out',
       }}
     >
-      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: dimmed ? 'rgba(255,255,255,0.2)' : r.text }} />
-      <p className="text-[9px] font-bold text-center leading-tight line-clamp-2 px-0.5" style={{ color: dimmed ? 'rgba(255,255,255,0.25)' : r.text }}>{card.name}</p>
-      <span className="text-[7px] uppercase tracking-widest" style={{ color: dimmed ? 'rgba(255,255,255,0.15)' : `${r.text}99` }}>{card.rarity}</span>
+      {/* Gradient Border */}
+      {!dimmed && (
+        <div 
+          className="absolute inset-0 rounded-xl"
+          style={{
+            background: r.border,
+            padding: '2px',
+            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            maskComposite: 'exclude',
+            WebkitMaskComposite: 'xor',
+          }}
+        />
+      )}
+      
+      {/* Gleam effect */}
+      {!dimmed && isHovered && (
+        <div 
+          className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none"
+          style={{
+            background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
+            backgroundSize: '200% 200%',
+            animation: 'gleam 0.6s ease-in-out',
+          }}
+        />
+      )}
+
+      <Icon className="w-5 h-5 flex-shrink-0 relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.2)' : r.text }} />
+      <p className="text-[9px] font-bold text-center leading-tight line-clamp-2 px-0.5 relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.25)' : r.text }}>{card.name}</p>
+      <span className="text-[7px] uppercase tracking-widest relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.15)' : r.text }}>{card.rarity}</span>
     </div>
   );
 }
@@ -147,6 +227,21 @@ export default function FriendTradePanel({ friend, onClose }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const dragCard = useRef(null);
+
+  // Add gleam animation style
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes gleam {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      try { document.head.removeChild(style); } catch(e) {}
+    };
+  }, []);
 
   const slottedIds = new Set(mySlots.filter(Boolean).map(c => c.id));
 
@@ -273,65 +368,74 @@ export default function FriendTradePanel({ friend, onClose }) {
           </button>
         </div>
 
-        {/* Body - 70/30 Split */}
+        {/* Body - Restructured Layout */}
         <div className="flex flex-1 overflow-hidden min-h-0">
 
-          {/* ── LEFT: Game Library + Inventory (70%) ─────────────────────────── */}
-          <div style={{ flex: '0 0 70%' }} className="flex flex-col overflow-hidden min-h-0"
-            style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* ── LEFT: Vertical Game List (18%) ───────────────────────────────── */}
+          <div style={{ flex: '0 0 18%' }} className="flex flex-col overflow-hidden min-h-0 relative">
+            {/* Partial Divider Line */}
+            <div className="absolute right-0 top-[20px] bottom-[20px] w-px"
+              style={{
+                background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 10%, rgba(255,255,255,0.15) 90%, transparent 100%)',
+              }}
+            />
 
-            {/* Games Grid - Card Style */}
-            <div className="flex-shrink-0 px-4 pt-3 pb-2">
-              <p className="text-[8px] font-black uppercase tracking-widest mb-2.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Your Games ({GAMES_WITH_CARDS.length})</p>
-              <div className="grid grid-cols-6 gap-3" style={{ scrollbarWidth: 'none' }}>
-                {GAMES_WITH_CARDS.map(game => (
-                  <button
-                    key={game.id}
-                    onClick={() => {
-                      setSelectedGame(selectedGame === game.id ? null : game.id);
-                      setSearchQuery('');
-                      setSelectedCategory(null);
-                    }}
-                    className="relative group flex flex-col rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-lg"
-                    style={{
-                      aspectRatio: '3/4',
-                      background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'transparent',
-                      border: selectedGame === game.id ? '2px solid rgba(34,211,238,0.5)' : '2px solid transparent',
-                      boxShadow: selectedGame === game.id ? '0 0 20px rgba(34,211,238,0.3)' : 'none',
-                    }}
-                  >
-                    {/* Full Cover Image */}
-                    <img 
-                      src={game.cover} 
-                      alt={game.name} 
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    {/* Game Name Below */}
-                    <div className="absolute bottom-0 left-0 right-0 p-2">
-                      <span className="text-[9px] font-bold text-white text-center block leading-tight line-clamp-2 drop-shadow-lg">
-                        {game.name}
-                      </span>
-                    </div>
-                    {/* Selection Glow */}
-                    {selectedGame === game.id && (
-                      <div className="absolute inset-0 border-2 border-cyan-400/60 rounded-xl" style={{ boxShadow: 'inset 0 0 20px rgba(34,211,238,0.4)' }} />
-                    )}
-                  </button>
-                ))}
-              </div>
+            {/* Game List Header */}
+            <div className="flex-shrink-0 px-3 pt-3 pb-2">
+              <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                Games ({GAMES_WITH_CARDS.length})
+              </p>
             </div>
 
+            {/* Vertical Game List - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+              {GAMES_WITH_CARDS.map(game => (
+                <button
+                  key={game.id}
+                  onClick={() => {
+                    setSelectedGame(selectedGame === game.id ? null : game.id);
+                    setSearchQuery('');
+                    setSelectedCategory(null);
+                  }}
+                  className="w-full relative group rounded-xl overflow-hidden transition-all hover:scale-105"
+                  style={{
+                    aspectRatio: '3/4',
+                    background: selectedGame === game.id ? 'rgba(34,211,238,0.2)' : 'transparent',
+                    border: selectedGame === game.id ? '2px solid rgba(34,211,238,0.6)' : '2px solid transparent',
+                    boxShadow: selectedGame === game.id ? '0 0 15px rgba(34,211,238,0.35)' : 'none',
+                  }}
+                >
+                  <img src={game.cover} alt={game.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5 text-center">
+                    <span className="text-[8px] font-bold text-white block leading-tight line-clamp-2 drop-shadow-lg">
+                      {game.name}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* ── MIDDLE: Achievement Cards Display (52%) ──────────────────────── */}
+          <div style={{ flex: '0 0 52%' }} className="flex flex-col overflow-hidden min-h-0 px-4">
+            
             {/* Category Filter + Search */}
             <AnimatePresence mode="wait">
               {selectedGame && (
                 <motion.div key="filters"
                   initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="flex-shrink-0 px-4 pb-2"
+                  className="flex-shrink-0 py-3"
                 >
+                  <div className="flex items-center gap-2 mb-3">
+                    <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      {GAMES_WITH_CARDS.find(g => g.id === selectedGame)?.name}
+                    </p>
+                    <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+                  </div>
+                  
                   {/* Category Pills */}
-                  <div className="flex gap-1.5 overflow-x-auto mb-2.5" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
                     {['All', 'Equipment', 'Ability', 'Companion', 'Achievement'].map(cat => (
                       <button key={cat}
                         onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
@@ -350,7 +454,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                   </div>
 
                   {/* Search */}
-                  <div className="relative">
+                  <div className="relative mt-3">
                     <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                     <input type="text" placeholder="Search items..."
                       value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
@@ -361,18 +465,18 @@ export default function FriendTradePanel({ friend, onClose }) {
               )}
             </AnimatePresence>
 
-            {/* Items Grid - Scrollable with 2-row capacity */}
-            <div className="flex-1 overflow-y-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
+            {/* Achievement Cards Grid - Scrollable */}
+            <div className="flex-1 overflow-y-auto pb-3" style={{ scrollbarWidth: 'none' }}>
               <AnimatePresence mode="wait">
                 {selectedGame ? (
                   <motion.div key={selectedGame}
                     initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.18 }}
                   >
-                    <p className="text-[8px] font-black uppercase tracking-widest mb-2.5 mt-2 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                      {filteredCards.length} Item{filteredCards.length !== 1 ? 's' : ''} Available
+                    <p className="text-[8px] font-black uppercase tracking-widest mb-3 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      {filteredCards.length} Achievement{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-4 gap-3">
                       {filteredCards.map(card => (
                         <div
                           key={card.id}
@@ -398,8 +502,8 @@ export default function FriendTradePanel({ friend, onClose }) {
                 ) : (
                   <motion.div key="no-game" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center gap-3 h-full text-center">
-                    <Gamepad2 className="w-12 h-12 text-white/10" />
-                    <p className="text-xs text-white/20 leading-relaxed">Select a game above<br/>to browse your inventory</p>
+                    <Gamepad2 className="w-16 h-16 text-white/10" />
+                    <p className="text-sm text-white/20 leading-relaxed">Select a game from the<br/>left to view achievements</p>
                   </motion.div>
                 )}
               </AnimatePresence>
