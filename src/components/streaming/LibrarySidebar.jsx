@@ -35,6 +35,7 @@ export default function LibrarySidebar() {
   const [expandedPanel, setExpandedPanel] = useState(null); // 'friends' | 'library' | null
   const [openDropdown, setOpenDropdown] = useState(null); // id of item with open dropdown
   const [viewingFriend, setViewingFriend] = useState(null);
+  const [messagingFriend, setMessagingFriend] = useState(null);
   const [tradingFriend, setTradingFriend] = useState(null);
   const [detailGame, setDetailGame] = useState(null);
   const [fullLibraryDetailGame, setFullLibraryDetailGame] = useState(null);
@@ -639,7 +640,7 @@ export default function LibrarySidebar() {
                           >
                             {[
                               { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setViewingFriend(friend); setOpenDropdown(null); } },
-                              { label: 'Message', icon: Msg, color: 'text-green-400' },
+                              { label: 'Message', icon: Msg, color: 'text-green-400', action: () => { setMessagingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Trade', icon: ArrowLeftRight, color: 'text-emerald-400', action: () => { setTradingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
                               { label: 'Join', icon: LogIn, color: 'text-purple-400' },
