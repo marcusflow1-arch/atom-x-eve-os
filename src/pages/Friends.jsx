@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { lunarDashboardInvite } from '@/functions/lunarDashboardInvite';
 import FriendMessenger from '../components/friends/FriendMessenger';
+import FriendProfileOverlay from '../components/streaming/FriendProfileOverlay';
 
 // --- Sub-components ---
 
@@ -164,7 +165,7 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [aiPartyMode, setAiPartyMode] = useState(false);
-  const [showChat, setShowChat] = useState(false);
+  const [activePanel, setActivePanel] = useState(null); // 'messenger', 'profile', 'trade', etc.
   
   // Refs
   const seededRef = useRef(false);
@@ -241,7 +242,11 @@ export default function FriendsPage() {
   };
 
   const handleOpenMessenger = () => {
-    setShowChat(true);
+    setActivePanel('messenger');
+  };
+
+  const handlePanelChange = (panel) => {
+    setActivePanel(panel);
   };
 
   const handleJoinLunar = async () => {
@@ -329,9 +334,9 @@ export default function FriendsPage() {
                 friend={friend} 
                 isSelected={selectedFriendId === friend.id}
                 onClick={() => {
-                  setSelectedFriendId(friend.id);
-                  setShowChat(false);
-                }}
+                       setSelectedFriendId(friend.id);
+                       setActivePanel(null);
+                     }}
               />
             ))}
           </div>
@@ -367,7 +372,7 @@ export default function FriendsPage() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="flex-1 relative rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
             >
-              {showChat ? (
+              {activePanel === 'messenger' ? (
                 /* CHAT VIEW - Using FriendMessenger Component */
                 <div className="absolute inset-0 z-10 bg-[#0f1419]/95">
                   <FriendMessenger 
@@ -378,7 +383,16 @@ export default function FriendsPage() {
                       status: selectedFriend.status,
                       current_game: selectedFriend.current_game
                     }}
-                    onClose={() => setShowChat(false)}
+                    onClose={() => setActivePanel(null)}
+                  />
+                </div>
+              ) : activePanel === 'profile' ? (
+                /* PROFILE OVERLAY */
+                <div className="absolute inset-0 z-10">
+                  <FriendProfileOverlay 
+                    friend={selectedFriend} 
+                    onClose={() => setActivePanel(null)}
+                    onPanelChange={handlePanelChange}
                   />
                 </div>
               ) : (
@@ -531,7 +545,7 @@ export default function FriendsPage() {
                   />
                   <ActionButton 
                     icon={MessageSquare} 
-                    label={showChat ? "Close Chat" : "Message"} 
+                    label={activePanel === 'messenger' ? "Close Chat" : "Message"} 
                     onClick={handleOpenMessenger} 
                   />
                 </div>

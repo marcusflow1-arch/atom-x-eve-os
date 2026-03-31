@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star } from 'lucide-react';
@@ -40,21 +41,33 @@ const glassStyle = {
   boxShadow: '0 4px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
 };
 
-export default function FriendProfileOverlay({ friend, onClose }) {
+export default function FriendProfileOverlay({ friend, onClose, onPanelChange }) {
   const [showMessenger, setShowMessenger] = useState(false);
+
+  useEffect(() => {
+    if (showMessenger && onPanelChange) {
+      onPanelChange('messenger');
+    }
+  }, [showMessenger, onPanelChange]);
   
-  if (!friend) return null;
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
 
   const handleOpenMessenger = () => {
-    setShowMessenger(true);
+    if (onPanelChange) {
+      onPanelChange('messenger');
+    } else {
+      setShowMessenger(true);
+    }
   };
 
   if (showMessenger) {
     return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowMessenger(false)}>
+      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => {
+        setShowMessenger(false);
+        if (onPanelChange) onPanelChange(null);
+      }}>
         <div onClick={e => e.stopPropagation()}>
           <FriendMessenger
             friend={{
@@ -64,7 +77,10 @@ export default function FriendProfileOverlay({ friend, onClose }) {
               status: friend.status,
               current_game: friend.game
             }}
-            onClose={() => setShowMessenger(false)}
+            onClose={() => {
+              setShowMessenger(false);
+              if (onPanelChange) onPanelChange(null);
+            }}
           />
         </div>
       </div>
