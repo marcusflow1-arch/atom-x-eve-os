@@ -397,19 +397,16 @@ export default function FriendTradePanel({ friend, onClose }) {
                     setSearchQuery('');
                     setSelectedCategory(null);
                   }}
-                  className="w-full relative group flex items-center gap-2 p-2 rounded-xl transition-all hover:scale-102"
-                  style={{
-                    background: selectedGame === game.id ? 'rgba(34,211,238,0.15)' : 'rgba(100,120,140,0.08)',
-                    border: selectedGame === game.id ? '1.5px solid rgba(34,211,238,0.5)' : '1px solid rgba(255,255,255,0.08)',
-                    boxShadow: selectedGame === game.id ? '0 0 12px rgba(34,211,238,0.25)' : 'none',
-                  }}
+                  className="w-full flex items-center gap-2 py-1.5 px-1 transition-all hover:bg-white/5 rounded-lg"
                 >
-                  {/* Game Icon - Small */}
-                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 ring-1 ring-white/10">
-                    <img src={game.cover} alt={game.name} className="w-full h-full object-cover" />
-                  </div>
+                  {/* Game Icon */}
+                  <img 
+                    src={game.cover} 
+                    alt={game.name} 
+                    className="w-8 h-8 rounded object-cover flex-shrink-0" 
+                  />
                   {/* Game Name */}
-                  <span className="text-[9px] font-bold text-white/80 group-hover:text-white transition-colors line-clamp-2 leading-tight flex-1 text-left">
+                  <span className="text-[9px] font-bold text-white/80 hover:text-white transition-colors line-clamp-2 leading-tight text-left flex-1">
                     {game.name}
                   </span>
                   {/* Selection Indicator */}
