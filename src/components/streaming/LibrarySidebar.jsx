@@ -390,7 +390,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 bottom-20 z-[70] flex flex-col items-center gap-2 py-2 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 bottom-8 z-[70] flex flex-col items-center gap-2 py-2 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
