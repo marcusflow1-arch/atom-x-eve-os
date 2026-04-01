@@ -17,7 +17,7 @@ import LibraryGameDetailModal from './LibraryGameDetailModal';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeSub, setActiveSub] = useState('library');
+  const [activeSub, setActiveSub] = useState('library'); // v2
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [overlayActive, setOverlayActive] = useState(false);
