@@ -30,6 +30,8 @@ import { showError } from '@/components/error/ErrorToast';
 import LoadingState from '@/components/error/LoadingState';
 import { useStoreNavigation } from '../components/store/hooks/useStoreNavigation';
 import { useGameFilters } from '../components/store/hooks/useGameFilters';
+import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 
 // --- Shiny Sidebar Box Component ---
 const ShinySidebarBox = ({ children, className = "" }) => {
@@ -317,7 +319,7 @@ const useVoiceInput = (onResult) => {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognitionRef.current = new SpeechRecognition();
             recognitionRef.current.continuous = false;
-            recognitionRef.current.interimResults = false; // Only final results for simple input
+            recognitionRef.current.interimResults = false;
             recognitionRef.current.lang = 'en-US';
 
             recognitionRef.current.onresult = (event) => {
@@ -360,8 +362,8 @@ export default function Store() {
     const { getCartCount } = useCart();
     
     // Store Mode State
-    const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store'); // 'store', 'marketplace', 'trading'
-    const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games'); // 'games' | 'library' | 'achievements'
+    const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
+    const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
     
     // Sync storeSubView with URL params when they change
     useEffect(() => {
@@ -376,8 +378,7 @@ export default function Store() {
         }
     }, [searchParams]);
 
-    const [viewMode, setViewMode] = useState('cross'); // 'cross' or 'classic'
-    // Cross navigation indices declared early to avoid temporal dead zone
+    const [viewMode, setViewMode] = useState('cross');
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
     const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
     const [isNavigating, setIsNavigating] = useState(false);
@@ -398,7 +399,6 @@ export default function Store() {
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
 
-    // Cross-scroll: scrollable genre list with wheel + WASD support
     const wheelTsRef = useRef(0);
     const genreListRef = useRef(null);
     const [isGenreHovering, setIsGenreHovering] = useState(false);
@@ -418,7 +418,7 @@ export default function Store() {
       if (!genreData || genreData.length === 0) return;
       e.preventDefault();
       const now = Date.now();
-      if (now - wheelTsRef.current < 120) return; // throttle
+      if (now - wheelTsRef.current < 120) return;
       wheelTsRef.current = now;
       const direction = e.deltaY < 0 ? -1 : 1;
       setActiveGenreIndex(prev => {
@@ -430,8 +430,6 @@ export default function Store() {
         return next;
       });
     };
-
-    // moved: scroll active genre into view (defined after activeGenreIndex)
 
     useEffect(() => {
       const onKey = (e) => {
@@ -451,13 +449,11 @@ export default function Store() {
       return () => window.removeEventListener('keydown', onKey);
     }, [isGenreHovering, genrePanelFocused]);
 
-    // Navigate with scroll transition
     const handleNavigateToGame = (id) => {
         setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
         setShowScrollTransition(true);
     };
 
-    // Use filter and navigation hooks
     const {
         activeCategory,
         setActiveCategory,
@@ -472,18 +468,13 @@ export default function Store() {
         genreData
     } = useGameFilters(games, loading);
 
-    // Filter games for the Grid Spotlight view based on sidebar selection
     const filteredGridGames = useMemo(() => {
         if (selectedGenres.length === 0) return games;
         return games.filter(g => selectedGenres.includes(g.genre));
     }, [games, selectedGenres]);
 
-    // --- NEW NAVIGATION LOGIC (Horizontal Genres + Vertical Sub-Categories) ---
-    
-    // Derived state
     const currentNavGenre = genreData[activeGenreIndex];
     
-    // Mock Sub-Categories (as requested)
     const SUB_CATEGORIES = useMemo(() => {
         const defaults = ['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'];
         if (!currentNavGenre) return defaults;
@@ -502,91 +493,44 @@ export default function Store() {
 
     const activeSubCategory = SUB_CATEGORIES[activeSubCategoryIndex] || SUB_CATEGORIES[0];
 
-    // Ensure active genre stays visible in the left list when it changes
     useEffect(() => {
       if (viewMode !== 'cross') return;
       scrollGenreIntoView(activeGenreIndex);
     }, [activeGenreIndex, viewMode]);
 
-    // Filtered Games based on Genre + Mock Sub-Category logic
-    // (In a real app, we would filter by actual tags. Here we simulate "showing a list of games")
     const displayedGames = useMemo(() => {
         if (!currentNavGenre) return [];
-        // For demo: shuffle or filter slightly to make lists look different per sub-cat
-        // We'll just return all genre items for now, maybe reversed or sliced to simulate variety
-        // User said: "It will show you all the games in action"
-        // We'll just show the genre items. In a real implementation we'd match tags.
         return currentNavGenre.items; 
     }, [currentNavGenre, activeSubCategory]);
 
-    const activeGame = null; // No single active game in this new "List View" mode until hovered/selected
+    const activeGame = null;
 
-    // Navigation Handler (Updated for Dual Horizontal Rows)
     useEffect(() => {
         if (storeMode !== 'store' || loading || genreData.length === 0 || viewMode !== 'cross') return;
 
-        // Simple focus state to toggle between controlling Genres (row 1) or Sub-Cats (row 2)
-        // 0 = Genre Row, 1 = Sub-Cat Row
-        // We'll use a ref or just simplify: Up/Down switches rows, Left/Right navigates current row
-        // But since we don't have visual focus state distinct from "active item", let's assume:
-        // Top Row (Genres) is dominant. Sub-cats update based on Genre.
-        // Let's keep it simple: Arrow Keys = Sub-Cats (since that's the "content" filter), 
-        // Shift + Arrows = Genres? Or maybe PageUp/Down for Genres?
-        
-        // Actually, let's try a smarter approach:
-        // W/S (Up/Down) = Switch between Genre selection and Sub-Cat selection? 
-        // No, that's complex state.
-        
-        // Let's map:
-        // A/D (Left/Right) = Navigate Sub-Categories (Fine tuning)
-        // Q/E (Shoulder buttons) = Navigate Genres (Broad switching)
-        // OR
-        // Up/Down = Navigate Genres (Since they are "higher" level, even if visually horizontal?) 
-        // User asked for "Left and Right" for both.
-        
         const handleKeyDown = (e) => {
             const key = e.key.toLowerCase();
-            
-            // Row 1: Genres (Use Shift + Left/Right OR just Up/Down to switch "focus" to top row?)
-            // Let's use W/S (Up/Down) to change Genres for now as it's a "Vertical" hierarchy logically (Parent -> Child),
-            // even if displayed horizontally.
-            // visual: Top Row vs Bottom Row.
-            
-            if (key === 'w' || key === 'arrowup') {
-                 // Move "Up" to Genres -> actually let's make Up/Down cycle genres to keep it simple with 1D input devices
-                 // Wait, user wants Left/Right for both.
-                 // Let's use standard grid nav logic.
-                 // We need a "focusRow" state, but we don't have one exposed.
-                 
-                 // Fallback: 
-                 // Arrows = Sub-Categories (most frequent action)
-                 // Shift + Arrows = Genres
-            }
 
             if (key === 'arrowleft' || key === 'a') {
                 e.preventDefault();
                 if (e.shiftKey) {
-                    // Shift + Left = Previous Genre
                     setActiveGenreIndex(prev => {
                         const newIndex = prev > 0 ? prev - 1 : prev;
                         return newIndex;
                     });
                     setActiveSubCategoryIndex(0);
                 } else {
-                    // Left = Previous Sub-Category
                     setActiveSubCategoryIndex(prev => prev > 0 ? prev - 1 : prev);
                 }
             } else if (key === 'arrowright' || key === 'd') {
                 e.preventDefault();
                 if (e.shiftKey) {
-                    // Shift + Right = Next Genre
                     setActiveGenreIndex(prev => {
                         const newIndex = prev < genreData.length - 1 ? prev + 1 : prev;
                         return newIndex;
                     });
                     setActiveSubCategoryIndex(0);
                 } else {
-                    // Right = Next Sub-Category
                     setActiveSubCategoryIndex(prev => prev < SUB_CATEGORIES.length - 1 ? prev + 1 : prev);
                 }
             }
@@ -596,18 +540,15 @@ export default function Store() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [activeGenreIndex, activeSubCategoryIndex, genreData, loading, viewMode, storeMode, SUB_CATEGORIES]);
 
-    // Keep activeGameIndex for API compatibility if needed, though unused in grid nav currently
     const activeGameIndex = 0; 
     const setActiveGameIndex = () => {};
 
-    // Scroll active genre into view for Classic Mode
     useEffect(() => {
         if (viewMode === 'classic' && genreRefs.current[activeGenreIndex]) {
             genreRefs.current[activeGenreIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [activeGenreIndex, viewMode]);
 
-    // Track scroll direction only (no header fade or pointer blocking)
     useEffect(() => {
         const handleScroll = () => {
             const el = contentScrollRef.current;
@@ -624,13 +565,11 @@ export default function Store() {
         };
     }, []);
 
-        // Regular Voice Input for Store
     const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
         setSearchTerm(text);
         setShowVoiceOptions(false);
     });
 
-    // Initial Data Fetch
     useEffect(() => {
         const fetchGames = async () => {
             const isDev = import.meta.env.DEV;
@@ -643,10 +582,8 @@ export default function Store() {
                 if (fetchedGames.length > 0) {
                     setGames(fetchedGames);
                 } else if (useMock) {
-                    // Only use mock data if explicitly enabled in dev
                     setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
                 } else {
-                    // Empty state - show helpful message
                     setGames([]);
                 }
             } catch (error) {
@@ -662,21 +599,52 @@ export default function Store() {
         fetchGames();
     }, []);
 
-    // Constants for positioning
     const ITEM_HEIGHT = 80;
     const ITEM_GAP = 24;
     const CROSS_Y_VH = 40;
 
     return (
         <PageErrorBoundary pageName="Store">
-        <div 
-            className="h-screen w-full relative overflow-hidden text-white font-sans select-none"
-            style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
-        >
+        <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={true} />}>
+        <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+          {/* 5% Left Sidebar */}
+          <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
+            <div className="flex flex-col items-center w-full px-2 mt-20">
+              <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Risley<br/>Play</span>
+              <div className="w-8 h-px bg-white/20 mb-3" />
+              <div className="flex flex-col gap-2 w-full items-center">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                    <span className="text-white/30 text-lg font-bold">?</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 95% Main Area */}
+          <div className="flex-1 relative h-full overflow-hidden flex flex-col">
+            {/* Top Header */}
+            <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
+              background: 'rgba(8, 12, 18, 0.5)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              borderBottom: '1px solid rgba(255,255,255,0.05)'
+            }}>
+              <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
+              <div className="flex items-center gap-3">
+                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
+                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Marketplace</button>
+                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Trading</button>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 overflow-hidden">
             
             {/* Secondary Store Controls Bar - below global header */}
             {storeSubView === 'games' && (
-            <div className="fixed top-16 left-0 right-0 z-40 flex items-center justify-between px-6 py-2" style={{
+            <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-between px-6 py-2" style={{
                 background: 'rgba(8, 12, 18, 0.5)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
@@ -1107,8 +1075,6 @@ export default function Store() {
                                                 </div>
                                             </div>
 
-                                            {/* Breadcrumbs Removed as requested */}
-
                                             {/* Sub-Categories (Trending, etc.) */}
                                             <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-2">
                                                 {SUB_CATEGORIES.map((subCat, idx) => {
@@ -1197,7 +1163,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar"
                     >
                         <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
                     </motion.div>
@@ -1207,7 +1173,7 @@ export default function Store() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar" // ADDED overflow-y-auto h-full
+                        className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar"
                     >
                         <TradingPostContent />
                     </motion.div>
@@ -1221,7 +1187,10 @@ export default function Store() {
                 if (url) navigate(url);
               }} />
             )}
+            </div>
+          </div>
         </div>
+        </GlassPageFrame>
         </PageErrorBoundary>
     );
 }
