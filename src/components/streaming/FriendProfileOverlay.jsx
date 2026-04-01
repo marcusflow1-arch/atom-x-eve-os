@@ -41,52 +41,17 @@ const glassStyle = {
 };
 
 export default function FriendProfileOverlay({ friend, onClose, onPanelChange }) {
-  const [showMessenger, setShowMessenger] = useState(false);
+  const [showChat, setShowChat] = useState(false);
 
-  useEffect(() => {
-    if (showMessenger && onPanelChange) {
-      onPanelChange('messenger');
-    }
-  }, [showMessenger, onPanelChange]);
+
   
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
 
   const handleOpenMessenger = () => {
-    if (onPanelChange) {
-      // Close this profile overlay first before opening messenger
-      onClose();
-      setTimeout(() => onPanelChange('messenger'), 100);
-    } else {
-      setShowMessenger(true);
-    }
+    setShowChat(true);
   };
-
-  if (showMessenger) {
-    return (
-      <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => {
-        setShowMessenger(false);
-        if (onPanelChange) onPanelChange(null);
-      }}>
-        <div onClick={e => e.stopPropagation()}>
-          <FriendMessenger
-            friend={{
-              friend_id: friend.id?.toString() || 'temp',
-              friend_name: friend.name,
-              friend_avatar: friend.avatar,
-              status: friend.status,
-              current_game: friend.game
-            }}
-            onClose={() => {
-              setShowMessenger(false);
-              if (onPanelChange) onPanelChange(null);
-            }}
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AnimatePresence>
@@ -217,8 +182,34 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             </div>
           </div>
 
-          {/* RIGHT column — main content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-w-0" style={{ scrollbarWidth: 'none' }}>
+          {/* RIGHT column — main content OR inline chat */}
+          <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
+            {showChat ? (
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <span className="text-white/50 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                    <MessageSquare className="w-3 h-3 text-cyan-400" /> Chat with {friend.name}
+                  </span>
+                  <button onClick={() => setShowChat(false)} className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <X className="w-3 h-3 text-white/40" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <FriendMessenger
+                    friend={{
+                      friend_id: friend.id?.toString() || 'temp',
+                      friend_name: friend.name,
+                      friend_avatar: friend.avatar,
+                      status: friend.status,
+                      current_game: friend.game
+                    }}
+                    onClose={() => setShowChat(false)}
+                    inline
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
 
             {/* Recent Games */}
             <div>
@@ -255,7 +246,6 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
 
             {/* Trophies + Clip */}
             <div className="grid grid-cols-2 gap-3">
-              {/* Trophies */}
               <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-white/45 text-[10px] font-semibold flex items-center gap-1.5">
@@ -280,18 +270,11 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                   ))}
                 </div>
               </div>
-
-              {/* Latest Clip */}
               <div className="rounded-xl overflow-hidden relative cursor-pointer group" style={{ border: '1px solid rgba(255,255,255,0.06)', minHeight: '120px' }}>
-                <img
-                  src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80"
-                  alt="Latest Clip"
-                  className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity absolute inset-0"
-                />
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80" alt="Latest Clip" className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity absolute inset-0" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-black/20" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)' }}>
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)', backdropFilter: 'blur(4px)' }}>
                     <div className="w-0 h-0 border-t-[5px] border-t-transparent border-l-[9px] border-l-white border-b-[5px] border-b-transparent ml-0.5" />
                   </div>
                 </div>
@@ -299,8 +282,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                   <p className="text-white/40 text-[8px] uppercase tracking-wider">Latest Clip</p>
                   <p className="text-white text-[10px] font-bold leading-tight">Shadow Realm – Boss Kill</p>
                 </div>
-                <div className="absolute top-1.5 right-1.5 z-10 px-1 py-0.5 rounded text-white/50 text-[8px]"
-                  style={{ background: 'rgba(0,0,0,0.5)' }}>0:08</div>
+                <div className="absolute top-1.5 right-1.5 z-10 px-1 py-0.5 rounded text-white/50 text-[8px]" style={{ background: 'rgba(0,0,0,0.5)' }}>0:08</div>
               </div>
             </div>
 
@@ -317,7 +299,6 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                   ))}
                 </div>
               </div>
-
               <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <div className="w-4 h-4 rounded-full overflow-hidden flex-shrink-0">
@@ -332,6 +313,8 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
               </div>
             </div>
 
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
