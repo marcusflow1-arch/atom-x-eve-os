@@ -280,114 +280,98 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Unified Left Nav Column: top boxes + nav buttons, all stacked from top */}
+          {/* Unified Left Nav Column */}
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className="absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12"
           >
-            {/* Top Section: label only on context pages */}
-            {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
-              <>
-                <button
-                  onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                  className="text-[9px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-                >
-                  {sidebarMode === 'context' ? (
-                    isClan ? <>Recently<br/>Visited</> :
-                    isForum ? <>Recent<br/>Forums</> :
-                    isFarm ? <>Recent<br/>Farm Hub</> :
-                    <>Recent<br/>Cards</>
-                  ) : <>Recently<br/>Played</>}
-                </button>
-                <div className="w-8 h-px bg-white/20 -mt-1" />
-              </>
-            )}
+            {/* Recently Played label */}
+            <button
+              onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
+              className="text-[8px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+            >
+              Recently<br/>Played
+            </button>
+            <div className="w-8 h-px bg-white/20" />
 
-            {/* Show context boxes only on pages where they are meaningful */}
-            {!isSidebarCollapsed && (isClan || isForum || isGenreMastery || isFarm) && (
-              <>
-                <button
-                  onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                  className="text-[9px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-                >
-                  {sidebarMode === 'context' ? (
-                    isClan ? <>Recently<br/>Visited</> :
-                    isForum ? <>Recent<br/>Forums</> :
-                    isFarm ? <>Recent<br/>Farm Hub</> :
-                    <>Recent<br/>Cards</>
-                  ) : <>Recently<br/>Played</>}
-                </button>
-                <div className="w-8 h-px bg-white/20 -mt-1" />
-
-                {sidebarMode === 'context' ? (
-                  <>
-                    {isClan && (
-                      <>
-                        <button onClick={() => navigate('/Clan?game=global_chat')} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black" title="Atom X Eve Global Clan Chat">
-                          <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                          <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
-                        </button>
-                        {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
-                          <button key={`clan_${game.id}`} onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group" title={`${game.name} Clan Chat`}>
-                            <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        ))}
-                      </>
-                    )}
-                    {isForum && quickNavForumGames.slice(0, 5).map((game) => (
-                      <button key={`forum_${game.id}`} onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group" title={`${game.name} Forum`}>
-                        <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    ))}
-                    {isFarm && quickNavFarmGames.slice(0, 5).map((game) => (
-                      <button key={`farm_${game.id}`} onClick={() => navigate(`/Farm?gameId=${game.id}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group" title={`${game.name} Farm`}>
-                        <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </button>
-                    ))}
-                    {isGenreMastery && [1,2,3,4,5].map(i => (
-                      <div key={`card-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-                        <span className="text-white/30 text-lg font-bold">C</span>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  [1,2,3,4,5].map(i => (
-                    <div key={`played-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-white/30 text-lg font-bold">?</span>
-                    </div>
-                  ))
-                )}
-
-                <div className="w-8 mt-1" />
-                <div className="w-8 h-px bg-white/20" />
-              </>
-            )}
-
-            {/* Nav Buttons (always visible) */}
-            <div className={`flex flex-col items-center gap-2 py-1 px-1 w-12`}>
-              {pathname.includes('/lunatemplate') && (<div className="relative group"><div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Top Widget"><Book className="w-4 h-4" /></div></div>)}
-              {isClan && !isSidebarCollapsed && (<button onClick={() => setQuickGamesDrawer({ open: true, type: 'clan' })} className="w-10 h-10 rounded-xl flex items-center justify-center border border-blue-500/30 bg-blue-500/10 text-blue-400 backdrop-blur-lg hover:bg-blue-500/20 hover:scale-105 transition-all duration-300" title="Clan Quick Menu"><UsersIcon className="w-4 h-4" /></button>)}
-              {isForum && !isSidebarCollapsed && (<button onClick={() => setQuickGamesDrawer({ open: true, type: 'forum' })} className="w-10 h-10 rounded-xl flex items-center justify-center border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 backdrop-blur-lg hover:bg-emerald-500/20 hover:scale-105 transition-all duration-300" title="Forum Quick Menu"><MessageSquare className="w-4 h-4" /></button>)}
-              {isFarm && !isSidebarCollapsed && (<button onClick={() => setQuickGamesDrawer({ open: true, type: 'farm' })} className="w-10 h-10 rounded-xl flex items-center justify-center border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 backdrop-blur-lg hover:bg-yellow-500/20 hover:scale-105 transition-all duration-300" title="Quick Farming Hub"><Wheat className="w-4 h-4" /></button>)}
-              {isAura && (<button onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))} className="w-10 h-10 rounded-xl flex items-center justify-center border border-purple-500/30 bg-purple-500/10 text-purple-400 backdrop-blur-lg hover:bg-purple-500/20 hover:scale-105 transition-all duration-300" title="Watched Streams"><Tv className="w-4 h-4" /></button>)}
-              <div className="relative flex items-center">
-                <button onClick={() => { setIsOpen(true); setExpandedPanel(null); }} className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-0.5" title="Library & Friends"><Library className="w-5 h-5" /></button>
-                {isSidebarCollapsed && (<button onClick={() => { localStorage.setItem('sidebarCollapsed', 'false'); window.dispatchEvent(new CustomEvent('sidebarCollapseChange', { detail: false })); }} className="absolute left-[44px] top-1/2 -translate-y-1/2 w-6 h-10 bg-black/60 border border-white/20 border-l-0 rounded-r-xl flex items-center justify-center hover:bg-white/10 hover:text-white text-white/50 transition-colors backdrop-blur-md shadow-lg" title="Restore Sidebar"><ChevronRight className="w-4 h-4" /></button>)}
+            {/* 5 recently played boxes */}
+            {[1,2,3,4,5].map(i => (
+              <div key={`rp-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="text-white/30 text-base font-bold">?</span>
               </div>
-              {isClan && !isSidebarCollapsed && (<button onClick={() => window.dispatchEvent(new Event('toggleClanRoster'))} className="w-12 h-12 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all bg-black/50 hover:bg-white/10 text-white/60 border-white/10 -ml-1 mt-1 group" title="Roster"><UsersIcon className="w-4 h-4 group-hover:text-yellow-400 transition-colors" /><span className="text-[7px] font-bold uppercase tracking-wider mt-0.5 group-hover:text-yellow-400 transition-colors">Roster</span></button>)}
-              {pathname.includes('/lunatemplate') && (<div className="relative group"><div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget"><Layers className="w-4 h-4" /></div></div>)}
-              <div className="w-8 h-px bg-white/10 my-1" />
-              <button onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }} className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`} title="Friends"><UsersIcon className="w-4 h-4" /><span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span></button>
-              <button onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); setIsOpen(false); }} className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'library' ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'}`} title="Library"><Library className="w-4 h-4" /><span className="text-[7px] font-bold uppercase tracking-wider">Library</span></button>
-              <button onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }} className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`} title="Rewards"><Trophy className="w-4 h-4" /><span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span></button>
-              <button onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }} className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`} title="Entertainment"><Tv className="w-4 h-4" /><span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span></button>
-            </div>
+            ))}
+
+            {/* 3 context/shortcut boxes */}
+            {isClan && (
+              <>
+                <button onClick={() => navigate('/Clan?game=global_chat')} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black" title="Atom X Eve Global Clan Chat">
+                  <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Clan" className="w-full h-full object-cover opacity-80" />
+                </button>
+                {quickNavGames.slice(0, 2).map((game, idx) => (
+                  <button key={`ctx-${idx}`} onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group" title={game.name}>
+                    <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </>
+            )}
+            {isForum && quickNavForumGames.slice(0, 3).map((game, idx) => (
+              <button key={`ctx-${idx}`} onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300" title={game.name}>
+                <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+              </button>
+            ))}
+            {isFarm && quickNavFarmGames.slice(0, 3).map((game, idx) => (
+              <button key={`ctx-${idx}`} onClick={() => navigate(`/Farm?gameId=${game.id}`)} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300" title={game.name}>
+                <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+              </button>
+            ))}
+            {isGenreMastery && [1,2,3].map(i => (
+              <div key={`gm-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="text-white/30 text-base font-bold">C</span>
+              </div>
+            ))}
+            {!isClan && !isForum && !isFarm && !isGenreMastery && [1,2,3].map(i => (
+              <div key={`ph-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="text-white/30 text-base font-bold">?</span>
+              </div>
+            ))}
+
+            <div className="w-8 h-px bg-white/20" />
+
+            {/* 4 bottom nav icon buttons */}
+            <button
+              onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
+              className="w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/70 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all"
+              title="Library"
+            >
+              <Library className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
+            </button>
+            <button
+              onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`}
+              title="Friends"
+            >
+              <UsersIcon className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Friends</span>
+            </button>
+            <button
+              onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`}
+              title="Rewards"
+            >
+              <Trophy className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
+            </button>
+            <button
+              onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }}
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`}
+              title="Entertainment"
+            >
+              <Tv className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
+            </button>
           </motion.div>
 
           {/* Full-height expanded panel */}
