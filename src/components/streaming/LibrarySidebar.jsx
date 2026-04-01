@@ -295,7 +295,8 @@ export default function LibrarySidebar() {
 
             {/* 5 recently played boxes */}
             {[1,2,3,4,5].map(i => (
-              <div key={`rp-${i}`} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center">
+              <div key={`rp-${i}`} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center" />
+            ))}
 
             {/* 3 context/shortcut boxes */}
             {isClan && (
