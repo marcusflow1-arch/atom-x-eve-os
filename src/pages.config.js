@@ -170,7 +170,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "Store",
+    mainPage: "OnboardingHome",
     Pages: PAGES,
     Layout: __Layout,
 };
