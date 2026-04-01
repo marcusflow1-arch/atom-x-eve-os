@@ -342,35 +342,31 @@ export default function LibrarySidebar() {
             {/* 4 bottom nav icon buttons */}
             <button
               onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
-              className="w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border border-white/10 bg-white/5 text-white/70 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all"
+              className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:scale-105 transition-all"
               title="Library"
             >
               <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`}
               title="Friends"
             >
               <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Friends</span>
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
-              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`}
               title="Rewards"
             >
               <Trophy className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }}
-              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`}
               title="Entertainment"
             >
               <Tv className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
             </button>
           </motion.div>
 
