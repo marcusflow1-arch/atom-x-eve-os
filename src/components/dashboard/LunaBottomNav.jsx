@@ -56,7 +56,7 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
     setSelectedItem(null);
     setSelectedGame(null);
     if (tab === 'home') {
-      setActiveTab('home');
+      navigate(createPageUrl('LunaTemplate'));
     } else {
       // If clicking the same tab that's already active, close it (go home)
       if (activeTab === tab) {

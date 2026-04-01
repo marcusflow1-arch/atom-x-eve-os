@@ -625,17 +625,22 @@ export default function Store() {
           {/* 95% Main Area */}
           <div className="flex-1 relative h-full overflow-hidden flex flex-col">
             {/* Top Header */}
-            <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
+            <div className="h-16 flex items-center justify-between px-6 flex-shrink-0"
+              style={{
               background: 'rgba(8, 12, 18, 0.5)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               borderBottom: '1px solid rgba(255,255,255,0.05)'
             }}>
               <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Home</button>
+                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
+                <button onClick={() => navigate(createPageUrl('Community'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Forum</button>
+                <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
+                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
+                <div className="w-px h-4 bg-white/20 mx-1" />
                 <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Marketplace</button>
-                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Trading</button>
               </div>
             </div>
 
