@@ -1355,7 +1355,6 @@ export default function LibrarySidebar() {
                   boxShadow: '-10px 0 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
                   border: '1px solid rgba(165, 243, 252, 0.15)'
                 }}
-                style={{ boxShadow: '-10px 0 40px rgba(0,0,0,0.5)' }}
             >
                 {/* Banner Header */}
                 <div className="relative h-64 w-full flex-shrink-0">
