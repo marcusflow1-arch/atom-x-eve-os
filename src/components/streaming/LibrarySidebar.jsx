@@ -287,18 +287,7 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed left-2 top-[72px] z-[70] flex flex-col items-center gap-1.5 w-10"
           >
-            {/* Recently Played label */}
-            <div className="text-[7px] uppercase tracking-wider text-white/50 font-bold text-center leading-tight w-full">
-              Recently<br/>Played
-            </div>
-            <div className="w-8 h-px bg-white/20" />
-
-            {/* 5 recently played boxes */}
-            {[1,2,3,4,5].map(i => (
-              <div key={`rp-${i}`} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center" />
-            ))}
-
-            {/* 3 context/shortcut boxes */}
+            {/* Context boxes for specific pages */}
             {isClan && (
               <>
                 <button onClick={() => navigate('/Clan?game=global_chat')} className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black" title="Atom X Eve Global Clan Chat">
@@ -334,7 +323,7 @@ export default function LibrarySidebar() {
 
             <div className="w-8 h-px bg-white/20" />
 
-            {/* 4 bottom nav icon buttons */}
+            {/* 4 bottom nav buttons */}
             <button
               onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
               className="w-8 h-8 rounded-md flex items-center justify-center border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 transition-all"
