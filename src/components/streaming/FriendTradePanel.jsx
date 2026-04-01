@@ -96,77 +96,66 @@ const RARITY = {
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+// Rarity background gradients for Store-style cards
+const RARITY_BG = {
+  Legendary: 'linear-gradient(135deg, #3a2200 0%, #6b3a00 40%, #d97706 100%)',
+  Epic:      'linear-gradient(135deg, #1e0533 0%, #4c1d95 40%, #7c3aed 100%)',
+  Rare:      'linear-gradient(135deg, #0a0f3d 0%, #1e3a8a 40%, #2563eb 100%)',
+  Uncommon:  'linear-gradient(135deg, #051a0f 0%, #064e3b 40%, #059669 100%)',
+  Common:    'linear-gradient(135deg, #0f0f0f 0%, #1f2937 40%, #374151 100%)',
+};
+
 function CardChip({ card, onDoubleClick, dimmed }) {
   const r = RARITY[card.rarity] || RARITY.Common;
   const Icon = card.icon || Package;
-  const [isHovered, setIsHovered] = useState(false);
-  const [transform, setTransform] = useState({ rotateX: 0, rotateY: 0 });
-
-  const handleMouseMove = (e) => {
-    if (!dimmed) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      const rotateX = (0.5 - y) * 15;
-      const rotateY = (x - 0.5) * 15;
-      setTransform({ rotateX, rotateY });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    setTransform({ rotateX: 0, rotateY: 0 });
-    setIsHovered(false);
-  };
 
   return (
-    <div
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+    <motion.div
       onDoubleClick={onDoubleClick}
       title={`Double-click to ${dimmed ? 'add' : 'remove'}`}
-      className="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl cursor-pointer select-none transition-all duration-200"
+      whileHover={!dimmed ? { y: -6, scale: 1.03 } : {}}
+      whileTap={!dimmed ? { scale: 0.97 } : {}}
+      className="group relative cursor-pointer select-none rounded-xl overflow-hidden shadow-lg"
       style={{
-        background: dimmed ? 'rgba(255,255,255,0.03)' : r.bg,
-        border: dimmed ? '1px solid rgba(255,255,255,0.08)' : 'none',
+        aspectRatio: '3/4',
+        opacity: dimmed ? 0.4 : 1,
+        background: RARITY_BG[card.rarity] || RARITY_BG.Common,
+        border: dimmed ? '1px solid rgba(255,255,255,0.06)' : `1px solid rgba(255,255,255,0.08)`,
         boxShadow: dimmed ? 'none' : r.glow,
-        opacity: dimmed ? 0.45 : 1,
-        backdropFilter: 'blur(12px)',
-        minHeight: '72px',
-        transform: !dimmed ? `perspective(600px) rotateX(${transform.rotateX}deg) rotateY(${transform.rotateY}deg) scale(${isHovered ? 1.06 : 1})` : 'none',
-        transition: 'transform 0.15s ease-out',
+        transition: 'box-shadow 0.2s ease',
       }}
     >
-      {/* Gradient Border */}
+      {/* Card shimmer overlay */}
       {!dimmed && (
-        <div 
-          className="absolute inset-0 rounded-xl"
-          style={{
-            background: r.border,
-            padding: '2px',
-            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            maskComposite: 'exclude',
-            WebkitMaskComposite: 'xor',
-          }}
-        />
-      )}
-      
-      {/* Gleam effect */}
-      {!dimmed && isHovered && (
-        <div 
-          className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none"
-          style={{
-            background: 'linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.15) 50%, transparent 60%)',
-            backgroundSize: '200% 200%',
-            animation: 'gleam 0.6s ease-in-out',
-          }}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(255,255,255,0.04) 100%)' }}
         />
       )}
 
-      <Icon className="w-5 h-5 flex-shrink-0 relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.2)' : r.text }} />
-      <p className="text-[9px] font-bold text-center leading-tight line-clamp-2 px-0.5 relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.25)' : r.text }}>{card.name}</p>
-      <span className="text-[7px] uppercase tracking-widest relative z-10" style={{ color: dimmed ? 'rgba(255,255,255,0.15)' : r.text }}>{card.rarity}</span>
-    </div>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+
+      {/* Rarity badge top-right */}
+      <div
+        className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest z-10"
+        style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)', color: r.text, border: `1px solid ${r.text}44` }}
+      >
+        {card.rarity}
+      </div>
+
+      {/* Icon centered */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Icon className="w-7 h-7 opacity-60 group-hover:opacity-90 transition-opacity" style={{ color: r.text }} />
+      </div>
+
+      {/* Bottom info — slides up on hover */}
+      <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-1 group-hover:translate-y-0 transition-transform duration-300 z-10">
+        <p className="text-white font-bold text-[9px] leading-tight truncate">{card.name}</p>
+        <p className="text-[7px] uppercase tracking-widest mt-0.5" style={{ color: r.text }}>{card.category}</p>
+      </div>
+    </motion.div>
   );
 }
 
