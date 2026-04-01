@@ -466,7 +466,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                     <p className="text-[8px] font-black uppercase tracking-widest mb-3 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       {filteredCards.length} Achievement{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-6 gap-2">
                       {filteredCards.map(card => (
                         <div
                           key={card.id}
@@ -488,7 +488,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                         </div>
                       ))}
                     </div>
-                  </motion.div>
+                    </motion.div>
                 ) : (
                   <motion.div key="no-game" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center gap-3 h-full text-center">
