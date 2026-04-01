@@ -285,11 +285,11 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[136px] opacity-100"
+              className="absolute left-6 z-[70] flex flex-col items-center gap-1.5 w-10 transition-all duration-500 top-[72px] opacity-100"
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+                className="text-[9px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
               >
                  {sidebarMode === 'context' ? (
                    isClan ? <>Recently<br/>Visited</> : 
@@ -307,7 +307,7 @@ export default function LibrarySidebar() {
                     <>
                       <button
                         onClick={() => navigate('/Clan?game=global_chat')}
-                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                           className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
                         title={`Atom X Eve Global Clan Chat`}
                       >
                         <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
@@ -319,7 +319,7 @@ export default function LibrarySidebar() {
                         <button
                           key={`clan_${game.id}`}
                           onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
                           title={`${game.name} Clan Chat`}
                         >
                           <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
@@ -335,7 +335,7 @@ export default function LibrarySidebar() {
                         <button
                           key={`forum_${game.id}`}
                           onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
                           title={`${game.name} Forum`}
                         >
                           <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
@@ -351,7 +351,7 @@ export default function LibrarySidebar() {
                         <button
                           key={`farm_${game.id}`}
                           onClick={() => navigate(`/Farm?gameId=${game.id}`)}
-                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
                           title={`${game.name} Farm`}
                         >
                           <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
@@ -364,7 +364,7 @@ export default function LibrarySidebar() {
                   {isGenreMastery && (
                     <>
                       {[1, 2, 3, 4, 5].map(i => (
-                        <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                        <div key={`card-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
                           <span className="text-white/30 text-lg font-bold">C</span>
                         </div>
                       ))}
@@ -374,7 +374,7 @@ export default function LibrarySidebar() {
               ) : (
                 <>
                   {[1, 2, 3, 4, 5].map(i => (
-                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                    <div key={`played-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
                       <span className="text-white/30 text-lg font-bold">?</span>
                     </div>
                   ))}
@@ -390,7 +390,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 bottom-20 z-[70] flex flex-col items-center gap-2 py-2 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
@@ -452,8 +452,8 @@ export default function LibrarySidebar() {
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
-                onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1"
+               onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
+               className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-0.5"
                 title="Library & Friends"
               >
                 <Library className="w-5 h-5" />
@@ -503,7 +503,7 @@ export default function LibrarySidebar() {
             <div className="w-8 h-px bg-white/10 my-1" />
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'friends'
                   ? 'border-green-400/50 bg-green-500/20 text-green-400'
                   : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
@@ -515,7 +515,7 @@ export default function LibrarySidebar() {
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'library'
                   ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
                   : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
@@ -527,7 +527,7 @@ export default function LibrarySidebar() {
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'rewards'
                   ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
                   : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
@@ -539,7 +539,7 @@ export default function LibrarySidebar() {
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }}
-              className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+              className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'entertainment'
                   ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
                   : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
