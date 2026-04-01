@@ -287,7 +287,7 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
-            {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
+            {/* Top Section: label only on context pages */}
             {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
               <>
                 <button
@@ -302,9 +302,13 @@ export default function LibrarySidebar() {
                   ) : <>Recently<br/>Played</>}
                 </button>
                 <div className="w-8 h-px bg-white/20 -mt-1" />
+              </>
+            )}
 
-                {/* The 5 boxes */}
-                {sidebarMode === 'context' ? (
+            {/* Always show 5 boxes (context images on relevant pages, "?" placeholders elsewhere) */}
+            {!isSidebarCollapsed && (
+              <>
+                {sidebarMode === 'context' && (isClan || isForum || isGenreMastery || isFarm) ? (
                   <>
                     {isClan && (
                       <>
@@ -379,8 +383,9 @@ export default function LibrarySidebar() {
                     ))}
                   </>
                 )}
-                {/* Separator between boxes and nav buttons */}
-                <div className="w-8 h-px bg-white/20 my-1" />
+                {/* Separator directly under last box, with a little space */}
+                <div className="w-8 mt-1" />
+                <div className="w-8 h-px bg-white/20" />
               </>
             )}
 
