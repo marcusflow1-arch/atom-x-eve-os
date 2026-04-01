@@ -195,6 +195,7 @@ export default function LibrarySidebar() {
   
   const isGenreMastery = pathname.includes('/genremastery');
   
+  const isStore = pathname.includes('/store') || pathname.includes('/gamedetail');
   const shouldShow = !(isEntertainment || isLibraryPage || overlayActive);
 
   // Close right-side overlay whenever the left pull-out tab closes

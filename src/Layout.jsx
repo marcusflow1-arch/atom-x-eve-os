@@ -483,8 +483,8 @@ function LayoutContent({ children, currentPageName }) {
       return;
     }
 
-    if (p === '/' || p.endsWith('/dashboard') || legacyPaths.includes(p)) {
-      navigate(createPageUrl('LunaTemplate'), { replace: true });
+    if (p.endsWith('/dashboard') || legacyPaths.includes(p)) {
+      navigate(createPageUrl('Store'), { replace: true });
     }
   }, [location.pathname, navigate, legacyPaths]);
 
