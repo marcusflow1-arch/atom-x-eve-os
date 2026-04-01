@@ -22,7 +22,6 @@ import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreSpotlight from '../components/store/StoreSpotlight';
 import StoreGridSpotlight from '../components/store/StoreGridSpotlight';
-import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import Library from './Library';
 import Achievements from './Achievements';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
@@ -1222,19 +1221,6 @@ export default function Store() {
                 if (url) navigate(url);
               }} />
             )}
-
-            {/* Bottom Navigation Bar */}
-            <div className="fixed bottom-0 left-0 right-0 z-[35] h-[52px] flex items-center"
-              style={{
-                background: 'rgba(8, 12, 18, 0.72)',
-                backdropFilter: 'blur(24px) saturate(160%)',
-                WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
-              }}
-            >
-              <LunaBottomNav isEnvironmentActive={false} />
-            </div>
         </div>
         </PageErrorBoundary>
     );

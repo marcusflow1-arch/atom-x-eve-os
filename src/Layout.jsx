@@ -296,10 +296,10 @@ function LayoutContent({ children, currentPageName }) {
   const [pendingRoute, setPendingRoute] = useState(null);
   const p_lower = location.pathname.toLowerCase();
   // Store header for store/gamedetail pages (kept separate as user likes it)
-  const showStoreHeader = ['/gamedetail'].some(s => p_lower.includes(s));
+  const showStoreHeader = ['/store', '/gamedetail'].some(s => p_lower.includes(s));
   const showNotificationsHeader = !showStoreHeader && p_lower.includes('/notifications');
   // Luna header bar used for most pages including Library, Aura, Cards, AI Battle, etc.
-  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/entertainment','/clan','/community','/farm','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass','/store']
+  const showLunaHeaderBar = !showStoreHeader && !showNotificationsHeader && ['/lunatemplate','/home','/entertainment','/clan','/community','/farm','/storyline','/worldevents','/dashboard','/adamxeve','/aistory','/library','/genremastery','/aura','/streaminghome','/discover','/aibattle','/leaderboard','/seasonalpass']
   .some(s => p_lower.includes(s));
   const audioRef = useRef(null);
   const { user, isAuthenticated, login, logout, showSignUp, completeSignUp, setShowSignUp } = useAuth();
@@ -1003,7 +1003,6 @@ function LayoutContent({ children, currentPageName }) {
                             if (pp.includes('/genremastery')) return 'Atom X Eve Cards';
                             if (pp.includes('/aibattle')) return 'Atom X Eve AI Battle';
                             if (pp.includes('/leaderboard')) return 'Atom X Eve Leaderboard';
-                            if (pp.includes('/store')) return 'Atom X Eve Store';
                             if (pp.includes('/streaminghome')) return 'Atom X Eve Aura Home';
                             return 'Atom X Eve Dashboard';
                           })()}
