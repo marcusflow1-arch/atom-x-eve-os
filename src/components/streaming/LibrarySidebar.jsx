@@ -279,119 +279,112 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
-          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
-            <motion.div
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 z-[70] flex flex-col items-center gap-1.5 w-10 transition-all duration-500 top-[72px] opacity-100"
-            >
-              <button 
-                onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                className="text-[9px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-              >
-                 {sidebarMode === 'context' ? (
-                   isClan ? <>Recently<br/>Visited</> : 
-                   isForum ? <>Recent<br/>Forums</> : 
-                   isFarm ? <>Recent<br/>Farm Hub</> :
-                   <>Recent<br/>Cards</>
-                 ) : <>Recently<br/>Played</>}
-              </button>
-              <div className="w-8 h-px bg-white/20 -mt-1" />
-
-              {/* The 5 boxes */}
-              {sidebarMode === 'context' ? (
-                <>
-                  {isClan && (
-                    <>
-                      <button
-                        onClick={() => navigate('/Clan?game=global_chat')}
-                           className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                        title={`Atom X Eve Global Clan Chat`}
-                      >
-                        <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
-                      </button>
-                      
-                      {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
-                        <button
-                          key={`clan_${game.id}`}
-                          onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Clan Chat`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isForum && (
-                    <>
-                      {quickNavForumGames.slice(0, 5).map((game) => (
-                        <button
-                          key={`forum_${game.id}`}
-                          onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Forum`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isFarm && (
-                    <>
-                      {quickNavFarmGames.slice(0, 5).map((game) => (
-                        <button
-                          key={`farm_${game.id}`}
-                          onClick={() => navigate(`/Farm?gameId=${game.id}`)}
-                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                          title={`${game.name} Farm`}
-                        >
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </>
-                  )}
-
-                  {isGenreMastery && (
-                    <>
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={`card-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-                          <span className="text-white/30 text-lg font-bold">C</span>
-                        </div>
-                      ))}
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <div key={`played-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-white/30 text-lg font-bold">?</span>
-                    </div>
-                  ))}
-                </>
-              )}
-              {/* Separator below last box */}
-              <div className="mt-1 w-8 h-px bg-white/20" />
-            </motion.div>
-          )}
-
-          {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
+          {/* Unified Left Nav Column: top boxes + nav buttons, all stacked from top */}
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 bottom-8 z-[70] flex flex-col items-center gap-2 py-2 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
+            {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
+            {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
+              <>
+                <button
+                  onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
+                  className="text-[9px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+                >
+                  {sidebarMode === 'context' ? (
+                    isClan ? <>Recently<br/>Visited</> :
+                    isForum ? <>Recent<br/>Forums</> :
+                    isFarm ? <>Recent<br/>Farm Hub</> :
+                    <>Recent<br/>Cards</>
+                  ) : <>Recently<br/>Played</>}
+                </button>
+                <div className="w-8 h-px bg-white/20 -mt-1" />
+
+                {/* The 5 boxes */}
+                {sidebarMode === 'context' ? (
+                  <>
+                    {isClan && (
+                      <>
+                        <button
+                          onClick={() => navigate('/Clan?game=global_chat')}
+                          className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                          title={`Atom X Eve Global Clan Chat`}
+                        >
+                          <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                          <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                        </button>
+                        {quickNavGames.filter(g => g.id !== 'global_chat').slice(0, 5).map((game) => (
+                          <button
+                            key={`clan_${game.id}`}
+                            onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
+                            className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                            title={`${game.name} Clan Chat`}
+                          >
+                            <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {isForum && (
+                      <>
+                        {quickNavForumGames.slice(0, 5).map((game) => (
+                          <button
+                            key={`forum_${game.id}`}
+                            onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
+                            className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                            title={`${game.name} Forum`}
+                          >
+                            <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {isFarm && (
+                      <>
+                        {quickNavFarmGames.slice(0, 5).map((game) => (
+                          <button
+                            key={`farm_${game.id}`}
+                            onClick={() => navigate(`/Farm?gameId=${game.id}`)}
+                            className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                            title={`${game.name} Farm`}
+                          >
+                            <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {isGenreMastery && (
+                      <>
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <div key={`card-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                            <span className="text-white/30 text-lg font-bold">C</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={`played-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+                        <span className="text-white/30 text-lg font-bold">?</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+                {/* Separator between boxes and nav buttons */}
+                <div className="w-8 h-px bg-white/20 my-1" />
+              </>
+            )}
+
+            {/* Nav Buttons (always visible) */}
+            <div className={`flex flex-col items-center gap-2 py-1 px-1 w-12`}>
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="relative group">
@@ -550,6 +543,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
             </button>
 
+            </div>
           </motion.div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
