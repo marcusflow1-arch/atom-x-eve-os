@@ -285,7 +285,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`fixed left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Section: label only on context pages */}
             {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
@@ -1100,7 +1100,7 @@ export default function LibrarySidebar() {
           initial={{ x: -50 }}
           animate={{ x: 0 }}
           onClick={() => setShowLeftNav(true)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
           title="Show UI"
         >
           <Eye className="w-3 h-3" />
