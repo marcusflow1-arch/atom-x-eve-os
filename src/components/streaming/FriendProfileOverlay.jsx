@@ -43,8 +43,6 @@ const glassStyle = {
 export default function FriendProfileOverlay({ friend, onClose, onPanelChange }) {
   const [showChat, setShowChat] = useState(false);
 
-
-  
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
