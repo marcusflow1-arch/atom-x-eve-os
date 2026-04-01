@@ -285,23 +285,17 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="absolute left-6 top-[76px] z-[70] flex flex-col items-center gap-2 w-12"
+            className="fixed left-2 top-[72px] z-[70] flex flex-col items-center gap-1.5 w-10"
           >
             {/* Recently Played label */}
-            <button
-              onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-              className="text-[8px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-            >
+            <div className="text-[7px] uppercase tracking-wider text-white/50 font-bold text-center leading-tight w-full">
               Recently<br/>Played
-            </button>
+            </div>
             <div className="w-8 h-px bg-white/20" />
 
             {/* 5 recently played boxes */}
             {[1,2,3,4,5].map(i => (
-              <div key={`rp-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
-                <span className="text-white/30 text-base font-bold">?</span>
-              </div>
-            ))}
+              <div key={`rp-${i}`} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center">
 
             {/* 3 context/shortcut boxes */}
             {isClan && (
@@ -332,7 +326,7 @@ export default function LibrarySidebar() {
               </div>
             ))}
             {!isClan && !isForum && !isFarm && !isGenreMastery && [1,2,3].map(i => (
-              <div key={`ph-${i}`} className="w-8 h-8 rounded-lg border border-white/10 bg-white/5 flex items-center justify-center">
+              <div key={`ph-${i}`} className="w-8 h-8 rounded-md border border-white/10 bg-white/5 flex items-center justify-center">
                 <span className="text-white/30 text-base font-bold">?</span>
               </div>
             ))}
@@ -342,28 +336,28 @@ export default function LibrarySidebar() {
             {/* 4 bottom nav icon buttons */}
             <button
               onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
-              className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:scale-105 transition-all"
+              className="w-8 h-8 rounded-md flex items-center justify-center border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 transition-all"
               title="Library"
             >
               <Library className="w-4 h-4" />
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`}
+              className={`w-8 h-8 rounded-md flex items-center justify-center border transition-all ${expandedPanel === 'friends' ? 'border-green-400/50 bg-green-500/20 text-green-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400'}`}
               title="Friends"
             >
               <UsersIcon className="w-4 h-4" />
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`}
+              className={`w-8 h-8 rounded-md flex items-center justify-center border transition-all ${expandedPanel === 'rewards' ? 'border-amber-400/50 bg-amber-500/20 text-amber-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400'}`}
               title="Rewards"
             >
               <Trophy className="w-4 h-4" />
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'entertainment' ? null : 'entertainment'); setOpenDropdown(null); setIsOpen(false); setSelectedEntertainmentApp(null); setShowAddLink(false); }}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-all hover:scale-105 ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`}
+              className={`w-8 h-8 rounded-md flex items-center justify-center border transition-all ${expandedPanel === 'entertainment' ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400'}`}
               title="Entertainment"
             >
               <Tv className="w-4 h-4" />
