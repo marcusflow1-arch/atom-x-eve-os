@@ -285,7 +285,7 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[136px] opacity-100"
+              className="absolute left-6 z-[70] flex flex-col items-center gap-2 w-10 transition-all duration-500 top-[72px] opacity-100"
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
