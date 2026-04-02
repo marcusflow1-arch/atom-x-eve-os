@@ -564,7 +564,7 @@ export default function Store() {
                           {/* Interface Layer */}
                           <div className="relative z-10 w-full h-full flex flex-col">
                             {/* HERO SHOWCASE */}
-                            <div className="h-[280px] flex-shrink-0 mt-[104px] overflow-hidden border-b border-white/10 w-[480px]">
+                            <div className="h-[280px] flex-shrink-0 mt-[104px] overflow-hidden border-b border-white/10 w-[50%] ml-auto">
                               <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
                             </div>
 
