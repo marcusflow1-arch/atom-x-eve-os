@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star, Phone, Video, Mic, Paperclip, Image as ImageIcon, Smile, MoreHorizontal } from 'lucide-react';
@@ -48,8 +48,24 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
     friend.status === 'idle' ? 'bg-yellow-400' : 'bg-gray-500';
 
   const handleOpenMessenger = () => {
-    setShowChat(true);
+    setShowChat((current) => !current);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key !== 'Escape') return;
+
+      if (showChat) {
+        setShowChat(false);
+        return;
+      }
+
+      onClose?.();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showChat, onClose]);
 
   return (
     <AnimatePresence>
@@ -155,7 +171,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
               >
                 <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-cyan-400 text-[8px] font-semibold">Message</span>
+                <span className="text-cyan-400 text-[8px] font-semibold">{showChat ? 'Profile' : 'Message'}</span>
               </button>
               <button
                 className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl transition-colors hover:bg-white/10"
