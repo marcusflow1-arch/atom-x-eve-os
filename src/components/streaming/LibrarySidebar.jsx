@@ -516,7 +516,7 @@ export default function LibrarySidebar() {
               title="Friends"
             >
               <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
+              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setShowAchievementsUniverse(false); setOpenDropdown(null); setIsOpen(false); }}
@@ -528,7 +528,7 @@ export default function LibrarySidebar() {
               title="Library"
             >
               <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Library</span>
+              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
             </button>
             <button
               onClick={() => { setExpandedPanel(p => p === 'rewards' ? null : 'rewards'); setOpenDropdown(null); setIsOpen(false); setIsExpandedRewardsInventory(false); }}
@@ -660,7 +660,7 @@ export default function LibrarySidebar() {
                       </AnimatePresence>
                     </div>
                   ))}
-                  {expandedPanel === 'library' && libraryGames.map((game, i) => (
+                  {(expandedPanel === 'library' || expandedPanel === 'fullLibrary') && libraryGames.map((game, i) => (
                     <div key={game.id || i} className="relative">
                       <button
                         onClick={() => setOpenDropdown(openDropdown === (game.id || i) ? null : (game.id || i))}
