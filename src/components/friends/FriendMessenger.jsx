@@ -23,7 +23,7 @@ const MOCK_CHAT_HISTORY = {
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
-export default function FriendMessenger({ friend, onClose, compact = false, inline = false, showCallOverlay = false }) {
+export default function FriendMessenger({ friend, onClose, compact = false, showCallOverlay = false }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -274,7 +274,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
   );
 
   return (
-    <div className={`flex flex-col relative overflow-hidden ${inline ? 'h-full w-full bg-transparent' : compact ? 'h-full bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl' : 'h-[600px] w-[400px] bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl'}`}>
+    <div className={`flex flex-col ${compact ? 'h-full' : 'h-[600px] w-[400px]'} bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden relative`}>
       <CallOverlay type={showCallOverlay ? 'voice' : onVoiceCall ? 'voice' : onVideoCall ? 'video' : onWatchTogether ? 'watch' : null} />
 
       {/* Header */}
@@ -400,7 +400,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
       </AnimatePresence>
 
       {/* Input Area */}
-      <div className="px-4 py-3 border-t border-white/10 flex-shrink-0" style={{ background: 'rgba(0,0,0,0.45)', boxShadow: 'inset 0 2px 12px rgba(0,0,0,0.5)' }}>
+      <div className="px-4 py-3 border-t border-white/10 bg-black/20 flex-shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
