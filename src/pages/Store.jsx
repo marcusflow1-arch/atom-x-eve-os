@@ -436,14 +436,11 @@ export default function Store() {
             {/* Secondary Store Controls Bar */}
             {storeSubView === 'games' && (
             <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-between px-4 py-2" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                {/* LEFT: Filter Toggles */}
+                {/* LEFT: Mode Tabs */}
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games">
-                        <Smartphone className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View">
-                        <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
+                    <button onClick={() => setStoreMode('store')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Store</button>
+                    <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Marketplace</button>
+                    <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Trading Post</button>
                 </div>
 
                 {/* CENTER: Sub-category tabs */}
@@ -455,11 +452,8 @@ export default function Store() {
                     ))}
                 </div>
 
-                {/* RIGHT: Mode Tabs + Search */}
+                {/* RIGHT: Search + Cart */}
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setStoreMode('store')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Store</button>
-                    <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Marketplace</button>
-                    <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Trading Post</button>
                     <div className="w-px h-4 bg-white/15" />
                     <div className="relative">
                         <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
@@ -611,14 +605,19 @@ export default function Store() {
                                     {/* Interface Layer */}
                                     <div className="relative z-10 w-full h-full flex flex-col">
                                         {/* HERO SHOWCASE */}
-                                        <div className="h-[280px] flex-shrink-0 mt-[104px] overflow-hidden border-b border-white/10">
+                                        <div className="h-[280px] flex-shrink-0 mt-[104px] overflow-hidden border-b border-white/10 w-[480px]">
                                             <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
                                         </div>
 
-                                        {/* Below showcase: genre list + game grid */}
+                                                        {/* Below showcase: genre list + game grid */}
                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                             {/* LEFT: Genre list */}
-                                            <div className="w-[200px] flex-shrink-0 pt-8 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                            <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                                {/* Android + Grid icons above genre list */}
+                                                <div className="flex items-center gap-2 pl-6 py-3">
+                                                    <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games"><Smartphone className="w-3.5 h-3.5" /></button>
+                                                    <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View"><LayoutGrid className="w-3.5 h-3.5" /></button>
+                                                </div>
                                                 <motion.div
                                                     ref={genreListRef}
                                                     onWheel={handleGenreWheel}
