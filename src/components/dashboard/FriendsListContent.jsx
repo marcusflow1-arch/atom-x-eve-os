@@ -8,21 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 
-// Mock Data if entity fetch fails or is empty
-const MOCK_FRIENDS = [
-  { id: '1', friend_name: 'Shadow_Striker', status: 'online', current_game: 'Cyberpunk 2088', friend_avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', bio: 'Night City Legend', level: 42 },
-  { id: '2', friend_name: 'CyberVixen', status: 'online', current_game: 'Final Fantasy XIV', friend_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', bio: 'Healer Main', level: 35 },
-  { id: '3', friend_name: 'GhostReaper', status: 'idle', friend_avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150', bio: 'AFK farming', level: 50 },
-  { id: '4', friend_name: 'IronFist', status: 'offline', friend_avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150', bio: 'Gym rat', level: 28 },
-  { id: '5', friend_name: 'NovaStar', status: 'online', current_game: 'League of Legends', friend_avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150', bio: 'Mid or feed', level: 60 },
-];
-
-const MOCK_GLOBAL_USERS = [
-  { id: '101', friend_name: 'AlphaGamer', status: 'online', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150', bio: 'Just chilling', level: 12, modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
-  { id: '102', friend_name: 'QuantumLeap', status: 'online', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', bio: 'Looking for a party', level: 24, modelUrl: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx' },
-  { id: '103', friend_name: 'PixelRogue', status: 'online', current_game: 'Cyberpunk 2088', friend_avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150', bio: 'Solo player', level: 88 },
-  { id: '104', friend_name: 'EchoMage', status: 'idle', current_game: 'Dashboard', friend_avatar: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=150', bio: 'AFK', level: 15, modelUrl: 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb' },
-];
 
 export default function FriendsListContent() {
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -31,45 +16,34 @@ export default function FriendsListContent() {
   const [invitedUsers, setInvitedUsers] = useState({});
   const { user } = useAuth();
 
-  // Fetch Global Users
-  const { data: globalUsers = MOCK_GLOBAL_USERS } = useQuery({
-    queryKey: ['globalUsers'],
+  const { data: globalUsers = [] } = useQuery({
+    queryKey: ['globalUsers', user?.id],
     queryFn: async () => {
-      try {
-        const res = await base44.entities.PlayerState.list();
-        if (res && res.length > 0) {
-          return res.filter(p => p.player_id !== user?.id).map(p => ({
-            id: p.player_id,
-            friend_name: p.display_name || 'Unknown Player',
-            status: p.status || 'online',
-            current_game: (p.channel_id && p.channel_id.startsWith('dashboard_')) ? 'Dashboard' : p.channel_id,
-            friend_avatar: p.avatar_url || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-            bio: 'Online Player',
-            level: 1,
-            modelUrl: p.model_url || 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb',
-            envUrl: p.env_url,
-            channel_id: p.channel_id
-          }));
-        }
-        return MOCK_GLOBAL_USERS;
-      } catch (e) {
-        return MOCK_GLOBAL_USERS;
-      }
+      const res = await base44.entities.PlayerState.list();
+      return res
+        .filter(p => p.player_id !== user?.id)
+        .map(p => ({
+          id: p.player_id,
+          friend_name: p.display_name || 'Unknown Player',
+          status: p.status || 'online',
+          current_game: (p.channel_id && p.channel_id.startsWith('dashboard_')) ? 'Dashboard' : p.channel_id,
+          friend_avatar: p.avatar_url || '',
+          bio: 'Online Player',
+          level: 1,
+          modelUrl: p.model_url || '',
+          envUrl: p.env_url,
+          channel_id: p.channel_id
+        }));
     },
+    enabled: !!user?.id,
     refetchInterval: 5000
   });
 
-  // Fetch Friends
-  const { data: friends = MOCK_FRIENDS } = useQuery({
-    queryKey: ['friends'],
-    queryFn: async () => {
-      try {
-        const res = await base44.entities.Friend.list();
-        return res.length > 0 ? res : MOCK_FRIENDS;
-      } catch (e) {
-        return MOCK_FRIENDS;
-      }
-    }
+  const { data: friends = [] } = useQuery({
+    queryKey: ['friends', user?.id],
+    queryFn: async () => base44.entities.Friend.filter({ user_id: user.id }),
+    enabled: !!user?.id,
+    refetchInterval: 5000
   });
 
   const handleInviteToDashboard = (userObj) => {
@@ -146,7 +120,7 @@ export default function FriendsListContent() {
           </div>
           <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 px-1">
             {activeTab === 'friends' ? <User className="w-3.5 h-3.5 text-blue-400" /> : <Globe className="w-3.5 h-3.5 text-purple-400" />}
-            {activeTab === 'friends' ? `Friends (${friends.length})` : `Online (${MOCK_GLOBAL_USERS.length})`}
+            {activeTab === 'friends' ? `Friends (${friends.length})` : `Online (${globalUsers.length})`}
           </h3>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -155,7 +129,7 @@ export default function FriendsListContent() {
               key={friend.id}
               onClick={() => {
                 setSelectedFriend(friend);
-                handleJoin(friend);
+                if (activeTab === 'global') handleJoin(friend);
               }}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                 selectedFriend?.id === friend.id 
@@ -184,6 +158,11 @@ export default function FriendsListContent() {
               </div>
             </button>
           ))}
+          {displayList.length === 0 && (
+            <div className="p-3 text-xs text-white/40 text-left">
+              {activeTab === 'friends' ? 'No real friends found yet.' : 'No live players found right now.'}
+            </div>
+          )}
         </div>
       </div>
 
