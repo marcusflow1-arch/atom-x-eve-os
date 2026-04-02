@@ -78,13 +78,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             <span className="text-white font-bold text-sm tracking-wide">{friend.name}</span>
             {friend.game && <span className="text-white/35 text-xs">· {friend.game}</span>}
           </div>
-          <button
-            onClick={onClose}
-            className="w-6 h-6 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
-            style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <X className="w-3 h-3 text-white/50" />
-          </button>
+
         </div>
 
         {/* Body: two columns */}
@@ -215,9 +209,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                         </button>
                       );
                     })}
-                    <button onClick={() => setShowChat(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
-                      <X className="w-3.5 h-3.5 text-white/40" />
-                    </button>
+
                   </div>
                 </div>
 
