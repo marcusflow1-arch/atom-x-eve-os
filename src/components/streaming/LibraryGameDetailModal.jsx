@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -12,6 +12,17 @@ const glassStyle = {
 
 export default function LibraryGameDetailModal({ game, onClose }) {
   const [activeTab, setActiveTab] = useState('content');
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   if (!game) return null;
 
