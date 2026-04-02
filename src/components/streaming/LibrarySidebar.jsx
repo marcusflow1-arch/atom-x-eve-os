@@ -14,6 +14,7 @@ import FriendMessenger from './FriendMessenger';
 import FriendTradePanel from './FriendTradePanel';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
+import LibraryAchievementsUniverse from './LibraryAchievementsUniverse';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +41,7 @@ export default function LibrarySidebar() {
   const [tradingFriend, setTradingFriend] = useState(null);
   const [detailGame, setDetailGame] = useState(null);
   const [fullLibraryDetailGame, setFullLibraryDetailGame] = useState(null);
+  const [showAchievementsUniverse, setShowAchievementsUniverse] = useState(false);
   const [isExpandedRewardsInventory, setIsExpandedRewardsInventory] = useState(false);
   const [selectedEntertainmentApp, setSelectedEntertainmentApp] = useState(null);
   const [customLinks, setCustomLinks] = useState(() => {
@@ -237,6 +239,9 @@ export default function LibrarySidebar() {
       setSelectedEntertainmentApp(null);
       setShowAddLink(false);
       setEntertainmentFullscreen(false);
+    }
+    if (expandedPanel !== 'library') {
+      setShowAchievementsUniverse(false);
     }
   }, [expandedPanel]);
 
@@ -514,7 +519,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setOpenDropdown(null); setIsOpen(false); }}
+              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setShowAchievementsUniverse(true); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'library'
                   ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -682,7 +687,7 @@ export default function LibrarySidebar() {
                             {[
                               { label: 'Play', icon: Play, color: 'text-cyan-400', action: null },
                               { label: 'Details', icon: Search, color: 'text-blue-400', action: () => { setDetailGame(game); setOpenDropdown(null); } },
-                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400', action: null },
+                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400', action: () => { setShowAchievementsUniverse(true); setOpenDropdown(null); } },
                               { label: 'Remove', icon: Trash2, color: 'text-red-400', action: null },
                             ].map(action => (
                               <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
@@ -1708,6 +1713,13 @@ export default function LibrarySidebar() {
               onClose={() => setMessagingFriend(null)}
             />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Achievement Universe Panel */}
+      <AnimatePresence>
+        {expandedPanel === 'library' && showAchievementsUniverse && (
+          <LibraryAchievementsUniverse />
         )}
       </AnimatePresence>
 
