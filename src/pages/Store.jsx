@@ -26,6 +26,7 @@ import { showError } from '@/components/error/ErrorToast';
 import LoadingState from '@/components/error/LoadingState';
 import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import StoreOverview from '../components/store/StoreOverview';
 import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 
 const GENRE_ICONS = {
@@ -166,6 +167,7 @@ export default function Store() {
     const { user } = useAuth();
     const { getCartCount } = useCart();
 
+    const [showOverview, setShowOverview] = useState(false);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
 
@@ -386,6 +388,8 @@ export default function Store() {
                 <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-between px-4 py-2" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* LEFT: Mode Tabs */}
                   <div className="flex items-center gap-2">
+                    <button onClick={() => setShowOverview(v => !v)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${showOverview ? 'bg-purple-500/20 border-purple-400/50 text-purple-300' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Overview</button>
+                    <div className="w-px h-4 bg-white/10" />
                     <button onClick={() => setStoreMode('store')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Store</button>
                     <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Marketplace</button>
                     <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Trading Post</button>
@@ -469,6 +473,13 @@ export default function Store() {
                       <div className="p-4"><p className="text-white/20 text-xs text-center">2025 ATOM×EVE</p></div>
                     </motion.div>
                   </>
+                )}
+              </AnimatePresence>
+
+              {/* STORE OVERVIEW OVERLAY */}
+              <AnimatePresence>
+                {showOverview && (
+                  <StoreOverview onClose={() => setShowOverview(false)} />
                 )}
               </AnimatePresence>
 
