@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star } from 'lucide-react';
+import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star, Phone, Video, Mic, Paperclip, Image as ImageIcon, Smile, MoreHorizontal } from 'lucide-react';
 import FriendMessenger from '../friends/FriendMessenger';
 
 const recentGamesData = [
@@ -183,16 +183,51 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
           {/* RIGHT column — main content OR inline chat */}
           <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
             {showChat ? (
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between px-4 py-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span className="text-white/50 text-[10px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
-                    <MessageSquare className="w-3 h-3 text-cyan-400" /> Chat with {friend.name}
-                  </span>
-                  <button onClick={() => setShowChat(false)} className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <X className="w-3 h-3 text-white/40" />
-                  </button>
+              <div className="flex flex-col h-full min-h-0">
+                <div className="flex items-center justify-between px-4 py-2.5 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10">
+                      <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <p className="text-white/80 text-[11px] font-semibold leading-none">{friend.name}</p>
+                      <p className="text-white/35 text-[9px] mt-0.5">{friend.status === 'online' ? 'Active now' : friend.game ? `Playing ${friend.game}` : 'Available'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { icon: Phone, color: 'text-cyan-300', label: 'Call' },
+                      { icon: Video, color: 'text-violet-300', label: 'Video' },
+                      { icon: Mic, color: 'text-emerald-300', label: 'Voice' },
+                      { icon: Paperclip, color: 'text-amber-300', label: 'Files' },
+                      { icon: MoreHorizontal, color: 'text-white/60', label: 'More' },
+                    ].map(action => {
+                      const Icon = action.icon;
+                      return (
+                        <button
+                          key={action.label}
+                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+                          style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+                          title={action.label}
+                        >
+                          <Icon className={`w-3.5 h-3.5 ${action.color}`} />
+                        </button>
+                      );
+                    })}
+                    <button onClick={() => setShowChat(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}>
+                      <X className="w-3.5 h-3.5 text-white/40" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex-1 overflow-hidden">
+
+                <div className="px-4 py-2 flex items-center gap-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.16)', boxShadow: 'inset 0 -10px 30px rgba(0,0,0,0.18)' }}>
+                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-cyan-300" style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.22)' }}>Messages</button>
+                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-white/45" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>Voice Chat</button>
+                  <button className="px-2.5 py-1 rounded-full text-[9px] font-semibold text-white/45" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>Files</button>
+                </div>
+
+                <div className="flex-1 overflow-hidden min-h-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(0,0,0,0.18))', boxShadow: 'inset 0 18px 40px rgba(0,0,0,0.22)' }}>
                   <FriendMessenger
                     friend={{
                       friend_id: friend.id?.toString() || 'temp',
@@ -204,6 +239,24 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                     onClose={() => setShowChat(false)}
                     inline
                   />
+                </div>
+
+                <div className="px-4 py-3 flex items-center gap-2 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Send file">
+                    <Paperclip className="w-3.5 h-3.5 text-amber-300" />
+                  </button>
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Send image">
+                    <ImageIcon className="w-3.5 h-3.5 text-violet-300" />
+                  </button>
+                  <div className="flex-1 h-10 rounded-2xl flex items-center px-3" style={{ background: 'rgba(0,0,0,0.26)', border: '1px solid rgba(255,255,255,0.07)', boxShadow: 'inset 0 8px 18px rgba(0,0,0,0.18)' }}>
+                    <span className="text-white/30 text-[10px]">Message {friend.name}...</span>
+                  </div>
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Emoji">
+                    <Smile className="w-3.5 h-3.5 text-cyan-300" />
+                  </button>
+                  <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors" style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }} title="Voice message">
+                    <Mic className="w-3.5 h-3.5 text-emerald-300" />
+                  </button>
                 </div>
               </div>
             ) : (
