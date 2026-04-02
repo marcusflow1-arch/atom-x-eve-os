@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import MiniAvatarViewer from '@/components/dashboard/MiniAvatarViewer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Swords, Users, Trophy, TrendingUp, Gamepad2, Star } from 'lucide-react';
@@ -41,6 +41,7 @@ const glassStyle = {
 };
 
 export default function FriendProfileOverlay({ friend, onClose, onPanelChange }) {
+  const [activeTab, setActiveTab] = useState('profile');
 
   const statusColor =
     friend.status === 'online' ? 'bg-green-400' :
@@ -176,19 +177,91 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             </div>
           </div>
 
-          {/* RIGHT column — always-on messenger */}
+          {/* RIGHT column — tabs: Profile / Chat */}
           <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
-            <FriendMessenger
-              friend={{
-                friend_id: friend.id?.toString() || 'temp',
-                friend_name: friend.name,
-                friend_avatar: friend.avatar,
-                status: friend.status,
-                current_game: friend.game
-              }}
-              onClose={onClose}
-              inline
-            />
+
+            {/* Tab bar */}
+            <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              {['profile', 'chat'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  style={activeTab === tab
+                    ? { color: '#22d3ee', borderBottom: '2px solid #22d3ee', background: 'rgba(34,211,238,0.05)' }
+                    : { color: 'rgba(255,255,255,0.3)', borderBottom: '2px solid transparent' }
+                  }
+                >
+                  {tab === 'profile' ? '👤 Profile' : '💬 Chat'}
+                </button>
+              ))}
+            </div>
+
+            {/* Profile tab */}
+            {activeTab === 'profile' && (
+              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
+
+                {/* Recently Played */}
+                <div>
+                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Gamepad2 className="w-2.5 h-2.5" /> Recently Played
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {recentGamesData.map((g, i) => (
+                      <div key={i} className="aspect-square rounded-lg overflow-hidden relative group cursor-pointer">
+                        <img src={g.image} alt={g.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+                          <p className="text-white text-[8px] font-semibold leading-tight truncate w-full">{g.name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Achievement Cards */}
+                <div>
+                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Trophy className="w-2.5 h-2.5" /> Achievement Cards
+                  </p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {achievementCards.map((ac, i) => (
+                      <div
+                        key={i}
+                        className={`aspect-[3/4] rounded-lg border ${ac.color} ${ac.bg} ${ac.glow ? `shadow-lg ${ac.glow}` : ''} flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:scale-105 transition-transform`}
+                      >
+                        <Trophy className="w-3.5 h-3.5 text-white/40" />
+                        <span className="text-[6px] text-white/30 font-bold uppercase">{ac.rarity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mutual Friends placeholder */}
+                <div>
+                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
+                    <Users className="w-2.5 h-2.5" /> Mutual Friends
+                  </p>
+                  <p className="text-white/20 text-[10px] italic">No mutual friends yet</p>
+                </div>
+              </div>
+            )}
+
+            {/* Chat tab */}
+            {activeTab === 'chat' && (
+              <div className="flex-1 overflow-hidden">
+                <FriendMessenger
+                  friend={{
+                    friend_id: friend.id?.toString() || 'temp',
+                    friend_name: friend.name,
+                    friend_avatar: friend.avatar,
+                    status: friend.status,
+                    current_game: friend.game
+                  }}
+                  onClose={onClose}
+                  inline
+                />
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
