@@ -177,61 +177,19 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             </div>
           </div>
 
-          {/* RIGHT column — Profile + Chat combined */}
+          {/* RIGHT column — messenger */}
           <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
-            {/* Game Header */}
-            <div className="flex-shrink-0 px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <h3 className="text-white font-bold text-sm">{friend.game || 'No Game'}</h3>
-              <p className="text-white/40 text-xs">Playing now</p>
-            </div>
-
-            {/* Main Profile + Chat Area */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {/* Top: Recently Played & Achievement Cards */}
-              <div className="flex-shrink-0 overflow-y-auto p-4 space-y-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', maxHeight: '40%' }}>
-                {/* Recently Played */}
-                <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Recently Played</p>
-                  <div className="grid grid-cols-5 gap-1.5">
-                    {recentGamesData.slice(0, 5).map((g, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden cursor-pointer">
-                        <img src={g.image} alt={g.name} className="w-full h-full object-cover hover:scale-110 transition-transform" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Achievement Cards */}
-                <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Achievement Cards</p>
-                  <div className="grid grid-cols-8 gap-1.5">
-                    {achievementCards.slice(0, 8).map((ac, i) => (
-                      <div
-                        key={i}
-                        className={`aspect-[3/4] rounded-lg border ${ac.color} ${ac.bg} ${ac.glow ? `shadow-lg ${ac.glow}` : ''} flex flex-col items-center justify-center gap-0.5`}
-                      >
-                        <Trophy className="w-3 h-3 text-white/40" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom: Chat (always visible) */}
-              <div className="flex-1 overflow-hidden">
-                <FriendMessenger
-                  friend={{
-                    friend_id: friend.id?.toString() || 'temp',
-                    friend_name: friend.name,
-                    friend_avatar: friend.avatar,
-                    status: friend.status,
-                    current_game: friend.game
-                  }}
-                  onClose={onClose}
-                  inline
-                />
-              </div>
-            </div>
+            <FriendMessenger
+              friend={{
+                friend_id: friend.id?.toString() || 'temp',
+                friend_name: friend.name,
+                friend_avatar: friend.avatar,
+                status: friend.status,
+                current_game: friend.game
+              }}
+              onClose={onClose}
+              inline
+            />
           </div>
         </div>
       </motion.div>
