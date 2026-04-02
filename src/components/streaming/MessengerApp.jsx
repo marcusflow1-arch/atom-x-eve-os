@@ -67,7 +67,7 @@ function ChatArea({ friend, messages, onSendMessage, inputValue, setInputValue }
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3" style={{ scrollbarWidth: 'none', background: 'rgba(0,0,0,0.15)' }}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-white/50">
             <MessageCircle className="w-12 h-12 mb-2" />
@@ -95,7 +95,7 @@ function ChatArea({ friend, messages, onSendMessage, inputValue, setInputValue }
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 px-6 py-4 border-t border-white/10">
+      <div className="flex-shrink-0 px-6 py-4 border-t border-white/10" style={{ background: 'rgba(0,0,0,0.45)', boxShadow: 'inset 0 2px 12px rgba(0,0,0,0.5)' }}>
         <div className="flex gap-2 mb-3">
           <button
             onClick={() => setCallActive('voice')}
@@ -250,9 +250,9 @@ export default function MessengerApp({ onClose }) {
       transition={{ type: 'spring', stiffness: 280, damping: 28 }}
       className="fixed z-[71] inset-0 flex overflow-hidden"
       style={{
-        background: 'linear-gradient(135deg, rgba(6, 8, 16, 0.95) 0%, rgba(10, 12, 22, 0.92) 100%)',
-        backdropFilter: 'blur(60px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(60px) saturate(200%)',
+        background: 'rgba(6, 9, 16, 0.72)',
+        backdropFilter: 'blur(60px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(60px) saturate(180%)',
       }}
     >
       <FriendsList

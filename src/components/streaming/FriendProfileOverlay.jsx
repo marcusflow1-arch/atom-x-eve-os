@@ -48,8 +48,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
 
 
   return (
-    <AnimatePresence>
-      <motion.div
+    <motion.div
         key="friend-profile-panel"
         initial={{ x: 20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
@@ -57,7 +56,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className="fixed z-[68] flex flex-col overflow-hidden"
         style={{
-          left: '320px',   // 80px sidebar + 240px friends panel
+          left: '320px',
           top: '64px',
           bottom: '52px',
           right: 0,
@@ -191,7 +190,6 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             />
           </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+    </motion.div>
   );
 }
