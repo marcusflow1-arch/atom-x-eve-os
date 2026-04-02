@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { Zap, Shield, User, Trees, ChevronLeft, ChevronRight, Trophy, Package } from 'lucide-react';
 
@@ -20,24 +20,24 @@ function AchCard({ ach }) {
   const Icon = cfg.icon;
 
   return (
-    <motion.div whileHover={{ scale: 1.06, y: -3 }} className="flex-shrink-0 w-[72px] cursor-default">
+    <motion.div whileHover={{ scale: 1.06, y: -2 }} className="flex-shrink-0 w-[68px] cursor-default">
       <div
-        className="flex flex-col items-center justify-center rounded-xl transition-all"
-        style={{ height: 86, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+        className="flex flex-col items-center justify-between rounded-xl overflow-hidden transition-all px-1 py-1.5"
+        style={{ height: 82, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
       >
+        <p className="text-[7px] font-bold text-white/80 leading-tight text-center w-full truncate">{ach.title || '—'}</p>
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center mb-0.5"
-          style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}30` }}
+          className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: `${cfg.color}18`, boxShadow: `0 0 8px ${cfg.color}28` }}
         >
           {ach.icon
-            ? <span className="text-base leading-none">{ach.icon}</span>
-            : <Icon style={{ color: cfg.color }} className="w-4 h-4" />
+            ? <span className="text-sm leading-none">{ach.icon}</span>
+            : <Icon style={{ color: cfg.color }} className="w-3.5 h-3.5" />
           }
         </div>
-      </div>
-      <div className="mt-1 text-center px-0.5">
-        <p className="text-[8px] font-bold text-white leading-tight truncate">{ach.title}</p>
-        <p className="text-[7px] text-white/35 leading-tight truncate">{ach.rarity || 'Standard'} Edition</p>
+        <p className="text-[6px] font-semibold leading-tight text-center w-full truncate" style={{ color: cfg.color }}>
+          {ach.rarity || 'Standard'}
+        </p>
       </div>
     </motion.div>
   );
@@ -76,8 +76,11 @@ export default function StoreAchievementsStrip() {
     ? source
     : source.filter(a => (a.category || '').toLowerCase() === activeFilter.toLowerCase());
 
+  const row1 = filtered.filter((_, i) => i % 2 === 0);
+  const row2 = filtered.filter((_, i) => i % 2 === 1);
+
   return (
-    <div className="h-full flex flex-col overflow-hidden" style={{ background: 'rgba(8,12,18,0.65)', borderRadius: 12, padding: '10px 6px 6px' }}>
+    <div className="h-full flex flex-col overflow-hidden px-1 pt-2 pb-1">
       {/* Title */}
       <div className="flex flex-col items-center gap-1 mb-1.5">
         <div className="flex items-center gap-1.5">
@@ -123,7 +126,7 @@ export default function StoreAchievementsStrip() {
         })}
       </div>
 
-      {/* Scrollable cards */}
+      {/* Two-row scrollable grid */}
       <div className="relative flex-1 min-h-0 group/strip" onWheel={handleWheel}>
         <button
           onClick={() => scroll('left')}
@@ -142,16 +145,25 @@ export default function StoreAchievementsStrip() {
 
         <div
           ref={scrollRef}
-          className="flex items-start gap-2 overflow-x-auto px-4 h-full"
+          className="flex flex-col gap-1.5 overflow-x-auto px-3 h-full"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {filtered.map((ach, i) => (
-            ach._ph
-              ? <div key={ach.id} className="flex-shrink-0 w-[72px] h-[86px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
-              : <AchCard key={ach.id || i} ach={ach} />
-          ))}
-          {filtered.length === 0 && !filtered.some(a => a._ph) && (
-            <div className="w-full text-center py-4 text-white/25 text-[10px]">No cards found</div>
+          <div className="flex gap-2">
+            {row1.map((ach, i) => (
+              ach._ph
+                ? <div key={ach.id} className="flex-shrink-0 w-[68px] h-[82px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+                : <AchCard key={ach.id || i} ach={ach} />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {row2.map((ach, i) => (
+              ach._ph
+                ? <div key={ach.id} className="flex-shrink-0 w-[68px] h-[82px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+                : <AchCard key={ach.id || i} ach={ach} />
+            ))}
+          </div>
+          {filtered.length === 0 && (
+            <div className="text-center py-4 text-white/25 text-[10px]">No cards found</div>
           )}
         </div>
       </div>

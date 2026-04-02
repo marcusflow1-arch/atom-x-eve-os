@@ -53,6 +53,7 @@ function CardItem({ card, onSelect }) {
 }
 
 export default function AchievementCardStrip({ achievementCards, dlcList, onSelectCard }) {
+  const scrollRef = useRef(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [mode, setMode] = useState('achievements'); // 'achievements' or 'dlc'
   const [dlcIndex, setDlcIndex] = useState(0);
