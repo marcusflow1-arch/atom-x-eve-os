@@ -40,7 +40,7 @@ const RARITY_STYLES = {
   legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
 };
 
-export default function LunaBottomNav({ isEnvironmentActive }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
   const [activeTab, setActiveTab] = useState('home');
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
@@ -433,7 +433,7 @@ export default function LunaBottomNav({ isEnvironmentActive }) {
                   <>
                     {activeTab === 'library' ? <Library className="w-5 h-5 text-cyan-400" /> : <Globe className="w-5 h-5 text-purple-400" />}
                     <h3 className="text-white font-bold tracking-widest uppercase text-sm">
-                      {activeTab === 'library' ? 'Library Games' : 'Environment Hubs'}
+                      {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
                     </h3>
                   </>
                 )}
