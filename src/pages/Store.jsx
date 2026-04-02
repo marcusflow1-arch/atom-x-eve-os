@@ -27,6 +27,7 @@ import LoadingState from '@/components/error/LoadingState';
 import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
+import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 
 const GENRE_ICONS = {
@@ -563,9 +564,20 @@ export default function Store() {
 
                           {/* Interface Layer */}
                           <div className="relative z-10 w-full h-full flex flex-col">
-                            {/* HERO SHOWCASE */}
-                            <div className="h-[280px] flex-shrink-0 mt-[104px] overflow-hidden border-b border-white/10 w-[50%] ml-auto">
-                              <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
+                            {/* HERO SHOWCASE + ACHIEVEMENTS */}
+                            <div className="h-[280px] flex-shrink-0 mt-[104px] border-b border-white/10 w-[50%] ml-auto flex overflow-hidden">
+                              {/* Achievements strip */}
+                              <StoreAchievementsStrip />
+
+                              {/* Subtle vertical divider — only in the middle portion */}
+                              <div className="flex-shrink-0 flex flex-col justify-center self-stretch py-12">
+                                <div className="w-px h-full bg-white/10 rounded-full" />
+                              </div>
+
+                              {/* Slideshow */}
+                              <div className="flex-1 overflow-hidden">
+                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
+                              </div>
                             </div>
 
                             {/* Below showcase: genre list + game grid */}
