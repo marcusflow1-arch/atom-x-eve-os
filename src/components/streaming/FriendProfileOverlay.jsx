@@ -177,42 +177,25 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
             </div>
           </div>
 
-          {/* RIGHT column — tabs: Profile / Chat */}
+          {/* RIGHT column — Profile + Chat combined */}
           <div className="flex-1 overflow-hidden min-w-0 flex flex-col" style={{ scrollbarWidth: 'none' }}>
-
-            {/* Tab bar */}
-            <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-              {['profile', 'chat'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className="flex-1 py-2.5 text-[10px] font-bold uppercase tracking-wider transition-colors"
-                  style={activeTab === tab
-                    ? { color: '#22d3ee', borderBottom: '2px solid #22d3ee', background: 'rgba(34,211,238,0.05)' }
-                    : { color: 'rgba(255,255,255,0.3)', borderBottom: '2px solid transparent' }
-                  }
-                >
-                  {tab === 'profile' ? '👤 Profile' : '💬 Chat'}
-                </button>
-              ))}
+            {/* Game Header */}
+            <div className="flex-shrink-0 px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <h3 className="text-white font-bold text-sm">{friend.game || 'No Game'}</h3>
+              <p className="text-white/40 text-xs">Playing now</p>
             </div>
 
-            {/* Profile tab */}
-            {activeTab === 'profile' && (
-              <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
-
+            {/* Main Profile + Chat Area */}
+            <div className="flex-1 overflow-hidden flex flex-col">
+              {/* Top: Recently Played & Achievement Cards */}
+              <div className="flex-shrink-0 overflow-y-auto p-4 space-y-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)', maxHeight: '40%' }}>
                 {/* Recently Played */}
                 <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Gamepad2 className="w-2.5 h-2.5" /> Recently Played
-                  </p>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {recentGamesData.map((g, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden relative group cursor-pointer">
-                        <img src={g.image} alt={g.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
-                          <p className="text-white text-[8px] font-semibold leading-tight truncate w-full">{g.name}</p>
-                        </div>
+                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Recently Played</p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {recentGamesData.slice(0, 5).map((g, i) => (
+                      <div key={i} className="aspect-square rounded-lg overflow-hidden cursor-pointer">
+                        <img src={g.image} alt={g.name} className="w-full h-full object-cover hover:scale-110 transition-transform" />
                       </div>
                     ))}
                   </div>
@@ -220,34 +203,21 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
 
                 {/* Achievement Cards */}
                 <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Trophy className="w-2.5 h-2.5" /> Achievement Cards
-                  </p>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {achievementCards.map((ac, i) => (
+                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2">Achievement Cards</p>
+                  <div className="grid grid-cols-8 gap-1.5">
+                    {achievementCards.slice(0, 8).map((ac, i) => (
                       <div
                         key={i}
-                        className={`aspect-[3/4] rounded-lg border ${ac.color} ${ac.bg} ${ac.glow ? `shadow-lg ${ac.glow}` : ''} flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:scale-105 transition-transform`}
+                        className={`aspect-[3/4] rounded-lg border ${ac.color} ${ac.bg} ${ac.glow ? `shadow-lg ${ac.glow}` : ''} flex flex-col items-center justify-center gap-0.5`}
                       >
-                        <Trophy className="w-3.5 h-3.5 text-white/40" />
-                        <span className="text-[6px] text-white/30 font-bold uppercase">{ac.rarity}</span>
+                        <Trophy className="w-3 h-3 text-white/40" />
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Mutual Friends placeholder */}
-                <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Users className="w-2.5 h-2.5" /> Mutual Friends
-                  </p>
-                  <p className="text-white/20 text-[10px] italic">No mutual friends yet</p>
-                </div>
               </div>
-            )}
 
-            {/* Chat tab */}
-            {activeTab === 'chat' && (
+              {/* Bottom: Chat (always visible) */}
               <div className="flex-1 overflow-hidden">
                 <FriendMessenger
                   friend={{
@@ -261,7 +231,7 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                   inline
                 />
               </div>
-            )}
+            </div>
           </div>
         </div>
       </motion.div>
