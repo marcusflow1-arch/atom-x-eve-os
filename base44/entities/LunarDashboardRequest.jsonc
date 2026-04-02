@@ -1,0 +1,47 @@
+{
+  "name": "LunarDashboardRequest",
+  "type": "object",
+  "properties": {
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "invite",
+        "join_request"
+      ],
+      "description": "Whether this is an invite to visit a dashboard or a request to join one"
+    },
+    "requester_id": {
+      "type": "string",
+      "description": "User who started the request"
+    },
+    "requester_name": {
+      "type": "string",
+      "description": "Name shown in the popup"
+    },
+    "target_user_id": {
+      "type": "string",
+      "description": "User who must approve or reject the request"
+    },
+    "host_user_id": {
+      "type": "string",
+      "description": "Dashboard owner to join after approval"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    }
+  },
+  "required": [
+    "request_type",
+    "requester_id",
+    "requester_name",
+    "target_user_id",
+    "host_user_id"
+  ]
+}

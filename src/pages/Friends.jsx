@@ -254,16 +254,10 @@ export default function FriendsPage() {
     try {
       const response = await lunarDashboardInvite({
         action: 'invite',
-        friend_id: selectedFriend.friend_id,
-        friend_email: null
+        friend_id: selectedFriend.friend_id
       });
       if (response.data.success) {
-        setFriends(prev => prev.map(f => 
-          f.id === selectedFriend.id 
-            ? { ...f, lunar_dashboard_invited: true }
-            : f
-        ));
-        alert('Invited ' + selectedFriend.friend_name + ' to your Lunar Dashboard!');
+        alert('Invite sent to ' + selectedFriend.friend_name + '. They will see a yes/no popup.');
       }
     } catch (err) {
       console.error('Invite failed:', err);
@@ -308,10 +302,7 @@ export default function FriendsPage() {
         friend_id: selectedFriend.friend_id
       });
       if (response.data.success) {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('friendId', selectedFriend.friend_id);
-        urlParams.set('view', 'lunar');
-        navigate('/LunaTemplate?' + urlParams.toString());
+        alert('Join request sent. They will see a yes/no popup.');
       }
     } catch (err) {
       console.error('Join failed:', err);

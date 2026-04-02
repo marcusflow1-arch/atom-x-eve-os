@@ -9,49 +9,54 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { action, friend_id, friend_email } = await req.json();
+    const { action, friend_id } = await req.json();
 
     if (action === 'invite') {
-      // Invite friend to Lunar Dashboard
-      // This creates a record linking the friend to user's lunar dashboard
-      const lunarInvite = await base44.entities.Friend.create({
-        user_id: user.id,
-        friend_id: friend_id,
-        friend_email: friend_email,
-        lunar_dashboard_invited: true,
-        lunar_dashboard_invite_date: new Date().toISOString()
+      const request = await base44.entities.LunarDashboardRequest.create({
+        request_type: 'invite',
+        requester_id: user.id,
+        requester_name: user.full_name || user.email || 'A friend',
+        target_user_id: friend_id,
+        host_user_id: user.id,
+        status: 'pending'
       });
 
-      // Also send platform invite if email provided
-      if (friend_email) {
-        try {
-          await base44.auth.inviteUser(friend_email, 'user');
-        } catch (inviteErr) {
-          console.log('Platform invite may already exist:', inviteErr);
-        }
-      }
-
-      return Response.json({ 
-        success: true, 
+      return Response.json({
+        success: true,
         message: 'Lunar Dashboard invitation sent!',
-        invite: lunarInvite 
+        request
       });
 
     } else if (action === 'join') {
-      // Join friend's Lunar Dashboard
-      // This creates a record that user has joined friend's dashboard
-      const joinRecord = await base44.entities.Friend.create({
-        user_id: user.id,
-        friend_id: friend_id,
-        lunar_dashboard_joined: true,
-        lunar_dashboard_join_date: new Date().toISOString()
+      const request = await base44.entities.LunarDashboardRequest.create({
+        request_type: 'join_request',
+        requester_id: user.id,
+        requester_name: user.full_name || user.email || 'A friend',
+        target_user_id: friend_id,
+        host_user_id: friend_id,
+        status: 'pending'
       });
 
-      return Response.json({ 
-        success: true, 
-        message: 'Joined Lunar Dashboard!',
-        join: joinRecord 
+      return Response.json({
+        success: true,
+        message: 'Join request sent!',
+        request
       });
+
+    } else if (action === 'respond') {
+      const { request_id, decision } = await req.json();
+      const requests = await base44.entities.LunarDashboardRequest.filter({ id: request_id, target_user_id: user.id });
+      const request = requests[0];
+
+      if (!request) {
+        return Response.json({ error: 'Request not found' }, { status: 404 });
+      }
+
+      const updated = await base44.entities.LunarDashboardRequest.update(request.id, {
+        status: decision === 'accept' ? 'accepted' : 'declined'
+      });
+
+      return Response.json({ success: true, request: updated });
 
     } else {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
