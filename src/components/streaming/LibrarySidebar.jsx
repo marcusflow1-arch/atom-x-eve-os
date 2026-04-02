@@ -280,7 +280,7 @@ export default function LibrarySidebar() {
       {!isOpen && !overlayActive && showLeftNav && (
         <>
           {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
-          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
+          {(isClan || isForum || isGenreMastery || isFarm || isAura) && !isSidebarCollapsed && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -292,10 +292,11 @@ export default function LibrarySidebar() {
                 className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
               >
                  {sidebarMode === 'context' ? (
-                   isClan ? <>Recently<br/>Visited</> : 
-                   isForum ? <>Recent<br/>Forums</> : 
-                   isFarm ? <>Recent<br/>Farm Hub</> :
-                   <>Recent<br/>Cards</>
+                 isClan ? <>Recently<br/>Visited</> : 
+                 isForum ? <>Recent<br/>Forums</> : 
+                 isFarm ? <>Recent<br/>Farm Hub</> :
+                 isAura ? <>Recently<br/>Watched</> :
+                 <>Recent<br/>Cards</>
                  ) : <>Recently<br/>Played</>}
               </button>
               <div className="w-8 h-px bg-white/20 -mt-1" />
@@ -356,6 +357,22 @@ export default function LibrarySidebar() {
                         >
                           <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {isAura && (
+                    <>
+                      {[recentChannels[0], recentChannels[1], recentChannels[2], recentGames[0], recentGames[1]].filter(Boolean).map((item, i) => (
+                        <button
+                          key={`aura_${i}`}
+                          onClick={() => window.dispatchEvent(new Event('openAuraStreamsDrawer'))}
+                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                          title={item.name}
+                        >
+                          <img src={item.avatar || item.image} alt={item.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                       ))}
                     </>
