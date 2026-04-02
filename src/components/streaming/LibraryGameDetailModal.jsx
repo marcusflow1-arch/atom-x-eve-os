@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award } from 'lucide-react';
+import { Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const glassStyle = {
@@ -28,18 +28,12 @@ export default function LibraryGameDetailModal({ game, onClose }) {
         bottom: '52px',
       }}
     >
-      {/* Header with Game Title and Close Button */}
+      {/* Header with Game Title */}
       <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div>
           <h2 className="text-2xl font-bold text-white">{game.title || game.name}</h2>
           <p className="text-sm text-white/50 mt-1">Ready to play</p>
         </div>
-        <button
-          onClick={onClose}
-          className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
       </div>
 
       {/* Action Buttons */}
