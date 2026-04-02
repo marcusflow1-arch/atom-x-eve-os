@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
-const RARITY_COLORS = {
-  Common: 'border-slate-500/40 bg-slate-800/60',
-  Uncommon: 'border-green-500/40 bg-green-900/20',
-  Rare: 'border-blue-500/40 bg-blue-900/20',
-  Epic: 'border-purple-500/40 bg-purple-900/20',
-  Legendary: 'border-yellow-500/40 bg-yellow-900/20',
-  Mythical: 'border-pink-500/40 bg-pink-900/20',
+const RARITY_STYLES = {
+  Common:    { border: 'border-slate-500/50',  bg: 'bg-slate-800/80',   glow: '',                          icon: 'text-slate-300' },
+  Uncommon:  { border: 'border-green-500/50',  bg: 'bg-green-900/30',   glow: '',                          icon: 'text-green-300' },
+  Rare:      { border: 'border-blue-500/60',   bg: 'bg-blue-900/30',    glow: 'shadow-[0_0_8px_rgba(59,130,246,0.3)]',  icon: 'text-blue-300' },
+  Epic:      { border: 'border-purple-500/60', bg: 'bg-purple-900/30',  glow: 'shadow-[0_0_8px_rgba(168,85,247,0.35)]', icon: 'text-purple-300' },
+  Legendary: { border: 'border-yellow-500/60', bg: 'bg-yellow-900/20',  glow: 'shadow-[0_0_10px_rgba(234,179,8,0.4)]',  icon: 'text-yellow-300' },
+  Mythical:  { border: 'border-pink-500/60',   bg: 'bg-pink-900/20',    glow: 'shadow-[0_0_10px_rgba(236,72,153,0.4)]', icon: 'text-pink-300' },
 };
 
 export default function StoreAchievementsStrip() {
@@ -19,36 +19,41 @@ export default function StoreAchievementsStrip() {
     }).catch(() => {});
   }, []);
 
+  const items = achievements.length > 0 ? achievements : Array.from({ length: 10 }).map((_, i) => ({ id: i, _placeholder: true }));
+
   return (
-    <div className="relative flex-1 h-full flex flex-col overflow-hidden px-3 pt-3 pb-2 min-w-0">
+    <div className="h-full flex flex-col overflow-hidden px-3 pt-3 pb-2 min-w-0">
       {/* Label */}
       <span className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-2 pl-1">Achievements</span>
 
       {/* Cards grid */}
       <div className="flex-1 overflow-hidden">
-        {achievements.length === 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="w-[44px] h-[52px] rounded-lg border border-white/10 bg-white/[0.03] animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-1.5 content-start">
-            {achievements.map((ach) => {
-              const colorClass = RARITY_COLORS[ach.rarity] || RARITY_COLORS.Common;
-              return (
-                <div
-                  key={ach.id}
-                  title={`${ach.title} — ${ach.rarity}`}
-                  className={`w-[44px] h-[52px] rounded-lg border flex flex-col items-center justify-center gap-0.5 cursor-default transition-all hover:scale-105 ${colorClass}`}
-                >
-                  <span className="text-lg leading-none">{ach.icon || '🏆'}</span>
-                  <span className="text-[7px] text-white/50 text-center leading-tight px-0.5 truncate w-full text-center">{ach.title?.slice(0, 6)}</span>
+        <div className="flex flex-wrap gap-2 content-start">
+          {items.map((ach, i) => {
+            if (ach._placeholder) {
+              return <div key={i} className="w-[58px] h-[76px] rounded-xl border border-white/10 bg-white/[0.03] animate-pulse" />;
+            }
+            const style = RARITY_STYLES[ach.rarity] || RARITY_STYLES.Common;
+            return (
+              <div
+                key={ach.id}
+                title={`${ach.title} — ${ach.rarity}`}
+                className={`w-[58px] h-[76px] rounded-xl border flex flex-col items-center justify-center gap-1 cursor-default transition-all hover:scale-105 hover:brightness-110 ${style.border} ${style.bg} ${style.glow}`}
+              >
+                {/* Icon area */}
+                <div className={`w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-xl leading-none ${style.icon}`}>
+                  {ach.icon || '⚡'}
                 </div>
-              );
-            })}
-          </div>
-        )}
+                {/* Title */}
+                <span className="text-[7px] text-white/70 text-center leading-tight px-1 font-semibold line-clamp-1 w-full text-center">{ach.title?.slice(0, 8)}</span>
+                {/* Subtitle */}
+                <span className="text-[6px] text-white/30 text-center leading-tight px-1">
+                  {ach.rarity || 'Standard'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

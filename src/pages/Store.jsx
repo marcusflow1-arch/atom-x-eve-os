@@ -565,17 +565,22 @@ export default function Store() {
                           {/* Interface Layer */}
                           <div className="relative z-10 w-full h-full flex flex-col">
                             {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                            <div className="h-[280px] flex-shrink-0 mt-[104px] border-b border-white/10 w-[50%] ml-auto flex overflow-hidden">
-                              {/* Achievements strip */}
-                              <StoreAchievementsStrip />
+                            <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                              {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                              <div className="flex-shrink-0" style={{ width: '256px' }} />
 
-                              {/* Subtle vertical divider — only in the middle portion */}
-                              <div className="flex-shrink-0 flex flex-col justify-center self-stretch py-12">
-                                <div className="w-px h-full bg-white/10 rounded-full" />
+                              {/* Achievements — from game grid left edge to divider */}
+                              <div className="flex-1 min-w-0 overflow-hidden">
+                                <StoreAchievementsStrip />
                               </div>
 
-                              {/* Slideshow */}
-                              <div className="flex-1 overflow-hidden">
+                              {/* Vertical divider — center portion only, thicker */}
+                              <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
+                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
+                              </div>
+
+                              {/* Slideshow — right 50% */}
+                              <div className="w-1/2 flex-shrink-0 overflow-hidden">
                                 <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
                               </div>
                             </div>
