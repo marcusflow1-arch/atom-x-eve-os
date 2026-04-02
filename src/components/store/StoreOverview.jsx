@@ -73,6 +73,12 @@ export default function StoreOverview({ onClose }) {
   const scrollRef = useRef(null);
 
   useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  useEffect(() => {
     const t = setInterval(() => setFeaturedIdx(i => (i + 1) % FEATURED_GAMES.length), 5500);
     return () => clearInterval(t);
   }, []);
