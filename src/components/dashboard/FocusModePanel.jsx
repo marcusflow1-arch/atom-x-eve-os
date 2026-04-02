@@ -1313,7 +1313,10 @@ export function LibraryBannerSection({
               
               {/* Invisible Placeholders for Friends */}
               {[...Array(Math.max(0, 5 - onlineFriends.length))].map((_, i) => (
-                <div key={`empty-${i}`} className="w-16 h-16 rounded-lg bg-transparent border border-white/5 flex-shrink-0" />
+                <div key={`empty-${i}`} className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <Plus className="w-3.5 h-3.5 text-white" />
+                  <div className="w-16 h-16 rounded-lg bg-transparent border border-white/5" />
+                </div>
               ))}
 
               <div className="flex-shrink-0 ml-2">
