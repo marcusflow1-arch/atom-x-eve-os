@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Camera, MapPin, Sparkles, ChevronUp, ChevronDown, X, PlayCircle, HelpCircle, ExternalLink } from 'lucide-react';
+import { Trophy, Camera, MapPin, Sparkles, ChevronUp, ChevronDown, PlayCircle, HelpCircle, ExternalLink } from 'lucide-react';
 import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
 import { Badge } from '@/components/ui/badge';
 
@@ -96,6 +96,17 @@ export default function LibraryAchievementsUniverse({ onClose }) {
     [selectedId]
   );
 
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose?.();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -124,9 +135,6 @@ export default function LibraryAchievementsUniverse({ onClose }) {
           </div>
           <p className="text-[11px] text-white/35 mt-1">Guides, screenshots, definitions, and a compact demo viewer.</p>
         </div>
-        <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
-          <X className="w-4 h-4" />
-        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
