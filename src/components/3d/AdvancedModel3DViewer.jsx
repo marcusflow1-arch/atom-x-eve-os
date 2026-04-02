@@ -177,18 +177,15 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }, [modelUrl]);
 
   return (
-    <canvas 
-      ref={canvasRef} 
+    <canvas
+      ref={canvasRef}
       className="w-full h-full"
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
+        display: 'block',
+        width: '100%',
+        height: '100%',
         pointerEvents: 'auto',
-        background: 'transparent',
-        zIndex: 1
+        background: 'transparent'
       }}
     />
   );
