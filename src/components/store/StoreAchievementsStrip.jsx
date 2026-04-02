@@ -1,14 +1,18 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Zap, Shield, User, Trees, ChevronLeft, ChevronRight, Trophy, Package } from 'lucide-react';
+import { Zap, Shield, Users, Map, Star, Package, Trophy } from 'lucide-react';
 
+// Category icon config — outline style lucide icons
 const TYPE_CONFIG = {
-  ability:     { icon: Zap,    color: '#22d3ee' },
-  equipment:   { icon: Shield, color: '#a78bfa' },
-  companion:   { icon: User,   color: '#4ade80' },
-  environment: { icon: Trees,  color: '#fbbf24' },
-  standard:    { icon: Trophy, color: '#94a3b8' },
+  ability:     { icon: Zap,     color: '#22d3ee', label: 'Ability' },
+  equipment:   { icon: Shield,  color: '#a78bfa', label: 'Equip' },
+  companion:   { icon: Users,   color: '#4ade80', label: 'Companion' },
+  environment: { icon: Map,     color: '#fbbf24', label: 'Env' },
+  standard:    { icon: Star,    color: '#94a3b8', label: 'Standard' },
+  emoji:       { icon: Star,    color: '#f472b6', label: 'Emoji' },
+  dance:       { icon: Zap,     color: '#fb923c', label: 'Dance' },
+  hidden:      { icon: Trophy,  color: '#e879f9', label: 'Hidden' },
 };
 
 const FILTERS = ['ALL', 'ABILITY', 'EQUIPMENT', 'COMPANION', 'ENVIRONMENT'];
@@ -20,78 +24,91 @@ function AchCard({ ach }) {
   const Icon = cfg.icon;
 
   return (
-    <motion.div whileHover={{ scale: 1.06, y: -2 }} className="flex-shrink-0 w-[68px] cursor-default">
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className="flex-shrink-0 w-full cursor-default"
+    >
       <div
-        className="flex flex-col items-center justify-between rounded-xl overflow-hidden transition-all px-1 py-1.5"
-        style={{ height: 82, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}
+        className="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
       >
-        <p className="text-[7px] font-bold text-white/80 leading-tight text-center w-full truncate">{ach.title || '—'}</p>
+        {/* Icon */}
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: `${cfg.color}18`, boxShadow: `0 0 8px ${cfg.color}28` }}
+          className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: 'transparent', border: `1px solid ${cfg.color}55` }}
         >
           {ach.icon
             ? <span className="text-sm leading-none">{ach.icon}</span>
-            : <Icon style={{ color: cfg.color }} className="w-3.5 h-3.5" />
+            : <Icon style={{ color: cfg.color }} className="w-4 h-4" strokeWidth={1.5} />
           }
         </div>
-        <p className="text-[6px] font-semibold leading-tight text-center w-full truncate" style={{ color: cfg.color }}>
-          {ach.rarity || 'Standard'}
-        </p>
+        {/* Text */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-bold text-white/85 leading-tight truncate">{ach.title || '—'}</p>
+          <p className="text-[7px] leading-tight truncate mt-0.5" style={{ color: cfg.color }}>{ach.rarity || cfg.label}</p>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-export default function StoreAchievementsStrip() {
-  const [achievements, setAchievements] = useState([]);
+export default function StoreAchievementsStrip({ currentGame }) {
+  const [allAchievements, setAllAchievements] = useState([]);
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [showDlc, setShowDlc] = useState(false);
-  const scrollRef = useRef(null);
 
   useEffect(() => {
-    base44.entities.Achievement.list('-created_date', 20).then(res => {
-      setAchievements(res?.data || res || []);
+    base44.entities.Achievement.list('-created_date', 100).then(res => {
+      setAllAchievements(res?.data || res || []);
     }).catch(() => {});
   }, []);
 
-  const handleWheel = useCallback((e) => {
-    if (!scrollRef.current) return;
-    e.preventDefault();
-    scrollRef.current.scrollBy({ left: e.deltaY < 0 ? 200 : -200, behavior: 'smooth' });
-  }, []);
+  const gameName = currentGame?.title || null;
 
-  const scroll = (dir) => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollBy({ left: dir === 'left' ? -220 : 220, behavior: 'smooth' });
-  };
+  // Filter by current game if available
+  const gameAchs = gameName
+    ? allAchievements.filter(a => a.game === gameName)
+    : allAchievements;
 
-  const placeholders = Array.from({ length: 10 }).map((_, i) => ({
-    id: `ph-${i}`, title: '—', category: ['ability','equipment','companion','environment'][i % 4], rarity: 'Common', _ph: true
-  }));
+  // DLC vs base
+  const baseAchs = gameAchs.filter(a => a.category !== 'hidden');
+  // For DLC, show hidden/secret achievements as a proxy — or all if none
+  const dlcAchs = gameAchs.filter(a => a.category === 'hidden');
 
-  const source = achievements.length > 0 ? achievements : placeholders;
+  const source = showDlc ? (dlcAchs.length > 0 ? dlcAchs : gameAchs) : baseAchs.length > 0 ? baseAchs : gameAchs;
 
   const filtered = activeFilter === 'ALL'
     ? source
     : source.filter(a => (a.category || '').toLowerCase() === activeFilter.toLowerCase());
 
-  const row1 = filtered.filter((_, i) => i % 2 === 0);
-  const row2 = filtered.filter((_, i) => i % 2 === 1);
+  // 5 per row, two rows = 10 visible, then scroll
+  const row1 = filtered.filter((_, i) => i % 2 === 0).slice(0, 5);
+  const row2 = filtered.filter((_, i) => i % 2 === 1).slice(0, 5);
+
+  const displayTitle = gameName ? `${gameName} Cards` : 'Achievement Cards';
 
   return (
-    <div className="h-full flex flex-col overflow-hidden px-1 pt-2 pb-1">
-      {/* Title */}
-      <div className="flex flex-col items-center gap-1 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <Trophy className="w-3.5 h-3.5 text-cyan-400" />
-          <h3 className="text-[11px] font-bold text-white tracking-wider">Achievement Cards</h3>
-        </div>
-        <div className="w-20 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)' }} />
+    <div className="h-full flex flex-col overflow-hidden px-2 pt-2 pb-1">
+      {/* Title — animates when game changes */}
+      <div className="flex flex-col items-center gap-1 mb-1.5 flex-shrink-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayTitle}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.3 }}
+            className="flex items-center gap-1.5"
+          >
+            <Trophy className="w-3 h-3 text-cyan-400 flex-shrink-0" />
+            <h3 className="text-[11px] font-bold text-white tracking-wider truncate max-w-[180px]">{displayTitle}</h3>
+          </motion.div>
+        </AnimatePresence>
+        <div className="w-24 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent)' }} />
       </div>
 
       {/* DLC toggle */}
-      <div className="flex items-center justify-center mb-1.5">
+      <div className="flex items-center justify-center mb-1.5 flex-shrink-0">
         <button
           onClick={() => setShowDlc(v => !v)}
           className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider transition-all"
@@ -106,7 +123,7 @@ export default function StoreAchievementsStrip() {
       </div>
 
       {/* Filter pills */}
-      <div className="flex items-center justify-center flex-wrap gap-1 mb-2">
+      <div className="flex items-center justify-center flex-wrap gap-1 mb-2 flex-shrink-0">
         {FILTERS.map(f => {
           const isActive = activeFilter === f;
           const c = FILTER_COLORS[f];
@@ -114,7 +131,7 @@ export default function StoreAchievementsStrip() {
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
-              className="px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider transition-all"
+              className="px-2 py-0.5 rounded-full text-[7px] font-bold tracking-wider transition-all"
               style={isActive
                 ? { background: `${c}20`, border: `1px solid ${c}50`, color: c }
                 : { background: 'transparent', border: '1px solid transparent', color: 'rgba(255,255,255,0.3)' }
@@ -126,44 +143,29 @@ export default function StoreAchievementsStrip() {
         })}
       </div>
 
-      {/* Two-row scrollable grid */}
-      <div className="relative flex-1 min-h-0 group/strip" onWheel={handleWheel}>
-        <button
-          onClick={() => scroll('left')}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
-          style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <ChevronLeft className="w-3 h-3 text-white/70" />
-        </button>
-        <button
-          onClick={() => scroll('right')}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity"
-          style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
-        >
-          <ChevronRight className="w-3 h-3 text-white/70" />
-        </button>
-
-        <div
-          ref={scrollRef}
-          className="flex flex-col gap-1.5 overflow-x-auto px-3 h-full"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          <div className="flex gap-2">
-            {row1.map((ach, i) => (
-              ach._ph
-                ? <div key={ach.id} className="flex-shrink-0 w-[68px] h-[82px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
-                : <AchCard key={ach.id || i} ach={ach} />
-            ))}
-          </div>
-          <div className="flex gap-2">
-            {row2.map((ach, i) => (
-              ach._ph
-                ? <div key={ach.id} className="flex-shrink-0 w-[68px] h-[82px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
-                : <AchCard key={ach.id || i} ach={ach} />
-            ))}
-          </div>
+      {/* Two columns of 5, vertically scrollable */}
+      <div
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div className="grid grid-cols-2 gap-1.5">
+          {/* Interleave row1 and row2 so they appear column-like */}
+          {Array.from({ length: Math.max(row1.length, row2.length) }).map((_, i) => (
+            <React.Fragment key={i}>
+              {row1[i] ? (
+                row1[i]._ph
+                  ? <div className="h-[44px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)' }} />
+                  : <AchCard ach={row1[i]} />
+              ) : <div />}
+              {row2[i] ? (
+                row2[i]._ph
+                  ? <div className="h-[44px] rounded-xl animate-pulse" style={{ background: 'rgba(255,255,255,0.03)' }} />
+                  : <AchCard ach={row2[i]} />
+              ) : <div />}
+            </React.Fragment>
+          ))}
           {filtered.length === 0 && (
-            <div className="text-center py-4 text-white/25 text-[10px]">No cards found</div>
+            <div className="col-span-2 text-center py-4 text-white/25 text-[10px]">No achievements found</div>
           )}
         </div>
       </div>

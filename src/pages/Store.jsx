@@ -169,6 +169,7 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
+    const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
 
@@ -571,7 +572,7 @@ export default function Store() {
 
                               {/* Achievements — from game grid left edge to divider */}
                               <div className="flex-1 min-w-0 overflow-hidden">
-                                <StoreAchievementsStrip />
+                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
                               </div>
 
                               {/* Vertical divider — center portion only, thicker */}
@@ -581,7 +582,7 @@ export default function Store() {
 
                               {/* Slideshow — right 50% */}
                               <div className="w-1/2 flex-shrink-0 overflow-hidden">
-                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} />
+                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
                               </div>
                             </div>
 

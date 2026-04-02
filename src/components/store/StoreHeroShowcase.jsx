@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function StoreHeroShowcase({ games = [], activeSubCategory = 'Trending' }) {
+export default function StoreHeroShowcase({ games = [], activeSubCategory = 'Trending', onGameChange }) {
   const [currentGameIdx, setCurrentGameIdx] = useState(0);
   const [direction, setDirection] = useState(1);
 
@@ -16,6 +16,12 @@ export default function StoreHeroShowcase({ games = [], activeSubCategory = 'Tre
     }, 4000);
     return () => clearInterval(timer);
   }, [showcaseGames.length]);
+
+  useEffect(() => {
+    if (onGameChange && showcaseGames[currentGameIdx]) {
+      onGameChange(showcaseGames[currentGameIdx]);
+    }
+  }, [currentGameIdx, showcaseGames.length]);
 
   const goNext = () => { setDirection(1); setCurrentGameIdx(prev => (prev + 1) % Math.max(showcaseGames.length, 1)); };
   const goPrev = () => { setDirection(-1); setCurrentGameIdx(prev => (prev - 1 + Math.max(showcaseGames.length, 1)) % Math.max(showcaseGames.length, 1)); };
