@@ -37,7 +37,7 @@ export default function StoreHeroShowcase({ games = [], activeSubCategory = 'Tre
           >
             <img src={currentGame.cover_image || currentGame.banner_image} alt={currentGame.title} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-l from-black/60 to-transparent" />
 
             {/* Category Badge */}
             <div className="absolute top-5 left-6 flex items-center gap-2">
