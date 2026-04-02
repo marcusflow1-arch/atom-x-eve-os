@@ -1,31 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useChatMessages } from './useChatMessages';
 import { 
   X, Send, Mic, Phone, Video, Image as ImageIcon, Paperclip, 
   Smile, Heart, ThumbsUp, MoreVertical, Search, Bell, PhoneOff, Eye, Gamepad2
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
-// Mock chat history data
-const MOCK_CHAT_HISTORY = {
-  'temp_logan': [
-    { id: 1, text: "Hey! Want to squad up later?", sender: 'friend', timestamp: '10:30 AM', type: 'text' },
-    { id: 2, text: "Yeah sure! What time?", sender: 'me', timestamp: '10:32 AM', type: 'text' },
-    { id: 3, text: "Around 8pm?", sender: 'friend', timestamp: '10:33 AM', type: 'text' },
-    { id: 4, text: "Perfect, see you then!", sender: 'me', timestamp: '10:35 AM', type: 'text' },
-    { id: 5, text: "Check out this clip I got!", sender: 'friend', timestamp: '2:15 PM', type: 'video', mediaUrl: 'https://example.com/clip.mp4', thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' },
-  ],
-  'temp_ariana': [
-    { id: 1, text: "Did you finish that achievement?", sender: 'friend', timestamp: 'Yesterday', type: 'text' },
-    { id: 2, text: "Not yet, so close though!", sender: 'me', timestamp: 'Yesterday', type: 'text' },
-  ],
-};
-
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥'];
 
 export default function FriendMessenger({ friend, onClose, compact = false, inline = false, showCallOverlay = false }) {
   const { user } = useAuth();
-  const [messages, setMessages] = useState([]);
+  const { messages, addMessage } = useChatMessages(friend?.friend_id);
   const [newMessage, setNewMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -35,14 +21,6 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
   const [mediaPreview, setMediaPreview] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  // Load chat history on mount
-  useEffect(() => {
-    if (friend?.friend_id) {
-      const history = MOCK_CHAT_HISTORY[friend.friend_id] || [];
-      setMessages(history);
-    }
-  }, [friend]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -60,7 +38,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
       type: 'text'
     };
 
-    setMessages(prev => [...prev, message]);
+    addMessage(message);
     setNewMessage('');
     setIsTyping(true);
 
@@ -82,7 +60,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'text'
       };
-      setMessages(prev => [...prev, reply]);
+      addMessage(reply);
     }, 1500 + Math.random() * 2000);
   };
 
@@ -109,7 +87,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
         mediaUrl: URL.createObjectURL(file),
         fileName: file.name
       };
-      setMessages(prev => [...prev, message]);
+      addMessage(message);
     }
     fileInputRef.current.value = '';
   };
