@@ -7,7 +7,6 @@ import {
   ChevronRight, Zap, Layers, Radio, ArrowRight,
   BookOpen, Swords, Crown, Heart, Home, ShoppingBag, Library as LibraryIcon, MessageSquare, Target, Hammer
 } from 'lucide-react';
-import PageGuideCard from '@/components/onboarding/PageGuideCard';
 import VisualFeatureGuide from '@/components/onboarding/VisualFeatureGuide';
 import { Button } from '@/components/ui/button';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
@@ -52,15 +51,14 @@ const FeatureStrip = ({ text, delay }) => (
   </motion.div>
 );
 
-// Path Selection Card
 const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) => (
   <motion.button
     onClick={onClick}
     whileHover={{ scale: 1.02, y: -4 }}
     whileTap={{ scale: 0.98 }}
     className={`relative p-6 rounded-2xl border text-left transition-all duration-300 ${
-      selected 
-        ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.2)]' 
+      selected
+        ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.2)]'
         : 'border-white/10 hover:border-white/20'
     }`}
     style={{

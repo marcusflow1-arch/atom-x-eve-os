@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  X, Send, Mic, Phone, Video, Image as ImageIcon, Paperclip, 
+  Send, Mic, Phone, Video, Image as ImageIcon, Paperclip, 
   Smile, Heart, ThumbsUp, MoreVertical, Search, Bell, PhoneOff, Eye, Gamepad2
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
@@ -48,6 +48,17 @@ export default function FriendMessenger({ friend, onClose, compact = false, show
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -321,14 +332,6 @@ export default function FriendMessenger({ friend, onClose, compact = false, show
               title="Watch Game"
             >
               <Eye className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
-            </button>
-          )}
-          {!compact && (
-            <button 
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
-            >
-              <X className="w-4 h-4 text-white/70" />
             </button>
           )}
         </div>
