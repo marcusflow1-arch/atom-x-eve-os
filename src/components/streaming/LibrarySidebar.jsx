@@ -173,6 +173,10 @@ export default function LibrarySidebar() {
   const location = useLocation();
   const pathname = location.pathname.toLowerCase();
   const panel = new URLSearchParams(location.search).get('panel');
+  const currentEnvironmentPageKey = pathname.includes('/lunatemplate') ? 'lunatemplate' : pathname.includes('/onboardinghome') ? 'onboardinghome' : pathname.replace(/[^a-z0-9]/g, '_') || 'global';
+  const [isEnvironmentEnabled, setIsEnvironmentEnabled] = useState(() => {
+    return localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
+  });
   const isAura = pathname.includes('/aura') || pathname.includes('/streaming');
   const isEntertainment = panel === 'entertainment' || pathname.includes('/entertainment');
   const isLibraryPage = pathname.includes('/library');
@@ -198,6 +202,11 @@ export default function LibrarySidebar() {
   const isGenreMastery = pathname.includes('/genremastery');
   
   const shouldShow = !(isEntertainment || isLibraryPage || overlayActive);
+
+  useEffect(() => {
+    const enabled = localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
+    setIsEnvironmentEnabled(enabled);
+  }, [currentEnvironmentPageKey]);
 
   // Close right-side overlay whenever the left pull-out tab closes
   useEffect(() => {
@@ -457,9 +466,20 @@ export default function LibrarySidebar() {
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
-                onClick={() => { setIsOpen(true); setExpandedPanel(null); }}
-                className="w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5 text-white/90 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 -ml-1"
-                title="Library & Friends"
+                onClick={() => {
+                  const nextEnabled = !isEnvironmentEnabled;
+                  setIsEnvironmentEnabled(nextEnabled);
+                  localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
+                  window.dispatchEvent(new CustomEvent('pageEnvironmentToggle', {
+                    detail: { pageKey: currentEnvironmentPageKey, enabled: nextEnabled }
+                  }));
+                }}
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
+                  isEnvironmentEnabled
+                    ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
+                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+                title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
               >
                 <Library className="w-5 h-5" />
               </button>
