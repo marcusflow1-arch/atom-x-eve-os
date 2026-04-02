@@ -958,7 +958,13 @@ export default function LibrarySidebar() {
                   </button>
                 </div>
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
+                <div
+                  className="flex-1 overflow-y-auto p-5"
+                  style={{
+                    scrollbarWidth: 'none',
+                    background: 'linear-gradient(180deg, rgba(10, 14, 20, 0.18) 0%, rgba(12, 16, 24, 0.42) 100%)'
+                  }}
+                >
                   <h2 className="text-xl font-bold text-white mb-1 leading-tight">{fullLibraryDetailGame.title || fullLibraryDetailGame.name}</h2>
                   <p className="text-white/40 text-xs mb-5">Ready to play</p>
 
