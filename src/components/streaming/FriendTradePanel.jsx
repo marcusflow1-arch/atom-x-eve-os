@@ -1,60 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+import { finalizeTradeSession } from '@/functions/finalizeTradeSession';
 import {
   X, ArrowLeftRight, DollarSign, Package, CheckCircle2, Clock,
   AlertTriangle, Plus, Minus, ChevronRight, Gamepad2, Swords,
   Shield, Zap, Star, Crown, Flame, Users, Search
 } from 'lucide-react';
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const GAMES_WITH_CARDS = [
-  {
-    id: 'cp2088', name: 'Cyberpunk 2088',
-    cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=80&q=80',
-    cards: [
-      { id: 'c1', name: 'Neural Shock',     rarity: 'Legendary', category: 'Ability',    icon: Zap },
-      { id: 'c2', name: 'Phoenix Partner',  rarity: 'Epic',      category: 'Companion',  icon: Flame },
-      { id: 'c3', name: 'Cyber Blade',      rarity: 'Rare',      category: 'Equipment',  icon: Swords },
-      { id: 'c4', name: 'Holo-Shield',      rarity: 'Uncommon',  category: 'Equipment',  icon: Shield },
-      { id: 'c5', name: 'Night Vision',     rarity: 'Common',    category: 'Ability',    icon: Star },
-    ]
-  },
-  {
-    id: 'elden', name: 'Elden Ring',
-    cover: 'https://images.unsplash.com/photo-1605901309584-818e25960b8f?w=80&q=80',
-    cards: [
-      { id: 'e1', name: 'Shadow Blade',     rarity: 'Legendary', category: 'Equipment',  icon: Swords },
-      { id: 'e2', name: 'Void Walker Set',  rarity: 'Epic',      category: 'Equipment',  icon: Shield },
-      { id: 'e3', name: 'Arcane Tome',      rarity: 'Rare',      category: 'Ability',    icon: Zap },
-      { id: 'e4', name: 'Iron Gauntlet',    rarity: 'Uncommon',  category: 'Equipment',  icon: Shield },
-    ]
-  },
-  {
-    id: 'valorant', name: 'Valorant',
-    cover: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=80&q=80',
-    cards: [
-      { id: 'v1', name: 'First Blood',      rarity: 'Rare',      category: 'Achievement', icon: Crown },
-      { id: 'v2', name: 'Radiant Crown',    rarity: 'Legendary', category: 'Achievement', icon: Crown },
-      { id: 'v3', name: 'Ace Protocol',     rarity: 'Epic',      category: 'Ability',     icon: Zap },
-    ]
-  },
-  {
-    id: 'darksouls', name: 'Dark Souls',
-    cover: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=80&q=80',
-    cards: [
-      { id: 'd1', name: 'Iron Shield',      rarity: 'Uncommon',  category: 'Equipment',  icon: Shield },
-      { id: 'd2', name: 'Basic Sword',      rarity: 'Common',    category: 'Equipment',  icon: Swords },
-      { id: 'd3', name: 'Soul Vessel',      rarity: 'Epic',      category: 'Ability',    icon: Star },
-    ]
-  },
-];
+const ICON_BY_TYPE = {
+  Equipment: Swords,
+  Ability: Zap,
+  Companion: Users,
+  Achievement: Crown,
+};
 
-const FRIEND_OFFER_CARDS = [
-  { id: 'f1', name: 'Radiant Crown',   rarity: 'Legendary', category: 'Achievement', game: 'Valorant', icon: Crown },
-  { id: 'f2', name: 'Soul Vessel',     rarity: 'Epic',      category: 'Ability',     game: 'Dark Souls', icon: Star },
-  { id: 'f3', name: 'Arcane Tome',     rarity: 'Rare',      category: 'Ability',     game: 'Elden Ring', icon: Zap },
-];
-const FRIEND_CURRENCY = 2500;
+const getCardIcon = (card) => ICON_BY_TYPE[card.card_type] || ICON_BY_TYPE[card.category] || Package;
 
 // ─── Rarity styles with gradient borders ──────────────────────────────────────
 const RARITY = {
@@ -206,15 +167,16 @@ function TradeSlot({ card, onDrop, onDragOver, onDragLeave, isOver, onDoubleClic
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function FriendTradePanel({ friend, onClose }) {
+export default function FriendTradePanel({ friend, onClose, currentUser }) {
   const SLOT_COUNT = 8;
   const [mySlots, setMySlots] = useState(Array(SLOT_COUNT).fill(null));
-  const [myCash, setMyCash] = useState('');
   const [dragOverSlot, setDragOverSlot] = useState(null);
-  const [tradeStatus, setTradeStatus] = useState('idle');
+  const [tradeSession, setTradeSession] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [inventoryCards, setInventoryCards] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dragCard = useRef(null);
 
   // Add gleam animation style
@@ -232,61 +194,185 @@ export default function FriendTradePanel({ friend, onClose }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!currentUser?.id || !friend?.friend_id) return;
+
+    const loadTradeState = async () => {
+      const sessions = await base44.entities.TradeSession.list();
+      const activeSession = sessions.find((session) => {
+        const pairMatch =
+          (session.initiator_id === currentUser.id && session.recipient_id === friend.friend_id) ||
+          (session.initiator_id === friend.friend_id && session.recipient_id === currentUser.id);
+        return pairMatch && ['pending', 'accepted'].includes(session.status);
+      });
+      setTradeSession(activeSession || null);
+
+      const cards = await base44.entities.UserCard.filter({ user_id: currentUser.id });
+      setInventoryCards(cards.filter((card) => card.trade_status !== 'locked_in_trade'));
+    };
+
+    loadTradeState();
+    const unsubscribe = base44.entities.TradeSession.subscribe((event) => {
+      const data = event.data;
+      const pairMatch = data && (
+        (data.initiator_id === currentUser.id && data.recipient_id === friend.friend_id) ||
+        (data.initiator_id === friend.friend_id && data.recipient_id === currentUser.id)
+      );
+      if (pairMatch) {
+        loadTradeState();
+      }
+    });
+
+    return unsubscribe;
+  }, [currentUser?.id, friend?.friend_id]);
+
+  useEffect(() => {
+    if (!tradeSession) {
+      setMySlots(Array(SLOT_COUNT).fill(null));
+      return;
+    }
+
+    const mine = tradeSession.initiator_id === currentUser?.id
+      ? tradeSession.initiator_offer_snapshot || []
+      : tradeSession.recipient_offer_snapshot || [];
+
+    const padded = [...mine];
+    while (padded.length < SLOT_COUNT) padded.push(null);
+    setMySlots(padded.slice(0, SLOT_COUNT));
+  }, [tradeSession, currentUser?.id]);
+
   const slottedIds = new Set(mySlots.filter(Boolean).map(c => c.id));
 
-  const inventoryCards = selectedGame
-    ? (GAMES_WITH_CARDS.find(g => g.id === selectedGame)?.cards || [])
-    : [];
+  const gameOptions = useMemo(() => Array.from(new Set(inventoryCards.map(card => card.game_name).filter(Boolean))), [inventoryCards]);
 
   const filteredCards = inventoryCards.filter(card => {
-    if (selectedCategory && selectedCategory !== 'All' && card.category !== selectedCategory) return false;
-    if (searchQuery && !card.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (selectedGame && card.game_name !== selectedGame) return false;
+    if (selectedCategory && selectedCategory !== 'All' && card.card_type !== selectedCategory) return false;
+    if (searchQuery && !card.card_name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
-  });
+  }).map(card => ({
+    ...card,
+    name: card.card_name,
+    rarity: card.card_rarity,
+    category: card.card_type,
+    icon: getCardIcon(card),
+  }));
 
-  const addToSlot = (card) => {
-    if (slottedIds.has(card.id)) return;
+  const addToSlot = async (card) => {
+    if (slottedIds.has(card.id) || !tradeSession || tradeSession.status !== 'accepted') return;
     const idx = mySlots.findIndex(s => s === null);
     if (idx === -1) return;
     const updated = [...mySlots];
     updated[idx] = card;
     setMySlots(updated);
+    await syncOffer(updated);
   };
 
-  const removeFromSlot = (idx) => {
+  const removeFromSlot = async (idx) => {
+    const card = mySlots[idx];
     const updated = [...mySlots];
     updated[idx] = null;
     setMySlots(updated);
+    if (card?.id) {
+      await base44.entities.UserCard.update(card.id, { trade_status: 'available' });
+    }
+    await syncOffer(updated);
   };
 
   const handleDragStart = (card) => { dragCard.current = card; };
 
-  const handleDropOnSlot = (slotIdx) => {
-    if (!dragCard.current) return;
+  const handleDropOnSlot = async (slotIdx) => {
+    if (!dragCard.current || !tradeSession || tradeSession.status !== 'accepted') return;
     if (slottedIds.has(dragCard.current.id) && mySlots[slotIdx]?.id !== dragCard.current.id) {
       dragCard.current = null; setDragOverSlot(null); return;
     }
     const updated = [...mySlots];
     updated[slotIdx] = dragCard.current;
     setMySlots(updated);
+    await syncOffer(updated);
     dragCard.current = null;
     setDragOverSlot(null);
   };
 
-  const hasOffer = mySlots.some(Boolean) || (myCash && parseFloat(myCash) > 0);
+  const hasOffer = mySlots.some(Boolean);
+  const isInitiator = tradeSession?.initiator_id === currentUser?.id;
+  const friendOfferCards = (tradeSession
+    ? (isInitiator ? tradeSession.recipient_offer_snapshot : tradeSession.initiator_offer_snapshot)
+    : []) || [];
+  const myConfirmed = tradeSession ? (isInitiator ? tradeSession.initiator_confirmed : tradeSession.recipient_confirmed) : false;
+  const friendConfirmed = tradeSession ? (isInitiator ? tradeSession.recipient_confirmed : tradeSession.initiator_confirmed) : false;
+  const tradeStatus = !tradeSession ? 'idle' : tradeSession.status === 'completed' ? 'completed' : myConfirmed ? (friendConfirmed ? 'ready' : 'waiting_other') : 'idle';
 
-  const handleConfirmTrade = () => {
-    if (tradeStatus === 'idle') setTradeStatus('my_confirmed');
-    else if (tradeStatus === 'my_confirmed') {
-      setTradeStatus('waiting_other');
-      setTimeout(() => setTradeStatus('completed'), 2500);
-    }
+  const syncOffer = async (nextSlots) => {
+    if (!tradeSession) return;
+    const offerCards = nextSlots.filter(Boolean);
+    const payload = isInitiator
+      ? {
+          initiator_offer_card_ids: offerCards.map(card => card.id),
+          initiator_offer_snapshot: offerCards,
+          initiator_confirmed: false,
+          recipient_confirmed: false,
+          status: 'accepted',
+        }
+      : {
+          recipient_offer_card_ids: offerCards.map(card => card.id),
+          recipient_offer_snapshot: offerCards,
+          initiator_confirmed: false,
+          recipient_confirmed: false,
+          status: 'accepted',
+        };
+
+    await Promise.all(offerCards.map((card) => base44.entities.UserCard.update(card.id, {
+      trade_status: 'locked_in_trade',
+      last_trade_id: tradeSession.id,
+    })));
+    await base44.entities.TradeSession.update(tradeSession.id, payload);
   };
 
-  const handleReset = () => {
+  const handleStartTrade = async () => {
+    setIsSubmitting(true);
+    const session = await base44.entities.TradeSession.create({
+      initiator_id: currentUser.id,
+      recipient_id: friend.friend_id,
+      status: 'pending',
+    });
+    setTradeSession(session);
+    setIsSubmitting(false);
+  };
+
+  const handleConfirmTrade = async () => {
+    if (!tradeSession) return;
+    setIsSubmitting(true);
+    const payload = isInitiator ? { initiator_confirmed: true } : { recipient_confirmed: true };
+    const updated = await base44.entities.TradeSession.update(tradeSession.id, payload);
+    setTradeSession(updated);
+
+    const initiatorDone = (isInitiator ? true : updated.initiator_confirmed);
+    const recipientDone = (isInitiator ? updated.recipient_confirmed : true);
+    if (initiatorDone && recipientDone) {
+      await finalizeTradeSession({ tradeSessionId: tradeSession.id });
+    }
+    setIsSubmitting(false);
+  };
+
+  const handleReset = async () => {
+    if (tradeSession?.status === 'completed') {
+      setMySlots(Array(SLOT_COUNT).fill(null));
+      setTradeSession(null);
+      return;
+    }
+
+    const reservedCards = mySlots.filter(Boolean);
+    await Promise.all(reservedCards.map((card) => base44.entities.UserCard.update(card.id, {
+      trade_status: 'available',
+    })));
+
+    if (tradeSession) {
+      await base44.entities.TradeSession.update(tradeSession.id, { status: 'cancelled' });
+    }
+
     setMySlots(Array(SLOT_COUNT).fill(null));
-    setMyCash('');
-    setTradeStatus('idle');
+    setTradeSession(null);
   };
 
   return (
@@ -372,34 +458,29 @@ export default function FriendTradePanel({ friend, onClose }) {
             {/* Game List Header */}
             <div className="flex-shrink-0 px-3 pt-3 pb-2">
               <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Games ({GAMES_WITH_CARDS.length})
+                Games ({gameOptions.length})
               </p>
             </div>
 
             {/* Vertical Game List - Scrollable */}
             <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1.5" style={{ scrollbarWidth: 'none' }}>
-              {GAMES_WITH_CARDS.map(game => (
+              {gameOptions.map(gameName => (
                 <button
-                  key={game.id}
+                  key={gameName}
                   onClick={() => {
-                    setSelectedGame(selectedGame === game.id ? null : game.id);
+                    setSelectedGame(selectedGame === gameName ? null : gameName);
                     setSearchQuery('');
                     setSelectedCategory(null);
                   }}
                   className="w-full flex items-center gap-2 py-1.5 px-1 transition-all hover:bg-white/5 rounded-lg"
                 >
-                  {/* Game Icon */}
-                  <img 
-                    src={game.cover} 
-                    alt={game.name} 
-                    className="w-8 h-8 rounded object-cover flex-shrink-0" 
-                  />
-                  {/* Game Name */}
+                  <div className="w-8 h-8 rounded bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                    <Gamepad2 className="w-4 h-4 text-cyan-300" />
+                  </div>
                   <span className="text-[9px] font-bold text-white/80 hover:text-white transition-colors line-clamp-2 leading-tight text-left flex-1">
-                    {game.name}
+                    {gameName}
                   </span>
-                  {/* Selection Indicator */}
-                  {selectedGame === game.id && (
+                  {selectedGame === gameName && (
                     <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 flex-shrink-0" style={{ boxShadow: '0 0 8px rgba(34,211,238,0.6)' }} />
                   )}
                 </button>
@@ -419,7 +500,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                      {GAMES_WITH_CARDS.find(g => g.id === selectedGame)?.name}
+                      {selectedGame}
                     </p>
                     <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
                   </div>
@@ -464,7 +545,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                     transition={{ duration: 0.18 }}
                   >
                     <p className="text-[8px] font-black uppercase tracking-widest mb-3 px-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                      {filteredCards.length} Achievement{filteredCards.length !== 1 ? 's' : ''} Available
+                      {filteredCards.length} Card{filteredCards.length !== 1 ? 's' : ''} Available
                     </p>
                     <div className="grid grid-cols-6 gap-2">
                       {filteredCards.map(card => (
@@ -509,13 +590,13 @@ export default function FriendTradePanel({ friend, onClose }) {
                 <img src={friend.avatar} alt={friend.name} className="w-4 h-4 rounded-full object-cover" />
                 <p className="text-[8px] font-black uppercase tracking-widest" style={{ color: 'rgba(100,160,255,0.7)' }}>{friend.name}'s Offer</p>
                 <span className="ml-auto text-[8px] font-bold text-white/30 flex items-center gap-1">
-                  <DollarSign className="w-2.5 h-2.5" />{FRIEND_CURRENCY.toLocaleString()} AGP
+                  {friendConfirmed ? <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" /> : <Clock className="w-2.5 h-2.5" />} {friendConfirmed ? 'Confirmed' : 'Waiting'}
                 </span>
               </div>
               <div className="flex-1 overflow-y-auto px-4 pb-2" style={{ scrollbarWidth: 'none' }}>
                 <div className="grid grid-cols-4 gap-1">
                   {Array(4).fill(null).map((_, idx) => {
-                    const card = FRIEND_OFFER_CARDS[idx] || null;
+                    const card = friendOfferCards[idx] || null;
                     const r = card ? (RARITY[card.rarity] || RARITY.Common) : null;
                     const Icon = card?.icon || Package;
                     return (
@@ -570,23 +651,8 @@ export default function FriendTradePanel({ friend, onClose }) {
 
               {/* Currency row */}
               <div className="flex-shrink-0 px-4 pb-3">
-                <p className="text-[8px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                  <DollarSign className="w-2.5 h-2.5" /> AGP
-                </p>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setMyCash(v => String(Math.max(0, (parseFloat(v)||0) - 500)))}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
-                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <Minus className="w-2.5 h-2.5" />
-                  </button>
-                  <input type="number" value={myCash} onChange={e => setMyCash(e.target.value)} placeholder="0"
-                    className="flex-1 rounded-lg px-2 py-1 text-xs text-white text-center placeholder-white/20 outline-none"
-                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }} />
-                  <button onClick={() => setMyCash(v => String((parseFloat(v)||0) + 500))}
-                    className="w-6 h-6 rounded-lg flex items-center justify-center text-white/40 hover:text-white transition-colors flex-shrink-0 text-xs"
-                    style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <Plus className="w-2.5 h-2.5" />
-                  </button>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] text-white/55">
+                  Cards keep their original game mapping after the trade, so they appear in the correct game library.
                 </div>
               </div>
 
@@ -600,7 +666,7 @@ export default function FriendTradePanel({ friend, onClose }) {
                       style={tradeStatus === 'my_confirmed'
                         ? { background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', color: '#fcd34d' }
                         : { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
-                      {tradeStatus === 'my_confirmed' && <><AlertTriangle className="w-2.5 h-2.5 flex-shrink-0" /> Confirm again</>}
+                      {tradeStatus === 'ready' && <><AlertTriangle className="w-2.5 h-2.5 flex-shrink-0" /> Ready to finish</>}
                       {tradeStatus === 'waiting_other' && <><Clock className="w-2.5 h-2.5 flex-shrink-0" /> Waiting...</>}
                     </motion.div>
                   )}
@@ -611,21 +677,22 @@ export default function FriendTradePanel({ friend, onClose }) {
                     style={{ background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)' }}>
                     Cancel
                   </button>
-                  <button onClick={handleConfirmTrade}
-                    disabled={!hasOffer || tradeStatus === 'waiting_other'}
+                  <button onClick={tradeSession ? handleConfirmTrade : handleStartTrade}
+                    disabled={isSubmitting || (!tradeSession && !friend?.status) || (tradeSession && (!hasOffer || tradeStatus === 'waiting_other' || myConfirmed))}
                     className="flex-1 py-1.5 rounded-lg text-[7px] font-bold transition-all"
                     style={
                       tradeStatus === 'waiting_other'
                         ? { background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)', color: 'rgba(165,180,252,0.4)', cursor: 'not-allowed' }
-                        : tradeStatus === 'my_confirmed'
+                        : myConfirmed
                           ? { background: 'rgba(52,211,153,0.85)', color: '#000', boxShadow: '0 0 20px rgba(52,211,153,0.35)' }
-                          : hasOffer
+                          : tradeSession
                             ? { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
-                            : { background: 'rgba(100,120,140,0.12)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' }
+                            : { background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)', color: '#67e8f9' }
                     }>
-                    {tradeStatus === 'idle' && 'Propose'}
-                    {tradeStatus === 'my_confirmed' && 'Confirm'}
-                    {tradeStatus === 'waiting_other' && 'Wait'}
+                    {!tradeSession && 'Send Trade Request'}
+                    {tradeSession && !myConfirmed && 'Confirm Trade'}
+                    {tradeSession && myConfirmed && tradeStatus !== 'completed' && 'Confirmed'}
+                    {tradeStatus === 'waiting_other' && 'Waiting'}
                   </button>
                 </div>
               </div>

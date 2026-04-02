@@ -1,0 +1,77 @@
+{
+  "name": "TradeSession",
+  "type": "object",
+  "properties": {
+    "initiator_id": {
+      "type": "string",
+      "description": "User ID who started the trade"
+    },
+    "recipient_id": {
+      "type": "string",
+      "description": "User ID who receives the trade invite"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "cancelled",
+        "completed"
+      ],
+      "default": "pending",
+      "description": "Overall trade status"
+    },
+    "initiator_offer_card_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "UserCard IDs offered by the initiator"
+    },
+    "recipient_offer_card_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "UserCard IDs offered by the recipient"
+    },
+    "initiator_offer_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": [],
+      "description": "Snapshot of initiator cards while trading"
+    },
+    "recipient_offer_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "default": [],
+      "description": "Snapshot of recipient cards while trading"
+    },
+    "initiator_confirmed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the initiator has confirmed"
+    },
+    "recipient_confirmed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the recipient has confirmed"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the trade finished"
+    }
+  },
+  "required": [
+    "initiator_id",
+    "recipient_id"
+  ]
+}

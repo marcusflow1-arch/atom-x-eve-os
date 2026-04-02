@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, UserPlus, MessageSquare, Mic, Gamepad2, 
-  Trophy, Heart, Zap, Activity, MoreHorizontal, 
-  Search, Bell, Shield, Radio, Sparkles, Sword, X
+  Users, UserPlus, MessageSquare, Mic, Gamepad2,
+  Trophy, Heart, Zap, Activity, MoreHorizontal,
+  Search, Bell, Shield, Radio, Sparkles, Sword, X, ArrowLeftRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
@@ -12,6 +12,8 @@ import { createPageUrl } from '@/utils';
 import { lunarDashboardInvite } from '@/functions/lunarDashboardInvite';
 import FriendMessenger from '../components/friends/FriendMessenger';
 import FriendProfileOverlay from '../components/streaming/FriendProfileOverlay';
+import FriendTradePanel from '../components/streaming/FriendTradePanel';
+import TradeInviteToast from '../components/friends/TradeInviteToast';
 
 // --- Sub-components ---
 
@@ -166,6 +168,7 @@ export default function FriendsPage() {
   const [activeTab, setActiveTab] = useState('all');
   const [aiPartyMode, setAiPartyMode] = useState(false);
   const [activePanel, setActivePanel] = useState(null); // 'messenger', 'profile', 'trade', etc.
+  const [incomingTrade, setIncomingTrade] = useState(null);
   
   // Refs
   const seededRef = useRef(false);
@@ -212,6 +215,28 @@ export default function FriendsPage() {
     loadData();
   }, [user]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadIncomingTrade = async () => {
+      const sessions = await base44.entities.TradeSession.filter({ recipient_id: user.id, status: 'pending' });
+      setIncomingTrade(sessions[0] || null);
+    };
+
+    loadIncomingTrade();
+    const unsubscribe = base44.entities.TradeSession.subscribe((event) => {
+      const data = event.data;
+      if (data?.recipient_id === user.id && data?.status === 'pending') {
+        setIncomingTrade(data);
+      }
+      if (data?.recipient_id === user.id && ['accepted', 'declined', 'cancelled'].includes(data?.status)) {
+        loadIncomingTrade();
+      }
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
+
   // Derived State
   const selectedFriend = friends.find(f => f.id === selectedFriendId);
   const filteredFriends = activeTab === 'all' ? friends :
@@ -248,6 +273,27 @@ export default function FriendsPage() {
 
   const handleOpenMessenger = () => {
     setActivePanel('messenger');
+  };
+
+  const handleOpenTrade = () => {
+    setActivePanel('trade');
+  };
+
+  const handleAcceptTradeInvite = async () => {
+    if (!incomingTrade) return;
+    await base44.entities.TradeSession.update(incomingTrade.id, { status: 'accepted' });
+    const matchedFriend = friends.find((entry) => entry.friend_id === incomingTrade.initiator_id);
+    if (matchedFriend) {
+      setSelectedFriendId(matchedFriend.id);
+      setActivePanel('trade');
+    }
+    setIncomingTrade(null);
+  };
+
+  const handleDeclineTradeInvite = async () => {
+    if (!incomingTrade) return;
+    await base44.entities.TradeSession.update(incomingTrade.id, { status: 'declined' });
+    setIncomingTrade(null);
   };
 
   const handlePanelChange = (panel) => {
@@ -391,7 +437,6 @@ export default function FriendsPage() {
               className="flex-1 relative rounded-[32px] overflow-hidden border border-white/10 shadow-2xl"
             >
               {activePanel === 'messenger' ? (
-                /* CHAT VIEW - Using FriendMessenger Component */
                 <div className="absolute inset-0 z-10 bg-[#0f1419]/95">
                   <FriendMessenger 
                     friend={{
@@ -401,6 +446,19 @@ export default function FriendsPage() {
                       status: selectedFriend.status,
                       current_game: selectedFriend.current_game
                     }}
+                    onClose={() => setActivePanel(null)}
+                  />
+                </div>
+              ) : activePanel === 'trade' ? (
+                <div className="absolute inset-0 z-10 bg-[#0f1419]/95">
+                  <FriendTradePanel
+                    friend={{
+                      friend_id: selectedFriend.friend_id,
+                      name: selectedFriend.friend_name,
+                      avatar: selectedFriend.friend_avatar,
+                      status: selectedFriend.status,
+                    }}
+                    currentUser={user}
                     onClose={() => setActivePanel(null)}
                   />
                 </div>
@@ -566,12 +624,26 @@ export default function FriendsPage() {
                         label={activePanel === 'messenger' ? "Close Chat" : "Message"} 
                         onClick={handleOpenMessenger} 
                       />
+                      <ActionButton 
+                        icon={ArrowLeftRight} 
+                        label="Trade" 
+                        onClick={handleOpenTrade} 
+                      />
                     </div>
 
                   </div>
                 </>
               )}
             </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {incomingTrade && (
+            <TradeInviteToast
+              friendName={friends.find((entry) => entry.friend_id === incomingTrade.initiator_id)?.friend_name || 'A friend'}
+              onAccept={handleAcceptTradeInvite}
+              onDecline={handleDeclineTradeInvite}
+            />
           )}
         </AnimatePresence>
       </div>

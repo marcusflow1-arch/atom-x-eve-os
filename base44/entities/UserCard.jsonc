@@ -1,0 +1,105 @@
+{
+  "name": "UserCard",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user who owns this card"
+    },
+    "trading_card_id": {
+      "type": "string",
+      "description": "ID of the master TradingCard record for this owned card"
+    },
+    "card_type": {
+      "type": "string",
+      "enum": [
+        "Equipment",
+        "Ability",
+        "Companion",
+        "Achievement"
+      ],
+      "description": "Type of card"
+    },
+    "card_name": {
+      "type": "string",
+      "description": "Name of the card/item"
+    },
+    "card_rarity": {
+      "type": "string",
+      "enum": [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Epic",
+        "Legendary",
+        "Mythic",
+        "Unique"
+      ],
+      "description": "Rarity tier"
+    },
+    "card_image": {
+      "type": "string",
+      "description": "Image URL for the card"
+    },
+    "game_name": {
+      "type": "string",
+      "description": "Game this card is from"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "Game entity ID this card belongs to"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Genre/category"
+    },
+    "acquisition_method": {
+      "type": "string",
+      "enum": [
+        "unlocked",
+        "purchased",
+        "traded",
+        "gifted"
+      ],
+      "default": "unlocked",
+      "description": "How the card was acquired"
+    },
+    "purchased_from": {
+      "type": "string",
+      "description": "User ID of seller if purchased"
+    },
+    "purchase_price": {
+      "type": "number",
+      "description": "Price paid if purchased"
+    },
+    "unlocked_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the card was unlocked in-game"
+    },
+    "is_equipped": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether card is currently equipped"
+    },
+    "trade_status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "locked_in_trade"
+      ],
+      "default": "available",
+      "description": "Whether the card is currently reserved in a live trade"
+    },
+    "last_trade_id": {
+      "type": "string",
+      "description": "Last TradeSession involving this card"
+    }
+  },
+  "required": [
+    "user_id",
+    "card_type",
+    "card_name",
+    "acquisition_method"
+  ]
+}
