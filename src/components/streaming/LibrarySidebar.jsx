@@ -519,7 +519,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Ferns</span>
             </button>
             <button
-              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setShowAchievementsUniverse(true); setOpenDropdown(null); setIsOpen(false); }}
+              onClick={() => { setExpandedPanel(p => p === 'library' ? null : 'library'); setShowAchievementsUniverse(false); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
                 expandedPanel === 'library'
                   ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
@@ -1719,7 +1719,7 @@ export default function LibrarySidebar() {
       {/* Achievement Universe Panel */}
       <AnimatePresence>
         {expandedPanel === 'library' && showAchievementsUniverse && (
-          <LibraryAchievementsUniverse />
+          <LibraryAchievementsUniverse onClose={() => setShowAchievementsUniverse(false)} />
         )}
       </AnimatePresence>
 
