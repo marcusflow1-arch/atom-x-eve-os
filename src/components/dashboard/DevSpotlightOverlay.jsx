@@ -166,35 +166,36 @@ function QuickAccessPanel({ recentGames, allGames, onSelectGame }) {
 function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
   return (
     <motion.button
-      whileHover={{ y: -4, scale: 1.01 }}
+      whileHover={{ y: -2, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={() => onClick(dev)}
-      className="group relative w-full overflow-hidden rounded-[28px] text-left transition-all border border-white/8 hover:border-cyan-400/25"
+      className="group relative w-full overflow-hidden rounded-2xl text-left transition-all border border-white/8 hover:border-cyan-400/20"
       style={{
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.28)'
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.02) 100%)',
+        boxShadow: '0 12px 24px rgba(0,0,0,0.2)'
       }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <div className="relative p-5 flex flex-col h-full min-h-[220px]">
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-white font-bold text-lg leading-tight group-hover:text-cyan-200 transition-colors">{dev.name}</h3>
-            <p className="text-white/45 text-xs mt-2 line-clamp-2 max-w-[30ch]">{dev.description}</p>
-          </div>
-          <img src={dev.logo} alt={dev.name} className="w-16 h-16 rounded-2xl object-cover border border-white/12 shadow-lg flex-shrink-0" />
-        </div>
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/8 via-transparent to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative p-3.5 flex items-center gap-3 min-h-[108px]">
+        <img src={dev.logo} alt={dev.name} className="w-12 h-12 rounded-xl object-cover border border-white/12 shadow-md flex-shrink-0" />
 
-        <div className="mt-auto flex items-end justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/6 px-3 py-1.5 text-[11px] text-white/70 border border-white/8">
-              <Gamepad2 className="w-3.5 h-3.5" /> {gameCount} game{gameCount !== 1 ? 's' : ''}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-white font-semibold text-sm leading-tight truncate group-hover:text-cyan-200 transition-colors">{dev.name}</h3>
+              <p className="text-white/42 text-[10px] mt-1 line-clamp-2">{dev.description}</p>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-white/60 group-hover:translate-x-0.5 transition-all flex-shrink-0 mt-0.5" />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/6 px-2 py-1 text-[10px] text-white/68 border border-white/8">
+              <Gamepad2 className="w-3 h-3" /> {gameCount}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/8 px-3 py-1.5 text-[11px] text-cyan-200/80 border border-cyan-400/10">
-              <Sparkles className="w-3.5 h-3.5" /> {cardCount} cards
+            <span className="inline-flex items-center gap-1 rounded-full bg-cyan-400/8 px-2 py-1 text-[10px] text-cyan-200/80 border border-cyan-400/10">
+              <Sparkles className="w-3 h-3" /> {cardCount}
             </span>
           </div>
-          <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all flex-shrink-0" />
         </div>
       </div>
     </motion.button>
@@ -532,7 +533,7 @@ export default function DevSpotlightOverlay({ onClose }) {
                         <p className="text-[10px] mt-1">Try a different genre or search term</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
                         {filteredDevs.map(dev => (
                           <DeveloperCard key={dev.id} dev={dev} onClick={handleSelectDev} gameCount={dev.gameCount} cardCount={dev.cardCount} />
                         ))}
