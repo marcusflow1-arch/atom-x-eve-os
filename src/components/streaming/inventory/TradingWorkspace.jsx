@@ -173,7 +173,7 @@ export default function TradingWorkspace({ item, onClose, onBack }) {
       </div>
 
       {/* ═══ MAIN CONTENT AREA (full width, scrollable) ═══ */}
-      <div className="flex-1 overflow-y-auto -ml-px">
+      <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           {activeMode === 'sell' && owned && (
             <TradingWorkspaceSell key="sell" item={item} owned={owned} marketPrice={marketPrice} />

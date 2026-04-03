@@ -157,7 +157,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="fixed top-[64px] bottom-[52px] right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
-        style={{ ...glassStyle, left: leftOffset !== undefined ? leftOffset : (fullScreen ? '0px' : '384px') }}
+        style={{ ...glassStyle, left: leftOffset !== undefined ? leftOffset : (fullScreen ? '0px' : '383px') }}
       >
         {/* Header */}
         <div className="sticky top-0 bg-[#0c1018]/95 backdrop-blur-xl z-10 px-5 py-4 relative">
@@ -391,6 +391,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
             item={marketItem}
             onClose={() => setMarketItem(null)}
             onBack={() => setMarketItem(null)}
+            leftOffset={leftOffset !== undefined ? leftOffset : (fullScreen ? 0 : 383)}
           />
         )}
       </AnimatePresence>
