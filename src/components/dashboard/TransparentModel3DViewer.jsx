@@ -481,6 +481,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
         containerRef.current?.focus();
         e.preventDefault();
+        e.stopPropagation();
       }
     };
     const onMouseUp = () => { isDraggingRef.current = false; };
@@ -500,8 +501,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
     const onContextMenu = (e) => {
       if (!containerRef.current?.contains(e.target)) return;
-      if (e.target === renderer.domElement && !isInteractiveUiTarget(e.target)) {
+      if (e.target === renderer.domElement) {
         e.preventDefault();
+        e.stopPropagation();
       }
     };
 
