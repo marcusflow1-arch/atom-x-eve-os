@@ -498,6 +498,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       const orbit = cameraOrbitRef.current;
       orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
       e.preventDefault();
+      e.stopPropagation();
     };
     const onContextMenu = (e) => {
       if (!containerRef.current?.contains(e.target)) return;
@@ -507,6 +508,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       }
     };
 
+    renderer.domElement.style.pointerEvents = 'auto';
     renderer.domElement.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mousemove', onMouseMove);
@@ -1954,7 +1956,7 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   }, [equippedWeaponUrl, isModelLoaded]);
 
   return (
-    <div ref={containerRef} className="w-full h-full relative" tabIndex="0">
+    <div ref={containerRef} className="w-full h-full relative" tabIndex="0" onContextMenu={(e) => e.preventDefault()}>
       {/* Player HUD */}
       <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-1.5 w-48"
         style={{

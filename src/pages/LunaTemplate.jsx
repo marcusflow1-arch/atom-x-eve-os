@@ -748,6 +748,8 @@ export default function LunaTemplate() {
         <>
           <div
             className="fixed inset-0 z-[5] pointer-events-auto"
+            onContextMenu={(e) => e.preventDefault()}
+            onWheel={(e) => e.preventDefault()}
             style={{
               display: isEnvironmentActive ? 'flex' : 'none',
               alignItems: 'center',
