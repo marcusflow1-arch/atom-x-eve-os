@@ -19,20 +19,20 @@ const PillarCard = ({ icon: Icon, title, description, color, delay }) => (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ delay, duration: 0.6 }}
-    className="relative group"
+    className="relative group min-w-0"
   >
     <div 
-      className="p-8 rounded-3xl border border-white/10 hover:border-white/20 transition-all duration-500 h-full"
+      className="h-full min-w-0 overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8 transition-all duration-500 hover:border-white/20"
       style={{
         background: 'rgba(255, 255, 255, 0.03)',
         backdropFilter: 'blur(20px)',
       }}
     >
-      <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-        <Icon className="w-8 h-8 text-white" />
+      <div className={`mb-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110 md:h-16 md:w-16`}>
+        <Icon className="h-7 w-7 text-white md:h-8 md:w-8" />
       </div>
-      <h3 className="text-2xl font-bold text-white mb-3">{title}</h3>
-      <p className="text-white/60 leading-relaxed">{description}</p>
+      <h3 className="mb-3 break-words text-xl font-bold leading-tight text-white md:text-2xl">{title}</h3>
+      <p className="break-words text-sm leading-6 text-white/60 md:text-base">{description}</p>
     </div>
   </motion.div>
 );
@@ -56,7 +56,7 @@ const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) 
     onClick={onClick}
     whileHover={{ scale: 1.02, y: -4 }}
     whileTap={{ scale: 0.98 }}
-    className={`relative p-6 rounded-2xl border text-left transition-all duration-300 ${
+    className={`relative min-w-0 overflow-hidden rounded-2xl border p-5 pr-12 text-left transition-all duration-300 md:p-6 md:pr-14 ${
       selected
         ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.2)]'
         : 'border-white/10 hover:border-white/20'
@@ -67,15 +67,15 @@ const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) 
     }}
   >
     {selected && (
-      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
-        <ChevronRight className="w-4 h-4 text-black" />
+      <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400 md:right-4 md:top-4">
+        <ChevronRight className="h-4 w-4 text-black" />
       </div>
     )}
-    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center mb-4`}>
-      <Icon className="w-6 h-6 text-white" />
+    <div className={`mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${color} md:h-12 md:w-12`}>
+      <Icon className="h-5 w-5 text-white md:h-6 md:w-6" />
     </div>
-    <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-    <p className="text-white/50 text-sm">{description}</p>
+    <h3 className="mb-2 break-words text-base font-bold leading-tight text-white md:text-lg">{title}</h3>
+    <p className="break-words pr-1 text-sm leading-6 text-white/50">{description}</p>
   </motion.button>
 );
 
@@ -226,7 +226,7 @@ export default function OnboardingHome() {
             <p className="text-white/50 text-lg">Three pillars that power your journey</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-3 items-stretch">
             <PillarCard
               icon={Gamepad2}
               title="Play"
@@ -288,7 +288,7 @@ export default function OnboardingHome() {
             <p className="text-white/50 text-lg">Choose your preferred path (you can explore everything later)</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-4 mb-12">
+          <div className="grid gap-4 md:grid-cols-2 mb-12 items-stretch">
             {paths.map((path) => (
               <PathCard
                 key={path.id}
