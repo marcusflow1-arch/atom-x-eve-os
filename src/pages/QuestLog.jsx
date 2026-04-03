@@ -146,7 +146,10 @@ export default function QuestLog({ isEmbedded, onClose, initialGame }) {
   return (
     <PageErrorBoundary pageName="QuestLog">
       <div 
-        className={isEmbedded ? `w-full h-full p-6 flex flex-col overflow-hidden ${swtorColors.bg} text-white font-sans relative` : `min-h-screen w-full ${swtorColors.bg} text-white pt-24 px-8 pb-8 flex flex-col relative`}
+        className={isEmbedded ? `w-full h-full p-6 flex flex-col overflow-hidden text-white font-sans relative` : `min-h-screen w-full ${swtorColors.bg} text-white pt-24 px-8 pb-8 flex flex-col relative`}
+        style={isEmbedded ? {
+          background: 'linear-gradient(180deg, rgba(8,12,18,0.12) 0%, rgba(7,10,16,0.32) 100%)'
+        } : undefined}
       >
         {/* Holographic grid background */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#4288cc 1px, transparent 1px), linear-gradient(90deg, #4288cc 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -254,40 +257,56 @@ export default function QuestLog({ isEmbedded, onClose, initialGame }) {
           <div className="col-span-8 flex flex-col gap-6">
             
             {/* Game Header Area - SWTOR style */}
-            <div className="bg-[#0d1522] border border-[#1b3652] rounded-sm p-6 relative overflow-hidden shadow-[0_0_20px_rgba(0,0,0,0.5)] shrink-0">
-              <div className="absolute top-0 right-0 w-64 h-full bg-cover bg-right opacity-20" style={{ backgroundImage: `url(${activeGame.image})`, maskImage: 'linear-gradient(to left, black, transparent)', WebkitMaskImage: 'linear-gradient(to left, black, transparent)' }} />
+            <div
+              className="relative overflow-hidden rounded-[24px] border border-white/10 p-6 shrink-0"
+              style={{
+                background: 'linear-gradient(180deg, rgba(12,18,28,0.82) 0%, rgba(9,14,22,0.72) 100%)',
+                backdropFilter: 'blur(24px) saturate(145%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(145%)',
+                boxShadow: '0 24px 60px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.08)'
+              }}
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.12),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.10),transparent_26%)]" />
+              <div className="absolute top-0 right-0 w-72 h-full bg-cover bg-right opacity-20" style={{ backgroundImage: `url(${activeGame.image})`, maskImage: 'linear-gradient(to left, black, transparent)', WebkitMaskImage: 'linear-gradient(to left, black, transparent)' }} />
               
-              <div className="relative z-10 flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-3xl font-black text-white uppercase tracking-widest">{activeGame.title}</h2>
-                    <Badge className="bg-[#1b3652] text-[#8caecc] border-none rounded-sm uppercase tracking-wider text-[10px]">{activeGame.genre}</Badge>
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                    <h2 className="text-3xl font-black text-white uppercase tracking-[0.22em]">{activeGame.title}</h2>
+                    <Badge className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-cyan-200">{activeGame.genre}</Badge>
                   </div>
                   
-                  <div className="flex items-center gap-6 mt-4">
-                    <div className="flex items-center gap-2 text-[#8caecc] text-xs font-mono font-bold">
-                      <Clock className="w-4 h-4 text-[#4288cc]" />
-                      <span>TIME LOGGED: 24.5 HRS</span>
+                  <div className="flex flex-wrap items-center gap-3 mt-4">
+                    <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-mono font-bold text-[#b6cde5] backdrop-blur-md">
+                      <span className="inline-flex items-center gap-2"><Clock className="w-4 h-4 text-cyan-300" /> TIME LOGGED: 24.5 HRS</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[#8caecc] text-xs font-mono font-bold">
-                      <Trophy className="w-4 h-4 text-[#e5c56d]" />
-                      <span>DIRECTIVES: {completedQuests}/{totalQuests}</span>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-mono font-bold text-[#b6cde5] backdrop-blur-md">
+                      <span className="inline-flex items-center gap-2"><Trophy className="w-4 h-4 text-amber-300" /> DIRECTIVES: {completedQuests}/{totalQuests}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0 lg:w-[420px]">
                   <Button 
                     onClick={() => handlePinGame(activeGame.id)}
                     variant="outline"
-                    className={`h-8 rounded-sm text-[10px] uppercase font-bold tracking-wider ${
+                    className={`h-auto min-h-[78px] rounded-[22px] border px-4 py-4 text-left normal-case tracking-normal justify-start items-start ${
                       pinnedGameId === activeGame.id 
-                        ? 'bg-[#e5c56d]/10 text-[#e5c56d] border-[#e5c56d]' 
-                        : 'bg-transparent text-[#8caecc] border-[#1b3652] hover:bg-[#1b3652]'
+                        ? 'bg-amber-300/10 text-amber-200 border-amber-300/30 hover:bg-amber-300/15' 
+                        : 'bg-white/5 text-[#c8dbef] border-white/10 hover:bg-white/10 hover:text-white'
                     }`}
+                    style={{ backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}
                   >
-                    <Pin className="w-3 h-3 mr-2" fill={pinnedGameId === activeGame.id ? "currentColor" : "none"} />
-                    {pinnedGameId === activeGame.id ? 'Tracked' : 'Track Operations'}
+                    <div className="flex items-start gap-3 w-full">
+                      <div className={`mt-0.5 flex h-9 w-9 items-center justify-center rounded-full border ${pinnedGameId === activeGame.id ? 'border-amber-300/30 bg-amber-300/10' : 'border-white/10 bg-white/5'}`}>
+                        <Pin className="w-4 h-4" fill={pinnedGameId === activeGame.id ? 'currentColor' : 'none'} />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">Quest Tracking</div>
+                        <div className="mt-1 text-sm font-semibold">{pinnedGameId === activeGame.id ? 'Pinned to Quest Book' : 'Add to Quest Book'}</div>
+                        <div className="mt-1 text-xs text-white/45">Keep this game on the dashboard book.</div>
+                      </div>
+                    </div>
                   </Button>
                   
                   <Button 
@@ -298,9 +317,19 @@ export default function QuestLog({ isEmbedded, onClose, initialGame }) {
                       navigate(createPageUrl('GenreMastery'));
                     }}
                     variant="outline"
-                    className="h-8 bg-transparent border-[#1b3652] text-[#8caecc] hover:bg-[#1b3652] hover:text-white rounded-sm text-[10px] uppercase font-bold tracking-wider"
+                    className="h-auto min-h-[78px] rounded-[22px] border border-cyan-400/20 bg-cyan-400/10 px-4 py-4 text-left normal-case tracking-normal justify-start items-start text-cyan-100 hover:bg-cyan-400/15"
+                    style={{ backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}
                   >
-                    <Target className="w-3 h-3 mr-2" /> View Collections
+                    <div className="flex items-start gap-3 w-full">
+                      <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/20 bg-cyan-400/10">
+                        <Target className="w-4 h-4 text-cyan-200" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] uppercase tracking-[0.24em] text-cyan-200/60">Card Unlocks</div>
+                        <div className="mt-1 text-sm font-semibold">Open Card Collection</div>
+                        <div className="mt-1 text-xs text-cyan-100/55">View unlockable cards for this game.</div>
+                      </div>
+                    </div>
                   </Button>
                 </div>
               </div>

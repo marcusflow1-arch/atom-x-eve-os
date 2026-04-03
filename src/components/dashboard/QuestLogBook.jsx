@@ -299,14 +299,27 @@ export default function QuestLogBook() {
         <AnimatePresence>
           {showFullView && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed z-[35] left-0 right-0 bg-[#080808] shadow-2xl border-t border-white/10"
-              style={{ top: '64px', bottom: '48px' }}
+              initial={{ opacity: 0, y: 20, scale: 0.985 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.985 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 210 }}
+              className="fixed z-[35] left-3 right-3 md:left-6 md:right-6 overflow-hidden rounded-[28px] border border-white/10 shadow-2xl"
+              style={{
+                top: '76px',
+                bottom: '56px',
+                background: 'linear-gradient(180deg, rgba(8,12,18,0.92) 0%, rgba(10,14,22,0.88) 45%, rgba(6,9,15,0.94) 100%)',
+                backdropFilter: 'blur(32px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(32px) saturate(150%)',
+                boxShadow: '0 30px 80px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08)'
+              }}
             >
-              <QuestLog isEmbedded={true} onClose={() => setShowFullView(false)} initialGame={fullViewGame} />
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.12),transparent_24%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_18%,transparent_82%,rgba(255,255,255,0.04))]" />
+              </div>
+              <div className="relative h-full w-full">
+                <QuestLog isEmbedded={true} onClose={() => setShowFullView(false)} initialGame={fullViewGame} />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>,
