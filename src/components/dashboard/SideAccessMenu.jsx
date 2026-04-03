@@ -255,44 +255,17 @@ export default function SideAccessMenu() {
       {/* Trigger Button - Floating on Left Edge */}
       {!isExpanded && !activeItem && (
         <motion.div
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-40 flex items-center"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-40 flex items-center"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          <button
+          {/* Hit area */}
+          <div 
+            className="w-4 h-64 absolute left-0" 
             onClick={handleAnchorClick}
-            className="relative w-14 h-[420px] rounded-[28px] overflow-hidden border border-white/10 flex flex-col items-center justify-between py-5 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.05]"
-            style={{
-              background: 'rgba(8, 12, 18, 0.42)',
-              backdropFilter: 'blur(30px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-            }}
-            aria-label="Open quick access"
-          >
-            <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
-            <div className="absolute inset-y-6 left-0 w-px bg-white/10" />
-            <div className="absolute inset-y-6 right-0 w-px bg-white/10" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-white/10" />
-
-            <div className="flex flex-col items-center gap-4">
-              {MENU_ITEMS.slice(0, 4).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.id} className="w-9 h-9 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-white/65">
-                    <Icon className="w-4 h-4" />
-                  </div>
-                );
-              })}
-            </div>
-
-            <motion.div
-              animate={{ opacity: isHovered ? 1 : 0.7, x: isHovered ? 2 : 0 }}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-white/[0.08] border border-white/10 text-white/80"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </motion.div>
-          </button>
+          />
+          
+          {/* Visible Bar Removed */}
         </motion.div>
       )}
 
@@ -306,13 +279,7 @@ export default function SideAccessMenu() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -100, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="w-64 h-full border-y border-r border-white/10 rounded-r-2xl flex flex-col overflow-hidden shadow-2xl"
-              style={{
-                background: 'rgba(8, 12, 18, 0.42)',
-                backdropFilter: 'blur(30px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
-              }}
+              className="w-64 h-full bg-black/80 backdrop-blur-xl border-y border-r border-white/10 rounded-r-2xl flex flex-col overflow-hidden shadow-2xl"
             >
               <div className="p-6 border-b border-white/10 flex justify-between items-center">
                 <h3 className="text-white font-bold text-lg tracking-wide">Quick Access</h3>
