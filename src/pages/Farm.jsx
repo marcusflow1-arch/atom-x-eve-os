@@ -8,7 +8,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { getFarmGameById } from '@/components/farm/farmData';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
-import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
+import { ChevronLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 export default function FarmPage() {
@@ -90,8 +90,16 @@ export default function FarmPage() {
                     <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-300/5 rounded-full blur-[120px]" />
                 </div>
 
-                <div className="relative z-10 h-screen pt-16 flex flex-col">
-                    <SideAccessMenu />
+                <div className="relative z-10 h-screen pt-16 flex">
+                    <div className="w-[5%] min-w-[80px] border-r border-white/20 h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm">
+                        <button
+                            className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-12 bg-black/60 border border-white/20 rounded-full flex items-center justify-center text-white/50 backdrop-blur-md z-50 shadow-lg cursor-default"
+                            aria-label="Farm sidebar bar"
+                        >
+                            <ChevronLeft className="w-4 h-4 -ml-1" />
+                        </button>
+                    </div>
+                    <div className="flex-1 flex flex-col min-w-0">
                     <AnimatePresence mode="wait">
                         {view === 'hub' ? (
                             <motion.div 
@@ -102,7 +110,7 @@ export default function FarmPage() {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 overflow-y-auto custom-scrollbar"
                             >
-                                <div className="max-w-[1600px] mx-auto w-full pl-20">
+                                <div className="max-w-[1600px] mx-auto w-full">
                                     <FarmHub onSelectGame={handleSelectGame} />
                                 </div>
                             </motion.div>
@@ -113,12 +121,13 @@ export default function FarmPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
-                                className="flex-1 h-full overflow-hidden pl-20"
+                                className="flex-1 h-full overflow-hidden"
                             >
                                 <FarmGameView game={selectedGame} onBack={handleBackToHub} />
                             </motion.div>
                         )}
                     </AnimatePresence>
+                    </div>
                 </div>
             </div>
             </GlassPageFrame>
