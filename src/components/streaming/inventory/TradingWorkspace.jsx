@@ -70,7 +70,7 @@ export default function TradingWorkspace({ item, onClose, onBack }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed left-80 sm:left-96 right-0 z-[72] flex flex-col overflow-hidden"
+      className="fixed left-[320px] right-0 z-[72] flex flex-col overflow-hidden"
       style={{ top: '64px', bottom: '52px', background: 'rgba(8, 12, 18, 0.92)', backdropFilter: 'blur(50px) saturate(180%)', WebkitBackdropFilter: 'blur(50px) saturate(180%)' }}
 
     >
