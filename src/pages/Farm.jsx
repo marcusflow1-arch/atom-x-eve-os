@@ -8,6 +8,7 @@ import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { getFarmGameById } from '@/components/farm/farmData';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
+import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { createPageUrl } from '@/utils';
 
 export default function FarmPage() {
@@ -90,6 +91,7 @@ export default function FarmPage() {
                 </div>
 
                 <div className="relative z-10 h-screen pt-16 flex flex-col">
+                    <SideAccessMenu />
                     <AnimatePresence mode="wait">
                         {view === 'hub' ? (
                             <motion.div 
@@ -100,7 +102,7 @@ export default function FarmPage() {
                                 transition={{ duration: 0.3 }}
                                 className="flex-1 overflow-y-auto custom-scrollbar"
                             >
-                                <div className="max-w-[1600px] mx-auto w-full">
+                                <div className="max-w-[1600px] mx-auto w-full pl-20">
                                     <FarmHub onSelectGame={handleSelectGame} />
                                 </div>
                             </motion.div>
@@ -111,7 +113,7 @@ export default function FarmPage() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3 }}
-                                className="flex-1 h-full overflow-hidden"
+                                className="flex-1 h-full overflow-hidden pl-20"
                             >
                                 <FarmGameView game={selectedGame} onBack={handleBackToHub} />
                             </motion.div>
