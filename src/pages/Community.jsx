@@ -346,14 +346,31 @@ export default function CommunityPage() {
             return;
         }
         try {
-            const newScore = post.score + (voteType === 'up' ? 1 : -1);
+            const currentScore = Number(post.score || 0);
+            const newScore = currentScore + (voteType === 'up' ? 1 : -1);
             await base44.entities.Post.update(post.id, { score: newScore });
             setPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
+            setRightPosts(prevPosts => prevPosts.map(p => p.id === post.id ? {...p, score: newScore} : p));
             if (selectedPost?.id === post.id) {
                 setSelectedPost(prev => ({...prev, score: newScore}));
             }
         } catch (error) {
             showError(error, 'Vote');
+        }
+    };
+
+    const handleCommentVote = async (comment, voteType) => {
+        if (!isAuthenticated) {
+            showError('Please sign in to vote');
+            return;
+        }
+        try {
+            const currentScore = Number(comment.score || 0);
+            const newScore = currentScore + (voteType === 'up' ? 1 : -1);
+            await base44.entities.Comment.update(comment.id, { score: newScore });
+            setComments(prevComments => prevComments.map(c => c.id === comment.id ? { ...c, score: newScore } : c));
+        } catch (error) {
+            showError(error, 'Comment Vote');
         }
     };
 
@@ -659,7 +676,7 @@ export default function CommunityPage() {
                                                     <ArrowLeft className="w-4 h-4 mr-2" /> Back to Feed
                                                 </Button>
                                                 
-                                                <PostCard post={selectedPost} onVote={handleVote} isDetailView={true} />
+                                                <PostCard post={selectedPost} onVote={handleVote} onSelect={() => {}} isDetailView={true} />
                                                 
                                                 <div className="mt-8 border-t border-white/10 pt-6">
                                                     <h3 className="text-white font-bold mb-6 flex items-center gap-2">
@@ -673,7 +690,7 @@ export default function CommunityPage() {
                                                            await base44.entities.Comment.create(data);
                                                            fetchComments(selectedPost.id);
                                                         }}
-                                                        onVote={async () => fetchComments(selectedPost.id)}
+                                                        onVote={handleCommentVote}
                                                     />
                                                 </div>
                                             </motion.div>
@@ -692,8 +709,8 @@ export default function CommunityPage() {
                                                     ))
                                                 ) : posts.length > 0 ? (
                                                     posts.map(post => (
-                                                        <div key={post.id} onClick={() => setSelectedPost(post)}>
-                                                            <PostCard post={post} onVote={handleVote} />
+                                                        <div key={post.id}>
+                                                            <PostCard post={post} onVote={handleVote} onSelect={() => setSelectedPost(post)} />
                                                         </div>
                                                     ))
                                                 ) : (

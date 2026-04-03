@@ -30,7 +30,8 @@ export default function CommentSection({ postId, comments, onAddComment, onVote 
         e.preventDefault();
         if (!newCommentText.trim()) return;
         onAddComment({
-            post_id: postId,
+            target_id: postId,
+            target_type: 'post',
             content: newCommentText,
         });
         setNewCommentText('');

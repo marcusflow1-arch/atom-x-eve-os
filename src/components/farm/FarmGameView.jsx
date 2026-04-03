@@ -179,6 +179,13 @@ export default function FarmGameView({ game, onBack }) {
         topic={activeTopic || 'achievements'}
         gameTitle={game.title}
         gameId={game.id}
+        onCreated={() => {
+          setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            newParams.set('refresh', String(Date.now()));
+            return newParams;
+          });
+        }}
       />
     </div>
   );

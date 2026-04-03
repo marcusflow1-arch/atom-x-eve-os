@@ -33,10 +33,11 @@ export default function CreatePostModal({ open, onClose, topic, gameTitle, gameI
 
   const createPostMutation = useMutation({
     mutationFn: (newPost) => base44.entities.Post.create(newPost),
-    onSuccess: () => {
+    onSuccess: (createdPost) => {
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast.success('Posted successfully!');
       setTitle(''); setContent('');
+      onCreated?.(createdPost);
       onClose();
     },
     onError: (error) => {
@@ -58,16 +59,10 @@ export default function CreatePostModal({ open, onClose, topic, gameTitle, gameI
       title: title.trim(),
       content: content.trim(),
       community: selectedTopic,
-      type: postType,
+      type: postType === 'discussion' ? 'discussion' : postType,
       game_title: gameTitle || '',
       is_farm_hub: true,
-    });
-
-    onCreated?.({ 
-      title: title.trim(), 
-      content: content.trim(), 
-      topic: selectedTopic,
-      type: postType 
+      score: 1,
     });
   };
 
