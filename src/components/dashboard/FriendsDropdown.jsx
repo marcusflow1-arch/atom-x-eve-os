@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { lunarDashboardInvite } from '@/functions/lunarDashboardInvite';
 import {
   Users, MessageSquare, UserPlus, Gamepad2,
   Swords, Repeat, Check, X, Search,
@@ -29,13 +30,6 @@ const STATUS_COLOR = {
   offline: 'bg-slate-600',
 };
 
-const FRIEND_ACTIONS = [
-  { id: 'chat', icon: MessageSquare, label: 'Chat', color: 'text-cyan-400' },
-  { id: 'invite', icon: UserPlus, label: 'Invite', color: 'text-green-400' },
-  { id: 'duel', icon: Swords, label: 'Duel', color: 'text-red-400' },
-  { id: 'trade', icon: Repeat, label: 'Trade', color: 'text-amber-400' },
-];
-
 const MESSENGER_ACTIONS = [
   { id: 'video', icon: Video, label: 'Video Call', color: 'text-cyan-400', bg: 'bg-cyan-500/10 hover:bg-cyan-500/20 border-cyan-500/20' },
   { id: 'voice', icon: Mic, label: 'Voice Call', color: 'text-green-400', bg: 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20' },
@@ -48,6 +42,7 @@ export default function FriendsDropdown() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMessenger, setShowMessenger] = useState(false);
   const [showCallUI, setShowCallUI] = useState(false);
+  const [pendingActionId, setPendingActionId] = useState(null);
 
   const filteredFriends = MOCK_FRIENDS.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -67,6 +62,16 @@ export default function FriendsDropdown() {
     setSelectedFriend(friend);
     setShowCallUI(true);
     setShowMessenger(false);
+  };
+
+  const handleDashboardInvite = async (friend, action) => {
+    const actionKey = `${action}-${friend.id}`;
+    setPendingActionId(actionKey);
+    try {
+      await lunarDashboardInvite({ action, friend_id: String(friend.id) });
+    } finally {
+      setPendingActionId(null);
+    }
   };
 
   return (
@@ -137,6 +142,8 @@ export default function FriendsDropdown() {
                     onSelect={() => handleFriendClick(friend)}
                     onMessage={handleOpenMessenger}
                     onCall={handleOpenCallUI}
+                    onInvite={handleDashboardInvite}
+                    pendingActionId={pendingActionId}
                   />
                 ))}
                 {/* Offline */}
@@ -153,6 +160,8 @@ export default function FriendsDropdown() {
                         onSelect={() => handleFriendClick(friend)}
                         onMessage={handleOpenMessenger}
                         onCall={handleOpenCallUI}
+                        onInvite={handleDashboardInvite}
+                        pendingActionId={pendingActionId}
                         dim
                       />
                     ))}
@@ -367,7 +376,7 @@ export default function FriendsDropdown() {
 }
 
 // Friend Row - compact book-style entry
-const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, dim, onCall }) => (
+const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, dim, onCall, pendingActionId }) => (
   <div className={`w-full rounded-xl border transition-all ${
     selected
       ? 'bg-white/[0.08] border-white/10'
@@ -402,7 +411,7 @@ const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, d
         exit={{ opacity: 0, height: 0 }}
         className="px-2 pb-2"
       >
-        <div className="flex gap-1.5 mt-1">
+        <div className="flex gap-1.5 mt-1 flex-wrap">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -426,12 +435,24 @@ const FriendRow = ({ friend, selected, onSelect, onMessage, onTrade, onInvite, d
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onTrade?.(friend);
+              onInvite?.(friend, 'invite');
             }}
-            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors"
+            disabled={pendingActionId === `invite-${friend.id}`}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 transition-colors disabled:opacity-50"
           >
-            <Repeat className="w-3 h-3 text-amber-400" />
-            <span className="text-[9px] font-medium text-amber-400">Trade</span>
+            <UserPlus className="w-3 h-3 text-blue-400" />
+            <span className="text-[9px] font-medium text-blue-400">Invite</span>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onInvite?.(friend, 'join');
+            }}
+            disabled={pendingActionId === `join-${friend.id}`}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 transition-colors disabled:opacity-50"
+          >
+            <ChevronRight className="w-3 h-3 text-violet-400" />
+            <span className="text-[9px] font-medium text-violet-400">Join</span>
           </button>
         </div>
       </motion.div>
