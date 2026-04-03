@@ -166,26 +166,37 @@ function QuickAccessPanel({ recentGames, allGames, onSelectGame }) {
 function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.01, y: -2 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={() => onClick(dev)}
-      className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all border border-transparent hover:border-white/10 group"
-      style={{ background: 'rgba(255,255,255,0.03)' }}
+      className="group relative w-full overflow-hidden rounded-[28px] text-left transition-all border border-white/8 hover:border-cyan-400/25"
+      style={{
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.28)'
+      }}
     >
-      <img src={dev.logo} alt={dev.name} className="w-14 h-14 rounded-xl border border-white/15 shadow-lg flex-shrink-0" />
-      <div className="flex-1 min-w-0">
-        <h3 className="text-white font-bold text-sm truncate group-hover:text-cyan-300 transition-colors">{dev.name}</h3>
-        <p className="text-white/30 text-[10px] line-clamp-1 mt-0.5">{dev.description}</p>
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className="text-white/25 text-[10px] flex items-center gap-1">
-            <Gamepad2 className="w-3 h-3" /> {gameCount} game{gameCount !== 1 ? 's' : ''}
-          </span>
-          <span className="text-cyan-400/40 text-[10px] flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> {cardCount} cards
-          </span>
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative p-5 flex flex-col h-full min-h-[220px]">
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-white font-bold text-lg leading-tight group-hover:text-cyan-200 transition-colors">{dev.name}</h3>
+            <p className="text-white/45 text-xs mt-2 line-clamp-2 max-w-[30ch]">{dev.description}</p>
+          </div>
+          <img src={dev.logo} alt={dev.name} className="w-16 h-16 rounded-2xl object-cover border border-white/12 shadow-lg flex-shrink-0" />
+        </div>
+
+        <div className="mt-auto flex items-end justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/6 px-3 py-1.5 text-[11px] text-white/70 border border-white/8">
+              <Gamepad2 className="w-3.5 h-3.5" /> {gameCount} game{gameCount !== 1 ? 's' : ''}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-400/8 px-3 py-1.5 text-[11px] text-cyan-200/80 border border-cyan-400/10">
+              <Sparkles className="w-3.5 h-3.5" /> {cardCount} cards
+            </span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all flex-shrink-0" />
         </div>
       </div>
-      <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-white/40 transition-colors flex-shrink-0" />
     </motion.button>
   );
 }
@@ -521,7 +532,7 @@ export default function DevSpotlightOverlay({ onClose }) {
                         <p className="text-[10px] mt-1">Try a different genre or search term</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
                         {filteredDevs.map(dev => (
                           <DeveloperCard key={dev.id} dev={dev} onClick={handleSelectDev} gameCount={dev.gameCount} cardCount={dev.cardCount} />
                         ))}
