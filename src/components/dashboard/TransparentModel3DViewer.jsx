@@ -463,16 +463,24 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    // --- MOUSE CONTROLS (Right click orbit + zoom) ---
+    // --- MOUSE CONTROLS (only inside empty 3D viewer space) ---
+    const isInteractiveUiTarget = (target) => {
+      if (!target || !containerRef.current) return false;
+      if (target === renderer.domElement) return false;
+      const element = target.closest?.('*');
+      if (!element) return false;
+      if (!containerRef.current.contains(element)) return false;
+      return !!element.closest('button, a, input, textarea, select, label, [role="button"], [data-no-camera], .pointer-events-auto, .overflow-y-auto, .overflow-auto, .scroll-auto');
+    };
+
     const onMouseDown = (e) => {
-      // Allow interaction if it's the canvas itself, otherwise block on UI elements
-      if (e.target.tagName?.toLowerCase() !== 'canvas' && e.target.closest('button, a, input, [role="button"], .overflow-y-auto, .overflow-auto, .scroll-auto')) {
-        return;
-      }
+      if (!containerRef.current?.contains(e.target)) return;
+      if (e.target !== renderer.domElement || isInteractiveUiTarget(e.target)) return;
       if (e.button === 0 || e.button === 2) {
         isDraggingRef.current = true;
         lastMouseRef.current = { x: e.clientX, y: e.clientY };
-        if (containerRef.current) containerRef.current.focus();
+        containerRef.current?.focus();
+        e.preventDefault();
       }
     };
     const onMouseUp = () => { isDraggingRef.current = false; };
@@ -484,26 +492,24 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       cameraOrbitRef.current.pitch = Math.max(0.05, Math.min(Math.PI / 1.8, cameraOrbitRef.current.pitch + dy * 0.005));
     };
     const onWheel = (e) => {
-      // Allow zooming if hovering over the canvas itself, otherwise block on scrolling UI elements
-      if (e.target.tagName?.toLowerCase() !== 'canvas' && e.target.closest('.overflow-y-auto, .overflow-auto, .scroll-auto')) {
-        return;
-      }
-      
+      if (!containerRef.current?.contains(e.target)) return;
+      if (e.target !== renderer.domElement || isInteractiveUiTarget(e.target)) return;
       const orbit = cameraOrbitRef.current;
       orbit.distance = Math.max(0.3, Math.min(15, orbit.distance + e.deltaY * 0.002));
+      e.preventDefault();
     };
     const onContextMenu = (e) => {
-      // Allow context menu on UI elements, prevent on background
-      if (!e.target.closest('button, a, input, [role="button"]')) {
+      if (!containerRef.current?.contains(e.target)) return;
+      if (e.target === renderer.domElement && !isInteractiveUiTarget(e.target)) {
         e.preventDefault();
       }
     };
 
-    window.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('wheel', onWheel, { passive: false });
-    window.addEventListener('contextmenu', onContextMenu);
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
+    renderer.domElement.addEventListener('contextmenu', onContextMenu);
 
     const initialEnvUrl = roomModelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/ddff83a29_ModularEnvironment.fbx';
     swapEnvironment(initialEnvUrl);
@@ -1860,11 +1866,11 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('keydown', onSwitchCharacter);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('contextmenu', onContextMenu);
+      renderer.domElement.removeEventListener('wheel', onWheel);
+      renderer.domElement.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('multiplayerPlayersUpdate', handleMultiplayerUpdate);
       if (c1ModelRef.current?.userData?._weaponCleanup) c1ModelRef.current.userData._weaponCleanup();
       spawnedAIModelsRef.current.forEach(inst => {
