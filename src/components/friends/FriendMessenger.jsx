@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Send, Mic, Phone, Video, Image as ImageIcon, Paperclip,
@@ -31,10 +31,14 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [onVoiceCall, setOnVoiceCall] = useState(false);
   const [onVideoCall, setOnVideoCall] = useState(false);
-  const [onWatchTogether, setOnWatchTogether] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [mediaPreview, setMediaPreview] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const screenShareStreamRef = useRef(null);
+  const SpeechRecognition = useMemo(() => window.SpeechRecognition || window.webkitSpeechRecognition, []);
 
   // Load chat history on mount
   useEffect(() => {
@@ -44,10 +48,28 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
     }
   }, [friend]);
 
+  useEffect(() => {
+    const startVoice = () => handleVoiceCall();
+    const startVideo = () => handleVideoCall();
+    window.addEventListener('friendMessengerStartVoiceCall', startVoice);
+    window.addEventListener('friendMessengerStartVideoCall', startVideo);
+    return () => {
+      window.removeEventListener('friendMessengerStartVoiceCall', startVoice);
+      window.removeEventListener('friendMessengerStartVideoCall', startVideo);
+    };
+  }, []);
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop?.();
+      stopScreenShare();
+    };
+  }, []);
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
@@ -115,21 +137,73 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
   };
 
   const handleVoiceCall = () => {
+    setOnVideoCall(false);
     setOnVoiceCall(true);
   };
 
   const handleVideoCall = () => {
+    setOnVoiceCall(false);
     setOnVideoCall(true);
   };
 
-  const handleWatchTogether = () => {
-    setOnWatchTogether(true);
+  const stopScreenShare = () => {
+    if (screenShareStreamRef.current) {
+      screenShareStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenShareStreamRef.current = null;
+    }
+    setIsScreenSharing(false);
+  };
+
+  const handleToggleVoiceTyping = () => {
+    if (!SpeechRecognition) return;
+
+    if (!recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0]?.transcript || '')
+          .join(' ');
+        setNewMessage(transcript.trim());
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      recognitionRef.current = recognition;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    recognitionRef.current.start();
+    setIsListening(true);
+  };
+
+  const handleStartScreenShare = async () => {
+    if (isScreenSharing) {
+      stopScreenShare();
+      return;
+    }
+
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    screenShareStreamRef.current = stream;
+    setIsScreenSharing(true);
+
+    const [videoTrack] = stream.getVideoTracks();
+    if (videoTrack) {
+      videoTrack.onended = () => stopScreenShare();
+    }
   };
 
   const handleEndCall = () => {
     setOnVoiceCall(false);
     setOnVideoCall(false);
-    setOnWatchTogether(false);
+    stopScreenShare();
   };
 
   const handleReaction = (emoji) => {
@@ -197,75 +271,63 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
 
   const CallOverlay = ({ type }) =>
   <AnimatePresence>
-      {(showCallOverlay || onVoiceCall || onVideoCall || onWatchTogether) &&
+      {(showCallOverlay || onVoiceCall || onVideoCall) &&
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl">
-      
-          <div className="text-center space-y-6">
-            {type !== 'watch' && !showCallOverlay &&
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-cyan-500/50 mx-auto">
-          
-                <img src={friend?.friend_avatar} alt="" className="w-full h-full object-cover" />
-              </motion.div>
-        }
-
-            {showCallOverlay &&
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-cyan-500/50 mx-auto">
-          
-                <img src={friend?.friend_avatar} alt="" className="w-full h-full object-cover" />
-              </motion.div>
-        }
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xl px-6">
+          <div className="text-center space-y-6 w-full max-w-md">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-cyan-500/50 mx-auto">
+              <img src={friend?.friend_avatar} alt="" className="w-full h-full object-cover" />
+            </motion.div>
 
             <div>
               <h3 className="text-2xl font-bold text-white">{friend?.friend_name}</h3>
               <p className="text-white/50 mt-1">
-                {showCallOverlay && 'Voice Call'}
-                {type === 'voice' && !showCallOverlay && 'Voice Call'}
-                {type === 'video' && 'Video Call'}
-                {type === 'watch' && 'Watching Game'}
-                • 00:{(Date.now() % 60).toString().padStart(2, '0')}
+                {type === 'video' ? 'Video Call' : 'Voice Call'}
+                {isScreenSharing ? ' • Screen sharing' : ''}
               </p>
             </div>
 
-            {(type === 'watch' || showCallOverlay) &&
-        <div className="w-64 h-36 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl border border-white/10 flex items-center justify-center">
-                <div className="text-center">
-                  <Gamepad2 className="w-12 h-12 text-purple-400 mx-auto mb-2" />
-                  <p className="text-sm text-white/60">{friend?.current_game || 'Game Stream'}</p>
-                </div>
+            {type === 'video' && (
+              <div className="w-full h-44 bg-gradient-to-br from-violet-500/20 to-cyan-500/20 rounded-xl border border-white/10 flex items-center justify-center">
+                <Video className="w-12 h-12 text-violet-300" />
               </div>
-        }
+            )}
 
             <div className="flex items-center gap-4 justify-center">
-              <button className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                <Mic className="w-6 h-6 text-white" />
+              <button
+                onClick={handleToggleVoiceTyping}
+                className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Mic className={`w-6 h-6 ${isListening ? 'text-emerald-300' : 'text-white'}`} />
               </button>
               <button
-            onClick={() => {
-              handleEndCall();
-              if (showCallOverlay) onClose();
-            }}
-            className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">
-            
+                onClick={handleStartScreenShare}
+                className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                <Eye className={`w-6 h-6 ${isScreenSharing ? 'text-cyan-300' : 'text-white'}`} />
+              </button>
+              <button
+                onClick={() => {
+                  handleEndCall();
+                  if (showCallOverlay) onClose();
+                }}
+                className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30">
                 <PhoneOff className="w-8 h-8 text-white" />
               </button>
-              {type === 'voice' &&
-          <button
-            onClick={() => setOnVideoCall(true)}
-            className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-            
+              {type === 'voice' && (
+                <button
+                  onClick={() => {
+                    setOnVoiceCall(false);
+                    setOnVideoCall(true);
+                  }}
+                  className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
                   <Video className="w-6 h-6 text-white" />
                 </button>
-          }
+              )}
             </div>
           </div>
         </motion.div>
@@ -275,7 +337,7 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
 
   return (
     <div className={`flex flex-col relative overflow-hidden ${inline ? 'h-full w-full bg-transparent' : compact ? 'h-full bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl' : 'h-[600px] w-[400px] bg-[#0f1419]/95 backdrop-blur-xl border border-white/10 rounded-2xl'}`}>
-      <CallOverlay type={showCallOverlay ? 'voice' : onVoiceCall ? 'voice' : onVideoCall ? 'video' : onWatchTogether ? 'watch' : null} />
+      <CallOverlay type={showCallOverlay ? 'voice' : onVoiceCall ? 'voice' : onVideoCall ? 'video' : null} />
 
       {/* Header */}
       
@@ -450,6 +512,9 @@ export default function FriendMessenger({ friend, onClose, compact = false, inli
           </button>
           <button className="hover:text-white/60 transition-colors flex items-center gap-1">
             <Video className="w-3.5 h-3.5" /> Video
+          </button>
+          <button onClick={handleToggleVoiceTyping} className="hover:text-white/60 transition-colors flex items-center gap-1">
+            <Mic className="w-3.5 h-3.5" /> {isListening ? 'Listening' : 'Voice'}
           </button>
           <span className="flex-1" />
           <span>Press Enter to send</span>

@@ -207,9 +207,8 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
 
                   <div className="flex items-center gap-1.5">
                     {[
-                      { icon: Phone, color: 'text-cyan-300', label: 'Call' },
-                      { icon: Video, color: 'text-violet-300', label: 'Video' },
-                      { icon: Mic, color: 'text-emerald-300', label: 'Voice' },
+                      { icon: Phone, color: 'text-cyan-300', label: 'Call', eventName: 'friendMessengerStartVoiceCall' },
+                      { icon: Video, color: 'text-violet-300', label: 'Video', eventName: 'friendMessengerStartVideoCall' },
                       { icon: Paperclip, color: 'text-amber-300', label: 'Files' },
                       { icon: MoreHorizontal, color: 'text-white/60', label: 'More' },
                     ].map(action => {
@@ -217,6 +216,11 @@ export default function FriendProfileOverlay({ friend, onClose, onPanelChange })
                       return (
                         <button
                           key={action.label}
+                          onClick={() => {
+                            if (action.eventName) {
+                              window.dispatchEvent(new CustomEvent(action.eventName));
+                            }
+                          }}
                           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
                           style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
                           title={action.label}
