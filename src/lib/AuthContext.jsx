@@ -34,6 +34,10 @@ export const AuthProvider = ({ children }) => {
       });
       
       try {
+        if (!appParams.appId || !appParams.serverUrl) {
+          throw new Error('Missing app configuration');
+        }
+
         const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
         setAppPublicSettings(publicSettings);
         
