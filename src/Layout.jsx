@@ -887,14 +887,14 @@ function LayoutContent({ children, currentPageName }) {
             borderBottom: '1px solid rgba(255,255,255,0.06)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
           }}>
-            <div className="h-16 flex items-center justify-between px-6">
-              <div className="flex items-center gap-6">
+            <div className="h-16 flex items-center gap-4 px-6">
+              <div className="flex min-w-0 flex-1 items-center gap-4">
                 {headerConfig.showMenu && (
                   <>
                     {/* Menu Button - circular like Store */}
                     <button
                       onClick={() => setDrawerOpen(true)}
-                      className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
+                      className="w-10 h-10 shrink-0 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all shadow-lg border border-white/10"
                     >
                       <div className="flex flex-col gap-[3px]">
                         <span className="w-4 h-[2px] bg-white/90 rounded-full"></span>
@@ -987,7 +987,7 @@ function LayoutContent({ children, currentPageName }) {
                     {showLunaHeaderBar && (
                       <>
                         {/* Title - dynamic per page */}
-                        <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
+                        <span className="min-w-0 shrink-0 truncate text-lg xl:text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
                           {(() => {
                             const pp = location.pathname.toLowerCase();
                             if (pp.includes('/clan')) return 'Atom X Eve Clan';
@@ -1009,7 +1009,7 @@ function LayoutContent({ children, currentPageName }) {
                         </span>
 
                         {/* Divider */}
-                        <div className="h-6 w-px bg-white/20 mx-2"></div>
+                        <div className="hidden lg:block h-6 w-px bg-white/20 mx-2 shrink-0"></div>
 
                         {/* Sub-Page Links */}
                         <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
@@ -1063,7 +1063,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
 
             {/* Settings + View Mode Toggle - right side */}
-            <div className="flex items-center gap-2">
+            <div className="ml-auto flex shrink-0 items-center gap-2">
               <button
                 onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=settings')}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/10"

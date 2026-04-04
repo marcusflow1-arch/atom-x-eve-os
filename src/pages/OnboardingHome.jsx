@@ -113,7 +113,7 @@ export default function OnboardingHome() {
       </div>
 
       {/* SECTION 1: HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-24 md:py-28">
         {/* AI Avatar Silhouette */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
@@ -126,7 +126,7 @@ export default function OnboardingHome() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center relative z-10"
+          className="text-center relative z-10 max-w-5xl mx-auto pt-8 md:pt-10"
         >
           {/* Logo */}
           <motion.h1 
