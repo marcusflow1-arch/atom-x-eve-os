@@ -478,8 +478,13 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     const p = location.pathname.toLowerCase();
     
+    if (!localStorage.getItem('atom_eve_character_created') && !p.includes('charactercreation')) {
+      navigate(createPageUrl('CharacterCreation'), { replace: true });
+      return;
+    }
+
     if (p === '/' || p.endsWith('/dashboard') || legacyPaths.includes(p)) {
-      navigate(createPageUrl('Store') + '?subview=games&overview=true', { replace: true });
+      navigate(createPageUrl('LunaTemplate'), { replace: true });
     }
   }, [location.pathname, navigate, legacyPaths]);
 
@@ -1212,7 +1217,11 @@ export default function Layout({ children, currentPageName }) {
     setTimeout(() => {
       setShowIntro(false);
       sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-      navigate(createPageUrl('Store') + '?subview=games&overview=true');
+      if (!localStorage.getItem('atom_eve_character_created')) {
+        navigate(createPageUrl('CharacterCreation'));
+      } else {
+        navigate(createPageUrl('LunaTemplate'));
+      }
     }, 400);
   };
 

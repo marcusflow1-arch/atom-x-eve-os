@@ -593,6 +593,20 @@ export default function LunaTemplate() {
     <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
       <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6 pointer-events-auto">
+        
+        {/* Recently Played Section */}
+        <div className="flex flex-col items-center w-full px-2 mt-20">
+          <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Recently<br/>Played</span>
+          <div className="w-8 h-px bg-white/20 mb-3" />
+          
+          <div className="flex flex-col gap-2 w-full items-center">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                <span className="text-white/30 text-lg font-bold">?</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* 95% Main Area */}
@@ -611,8 +625,8 @@ export default function LunaTemplate() {
       {!showConsoleMode && !showAchievements && (
         <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
              style={uiVisible ? {
-               left: '112px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
-             } : { left: '112px', top: '80px', width: '322px', gap: '12px' }}>
+               left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
+             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
@@ -661,11 +675,11 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
             className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
             style={{
-              left: '520px',
+              left: '440px',
               top: '80px',
               bottom: '32px',
               width: '1000px',
-              maxWidth: 'calc(100vw - 560px)',
+              maxWidth: 'calc(100vw - 480px)',
               background: 'transparent'
             }}
           >
@@ -806,7 +820,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="absolute right-8 z-30 overflow-hidden pointer-events-auto"
             style={{
-              left: '520px', /* Offset matches left column and keeps the original spacing */
+              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
               top: '80px',
               bottom: '32px',
             }}>
@@ -1184,7 +1198,7 @@ export default function LunaTemplate() {
             <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* QUICK ACCESS BOXES */}
-            <div style={{ paddingLeft: '520px' }}>
+            <div style={{ paddingLeft: '440px' }}>
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile

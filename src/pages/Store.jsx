@@ -168,7 +168,7 @@ export default function Store() {
     const { user } = useAuth();
     const { getCartCount } = useCart();
 
-    const [showOverview, setShowOverview] = useState(searchParams.get('overview') === 'true');
+    const [showOverview, setShowOverview] = useState(false);
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
@@ -178,7 +178,6 @@ export default function Store() {
         if (subview) { setStoreSubView(subview); setStoreMode('store'); }
         const mode = searchParams.get('mode');
         if (mode) setStoreMode(mode);
-        setShowOverview(searchParams.get('overview') === 'true');
     }, [searchParams]);
 
     const [viewMode, setViewMode] = useState('cross');
