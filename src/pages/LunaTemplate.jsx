@@ -5,8 +5,8 @@ import {
   Home, BookOpen, Zap, Sword, Gamepad2, Target, Layers,
   ChevronLeft, ChevronRight, User, Trophy, MessageSquare, Shield, Swords, Bot, Crown, Radio, Users, Globe,
   Grid, ArrowUpAz, ArrowDownAz, ArrowUp, ArrowDown, GripVertical, Clapperboard,
-  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video
-} from 'lucide-react';
+  Film, Sparkles, Play, ShoppingBag, Tv, Monitor, Mountain, Feather, Calendar, Hammer, Video } from
+'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -81,51 +81,51 @@ import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
-  {
-    id: 'skill-tree',
-    label: 'Skill Tree',
-    icon: Layers,
-    color: 'from-purple-500 to-pink-500',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
-    description: 'View & Unlock Abilities'
-  },
-  {
-    id: 'battle',
-    label: 'Battle Mode',
-    icon: Swords,
-    color: 'from-red-500 to-orange-500',
-    route: 'Challenges',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
-    description: 'Enter Combat Arena'
-  },
+{
+  id: 'skill-tree',
+  label: 'Skill Tree',
+  icon: Layers,
+  color: 'from-purple-500 to-pink-500',
+  image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400',
+  description: 'View & Unlock Abilities'
+},
+{
+  id: 'battle',
+  label: 'Battle Mode',
+  icon: Swords,
+  color: 'from-red-500 to-orange-500',
+  route: 'Challenges',
+  image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+  description: 'Enter Combat Arena'
+},
 
-  {
-    id: 'story',
-    label: 'AI Story',
-    icon: BookOpen,
-    color: 'from-indigo-500 to-purple-500',
-    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
-    description: 'Continue Your Journey'
-  },
-  {
-    id: 'home',
-    label: 'AI Home',
-    icon: Home,
-    color: 'from-green-500 to-emerald-500',
-    route: 'Dashboard',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
-    description: 'Personal Space'
-  },
+{
+  id: 'story',
+  label: 'AI Story',
+  icon: BookOpen,
+  color: 'from-indigo-500 to-purple-500',
+  image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400',
+  description: 'Continue Your Journey'
+},
+{
+  id: 'home',
+  label: 'AI Home',
+  icon: Home,
+  color: 'from-green-500 to-emerald-500',
+  route: 'Dashboard',
+  image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400',
+  description: 'Personal Space'
+},
 
-  {
-    id: 'games',
-    label: 'PINGAMES',
-    icon: Gamepad2,
-    color: 'from-cyan-500 to-blue-500',
-    route: 'Library',
-    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
-    description: 'Your Game Library'
-  }];
+{
+  id: 'games',
+  label: 'PINGAMES',
+  icon: Gamepad2,
+  color: 'from-cyan-500 to-blue-500',
+  route: 'Library',
+  image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400',
+  description: 'Your Game Library'
+}];
 
 
 // ExpandedGenreView extracted to component
@@ -134,11 +134,11 @@ import { ConsoleTile, LegendaryTile, LeaderboardTile } from '../components/dashb
 
 // Mock Friends Data
 const mockFriends = [
-  { id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
-  { id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
-  { id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
-  { id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
-  { id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }];
+{ id: 1, name: 'Shadow_Striker', avatar: 'https://i.pravatar.cc/150?u=1', status: 'online', game: 'Cyberpunk 2088' },
+{ id: 2, name: 'CyberVixen', avatar: 'https://i.pravatar.cc/150?u=2', status: 'online', game: 'Final Fantasy XIV' },
+{ id: 3, name: 'GhostReaper', avatar: 'https://i.pravatar.cc/150?u=3', status: 'idle' },
+{ id: 4, name: 'IronFist', avatar: 'https://i.pravatar.cc/150?u=4', status: 'offline' },
+{ id: 5, name: 'NovaStar', avatar: 'https://i.pravatar.cc/150?u=5', status: 'online', game: 'League of Legends' }];
 
 export default function LunaTemplate() {
   const navigate = useNavigate();
@@ -219,7 +219,7 @@ export default function LunaTemplate() {
 
   useEffect(() => {
     const handler = () => {
-      setAvatarFocusMode(prev => {
+      setAvatarFocusMode((prev) => {
         if (prev) setActiveAvatarFocusView(null);
         return !prev;
       });
@@ -231,7 +231,7 @@ export default function LunaTemplate() {
   }, []);
 
   useEffect(() => {
-    const handleSkillTree = () => setShowSkillTreeBlankUI(prev => !prev);
+    const handleSkillTree = () => setShowSkillTreeBlankUI((prev) => !prev);
     window.addEventListener('toggleSkillTree', handleSkillTree);
     return () => window.removeEventListener('toggleSkillTree', handleSkillTree);
   }, []);
@@ -251,7 +251,7 @@ export default function LunaTemplate() {
       try {
         // Default to Y-bot (using Xbot.glb as standard web-ready version)
         let url = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
-        
+
         // Optional: Check for override in DB
         // const exact = await base44.entities.ModelFBX.filter({ name: 'Y-bot' });
         // if (exact && exact.length) url = exact[0].file_url;
@@ -264,7 +264,7 @@ export default function LunaTemplate() {
       }
     };
     if (!modelUrl) load();
-    return () => { cancelled = true; };
+    return () => {cancelled = true;};
   }, [modelUrl]);
   const [clickedSlot, setClickedSlot] = useState(null);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -278,38 +278,38 @@ export default function LunaTemplate() {
   // Fetch Active Scene Layout from Admin
   useEffect(() => {
     const fetchScene = async () => {
-        try {
-            // 1. Try to find an ACTIVE SceneLayout
-            const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
-            
-            if (layouts.length > 0) {
-                const layout = layouts[0];
-                console.log("Loading Active Scene:", layout.name);
-                setActiveScene(layout);
-                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
-            } else {
-                // Fallback to legacy auto-fetch logic if no scene is active
-                console.warn("No active scene found, falling back to auto-discovery.");
-                const models = await base44.entities.Model3D.list();
-                const room2Fbx = models.find(m => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
-                const room2Any = models.find(m => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
-                const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-                const selectedAsset = room2Fbx || room2Any || room1Asset;
-                
-                if (selectedAsset?.file_url) {
-                  setRoomModelUrl(selectedAsset.file_url);
-                  // Apply per-environment spawn & collision settings
-                  if (selectedAsset.player_spawn) setPlayerSpawn(selectedAsset.player_spawn);
-                  if (selectedAsset.use_mesh_collision) setUseMeshCollision(true);
-                }
-                else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
-            }
-        } catch (e) {
-            console.error("Failed to load scene configuration:", e);
+      try {
+        // 1. Try to find an ACTIVE SceneLayout
+        const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
+
+        if (layouts.length > 0) {
+          const layout = layouts[0];
+          console.log("Loading Active Scene:", layout.name);
+          setActiveScene(layout);
+          if (layout.environment_url) setRoomModelUrl(layout.environment_url);
+        } else {
+          // Fallback to legacy auto-fetch logic if no scene is active
+          console.warn("No active scene found, falling back to auto-discovery.");
+          const models = await base44.entities.Model3D.list();
+          const room2Fbx = models.find((m) => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
+          const room2Any = models.find((m) => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
+          const room1Asset = models.find((m) => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+          const selectedAsset = room2Fbx || room2Any || room1Asset;
+
+          if (selectedAsset?.file_url) {
+            setRoomModelUrl(selectedAsset.file_url);
+            // Apply per-environment spawn & collision settings
+            if (selectedAsset.player_spawn) setPlayerSpawn(selectedAsset.player_spawn);
+            if (selectedAsset.use_mesh_collision) setUseMeshCollision(true);
+          } else
+          setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
         }
+      } catch (e) {
+        console.error("Failed to load scene configuration:", e);
+      }
     };
     fetchScene();
-    
+
     // Model selection handled separately (Maria WProp J J Ong)
   }, []);
 
@@ -322,48 +322,48 @@ export default function LunaTemplate() {
         if (states && states.length > 0 && states[0].currentEnvironmentId) {
           const savedId = states[0].currentEnvironmentId;
           setCurrentEnvId(savedId);
-          
+
           // 1. Try to load as SceneLayout (New System)
           if (savedId !== 'default_room' && !savedId.startsWith('joined_')) {
-             try {
-                 const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
-                 if (layouts && layouts.length > 0) {
-                     const layout = layouts[0];
-                     setActiveScene(layout);
-                     if (layout.environment_url) setRoomModelUrl(layout.environment_url);
-                     return;
-                 }
-             } catch (e) { /* Not a scene layout or fetch failed */ }
+            try {
+              const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
+              if (layouts && layouts.length > 0) {
+                const layout = layouts[0];
+                setActiveScene(layout);
+                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
+                return;
+              }
+            } catch (e) {/* Not a scene layout or fetch failed */}
 
-             // 2. Legacy Fallback (Old IDs)
-             const models = await base44.entities.Model3D.list();
-             const fbxs = await base44.entities.ModelFBX.list();
-             const all = [...(models || []), ...(fbxs || [])];
-             
-             const queries = {
-               'cyber_loft': ['room 2', 'room2'],
-               'zen_garden': ['zen', 'garden'],
-               'mars_outpost': ['mars', 'outpost']
-             };
-             
-             if (queries[savedId]) {
-               const found = all.find(m => queries[savedId].some(q => (m.name || '').toLowerCase().includes(q)));
-               if (found?.file_url) {
-                 setRoomModelUrl(found.file_url);
-               }
-             }
+            // 2. Legacy Fallback (Old IDs)
+            const models = await base44.entities.Model3D.list();
+            const fbxs = await base44.entities.ModelFBX.list();
+            const all = [...(models || []), ...(fbxs || [])];
+
+            const queries = {
+              'cyber_loft': ['room 2', 'room2'],
+              'zen_garden': ['zen', 'garden'],
+              'mars_outpost': ['mars', 'outpost']
+            };
+
+            if (queries[savedId]) {
+              const found = all.find((m) => queries[savedId].some((q) => (m.name || '').toLowerCase().includes(q)));
+              if (found?.file_url) {
+                setRoomModelUrl(found.file_url);
+              }
+            }
           } else {
-             // Default Room fallback
-             try {
-                 const models = await base44.entities.Model3D.list();
-                 const room1Asset = models.find(m => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-                 if (room1Asset?.file_url) setRoomModelUrl(room1Asset.file_url);
-                 else setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
-                 setActiveScene(null);
-             } catch {}
+            // Default Room fallback
+            try {
+              const models = await base44.entities.Model3D.list();
+              const room1Asset = models.find((m) => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
+              if (room1Asset?.file_url) setRoomModelUrl(room1Asset.file_url);else
+              setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+              setActiveScene(null);
+            } catch {}
           }
         }
-      } catch (e) { console.error('Error loading env pref', e); }
+      } catch (e) {console.error('Error loading env pref', e);}
     };
     loadUserEnv();
   }, [user?.id]);
@@ -375,7 +375,7 @@ export default function LunaTemplate() {
     }
 
     setCurrentEnvId(env.id);
-    
+
     // Update player spawn and collision from environment data
     if (env.playerSpawn) {
       setPlayerSpawn(env.playerSpawn);
@@ -383,18 +383,18 @@ export default function LunaTemplate() {
       setPlayerSpawn({ x: 0, y: -0.5, z: 0 });
     }
     setUseMeshCollision(env.useMeshCollision || false);
-    
+
     // Check if it's a full SceneLayout
     if (env.layoutData) {
-        console.log("Switching to Scene Layout:", env.layoutData.name);
-        setActiveScene(env.layoutData);
-        if (env.layoutData.environment_url) {
-            setRoomModelUrl(env.layoutData.environment_url);
-        }
+      console.log("Switching to Scene Layout:", env.layoutData.name);
+      setActiveScene(env.layoutData);
+      if (env.layoutData.environment_url) {
+        setRoomModelUrl(env.layoutData.environment_url);
+      }
     } else if (env.modelUrl) {
-        // Legacy/Simple model switch
-        setRoomModelUrl(env.modelUrl);
-        setActiveScene(null); // Clear complex scene if switching to simple env
+      // Legacy/Simple model switch
+      setRoomModelUrl(env.modelUrl);
+      setActiveScene(null); // Clear complex scene if switching to simple env
     }
 
     // Persist Preference
@@ -406,7 +406,7 @@ export default function LunaTemplate() {
         } else {
           await base44.entities.AvatarHomeState.create({ avatarId: user.id, currentEnvironmentId: env.id });
         }
-      } catch (e) { console.error('Error saving env pref', e); }
+      } catch (e) {console.error('Error saving env pref', e);}
     }
   };
 
@@ -432,7 +432,7 @@ export default function LunaTemplate() {
     } else {
       setActiveSubTab(null);
     }
-    
+
     setShowAchievements(panel === 'achievements');
   }, [location.search]);
 
@@ -521,7 +521,7 @@ export default function LunaTemplate() {
         setHideUI((v) => !v);
       }
       if (key === 'escape') {
-        if (showDevSpotlight) { setShowDevSpotlight(false); return; }
+        if (showDevSpotlight) {setShowDevSpotlight(false);return;}
         if (hideUI) setHideUI(false);
         if (showAvatarProgression) setShowAvatarProgression(false);
         if (showForumOverlay) setShowForumOverlay(false);
@@ -592,97 +592,97 @@ export default function LunaTemplate() {
     <MultiplayerSystem envUrl={roomModelUrl} />
     <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
-      <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6 pointer-events-auto">
+      <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
         
         {/* Recently Played Section */}
-        <div className="flex flex-col items-center w-full px-2 mt-20">
-          <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Recently<br/>Played</span>
+        <div className="mt-12 px-2 flex flex-col items-center w-full">
+          <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Recently<br />Played</span>
           <div className="w-8 h-px bg-white/20 mb-3" />
           
           <div className="flex flex-col gap-2 w-full items-center">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+            {[1, 2, 3, 4, 5].map((i) =>
+                <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
                 <span className="text-white/30 text-lg font-bold">?</span>
               </div>
-            ))}
+                )}
           </div>
         </div>
       </div>
 
       {/* 95% Main Area */}
-      <div className="flex-1 relative h-full overflow-hidden pointer-events-none" style={{
-        backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}>
+      <div className="flex-1 relative h-full overflow-hidden" style={{
+            backgroundImage: `url('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/fed9dc2c3_unnamed4.jpg')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}>
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
-        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar pointer-events-none">
+        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
 
 
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
-      {!showConsoleMode && !showAchievements && (
-        <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
-             style={uiVisible ? {
-               left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
-             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+      {!showConsoleMode && !showAchievements &&
+              <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
+              style={uiVisible ? {
+                left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
+              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
-          {!avatarFocusMode && !uiVisible && (
-            <div className="flex flex-col gap-6">
-              {slot1Content!=='none'&&<div className="w-full" style={slot1Content==='questBook'?{transform:'scale(1.15)',transformOrigin:'top left',marginBottom:24}:{height:380,marginBottom:12}}>{slot1Content==='questBook'?<QuestLogBook/>:slot1Content==='friendsList'?<FriendsNetworkWidget/>:<div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
-              {slot2Content!=='none'&&<div className="w-full" style={slot2Content==='cardCollection'?{}:{height:380}}>{slot2Content==='cardCollection'?<CardCollectionBrowser/>:slot2Content==='friendsList'?<FriendsNetworkWidget/>:<div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+          {!avatarFocusMode && !uiVisible &&
+                <div className="flex flex-col gap-6">
+              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
             </div>
-          )}
+                }
 
           <AnimatePresence>
-            {avatarFocusMode && !uiVisible && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col gap-3 mt-2"
-              >
-                {['AI Story', 'AI Battle', 'Leaderboard', 'Stats', 'Live'].map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
-                    className={`w-full py-4 rounded-xl border transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center font-bold ${
-                      activeAvatarFocusView === opt
-                        ? 'bg-cyan-500/20 border-cyan-400/50 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]'
-                        : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'
-                    }`}
-                  >
+            {avatarFocusMode && !uiVisible &&
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex flex-col gap-3 mt-2">
+                    
+                {['AI Story', 'AI Battle', 'Leaderboard', 'Stats', 'Live'].map((opt) =>
+                    <button
+                      key={opt}
+                      onClick={() => setActiveAvatarFocusView(activeAvatarFocusView === opt ? null : opt)}
+                      className={`w-full py-4 rounded-xl border transition-all backdrop-blur-md shadow-lg uppercase tracking-wider text-sm cursor-pointer text-center font-bold ${
+                      activeAvatarFocusView === opt ?
+                      'bg-cyan-500/20 border-cyan-400/50 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)]' :
+                      'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:text-white hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]'}`
+                      }>
+                      
                     {opt}
                   </button>
-                ))}
+                    )}
               </motion.div>
-            )}
+                  }
           </AnimatePresence>
         </div>
-      )}
+              }
 
       {/* Avatar Focus Content Panel (Appears to the right) */}
       <AnimatePresence>
-        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && (
-          <motion.div
-            initial={{ opacity: 0, x: 20, scale: 0.95 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 20, scale: 0.95 }}
-            transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-            className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
-            style={{
-              left: '440px',
-              top: '80px',
-              bottom: '32px',
-              width: '1000px',
-              maxWidth: 'calc(100vw - 480px)',
-              background: 'transparent'
-            }}
-          >
+        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements &&
+                <motion.div
+                  initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                  transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+                  className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
+                  style={{
+                    left: '440px',
+                    top: '80px',
+                    bottom: '32px',
+                    width: '1000px',
+                    maxWidth: 'calc(100vw - 480px)',
+                    background: 'transparent'
+                  }}>
+                  
             {/* Header */}
             <div className="px-6 py-4 flex justify-between items-center bg-transparent">
               <h2 className="text-xl font-bold text-white tracking-wider uppercase flex items-center gap-3">
@@ -694,9 +694,9 @@ export default function LunaTemplate() {
                 {activeAvatarFocusView}
               </h2>
               <button
-                onClick={() => setActiveAvatarFocusView(null)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 text-white/60 hover:text-white"
-              >
+                      onClick={() => setActiveAvatarFocusView(null)}
+                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10 text-white/60 hover:text-white">
+                      
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -706,139 +706,137 @@ export default function LunaTemplate() {
               {activeAvatarFocusView === 'AI Story' && <AIStoryOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'AI Battle' && <BattleModeOverlay onClose={() => setActiveAvatarFocusView(null)} />}
               {activeAvatarFocusView === 'Stats' && <AvatarStatsOverlay onClose={() => setActiveAvatarFocusView(null)} />}
-              {activeAvatarFocusView === 'Leaderboard' && (
-                <div className="absolute inset-0 bg-transparent overflow-y-auto overflow-x-hidden">
+              {activeAvatarFocusView === 'Leaderboard' &&
+                    <div className="absolute inset-0 bg-transparent overflow-y-auto overflow-x-hidden">
                   <Leaderboard isEmbedded={true} />
                 </div>
-              )}
-              {activeAvatarFocusView === 'Live' && (
-                <div className="absolute inset-0 flex gap-4 p-6 pt-0">
+                    }
+              {activeAvatarFocusView === 'Live' &&
+                    <div className="absolute inset-0 flex gap-4 p-6 pt-0">
                   <div className="flex-1 min-w-0 bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden">
                     <StreamPlayerBox
-                      isLive={isLive}
-                      onToggleLive={() => setIsLive(!isLive)}
-                      isPlaying={isPlaying}
-                      onTogglePlay={() => setIsPlaying(!isPlaying)}
-                      volume={volume}
-                      onVolumeChange={setVolume}
-                      onOpenSettings={() => setShowStreamSettings(true)}
-                      settingsOpen={showStreamSettings}
-                      onCloseSettings={() => setShowStreamSettings(false)}
-                      isSettingsMaximized={settingsMaximized}
-                      onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)}
-                    />
+                          isLive={isLive}
+                          onToggleLive={() => setIsLive(!isLive)}
+                          isPlaying={isPlaying}
+                          onTogglePlay={() => setIsPlaying(!isPlaying)}
+                          volume={volume}
+                          onVolumeChange={setVolume}
+                          onOpenSettings={() => setShowStreamSettings(true)}
+                          settingsOpen={showStreamSettings}
+                          onCloseSettings={() => setShowStreamSettings(false)}
+                          isSettingsMaximized={settingsMaximized}
+                          onToggleSettingsMaximize={() => setSettingsMaximized(!settingsMaximized)} />
+                        
                   </div>
                   <div className="w-[320px] bg-black/40 rounded-2xl border border-white/10 backdrop-blur-md overflow-hidden flex-shrink-0">
-                    {isLive ? (
-                      <StreamChatBox isLive={isLive} />
-                    ) : (
-                      <StreamSetupPanel onStartStream={() => { setIsLive(true); setIsPlaying(true); }} />
-                    )}
+                    {isLive ?
+                        <StreamChatBox isLive={isLive} /> :
+
+                        <StreamSetupPanel onStartStream={() => {setIsLive(true);setIsPlaying(true);}} />
+                        }
                   </div>
                 </div>
-              )}
+                    }
             </div>
           </motion.div>
-        )}
+                }
       </AnimatePresence>
 
       {/* 3D Model Viewer - Full Page Background */}
       {/* Hidden when overlays are open (Friends Hub, Achievements, etc.) */}
-      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements && (
-        <>
+      {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
+              <>
           <div
-            className="fixed inset-0 z-[5] pointer-events-auto"
-            onContextMenu={(e) => e.preventDefault()}
-            onWheel={(e) => e.preventDefault()}
-            style={{
-              display: isEnvironmentActive ? 'flex' : 'none',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100vw',
-              height: '100vh',
-            }}>
-            <TransparentModel3DViewer 
-              modelUrl={modelUrl} 
-              weaponModel={weaponModelUrl} 
-              triggerAnimation={triggerAnimation} 
-              backgroundUrl={bannerBackgroundUrl} 
-              roomModelUrl={roomModelUrl} 
-              activeScene={activeScene}
-              isStatsOpen={stageMode === 'stats'}
-              playerSpawn={playerSpawn}
-              useMeshCollision={useMeshCollision}
-              equippedWeaponUrl={weaponModelUrl}
-              drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb"
-            />
+                  className="fixed inset-0 z-0 pointer-events-auto"
+                  style={{
+                    display: isEnvironmentActive ? 'flex' : 'none',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100vw',
+                    height: '100vh'
+                  }}>
+            <TransparentModel3DViewer
+                    modelUrl={modelUrl}
+                    weaponModel={weaponModelUrl}
+                    triggerAnimation={triggerAnimation}
+                    backgroundUrl={bannerBackgroundUrl}
+                    roomModelUrl={roomModelUrl}
+                    activeScene={activeScene}
+                    isStatsOpen={stageMode === 'stats'}
+                    playerSpawn={playerSpawn}
+                    useMeshCollision={useMeshCollision}
+                    equippedWeaponUrl={weaponModelUrl}
+                    drawEffectUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/2d967f68b_jetpack_effect.glb" />
+                  
           </div>
           
           <AnimatePresence>
             {!isEnvironmentActive && <LunaDashboardOfflineView />}
           </AnimatePresence>
         </>
-      )}
+              }
 
       {/* Focus Mode Background Overlay - Removed to show custom background */}
 
       {/* Plasma Water Video Background - Shows when I key is pressed (uiVisible) */}
       <AnimatePresence>
         {uiVisible && !showConsoleMode && !showAchievements &&
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
-            className="fixed inset-0 z-0"
-          >
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className="fixed inset-0 z-0">
+                  
             <video
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover opacity-40"
-            />
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6876751a602125f45f1861b9/15b006cdb_Plasma-Water.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  
             <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/60 to-transparent" />
           </motion.div>
-        }
+                }
       </AnimatePresence>
 
       {/* Developer Spotlight Overlay (P key) */}
       <AnimatePresence>
-        {showDevSpotlight && (
-          <DevSpotlightOverlay onClose={() => setShowDevSpotlight(false)} />
-        )}
+        {showDevSpotlight &&
+                <DevSpotlightOverlay onClose={() => setShowDevSpotlight(false)} />
+                }
       </AnimatePresence>
 
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
         {!uiVisible && !showConsoleMode && !avatarFocusMode &&
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="absolute right-8 z-30 overflow-hidden pointer-events-auto"
-            style={{
-              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
-              top: '80px',
-              bottom: '32px',
-            }}>
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  transition={{ duration: 0.4, ease: 'easeOut' }}
+                  className="absolute right-8 z-30 overflow-hidden pointer-events-none"
+                  style={{
+                    left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+                    top: '80px',
+                    bottom: '32px'
+                  }}>
 
             <div className="h-full">
               <FocusModePanel
-                 onOpenCalendar={() => setShowCalendar(true)}
-                 onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
-                 onToggleStats={() => setStageMode(m => m === 'stats' ? 'default' : 'stats')}
-                 currentEnvId={currentEnvId}
-                 onSelectEnv={handleEnvSelect}
-                 onOpenDevSpotlight={() => setShowDevSpotlight(true)}
-                 isEnvironmentActive={isEnvironmentActive}
-                 onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
-                />
+                      onOpenCalendar={() => setShowCalendar(true)}
+                      onBackgroundChange={(url) => setBannerBackgroundUrl(url)}
+                      onToggleStats={() => setStageMode((m) => m === 'stats' ? 'default' : 'stats')}
+                      currentEnvId={currentEnvId}
+                      onSelectEnv={handleEnvSelect}
+                      onOpenDevSpotlight={() => setShowDevSpotlight(true)}
+                      isEnvironmentActive={isEnvironmentActive}
+                      onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)} />
+                    
             </div>
           </motion.div>
-        }
+                }
       </AnimatePresence>
 
 
@@ -848,74 +846,74 @@ export default function LunaTemplate() {
       {/* Universal Slide-Out Drawer */}
       <AnimatePresence>
         {activeDrawer &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
-              onClick={() => setActiveDrawer(null)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                    onClick={() => setActiveDrawer(null)} />
 
             <motion.div
-              initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-              animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
-              exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className={`absolute bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
-                'inset-0' :
-                'left-0 rounded-3xl'}`
-              }
-              style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? {
-                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-              } : {
-                top: '80px',
-                bottom: '48px',
-                width: '28vw',
-                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-              }}>
+                    initial={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+                    animate={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 1, scale: 1 } : { x: 0, opacity: 1 }}
+                    exit={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? { opacity: 0, scale: 0.95 } : { x: '-100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className={`absolute bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col ${['settings', 'skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) ?
+                    'inset-0' :
+                    'left-0 rounded-3xl'}`
+                    }
+                    style={['home', 'settings', 'skill-tree', 'battle', 'story'].includes(activeDrawer.id) ? {
+                      WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+                    } : {
+                      top: '80px',
+                      bottom: '48px',
+                      width: '28vw',
+                      WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+                    }}>
 
               {/* Header - Hidden for full screen apps that have their own header */}
               {!['skill-tree', 'battle', 'home', 'story'].includes(activeDrawer.id) &&
-                <div className="p-6 flex items-center justify-between">
+                    <div className="p-6 flex items-center justify-between">
                   <h2 className="text-white font-bold text-xl tracking-wider uppercase">{activeDrawer.label}</h2>
                   <button
-                    onClick={() => setActiveDrawer(null)}
-                    className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
+                        onClick={() => setActiveDrawer(null)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
 
                     <X className="w-4 h-4 text-white/60" />
                   </button>
                 </div>
-              }
+                    }
 
               {/* Close Button Overlay for Full Screen Apps (Story has its own internal close button) */}
               {['battle', 'home'].includes(activeDrawer.id) &&
-                <button
-                  onClick={() => setActiveDrawer(null)}
-                  className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                    <button
+                      onClick={() => setActiveDrawer(null)}
+                      className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
 
                   <X className="w-5 h-5" />
                 </button>
-              }
+                    }
 
               {/* Content Area */}
               <div className={`flex-1 overflow-y-auto ${activeDrawer.id === 'skill-tree' ? '' : 'p-6'}`}>
                 {activeDrawer.id === 'loadout' ?
-                  <LoadoutPanel /> :
-                  activeDrawer.id === 'settings' ?
-                    <SettingsPanel /> :
-                    activeDrawer.id === 'skill-tree' ?
+                      <LoadoutPanel /> :
+                      activeDrawer.id === 'settings' ?
+                      <SettingsPanel /> :
+                      activeDrawer.id === 'skill-tree' ?
                       <GenreMastery onClose={() => setActiveDrawer(null)} /> :
                       activeDrawer.id === 'battle' ?
-                        <BattleModeOverlay onClose={() => setActiveDrawer(null)} /> :
-                        activeDrawer.id === 'home' ?
-                          <AIHomeOverlay
-                            onClose={() => setActiveDrawer(null)}
-                            onSelectItem={(item) => setActiveDrawer(item)} /> :
+                      <BattleModeOverlay onClose={() => setActiveDrawer(null)} /> :
+                      activeDrawer.id === 'home' ?
+                      <AIHomeOverlay
+                        onClose={() => setActiveDrawer(null)}
+                        onSelectItem={(item) => setActiveDrawer(item)} /> :
 
-                          activeDrawer.id === 'story' ?
-                            <AIStoryOverlay onClose={() => setActiveDrawer(null)} /> :
-                            activeDrawer.id === 'games' ?
-                              <div className="space-y-6">
+                      activeDrawer.id === 'story' ?
+                      <AIStoryOverlay onClose={() => setActiveDrawer(null)} /> :
+                      activeDrawer.id === 'games' ?
+                      <div className="space-y-6">
                                 {/* Pinned Games Header */}
                                 <div className="flex items-center justify-between">
                                   <h3 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Pinned Games</h3>
@@ -925,22 +923,22 @@ export default function LunaTemplate() {
                                 {/* Pinned Games Grid */}
                                 <div className="grid grid-cols-7 gap-3">
                                   {Array.from({ length: 70 }, (_, i) => {
-                                    const games = [
-                                      { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
-                                      { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
-                                      { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
-                                      { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' }];
+                            const games = [
+                            { title: 'Cyberpunk 2088', genre: 'RPG', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400', status: 'Playing' },
+                            { title: 'Neon Legends', genre: 'Action', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400', status: 'Installed' },
+                            { title: 'Stellar Odyssey', genre: 'Space Sim', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400', status: 'Playing' },
+                            { title: 'Shadow Realm', genre: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400', status: 'Installed' }];
 
-                                    const game = games[i % games.length];
-                                    return { ...game, index: i };
-                                  }).map((game, index) =>
-                                    <motion.div
-                                      key={index}
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: Math.min(index * 0.02, 1) }}
-                                      onClick={() => setSelectedGame(game)}
-                                      className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all">
+                            const game = games[i % games.length];
+                            return { ...game, index: i };
+                          }).map((game, index) =>
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: Math.min(index * 0.02, 1) }}
+                            onClick={() => setSelectedGame(game)}
+                            className="group relative aspect-[3/4] rounded-lg overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-400/50 transition-all">
 
                                       {/* Game Image */}
                                       <img src={game.image} alt={game.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -961,25 +959,25 @@ export default function LunaTemplate() {
 
                                       {/* Achievements Link - Top Right on Hover */}
                                       <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
-                                        }}
-                                        className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
-                                        title="View Achievements"
-                                      >
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(createPageUrl('Store') + '?subview=achievements&gameId=' + game.title);
+                              }}
+                              className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 hover:scale-110 z-10"
+                              title="View Achievements">
+                              
                                         <Trophy size={12} />
                                       </button>
                                     </motion.div>
-                                  )}
+                          )}
                                 </div>
 
                                 {/* Add More Games */}
                                 <motion.button
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  transition={{ delay: 0.5 }}
-                                  className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2">
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="w-full border-2 border-dashed border-white/20 hover:border-cyan-400/50 rounded-xl py-8 text-white/40 hover:text-white/80 transition-all flex flex-col items-center justify-center gap-2">
 
                                   <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
                                     <Gamepad2 className="w-6 h-6" />
@@ -988,44 +986,44 @@ export default function LunaTemplate() {
                                 </motion.button>
                               </div> :
 
-                              <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
-                }
+                      <p className="text-white/40 text-sm">{activeDrawer.label} content will appear here</p>
+                      }
               </div>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
       {/* Game Detail Drawer - Slides from Right */}
       <AnimatePresence>
         {selectedGame &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setSelectedGame(null)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setSelectedGame(null)} />
 
             <motion.div
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{
-                top: '80px',
-                bottom: '48px',
-                width: '35vw',
-                WebkitBackdropFilter: 'blur(50px) saturate(200%)'
-              }}>
+                    initial={{ x: '100%', opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute right-0 border-l rounded-none bg-white/[0.03] backdrop-blur-3xl border-white/[0.08] z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+                    style={{
+                      top: '80px',
+                      bottom: '48px',
+                      width: '35vw',
+                      WebkitBackdropFilter: 'blur(50px) saturate(200%)'
+                    }}>
 
               {/* Header */}
               <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
                 <h2 className="text-white font-bold text-xl tracking-wider uppercase">Game Details</h2>
                 <button
-                  onClick={() => setSelectedGame(null)}
-                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
+                        onClick={() => setSelectedGame(null)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all">
 
                   <X className="w-4 h-4 text-white/60" />
                 </button>
@@ -1088,7 +1086,7 @@ export default function LunaTemplate() {
                   <h4 className="text-white/80 font-semibold text-sm uppercase tracking-wider">Recent Achievements</h4>
                   <div className="space-y-2">
                     {[1, 2, 3].map((i) =>
-                      <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
+                          <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
                           <Trophy className="w-5 h-5 text-white" />
                         </div>
@@ -1097,7 +1095,7 @@ export default function LunaTemplate() {
                           <p className="text-white/40 text-xs">Unlocked today</p>
                         </div>
                       </div>
-                    )}
+                          )}
                   </div>
                 </div>
 
@@ -1108,36 +1106,36 @@ export default function LunaTemplate() {
               </div>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
 
 
       {/* Main Content Area - Switches based on Console Mode or Achievements */}
       <AnimatePresence mode="wait">
-        {showAchievements ? (
-          <motion.div
-            key="achievements-mode"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-40"
-          >
-            <Achievements 
-              showCloseButton={true} 
-              onClose={() => navigate(createPageUrl('LunaTemplate'))}
-            />
-          </motion.div>
-        ) : showConsoleMode ? (
-          <motion.div
-            key="console-mode"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="w-full h-full pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none"
-          >
-{!showAvatarProgression && (
-            <>
+        {showAchievements ?
+                <motion.div
+                  key="achievements-mode"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-40">
+                  
+            <Achievements
+                    showCloseButton={true}
+                    onClose={() => navigate(createPageUrl('LunaTemplate'))} />
+                  
+          </motion.div> :
+                showConsoleMode ?
+                <motion.div
+                  key="console-mode"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="w-full h-full pt-20 px-12 pb-12 relative z-20 flex flex-col pointer-events-none">
+                  
+{!showAvatarProgression &&
+                  <>
             {/* Live/Stats Dropdowns Removed - Replaced by DashboardStage */}
 
             {/* TOP SECTION: Aspects / Artifacts / Genre */}
@@ -1151,11 +1149,11 @@ export default function LunaTemplate() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
                 </div>
                 <div className="flex gap-3">
-                  {[1,2,3].map((i)=> (
-                    <div key={i} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                  {[1, 2, 3].map((i) =>
+                          <div key={i} className="w-[60px] h-[60px] rounded-full border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     </div>
-                  ))}
+                          )}
                 </div>
               </div>
 
@@ -1168,11 +1166,11 @@ export default function LunaTemplate() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
                 </div>
                 <div className="flex gap-3">
-                  {[1,2,3,4,5].map((i)=> (
-                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                  {[1, 2, 3, 4, 5].map((i) =>
+                          <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     </div>
-                  ))}
+                          )}
                 </div>
               </div>
 
@@ -1185,11 +1183,11 @@ export default function LunaTemplate() {
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full border border-white/15 bg-black/60"></div>
                 </div>
                 <div className="flex gap-3">
-                  {[1,2].map((i)=> (
-                    <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
+                  {[1, 2].map((i) =>
+                          <div key={i} className="w-[60px] h-[60px] rounded-xl border cursor-pointer flex items-center justify-center overflow-hidden relative group transition-all duration-700" style={{ background: 'rgba(11, 11, 11, 0.85)', backdropFilter: 'blur(35px)', WebkitBackdropFilter: 'blur(35px)', borderColor: 'rgba(255, 255, 255, 0.12)', boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.4)' }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                     </div>
-                  ))}
+                          )}
                 </div>
               </div>
             </div>
@@ -1202,36 +1200,36 @@ export default function LunaTemplate() {
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
-                onClick={() => setStageMode(m => m === 'stats' ? 'default' : 'stats')}
-                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'stats' ? 'border-cyan-400/50 bg-cyan-900/20' : ''}`}
-              >
+                          onClick={() => setStageMode((m) => m === 'stats' ? 'default' : 'stats')}
+                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'stats' ? 'border-cyan-400/50 bg-cyan-900/20' : ''}`}>
+                          
                 <Grid className={`w-10 h-10 relative z-10 ${stageMode === 'stats' ? 'text-cyan-400' : ''}`} style={stageMode === 'stats' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'stats' ? 'text-cyan-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Stats</span>
               </ConsoleTile>
 
               {/* Friends (Replaces Skill Tree) */}
               <ConsoleTile
-                onClick={() => setStageMode(m => m === 'friends' ? 'default' : 'friends')}
-                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}
-              >
+                          onClick={() => setStageMode((m) => m === 'friends' ? 'default' : 'friends')}
+                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'friends' ? 'border-green-400/50 bg-green-900/20' : ''}`}>
+                          
                 <Users className={`w-10 h-10 relative z-10 ${stageMode === 'friends' ? 'text-green-400' : ''}`} style={stageMode === 'friends' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'friends' ? 'text-green-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Friends</span>
               </ConsoleTile>
 
               {/* Live (Replaces Cards) */}
               <ConsoleTile
-                onClick={() => setStageMode(m => m === 'live' ? 'default' : 'live')}
-                className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'live' ? 'border-red-400/50 bg-red-900/20' : ''}`}
-              >
+                          onClick={() => setStageMode((m) => m === 'live' ? 'default' : 'live')}
+                          className={`flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2 ${stageMode === 'live' ? 'border-red-400/50 bg-red-900/20' : ''}`}>
+                          
                 <Video className={`w-10 h-10 relative z-10 ${stageMode === 'live' ? 'text-red-400' : ''}`} style={stageMode === 'live' ? {} : { stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 10px rgba(255, 215, 0, 0.6))' }} strokeWidth={1.5} />
                 <span className={`text-sm font-sans relative z-10 ${stageMode === 'live' ? 'text-red-400 font-bold' : 'text-[#CCCCCC]'}`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Live</span>
               </ConsoleTile>
 
               {/* Leaderboard */}
               <ConsoleTile
-                onClick={() => navigate(createPageUrl('Leaderboard'))}
-                className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2"
-              >
+                          onClick={() => navigate(createPageUrl('Leaderboard'))}
+                          className="flex-1 h-28 cursor-pointer flex flex-col items-center justify-center gap-2">
+                          
                 <Target className="w-10 h-10 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                 <span className="text-[#CCCCCC] text-sm font-sans relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>Leaderboard</span>
               </ConsoleTile>
@@ -1239,68 +1237,68 @@ export default function LunaTemplate() {
 
             {/* DASHBOARD STAGE: EnvironmentSelector always in normal flow */}
             {/* Stage overlay (Stats/Friends/Live) floats on top without affecting layout */}
-            <div 
-              className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-              ref={stageContainerRef}
-            >
+            <div
+                        className={`mb-6 relative transition-opacity duration-500 pointer-events-auto ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                        ref={stageContainerRef}>
+                        
               {/* Always-visible default content — EnvironmentSelector only, DevSpotlight moved to right column */}
               <div className="flex flex-col gap-4">
-                <EnvironmentSelector 
-                  currentEnvId={currentEnvId} 
-                  onSelect={handleEnvSelect} 
-                  isEnvironmentActive={isEnvironmentActive}
-                  onToggleEnvironment={() => setIsEnvironmentActive(p => !p)}
-                />
+                <EnvironmentSelector
+                            currentEnvId={currentEnvId}
+                            onSelect={handleEnvSelect}
+                            isEnvironmentActive={isEnvironmentActive}
+                            onToggleEnvironment={() => setIsEnvironmentActive((p) => !p)} />
+                          
                 {/* Open space below — Stats/Friends/Live overlay fills this exactly */}
                 <div style={{ height: '140px' }} />
               </div>
 
               {/* Overlay panel — floats ON TOP of the open space, no layout impact */}
               <AnimatePresence>
-                {stageMode !== 'default' && (
-                  <motion.div
-                    key={stageMode}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="absolute z-30 rounded-2xl overflow-hidden"
-                    style={{
-                      top: 'calc(100% - 140px)',
-                      left: 0,
-                      right: 0,
-                      height: '140px',
-                      background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
-                      backdropFilter: 'blur(24px)',
-                      WebkitBackdropFilter: 'blur(24px)',
-                      border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.30)'
-                            : stageMode === 'friends' ? '1px solid rgba(74,222,128,0.30)'
-                            : '1px solid rgba(248,113,113,0.30)',
-                      boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)',
-                    }}
-                  >
+                {stageMode !== 'default' &&
+                          <motion.div
+                            key={stageMode}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="absolute z-30 rounded-2xl overflow-hidden"
+                            style={{
+                              top: 'calc(100% - 140px)',
+                              left: 0,
+                              right: 0,
+                              height: '140px',
+                              background: 'linear-gradient(135deg, rgba(10, 16, 26, 0.96) 0%, rgba(14, 22, 38, 0.94) 100%)',
+                              backdropFilter: 'blur(24px)',
+                              WebkitBackdropFilter: 'blur(24px)',
+                              border: stageMode === 'stats' ? '1px solid rgba(34,211,238,0.30)' :
+                              stageMode === 'friends' ? '1px solid rgba(74,222,128,0.30)' :
+                              '1px solid rgba(248,113,113,0.30)',
+                              boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(125,211,252,0.06)'
+                            }}>
+                            
                     {/* Close button */}
                     <button
-                      onClick={() => setStageMode('default')}
-                      className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                    >
+                              onClick={() => setStageMode('default')}
+                              className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+                              
                       <X className="w-3 h-3 text-white/60" />
                     </button>
 
-                    {stageMode === 'stats' && (
-                      <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                    {stageMode === 'stats' &&
+                            <div className="h-full overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
                         <div className="text-white/40 text-xs text-center py-8">Click a stat button below to expand</div>
                       </div>
-                    )}
+                            }
 
-                    {stageMode === 'friends' && (
-                      <div className="h-full overflow-hidden">
+                    {stageMode === 'friends' &&
+                            <div className="h-full overflow-hidden">
                         <FriendsListContent />
                       </div>
-                    )}
+                            }
 
-                    {stageMode === 'live' && (
-                      <div className="h-full flex gap-3 p-3">
+                    {stageMode === 'live' &&
+                            <div className="h-full flex gap-3 p-3">
                         <div className="flex-1 bg-black/40 rounded-xl border border-red-500/20 overflow-hidden flex items-center justify-center flex-col gap-2">
                           <Video className="w-8 h-8 text-red-500/40" />
                           <span className="text-white/30 text-xs">Stream Offline</span>
@@ -1315,9 +1313,9 @@ export default function LunaTemplate() {
                           </div>
                         </div>
                       </div>
-                    )}
+                            }
                   </motion.div>
-                )}
+                          }
               </AnimatePresence>
             </div>
 
@@ -1335,9 +1333,9 @@ export default function LunaTemplate() {
                    <div className="flex gap-6 flex-1">
                      {/* My Games & Apps */}
                      <ConsoleTile
-                       onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-                       className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto"
-                     >
+                            onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
+                            className="flex-1 cursor-pointer flex flex-col items-center justify-center gap-3 pointer-events-auto">
+                            
                        <Layers className="w-16 h-16 relative z-10" style={{ stroke: 'url(#silverGradient)', filter: 'drop-shadow(0px 0px 8px rgba(255, 255, 255, 0.4))' }} strokeWidth={1.5} />
                        <span className="text-[#CCCCCC] text-lg font-sans text-center relative z-10" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>My games & apps</span>
                      </ConsoleTile>
@@ -1349,15 +1347,15 @@ export default function LunaTemplate() {
                  </div>
             </div>
             </>
-            )}
+                  }
 
-            {showAvatarProgression && (
-              <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
+            {showAvatarProgression &&
+                  <div className="pt-4 pr-8" style={{ paddingLeft: '440px' }}>
                 <div className="max-w-5xl mx-auto pointer-events-auto">
                   <AvatarProgressionBox />
                 </div>
               </div>
-            )}
+                  }
 
             {/* Time Display - Bottom Left */}
             <div className="absolute bottom-6 left-12 z-30 pointer-events-auto">
@@ -1380,25 +1378,25 @@ export default function LunaTemplate() {
                 </linearGradient>
               </defs>
             </svg>
-          </motion.div>
-        ) : uiVisible ? (
-          <motion.div
-            key="loadout-mode"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full">
-
-            <AnimatePresence mode="wait">
-              {false &&
+          </motion.div> :
+                uiVisible ?
                 <motion.div
-                  key="hidden-ui"
+                  key="loadout-mode"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="w-full h-full flex gap-8 py-8">
+                  className="w-full">
+
+            <AnimatePresence mode="wait">
+              {false &&
+                    <motion.div
+                      key="hidden-ui"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-full h-full flex gap-8 py-8">
 
                   {/* Friends List - Far Left */}
                 <div className="w-80 flex-shrink-0">
@@ -1411,26 +1409,26 @@ export default function LunaTemplate() {
                       </h2>
                       <div className="space-y-3">
                         {mockFriends.map((friend) =>
-                          <div
-                            key={friend.id}
-                            onClick={() => setSelectedFriend(friend)}
-                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                              <div
+                                key={friend.id}
+                                onClick={() => setSelectedFriend(friend)}
+                                className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
 
                             <div className="relative">
                               <img src={friend.avatar} alt={friend.name} className="w-12 h-12 rounded-full" />
                               <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${friend.status === 'online' ? 'bg-green-500' : friend.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-500'}`
-                              } />
+                                  } />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-white font-semibold truncate">{friend.name}</p>
                               {friend.game ?
-                                <p className="text-blue-400 text-xs truncate">{friend.game}</p> :
-                                
-                                <p className="text-slate-500 text-xs">Offline</p>
-                              }
+                                  <p className="text-blue-400 text-xs truncate">{friend.game}</p> :
+
+                                  <p className="text-slate-500 text-xs">Offline</p>
+                                  }
                             </div>
                           </div>
-                        )}
+                              )}
                       </div>
                     </div>
                   </div>
@@ -1440,8 +1438,8 @@ export default function LunaTemplate() {
                 <div className="flex-1 flex flex-col gap-6">
                   {/* Clock & Date */}
                   <div
-                    onClick={() => setShowCalendar(true)}
-                    className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/[0.05] transition-colors">
+                          onClick={() => setShowCalendar(true)}
+                          className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:bg-white/[0.05] transition-colors">
 
                     <div className="text-7xl font-bold text-white mb-2 font-mono">
                       {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -1460,10 +1458,10 @@ export default function LunaTemplate() {
                     </h2>
                     <div className="space-y-3">
                       {userEvents.slice(0, 3).map((event, i) =>
-                        <div
-                          key={i}
-                          onClick={() => setShowCalendar(true)}
-                          className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer">
+                            <div
+                              key={i}
+                              onClick={() => setShowCalendar(true)}
+                              className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-purple-400/50 transition-colors cursor-pointer">
 
                           <div className="flex items-center gap-3">
                             <div className="bg-purple-500/20 rounded-lg px-3 py-2 text-purple-300 font-bold text-sm">
@@ -1475,10 +1473,10 @@ export default function LunaTemplate() {
                             </div>
                           </div>
                         </div>
-                      )}
+                            )}
                       {userEvents.length === 0 &&
-                        <p className="text-white/40 text-sm text-center py-4">No upcoming events</p>
-                      }
+                            <p className="text-white/40 text-sm text-center py-4">No upcoming events</p>
+                            }
                     </div>
                   </div>
 
@@ -1494,11 +1492,11 @@ export default function LunaTemplate() {
                     </h2>
                     <div className="space-y-3">
                       {platformUpdates.slice(0, 3).map((update, i) =>
-                        <div
-                          key={i}
-                          onClick={() => setSelectedUpdate(update)}
-                          className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${update.update_type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'}`
-                          }>
+                            <div
+                              key={i}
+                              onClick={() => setSelectedUpdate(update)}
+                              className={`bg-white/5 rounded-lg p-4 border transition-colors cursor-pointer ${update.update_type === 'required' ? 'border-red-500/50 hover:border-red-400' : 'border-white/10 hover:border-green-400/50'}`
+                              }>
 
                           <div className="flex items-start gap-3">
                             <Bot className={`w-5 h-5 flex-shrink-0 mt-0.5 ${update.update_type === 'required' ? 'text-red-400' : 'text-green-400'}`} />
@@ -1508,170 +1506,170 @@ export default function LunaTemplate() {
                             </div>
                           </div>
                         </div>
-                      )}
+                            )}
                       {platformUpdates.length === 0 &&
-                        <p className="text-white/40 text-sm text-center py-4">No updates available</p>
-                      }
+                            <p className="text-white/40 text-sm text-center py-4">No updates available</p>
+                            }
                     </div>
                   </div>
                 </div>
                 </motion.div>
-              }
+                    }
               {uiVisible &&
-                <motion.div
-                  key="visible-ui"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="w-full">
-
-                  <AnimatePresence mode="wait">
-                  {expandedGenre ? (
                     <motion.div
-                      key="expanded-genre"
+                      key="visible-ui"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="fixed inset-0 z-[70] p-8"
-                      style={{
-                        background: 'rgba(11, 11, 11, 0.95)',
-                        backdropFilter: 'blur(40px)',
-                        WebkitBackdropFilter: 'blur(40px)'
-                      }}
-                    >
+                      transition={{ duration: 0.5 }}
+                      className="w-full">
+
+                  <AnimatePresence mode="wait">
+                  {expandedGenre ?
+                        <motion.div
+                          key="expanded-genre"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-[70] p-8"
+                          style={{
+                            background: 'rgba(11, 11, 11, 0.95)',
+                            backdropFilter: 'blur(40px)',
+                            WebkitBackdropFilter: 'blur(40px)'
+                          }}>
+                          
                       <ExpandedGenreView
-                        genre={expandedGenre}
-                        onClose={() => setExpandedGenre(null)}
-                        onCardClick={setSelectedCardForUpgrade}
-                      />
-                    </motion.div>
-                  ) : (
-                    <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleBoxClick} />
-                  )}
+                            genre={expandedGenre}
+                            onClose={() => setExpandedGenre(null)}
+                            onCardClick={setSelectedCardForUpgrade} />
+                          
+                    </motion.div> :
+
+                        <InventoryGrid equippedItems={equippedItems} handleBoxClick={handleBoxClick} />
+                        }
                   </AnimatePresence>
                 </motion.div>
-              }
+                    }
             </AnimatePresence>
-          </motion.div>
-        ) : null}
+          </motion.div> :
+                null}
       </AnimatePresence>
 
       {/* Inventory Panel Overlay (Global) - Single Instance */}
       {/* Moved out of AnimatePresence to ensure single stable instance when visible */}
-      {clickedSlot && (
-        <div 
-          className="absolute inset-0 z-[60]"
-          key="inventory-panel-container"
-        >
+      {clickedSlot &&
+              <div
+                className="absolute inset-0 z-[60]"
+                key="inventory-panel-container">
+                
           <InventoryPanel
-            inventory={inventoryData}
-            onEquip={handleEquipItem}
-            targetSlot={clickedSlot}
-            onClose={() => setClickedSlot(null)}
-          />
+                  inventory={inventoryData}
+                  onEquip={handleEquipItem}
+                  targetSlot={clickedSlot}
+                  onClose={() => setClickedSlot(null)} />
+                
         </div>
-      )}
+              }
 
       {/* Avatar Progression Overlay (O key) */}
       <AnimatePresence>
-        {showAvatarProgression && (
-          <>
+        {showAvatarProgression &&
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowAvatarProgression(false)}
-            />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setShowAvatarProgression(false)} />
+                  
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}
-            >
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+                    style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+                    
               <div className="flex-1 overflow-y-auto p-8">
                 <AvatarProgressionBox />
               </div>
               <button
-                onClick={() => setShowAvatarProgression(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
-              >
+                      onClick={() => setShowAvatarProgression(false)}
+                      className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                      
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        )}
+                }
       </AnimatePresence>
 
       {/* Settings Overlay */}
       <AnimatePresence>
         {showSettings &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowSettings(false)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setShowSettings(false)} />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+                    style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
 
               <div className="flex-1 overflow-y-auto">
                 <SettingsPanel />
               </div>
 
               <button
-                onClick={() => setShowSettings(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                      onClick={() => setShowSettings(false)}
+                      className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
 
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
       {/* AI News Overlay */}
       <AnimatePresence>
         {showAINews &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowAINews(false)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setShowAINews(false)} />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
-              style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute inset-0 bg-white/[0.03] backdrop-blur-3xl z-50 shadow-[0_4px_30px_rgba(0,0,0,0.2)] flex flex-col"
+                    style={{ WebkitBackdropFilter: 'blur(50px) saturate(200%)' }}>
 
               <div className="flex-1 overflow-y-auto">
                 <AINewsContent />
               </div>
 
               <button
-                onClick={() => setShowAINews(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                      onClick={() => setShowAINews(false)}
+                      className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
 
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
 
@@ -1683,50 +1681,50 @@ export default function LunaTemplate() {
       {/* Pin Games Overlay */}
       <AnimatePresence>
         {showPinGames &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowPinGames(false)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setShowPinGames(false)} />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-0 z-50 flex flex-col p-8"
-              style={{
-                background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
-                backdropFilter: 'blur(16px) saturate(140%)',
-                WebkitBackdropFilter: 'blur(16px) saturate(140%)',
-                boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.05)'
-              }}>
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute inset-0 z-50 flex flex-col p-8"
+                    style={{
+                      background: 'rgba(30, 41, 59, 0.25)', // Very translucent grayish dark blue
+                      backdropFilter: 'blur(16px) saturate(140%)',
+                      WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+                      boxShadow: 'inset 0 0 40px rgba(255, 255, 255, 0.05)'
+                    }}>
 
               <div className="flex-1 overflow-hidden">
                 <PinGamesContent />
               </div>
 
               <button
-                onClick={() => setShowPinGames(false)}
-                className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                      onClick={() => setShowPinGames(false)}
+                      className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
 
                 <X className="w-5 h-5" />
               </button>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
       {/* Card Enhancement Overlay */}
       <AnimatePresence>
         {selectedCardForUpgrade &&
-          <CardEnhancementOverlay
-            card={selectedCardForUpgrade}
-            onClose={() => setSelectedCardForUpgrade(null)} />
+                <CardEnhancementOverlay
+                  card={selectedCardForUpgrade}
+                  onClose={() => setSelectedCardForUpgrade(null)} />
 
-        }
+                }
 
 
       </AnimatePresence>
@@ -1734,26 +1732,26 @@ export default function LunaTemplate() {
       {/* Blank Page Overlay */}
       <AnimatePresence>
         {showBlankPage &&
-          <>
+                <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-              onClick={() => setShowBlankPage(false)} />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                    onClick={() => setShowBlankPage(false)} />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute inset-0 z-50 flex flex-col p-8"
-              style={{
-                background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
-                backdropFilter: 'blur(40px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(59, 130, 246, 0.15)'
-              }}>
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    className="absolute inset-0 z-50 flex flex-col p-8"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(147, 197, 253, 0.15) 0%, rgba(191, 219, 254, 0.1) 50%, rgba(147, 197, 253, 0.05) 100%)',
+                      backdropFilter: 'blur(40px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                      boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 32px rgba(59, 130, 246, 0.15)'
+                    }}>
 
               {/* Header with Tabs */}
               <div className="flex items-center justify-between mb-8">
@@ -1762,47 +1760,47 @@ export default function LunaTemplate() {
                   <div className="h-8 w-px bg-white/20" />
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setBlankPageTab('entertainment')}
-                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'entertainment' ?
-                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                        'text-white/60 hover:text-white'}`
-                      }
-                      style={blankPageTab === 'entertainment' ? {
-                        background: 'rgba(59, 130, 246, 0.3)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(147, 197, 253, 0.3)'
-                      } : {}}>
+                            onClick={() => setBlankPageTab('entertainment')}
+                            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'entertainment' ?
+                            'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                            'text-white/60 hover:text-white'}`
+                            }
+                            style={blankPageTab === 'entertainment' ? {
+                              background: 'rgba(59, 130, 246, 0.3)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(147, 197, 253, 0.3)'
+                            } : {}}>
 
                       Entertainment
                     </button>
                     <button
-                      onClick={() => setBlankPageTab('streaming')}
-                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'streaming' ?
-                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                        'text-white/60 hover:text-white'}`
-                      }
-                      style={blankPageTab === 'streaming' ? {
-                        background: 'rgba(59, 130, 246, 0.3)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(147, 197, 253, 0.3)'
-                      } : {}}>
+                            onClick={() => setBlankPageTab('streaming')}
+                            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'streaming' ?
+                            'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                            'text-white/60 hover:text-white'}`
+                            }
+                            style={blankPageTab === 'streaming' ? {
+                              background: 'rgba(59, 130, 246, 0.3)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(147, 197, 253, 0.3)'
+                            } : {}}>
 
                       Streaming
                     </button>
                     <button
-                      onClick={() => setBlankPageTab('social')}
-                      className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'social' ?
-                        'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
-                        'text-white/60 hover:text-white'}`
-                      }
-                      style={blankPageTab === 'social' ? {
-                        background: 'rgba(59, 130, 246, 0.3)',
-                        backdropFilter: 'blur(20px)',
-                        WebkitBackdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(147, 197, 253, 0.3)'
-                      } : {}}>
+                            onClick={() => setBlankPageTab('social')}
+                            className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all ${blankPageTab === 'social' ?
+                            'text-white shadow-[0_8px_32px_rgba(59,130,246,0.3)]' :
+                            'text-white/60 hover:text-white'}`
+                            }
+                            style={blankPageTab === 'social' ? {
+                              background: 'rgba(59, 130, 246, 0.3)',
+                              backdropFilter: 'blur(20px)',
+                              WebkitBackdropFilter: 'blur(20px)',
+                              border: '1px solid rgba(147, 197, 253, 0.3)'
+                            } : {}}>
 
                       Social Hub
                     </button>
@@ -1810,8 +1808,8 @@ export default function LunaTemplate() {
                 </div>
 
                 <button
-                  onClick={() => setShowBlankPage(false)}
-                  className="text-white/60 hover:text-white transition-colors">
+                        onClick={() => setShowBlankPage(false)}
+                        className="text-white/60 hover:text-white transition-colors">
 
                   <X className="w-8 h-8" />
                 </button>
@@ -1821,22 +1819,22 @@ export default function LunaTemplate() {
               <div className="flex-1 overflow-hidden">
                 <AnimatePresence mode="wait">
                   <motion.div
-                    key={blankPageTab}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="h-full overflow-y-auto">
+                          key={blankPageTab}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.3 }}
+                          className="h-full overflow-y-auto">
 
                     {blankPageTab === 'entertainment' &&
-                      <AnimatePresence mode="wait">
+                          <AnimatePresence mode="wait">
                         {!selectedStreamingService ?
-                          <motion.div
-                            key="service-grid"
-                            initial={{ opacity: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            transition={{ duration: 0.4 }}
-                            className="grid grid-cols-4 gap-4">
+                            <motion.div
+                              key="service-grid"
+                              initial={{ opacity: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              transition={{ duration: 0.4 }}
+                              className="grid grid-cols-4 gap-4">
 
                             {[
                               { name: 'Netflix', icon: Film, color: 'rgba(229, 9, 20, 0.3)', topText: 'Netflix', bottomText: '' },
@@ -1873,16 +1871,16 @@ export default function LunaTemplate() {
                               })}
                           </motion.div> :
 
-                          <motion.div
-                            key="streaming-app"
-                            initial={{ opacity: 0, scale: 1.1 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="fixed inset-0 flex items-center justify-center bg-black z-[100]">
+                            <motion.div
+                              key="streaming-app"
+                              initial={{ opacity: 0, scale: 1.1 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.5 }}
+                              className="fixed inset-0 flex items-center justify-center bg-black z-[100]">
 
                             <button
-                              onClick={() => setSelectedStreamingService(null)}
-                              className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors">
+                                onClick={() => setSelectedStreamingService(null)}
+                                className="fixed top-8 right-8 text-white/60 hover:text-white transition-colors">
 
                               <X className="w-8 h-8" />
                             </button>
@@ -1893,87 +1891,87 @@ export default function LunaTemplate() {
                               <p className="text-white/40 text-sm mt-2">Streaming interface coming soon</p>
                             </div>
                           </motion.div>
-                        }
+                            }
                       </AnimatePresence>
-                    }
+                          }
                     {blankPageTab === 'streaming' &&
-                      <StreamingDiscovery />
-                    }
+                          <StreamingDiscovery />
+                          }
                     {blankPageTab === 'social' &&
-                      <SocialHub />
-                    }
+                          <SocialHub />
+                          }
                   </motion.div>
                 </AnimatePresence>
               </div>
             </motion.div>
           </>
-        }
+                }
       </AnimatePresence>
 
       {/* Skill Tree Blank UI */}
       <AnimatePresence>
-        {showSkillTreeBlankUI && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed left-0 right-0 z-50 bg-[#080808]"
-            style={{
-              top: '64px', // Below top header
-              bottom: '48px', // Above bottom header
-            }}
-          >
+        {showSkillTreeBlankUI &&
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed left-0 right-0 z-50 bg-[#080808]"
+                  style={{
+                    top: '64px', // Below top header
+                    bottom: '48px' // Above bottom header
+                  }}>
+                  
             <div className="absolute top-4 left-4">
               <h2 className="text-white text-2xl font-bold tracking-wider uppercase">Skill Tree</h2>
             </div>
             
             <button
-              onClick={() => setShowSkillTreeBlankUI(false)}
-              className="absolute top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
-            >
+                    onClick={() => setShowSkillTreeBlankUI(false)}
+                    className="absolute top-4 right-4 z-[60] w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+                    
               <X className="w-5 h-5" />
             </button>
           </motion.div>
-        )}
+                }
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && (
-        // SideAccessMenu stays visible even when hideUI is true, per user request:
-        // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
-        // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
-        <SideAccessMenu />
-      )}
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
+              // SideAccessMenu stays visible even when hideUI is true, per user request:
+              // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
+              // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
+              <SideAccessMenu />
+              }
 
       {/* Calendar Overlay */}
       <AnimatePresence>
-        {showCalendar && (
-          <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
-        )}
+        {showCalendar &&
+                <IntelligentCalendarOverlay onClose={() => setShowCalendar(false)} currentUserId={user?.id} />
+                }
       </AnimatePresence>
 
       {/* Sub-Page Views - Blacksmith, Season Pass, Entertainment, Clan, Forum */}
       <AnimatePresence>
         {activeSubTab &&
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="absolute inset-0 z-40"
-            style={{
-              background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
-            }}>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 z-40"
+                  style={{
+                    background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
+                  }}>
 
              {/* Close Blacksmith -> Console */}
-             {activeSubTab === 'blacksmith' && (
-               <button
-                 onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
-                 className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white"
-               >
+             {activeSubTab === 'blacksmith' &&
+                  <button
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
+                    className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                    
                  <X className="w-5 h-5" />
                </button>
-             )}
+                  }
 
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
@@ -1982,15 +1980,15 @@ export default function LunaTemplate() {
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
           </motion.div>
-        }
+                }
       </AnimatePresence>
 
         </div>
       </div>
     </div>
     </GlassPageFrame>
-    </PageErrorBoundary>
-    );
+    </PageErrorBoundary>);
+
 
 
 }
