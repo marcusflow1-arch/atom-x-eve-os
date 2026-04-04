@@ -1,418 +1,193 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { 
-  Gamepad2, Brain, Trophy, Users, Sparkles, Play, 
-  ChevronRight, Zap, Layers, Radio, ArrowRight,
-  BookOpen, Swords, Crown, Heart, Home, ShoppingBag, Library as LibraryIcon, MessageSquare, Target, Hammer
+import {
+  ArrowRight,
+  ShoppingBag,
+  Sparkles,
+  Trophy,
+  Radio,
+  Users,
+  Layers,
+  Shield,
+  Play,
+  Gamepad2
 } from 'lucide-react';
-import VisualFeatureGuide from '@/components/onboarding/VisualFeatureGuide';
 import { Button } from '@/components/ui/button';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
 import { useViewMode } from '@/components/mobile/ViewModeContext';
 
-// Core Loop Pillar Card
-const PillarCard = ({ icon: Icon, title, description, color, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.6 }}
-    className="relative group min-w-0"
-  >
-    <div 
-      className="h-full min-w-0 overflow-hidden rounded-3xl border border-white/10 p-6 md:p-8 transition-all duration-500 hover:border-white/20"
-      style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        backdropFilter: 'blur(20px)',
-      }}
-    >
-      <div className={`mb-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${color} transition-transform duration-300 group-hover:scale-110 md:h-16 md:w-16`}>
-        <Icon className="h-7 w-7 text-white md:h-8 md:w-8" />
-      </div>
-      <h3 className="mb-3 break-words text-xl font-bold leading-tight text-white md:text-2xl">{title}</h3>
-      <p className="break-words text-sm leading-6 text-white/60 md:text-base">{description}</p>
-    </div>
-  </motion.div>
-);
+const featureCards = [
+  {
+    icon: ShoppingBag,
+    title: 'Storefront First',
+    description: 'Jump directly into the marketplace overview, featured drops, and launch-ready worlds.',
+    accent: 'from-cyan-400/80 to-blue-500/80'
+  },
+  {
+    icon: Trophy,
+    title: 'Progression Layer',
+    description: 'Cards, rewards, gear, and achievements flow through one connected game identity.',
+    accent: 'from-amber-400/80 to-orange-500/80'
+  },
+  {
+    icon: Radio,
+    title: 'Live Systems',
+    description: 'Streaming, social presence, and interactive spaces stay woven into the core UI.',
+    accent: 'from-fuchsia-400/80 to-violet-500/80'
+  }
+];
 
-// Feature Strip
-const FeatureStrip = ({ text, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -20 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    viewport={{ once: true }}
-    transition={{ delay, duration: 0.5 }}
-    className="flex items-center gap-4 py-4 border-b border-white/5"
-  >
-    <div className="w-2 h-2 rounded-full bg-cyan-400" />
-    <p className="text-white/80 text-lg">{text}</p>
-  </motion.div>
-);
-
-const PathCard = ({ icon: Icon, title, description, color, selected, onClick }) => (
-  <motion.button
-    onClick={onClick}
-    whileHover={{ scale: 1.02, y: -4 }}
-    whileTap={{ scale: 0.98 }}
-    className={`relative min-w-0 overflow-hidden rounded-2xl border p-5 pr-12 text-left transition-all duration-300 md:p-6 md:pr-14 ${
-      selected
-        ? 'border-cyan-400/50 shadow-[0_0_30px_rgba(34,211,238,0.2)]'
-        : 'border-white/10 hover:border-white/20'
-    }`}
-    style={{
-      background: selected ? 'rgba(34, 211, 238, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-      backdropFilter: 'blur(20px)',
-    }}
-  >
-    {selected && (
-      <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400 md:right-4 md:top-4">
-        <ChevronRight className="h-4 w-4 text-black" />
-      </div>
-    )}
-    <div className={`mb-4 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${color} md:h-12 md:w-12`}>
-      <Icon className="h-5 w-5 text-white md:h-6 md:w-6" />
-    </div>
-    <h3 className="mb-2 break-words text-base font-bold leading-tight text-white md:text-lg">{title}</h3>
-    <p className="break-words pr-1 text-sm leading-6 text-white/50">{description}</p>
-  </motion.button>
-);
+const liquidPills = ['Game OS', 'Liquid Glass', 'Marketplace', 'Live Social Layer'];
 
 export default function OnboardingHome() {
   const navigate = useNavigate();
-  const [selectedPath, setSelectedPath] = useState(null);
   const { isMobile } = useViewMode();
 
-  const handleBegin = () => {
-    // Store selected path preference
-    if (selectedPath) {
-      localStorage.setItem('atom_eve_preferred_path', selectedPath);
-    }
-    // Mark onboarding as seen
+  const handleEnter = () => {
     localStorage.setItem('atom_eve_onboarding_complete', 'true');
-    // Navigate to avatar setup or dashboard
-    navigate(createPageUrl('LunaTemplate'));
+    navigate(createPageUrl('Store') + '?subview=games&overview=true');
   };
 
-  const paths = [
-    { id: 'story', icon: BookOpen, title: 'AI Story Mode', description: 'Narrative-driven progression with your AI companion', color: 'from-blue-500 to-indigo-600' },
-    { id: 'battle', icon: Swords, title: 'AI Battle', description: 'Competitive PvP and challenging PvE encounters', color: 'from-red-500 to-rose-600' },
-    { id: 'collector', icon: Trophy, title: 'Collector', description: 'Cards, gear, achievements, and legacy systems', color: 'from-amber-500 to-orange-600' },
-    { id: 'social', icon: Users, title: 'Social', description: 'Clans, friends, events, and community', color: 'from-purple-500 to-pink-600' },
-  ];
-
   return (
-    <div className="min-h-screen w-full text-white overflow-y-auto overflow-x-hidden" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+    <div className="relative min-h-screen overflow-hidden bg-[#070b14] text-white">
       {!isMobile && <SideAccessMenu />}
-      
-      {/* Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-cyan-500/10 via-transparent to-transparent blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-purple-500/10 via-transparent to-transparent blur-3xl" />
+
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.18),transparent_32%),radial-gradient(circle_at_bottom_center,rgba(251,191,36,0.10),transparent_24%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(8,14,27,0.96),rgba(13,22,40,0.92)_38%,rgba(10,15,28,0.96))]" />
+        <div className="absolute left-[12%] top-[18%] h-72 w-72 rounded-full bg-cyan-400/10 blur-[110px]" />
+        <div className="absolute bottom-[8%] right-[10%] h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[130px]" />
       </div>
 
-      {/* SECTION 1: HERO */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 py-20">
-        {/* AI Avatar Silhouette */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 0.3, scale: 1 }}
-          transition={{ duration: 1.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-b from-cyan-500/5 to-transparent blur-3xl"
-        />
-
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center relative z-10"
-        >
-          {/* Logo */}
-          <motion.h1 
-            className="text-6xl md:text-8xl font-black tracking-tighter mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <span className="bg-gradient-to-r from-white via-cyan-200 to-purple-300 bg-clip-text text-transparent">
-              Atom × Eve
-            </span>
-          </motion.h1>
-
-          {/* Tagline */}
-          <motion.p 
-            className="text-xl md:text-2xl text-white/60 mb-4 font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            An AI-powered gaming OS.
-          </motion.p>
-
-          {/* Value Props */}
-          <motion.div 
-            className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-white/40 mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <span className="flex items-center gap-2">
-              <Play className="w-4 h-4 text-cyan-400" />
-              Play games.
-            </span>
-            <span className="hidden md:block">•</span>
-            <span className="flex items-center gap-2">
-              <Brain className="w-4 h-4 text-purple-400" />
-              Evolve your AI.
-            </span>
-            <span className="hidden md:block">•</span>
-            <span className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-amber-400" />
-              Collect power across worlds.
-            </span>
-          </motion.div>
-
-          {/* Primary CTA */}
+      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-6 py-12 md:px-10 lg:px-16">
+        <div className="grid w-full gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col items-center gap-4"
+            transition={{ duration: 0.7 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/12 bg-white/[0.06] p-6 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-[28px] md:p-8 lg:p-10"
           >
-            <Button
-              onClick={() => document.getElementById('path-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-10 py-6 text-lg font-bold bg-white text-black hover:bg-white/90 rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)] transition-all"
-            >
-              Begin Initialization
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            
-            <div className="flex items-center gap-6 mt-4 text-sm text-white/40">
-              <button className="hover:text-white transition-colors">Watch Overview</button>
-              <span>•</span>
-              <button className="hover:text-white transition-colors">Learn More</button>
+            <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),rgba(255,255,255,0.03)_28%,rgba(34,211,238,0.06)_58%,rgba(168,85,247,0.08))]" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+
+            <div className="relative flex flex-wrap gap-3">
+              {liquidPills.map((pill) => (
+                <span
+                  key={pill}
+                  className="rounded-full border border-white/15 bg-white/[0.06] px-4 py-1.5 text-[11px] font-medium uppercase tracking-[0.24em] text-white/65"
+                >
+                  {pill}
+                </span>
+              ))}
+            </div>
+
+            <div className="relative mt-8 max-w-3xl">
+              <p className="mb-4 text-sm uppercase tracking-[0.35em] text-cyan-300/70">Atom × Eve</p>
+              <h1 className="max-w-4xl text-5xl font-black leading-[0.92] tracking-[-0.05em] text-white md:text-7xl xl:text-[6.5rem]">
+                A silky game interface with a living storefront at the front.
+              </h1>
+              <p className="mt-6 max-w-2xl text-base leading-7 text-white/68 md:text-lg">
+                Enter through a vibrant liquid-glass welcome surface, then land directly in the store overview where featured games, systems, and live layers are ready immediately.
+              </p>
+            </div>
+
+            <div className="relative mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Button
+                onClick={handleEnter}
+                className="h-14 rounded-full border border-white/20 bg-white text-base font-bold text-black shadow-[0_12px_30px_rgba(255,255,255,0.18)] transition-all hover:bg-white/90 sm:px-8"
+              >
+                Enter Store Overview
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+
+              <div className="flex items-center gap-5 text-sm text-white/45">
+                <span className="flex items-center gap-2"><Play className="h-4 w-4 text-cyan-300" /> Immediate entry</span>
+                <span className="flex items-center gap-2"><Layers className="h-4 w-4 text-violet-300" /> Unified systems</span>
+              </div>
+            </div>
+
+            <div className="relative mt-10 grid gap-4 md:grid-cols-3">
+              {featureCards.map((card, index) => {
+                const Icon = card.icon;
+                return (
+                  <motion.div
+                    key={card.title}
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.55, delay: 0.12 * (index + 1) }}
+                    className="min-w-0 rounded-[24px] border border-white/12 bg-black/20 p-5 backdrop-blur-xl"
+                  >
+                    <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent}`}>
+                      <Icon className="h-5 w-5 text-white" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-white">{card.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-white/58">{card.description}</p>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
-        </motion.div>
 
-        {/* Scroll Indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2"
-        >
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-2"
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="relative overflow-hidden rounded-[32px] border border-white/12 bg-white/[0.05] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-[28px] md:p-6"
           >
-            <div className="w-1 h-2 bg-white/40 rounded-full" />
-          </motion.div>
-        </motion.div>
-      </section>
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03)_18%,rgba(14,23,42,0.28)_50%,rgba(12,18,34,0.55))]" />
+            <div className="relative flex h-full min-h-[420px] flex-col justify-between rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(9,13,24,0.76),rgba(9,15,28,0.56))] p-5">
+              <div>
+                <div className="flex items-center justify-between rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-white/50">
+                  <span className="flex items-center gap-2"><Gamepad2 className="h-3.5 w-3.5 text-cyan-300" /> Welcome Surface</span>
+                  <span>Live UI Preview</span>
+                </div>
 
-      {/* SECTION 2: CORE LOOP */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">The Core Loop</h2>
-            <p className="text-white/50 text-lg">Three pillars that power your journey</p>
-          </motion.div>
+                <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.26em] text-white/45">Launch Route</p>
+                      <p className="mt-2 text-2xl font-bold text-white">Store Overview</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-semibold text-emerald-300">Active</div>
+                  </div>
 
-          <div className="grid gap-6 md:grid-cols-3 items-stretch">
-            <PillarCard
-              icon={Gamepad2}
-              title="Play"
-              description="Games, stories, battles. Every session feeds your progression and shapes your AI companion."
-              color="from-cyan-500 to-blue-600"
-              delay={0.1}
-            />
-            <PillarCard
-              icon={Brain}
-              title="Evolve"
-              description="Your AI learns from every action. It adapts, remembers, and grows alongside you."
-              color="from-purple-500 to-pink-600"
-              delay={0.2}
-            />
-            <PillarCard
-              icon={Layers}
-              title="Collect"
-              description="Cards, gear, achievements, legacy items. Build a collection that transcends individual games."
-              color="from-amber-500 to-orange-600"
-              delay={0.3}
-            />
-          </div>
-        </div>
-      </section>
+                  <div className="mt-5 grid gap-3">
+                    {[
+                      { icon: Shield, title: 'Clean entry flow', text: 'Avatar creation removed from first-launch routing for now.' },
+                      { icon: ShoppingBag, title: 'Store-first default', text: 'Users land inside the shopping experience immediately.' },
+                      { icon: Users, title: 'Keeps design language', text: 'Glass, glow, and rich dark gradients stay aligned with the app.' },
+                    ].map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={item.title} className="flex items-start gap-3 rounded-2xl border border-white/8 bg-black/20 p-3">
+                          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/8">
+                            <Icon className="h-4.5 w-4.5 text-white/80" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white">{item.title}</p>
+                            <p className="mt-1 text-xs leading-5 text-white/50">{item.text}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
 
-      {/* SECTION 3: WHY DIFFERENT */}
-      <section className="relative py-32 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Not Another Launcher</h2>
-            <p className="text-white/50 text-lg">This is different from Steam, Xbox, Twitch, and Discord.</p>
-          </motion.div>
-
-          <div className="space-y-2">
-            <FeatureStrip text="AI Avatar persists across every game you play" delay={0.1} />
-            <FeatureStrip text="Achievements become usable assets in your collection" delay={0.2} />
-            <FeatureStrip text="Streaming and progression are connected" delay={0.3} />
-            <FeatureStrip text="Old games get new life through AI enhancement" delay={0.4} />
-            <FeatureStrip text="Your gaming legacy follows you everywhere" delay={0.5} />
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: PATH SELECTION */}
-      <section id="path-section" className="relative py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">How Do You Want to Begin?</h2>
-            <p className="text-white/50 text-lg">Choose your preferred path (you can explore everything later)</p>
-          </motion.div>
-
-          <div className="grid gap-4 md:grid-cols-2 mb-12 items-stretch">
-            {paths.map((path) => (
-              <PathCard
-                key={path.id}
-                {...path}
-                selected={selectedPath === path.id}
-                onClick={() => setSelectedPath(path.id)}
-              />
-            ))}
-          </div>
-
-          {/* Final CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <Button
-              onClick={handleBegin}
-              disabled={!selectedPath}
-              className={`px-12 py-6 text-lg font-bold rounded-full transition-all ${
-                selectedPath 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-[0_0_30px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.4)]' 
-                  : 'bg-white/10 text-white/40 cursor-not-allowed'
-              }`}
-            >
-              Enter Atom × Eve
-              <Sparkles className="w-5 h-5 ml-2" />
-            </Button>
-            
-            {!selectedPath && (
-              <p className="text-white/30 text-sm mt-4">Select a path above to continue</p>
-            )}
+              <div className="mt-6 rounded-[24px] border border-cyan-400/20 bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-violet-500/10 p-5">
+                <p className="text-xs uppercase tracking-[0.28em] text-cyan-200/65">Visual Tone</p>
+                <p className="mt-3 text-2xl font-bold text-white">Half translucent. Half vibrant. Fully game-native.</p>
+                <div className="mt-5 flex items-center gap-3 text-sm text-white/55">
+                  <Sparkles className="h-4.5 w-4.5 text-cyan-300" />
+                  Smooth glass reflections with bold sci-fi color depth.
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      {/* SECTION 5: Visual Feature Tour */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-        <VisualFeatureGuide
-          onNavigate={(page) => navigate(createPageUrl(page))}
-          features={[
-            { 
-              icon: Home, 
-              title: 'Dashboard Command', 
-              summary: 'Your central hub for everything. Access friends, stats, and quick actions.', 
-              bullets: ['Real-time AI Stats', 'Quick Launch Games', 'Friends Activity'], 
-              page: 'LunaTemplate', 
-              color: 'from-cyan-500 to-blue-600',
-              image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: ShoppingBag, 
-              title: 'The Store', 
-              summary: 'A futuristic marketplace for games, items, and AI upgrades.', 
-              bullets: ['Exclusive Deals', 'Trading Post', 'Limited Editions'], 
-              page: 'Store', 
-              color: 'from-amber-500 to-orange-500',
-              image: 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: LibraryIcon, 
-              title: 'Game Library', 
-              summary: 'Your entire collection in one immersive interface.', 
-              bullets: ['Cross-platform Sync', 'Achievement Tracking', 'Cloud Saves'], 
-              page: 'Library', 
-              color: 'from-purple-500 to-pink-500',
-              image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Swords, 
-              title: 'AI Battle Arena', 
-              summary: 'Train your AI and compete in simulated combat scenarios.', 
-              bullets: ['PvP Ranked Matches', 'AI Training Grounds', 'Loot Rewards'], 
-              page: 'AIBattle', 
-              color: 'from-rose-500 to-red-600',
-              image: 'https://images.unsplash.com/photo-1535378437327-b7149b379c2a?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: MessageSquare, 
-              title: 'Community Hub', 
-              summary: 'Connect with other players, share guides, and discuss strategies.', 
-              bullets: ['Global Chat', 'Strategy Forums', 'Event Calendars'], 
-              page: 'Community', 
-              color: 'from-indigo-500 to-blue-700',
-              image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Users, 
-              title: 'Clan Headquarters', 
-              summary: 'Manage your team, plan raids, and dominate the leaderboards.', 
-              bullets: ['Roster Management', 'Clan Vault', 'War Planning'], 
-              page: 'Clan', 
-              color: 'from-sky-500 to-cyan-600',
-              image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Hammer, 
-              title: 'The Blacksmith', 
-              summary: 'Forge new equipment and upgrade your existing gear.', 
-              bullets: ['Item Crafting', 'Rarity Upgrades', 'Socketing'], 
-              page: 'Blacksmith', 
-              color: 'from-slate-500 to-zinc-600',
-              image: 'https://images.unsplash.com/photo-1504221507732-5246c045949b?auto=format&fit=crop&w=1200&q=80'
-            },
-            { 
-              icon: Radio, 
-              title: 'Streaming Studio', 
-              summary: 'Broadcast your gameplay and manage your channel.', 
-              bullets: ['Go Live', 'VOD Management', 'Stream Analytics'], 
-              page: 'StreamingHome', 
-              color: 'from-fuchsia-500 to-purple-600',
-              image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=1200&q=80'
-            }
-          ]}
-        />
-      </section>
-
-      <footer className="relative py-12 px-6 border-t border-white/5">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-white/30 text-sm">© 2025 Atom × Eve. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }
