@@ -151,12 +151,8 @@ export default function QuestLog({ isEmbedded, onClose, initialGame }) {
           background: 'linear-gradient(180deg, rgba(8,12,18,0.12) 0%, rgba(7,10,16,0.32) 100%)'
         } : undefined}
       >
-        {/* Ambient shadow/light background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_24%),linear-gradient(180deg,rgba(4,7,12,0.22),rgba(4,7,12,0.6))]" />
-          <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/30 to-transparent" />
-        </div>
+        {/* Holographic grid background */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#4288cc 1px, transparent 1px), linear-gradient(90deg, #4288cc 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
         {/* SWTOR-style Header Area */}
         <div className="flex items-center justify-between mb-8 relative z-10 border-b-2 border-[#1b3652] pb-4">
