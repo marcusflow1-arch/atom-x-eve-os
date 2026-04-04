@@ -611,8 +611,8 @@ export default function LunaTemplate() {
       {!showConsoleMode && !showAchievements && (
         <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out" 
              style={uiVisible ? {
-               left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
-             } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+               left: '112px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
+             } : { left: '112px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
@@ -661,11 +661,11 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
             className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
             style={{
-              left: '440px',
+              left: '520px',
               top: '80px',
               bottom: '32px',
               width: '1000px',
-              maxWidth: 'calc(100vw - 480px)',
+              maxWidth: 'calc(100vw - 560px)',
               background: 'transparent'
             }}
           >
@@ -806,7 +806,7 @@ export default function LunaTemplate() {
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="absolute right-8 z-30 overflow-hidden pointer-events-auto"
             style={{
-              left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+              left: '520px', /* Offset matches left column and keeps the original spacing */
               top: '80px',
               bottom: '32px',
             }}>
@@ -1184,7 +1184,7 @@ export default function LunaTemplate() {
             <div className={`h-px bg-white/10 mb-6 transition-opacity duration-500 ${hideUI ? 'opacity-0' : 'opacity-100'}`} />
 
             {/* QUICK ACCESS BOXES */}
-            <div style={{ paddingLeft: '440px' }}>
+            <div style={{ paddingLeft: '520px' }}>
             <div className={`flex gap-4 mb-6 pointer-events-auto transition-opacity duration-500 ${hideUI ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
               {/* Stats */}
               <ConsoleTile
