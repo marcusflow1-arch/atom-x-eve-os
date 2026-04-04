@@ -397,7 +397,7 @@ export default function ClanPage() {
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
             {/* 5% Left Area for Global Icons */}
-            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center pt-20 pb-6`}>
+            <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/20'} h-full bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center pt-24 pb-6`}>
                 {!isSidebarCollapsed && (
                     <button
                         onClick={() => {
@@ -415,7 +415,7 @@ export default function ClanPage() {
             </div>
 
             {/* 95% Main Clan Area */}
-            <div className="flex-1 relative h-full pt-16">
+            <div className="flex-1 relative h-full pt-20">
                 <SidebarOverlays className="absolute top-[16px] left-6 right-6 bottom-[100px] z-[80]" />
 
                 {bottomTab === 'home' && (
