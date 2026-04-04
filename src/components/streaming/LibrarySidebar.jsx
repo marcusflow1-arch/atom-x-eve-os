@@ -286,9 +286,9 @@ export default function LibrarySidebar() {
   };
   const handleMoreInfo = () => {
 
+
     // Placeholder for navigating to details page
-  };
-  return (
+  };return (
     <>
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav &&
@@ -403,7 +403,7 @@ export default function LibrarySidebar() {
           <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }} className="py-3 opacity-100 absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-12 transition-opacity duration-500">
+          transition={{ type: "spring", stiffness: 300, damping: 30 }} className="px-1 py-3 opacity-100 absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-12 transition-opacity duration-500">
 
           
             {/* Top Slot Customizable Button (Luna only) */}
