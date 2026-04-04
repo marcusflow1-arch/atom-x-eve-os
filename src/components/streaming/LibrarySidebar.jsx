@@ -183,6 +183,7 @@ export default function LibrarySidebar() {
   const isClan = pathname.includes('/clan');
   const isForum = pathname.includes('/community');
   const isFarm = pathname.includes('/farm');
+  const isHome = pathname === '/' || pathname.includes('/home') || pathname.includes('/lunatemplate');
 
   const defaultQuickNavGames = [
   { id: 'g1', name: 'Cyberpunk 2088', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=100&q=80' },
@@ -293,117 +294,94 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav &&
       <>
-          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
-          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed &&
-        <motion.div
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100">
-          
-              <button
-            onClick={() => setSidebarMode((m) => m === 'context' ? 'recent' : 'context')}
-            className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14">
-            
-                 {sidebarMode === 'context' ?
-            isClan ? <>Recently<br />Visited</> :
-            isForum ? <>Recent<br />Forums</> :
-            isFarm ? <>Recent<br />Farm Hub</> :
-            <>Recent<br />Cards</> :
-            <>Recently<br />Played</>}
-              </button>
-              <div className="w-8 h-px bg-white/20 -mt-1" />
-
-              {/* The 5 boxes */}
-              {sidebarMode === 'context' ?
-          <>
-                  {isClan &&
-            <>
+          {/* Top / Middle / Bottom left rail layout */}
+          <div className="absolute left-6 top-[80px] bottom-[72px] z-[70] flex w-12 flex-col items-center justify-between transition-all duration-500">
+            {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed ? (
+              <motion.div
+                initial={{ x: -100, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="flex flex-col items-center gap-2"
+              >
+                <button
+                  onClick={() => setSidebarMode((m) => m === 'context' ? 'recent' : 'context')}
+                  className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight w-14"
+                >
+                  {sidebarMode === 'context' ? isClan ? <>Recently<br />Visited</> : isForum ? <>Recent<br />Forums</> : isFarm ? <>Recent<br />Farm Hub</> : <>Recent<br />Cards</> : <>Recently<br />Played</>}
+                </button>
+                <div className="w-8 h-px bg-white/20" />
+                {sidebarMode === 'context' ? (
+                  <>
+                    {isClan && (
+                      <>
+                        <button
+                          onClick={() => navigate('/Clan?game=global_chat')}
+                          className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
+                          title="Atom X Eve Global Clan Chat"
+                        >
+                          <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
+                          <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                        </button>
+                        {quickNavGames.filter((g) => g.id !== 'global_chat').slice(0, 4).map((game) => (
+                          <button
+                            key={`clan_${game.id}`}
+                            onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
+                            className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                            title={`${game.name} Clan Chat`}
+                          >
+                            <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    {isForum && quickNavForumGames.slice(0, 5).map((game) => (
                       <button
-                onClick={() => navigate('/Clan?game=global_chat')}
-                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group flex items-center justify-center bg-black"
-                title={`Atom X Eve Global Clan Chat`}>
-                
-                        <img src="https://images.unsplash.com/photo-1527443154391-507e9dc6c5cc?w=100&q=80" alt="Atom X Eve" className="w-full h-full object-cover opacity-80" />
-                        <div className="absolute inset-0 bg-cyan-500/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-center text-cyan-400 py-0.5 uppercase tracking-widest">Main</div>
+                        key={`forum_${game.id}`}
+                        onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
+                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                        title={`${game.name} Forum`}
+                      >
+                        <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
-                      
-                      {quickNavGames.filter((g) => g.id !== 'global_chat').slice(0, 5).map((game) =>
-              <button
-                key={`clan_${game.id}`}
-                onClick={() => navigate(`/Clan?game=${encodeURIComponent(game.name)}`)}
-                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                title={`${game.name} Clan Chat`}>
-                
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-              )}
-                    </>
-            }
+                    ))}
+                    {isFarm && quickNavFarmGames.slice(0, 5).map((game) => (
+                      <button
+                        key={`farm_${game.id}`}
+                        onClick={() => navigate(`/Farm?gameId=${game.id}`)}
+                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
+                        title={`${game.name} Farm`}
+                      >
+                        <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                    {isGenreMastery && [1, 2, 3, 4, 5].map((i) => (
+                      <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                        <span className="text-white/30 text-lg font-bold">C</span>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                        <span className="text-white/30 text-lg font-bold">?</span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </motion.div>
+            ) : <div className="w-full" />}
 
-                  {isForum &&
-            <>
-                      {quickNavForumGames.slice(0, 5).map((game) =>
-              <button
-                key={`forum_${game.id}`}
-                onClick={() => navigate(`/Community?game=${encodeURIComponent(game.name)}`)}
-                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                title={`${game.name} Forum`}>
-                
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-              )}
-                    </>
-            }
-
-                  {isFarm &&
-            <>
-                      {quickNavFarmGames.slice(0, 5).map((game) =>
-              <button
-                key={`farm_${game.id}`}
-                onClick={() => navigate(`/Farm?gameId=${game.id}`)}
-                className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 shadow-lg hover:scale-105 transition-all duration-300 relative group"
-                title={`${game.name} Farm`}>
-                
-                          <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-              )}
-                    </>
-            }
-
-                  {isGenreMastery &&
-            <>
-                      {[1, 2, 3, 4, 5].map((i) =>
-              <div key={`card-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                          <span className="text-white/30 text-lg font-bold">C</span>
-                        </div>
-              )}
-                    </>
-            }
-                </> :
-
-          <>
-                  {[1, 2, 3, 4, 5].map((i) =>
-            <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-white/30 text-lg font-bold">?</span>
-                    </div>
-            )}
-                </>
-          }
-              {/* Separator below last box */}
-              <div className="mt-1 w-8 h-px bg-white/20" />
-            </motion.div>
-        }
-
-          {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
-          <motion.div
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }} className="px-1 py-3 opacity-100 absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 w-12 transition-opacity duration-500">
+            <motion.div
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="px-1 py-3 opacity-100 flex flex-col items-center gap-3 w-12 transition-opacity duration-500"
+            >
 
           
             {/* Top Slot Customizable Button (Luna only) */}
@@ -465,24 +443,26 @@ export default function LibrarySidebar() {
 
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
-              <button
-              onClick={() => {
-                const nextEnabled = !isEnvironmentEnabled;
-                setIsEnvironmentEnabled(nextEnabled);
-                localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
-                window.dispatchEvent(new CustomEvent('pageEnvironmentToggle', {
-                  detail: { pageKey: currentEnvironmentPageKey, enabled: nextEnabled }
-                }));
-              }}
-              className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
-              isEnvironmentEnabled ?
-              'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15' :
-              'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'}`
-              }
-              title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}>
-              
-                <Library className="w-5 h-5" />
-              </button>
+              {!(isClan || isForum || isFarm || isHome || isAura) && (
+                <button
+                  onClick={() => {
+                    const nextEnabled = !isEnvironmentEnabled;
+                    setIsEnvironmentEnabled(nextEnabled);
+                    localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
+                    window.dispatchEvent(new CustomEvent('pageEnvironmentToggle', {
+                      detail: { pageKey: currentEnvironmentPageKey, enabled: nextEnabled }
+                    }));
+                  }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
+                    isEnvironmentEnabled
+                      ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+                  }`}
+                  title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
+                >
+                  <Library className="w-5 h-5" />
+                </button>
+              )}
               {isSidebarCollapsed &&
             <button
               onClick={() => {
@@ -524,58 +504,61 @@ export default function LibrarySidebar() {
               </div>
           }
 
-            {/* Friends & Library expand buttons */}
-            <div className="w-8 h-px bg-white/10 my-1" />
-            <button
-            onClick={() => {setExpandedPanel((p) => p === 'friends' ? null : 'friends');setOpenDropdown(null);setIsOpen(false);}}
-            className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-            expandedPanel === 'friends' ?
-            'border-green-400/50 bg-green-500/20 text-green-400' :
-            'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'}`
-            }
-            title="Friends">
-            
-              <UsersIcon className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-            </button>
-            <button
-            onClick={() => {setExpandedPanel((p) => p === 'library' ? null : 'library');setShowAchievementsUniverse(false);setOpenDropdown(null);setIsOpen(false);}}
-            className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-            expandedPanel === 'library' ?
-            'border-cyan-400/50 bg-cyan-500/20 text-cyan-400' :
-            'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'}`
-            }
-            title="Library">
-            
-              <Library className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider"></span>
-            </button>
-            <button
-            onClick={() => {setExpandedPanel((p) => p === 'rewards' ? null : 'rewards');setOpenDropdown(null);setIsOpen(false);setIsExpandedRewardsInventory(false);}}
-            className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-            expandedPanel === 'rewards' ?
-            'border-amber-400/50 bg-amber-500/20 text-amber-400' :
-            'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'}`
-            }
-            title="Rewards">
-            
-              <Trophy className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Rewards</span>
-            </button>
-            <button
-            onClick={() => {setExpandedPanel((p) => p === 'entertainment' ? null : 'entertainment');setOpenDropdown(null);setIsOpen(false);setSelectedEntertainmentApp(null);setShowAddLink(false);}}
-            className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
-            expandedPanel === 'entertainment' ?
-            'border-indigo-400/50 bg-indigo-500/20 text-indigo-400' :
-            'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'}`
-            }
-            title="Entertainment">
-            
-              <Tv className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
-            </button>
-
           </motion.div>
+
+            <motion.div
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="flex flex-col items-center gap-3 w-12 pb-1"
+            >
+              <div className="w-8 h-px bg-white/10 my-1" />
+              <button
+                onClick={() => {setExpandedPanel((p) => p === 'friends' ? null : 'friends');setOpenDropdown(null);setIsOpen(false);}}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'friends'
+                    ? 'border-green-400/50 bg-green-500/20 text-green-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-green-400 hover:border-green-400/40 hover:bg-green-500/10'
+                }`}
+                title="Friends"
+              >
+                <UsersIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {setExpandedPanel((p) => p === 'entertainment' ? null : 'entertainment');setOpenDropdown(null);setIsOpen(false);setSelectedEntertainmentApp(null);setShowAddLink(false);}}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'entertainment'
+                    ? 'border-indigo-400/50 bg-indigo-500/20 text-indigo-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-indigo-400 hover:border-indigo-400/40 hover:bg-indigo-500/10'
+                }`}
+                title="Entertainment"
+              >
+                <Tv className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {setExpandedPanel((p) => p === 'rewards' ? null : 'rewards');setOpenDropdown(null);setIsOpen(false);setIsExpandedRewardsInventory(false);}}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'rewards'
+                    ? 'border-amber-400/50 bg-amber-500/20 text-amber-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-amber-400 hover:border-amber-400/40 hover:bg-amber-500/10'
+                }`}
+                title="Rewards"
+              >
+                <Trophy className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {setExpandedPanel((p) => p === 'library' ? null : 'library');setShowAchievementsUniverse(false);setOpenDropdown(null);setIsOpen(false);}}
+                className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
+                  expandedPanel === 'library'
+                    ? 'border-cyan-400/50 bg-cyan-500/20 text-cyan-400'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-500/10'
+                }`}
+                title="Library"
+              >
+                <Library className="w-4 h-4" />
+              </button>
+            </motion.div>
+          </div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
