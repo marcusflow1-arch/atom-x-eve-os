@@ -394,8 +394,7 @@ export default function LibrarySidebar() {
                   ))}
                 </>
               )}
-              {/* Separator below last box */}
-              <div className="mt-1 w-8 h-px bg-white/20" />
+
             </motion.div>
           )}
 
@@ -548,7 +547,6 @@ export default function LibrarySidebar() {
             )}
 
             {/* Friends & Library expand buttons */}
-            <div className="w-8 h-px bg-white/10 my-1" />
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
