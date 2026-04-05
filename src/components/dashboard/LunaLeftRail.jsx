@@ -22,16 +22,16 @@ export default function LunaLeftRail({ isEnvironmentActive, onToggleEnvironment 
 
         
 
-        <button
-          onClick={onToggleEnvironment}
-          className={`min-h-[64px] w-full rounded-2xl border px-2 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-center transition-all ${
-          isEnvironmentActive ?
-          'border-emerald-400/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15' :
-          'border-amber-400/30 bg-amber-500/10 text-amber-200 hover:bg-amber-500/15'}`
-          }>
-          
-          {isEnvironmentActive ? 'Environment Enabled' : 'Environment Disabled'}
-        </button>
+        
+
+
+
+
+
+
+
+
+        
 
         
 
