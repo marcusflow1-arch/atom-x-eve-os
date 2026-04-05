@@ -404,33 +404,36 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-4 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
-              <div className="relative group">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20 bg-white/10 text-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl hover:bg-white/15 transition-all duration-300 relative z-20"
-                  title="Top Widget Placeholder"
-                >
-                  <span className="text-lg font-bold text-white/70">?</span>
-                </div>
-                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
-                  <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot1Content', { detail: 'questBook' }))}
-                    className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
-                    title="Toggle Quest Book"
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-px bg-white/20" />
+                <div className="relative group">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20 bg-white/10 text-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl hover:bg-white/15 transition-all duration-300 relative z-20"
+                    title="Top Widget Placeholder"
                   >
-                    <Book className="w-4 h-4 text-cyan-200" />
-                  </button>
-                  {[1, 2, 3].map((item) => (
-                    <div
-                      key={`top-placeholder-${item}`}
-                      className="w-10 h-10 rounded-xl border border-white/20 bg-white/10 text-white/70 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)]"
+                    <span className="text-lg font-bold text-white/70">?</span>
+                  </div>
+                  <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot1Content', { detail: 'questBook' }))}
+                      className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
+                      title="Toggle Quest Book"
                     >
-                      <span className="text-lg font-bold">?</span>
-                    </div>
-                  ))}
+                      <Book className="w-4 h-4 text-cyan-200" />
+                    </button>
+                    {[1, 2, 3].map((item) => (
+                      <div
+                        key={`top-placeholder-${item}`}
+                        className="w-10 h-10 rounded-xl border border-white/20 bg-white/10 text-white/70 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)]"
+                      >
+                        <span className="text-lg font-bold">?</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -545,7 +548,7 @@ export default function LibrarySidebar() {
             )}
 
             {/* Friends & Library expand buttons */}
-            <div className="w-8 h-px bg-white/10 my-1 -ml-1" />
+            <div className="w-8 h-px bg-white/10 my-1" />
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
