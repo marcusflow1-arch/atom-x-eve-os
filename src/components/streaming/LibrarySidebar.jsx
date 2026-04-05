@@ -463,15 +463,10 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Context button with page-specific behavior */}
+            {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
                 onClick={() => {
-                  if (isAura) {
-                    window.dispatchEvent(new CustomEvent('toggleAuraEditMode'));
-                    return;
-                  }
-
                   const nextEnabled = !isEnvironmentEnabled;
                   setIsEnvironmentEnabled(nextEnabled);
                   localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
@@ -480,13 +475,11 @@ export default function LibrarySidebar() {
                   }));
                 }}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
-                  isAura
-                    ? 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-300 hover:bg-fuchsia-500/15'
-                    : isEnvironmentEnabled
-                      ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
-                      : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+                  isEnvironmentEnabled
+                    ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
+                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
                 }`}
-                title={isAura ? 'Edit Aura page' : isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
+                title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
               >
                 <Library className="w-5 h-5" />
               </button>
@@ -516,9 +509,19 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Separator between top widget controls and bottom widget controls */}
+            {/* Bottom Slot Customizable Button (Luna only) - MOVED ABOVE FRIENDS */}
             {pathname.includes('/lunatemplate') && (
-              <div className="w-8 h-px bg-white/10 my-1" />
+              <div className="relative group">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 text-white/80 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:scale-105 transition-all duration-300 relative z-20 cursor-pointer" title="Customize Bottom Widget">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-10">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'cardCollection'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Card Collection"><Layers className="w-4 h-4 text-white" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'friendsList'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-blue-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Friends List"><UsersIcon className="w-4 h-4 text-blue-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'recentGames'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-green-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform" title="Recent Games"><Gamepad2 className="w-4 h-4 text-green-400" /></button>
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', {detail: 'none'}))} className="w-10 h-10 rounded-xl bg-white/10 hover:bg-red-500/20 border border-white/20 flex items-center justify-center backdrop-blur-lg shadow-lg hover:scale-110 transition-transform text-lg font-bold text-white/50" title="Remove Widget">?</button>
+                </div>
+              </div>
             )}
 
             {/* Friends & Library expand buttons */}
