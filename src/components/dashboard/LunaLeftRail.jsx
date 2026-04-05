@@ -38,7 +38,7 @@ export default function LunaLeftRail({ isEnvironmentActive, onToggleEnvironment 
 
       
 
-      <div className="bg-white/20 mb-3 w-8 h-px" />
+      <div className="bg-white/20 mb-2 ml-2 mt-1 w-8 h-px" />
 
       
 
