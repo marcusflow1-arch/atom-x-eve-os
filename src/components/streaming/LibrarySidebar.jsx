@@ -404,7 +404,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`absolute left-4 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 px-1 w-12 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Customizable Button (Luna only) */}
             {pathname.includes('/lunatemplate') && (
@@ -525,7 +525,7 @@ export default function LibrarySidebar() {
             )}
 
             {/* Friends & Library expand buttons */}
-            <div className="w-8 h-px bg-white/10 my-1" />
+            <div className="w-8 h-px bg-white/10 my-1 -ml-1" />
             <button
               onClick={() => { setExpandedPanel(p => p === 'friends' ? null : 'friends'); setOpenDropdown(null); setIsOpen(false); }}
               className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 ${
