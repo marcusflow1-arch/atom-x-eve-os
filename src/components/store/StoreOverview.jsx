@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Flame, Star, Zap, Trophy, Clock, ChevronRight, ChevronLeft,
   Play, Sparkles, TrendingUp, Gift, Calendar, Crown,
-  Gamepad2, Eye, Heart, Bookmark, Tag, Percent
+  Gamepad2, Eye, Heart, Bookmark, Tag, Percent, Users, Radio, Layers, Shield, Wand2
 } from 'lucide-react';
 
 const FEATURED_GAMES = [
@@ -53,6 +53,33 @@ const TRIVIA = [
   { id: 4, q: 'What does RPG stand for?', a: 'Role-Playing Game', icon: '⚔️' },
 ];
 
+const LIVE_EVENTS = [
+  { id: 1, title: 'Weekend Arena Cup', meta: 'Live now · 28 teams', status: 'watch live', icon: Trophy },
+  { id: 2, title: 'Indie Dev Showcase', meta: 'Starts in 2h', status: 'set reminder', icon: Sparkles },
+  { id: 3, title: 'Co-op Raid Night', meta: 'Tonight · 8PM', status: 'join squad', icon: Users },
+  { id: 4, title: 'Lore Stream Premiere', meta: 'Tomorrow · 6PM', status: 'premiere', icon: Radio },
+];
+
+const EDITORIAL_ROWS = [
+  {
+    title: 'Curated for Action Fans',
+    accent: 'text-cyan-300',
+    items: FEATURED_GAMES.map((game) => ({ ...game, eyebrow: 'Fast-paced picks' })),
+  },
+  {
+    title: 'Deep RPG Journeys',
+    accent: 'text-violet-300',
+    items: POPULAR_GAMES.slice(0, 4).map((game) => ({ ...game, eyebrow: 'Long-form adventures' })),
+  },
+];
+
+const COMMUNITY_SPOTLIGHTS = [
+  { title: 'Top Wishlisted', value: '184K', sub: 'players watching upcoming drops', icon: Heart },
+  { title: 'Most Discussed', value: '12.4K', sub: 'fresh reviews and community notes', icon: Layers },
+  { title: 'Trusted Picks', value: '96%', sub: 'positive score across featured titles', icon: Shield },
+  { title: 'Fresh Discoveries', value: '42', sub: 'new hidden gems this week', icon: Wand2 },
+];
+
 function SectionHeader({ icon: Icon, color, label, children }) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -92,7 +119,9 @@ export default function StoreOverview({ onClose }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       className="absolute inset-0 z-50 overflow-y-auto"
-      style={{ background: 'linear-gradient(160deg, #0a0e16 0%, #0d1420 60%, #080c12 100%)' }}
+      style={{
+        background: 'radial-gradient(circle at top left, rgba(56,189,248,0.12), transparent 28%), radial-gradient(circle at top right, rgba(168,85,247,0.12), transparent 26%), linear-gradient(160deg, #0a0e16 0%, #0d1420 60%, #080c12 100%)'
+      }}
     >
       <button
         onClick={onClose}
@@ -102,6 +131,45 @@ export default function StoreOverview({ onClose }) {
       </button>
 
       <div className="pb-28 space-y-8 max-w-[1600px] mx-auto px-5 pt-4">
+
+        <section className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4">
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-6">
+            <div className="flex items-center gap-2 mb-3 text-cyan-300">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-[11px] font-black uppercase tracking-[0.28em]">Store Pulse</span>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {COMMUNITY_SPOTLIGHTS.map(({ title, value, sub, icon: Icon }) => (
+                <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4">
+                  <div className="flex items-center gap-2 text-white/65 mb-3">
+                    <Icon className="w-4 h-4 text-cyan-300" />
+                    <span className="text-xs font-semibold">{title}</span>
+                  </div>
+                  <div className="text-2xl font-black text-white mb-1">{value}</div>
+                  <p className="text-[11px] leading-relaxed text-white/45">{sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-6">
+            <SectionHeader icon={Calendar} color="text-violet-300" label="Live Schedule" />
+            <div className="space-y-3">
+              {LIVE_EVENTS.map(({ id, title, meta, status, icon: Icon }) => (
+                <div key={id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-violet-300" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white truncate">{title}</p>
+                    <p className="text-[11px] text-white/45">{meta}</p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.22em] text-cyan-300 font-black">{status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
         {/* ══ 1. FEATURED HERO ══ */}
         <section>
@@ -416,6 +484,73 @@ export default function StoreOverview({ onClose }) {
                 </div>
               </motion.div>
             ))}
+          </div>
+        </section>
+
+        <section className="rounded-[30px] border border-white/10 bg-white/[0.04] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-5 md:p-6">
+          <SectionHeader icon={Bookmark} color="text-cyan-300" label="Editorial Collections" />
+          <div className="space-y-6">
+            {EDITORIAL_ROWS.map((row) => (
+              <div key={row.title}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-black uppercase tracking-[0.2em] ${row.accent}`}>{row.title}</h3>
+                  <button className="text-[11px] text-white/40 hover:text-white/70 transition-colors">Explore shelf</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                  {row.items.map((item, idx) => (
+                    <motion.div key={`${row.title}-${item.id}-${idx}`} whileHover={{ y: -4 }} className="rounded-2xl border border-white/10 bg-white/[0.04] overflow-hidden">
+                      <div className="relative h-36">
+                        <img src={item.img} alt={item.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                        <div className="absolute left-3 bottom-3 right-3">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-200/80 font-black mb-1">{item.eyebrow}</p>
+                          <p className="text-white font-bold text-sm truncate">{item.title}</p>
+                        </div>
+                      </div>
+                      <div className="px-4 py-3 flex items-center justify-between gap-3">
+                        <p className="text-[11px] text-white/45 line-clamp-2">{item.desc || `${item.genre} favorites picked for players who want more depth and style.`}</p>
+                        <span className="text-sm font-black text-white whitespace-nowrap">{item.price}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] gap-4">
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-6">
+            <SectionHeader icon={Gift} color="text-pink-300" label="Member Rewards" />
+            <div className="space-y-3">
+              {[
+                'Claim rotating coupons for featured shelves',
+                'Unlock bonus points on bundle purchases',
+                'Preview new drops before the public feed',
+                'Save personal collections for fast checkout',
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                  <Gift className="w-4 h-4 text-pink-300 flex-shrink-0" />
+                  <span className="text-sm text-white/75">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.05] backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.45)] p-6">
+            <SectionHeader icon={Radio} color="text-orange-300" label="Store Broadcast" />
+            <div className="grid md:grid-cols-3 gap-3">
+              {[
+                { title: 'New drop every hour', text: 'Fresh headlines, launch trailers, and editor picks cycling through the store feed.' },
+                { title: 'Community watchlist', text: 'Track what players are wishlisting, gifting, and reviewing in real time.' },
+                { title: 'Liquid glass UI', text: 'A brighter, busier overview with layered panels that still feel calm and premium.' },
+              ].map((card) => (
+                <div key={card.title} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-sm font-black text-white mb-2">{card.title}</p>
+                  <p className="text-[12px] leading-relaxed text-white/50">{card.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
