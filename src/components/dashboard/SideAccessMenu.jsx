@@ -9,11 +9,9 @@ import FriendsListContent from './FriendsListContent';
 
 const MENU_ITEMS = [
   { id: 'library', label: 'Library', icon: Library, color: 'cyan' },
-  { id: 'entertainment', label: 'Entertainment', icon: Tv, color: 'purple' },
   { id: 'friends-list', label: 'Friends List', icon: Users, color: 'blue' },
   { id: 'aura', label: 'Aura', icon: Radio, color: 'pink' },
   { id: 'ai-story', label: 'AI Story', icon: Brain, color: 'emerald' },
-  { id: 'ai-battle', label: 'AI Battle', icon: Swords, color: 'orange' },
 ];
 
 // Mock data for content panels
