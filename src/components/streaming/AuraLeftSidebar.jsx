@@ -1,5 +1,5 @@
 import React from 'react';
-import { Library, Users, PlaySquare, Tv, Settings } from 'lucide-react';
+import { Tv, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -11,27 +11,7 @@ const quickActions = [
     iconClass: 'text-purple-300',
     className: 'bg-purple-500/20 border-purple-400/30 shadow-[0_0_18px_rgba(168,85,247,0.25)]',
   },
-  {
-    id: 'friends',
-    label: 'Friends',
-    icon: Users,
-    iconClass: 'text-cyan-200',
-    className: 'bg-white/10 border-white/15',
-  },
-  {
-    id: 'library',
-    label: 'Library Rewards',
-    icon: Library,
-    iconClass: 'text-white/80',
-    className: 'bg-white/10 border-white/15',
-  },
-  {
-    id: 'entertainment',
-    label: 'Entertainment',
-    icon: PlaySquare,
-    iconClass: 'text-white/80',
-    className: 'bg-white/10 border-white/15',
-  },
+
   {
     id: 'stream-settings',
     label: 'Stream Settings',
@@ -45,21 +25,6 @@ export default function AuraLeftSidebar() {
   const navigate = useNavigate();
 
   const handleAction = (actionId) => {
-    if (actionId === 'friends') {
-      window.dispatchEvent(new CustomEvent('openSocialHub'));
-      return;
-    }
-
-    if (actionId === 'library') {
-      window.dispatchEvent(new CustomEvent('openLibrarySidebar'));
-      return;
-    }
-
-    if (actionId === 'entertainment') {
-      navigate(createPageUrl('LunaTemplate') + '?panel=entertainment');
-      return;
-    }
-
     if (actionId === 'stream-settings') {
       navigate(createPageUrl('StreamerProfileEdit'));
       return;
