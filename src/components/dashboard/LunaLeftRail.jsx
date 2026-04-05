@@ -40,13 +40,13 @@ export default function LunaLeftRail({ isEnvironmentActive, onToggleEnvironment 
 
       <div className="w-8 h-px bg-white/20 mb-3" />
 
-      <div className="mt-auto px-2 pb-6 flex flex-col items-center w-full">
-        <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Friends</span>
-        <div className="w-8 h-px bg-white/20 mb-3" />
-        <div className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-          <Users className="w-4 h-4 text-white/50" />
-        </div>
-      </div>
+      
+
+
+
+
+
+      
     </div>);
 
 }
