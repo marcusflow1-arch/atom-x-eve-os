@@ -417,9 +417,9 @@ export default function LibrarySidebar() {
                 </div>
                 <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
                   <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('setSlot1Content', { detail: 'questBook' }))}
+                    onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot1Content', { detail: 'questBook' }))}
                     className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
-                    title="Re-enable Quest Book"
+                    title="Toggle Quest Book"
                   >
                     <Book className="w-4 h-4 text-cyan-200" />
                   </button>
@@ -534,9 +534,9 @@ export default function LibrarySidebar() {
                 </div>
                 <div className="absolute left-10 top-0 ml-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all duration-300 z-10">
                   <button
-                    onClick={() => window.dispatchEvent(new CustomEvent('setSlot2Content', { detail: 'cardCollection' }))}
+                    onClick={() => window.dispatchEvent(new CustomEvent('toggleSlot2Content', { detail: 'cardCollection' }))}
                     className="w-10 h-10 rounded-xl border border-cyan-400/25 bg-white/10 text-white/80 flex items-center justify-center backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.16)] hover:bg-cyan-500/15 transition-all duration-300"
-                    title="Re-enable Cards Unlocked"
+                    title="Toggle Cards Unlocked"
                   >
                     <Layers className="w-4 h-4 text-cyan-200" />
                   </button>
