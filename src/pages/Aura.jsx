@@ -20,7 +20,7 @@ export default function Aura() {
       {/* 95% Main Area */}
       <div className="flex-1 relative h-full overflow-y-auto">
         {/* Main Content */}
-        <div className="pt-20 pb-24 min-h-screen">
+        <div className="pt-20 pb-28 min-h-screen">
           <StreamingGamesLive />
         </div>
 
