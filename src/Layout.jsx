@@ -1220,7 +1220,7 @@ export default function Layout({ children, currentPageName }) {
       if (!localStorage.getItem('atom_eve_character_created')) {
         navigate(createPageUrl('CharacterCreation'));
       } else {
-        navigate(createPageUrl('LunaTemplate'));
+        navigate(createPageUrl('Store'));
       }
     }, 400);
   };
