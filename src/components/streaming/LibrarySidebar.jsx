@@ -480,22 +480,14 @@ export default function LibrarySidebar() {
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
-                onClick={() => {
-                  const nextEnabled = !isEnvironmentEnabled;
-                  setIsEnvironmentEnabled(nextEnabled);
-                  localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
-                  window.dispatchEvent(new CustomEvent('pageEnvironmentToggle', {
-                    detail: { pageKey: currentEnvironmentPageKey, enabled: nextEnabled }
-                  }));
-                }}
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
-                  isEnvironmentEnabled
-                    ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
-                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
-                }`}
-                title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
+                onClick={() => window.dispatchEvent(new CustomEvent('launchEnvironment', {
+                  detail: { pageKey: currentEnvironmentPageKey }
+                }))}
+                className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15 backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1"
+                title="Launch environment"
               >
-                <Library className="w-5 h-5" />
+                <Play className="w-4 h-4" />
+                <span className="text-[7px] font-bold uppercase tracking-wider">Launch</span>
               </button>
               {isSidebarCollapsed && (
                 <button
