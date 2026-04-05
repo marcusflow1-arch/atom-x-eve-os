@@ -463,10 +463,15 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Original Library Button with Restore Arrow */}
+            {/* Context button with page-specific behavior */}
             <div className="relative flex items-center">
               <button
                 onClick={() => {
+                  if (isAura) {
+                    window.dispatchEvent(new CustomEvent('toggleAuraEditMode'));
+                    return;
+                  }
+
                   const nextEnabled = !isEnvironmentEnabled;
                   setIsEnvironmentEnabled(nextEnabled);
                   localStorage.setItem(`environment_enabled_${currentEnvironmentPageKey}`, String(nextEnabled));
@@ -475,11 +480,13 @@ export default function LibrarySidebar() {
                   }));
                 }}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center border backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1 ${
-                  isEnvironmentEnabled
-                    ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
-                    : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+                  isAura
+                    ? 'border-fuchsia-400/30 bg-fuchsia-500/10 text-fuchsia-300 hover:bg-fuchsia-500/15'
+                    : isEnvironmentEnabled
+                      ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/15'
+                      : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
                 }`}
-                title={isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
+                title={isAura ? 'Edit Aura page' : isEnvironmentEnabled ? 'Disable environment' : 'Enable environment'}
               >
                 <Library className="w-5 h-5" />
               </button>
