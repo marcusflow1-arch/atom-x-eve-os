@@ -474,14 +474,9 @@ function LayoutContent({ children, currentPageName }) {
     '/dashboard'
   ], []);
 
-  // Redirect legacy locations to LunaTemplate and enforce character creation
+  // Redirect legacy locations to LunaTemplate
   useEffect(() => {
     const p = location.pathname.toLowerCase();
-    
-    if (!localStorage.getItem('atom_eve_character_created') && !p.includes('charactercreation')) {
-      navigate(createPageUrl('CharacterCreation'), { replace: true });
-      return;
-    }
 
     if (p === '/' || p.endsWith('/dashboard') || legacyPaths.includes(p)) {
       navigate(createPageUrl('LunaTemplate'), { replace: true });
@@ -1217,11 +1212,7 @@ export default function Layout({ children, currentPageName }) {
     setTimeout(() => {
       setShowIntro(false);
       sessionStorage.setItem('atom_eve_intro_seen_session', 'true');
-      if (!localStorage.getItem('atom_eve_character_created')) {
-        navigate(createPageUrl('CharacterCreation'));
-      } else {
-        navigate(createPageUrl('Store'));
-      }
+      navigate(createPageUrl('Store'));
     }, 400);
   };
 
