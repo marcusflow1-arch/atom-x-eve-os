@@ -408,7 +408,6 @@ export default function LibrarySidebar() {
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-px bg-white/20" />
                 <div className="relative group">
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/20 bg-white/10 text-white/80 shadow-[0_8px_30px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-xl hover:bg-white/15 transition-all duration-300 relative z-20"
