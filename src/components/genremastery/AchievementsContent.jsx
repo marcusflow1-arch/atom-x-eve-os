@@ -122,30 +122,32 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Game Header */}
-      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-        <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-          {selectedGame.cover_image ? (
-            <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-white/25" />
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {!selectedCard && (
+        <>
+          {/* Game Header */}
+          <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
+            <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+              {selectedGame.cover_image ? (
+                <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-white/25" />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
-          <div className="flex items-center gap-2 mt-0.5">
-            <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre || genre.name}</Badge>
-            <span className="text-white/30 text-xs">{displayCards.length} cards</span>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
+              <div className="flex items-center gap-2 mt-0.5">
+                <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre || genre.name}</Badge>
+                <span className="text-white/30 text-xs">{displayCards.length} cards</span>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Cards Grid */}
-      <div className="relative flex-1 overflow-hidden">
-        <div className="flex-1 h-full overflow-y-auto p-5">
+          {/* Cards Grid */}
+          <div className="relative flex-1 overflow-hidden">
+            <div className="flex-1 h-full overflow-y-auto p-5">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
@@ -201,14 +203,16 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
             <p className="text-xs text-white/20 mt-1">Unlock achievements to earn cards</p>
           </div>
         )}
-        </div>
+            </div>
+          </div>
+        </>
+      )}
 
-        <AnimatePresence>
-          {selectedCard && (
-            <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
-          )}
-        </AnimatePresence>
-      </div>
+      <AnimatePresence>
+        {selectedCard && (
+          <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
+        )}
+      </AnimatePresence>
 
       {/* Overlays */}
 
