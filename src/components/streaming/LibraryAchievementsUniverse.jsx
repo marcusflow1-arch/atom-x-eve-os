@@ -106,6 +106,7 @@ export default function LibraryAchievementsUniverse({ onClose }) {
   const [selectedId, setSelectedId] = useState(ACHIEVEMENTS[0].id);
   const [currentShot, setCurrentShot] = useState(0);
   const [expandedQuestId, setExpandedQuestId] = useState(QUESTS[0].id);
+  const [rightPanelMode, setRightPanelMode] = useState('details');
   const selectedAchievement = useMemo(
     () => ACHIEVEMENTS.find((item) => item.id === selectedId) || ACHIEVEMENTS[0],
     [selectedId]
@@ -153,7 +154,7 @@ export default function LibraryAchievementsUniverse({ onClose }) {
 
       <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
         <div className="space-y-6 min-h-full">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 border border-white/10 rounded-3xl overflow-hidden bg-white/[0.02]">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 bg-transparent">
             <div className="p-5 md:p-6 border-b xl:border-b-0 xl:border-r border-white/10">
               <div className="flex items-center gap-3 mb-5">
                 <ScrollText className="w-4 h-4 text-cyan-300" />
@@ -220,7 +221,7 @@ export default function LibraryAchievementsUniverse({ onClose }) {
               <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
                   <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
-                  <p className="text-sm text-white/45">Compact 4-card row with inline upgrade area.</p>
+                  <p className="text-sm text-white/45">50% of the page width, with the other 50% used for card details and upgrades.</p>
                 </div>
                 <Trophy className="w-4 h-4 text-amber-300" />
               </div>
@@ -230,8 +231,13 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                   <button
                     key={achievement.id}
                     onClick={() => {
-                      setSelectedId(achievement.id);
-                      setCurrentShot(0);
+                      if (selectedAchievement.id === achievement.id) {
+                        setRightPanelMode((prev) => (prev === 'details' ? 'upgrade' : 'details'));
+                      } else {
+                        setSelectedId(achievement.id);
+                        setCurrentShot(0);
+                        setRightPanelMode('details');
+                      }
                     }}
                     className={`text-left transition-all ${selectedAchievement.id === achievement.id ? 'opacity-100' : 'opacity-85 hover:opacity-100'}`}
                   >
@@ -247,38 +253,56 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                 <div className="flex items-center justify-between gap-3 mb-4">
                   <div>
                     <p className="text-sm font-semibold text-white">{selectedAchievement.name}</p>
-                    <p className="text-xs text-white/40 mt-1">Mini card upgrade menu</p>
+                    <p className="text-xs text-white/40 mt-1">
+                      {rightPanelMode === 'details' ? 'Card content display' : 'Card upgrade options'}
+                    </p>
                   </div>
                   <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="border-b border-white/10 pb-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Current Card</p>
-                      <p className="text-sm text-white/70">Base achievement card frame</p>
+                {rightPanelMode === 'details' ? (
+                  <div className="space-y-4">
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Summary</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.summary}</p>
                     </div>
-                    <div className="border-b border-white/10 pb-3">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Upgrade Path</p>
-                      <p className="text-sm text-white/70">Visual tier, stat bump, and card polish</p>
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Definition</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.definition}</p>
+                    </div>
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Location</p>
+                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.gameLocation}</p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Required</p>
-                      <p className="text-sm text-white/70">Materials, credits, and unlock progress</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Stats & Info</p>
+                      <div className="space-y-2">
+                        <p className="text-sm text-white/70">Rarity: {selectedAchievement.rarity}</p>
+                        <p className="text-sm text-white/70">Tips: {selectedAchievement.tips.length}</p>
+                        <p className="text-sm text-white/70">Media: {selectedAchievement.screenshots.length} screenshots</p>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="flex flex-col justify-between gap-4 border border-white/10 rounded-2xl p-4 bg-black/20">
-                    <div>
-                      <p className="text-sm text-white/75">This side now acts like a mini version of the card upgrade area.</p>
-                      <p className="text-xs text-white/40 mt-2">Select any card above to switch this menu.</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Path</p>
+                      <p className="text-sm text-white/70">Increase visual quality, improve card tier, and unlock stronger stat bonuses.</p>
+                    </div>
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Required Materials</p>
+                      <p className="text-sm text-white/70">Card shards, upgrade credits, and completion progress for this achievement.</p>
+                    </div>
+                    <div className="border-b border-white/10 pb-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Effects</p>
+                      <p className="text-sm text-white/70">Higher stats, better card presentation, and expanded card utility.</p>
                     </div>
                     <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
                       <ArrowUpCircle className="w-4 h-4" />
                       Upgrade Card
                     </button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
