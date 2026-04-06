@@ -218,92 +218,131 @@ export default function LibraryAchievementsUniverse({ onClose }) {
             </div>
 
             <div className="p-5 md:p-6">
-              <div className="flex items-center justify-between gap-4 mb-5">
-                <div>
-                  <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
-                  <p className="text-sm text-white/45">50% of the page width, with the other 50% used for card details and upgrades.</p>
-                </div>
-                <Trophy className="w-4 h-4 text-amber-300" />
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {ACHIEVEMENTS.map((achievement) => (
-                  <button
-                    key={achievement.id}
-                    onClick={() => {
-                      if (selectedAchievement.id === achievement.id) {
-                        setRightPanelMode((prev) => (prev === 'details' ? 'upgrade' : 'details'));
-                      } else {
-                        setSelectedId(achievement.id);
-                        setCurrentShot(0);
-                        setRightPanelMode('details');
-                      }
-                    }}
-                    className={`text-left transition-all ${selectedAchievement.id === achievement.id ? 'opacity-100' : 'opacity-85 hover:opacity-100'}`}
-                  >
-                    <p className="text-xs font-medium text-white mb-2 truncate">{achievement.name}</p>
-                    <div className={`aspect-[3/4] rounded-xl border flex items-center justify-center ${selectedAchievement.id === achievement.id ? 'border-amber-400/40 bg-amber-500/10' : 'border-white/10 bg-black/20'}`}>
-                      <HelpCircle className="w-7 h-7 text-white/45" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-6 border-t border-white/10 pt-5">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{selectedAchievement.name}</p>
-                    <p className="text-xs text-white/40 mt-1">
-                      {rightPanelMode === 'details' ? 'Card content display' : 'Card upgrade options'}
-                    </p>
-                  </div>
-                  <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
-                </div>
-
-                {rightPanelMode === 'details' ? (
-                  <div className="space-y-4">
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Summary</p>
-                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.summary}</p>
-                    </div>
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Definition</p>
-                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.definition}</p>
-                    </div>
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Location</p>
-                      <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.gameLocation}</p>
-                    </div>
+              {rightPanelMode === 'details' ? (
+                <>
+                  <div className="flex items-center justify-between gap-4 mb-5">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Stats & Info</p>
-                      <div className="space-y-2">
-                        <p className="text-sm text-white/70">Rarity: {selectedAchievement.rarity}</p>
-                        <p className="text-sm text-white/70">Tips: {selectedAchievement.tips.length}</p>
-                        <p className="text-sm text-white/70">Media: {selectedAchievement.screenshots.length} screenshots</p>
+                      <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
+                      <p className="text-sm text-white/45">Single click shows card details. Double click replaces this full side with the upgrade UI.</p>
+                    </div>
+                    <Trophy className="w-4 h-4 text-amber-300" />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {ACHIEVEMENTS.map((achievement) => (
+                      <button
+                        key={achievement.id}
+                        onClick={() => {
+                          setSelectedId(achievement.id);
+                          setCurrentShot(0);
+                          setRightPanelMode('details');
+                        }}
+                        onDoubleClick={() => {
+                          setSelectedId(achievement.id);
+                          setCurrentShot(0);
+                          setRightPanelMode('upgrade');
+                        }}
+                        className={`text-left transition-all ${selectedAchievement.id === achievement.id ? 'opacity-100' : 'opacity-85 hover:opacity-100'}`}
+                      >
+                        <p className="text-xs font-medium text-white mb-2 truncate">{achievement.name}</p>
+                        <div className={`aspect-[3/4] rounded-xl border flex items-center justify-center ${selectedAchievement.id === achievement.id ? 'border-amber-400/40 bg-amber-500/10' : 'border-white/10 bg-black/20'}`}>
+                          <HelpCircle className="w-7 h-7 text-white/45" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 border-t border-white/10 pt-5">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{selectedAchievement.name}</p>
+                        <p className="text-xs text-white/40 mt-1">Card content display</p>
+                      </div>
+                      <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="border-b border-white/10 pb-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Summary</p>
+                        <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.summary}</p>
+                      </div>
+                      <div className="border-b border-white/10 pb-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Definition</p>
+                        <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.definition}</p>
+                      </div>
+                      <div className="border-b border-white/10 pb-4">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Location</p>
+                        <p className="text-sm text-white/70 leading-relaxed">{selectedAchievement.gameLocation}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Stats & Info</p>
+                        <div className="space-y-2">
+                          <p className="text-sm text-white/70">Rarity: {selectedAchievement.rarity}</p>
+                          <p className="text-sm text-white/70">Tips: {selectedAchievement.tips.length}</p>
+                          <p className="text-sm text-white/70">Media: {selectedAchievement.screenshots.length} screenshots</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Path</p>
-                      <p className="text-sm text-white/70">Increase visual quality, improve card tier, and unlock stronger stat bonuses.</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Upgrade Card</h3>
+                      <p className="text-sm text-white/45">The full 50% panel is now dedicated to upgrading {selectedAchievement.name}.</p>
                     </div>
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Required Materials</p>
-                      <p className="text-sm text-white/70">Card shards, upgrade credits, and completion progress for this achievement.</p>
-                    </div>
-                    <div className="border-b border-white/10 pb-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Effects</p>
-                      <p className="text-sm text-white/70">Higher stats, better card presentation, and expanded card utility.</p>
-                    </div>
-                    <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
-                      <ArrowUpCircle className="w-4 h-4" />
-                      Upgrade Card
+                    <button
+                      onClick={() => setRightPanelMode('details')}
+                      className="text-xs text-white/55 hover:text-white transition-colors"
+                    >
+                      Back to card view
                     </button>
                   </div>
-                )}
-              </div>
+
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10">
+                      <div>
+                        <p className="text-base font-semibold text-white">{selectedAchievement.name}</p>
+                        <p className="text-xs text-white/40 mt-1">Upgrade options for the selected card</p>
+                      </div>
+                      <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Path</p>
+                        <p className="text-sm text-white/70">Increase visual quality, improve card tier, and unlock stronger stat bonuses.</p>
+                      </div>
+                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Required Materials</p>
+                        <p className="text-sm text-white/70">Card shards, upgrade credits, and completion progress for this achievement.</p>
+                      </div>
+                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Effects</p>
+                        <p className="text-sm text-white/70">Higher stats, better card presentation, and expanded card utility.</p>
+                      </div>
+                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
+                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Current Status</p>
+                        <p className="text-sm text-white/70">Selected card ready for enhancement review.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
+                        <ArrowUpCircle className="w-4 h-4" />
+                        Upgrade Card
+                      </button>
+                      <button
+                        onClick={() => setRightPanelMode('details')}
+                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
