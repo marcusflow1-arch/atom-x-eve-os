@@ -786,7 +786,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed z-50 bg-black/20 backdrop-blur-[2px]"
-      style={{ left: '400px', right: '0', top: '104px', bottom: '52px' }}
+      style={{ left: '482px', right: '0', top: '136px', bottom: '52px' }}
       onClick={onClose}
     >
       <div 
