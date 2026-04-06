@@ -16,7 +16,6 @@ import GameCommunityTab from '@/components/library/GameCommunityTab';
 import GameDiscussionTab from '@/components/library/GameDiscussionTab';
 import GameStreamerAffiliateTab from '@/components/library/GameStreamerAffiliateTab';
 import GameSupportTab from '@/components/library/GameSupportTab';
-import GameAchievementsTab from '@/components/library/GameAchievementsTab';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 
@@ -835,7 +834,7 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
 
                     {/* Tab Navigation */}
                     <div className="flex items-center gap-8 border-b border-white/10 px-8 bg-black/20">
-                        {['Content', 'Community', 'Discussion', 'Achievements', 'Streamer Affiliate', 'Support'].map((tab) => {
+                        {['Content', 'Community', 'Discussion', 'Streamer Affiliate', 'Support'].map((tab) => {
                           const id = tab.toLowerCase().replace(/ /g, '_');
                           return (
                             <button
@@ -860,7 +859,6 @@ export default function Library({ onSwitchToStore, onSwitchToAchievements }) {
                         {activeDetailTab === 'content' && <GameContentTab key="content" game={selectedGame} />}
                         {activeDetailTab === 'community' && <GameCommunityTab key="community" game={selectedGame} />}
                         {activeDetailTab === 'discussion' && <GameDiscussionTab key="discussion" game={selectedGame} />}
-                        {activeDetailTab === 'achievements' && <GameAchievementsTab key="achievements" game={selectedGame} />}
                         {activeDetailTab === 'streamer_affiliate' && <GameStreamerAffiliateTab key="streamer" game={selectedGame} />}
                         {activeDetailTab === 'support' && <GameSupportTab key="support" game={selectedGame} />}
                       </AnimatePresence>
