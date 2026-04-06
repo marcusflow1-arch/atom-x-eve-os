@@ -1,26 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Sparkles, ScrollText, Rocket, Newspaper, ArrowUpCircle } from 'lucide-react';
-import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
+import { Trophy, Sparkles, ScrollText, Rocket, Newspaper, ArrowUpCircle, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-
-const DEMO_MODEL = 'https://models.babylonjs.com/boombox.glb';
-
-const viewerCardStyle = {
-  position: 'relative',
-  width: '100%',
-  height: '100%',
-  overflow: 'hidden'
-};
-
-const viewerCanvasStyle = `
-  .achievement-viewer canvas {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-`;
 
 const ACHIEVEMENTS = [
   {
@@ -88,9 +69,43 @@ const rarityClasses = {
   Legendary: 'text-amber-300 border-amber-400/30 bg-amber-500/10'
 };
 
+const QUESTS = [
+  {
+    id: 'rift',
+    title: 'Main Quest: Into the Rift',
+    status: 'In Progress',
+    steps: [
+      'Reach the lower district gate',
+      'Scan the relay tower',
+      'Return with the system log'
+    ]
+  },
+  {
+    id: 'signal',
+    title: 'Side Quest: Signal Recovery',
+    status: 'New',
+    steps: [
+      'Find beacon fragment one',
+      'Find beacon fragment two',
+      'Find beacon fragment three'
+    ]
+  },
+  {
+    id: 'elite',
+    title: 'Weekly Task: Elite Sweep',
+    status: 'Tracked',
+    steps: [
+      'Clear 5 elite encounters',
+      'Collect weekly reward cache',
+      'Report back before reset'
+    ]
+  }
+];
+
 export default function LibraryAchievementsUniverse({ onClose }) {
   const [selectedId, setSelectedId] = useState(ACHIEVEMENTS[0].id);
   const [currentShot, setCurrentShot] = useState(0);
+  const [expandedQuestId, setExpandedQuestId] = useState(QUESTS[0].id);
   const selectedAchievement = useMemo(
     () => ACHIEVEMENTS.find((item) => item.id === selectedId) || ACHIEVEMENTS[0],
     [selectedId]
@@ -126,7 +141,6 @@ export default function LibraryAchievementsUniverse({ onClose }) {
         boxShadow: '-6px 0 30px rgba(0,0,0,0.35)',
       }}
     >
-      <style>{viewerCanvasStyle}</style>
       <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 flex-shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -139,51 +153,45 @@ export default function LibraryAchievementsUniverse({ onClose }) {
 
       <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
         <div className="space-y-6 min-h-full">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <div className="rounded-3xl border border-cyan-400/15 bg-white/5 p-5 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
-                  <ScrollText className="w-5 h-5 text-cyan-300" />
-                </div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-0 border border-white/10 rounded-3xl overflow-hidden bg-white/[0.02]">
+            <div className="p-5 md:p-6 border-b xl:border-b-0 xl:border-r border-white/10">
+              <div className="flex items-center gap-3 mb-5">
+                <ScrollText className="w-4 h-4 text-cyan-300" />
                 <div>
-                  <h3 className="text-xl font-bold text-white">Quests & System Updates</h3>
-                  <p className="text-sm text-white/45">Quest progress, mission updates, and game content updates.</p>
+                  <h3 className="text-lg font-bold text-white">Quests & System Updates</h3>
+                  <p className="text-sm text-white/45">Quest details with simple dropdown sections.</p>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  {
-                    title: 'Main Quest: Into the Rift',
-                    status: 'In Progress',
-                    detail: 'Reach the lower district gate and scan the relay tower.',
-                    update: 'Objective updated 2 hours ago'
-                  },
-                  {
-                    title: 'Side Quest: Signal Recovery',
-                    status: 'New',
-                    detail: 'Recover three missing beacon fragments in the eastern zone.',
-                    update: 'New quest added in the latest patch'
-                  },
-                  {
-                    title: 'Weekly Task: Elite Sweep',
-                    status: 'Tracked',
-                    detail: 'Clear 5 elite enemy encounters before reset.',
-                    update: 'Weekly refresh in 3 days'
-                  }
-                ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <h4 className="text-white font-semibold">{item.title}</h4>
-                      <Badge className="bg-cyan-500/10 text-cyan-300 border-cyan-400/20">{item.status}</Badge>
+              <div>
+                {QUESTS.map((quest) => {
+                  const isOpen = expandedQuestId === quest.id;
+                  return (
+                    <div key={quest.id} className="border-b border-white/10 py-3 last:border-b-0">
+                      <button
+                        onClick={() => setExpandedQuestId(isOpen ? null : quest.id)}
+                        className="w-full flex items-center justify-between gap-4 text-left"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-white">{quest.title}</p>
+                          <p className="text-xs text-white/35 mt-1">{quest.status}</p>
+                        </div>
+                        {isOpen ? <ChevronDown className="w-4 h-4 text-white/50" /> : <ChevronRight className="w-4 h-4 text-white/50" />}
+                      </button>
+
+                      {isOpen && (
+                        <div className="mt-3 pl-0 space-y-2">
+                          {quest.steps.map((step) => (
+                            <p key={step} className="text-sm text-white/60">• {step}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-white/65 leading-relaxed">{item.detail}</p>
-                    <p className="text-xs text-white/35 mt-3">{item.update}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <div className="space-y-3">
+              <div className="mt-6 pt-4 border-t border-white/10 space-y-3">
                 {[
                   {
                     title: 'Patch 2.4 Content Update',
@@ -196,30 +204,28 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                     detail: 'Limited-time rewards, rotating challenge board, and bonus XP weekend.'
                   }
                 ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Rocket className="w-4 h-4 text-violet-300" />
-                      <span className="text-xs uppercase tracking-[0.2em] text-white/40">{item.type}</span>
+                  <div key={item.title} className="border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Rocket className="w-3.5 h-3.5 text-violet-300" />
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-white/40">{item.type}</span>
                     </div>
-                    <h4 className="text-white font-semibold">{item.title}</h4>
-                    <p className="text-sm text-white/60 mt-2">{item.detail}</p>
+                    <p className="text-sm font-medium text-white">{item.title}</p>
+                    <p className="text-sm text-white/55 mt-1">{item.detail}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-amber-400/15 bg-white/5 p-5 space-y-5">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-amber-500/10 border border-amber-400/20 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-amber-300" />
-                </div>
+            <div className="p-5 md:p-6">
+              <div className="flex items-center justify-between gap-4 mb-5">
                 <div>
-                  <h3 className="text-xl font-bold text-white">Achievement Cards</h3>
-                  <p className="text-sm text-white/45">Cards you own, cards you do not own, and card upgrades.</p>
+                  <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
+                  <p className="text-sm text-white/45">Compact 4-card row with inline upgrade area.</p>
                 </div>
+                <Trophy className="w-4 h-4 text-amber-300" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {ACHIEVEMENTS.map((achievement) => (
                   <button
                     key={achievement.id}
@@ -227,51 +233,52 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                       setSelectedId(achievement.id);
                       setCurrentShot(0);
                     }}
-                    className={`rounded-2xl border p-4 text-left transition-all ${
-                      selectedAchievement.id === achievement.id
-                        ? 'border-yellow-400/30 bg-yellow-500/10 shadow-[0_0_18px_rgba(250,204,21,0.08)]'
-                        : 'border-white/10 bg-black/20 hover:bg-white/10'
-                    }`}
+                    className={`text-left transition-all ${selectedAchievement.id === achievement.id ? 'opacity-100' : 'opacity-85 hover:opacity-100'}`}
                   >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <p className="text-base font-semibold text-white">{achievement.name}</p>
-                        <p className="text-xs text-white/40 mt-1 line-clamp-2">{achievement.summary}</p>
-                      </div>
-                      <Badge className={rarityClasses[achievement.rarity]}>{achievement.rarity}</Badge>
-                    </div>
-                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20 aspect-[16/10] mb-3">
-                      <img
-                        src={achievement.screenshots[0]}
-                        alt={achievement.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className={selectedAchievement.id === achievement.id ? 'text-amber-200' : 'text-white/35'}>
-                        {achievement.id === 'ghost-run' || achievement.id === 'vault-master' ? 'Not owned' : 'Owned'}
-                      </span>
-                      <span className="text-white/35 flex items-center gap-1">
-                        Upgrade <ArrowUpCircle className="w-3 h-3" />
-                      </span>
+                    <p className="text-xs font-medium text-white mb-2 truncate">{achievement.name}</p>
+                    <div className={`aspect-[3/4] rounded-xl border flex items-center justify-center ${selectedAchievement.id === achievement.id ? 'border-amber-400/40 bg-amber-500/10' : 'border-white/10 bg-black/20'}`}>
+                      <HelpCircle className="w-7 h-7 text-white/45" />
                     </div>
                   </button>
                 ))}
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="mt-6 border-t border-white/10 pt-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <div>
-                    <p className="text-white font-semibold">{selectedAchievement.name}</p>
-                    <p className="text-xs text-white/40 mt-1">Selected card action</p>
+                    <p className="text-sm font-semibold text-white">{selectedAchievement.name}</p>
+                    <p className="text-xs text-white/40 mt-1">Mini card upgrade menu</p>
                   </div>
-                  <Sparkles className="w-5 h-5 text-amber-300" />
+                  <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
                 </div>
-                <p className="text-sm text-white/60 mb-4">Clicking a card gives you the option to upgrade that achievement card.</p>
-                <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
-                  <ArrowUpCircle className="w-4 h-4" />
-                  Upgrade Card
-                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="border-b border-white/10 pb-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Current Card</p>
+                      <p className="text-sm text-white/70">Base achievement card frame</p>
+                    </div>
+                    <div className="border-b border-white/10 pb-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Upgrade Path</p>
+                      <p className="text-sm text-white/70">Visual tier, stat bump, and card polish</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-1">Required</p>
+                      <p className="text-sm text-white/70">Materials, credits, and unlock progress</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between gap-4 border border-white/10 rounded-2xl p-4 bg-black/20">
+                    <div>
+                      <p className="text-sm text-white/75">This side now acts like a mini version of the card upgrade area.</p>
+                      <p className="text-xs text-white/40 mt-2">Select any card above to switch this menu.</p>
+                    </div>
+                    <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
+                      <ArrowUpCircle className="w-4 h-4" />
+                      Upgrade Card
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -281,11 +288,11 @@ export default function LibraryAchievementsUniverse({ onClose }) {
               <Newspaper className="w-5 h-5 text-cyan-300" />
               <div>
                 <h3 className="text-xl font-bold text-white">Game Content</h3>
-                <p className="text-sm text-white/45">News releases, system updates, and content for the game below the 50/50 split.</p>
+                <p className="text-sm text-white/45">Content and system updates displayed below the split view.</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="space-y-4">
               {[
                 {
                   title: 'Content Drop: Neon District',
@@ -303,9 +310,9 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                   body: 'Preview the next release wave with event rotations, card sets, and questline expansions.'
                 }
               ].map((item) => (
-                <div key={item.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div key={item.title} className="border-b border-white/10 pb-4 last:border-b-0 last:pb-0">
                   <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/80 mb-2">{item.subtitle}</p>
-                  <h4 className="text-white font-semibold mb-2">{item.title}</h4>
+                  <h4 className="text-white font-semibold mb-1">{item.title}</h4>
                   <p className="text-sm text-white/60 leading-relaxed">{item.body}</p>
                 </div>
               ))}
