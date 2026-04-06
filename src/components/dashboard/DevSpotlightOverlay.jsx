@@ -294,15 +294,19 @@ export default function DevSpotlightOverlay({ onClose }) {
     <>
       {/* Backdrop for maximized view */}
       {isMaximized && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[54]" onClick={onClose} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed top-[64px] right-0 bottom-[48px] left-[80px] bg-black/60 backdrop-blur-sm z-[54]" onClick={onClose} />
       )}
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }} 
         animate={{ opacity: 1, scale: 1 }} 
         exit={{ opacity: 0, scale: 0.95 }} 
         transition={{ duration: 0.3, type: 'spring', bounce: 0.2 }}
-        className={`fixed z-[55] pointer-events-auto overflow-hidden flex flex-col ${isMaximized ? 'inset-0' : 'rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/15'}`}
+        className={`fixed z-[55] pointer-events-auto overflow-hidden flex flex-col ${isMaximized ? '' : 'rounded-none shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-white/15'}`}
         style={isMaximized ? {
+          top: '64px',
+          left: '80px',
+          right: '0',
+          bottom: '48px',
           background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)'
         } : {
           top: '160px',

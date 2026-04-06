@@ -591,7 +591,7 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
-    <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
+    <div className="h-full w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30 pt-[64px] pb-[48px]" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
       <LunaLeftRail
         isEnvironmentActive={isEnvironmentActive}
@@ -736,13 +736,11 @@ export default function LunaTemplate() {
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
               <>
           <div
-                  className="fixed inset-0 z-0 pointer-events-auto"
+                  className="absolute top-[64px] right-0 bottom-[48px] left-[80px] z-0 pointer-events-auto"
                   style={{
                     display: isEnvironmentActive ? 'flex' : 'none',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100vw',
-                    height: '100vh'
+                    justifyContent: 'center'
                   }}>
             <TransparentModel3DViewer
                     modelUrl={modelUrl}
