@@ -299,23 +299,20 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 right-0 z-[70] flex flex-col gap-3 transition-all duration-500 top-[80px] opacity-100"
+              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100"
             >
-              <div className="w-10 flex flex-col items-center">
-                <button 
-                  onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
-                  className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
-                >
-                   {sidebarMode === 'context' ? (
-                     isClan ? <>Recently<br/>Visited</> : 
-                     isForum ? <>Recent<br/>Forums</> : 
-                     isFarm ? <>Recent<br/>Farm Hub</> :
-                     <>Recent<br/>Cards</>
-                   ) : <>Recently<br/>Played</>}
-                </button>
-              </div>
-              <div className="h-px w-full bg-white/20 -mt-1" />
-              <div className="w-10 flex flex-col items-center gap-3">
+              <button 
+                onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
+                className="text-[10px] uppercase tracking-wider text-white/50 hover:text-white font-bold text-center transition-colors leading-tight -ml-2 w-14"
+              >
+                 {sidebarMode === 'context' ? (
+                   isClan ? <>Recently<br/>Visited</> : 
+                   isForum ? <>Recent<br/>Forums</> : 
+                   isFarm ? <>Recent<br/>Farm Hub</> :
+                   <>Recent<br/>Cards</>
+                 ) : <>Recently<br/>Played</>}
+              </button>
+              <div className="w-8 h-px bg-white/20 -mt-1" />
 
               {/* The 5 boxes */}
               {sidebarMode === 'context' ? (
@@ -397,9 +394,8 @@ export default function LibrarySidebar() {
                   ))}
                 </>
               )}
-              </div>
 
-              </motion.div>
+            </motion.div>
           )}
 
           {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
