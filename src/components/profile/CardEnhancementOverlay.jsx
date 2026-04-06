@@ -785,16 +785,17 @@ export default function CardEnhancementOverlay({ card, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/40 backdrop-blur-sm"
+      className="fixed z-50 bg-black/20 backdrop-blur-[2px]"
+      style={{ left: '400px', right: '0', top: '104px', bottom: '52px' }}
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-6xl h-[85vh] flex gap-8 bg-slate-900/90 rounded-3xl border border-white/10 overflow-hidden shadow-2xl backdrop-blur-3xl"
+        className="relative w-full h-full flex bg-slate-950/95 border-l border-t border-white/10 overflow-hidden shadow-2xl backdrop-blur-3xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="h-full w-full flex flex-col gap-4">
+        <div className="h-full w-full flex flex-col">
           {/* Top Header Bar */}
-          <div className="flex items-center justify-between shrink-0 bg-black/20 p-2 border-b border-white/5">
+          <div className="flex items-center justify-between shrink-0 bg-black/20 px-2 py-2 border-b border-white/10">
              <div className="flex items-center gap-4 pl-4">
                  <div className="flex items-center gap-2">
                     <span className="text-white/40 text-xs font-bold uppercase tracking-wider">Total Power</span>
@@ -844,7 +845,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
 
              {/* Close Button */}
              <div className="pr-2">
-                <Button variant="ghost" size="sm" onClick={onClose} className="text-white/50 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-full">
+                <Button variant="ghost" size="sm" onClick={onClose} className="text-white/50 hover:text-white hover:bg-white/10 h-8 w-8 p-0 rounded-none">
                     <X className="w-4 h-4" />
                 </Button>
              </div>
