@@ -126,15 +126,15 @@ export default function GenreMastery({ onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         const cardOverlayOpen = document.querySelector('[data-card-overlay="true"]');
-        if (cardOverlayOpen) return;
-
-        if (onClose) onClose();
-        else navigate(createPageUrl('LunaTemplate'));
+        if (!cardOverlayOpen) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [navigate, onClose]);
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
