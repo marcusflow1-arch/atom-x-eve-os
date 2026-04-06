@@ -144,7 +144,8 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
       </div>
 
       {/* Cards Grid */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="relative flex-1 overflow-hidden">
+        <div className="flex-1 h-full overflow-y-auto p-5">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
@@ -200,14 +201,16 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
             <p className="text-xs text-white/20 mt-1">Unlock achievements to earn cards</p>
           </div>
         )}
+        </div>
+
+        <AnimatePresence>
+          {selectedCard && (
+            <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Overlays */}
-      <AnimatePresence>
-        {selectedCard && (
-          <CardEnhancementOverlay card={selectedCard} onClose={() => setSelectedCard(null)} />
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {selectedAchievement && (
