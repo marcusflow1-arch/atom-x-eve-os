@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Sparkles, ScrollText, Rocket, Newspaper, ArrowUpCircle, ChevronDown, ChevronRight, HelpCircle } from 'lucide-react';
+import { Trophy, Sparkles, ScrollText, Rocket, Newspaper, ArrowUpCircle, ChevronDown, ChevronRight, HelpCircle, Wand2, Combine, Flame, Repeat, Scroll } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const ACHIEVEMENTS = [
@@ -107,6 +107,7 @@ export default function LibraryAchievementsUniverse({ onClose }) {
   const [currentShot, setCurrentShot] = useState(0);
   const [expandedQuestId, setExpandedQuestId] = useState(QUESTS[0].id);
   const [rightPanelMode, setRightPanelMode] = useState('details');
+  const [upgradeTab, setUpgradeTab] = useState('forge');
   const selectedAchievement = useMemo(
     () => ACHIEVEMENTS.find((item) => item.id === selectedId) || ACHIEVEMENTS[0],
     [selectedId]
@@ -240,6 +241,7 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                         onDoubleClick={() => {
                           setSelectedId(achievement.id);
                           setCurrentShot(0);
+                          setUpgradeTab('forge');
                           setRightPanelMode('upgrade');
                         }}
                         className={`text-left transition-all ${selectedAchievement.id === achievement.id ? 'opacity-100' : 'opacity-85 hover:opacity-100'}`}
@@ -287,10 +289,14 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="flex items-start justify-between gap-4 mb-6">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Upgrade Card</h3>
-                      <p className="text-sm text-white/45">The full 50% panel is now dedicated to upgrading {selectedAchievement.name}.</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-cyan-300" />
+                        <span className="text-[11px] uppercase tracking-[0.2em] text-white/40">Liquid Forge Interface</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-white">{selectedAchievement.name}</h3>
+                      <p className="text-sm text-white/45 mt-1">A smoother card workstation inspired by the Cards achievement panel.</p>
                     </div>
                     <button
                       onClick={() => setRightPanelMode('details')}
@@ -300,45 +306,116 @@ export default function LibraryAchievementsUniverse({ onClose }) {
                     </button>
                   </div>
 
-                  <div className="space-y-5">
-                    <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10">
-                      <div>
-                        <p className="text-base font-semibold text-white">{selectedAchievement.name}</p>
-                        <p className="text-xs text-white/40 mt-1">Upgrade options for the selected card</p>
+                  <div className="rounded-[28px] border border-white/10 bg-white/[0.06] backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] overflow-hidden">
+                    <div className="p-5 border-b border-white/10 bg-gradient-to-r from-cyan-500/10 via-white/5 to-amber-500/10">
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div>
+                          <p className="text-base font-semibold text-white">{selectedAchievement.name}</p>
+                          <p className="text-xs text-white/40 mt-1">Card upgrade workspace with smooth top-tab navigation</p>
+                        </div>
+                        <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
                       </div>
-                      <Badge className={rarityClasses[selectedAchievement.rarity]}>{selectedAchievement.rarity}</Badge>
+
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 'forge', label: 'Forge' },
+                          { id: 'skill', label: 'Skill' },
+                          { id: 'record', label: 'Record' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => setUpgradeTab(tab.id)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${upgradeTab === tab.id ? 'bg-white/16 border-white/20 text-white shadow-[0_8px_30px_rgba(255,255,255,0.08)]' : 'bg-transparent border-transparent text-white/50 hover:text-white hover:bg-white/8'}`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Path</p>
-                        <p className="text-sm text-white/70">Increase visual quality, improve card tier, and unlock stronger stat bonuses.</p>
-                      </div>
-                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Required Materials</p>
-                        <p className="text-sm text-white/70">Card shards, upgrade credits, and completion progress for this achievement.</p>
-                      </div>
-                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Upgrade Effects</p>
-                        <p className="text-sm text-white/70">Higher stats, better card presentation, and expanded card utility.</p>
-                      </div>
-                      <div className="border border-white/10 rounded-2xl p-4 bg-black/20">
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Current Status</p>
-                        <p className="text-sm text-white/70">Selected card ready for enhancement review.</p>
-                      </div>
-                    </div>
+                    <div className="p-5">
+                      {upgradeTab === 'forge' ? (
+                        <div className="space-y-5">
+                          <div className="grid grid-cols-1 xl:grid-cols-[220px_1fr] gap-5">
+                            <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                              <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-3">Selected Card</p>
+                              <div className="aspect-[3/4] rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center mb-3">
+                                <HelpCircle className="w-10 h-10 text-white/40" />
+                              </div>
+                              <p className="text-sm font-semibold text-white">{selectedAchievement.name}</p>
+                              <p className="text-xs text-white/45 mt-1">Ready for forge actions</p>
+                            </div>
 
-                    <div className="flex flex-wrap gap-3 pt-2">
-                      <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-200 font-medium transition-all">
-                        <ArrowUpCircle className="w-4 h-4" />
-                        Upgrade Card
-                      </button>
-                      <button
-                        onClick={() => setRightPanelMode('details')}
-                        className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-all"
-                      >
-                        Cancel
-                      </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="rounded-[24px] border border-cyan-400/15 bg-cyan-500/5 p-4">
+                                <div className="flex items-center gap-2 mb-3 text-cyan-200"><ArrowUpCircle className="w-4 h-4" /><span className="text-sm font-semibold">Load Up</span></div>
+                                <p className="text-sm text-white/65">Boost card power and core stats with upgrade shards and XP charge.</p>
+                              </div>
+                              <div className="rounded-[24px] border border-fuchsia-400/15 bg-fuchsia-500/5 p-4">
+                                <div className="flex items-center gap-2 mb-3 text-fuchsia-200"><Wand2 className="w-4 h-4" /><span className="text-sm font-semibold">Enchant</span></div>
+                                <p className="text-sm text-white/65">Apply new effects, passive bonuses, and rarity-linked enhancements.</p>
+                              </div>
+                              <div className="rounded-[24px] border border-amber-400/15 bg-amber-500/5 p-4">
+                                <div className="flex items-center gap-2 mb-3 text-amber-200"><Combine className="w-4 h-4" /><span className="text-sm font-semibold">Combine</span></div>
+                                <p className="text-sm text-white/65">Fuse matching cards and fragments into a stronger upgraded version.</p>
+                              </div>
+                              <div className="rounded-[24px] border border-emerald-400/15 bg-emerald-500/5 p-4">
+                                <div className="flex items-center gap-2 mb-3 text-emerald-200"><Flame className="w-4 h-4" /><span className="text-sm font-semibold">Ascend</span></div>
+                                <p className="text-sm text-white/65">Advance the card into a higher evolution tier with premium stat scaling.</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <div className="flex items-center gap-2 mb-3 text-white"><Repeat className="w-4 h-4 text-amber-200" /><span className="text-sm font-semibold">Trade Desk</span></div>
+                            <p className="text-sm text-white/65 mb-4">Open trading flow for selling, swapping, or listing the selected card.</p>
+                            <div className="flex flex-wrap gap-3">
+                              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/25 text-cyan-100 font-medium transition-all">
+                                <ArrowUpCircle className="w-4 h-4" />
+                                Load Up
+                              </button>
+                              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-fuchsia-500/15 hover:bg-fuchsia-500/25 border border-fuchsia-400/25 text-fuchsia-100 font-medium transition-all">
+                                <Wand2 className="w-4 h-4" />
+                                Enchant
+                              </button>
+                              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/25 text-amber-100 font-medium transition-all">
+                                <Combine className="w-4 h-4" />
+                                Combine
+                              </button>
+                              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/25 text-emerald-100 font-medium transition-all">
+                                <Flame className="w-4 h-4" />
+                                Ascend
+                              </button>
+                              <button className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-medium transition-all">
+                                <Repeat className="w-4 h-4" />
+                                Trade
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : upgradeTab === 'skill' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Skill Path</p>
+                            <p className="text-sm text-white/70">This card can unlock passive boosts, affinity links, and synergy effects tied to its rarity tier.</p>
+                          </div>
+                          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Skill Nodes</p>
+                            <p className="text-sm text-white/70">Precision boost, cooldown reduction, and combo amplification are available in this skill view.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <div className="flex items-center gap-2 mb-2"><Scroll className="w-4 h-4 text-cyan-200" /><p className="text-xs uppercase tracking-[0.2em] text-white/35">Record Log</p></div>
+                            <p className="text-sm text-white/70">Shows prior upgrades, enchant rolls, combine history, ascension tier, and trading activity for this card.</p>
+                          </div>
+                          <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <p className="text-xs uppercase tracking-[0.2em] text-white/35 mb-2">Current Snapshot</p>
+                            <p className="text-sm text-white/70">Rarity {selectedAchievement.rarity}, {selectedAchievement.tips.length} tactical tips, and {selectedAchievement.screenshots.length} media references stored.</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
