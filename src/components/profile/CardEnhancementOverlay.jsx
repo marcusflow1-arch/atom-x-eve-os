@@ -787,7 +787,7 @@ export default function CardEnhancementOverlay({ card, onClose }) {
       exit={{ opacity: 0 }}
       className="absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl"
     >
-      <div className="relative w-full h-full flex bg-slate-900/95 overflow-hidden border-0 rounded-none">
+      <div data-card-overlay="true" className="relative w-full h-full flex bg-slate-900/95 overflow-hidden border-0 rounded-none">
         <div className="h-full w-full flex flex-col gap-4">
           {/* Top Header Bar */}
           <div className="flex items-center justify-between shrink-0 bg-black/20 p-2 border-b border-white/5">

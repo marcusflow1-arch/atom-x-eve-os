@@ -125,6 +125,9 @@ export default function GenreMastery({ onClose }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
+        const cardOverlayOpen = document.querySelector('[data-card-overlay="true"]');
+        if (cardOverlayOpen) return;
+
         if (onClose) onClose();
         else navigate(createPageUrl('LunaTemplate'));
       }

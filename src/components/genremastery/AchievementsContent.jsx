@@ -107,6 +107,21 @@ export default function AchievementsContent({ genre, selectedGame, onSelectGame,
     await updateUserData({ tracked_achievements: newTracked });
   }, [isAuthenticated, user, updateUserData, trackedAchievements]);
 
+  useEffect(() => {
+    if (!selectedCard) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setSelectedCard(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [selectedCard]);
+
   if (!selectedGame) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center px-8">
