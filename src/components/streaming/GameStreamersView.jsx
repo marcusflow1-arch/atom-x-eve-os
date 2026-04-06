@@ -134,7 +134,7 @@ export default function GameStreamersView({ game, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-[#050505] pt-20"
+      className="fixed top-0 right-0 bottom-0 left-[80px] z-50 bg-[#050505] pt-20"
     >
       {/* Header */}
       <div className="relative z-10 border-b border-white/10 bg-black/40 backdrop-blur-2xl">
