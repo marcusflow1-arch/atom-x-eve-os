@@ -137,15 +137,6 @@ export default function FarmTopicContent({ topic, gameId, gameTitle, isOwned, on
                         className="w-full text-left rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 hover:bg-white/[0.05] transition-all"
                       >
                         <div className="flex items-start gap-4">
-                          <div className="flex flex-col items-center gap-1 pt-0.5 text-white/40">
-                            <button onClick={(e) => { e.stopPropagation(); handlePostVote(post, 'up'); }} className="p-1 rounded-full hover:bg-white/10 hover:text-white/80">
-                              <ArrowUp className="w-3.5 h-3.5" />
-                            </button>
-                            <span className="text-sm font-bold text-white">{post.score || 0}</span>
-                            <button onClick={(e) => { e.stopPropagation(); handlePostVote(post, 'down'); }} className="p-1 rounded-full hover:bg-white/10 hover:text-white/80">
-                              <ArrowDown className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 text-[10px] text-white/35 mb-2 uppercase tracking-wider">
                               <span className="text-cyan-300">Discussion</span>
@@ -156,9 +147,27 @@ export default function FarmTopicContent({ topic, gameId, gameTitle, isOwned, on
                             </div>
                             <h3 className="text-lg font-semibold text-white">{post.title}</h3>
                             <p className="text-sm text-white/55 mt-1 line-clamp-2">{post.content}</p>
-                            <div className="flex items-center gap-3 mt-3 text-[11px] text-white/30">
-                              <span className="px-2 py-1 rounded-md bg-black/30 border border-white/5">{gameTitle}</span>
-                              <span>Comments</span>
+                            <div className="flex items-center justify-between gap-3 mt-4 text-[11px] text-white/30">
+                              <div className="flex items-center gap-3">
+                                <span className="px-2 py-1 rounded-md bg-black/30 border border-white/5">{gameTitle}</span>
+                                <span>Comments</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handlePostVote(post, 'up'); }}
+                                  className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-white/60 hover:text-green-400 hover:border-green-500/30 hover:bg-green-500/10"
+                                >
+                                  <ArrowUp className="w-3.5 h-3.5" />
+                                  <span>{post.score || 0}</span>
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handlePostVote(post, 'down'); }}
+                                  className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-white/60 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10"
+                                >
+                                  <ArrowDown className="w-3.5 h-3.5" />
+                                  <span>Dislike</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
