@@ -441,7 +441,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
               <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
                 {selectedGame && (
                   <button
-                    onClick={() => navigate(createPageUrl('Library'))}
+                    type="button"
                     className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg text-xs transition-colors"
                   >
                     <Play className="w-3 h-3 fill-current" /> Play {selectedGame.displayTitle}
