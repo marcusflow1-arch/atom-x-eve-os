@@ -615,14 +615,14 @@ export default function LunaTemplate() {
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
                 left: '32px', top: '16px', bottom: '16px', width: '388px', gap: '0px'
-              } : { left: '32px', top: '16px', width: '322px', gap: '12px' }}>
+              } : { left: '32px', top: '16px', width: '420px', gap: '18px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
           {!avatarFocusMode && !uiVisible &&
-                <div className="flex flex-col gap-5">
-              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.08)', transformOrigin: 'top left', marginBottom: 14 } : { height: 320, marginBottom: 10 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
-              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? { marginTop: 4 } : { height: 280 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+                <div className="flex flex-col gap-4">
+              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
             </div>
                 }
 
@@ -805,7 +805,7 @@ export default function LunaTemplate() {
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="absolute right-8 z-30 overflow-hidden pointer-events-none"
                   style={{
-                    left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+                    left: '520px',
                     top: '16px',
                     bottom: '16px'
                   }}>
@@ -1923,10 +1923,7 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
-              // SideAccessMenu stays visible even when hideUI is true, per user request:
-              // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
-              // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && !avatarFocusMode && !uiVisible &&
               <SideAccessMenu />
               }
 
