@@ -234,7 +234,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
         <div className="flex-1 flex min-h-0 overflow-hidden">
 
           {/* LEFT: Game library (65%) */}
-          <div style={{ width: '65%' }} className="flex-shrink-0 overflow-y-auto p-3">
+          <div style={{ width: '65%' }} className="flex-shrink-0 overflow-y-auto overflow-x-hidden p-3 min-w-0">
             {viewMode === 'grid' ? (
               /* GRID VIEW — larger covers with aspect-[3/4] */
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
