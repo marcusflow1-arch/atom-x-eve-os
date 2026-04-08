@@ -1783,7 +1783,7 @@ export default function LibrarySidebar() {
             isOpen={true}
             onClose={() => { setIsExpandedRewardsInventory(false); setPendingRewardGame(null); }}
             initialGameName={pendingRewardGame}
-            leftOffset="240px"
+            leftOffset="320px"
           />
         )}
       </AnimatePresence>
