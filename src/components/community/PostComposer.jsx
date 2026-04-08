@@ -19,7 +19,6 @@ export default function PostComposer({
   initialType = "general_discussion",
   initialGameTitle = "",
   initialGameGenre = "",
-  leftOffset = 0,
 }) {
   const [activeTab, setActiveTab] = useState("text");
   const [title, setTitle] = useState("");
@@ -142,19 +141,14 @@ export default function PostComposer({
         className="fixed inset-0 z-[70]"
       >
         {/* Backdrop */}
-        <div
-          className="absolute bg-black/70 backdrop-blur-md"
-          style={{ top: 64, left: leftOffset, right: 0, bottom: 48 }}
-          onClick={onCancel}
-        />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onCancel} />
 
         {/* Panel */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 10, opacity: 0 }}
-          className="absolute bg-[#0f1419]/95 border-y border-r border-white/10 overflow-hidden flex flex-col"
-          style={{ top: 64, left: leftOffset, right: 0, bottom: 48, borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderTopRightRadius: 24, borderBottomRightRadius: 0 }}
+          className="absolute inset-4 bg-[#0f1419]/95 border border-white/10 rounded-3xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">

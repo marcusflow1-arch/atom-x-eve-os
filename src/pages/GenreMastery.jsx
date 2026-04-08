@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor, DollarSign,
+  Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
   ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -14,8 +14,6 @@ import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
 import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
-import BlackMarketContent from '@/components/dashboard/BlackMarketContent';
-import TradingPostOverlayContent from '@/components/dashboard/TradingPostOverlayContent';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
@@ -89,7 +87,7 @@ export default function GenreMastery({ onClose }) {
   const navigate = useNavigate();
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
-  const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', 'achievements', 'tradingpost', or 'blackmarket'
+  const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const dropdownRef = useRef(null);
@@ -128,15 +126,15 @@ export default function GenreMastery({ onClose }) {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         const cardOverlayOpen = document.querySelector('[data-card-overlay="true"]');
-        if (!cardOverlayOpen) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+        if (cardOverlayOpen) return;
+
+        if (onClose) onClose();
+        else navigate(createPageUrl('LunaTemplate'));
       }
     };
-    window.addEventListener('keydown', handleKeyDown, true);
-    return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, []);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate, onClose]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -210,44 +208,8 @@ export default function GenreMastery({ onClose }) {
             <GenreScrollTabs
               genres={GENRES}
               selectedGenre={selectedGenre}
-              onSelect={(genre) => {
-                setSelectedGenre(genre);
-                if (rightPanel === 'tradingpost' || rightPanel === 'blackmarket') {
-                  setRightPanel('games');
-                }
-              }}
+              onSelect={setSelectedGenre}
             />
-
-            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
-              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => setRightPanel(rightPanel === 'tradingpost' ? 'games' : 'tradingpost')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  rightPanel === 'tradingpost'
-                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Trading</span>
-              </button>
-              <button
-                onClick={() => setRightPanel(rightPanel === 'blackmarket' ? 'games' : 'blackmarket')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  rightPanel === 'blackmarket'
-                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>Black Market</span>
-              </button>
-            </div>
 
           </div>
         </div>
@@ -354,28 +316,6 @@ export default function GenreMastery({ onClose }) {
                     onSelectGame={(game) => { setSelectedGame(game); setRightPanel('achievements'); }}
                     games={gameData}
                   />
-                </motion.div>
-              ) : rightPanel === 'tradingpost' ? (
-                <motion.div
-                  key="tradingpost"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <TradingPostOverlayContent />
-                </motion.div>
-              ) : rightPanel === 'blackmarket' ? (
-                <motion.div
-                  key="blackmarket"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.2 }}
-                  className="h-full"
-                >
-                  <BlackMarketContent />
                 </motion.div>
               ) : rightPanel === 'skilltree' ? (
                 <motion.div

@@ -1167,28 +1167,7 @@ function HomeReference({ onClick }) {
 
 // Bottom Nav Header (Replaces Quick Actions)
 function BottomNavBoxes({ navigate, onLiveClick, showLive }) {
-  return (
-    <div className="flex items-center gap-3 pointer-events-auto">
-      <button
-        onClick={() => navigate(createPageUrl('Store') + '?subview=library')}
-        className="px-4 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 text-[11px] font-bold uppercase tracking-[0.18em] transition-all"
-      >
-        Library
-      </button>
-      <button
-        onClick={() => navigate(createPageUrl('LunaTemplate'))}
-        className="px-4 h-10 rounded-xl border border-white/10 bg-white/10 text-white text-[11px] font-bold uppercase tracking-[0.18em] transition-all"
-      >
-        Home
-      </button>
-      <button
-        onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=entertainment')}
-        className="px-4 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 text-[11px] font-bold uppercase tracking-[0.18em] transition-all"
-      >
-        Environment Hubs
-      </button>
-    </div>
-  );
+  return null;
 }
 
 // Library Banner Section - Now ONLY renders Banner + Memories (Quick Actions moved out)

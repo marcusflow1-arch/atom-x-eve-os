@@ -78,14 +78,14 @@ export default function StreamsForGame({ game, onClose }) {
       transition={{ duration: 0.2 }}
       className="streams-box fixed inset-0 z-[70]"
     >
-      <div className="absolute top-0 right-0 bottom-0 left-[80px] bg-black/70 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
       <motion.div
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 12, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 240, damping: 26 }}
-        className="absolute top-0 right-0 bottom-0 left-[80px] p-6"
+        className="relative w-full h-full p-6"
       >
         {/* Close button only (no lines) */}
         <button

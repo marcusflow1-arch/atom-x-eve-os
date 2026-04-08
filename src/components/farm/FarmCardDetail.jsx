@@ -9,13 +9,13 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const ACTION_TABS = [
-{ id: 'guide', label: 'Guide', icon: Trophy },
-{ id: 'farm', label: 'Farm Queue', icon: Users },
-{ id: 'recruit', label: 'Recruit', icon: UserPlus },
-{ id: 'bugs', label: 'Report Bug', icon: AlertCircle },
-{ id: 'media', label: 'Videos', icon: Video },
-{ id: 'discuss', label: 'Discuss', icon: MessageCircle }];
-
+  { id: 'guide', label: 'Guide', icon: Trophy },
+  { id: 'farm', label: 'Farm Queue', icon: Users },
+  { id: 'recruit', label: 'Recruit', icon: UserPlus },
+  { id: 'bugs', label: 'Report Bug', icon: AlertCircle },
+  { id: 'media', label: 'Videos', icon: Video },
+  { id: 'discuss', label: 'Discuss', icon: MessageCircle },
+];
 
 export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
   const [activeTab, setActiveTab] = useState(activeTopic || 'guide');
@@ -23,12 +23,12 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
 
   // Sync tab when topic changes
   React.useEffect(() => {
-    if (activeTopic === 'achievements') setActiveTab('guide');else
-    if (activeTopic === 'farming') setActiveTab('farm');else
-    if (activeTopic === 'recruitment') setActiveTab('recruit');else
-    if (activeTopic === 'bugs') setActiveTab('bugs');else
-    if (activeTopic === 'content') setActiveTab('media');else
-    if (activeTopic) setActiveTab('discuss');
+    if (activeTopic === 'achievements') setActiveTab('guide');
+    else if (activeTopic === 'farming') setActiveTab('farm');
+    else if (activeTopic === 'recruitment') setActiveTab('recruit');
+    else if (activeTopic === 'bugs') setActiveTab('bugs');
+    else if (activeTopic === 'content') setActiveTab('media');
+    else if (activeTopic) setActiveTab('discuss');
   }, [activeTopic]);
 
   if (!card) {
@@ -41,7 +41,7 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
     Rare: 'from-blue-500/10 to-blue-500/[0.02]',
     Epic: 'from-purple-500/10 to-purple-500/[0.02]',
     Legendary: 'from-yellow-500/10 to-yellow-500/[0.02]',
-    Mythical: 'from-red-500/10 to-red-500/[0.02]'
+    Mythical: 'from-red-500/10 to-red-500/[0.02]',
   };
 
   const gradient = RARITY_GRADIENT[card.rarity] || RARITY_GRADIENT.Common;
@@ -52,8 +52,8 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
       <div className={`flex-shrink-0 p-5 bg-gradient-to-b ${gradient}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
             {card.icon || '🏆'}
           </div>
           <div className="flex-1 min-w-0">
@@ -70,20 +70,20 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
 
       {/* Action Tabs */}
       <div className="flex-shrink-0 flex items-center gap-1 px-4 pt-3 pb-2 overflow-x-auto no-scrollbar" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-        {ACTION_TABS.map((tab) => {
+        {ACTION_TABS.map(tab => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-semibold whitespace-nowrap transition-all ${
-              isActive ? 'bg-white/[0.08] text-white border border-white/10' : 'text-white/30 hover:text-white/60 border border-transparent'}`
-              }>
-              
+                isActive ? 'bg-white/[0.08] text-white border border-white/10' : 'text-white/30 hover:text-white/60 border border-transparent'
+              }`}
+            >
               <tab.icon className="w-3 h-3" />
               {tab.label}
-            </button>);
-
+            </button>
+          );
         })}
       </div>
 
@@ -95,8 +95,8 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}>
-            
+            transition={{ duration: 0.15 }}
+          >
             {activeTab === 'guide' && <GuideTab card={card} />}
             {activeTab === 'farm' && <FarmQueueTab card={card} />}
             {activeTab === 'recruit' && <RecruitTab card={card} />}
@@ -106,8 +106,8 @@ export default function FarmCardDetail({ card, activeTopic, gameTitle }) {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
 // --- SUB TAB COMPONENTS ---
@@ -117,11 +117,11 @@ function GlassBox({ children, className = '' }) {
     <div className={`rounded-xl p-4 ${className}`} style={{
       background: 'rgba(100, 120, 140, 0.06)',
       border: '1px solid rgba(255,255,255,0.05)',
-      backdropFilter: 'blur(8px)'
+      backdropFilter: 'blur(8px)',
     }}>
       {children}
-    </div>);
-
+    </div>
+  );
 }
 
 function GuideTab({ card }) {
@@ -133,8 +133,8 @@ function GuideTab({ card }) {
           {card.description || 'No guide available yet. Be the first to write one!'}
         </p>
       </GlassBox>
-      {card.reward &&
-      <GlassBox>
+      {card.reward && (
+        <GlassBox>
           <h3 className="text-sm font-bold text-white/80 mb-2">Reward</h3>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400">
@@ -146,36 +146,36 @@ function GuideTab({ card }) {
             </div>
           </div>
         </GlassBox>
-      }
+      )}
       <GlassBox>
         <h3 className="text-sm font-bold text-white/80 mb-3">Community Tips</h3>
         <div className="space-y-2">
-          {['Use stealth approach on the left path', 'Bring at least 2 healers for boss phase', 'Timing window is tight — practice in training mode'].map((tip, i) =>
-          <div key={i} className="flex items-start gap-2 text-xs text-white/40">
+          {['Use stealth approach on the left path', 'Bring at least 2 healers for boss phase', 'Timing window is tight — practice in training mode'].map((tip, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs text-white/40">
               <ChevronRight className="w-3 h-3 text-cyan-400/50 mt-0.5 flex-shrink-0" />
               <span>{tip}</span>
             </div>
-          )}
+          ))}
         </div>
       </GlassBox>
       <Button variant="outline" className="w-full border-white/8 text-white/40 hover:text-white/70 text-xs h-9">
         <Plus className="w-3 h-3 mr-2" /> Submit a Guide
       </Button>
-    </div>);
-
+    </div>
+  );
 }
 
 function FarmQueueTab({ card }) {
   const mockQueues = [
-  { id: 1, host: 'FarmKing', players: 3, max: 4, status: 'Waiting' },
-  { id: 2, host: 'GrindSquad', players: 4, max: 4, status: 'Full' }];
-
+    { id: 1, host: 'FarmKing', players: 3, max: 4, status: 'Waiting' },
+    { id: 2, host: 'GrindSquad', players: 4, max: 4, status: 'Full' },
+  ];
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-white/30 mb-2">Active farm parties for "{card.title}"</p>
-      {mockQueues.map((q) =>
-      <GlassBox key={q.id} className="flex items-center justify-between">
+      {mockQueues.map(q => (
+        <GlassBox key={q.id} className="flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-white/70">{q.host}'s Party</p>
             <p className="text-[11px] text-white/30">{q.players}/{q.max} players • {q.status}</p>
@@ -184,12 +184,12 @@ function FarmQueueTab({ card }) {
             {q.status === 'Full' ? 'Full' : 'Join'}
           </Button>
         </GlassBox>
-      )}
+      ))}
       <Button variant="outline" className="w-full border-white/8 text-white/40 hover:text-white/70 text-xs h-9">
         <Plus className="w-3 h-3 mr-2" /> Create Farm Party
       </Button>
-    </div>);
-
+    </div>
+  );
 }
 
 function RecruitTab({ card }) {
@@ -213,8 +213,8 @@ function RecruitTab({ card }) {
       <Button variant="outline" className="w-full border-white/8 text-white/40 hover:text-white/70 text-xs h-9">
         <UserPlus className="w-3 h-3 mr-2" /> Post Recruitment
       </Button>
-    </div>);
-
+    </div>
+  );
 }
 
 function BugReportTab({ card }) {
@@ -233,16 +233,16 @@ function BugReportTab({ card }) {
       <Button variant="outline" className="w-full border-white/8 text-white/40 hover:text-white/70 text-xs h-9">
         <AlertCircle className="w-3 h-3 mr-2" /> Report a Bug
       </Button>
-    </div>);
-
+    </div>
+  );
 }
 
 function MediaTab({ card }) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-white/30 mb-2">Community videos & guides for "{card.title}"</p>
-      {[1, 2].map((i) =>
-      <GlassBox key={i} className="flex items-center gap-3 cursor-pointer group">
+      {[1, 2].map(i => (
+        <GlassBox key={i} className="flex items-center gap-3 cursor-pointer group">
           <div className="w-20 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
             <Video className="w-5 h-5 text-white/20 group-hover:text-cyan-400 transition-colors" />
           </div>
@@ -251,27 +251,27 @@ function MediaTab({ card }) {
             <p className="text-[11px] text-white/30">@Creator{i} • 2.4k views</p>
           </div>
         </GlassBox>
-      )}
+      ))}
       <Button variant="outline" className="w-full border-white/8 text-white/40 hover:text-white/70 text-xs h-9">
         <Video className="w-3 h-3 mr-2" /> Upload Video
       </Button>
-    </div>);
-
+    </div>
+  );
 }
 
 function DiscussTab({ card, chatInput, setChatInput }) {
   const mockMessages = [
-  { id: 1, user: 'TrophyHunter', msg: 'Has anyone figured out the hidden step?', time: '2m' },
-  { id: 2, user: 'GuideMaster', msg: 'You need to interact with the NPC first before the door opens.', time: '5m' },
-  { id: 3, user: 'Newbie99', msg: 'Thanks! That worked perfectly', time: '8m' }];
-
+    { id: 1, user: 'TrophyHunter', msg: 'Has anyone figured out the hidden step?', time: '2m' },
+    { id: 2, user: 'GuideMaster', msg: 'You need to interact with the NPC first before the door opens.', time: '5m' },
+    { id: 3, user: 'Newbie99', msg: 'Thanks! That worked perfectly', time: '8m' },
+  ];
 
   return (
     <div className="flex flex-col h-full min-h-[300px]">
       <p className="text-xs text-white/30 mb-3">Chat about "{card.title}"</p>
       <div className="flex-1 space-y-2 mb-3">
-        {mockMessages.map((m) =>
-        <div key={m.id} className="flex items-start gap-2">
+        {mockMessages.map(m => (
+          <div key={m.id} className="flex items-start gap-2">
             <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-white/30 flex-shrink-0 mt-0.5">
               {m.user[0]}
             </div>
@@ -283,21 +283,21 @@ function DiscussTab({ card, chatInput, setChatInput }) {
               <p className="text-xs text-white/40">{m.msg}</p>
             </div>
           </div>
-        )}
+        ))}
       </div>
       <div className="flex gap-2">
         <Input
           value={chatInput}
           onChange={(e) => setChatInput(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 h-8 text-xs bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 rounded-lg" />
-        
+          className="flex-1 h-8 text-xs bg-white/[0.04] border-white/[0.06] text-white placeholder:text-white/20 rounded-lg"
+        />
         <Button size="sm" className="h-8 w-8 p-0 bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/20 rounded-lg">
           <Send className="w-3 h-3" />
         </Button>
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
 function FarmHubFeed({ gameTitle, activeTopic }) {
@@ -310,41 +310,41 @@ function FarmHubFeed({ gameTitle, activeTopic }) {
       }
       return await base44.entities.Post.filter(filter, '-created_date', 50);
     },
-    enabled: !!gameTitle
+    enabled: !!gameTitle,
   });
 
   return (
     <div className="h-full p-4 flex flex-col md:flex-row gap-6 overflow-hidden">
       {/* 70% Main Content */}
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
+      <div className="flex-[7] flex flex-col h-full bg-white/[0.02] border border-white/[0.05] rounded-2xl overflow-hidden shadow-lg">
+        <div className="flex-shrink-0 p-6 border-b border-white/[0.05] flex items-center justify-between bg-black/20">
+          <div>
+            <h2 className="text-xl font-black text-white capitalize tracking-wide">{activeTopic || 'All'} Discussions</h2>
+            <p className="text-xs text-white/40 mt-1">Join the conversation and share your strategies</p>
+          </div>
+          <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+            <Plus className="w-4 h-4 mr-1.5" /> New Post
+          </Button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+          {isLoading ? (
+            <div className="flex justify-center py-10"><div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" /></div>
+          ) : posts?.length > 0 ? (
+            <div className="space-y-4">
+              {posts.map(post => (
+                <PostCard key={post.id} post={post} onVote={() => {}} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-white/40 bg-white/[0.02] rounded-2xl border border-white/5 border-dashed">
+              <MessageCircle className="w-12 h-12 mx-auto text-white/20 mb-4" />
+              <p className="text-base font-medium text-white/60 mb-2">No discussions yet</p>
+              <p className="text-sm">Be the first to start a topic in this section!</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* 30% Sidebar */}
       <div className="flex-[3] flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar pr-2 pb-2">
@@ -368,20 +368,20 @@ function FarmHubFeed({ gameTitle, activeTopic }) {
           <h3 className="text-sm font-bold text-white mb-4">Popular Topics</h3>
           <div className="space-y-2">
             {[
-            { label: 'Guides & Strategies', icon: Trophy, color: 'text-yellow-400' },
-            { label: 'Farm Queue', icon: Users, color: 'text-cyan-400' },
-            { label: 'Recruitment', icon: UserPlus, color: 'text-green-400' },
-            { label: 'Bug Reports', icon: AlertCircle, color: 'text-red-400' },
-            { label: 'Media & Content', icon: Video, color: 'text-purple-400' }].
-            map((topic, i) =>
-            <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-black/20 border border-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.08] cursor-pointer transition-all group">
+              { label: 'Guides & Strategies', icon: Trophy, color: 'text-yellow-400' },
+              { label: 'Farm Queue', icon: Users, color: 'text-cyan-400' },
+              { label: 'Recruitment', icon: UserPlus, color: 'text-green-400' },
+              { label: 'Bug Reports', icon: AlertCircle, color: 'text-red-400' },
+              { label: 'Media & Content', icon: Video, color: 'text-purple-400' }
+            ].map((topic, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-black/20 border border-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.08] cursor-pointer transition-all group">
                 <div className="flex items-center gap-3">
                   <topic.icon className={`w-4 h-4 ${topic.color} opacity-70 group-hover:opacity-100 transition-opacity`} />
                   <span className="text-xs font-medium text-white/70 group-hover:text-white transition-colors">{topic.label}</span>
                 </div>
                 <Badge variant="outline" className="text-[10px] border-white/10 text-white/40 bg-black/40">{Math.floor(Math.random() * 50) + 1}</Badge>
               </div>
-            )}
+            ))}
           </div>
         </div>
 
@@ -408,6 +408,6 @@ function FarmHubFeed({ gameTitle, activeTopic }) {
           </div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 }

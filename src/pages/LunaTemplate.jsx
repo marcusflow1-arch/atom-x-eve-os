@@ -591,7 +591,7 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
-    <div className="absolute inset-x-0 top-[64px] bottom-[48px] flex overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
+    <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
       <LunaLeftRail
         isEnvironmentActive={isEnvironmentActive}
@@ -606,7 +606,7 @@ export default function LunaTemplate() {
             backgroundRepeat: 'no-repeat'
           }}>
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
-        <div className="w-full h-full px-8 pt-0 pb-6 overflow-y-auto relative custom-scrollbar">
+        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
 
 
 
@@ -614,13 +614,13 @@ export default function LunaTemplate() {
       {!showConsoleMode && !showAchievements &&
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
-                left: '32px', top: '16px', bottom: '16px', width: '388px', gap: '0px'
-              } : { left: '32px', top: '16px', width: '420px', gap: '18px' }}>
+                left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
+              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
           {!avatarFocusMode && !uiVisible &&
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
               {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
               {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
             </div>
@@ -665,8 +665,8 @@ export default function LunaTemplate() {
                   className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
                   style={{
                     left: '440px',
-                    top: '16px',
-                    bottom: '16px',
+                    top: '80px',
+                    bottom: '32px',
                     width: '1000px',
                     maxWidth: 'calc(100vw - 480px)',
                     background: 'transparent'
@@ -736,11 +736,13 @@ export default function LunaTemplate() {
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
               <>
           <div
-                  className="absolute top-0 right-0 bottom-0 left-[80px] z-0 pointer-events-auto overflow-hidden"
+                  className="fixed inset-0 z-0 pointer-events-auto"
                   style={{
                     display: isEnvironmentActive ? 'flex' : 'none',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    width: '100vw',
+                    height: '100vh'
                   }}>
             <TransparentModel3DViewer
                     modelUrl={modelUrl}
@@ -805,9 +807,9 @@ export default function LunaTemplate() {
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                   className="absolute right-8 z-30 overflow-hidden pointer-events-none"
                   style={{
-                    left: '520px',
-                    top: '16px',
-                    bottom: '16px'
+                    left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
+                    top: '80px',
+                    bottom: '32px'
                   }}>
 
             <div className="h-full">
@@ -1923,7 +1925,10 @@ export default function LunaTemplate() {
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
-      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab && !avatarFocusMode && !uiVisible &&
+      {!clickedSlot && !showConsoleMode && !showAchievements && !activeSubTab &&
+              // SideAccessMenu stays visible even when hideUI is true, per user request:
+              // "You're going to keep the button that's below the navigation menu. Inside this button is my library, aura, and entertainment."
+              // SideAccessMenu contains Library, Entertainment, AI Story, AI Battle - close enough match
               <SideAccessMenu />
               }
 

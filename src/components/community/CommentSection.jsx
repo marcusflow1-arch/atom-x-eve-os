@@ -14,15 +14,11 @@ const Comment = ({ comment, onVote }) => (
                 <ArrowDown className="w-4 h-4" />
             </button>
         </div>
-        <div className="min-w-0 flex-1">
+        <div>
             <p className="text-xs text-slate-400 mb-1">
                 <span className="font-semibold text-slate-300">{comment.created_by?.split('@')[0] || 'Anonymous'}</span>
             </p>
-            <p className="text-slate-200 break-words">{comment.content}</p>
-            <div className="mt-2 flex items-center gap-2">
-                <button onClick={() => onVote(comment, 'up')} className="text-[11px] text-green-400/80 hover:text-green-300">Like</button>
-                <button onClick={() => onVote(comment, 'down')} className="text-[11px] text-red-400/80 hover:text-red-300">Dislike</button>
-            </div>
+            <p className="text-slate-200">{comment.content}</p>
         </div>
     </div>
 );

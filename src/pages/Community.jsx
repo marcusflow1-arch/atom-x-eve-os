@@ -808,7 +808,6 @@ export default function CommunityPage() {
                         initialType={activeGame ? 'game_discussion' : 'general_discussion'}
                         initialGameTitle={activeGame ? activeGame.title : ''}
                         initialGameGenre={activeGame ? activeGame.genre : ''}
-                        leftOffset={isSidebarCollapsed ? 0 : 80}
                     />
                 )}
             </AnimatePresence>
