@@ -782,8 +782,26 @@ export default function LibrarySidebar() {
                           >
                             {[
                               { label: 'Play', icon: Play, color: 'text-cyan-400', action: null },
-                              { label: 'Details', icon: Search, color: 'text-blue-400', action: () => { setDetailGame(game); setOpenDropdown(null); } },
-                              { label: 'Achievements', icon: Trophy, color: 'text-yellow-400', action: () => { setShowAchievementsUniverse(true); setOpenDropdown(null); } },
+                              {
+                                label: 'Details',
+                                icon: Search,
+                                color: 'text-blue-400',
+                                action: () => {
+                                  setShowAchievementsUniverse(false);
+                                  setDetailGame(current => current?.id === game.id ? null : game);
+                                  setOpenDropdown(null);
+                                }
+                              },
+                              {
+                                label: 'Achievements',
+                                icon: Trophy,
+                                color: 'text-yellow-400',
+                                action: () => {
+                                  setDetailGame(null);
+                                  setShowAchievementsUniverse(current => !current);
+                                  setOpenDropdown(null);
+                                }
+                              },
                               { label: 'Remove', icon: Trash2, color: 'text-red-400', action: null },
                             ].map(action => (
                               <button key={action.label} onClick={action.action || undefined} className="w-full flex items-center gap-3 px-6 py-2 hover:bg-white/5 transition-colors">
