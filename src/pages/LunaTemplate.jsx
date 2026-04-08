@@ -591,7 +591,7 @@ export default function LunaTemplate() {
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
-    <div className="h-full w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
+    <div className="absolute inset-x-0 top-[64px] bottom-[48px] flex overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ backgroundColor: '#080808' }}>
       {/* 5% Left Area for Global Icons */}
       <LunaLeftRail
         isEnvironmentActive={isEnvironmentActive}
@@ -614,8 +614,8 @@ export default function LunaTemplate() {
       {!showConsoleMode && !showAchievements &&
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
-                left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
-              } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
+                left: '32px', top: '16px', bottom: '16px', width: '388px', gap: '0px'
+              } : { left: '32px', top: '16px', width: '322px', gap: '12px' }}>
              
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
@@ -665,8 +665,8 @@ export default function LunaTemplate() {
                   className="absolute z-10 pointer-events-auto overflow-hidden flex flex-col"
                   style={{
                     left: '440px',
-                    top: '80px',
-                    bottom: '32px',
+                    top: '16px',
+                    bottom: '16px',
                     width: '1000px',
                     maxWidth: 'calc(100vw - 480px)',
                     background: 'transparent'
@@ -736,7 +736,7 @@ export default function LunaTemplate() {
       {(modelUrl || roomModelUrl) && !showConsoleMode && !showFriendsHub && !showAchievements &&
               <>
           <div
-                  className="absolute inset-0 z-0 pointer-events-auto"
+                  className="absolute top-0 right-0 bottom-0 left-[80px] z-0 pointer-events-auto overflow-hidden"
                   style={{
                     display: isEnvironmentActive ? 'flex' : 'none',
                     alignItems: 'center',
@@ -806,8 +806,8 @@ export default function LunaTemplate() {
                   className="absolute right-8 z-30 overflow-hidden pointer-events-none"
                   style={{
                     left: '440px', /* Offset matches expanded 3D viewer (420px) + 20px gap */
-                    top: '80px',
-                    bottom: '32px'
+                    top: '16px',
+                    bottom: '16px'
                   }}>
 
             <div className="h-full">
