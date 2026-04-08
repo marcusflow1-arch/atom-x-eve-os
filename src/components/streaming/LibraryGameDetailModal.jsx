@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import { Play, Radio, Info, Clock, AlertCircle, ShoppingCart, Award, ThumbsUp, ThumbsDown, MessageSquare, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const glassStyle = {
@@ -13,6 +13,7 @@ const glassStyle = {
 export default function LibraryGameDetailModal({ game, onClose }) {
   const [activeTab, setActiveTab] = useState('content');
   const [selectedUpdateId, setSelectedUpdateId] = useState('patch-2-1');
+  const [expandedExpansionId, setExpandedExpansionId] = useState('neural-expansion-pack');
 
   const updates = useMemo(() => ([
     {
@@ -52,6 +53,33 @@ export default function LibraryGameDetailModal({ game, onClose }) {
         { name: 'LunaGrid', stance: 'mixed', liked: true, text: 'Good event overall, but the daily rotations feel a little repetitive.' },
         { name: 'DriftCore', stance: 'not_recommended', liked: false, text: 'I wanted more exclusive missions instead of a mostly XP-focused event.' }
       ]
+    }
+  ]), []);
+
+  const expansions = useMemo(() => ([
+    {
+      id: 'neural-expansion-pack',
+      title: 'Neural Expansion Pack',
+      subtitle: 'Advanced AI storylines & weapons',
+      price: '$ 14.99',
+      includes: ['4 new branching missions', '2 advanced companion AI story arcs', '6 prototype weapons with upgrade trees'],
+      details: 'Adds a full late-game narrative track focused on rogue neural agents, hidden labs, and adaptive enemy encounters.'
+    },
+    {
+      id: 'void-walker-arsenal',
+      title: 'Void Walker Arsenal',
+      subtitle: '10 legendary weapons & skins',
+      price: '$ 14.99',
+      includes: ['10 void-tuned weapon variants', 'Exclusive weapon skins and finishing effects', 'Bonus crafting materials cache'],
+      details: 'Built for players who want stronger visual flair and a faster loadout refresh with premium legendary gear.'
+    },
+    {
+      id: 'season-pass-year-one',
+      title: 'Season Pass: Year One',
+      subtitle: 'All seasonal content & rewards',
+      price: '$ 29.99',
+      includes: ['Access to all year one seasonal drops', 'Premium reward track cosmetics', 'XP boosts and event bonus bundles'],
+      details: 'Unlocks the full seasonal roadmap with premium drops, rotating challenges, and bonus progression rewards.'
     }
   ]), []);
 
@@ -157,6 +185,16 @@ export default function LibraryGameDetailModal({ game, onClose }) {
                           <span className="text-[11px] text-white/35 whitespace-nowrap">{update.time}</span>
                         </div>
                         <p className="text-sm text-white/60 leading-relaxed">{update.summary}</p>
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-400/20 text-xs text-emerald-300">
+                            <ThumbsUp className="w-3.5 h-3.5" />
+                            <span>{update.likes}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-400/20 text-xs text-red-300">
+                            <ThumbsDown className="w-3.5 h-3.5" />
+                            <span>{update.dislikes}</span>
+                          </div>
+                        </div>
                       </button>
                     );
                   })}
@@ -195,44 +233,55 @@ export default function LibraryGameDetailModal({ game, onClose }) {
                     <h3 className="text-lg font-bold text-white">Expansion Content</h3>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors cursor-pointer flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-white mb-1">Neural Expansion Pack</h4>
-                        <p className="text-sm text-white/50">Advanced AI storylines & weapons</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-white font-bold">$ 14.99</span>
-                        <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
-                          Buy
-                        </button>
-                      </div>
-                    </div>
+                    {expansions.map((expansion) => {
+                      const isExpanded = expandedExpansionId === expansion.id;
+                      return (
+                        <div key={expansion.id} className="rounded-xl bg-white/5 border border-white/10 overflow-hidden">
+                          <button
+                            onClick={() => setExpandedExpansionId(isExpanded ? '' : expansion.id)}
+                            className="w-full p-4 text-left hover:bg-white/[0.03] transition-colors"
+                          >
+                            <div className="flex items-center justify-between gap-4 flex-wrap">
+                              <div>
+                                <h4 className="font-bold text-white mb-1">{expansion.title}</h4>
+                                <p className="text-sm text-white/50">{expansion.subtitle}</p>
+                              </div>
+                              <div className="flex items-center gap-3 ml-auto">
+                                <span className="text-white font-bold">{expansion.price}</span>
+                                <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
+                                  Buy
+                                </button>
+                                <div className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                                  <ChevronDown className="w-4 h-4 text-white/70" />
+                                </div>
+                              </div>
+                            </div>
+                          </button>
 
-                    <div className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors cursor-pointer flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-white mb-1">Void Walker Arsenal</h4>
-                        <p className="text-sm text-white/50">10 legendary weapons & skins</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-white font-bold">$ 14.99</span>
-                        <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
-                          Buy
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors cursor-pointer flex items-center justify-between">
-                      <div>
-                        <h4 className="font-bold text-white mb-1">Season Pass: Year One</h4>
-                        <p className="text-sm text-white/50">All seasonal content & rewards</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-white font-bold">$ 29.99</span>
-                        <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors">
-                          Buy
-                        </button>
-                      </div>
-                    </div>
+                          {isExpanded && (
+                            <div className="px-4 pb-4 pt-1 border-t border-white/10 bg-white/[0.02]">
+                              <div className="grid md:grid-cols-[1.2fr_0.8fr] gap-4">
+                                <div className="rounded-xl bg-black/20 border border-white/10 p-4">
+                                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/70 mb-3">Content details</p>
+                                  <p className="text-sm text-white/65 leading-relaxed">{expansion.details}</p>
+                                </div>
+                                <div className="rounded-xl bg-black/20 border border-white/10 p-4">
+                                  <p className="text-xs uppercase tracking-[0.2em] text-cyan-300/70 mb-3">Includes</p>
+                                  <div className="space-y-2">
+                                    {expansion.includes.map((item) => (
+                                      <div key={item} className="flex gap-3 text-sm text-white/65 leading-relaxed">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 flex-shrink-0" />
+                                        <p>{item}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </section>
 
