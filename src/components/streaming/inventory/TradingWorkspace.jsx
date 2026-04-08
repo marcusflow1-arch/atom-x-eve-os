@@ -33,7 +33,7 @@ const PRICE_MAP = {
   Mythic: 95000, Legendary: 75000, Epic: 45000, Rare: 25000, Uncommon: 12000, Common: 5000
 };
 
-export default function TradingWorkspace({ item, onClose, onBack }) {
+export default function TradingWorkspace({ item, onClose, onBack, leftOffset = 383 }) {
   const [activeMode, setActiveMode] = useState(null);
 
   if (!item) return null;
@@ -70,8 +70,8 @@ export default function TradingWorkspace({ item, onClose, onBack }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="fixed left-[384px] right-0 z-[72] flex flex-col overflow-hidden"
-      style={{ top: '64px', bottom: '52px', background: 'rgba(8, 12, 18, 0.92)', backdropFilter: 'blur(50px) saturate(180%)', WebkitBackdropFilter: 'blur(50px) saturate(180%)' }}
+      className="fixed right-0 z-[72] flex flex-col overflow-hidden"
+      style={{ left: typeof leftOffset === 'number' ? `${leftOffset}px` : leftOffset, top: '64px', bottom: '52px', background: 'rgba(8, 12, 18, 0.92)', backdropFilter: 'blur(50px) saturate(180%)', WebkitBackdropFilter: 'blur(50px) saturate(180%)' }}
 
     >
       {/* ═══ TOP BAR: Item Info + Mode Tabs (horizontal, like MMO auction house) ═══ */}

@@ -391,7 +391,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
             item={marketItem}
             onClose={() => setMarketItem(null)}
             onBack={() => setMarketItem(null)}
-            leftOffset={leftOffset !== undefined ? leftOffset : (fullScreen ? 0 : 383)}
+            leftOffset={leftOffset !== undefined ? leftOffset : (fullScreen ? 0 : '383px')}
           />
         )}
       </AnimatePresence>
