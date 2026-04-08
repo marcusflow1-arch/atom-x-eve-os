@@ -220,6 +220,7 @@ export default function LibrarySidebar() {
       setPendingRewardGame(null);
       setTradingFriend(null);
       setViewingFriend(null);
+      setMessagingFriend(null);
     }
   }, [isOpen]);
 
@@ -705,7 +706,7 @@ export default function LibrarySidebar() {
                       </button>
                     )}
                   </div>
-                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); setSelectedEntertainmentApp(null); setShowAddLink(false); setTradingFriend(null); setViewingFriend(null); }} className="text-white/40 hover:text-white transition-colors">
+                  <button onClick={() => { setExpandedPanel(null); setOpenDropdown(null); setFullLibraryDetailGame(null); setIsExpandedRewardsInventory(false); setSelectedEntertainmentApp(null); setShowAddLink(false); setTradingFriend(null); setViewingFriend(null); setMessagingFriend(null); }} className="text-white/40 hover:text-white transition-colors">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -740,8 +741,8 @@ export default function LibrarySidebar() {
                             className="overflow-hidden bg-white/5 border-t border-b border-white/5"
                           >
                             {[
-                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setViewingFriend(friend); setOpenDropdown(null); } },
-                              { label: 'Trade', icon: ArrowLeftRight, color: 'text-emerald-400', action: () => { setTradingFriend(friend); setOpenDropdown(null); } },
+                              { label: 'Profile', icon: UserCircle, color: 'text-blue-400', action: () => { setTradingFriend(null); setMessagingFriend(null); setViewingFriend(friend); setOpenDropdown(null); } },
+                              { label: 'Trade', icon: ArrowLeftRight, color: 'text-emerald-400', action: () => { setViewingFriend(null); setMessagingFriend(null); setTradingFriend(friend); setOpenDropdown(null); } },
                               { label: 'Invite', icon: UserPlus, color: 'text-yellow-400' },
                               { label: 'Join', icon: LogIn, color: 'text-purple-400' },
                             ].map(action => (
