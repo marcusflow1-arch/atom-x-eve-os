@@ -377,20 +377,13 @@ export default function FriendTradePanel({ friend, onClose, currentUser }) {
 
   return (
     <>
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-[70] bg-black/15"
-      />
-
       {/* Panel */}
       <motion.div
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -16 }}
         transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-        className="fixed z-[71] flex flex-col overflow-hidden"
+        className="fixed z-[71] flex flex-col overflow-hidden pointer-events-auto"
         style={{
           left: '320px', top: '64px', bottom: '52px', right: 0,
           background: 'rgba(100, 120, 140, 0.08)',
