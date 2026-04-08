@@ -11,8 +11,7 @@ import { useAuth } from '../components/auth/AuthContext';
 import { createPageUrl } from '@/utils';
 import { aiGamesList, otherSampleGames, androidGames } from '../components/store/mockData';
 import { googlePlayGames } from '../components/store/androidGamesData';
-import MarketplaceContent from '../components/store/MarketplaceContent';
-import TradingPostContent from '../components/store/TradingPostContent';
+import IntegratedMarketplaceContent from '../components/store/IntegratedMarketplaceContent';
 import { NAV_HIERARCHY } from '../components/dashboard/NavigationConfig';
 import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
@@ -655,11 +654,11 @@ export default function Store() {
                   )
                 ) : storeMode === 'marketplace' ? (
                   <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
+                    <IntegratedMarketplaceContent />
                   </motion.div>
                 ) : (
                   <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <TradingPostContent />
+                    <IntegratedMarketplaceContent />
                   </motion.div>
                 )}
               </AnimatePresence>

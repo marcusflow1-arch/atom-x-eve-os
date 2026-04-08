@@ -141,11 +141,11 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
   // Compute right offset: if game selected AND market item selected, game grid shrinks more
   // Pattern: Game Grid | Items Panel | Market Panel
   const glassStyle = {
-    background: 'rgba(12, 16, 24, 0.6)',
+    background: 'rgba(12, 16, 24, 0.92)',
     backdropFilter: 'blur(40px) saturate(180%)',
     WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-    boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(165, 243, 252, 0.08)',
-    border: '1px solid rgba(165, 243, 252, 0.15)'
+    boxShadow: '0 0 50px rgba(0,0,0,0.5)',
+    border: 'none'
   };
 
   return (
@@ -156,7 +156,7 @@ export default function InventoryFullPanel({ isOpen, onClose, initialGameName, f
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: -20, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="fixed top-[64px] bottom-[52px] right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
+        className="fixed top-16 bottom-0 right-0 z-[68] shadow-2xl overflow-hidden flex flex-col"
         style={{ ...glassStyle, left: leftOffset !== undefined ? leftOffset : (fullScreen ? '0px' : '383px') }}
       >
         {/* Header */}
