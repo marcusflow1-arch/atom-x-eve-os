@@ -606,7 +606,7 @@ export default function LunaTemplate() {
             backgroundRepeat: 'no-repeat'
           }}>
         <SidebarOverlays className="absolute top-[80px] left-6 right-6 bottom-[100px] z-[80]" />
-        <div className="w-full h-full p-8 pt-0 overflow-y-auto relative custom-scrollbar">
+        <div className="w-full h-full px-8 pt-0 pb-6 overflow-y-auto relative custom-scrollbar">
 
 
 
@@ -620,9 +620,9 @@ export default function LunaTemplate() {
           <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
           
           {!avatarFocusMode && !uiVisible &&
-                <div className="flex flex-col gap-6">
-              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
-              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+                <div className="flex flex-col gap-5">
+              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.08)', transformOrigin: 'top left', marginBottom: 14 } : { height: 320, marginBottom: 10 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? { marginTop: 4 } : { height: 280 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
             </div>
                 }
 
