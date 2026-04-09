@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,7 @@ const RarityBadge = ({ rarity }) => {
   );
 };
 
-export default function TradingPostOverlayContent({ cardSearchQuery = '', selectedGame }) {
+export default function TradingPostOverlayContent({ cardSearchQuery = '', onCardSearch = () => {}, selectedGame }) {
   const { user } = useAuth();
   const [achievements, setAchievements] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
