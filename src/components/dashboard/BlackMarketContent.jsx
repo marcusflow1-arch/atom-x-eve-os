@@ -92,20 +92,17 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-white/50 whitespace-nowrap">Search Cart</span>
-          <button className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
-            <Mic className="w-3.5 h-3.5" />
+        <div className="relative flex items-center flex-shrink-0">
+          <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
+          <input
+            value={cardSearchQuery}
+            onChange={(e) => onCardSearch(e.target.value)}
+            placeholder="search cars"
+            className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-32"
+          />
+          <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
+            <Mic className="w-3 h-3" />
           </button>
-          <div className="relative flex items-center">
-            <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
-            <input
-              value={cardSearchQuery}
-              onChange={(e) => onCardSearch(e.target.value)}
-              placeholder=""
-              className="bg-white/5 border border-white/10 rounded-md pl-7 pr-3 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-24"
-            />
-          </div>
         </div>
       </div>
 
