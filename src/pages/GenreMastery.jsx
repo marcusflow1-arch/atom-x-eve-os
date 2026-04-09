@@ -365,7 +365,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <BlackMarketContent cardSearchQuery={cardSearchQuery} />
+                  <BlackMarketContent cardSearchQuery={cardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : marketView === 'tradingpost' ? (
                 <motion.div
@@ -376,7 +376,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} />
+                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : rightPanel === 'achievements' ? (
                 <motion.div
