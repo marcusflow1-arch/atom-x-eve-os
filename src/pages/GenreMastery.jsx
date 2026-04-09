@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
-  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft
+  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft, DollarSign
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -210,6 +210,29 @@ export default function GenreMastery({ onClose }) {
               selectedGenre={selectedGenre}
               onSelect={setSelectedGenre}
             />
+
+            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => navigate(createPageUrl('Blacksmith'))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <DollarSign className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Black Market</span>
+              </button>
+              <button
+                onClick={() => navigate(createPageUrl('TradingPost'))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Trading Post</span>
+              </button>
+            </div>
 
           </div>
         </div>
