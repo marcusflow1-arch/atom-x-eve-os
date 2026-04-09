@@ -1,64 +1,17 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import {
-  Gamepad2, Sparkles, DollarSign, ChevronLeft, ShoppingCart, Search, Mic,
-  LayoutGrid, Globe, Rocket, Crosshair, Map, Ghost, Monitor, Car, Layers,
-  Star, Crown, ArrowRight
+  Gamepad2, Sparkles, DollarSign, ChevronLeft, Search, Mic,
+  LayoutGrid, Globe, Rocket, Crosshair, Map, Ghost, Monitor, Car,
+  Star, Crown
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCart } from '@/components/CartContext';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
-const GENRE_TABS = [
-  { id: 'all', name: 'All', icon: LayoutGrid },
-  { id: 'action', name: 'Action', icon: Crosshair },
-  { id: 'rpg', name: 'RPG', icon: Globe },
-  { id: 'sci-fi', name: 'Sci-Fi', icon: Rocket },
-  { id: 'fantasy', name: 'Fantasy', icon: Sparkles },
-  { id: 'horror', name: 'Horror', icon: Ghost },
-  { id: 'racing', name: 'Racing', icon: Car },
-  { id: 'strategy', name: 'Strategy', icon: Map },
-  { id: 'simulation', name: 'Simulation', icon: Monitor },
-];
-
-function GenreScrollTabs({ tabs, selectedTab, onSelect }) {
-  const scrollRef = useRef(null);
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const handleWheel = (e) => { e.preventDefault(); el.scrollLeft += e.deltaY > 0 ? 80 : -80; };
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  return (
-    <div className="relative flex-1 min-w-0">
-      <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
-      <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
-      <div ref={scrollRef} className="flex items-center gap-1.5 overflow-x-auto px-2" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none' }}>
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => onSelect(t)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
-              selectedTab?.id === t.id
-                ? 'bg-white/12 border-white/20 text-white'
-                : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
-            }`}
-          >
-            {React.createElement(t.icon, { className: 'w-3.5 h-3.5' })}
-            <span>{t.name}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function BlackMarketContent({ cardSearchQuery = '' }) {
   const { addToCart } = useCart();
-  const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [games, setGames] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -88,37 +41,20 @@ export default function BlackMarketContent({ cardSearchQuery = '' }) {
 
   const filteredGames = useMemo(() => {
     let g = [...games];
-    if (selectedGenre.id !== 'all') {
-      g = g.filter(game => (game.genre || '').toLowerCase().includes(selectedGenre.id));
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       g = g.filter(game => (game.title || '').toLowerCase().includes(q));
     }
     return g;
-  }, [games, selectedGenre, searchQuery]);
+  }, [games, searchQuery]);
 
   const gameCards = useMemo(() => {
     if (!selectedGame) return [];
     return achievements.filter(a => (a.game || '').toLowerCase() === (selectedGame.title || '').toLowerCase());
   }, [selectedGame, achievements]);
 
-  const handleBuyCard = (card) => {
-    const price = card.points ? Math.max(1.99, card.points * 0.1) : 4.99;
-    addToCart({
-      id: `bm-card-${card.id}`,
-      title: card.title,
-      image: card.icon || selectedGame?.cover_image,
-      price,
-      type: 'card',
-    });
-  };
-
   const mysteryCards = useMemo(() => {
-    const all = Array.from({ length: 70 }, (_, i) => ({
-      id: `mystery-${i + 1}`,
-      label: `Card ${i + 1}`,
-    }));
+    const all = Array.from({ length: 70 }, (_, i) => ({ id: `mystery-${i + 1}`, label: `Card ${i + 1}` }));
     if (!cardSearchQuery.trim()) return all;
     const q = cardSearchQuery.toLowerCase();
     return all.filter(c => c.label.toLowerCase().includes(q));
@@ -160,10 +96,11 @@ export default function BlackMarketContent({ cardSearchQuery = '' }) {
 
   return (
     <div className="h-full flex min-h-0">
-      {/* LEFT: Genre filter + game list */}
-      <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-        style={{ width: '25%', minWidth: '200px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-
+      {/* LEFT: Game list */}
+      <div
+        className="h-full flex flex-col overflow-hidden flex-shrink-0"
+        style={{ width: '25%', minWidth: '200px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+      >
         <div className="p-4 border-b border-white/6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
@@ -203,9 +140,7 @@ export default function BlackMarketContent({ cardSearchQuery = '' }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-white text-xs font-semibold truncate">{game.title}</h3>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-white/30 text-[10px]">{game.genre}</span>
-                </div>
+                <span className="text-white/30 text-[10px]">{game.genre}</span>
               </div>
             </motion.button>
           ))}
@@ -238,74 +173,71 @@ export default function BlackMarketContent({ cardSearchQuery = '' }) {
               </div>
 
               <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                  <div className="flex-1 min-h-0 overflow-hidden px-5 pt-3">
-                    <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
-                      <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
-                      {selectedCardDetails && (
-                        <div className="px-4 pb-2">
-                          <div className="flex items-center justify-between gap-4 text-white/70">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-white truncate">{selectedCardDetails.title}</div>
-                              <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedCardDetails.rarity} card</div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <div className="text-cyan-300 text-sm font-bold">${selectedCardDetails.price}</div>
-                              <div className="text-[10px] text-white/35">{selectedCardDetails.sellers} sellers</div>
-                            </div>
+                <div className="flex-1 min-h-0 overflow-hidden px-5 pt-3">
+                  <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
+                    <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
+                    {selectedCardDetails && (
+                      <div className="px-4 pb-2">
+                        <div className="flex items-center justify-between gap-4 text-white/70">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-white truncate">{selectedCardDetails.title}</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedCardDetails.rarity} card</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-cyan-300 text-sm font-bold">${selectedCardDetails.price}</div>
+                            <div className="text-[10px] text-white/35">{selectedCardDetails.sellers} sellers</div>
                           </div>
                         </div>
-                      )}
-                      <div className="mx-4 mb-2 h-px bg-white/10" />
-                      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
-                        {(selectedMysteryCard ? sellerRows : []).map((seller) => (
-                          <button
-                            key={seller.id}
-                            className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-white text-sm font-semibold truncate">{seller.name}</div>
-                                <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{seller.type} · {seller.stock} available</div>
-                              </div>
-                              <div className="text-cyan-300 text-sm font-bold shrink-0">${seller.price}</div>
-                            </div>
-                          </button>
-                        ))}
-                        {!selectedMysteryCard && (
-                          <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
-                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 px-5">
-                    <div className="h-px bg-white/10" />
-                    <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
-                      <div>Row {cardRowIndex + 1} / 10</div>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 px-5 pb-2">
-                    <div
-                      className="flex gap-3 items-end"
-                      onWheel={(e) => {
-                        e.preventDefault();
-                        setCardRowIndex((prev) => {
-                          if (e.deltaY > 0) return Math.min(9, prev + 1);
-                          if (e.deltaY < 0) return Math.max(0, prev - 1);
-                          return prev;
-                        });
-                      }}
-                    >
-                      {visibleMysteryCards.map((card) => (
-                        <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}>
-                          <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
-                            <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
+                    )}
+                    <div className="mx-4 mb-2 h-px bg-white/10" />
+                    <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {(selectedMysteryCard ? sellerRows : []).map((seller) => (
+                        <button key={seller.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-white text-sm font-semibold truncate">{seller.name}</div>
+                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{seller.type} · {seller.stock} available</div>
+                            </div>
+                            <div className="text-cyan-300 text-sm font-bold shrink-0">${seller.price}</div>
                           </div>
-                        </LiquidGlassCard>
+                        </button>
                       ))}
+                      {!selectedMysteryCard && (
+                        <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
+                      )}
                     </div>
                   </div>
+                </div>
+
+                <div className="shrink-0 px-5">
+                  <div className="h-px bg-white/10" />
+                  <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                    <div>Row {cardRowIndex + 1} / 10</div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 px-5 pb-2">
+                  <div
+                    className="flex gap-3 items-end"
+                    onWheel={(e) => {
+                      e.preventDefault();
+                      setCardRowIndex((prev) => {
+                        if (e.deltaY > 0) return Math.min(9, prev + 1);
+                        if (e.deltaY < 0) return Math.max(0, prev - 1);
+                        return prev;
+                      });
+                    }}
+                  >
+                    {visibleMysteryCards.map((card) => (
+                      <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}>
+                        <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
+                          <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
+                        </div>
+                      </LiquidGlassCard>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           ) : (

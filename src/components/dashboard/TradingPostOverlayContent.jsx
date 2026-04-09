@@ -4,8 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Gamepad2, ChevronLeft, Search, Layers, DollarSign, Gavel, Mic,
-  ArrowLeftRight, Star, Eye, Filter, ArrowUpDown, Globe, ChevronRight
+  Gamepad2, ChevronLeft, Search, Mic, DollarSign, Gavel,
+  ArrowLeftRight, Star, ChevronRight
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -79,13 +79,11 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
     return g;
   }, [games, searchQuery]);
 
-  // Items (achievements) for the selected game
   const gameItems = useMemo(() => {
     if (!selectedGame) return [];
     return achievements.filter(a => (a.game || '').toLowerCase() === (selectedGame.title || '').toLowerCase());
   }, [selectedGame, achievements]);
 
-  // Offers for selected item
   const itemOffers = useMemo(() => {
     if (!selectedItem) return [];
     const itemName = selectedItem.title?.toLowerCase();
@@ -106,18 +104,13 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
       endsAt: o.expires_at ? new Date(o.expires_at).toLocaleDateString() : null,
     }));
 
-    // If no real offers, show a mock one
     if (offers.length === 0) {
       offers = [
         { id: 'mock-1', seller: { name: 'MarketBot', avatar: '', rating: 5.0 }, type: 'sale', price: selectedItem.points ? selectedItem.points * 10 : 500, description: 'System listing — fixed price.', postedAt: 'Today' },
       ];
     }
 
-    // Filter
-    if (offerTypeFilter !== 'all') {
-      offers = offers.filter(o => o.type === offerTypeFilter);
-    }
-    // Sort
+    if (offerTypeFilter !== 'all') offers = offers.filter(o => o.type === offerTypeFilter);
     if (offerSort === 'price-low') offers.sort((a, b) => (a.price || 0) - (b.price || 0));
     else if (offerSort === 'price-high') offers.sort((a, b) => (b.price || 0) - (a.price || 0));
 
@@ -125,10 +118,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
   }, [selectedItem, selectedGame, tradeOffers, offerTypeFilter, offerSort]);
 
   const mysteryTradeCards = useMemo(() => {
-    const all = Array.from({ length: 70 }, (_, i) => ({
-      id: `trade-mystery-${i + 1}`,
-      label: `Trade Card ${i + 1}`,
-    }));
+    const all = Array.from({ length: 70 }, (_, i) => ({ id: `trade-mystery-${i + 1}`, label: `Trade Card ${i + 1}` }));
     if (!cardSearchQuery.trim()) return all;
     const q = cardSearchQuery.toLowerCase();
     return all.filter(c => c.label.toLowerCase().includes(q));
@@ -176,9 +166,10 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
   return (
     <div className="h-full flex min-h-0">
       {/* LEFT: Game list */}
-      <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-        style={{ width: '25%', minWidth: '200px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-
+      <div
+        className="h-full flex flex-col overflow-hidden flex-shrink-0"
+        style={{ width: '25%', minWidth: '200px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+      >
         <div className="p-4 border-b border-white/6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
@@ -224,7 +215,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
       {/* RIGHT: Items → Offers → Detail */}
       <div className="flex-1 h-full overflow-hidden" style={{ background: 'rgba(8, 12, 18, 0.55)', backdropFilter: 'blur(20px)' }}>
         <AnimatePresence mode="wait">
-          {/* Level 2: Offer detail */}
           {selectedOffer ? (
             <motion.div key="offer-detail" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }} className="h-full flex flex-col p-5">
               <div className="flex items-center gap-3 mb-6">
@@ -239,7 +229,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
                   <div className="text-center">
                     <div className="w-16 h-16 rounded-full bg-white/5 border-2 border-white/10 mx-auto mb-3 flex items-center justify-center overflow-hidden">
                       {selectedOffer.seller.avatar ? (
-                        <img src={selectedOffer.seller.avatar} className="w-full h-full object-cover" />
+                        <img src={selectedOffer.seller.avatar} className="w-full h-full object-cover" alt="" />
                       ) : (
                         <span className="text-white/30 text-xl font-bold">{(selectedOffer.seller.name || 'U')[0]}</span>
                       )}
@@ -303,7 +293,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
               </div>
             </motion.div>
 
-          /* Level 1: Item selected → show sellers */
           ) : selectedItem ? (
             <motion.div key="item-offers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col">
               <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
@@ -317,7 +306,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
                     <span className="text-white/30 text-xs">{itemOffers.length} seller{itemOffers.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                {/* Filter/Sort */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <select value={offerTypeFilter} onChange={(e) => setOfferTypeFilter(e.target.value)} className="bg-slate-800 border border-white/20 text-white text-[10px] rounded-lg px-2 py-1.5">
                     <option value="all">All Types</option>
@@ -346,7 +334,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {offer.seller.avatar ? (
-                          <img src={offer.seller.avatar} className="w-full h-full object-cover" />
+                          <img src={offer.seller.avatar} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <span className="text-white/30 text-sm font-bold">{(offer.seller.name || 'U')[0]}</span>
                         )}
@@ -369,7 +357,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
               </div>
             </motion.div>
 
-          /* Level 0: Game selected → show items */
           ) : selectedGame ? (
             <motion.div key={`items-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col">
               <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
@@ -388,75 +375,75 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
               </div>
 
               <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                  <div className="flex-1 min-h-0 overflow-hidden px-5 pt-4">
-                    <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
-                      <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
-                      {selectedTradeCardDetails && (
-                        <div className="px-4 pb-2">
-                          <div className="flex items-center justify-between gap-4 text-white/70">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-white truncate">{selectedTradeCardDetails.title}</div>
-                              <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedTradeCardDetails.type} listing</div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <div className="text-cyan-300 text-sm font-bold">${selectedTradeCardDetails.value}</div>
-                              <div className="text-[10px] text-white/35">{selectedTradeCardDetails.traders} traders</div>
-                            </div>
+                <div className="flex-1 min-h-0 overflow-hidden px-5 pt-4">
+                  <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
+                    <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
+                    {selectedTradeCardDetails && (
+                      <div className="px-4 pb-2">
+                        <div className="flex items-center justify-between gap-4 text-white/70">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-white truncate">{selectedTradeCardDetails.title}</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedTradeCardDetails.type} listing</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <div className="text-cyan-300 text-sm font-bold">${selectedTradeCardDetails.value}</div>
+                            <div className="text-[10px] text-white/35">{selectedTradeCardDetails.traders} traders</div>
                           </div>
                         </div>
-                      )}
-                      <div className="mx-4 mb-2 h-px bg-white/10" />
-                      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
-                        {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
-                          <button key={row.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-white text-sm font-semibold truncate">{row.name}</div>
-                                <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{row.type}</div>
-                              </div>
-                              <div className="text-cyan-300 text-sm font-bold shrink-0">${row.value}</div>
-                            </div>
-                          </button>
-                        ))}
-                        {!selectedMysteryTradeCard && (
-                          <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view traders and sellers.</div>
-                        )}
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 px-5">
-                    <div className="h-px bg-white/10" />
-                    <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
-                      <div>Row {tradeCardRowIndex + 1} / 10</div>
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 px-5 pb-0">
-                    <div
-                      className="flex gap-3 items-end"
-                      onWheel={(e) => {
-                        e.preventDefault();
-                        setTradeCardRowIndex((prev) => {
-                          if (e.deltaY > 0) return Math.min(9, prev + 1);
-                          if (e.deltaY < 0) return Math.max(0, prev - 1);
-                          return prev;
-                        });
-                      }}
-                    >
-                      {visibleMysteryTradeCards.map((card) => (
-                        <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}>
-                          <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
-                            <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
+                    )}
+                    <div className="mx-4 mb-2 h-px bg-white/10" />
+                    <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
+                        <button key={row.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="text-white text-sm font-semibold truncate">{row.name}</div>
+                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{row.type}</div>
+                            </div>
+                            <div className="text-cyan-300 text-sm font-bold shrink-0">${row.value}</div>
                           </div>
-                        </LiquidGlassCard>
+                        </button>
                       ))}
+                      {!selectedMysteryTradeCard && (
+                        <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view traders and sellers.</div>
+                      )}
                     </div>
                   </div>
+                </div>
+
+                <div className="shrink-0 px-5">
+                  <div className="h-px bg-white/10" />
+                  <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                    <div>Row {tradeCardRowIndex + 1} / 10</div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 px-5 pb-0">
+                  <div
+                    className="flex gap-3 items-end"
+                    onWheel={(e) => {
+                      e.preventDefault();
+                      setTradeCardRowIndex((prev) => {
+                        if (e.deltaY > 0) return Math.min(9, prev + 1);
+                        if (e.deltaY < 0) return Math.max(0, prev - 1);
+                        return prev;
+                      });
+                    }}
+                  >
+                    {visibleMysteryTradeCards.map((card) => (
+                      <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}>
+                        <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
+                          <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
+                        </div>
+                      </LiquidGlassCard>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
+
           ) : (
-            /* No game selected */
             <motion.div key="no-game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col items-center justify-center text-center px-8">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/20 flex items-center justify-center mb-4">
                 <ArrowLeftRight className="w-8 h-8 text-blue-400/60" />
