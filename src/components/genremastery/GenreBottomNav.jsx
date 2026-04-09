@@ -1,14 +1,9 @@
 import React from 'react';
-import { Home, Trophy, Layers, Search, Mic } from 'lucide-react';
+import { Home, Trophy, Layers } from 'lucide-react';
 
-export default function GenreBottomNav({ activeTab, onTabSelect, marketView, cardSearchQuery, onCardSearch }) {
-  const showSearch = (marketView === 'blackmarket' || marketView === 'tradingpost') && activeTab !== 'skilltree';
+export default function GenreBottomNav({ activeTab, onTabSelect }) {
   return (
-    <div className="flex items-center w-full h-full px-4">
-      {/* Left spacer to balance layout */}
-      <div className="flex-1" />
-
-      {/* Center tabs */}
+    <div className="flex items-center justify-center w-full h-full">
       <div className="flex items-center">
         <button
           onClick={() => onTabSelect('achievements')}
@@ -58,24 +53,6 @@ export default function GenreBottomNav({ activeTab, onTabSelect, marketView, car
           <Layers className="w-4 h-4" />
           <span>Skill Tree</span>
         </button>
-      </div>
-
-      {/* Right: Card search bar — only when Black Market or Trading Post is active */}
-      <div className="flex-1 flex justify-end">
-        {showSearch && (
-          <div className="relative flex items-center">
-            <Search className="absolute left-3 w-3.5 h-3.5 text-white/30 pointer-events-none" />
-            <input
-              value={cardSearchQuery}
-              onChange={(e) => onCardSearch(e.target.value)}
-              placeholder="Search cards..."
-              className="bg-white/5 border border-white/10 rounded-lg pl-9 pr-10 py-1.5 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-44"
-            />
-            <button className="absolute right-2 w-6 h-5 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center">
-              <Mic className="w-3.5 h-3.5 text-white/45" />
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
