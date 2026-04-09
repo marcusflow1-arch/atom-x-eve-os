@@ -169,7 +169,7 @@ export default function TradingPostOverlayContent() {
   }
 
   return (
-    <div className="flex-1 flex min-h-0">
+    <div className="h-full flex min-h-0">
       {/* LEFT: Game list */}
       <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
         style={{ width: '225px', minWidth: '225px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
