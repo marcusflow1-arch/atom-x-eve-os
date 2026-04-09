@@ -391,9 +391,8 @@ export default function TradingPostOverlayContent() {
                 </div>
               </div>
 
-              <div className="flex-1 min-h-0 px-5 pt-5 pb-0 overflow-hidden">
-                <div className="h-full min-h-0 flex flex-col overflow-hidden">
-                  <div className="flex-1 min-h-0 overflow-hidden px-4 pb-0">
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                  <div className="flex-1 min-h-0 overflow-hidden px-5 pt-4">
                     <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
                       <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
                       {selectedTradeCardDetails && (
@@ -430,12 +429,10 @@ export default function TradingPostOverlayContent() {
                     </div>
                   </div>
 
-                  <div className="shrink-0 px-4 pb-0">
+                  <div className="shrink-0 px-5">
                     <div className="h-px bg-white/10" />
                     <div className="flex items-center justify-between gap-4 px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
-                      <div>
-                        Row {tradeCardRowIndex + 1} / 10
-                      </div>
+                      <div>Row {tradeCardRowIndex + 1} / 10</div>
                       <div className="flex items-center gap-2 text-white/40 normal-case tracking-normal text-xs w-[30%] min-w-[140px] justify-end">
                         <span>Search bar</span>
                         <Search className="w-3.5 h-3.5" />
@@ -444,7 +441,7 @@ export default function TradingPostOverlayContent() {
                     </div>
                   </div>
 
-                  <div className="shrink-0 px-4 pb-0">
+                  <div className="shrink-0 px-5 pb-0">
                     <div
                       className="flex gap-3 items-end"
                       onWheel={(e) => {
@@ -465,7 +462,6 @@ export default function TradingPostOverlayContent() {
                       ))}
                     </div>
                   </div>
-                </div>
               </div>
             </motion.div>
           ) : (
