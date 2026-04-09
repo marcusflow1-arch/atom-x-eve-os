@@ -144,6 +144,16 @@ export default function TradingPostOverlayContent() {
     }));
   }, [selectedMysteryTradeCard]);
 
+  const selectedTradeCardDetails = useMemo(() => {
+    if (!selectedMysteryTradeCard) return null;
+    return {
+      title: selectedMysteryTradeCard.label,
+      type: mysteryTradeRows[0]?.type || 'Trade',
+      value: mysteryTradeRows[0]?.value,
+      traders: mysteryTradeRows.length,
+    };
+  }, [selectedMysteryTradeCard, mysteryTradeRows]);
+
   const handleBack = () => {
     if (selectedOffer) setSelectedOffer(null);
     else if (selectedItem) { setSelectedItem(null); setSelectedOffer(null); }
@@ -385,6 +395,20 @@ export default function TradingPostOverlayContent() {
                 <div className="h-full">
                   <div className="min-h-0 h-full flex flex-col overflow-hidden">
                     <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
+                    {selectedTradeCardDetails && (
+                      <div className="px-4 pb-3">
+                        <div className="flex items-center justify-between gap-4 text-white/70">
+                          <div>
+                            <div className="text-sm font-semibold text-white">{selectedTradeCardDetails.title}</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedTradeCardDetails.type} listing</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-cyan-300 text-sm font-bold">${selectedTradeCardDetails.value}</div>
+                            <div className="text-[10px] text-white/35">{selectedTradeCardDetails.traders} traders</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
                       {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
                         <button key={row.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-3 transition-all">

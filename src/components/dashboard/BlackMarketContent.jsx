@@ -135,6 +135,16 @@ export default function BlackMarketContent() {
     }));
   }, [selectedMysteryCard]);
 
+  const selectedCardDetails = useMemo(() => {
+    if (!selectedMysteryCard) return null;
+    return {
+      title: selectedMysteryCard.label,
+      rarity: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'][cardRowIndex % 5],
+      price: sellerRows[0]?.price,
+      sellers: sellerRows.length,
+    };
+  }, [selectedMysteryCard, sellerRows, cardRowIndex]);
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -227,6 +237,20 @@ export default function BlackMarketContent() {
                 <div className="h-full">
                   <div className="min-h-0 h-full flex flex-col overflow-hidden">
                     <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
+                    {selectedCardDetails && (
+                      <div className="px-4 pb-3">
+                        <div className="flex items-center justify-between gap-4 text-white/70">
+                          <div>
+                            <div className="text-sm font-semibold text-white">{selectedCardDetails.title}</div>
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedCardDetails.rarity} card</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-cyan-300 text-sm font-bold">${selectedCardDetails.price}</div>
+                            <div className="text-[10px] text-white/35">{selectedCardDetails.sellers} sellers</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
                       {(selectedMysteryCard ? sellerRows : []).map((seller) => (
                         <button
