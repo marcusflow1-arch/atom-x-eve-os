@@ -277,6 +277,13 @@ export default function GenreMastery({ onClose }) {
                 />
               </div>
             </div>
+
+            {/* Games */}
+            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
+              {gamesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
+                </div>
               ) : gameData.length === 0 ? (
                 <div className="text-center py-12 text-white/25">
                   <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
@@ -287,7 +294,6 @@ export default function GenreMastery({ onClose }) {
                   <motion.button
                     key={game.id}
                     onClick={() => { setSelectedGame(game); if (rightPanel === 'skilltree') setRightPanel('games'); }}
-
                     whileHover={{ x: 2 }}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all border ${
                       selectedGame?.id === game.id && rightPanel === 'games'
