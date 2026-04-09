@@ -27,7 +27,7 @@ const RarityBadge = ({ rarity }) => {
   );
 };
 
-export default function TradingPostOverlayContent() {
+export default function TradingPostOverlayContent({ selectedGenre }) {
   const { user } = useAuth();
   const [games, setGames] = useState([]);
   const [achievements, setAchievements] = useState([]);
@@ -69,12 +69,16 @@ export default function TradingPostOverlayContent() {
 
   const filteredGames = useMemo(() => {
     let g = [...games];
+    const genreId = selectedGenre?.id || 'all';
+    if (genreId !== 'all') {
+      g = g.filter(game => (game.genre || '').toLowerCase().includes(genreId));
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       g = g.filter(game => (game.title || '').toLowerCase().includes(q));
     }
     return g;
-  }, [games, searchQuery]);
+  }, [games, selectedGenre, searchQuery]);
 
   // Items (achievements) for the selected game
   const gameItems = useMemo(() => {
