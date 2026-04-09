@@ -107,9 +107,12 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', select
     return all.filter(c => c.label.toLowerCase().includes(q));
   }, [cardSearchQuery]);
 
+  const CARDS_PER_ROW = 5;
+  const totalRows = Math.ceil(mysteryTradeCards.length / CARDS_PER_ROW);
+
   const visibleMysteryTradeCards = useMemo(() => {
-    const start = tradeCardRowIndex * 7;
-    return mysteryTradeCards.slice(start, start + 7);
+    const start = tradeCardRowIndex * CARDS_PER_ROW;
+    return mysteryTradeCards.slice(start, start + CARDS_PER_ROW);
   }, [mysteryTradeCards, tradeCardRowIndex]);
 
   const mysteryTradeRows = useMemo(() => {
@@ -290,72 +293,82 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', select
           </motion.div>
 
         ) : (
-          <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col">
-            <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-              <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                {selectedGame.cover_image ? (
-                  <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-                ) : <div className="w-full h-full bg-black/30" />}
+          <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex gap-4 overflow-hidden">
+            {/* LEFT: Traders List (70%) */}
+            <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
+              <div className="pb-3 border-b border-white/6 flex items-center gap-3 mb-3 flex-shrink-0">
+                <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10">
+                  {selectedGame.cover_image ? (
+                    <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
+                  ) : <div className="w-full h-full bg-black/30" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-white font-bold text-sm truncate">{selectedGame.title}</h2>
+                  <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px] mt-1">{selectedGame.genre}</Badge>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
+
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Traders</div>
+                {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
+                  <div key={row.id}>
+                    <div className="flex items-center justify-between py-2.5">
+                      <span className="text-white text-sm">{row.name}</span>
+                      <span className="text-cyan-300 text-sm font-semibold">${row.value}</span>
+                    </div>
+                    <div className="h-px bg-white/10" />
+                  </div>
+                ))}
+                {!selectedMysteryTradeCard && (
+                  <div className="py-8 text-center text-white/25 text-xs">Select a card to view traders.</div>
+                )}
+              </div>
+
+              <div className="shrink-0 border-t border-white/10 pt-2 mt-2">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-white/35">
+                  Row {tradeCardRowIndex + 1} / {totalRows}
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-              <div className="flex-1 min-h-0 overflow-hidden px-5 pt-3">
-                <div className="h-full flex flex-col overflow-hidden">
-                  <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Traders</div>
-                  <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                    {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
-                      <div key={row.id}>
-                        <div className="flex items-center justify-between py-2.5">
-                          <span className="text-white text-sm">{row.name}</span>
-                          <span className="text-cyan-300 text-sm font-semibold">${row.value}</span>
+            {/* RIGHT: Cards Grid (30%) */}
+            <div className="w-[30%] flex flex-col border-l border-white/10 pl-4 overflow-hidden">
+              <div className="pb-3 border-b border-white/6 flex items-center gap-2 mb-3 flex-shrink-0">
+                <div className="w-8 h-12 rounded-lg overflow-hidden border border-white/10">
+                  {selectedGame.cover_image ? (
+                    <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
+                  ) : <div className="w-full h-full bg-black/30" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-white font-bold text-xs truncate">{selectedGame.title}</h2>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                <div className="space-y-2">
+                  {mysteryTradeCards.length === 0 ? (
+                    <div className="text-center text-white/25 text-xs py-8">No cards</div>
+                  ) : (
+                    Array.from({ length: totalRows }, (_, rowIdx) => {
+                      const rowStart = rowIdx * CARDS_PER_ROW;
+                      const rowCards = mysteryTradeCards.slice(rowStart, rowStart + CARDS_PER_ROW);
+                      return (
+                        <div key={`row-${rowIdx}`} className="flex gap-1.5">
+                          {rowCards.map((card) => (
+                            <LiquidGlassCard
+                              key={card.id}
+                              onClick={() => setSelectedMysteryTradeCard(card)}
+                              className={`flex-1 aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
+                            >
+                              <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                <span className="text-white/40 text-lg font-black">?</span>
+                              </div>
+                            </LiquidGlassCard>
+                          ))}
                         </div>
-                        <div className="h-px bg-white/10" />
-                      </div>
-                    ))}
-                    {!selectedMysteryTradeCard && (
-                      <div className="py-8 text-center text-white/25 text-xs">Select a card below to view traders and sellers.</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="shrink-0 px-5">
-                <div className="h-px bg-white/10" />
-                <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
-                  Row {tradeCardRowIndex + 1} / 10
-                </div>
-              </div>
-
-              <div className="shrink-0 px-5 pb-2">
-                <div
-                  className="flex gap-3 items-end"
-                  onWheel={(e) => {
-                    e.preventDefault();
-                    setTradeCardRowIndex((prev) => {
-                      if (e.deltaY > 0) return Math.min(9, prev + 1);
-                      if (e.deltaY < 0) return Math.max(0, prev - 1);
-                      return prev;
-                    });
-                  }}
-                >
-                  {visibleMysteryTradeCards.map((card) => (
-                    <LiquidGlassCard
-                      key={card.id}
-                      onClick={() => setSelectedMysteryTradeCard(card)}
-                      className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}
-                    >
-                      <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
-                        <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
-                      </div>
-                    </LiquidGlassCard>
-                  ))}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>
