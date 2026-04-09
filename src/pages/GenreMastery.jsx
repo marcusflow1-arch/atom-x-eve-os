@@ -14,6 +14,8 @@ import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
 import AchievementsContent from '@/components/genremastery/AchievementsContent';
 import GenreBottomNav from '@/components/genremastery/GenreBottomNav';
+import BlackMarketContent from '@/components/dashboard/BlackMarketContent';
+import TradingPostOverlayContent from '@/components/dashboard/TradingPostOverlayContent';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', short: 'MMO', icon: Globe, color: 'from-purple-500 to-indigo-600', accent: 'text-purple-400', xpType: 'Social XP', level: 42, maxLevel: 50, rank: 'Warlord', xp: 92, skillPoints: 5, paths: ['Synergy', 'Raid', 'Trade'], matchGenres: ['mmo', 'mmorpg'] },
@@ -88,6 +90,7 @@ export default function GenreMastery({ onClose }) {
   const [selectedGenre, setSelectedGenre] = useState(GENRES[0]);
   const [selectedGame, setSelectedGame] = useState(null);
   const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
+  const [marketView, setMarketView] = useState('cards'); // 'cards' | 'blackmarket' | 'tradingpost'
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const dropdownRef = useRef(null);
@@ -155,6 +158,12 @@ export default function GenreMastery({ onClose }) {
     setSelectedGame(null);
   }, [selectedGenre]);
 
+  useEffect(() => {
+    if (marketView !== 'cards') {
+      setSelectedGame(null);
+    }
+  }, [marketView]);
+
   return (
     <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} />}>
       <div className="flex w-full h-full">
@@ -217,16 +226,24 @@ export default function GenreMastery({ onClose }) {
 
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
-                onClick={() => navigate(createPageUrl('Blacksmith'))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
+                onClick={() => setMarketView(marketView === 'blackmarket' ? 'cards' : 'blackmarket')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                  marketView === 'blackmarket'
+                    ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
                 style={{ backdropFilter: 'blur(12px)' }}
               >
                 <DollarSign className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Black Market</span>
               </button>
               <button
-                onClick={() => navigate(createPageUrl('TradingPost'))}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15"
+                onClick={() => setMarketView(marketView === 'tradingpost' ? 'cards' : 'tradingpost')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                  marketView === 'tradingpost'
+                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
                 style={{ backdropFilter: 'blur(12px)' }}
               >
                 <Layers className="w-3.5 h-3.5" />
@@ -324,7 +341,29 @@ export default function GenreMastery({ onClose }) {
             }}
           >
             <AnimatePresence mode="wait">
-              {rightPanel === 'achievements' ? (
+              {marketView === 'blackmarket' ? (
+                <motion.div
+                  key="blackmarket"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <BlackMarketContent />
+                </motion.div>
+              ) : marketView === 'tradingpost' ? (
+                <motion.div
+                  key="tradingpost"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <TradingPostOverlayContent />
+                </motion.div>
+              ) : rightPanel === 'achievements' ? (
                 <motion.div
                   key="achievements"
                   initial={{ opacity: 0, x: 20 }}

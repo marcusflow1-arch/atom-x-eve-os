@@ -59,7 +59,6 @@ import AdminUIBuilder from './pages/AdminUIBuilder';
 import Aura from './pages/Aura';
 import AvatarHome from './pages/AvatarHome';
 import AvatarStudio from './pages/AvatarStudio';
-import Blacksmith from './pages/Blacksmith';
 import BlankTransition from './pages/BlankTransition';
 import CardCollection from './pages/CardCollection';
 import Cart from './pages/Cart';
@@ -121,7 +120,6 @@ export const PAGES = {
     "Aura": Aura,
     "AvatarHome": AvatarHome,
     "AvatarStudio": AvatarStudio,
-    "Blacksmith": Blacksmith,
     "BlankTransition": BlankTransition,
     "CardCollection": CardCollection,
     "Cart": Cart,
