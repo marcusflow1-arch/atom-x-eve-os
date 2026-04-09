@@ -442,37 +442,20 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
 
                 <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
                   <div className="flex-1 min-h-0 overflow-hidden px-5 pt-4">
-                    <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
-                      <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
-                      {selectedTradeCardDetails && (
-                        <div className="px-4 pb-2">
-                          <div className="flex items-center justify-between gap-4 text-white/70">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-white truncate">{selectedTradeCardDetails.title}</div>
-                              <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedTradeCardDetails.type} listing</div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <div className="text-cyan-300 text-sm font-bold">${selectedTradeCardDetails.value}</div>
-                              <div className="text-[10px] text-white/35">{selectedTradeCardDetails.traders} traders</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      <div className="mx-4 mb-2 h-px bg-white/10" />
-                      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                    <div className="h-full flex flex-col overflow-hidden">
+                      <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Traders</div>
+                      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                         {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
-                          <button key={row.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-white text-sm font-semibold truncate">{row.name}</div>
-                                <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{row.type}</div>
-                              </div>
-                              <div className="text-cyan-300 text-sm font-bold shrink-0">${row.value}</div>
+                          <div key={row.id}>
+                            <div className="flex items-center justify-between py-2.5">
+                              <span className="text-white text-sm">{row.name}</span>
+                              <span className="text-cyan-300 text-sm font-semibold">${row.value}</span>
                             </div>
-                          </button>
+                            <div className="h-px bg-white/10" />
+                          </div>
                         ))}
                         {!selectedMysteryTradeCard && (
-                          <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view traders and sellers.</div>
+                          <div className="py-8 text-center text-white/25 text-xs">Select a card below to view traders and sellers.</div>
                         )}
                       </div>
                     </div>
