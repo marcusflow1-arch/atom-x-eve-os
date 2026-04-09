@@ -8,8 +8,8 @@ export default function FarmHubFeaturedHero({ games, onSelect }) {
 
   const game = games[active];
 
-  const prev = () => setActive(i => (i - 1 + games.length) % games.length);
-  const next = () => setActive(i => (i + 1) % games.length);
+  const prev = () => setActive((i) => (i - 1 + games.length) % games.length);
+  const next = () => setActive((i) => (i + 1) % games.length);
 
   return (
     <motion.div
@@ -21,9 +21,9 @@ export default function FarmHubFeaturedHero({ games, onSelect }) {
       style={{
         background: 'rgba(100, 120, 140, 0.08)',
         border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
-      }}
-    >
+        boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)'
+      }}>
+      
       <AnimatePresence mode="wait">
         <motion.div
           key={game.id}
@@ -31,8 +31,8 @@ export default function FarmHubFeaturedHero({ games, onSelect }) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="absolute inset-0"
-        >
+          className="absolute inset-0">
+          
           <img src={game.banner || game.image} alt={game.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f1419]/95 via-[#0f1419]/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f1419]/80 to-transparent" />
@@ -57,31 +57,31 @@ export default function FarmHubFeaturedHero({ games, onSelect }) {
           <div className="flex items-center gap-2 text-white/40 text-xs">
             <Mic2 className="w-3 h-3" /> {game.voiceRooms} rooms
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white/80 group-hover:text-cyan-300 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <Play className="w-3 h-3" /> Enter Hub
-          </div>
+          
+
+
+          
         </div>
       </div>
 
-      {games.length > 1 && (
-        <>
-          <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+      {games.length > 1 &&
+      <>
+          <button onClick={(e) => {e.stopPropagation();prev();}} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <ChevronLeft className="w-4 h-4 text-white/70" />
           </button>
-          <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button onClick={(e) => {e.stopPropagation();next();}} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <ChevronRight className="w-4 h-4 text-white/70" />
           </button>
         </>
-      )}
+      }
 
-      {games.length > 1 && (
-        <div className="absolute bottom-4 right-8 flex gap-1.5 z-20">
-          {games.map((_, i) => (
-            <button key={i} onClick={(e) => { e.stopPropagation(); setActive(i); }} className={`rounded-full transition-all duration-300 ${i === active ? 'w-6 h-1.5 bg-cyan-400' : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'}`} />
-          ))}
+      {games.length > 1 &&
+      <div className="absolute bottom-4 right-8 flex gap-1.5 z-20">
+          {games.map((_, i) =>
+        <button key={i} onClick={(e) => {e.stopPropagation();setActive(i);}} className={`rounded-full transition-all duration-300 ${i === active ? 'w-6 h-1.5 bg-cyan-400' : 'w-1.5 h-1.5 bg-white/20 hover:bg-white/40'}`} />
+        )}
         </div>
-      )}
-    </motion.div>
-  );
+      }
+    </motion.div>);
+
 }
