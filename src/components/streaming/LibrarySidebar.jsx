@@ -53,6 +53,30 @@ export default function LibrarySidebar() {
   const [entertainmentFullscreen, setEntertainmentFullscreen] = useState(false);
   const navigate = useNavigate();
 
+  const closeAllSidebarUi = () => {
+    setIsOpen(false);
+    setExpandedPanel(null);
+    setOpenDropdown(null);
+    setOverlayOpen(false);
+    setSelectedItem(null);
+    setIsExpandedLibrary(false);
+    setPreviewGame(null);
+    setIsExpandedInventory(false);
+    setInventoryDetailItem(null);
+    setPendingRewardGame(null);
+    setIsExpandedRewardsInventory(false);
+    setTradingFriend(null);
+    setViewingFriend(null);
+    setMessagingFriend(null);
+    setDetailGame(null);
+    setFullLibraryDetailGame(null);
+    setShowAchievementsUniverse(false);
+    setSelectedEntertainmentApp(null);
+    setShowAddLink(false);
+    setEntertainmentFullscreen(false);
+    setQuickGamesDrawer({ open: false, type: null });
+  };
+
   useEffect(() => {
     const handleToggle = (e) => setIsSidebarCollapsed(e.detail);
     window.addEventListener('sidebarCollapseChange', handleToggle);
@@ -208,6 +232,10 @@ export default function LibrarySidebar() {
     setIsEnvironmentEnabled(enabled);
   }, [currentEnvironmentPageKey]);
 
+  useEffect(() => {
+    closeAllSidebarUi();
+  }, [location.pathname, location.search]);
+
   // Close right-side overlay whenever the left pull-out tab closes
   useEffect(() => {
     if (!isOpen) {
@@ -239,6 +267,17 @@ export default function LibrarySidebar() {
     setIsExpandedInventory(false);
     setInventoryDetailItem(null);
     setPendingRewardGame(null);
+    setOpenDropdown(null);
+    setTradingFriend(null);
+    setViewingFriend(null);
+    setMessagingFriend(null);
+    setDetailGame(null);
+    setFullLibraryDetailGame(null);
+    setShowAchievementsUniverse(false);
+    setIsExpandedRewardsInventory(false);
+    setSelectedEntertainmentApp(null);
+    setShowAddLink(false);
+    setEntertainmentFullscreen(false);
   }, [activeSub]);
 
   useEffect(() => {
