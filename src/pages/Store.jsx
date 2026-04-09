@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -349,308 +349,298 @@ export default function Store() {
     }, []);
 
     const handleStoreTabChange = (tabId) => {
-    setActiveStoreTab(tabId);
-    switch (tabId) {
-      case 'overview':
-        setShowOverview(true);
-        break;
-      case 'marketplace':
-        setStoreMode('marketplace');
-        break;
-      case 'trading':
-        setStoreMode('trading');
-        break;
-      case 'store':
-      default:
-        setShowOverview(false);
-        setStoreMode('store');
-        break;
-    }
-  };
+        setActiveStoreTab(tabId);
+        switch (tabId) {
+            case 'overview':
+                setShowOverview(true);
+                break;
+            case 'marketplace':
+                setStoreMode('marketplace');
+                break;
+            case 'trading':
+                setStoreMode('trading');
+                break;
+            case 'store':
+            default:
+                setShowOverview(false);
+                setStoreMode('store');
+                break;
+        }
+    };
 
-  return (
+    return (
         <PageErrorBoundary pageName="Store">
-        <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
-        <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
+                <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-          {/* 5% Left Sidebar */}
-          <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
-            <div className="flex flex-col items-center w-full px-2 mt-20">
-              <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Risley<br />Play</span>
-              <div className="w-8 h-px bg-white/20 mb-3" />
-              <div className="flex flex-col gap-2 w-full items-center">
-                {[1, 2, 3, 4, 5].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                    <span className="text-white/30 text-lg font-bold">?</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 95% Main Area */}
-          <div className="flex-1 relative h-full overflow-hidden flex flex-col">
-
-            {/* Top Header */}
-            <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
-                <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
-                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
-                <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
-              </div>
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 overflow-hidden">
-
-              {/* Secondary Store Controls Bar */}
-              {storeSubView === 'games' && (
-                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-center px-4 py-2 gap-6" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* CENTER: Sub-category tabs */}
-                  <div className="flex items-center gap-1.5">
-                    {['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'].map((tab, idx) => (
-                      <button key={tab} onClick={() => setActiveSubCategoryIndex(idx)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${activeSubCategoryIndex === idx ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-transparent border-transparent text-white/40 hover:text-white hover:bg-white/5'}`}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Search + Cart */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
-                        <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
-                        <input type="text" placeholder={isRegularVoiceListening ? 'Listening...' : 'Search games...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full" />
-                        {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white"><X className="w-3 h-3" /></button>}
-                        <button onClick={() => setShowVoiceOptions(!showVoiceOptions)} className={`transition-colors ${isRegularVoiceListening ? 'text-purple-400' : 'text-white/30 hover:text-white'}`}><Mic className="w-3 h-3" /></button>
-                      </div>
-                      <AnimatePresence>
-                        {showVoiceOptions && (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
-                            <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Sparkles className="w-4 h-4 text-purple-400" /><span className="text-sm text-white">AI Search</span></button>
-                            <div className="h-px bg-white/10" />
-                            <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Mic className="w-4 h-4 text-blue-400" /><span className="text-sm text-white">Voice Search</span></button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <AnimatePresence>
-                        {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
-                      </AnimatePresence>
-                    </div>
-                    <Link to={createPageUrl('Cart')} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative border border-white/10">
-                      <ShoppingCart className="w-3 h-3 text-white/80" />
-                      {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
-                    </Link>
-                  </div>
-                </div>
-                )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="p-4"><p className="text-white/20 text-xs text-center">2025 ATOM×EVE</p></div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-
-              {/* STORE OVERVIEW OVERLAY */}
-              <AnimatePresence>
-                {showOverview && (
-                  <StoreOverview onClose={() => setShowOverview(false)} />
-                )}
-              </AnimatePresence>
-
-              {/* MAIN CONTENT AREA */}
-              <AnimatePresence mode="wait">
-                {storeMode === 'store' && storeSubView === 'achievements' ? (
-                  <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
-                    <Achievements onExitToLibrary={() => setStoreSubView('library')} />
-                  </motion.div>
-                ) : storeMode === 'store' && storeSubView === 'library' ? (
-                  <motion.div key="embedded-library" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full overflow-hidden">
-                    <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
-                  </motion.div>
-                ) : storeMode === 'store' ? (
-                  viewMode === 'classic' ? (
-                    <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-28 pb-0 bg-transparent">
-                      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                        <AnimatePresence mode="wait">
-                          {hoveredGame && (
-                            <motion.div key={hoveredGame?.id} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
-                              <img src={hoveredGame?.cover_image || hoveredGame?.image} className="w-full h-full object-cover opacity-20 blur-sm" alt="Background" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                      <div className="flex h-full max-w-[1920px] mx-auto">
-                        <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
-                          <div className="flex items-center gap-3 mb-8">
-                            <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20"><Gamepad2 className="w-5 h-5 text-white" /></div>
-                            <h2 className="text-lg font-bold text-white tracking-wide">Catalog</h2>
-                          </div>
-                          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
-                            <button onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>
-                              <span className="text-sm font-medium">All Games</span>
-                            </button>
-                            <div className="py-2"><div className="h-px bg-white/5 w-full my-2" /><p className="px-3 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Categories</p></div>
-                            {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
-                              const Icon = GENRE_ICONS[g] || Gamepad2;
-                              const isSelected = selectedGenres.includes(g);
-                              return (
-                                <button key={g} onClick={() => toggleGenre(g)} className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500' : 'text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent'}`}>
-                                  <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-white/40'}`} />
-                                  <span className="text-sm font-medium">{g}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
-                          <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
-                            <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
-                            <button onClick={() => setViewMode('cross')} className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all text-white/80 hover:text-white hover:scale-110" title="Cross View"><Gamepad2 className="w-6 h-6" /></button>
-                          </div>
-                          <StoreGridSpotlight games={filteredGridGames} onNavigate={handleNavigateToGame} />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    // CROSS INTERFACE VIEW
-                    <motion.div key="cross-interface" className="w-full h-full relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      {loading ? (
-                        <LoadingState fullScreen message="Loading Store..." />
-                      ) : !currentNavGenre ? null : (
-                        <>
-                          {/* Dynamic Background */}
-                          <AnimatePresence mode="wait">
-                            <motion.div key={activeGame?.id || currentNavGenre?.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0 z-0">
-                              <div className="absolute inset-0 bg-transparent" />
-                              {activeGame?.cover_image && (
-                                <>
-                                  <img src={activeGame.cover_image} alt="bg" className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
-                                </>
-                              )}
-                              <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                            </motion.div>
-                          </AnimatePresence>
-
-                          {/* Interface Layer */}
-                          <div className="relative z-10 w-full h-full flex flex-col">
-                            {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                            <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
-                              {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
-                              <div className="flex-shrink-0" style={{ width: '256px' }} />
-
-                              {/* Achievements — from game grid left edge to divider */}
-                              <div className="flex-1 min-w-0 overflow-hidden">
-                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
-                              </div>
-
-                              {/* Vertical divider — center portion only, thicker */}
-                              <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
-                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
-                              </div>
-
-                              {/* Slideshow — right 50% */}
-                              <div className="w-1/2 flex-shrink-0 overflow-hidden">
-                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
-                              </div>
-                            </div>
-
-                            {/* Below showcase: genre list + game grid */}
-                            <div className="flex flex-1 overflow-hidden px-6 gap-8">
-                              {/* LEFT: Genre list */}
-                              <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                <motion.div
-                                  ref={genreListRef}
-                                  className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
-                                  onWheel={handleGenreWheel}
-                                  onMouseEnter={() => setIsGenreHovering(true)}
-                                  onMouseLeave={() => setIsGenreHovering(false)}
-                                  onFocus={() => setGenrePanelFocused(true)}
-                                  onBlur={() => setGenrePanelFocused(false)}
-                                  tabIndex={0}
-                                  initial={false}
-                                  animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
-                                  transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                                  className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
-                                >
-                                  {genreData.map((genre, idx) => {
-                                    const Icon = genre.icon;
-                                    const isActive = idx === activeGenreIndex;
-                                    return (
-                                      <motion.button data-genre-item key={genre.id} onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} className="group flex items-center gap-2 text-left py-2 pl-0 pr-2" animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }} whileHover={{ x: 8 }}>
-                                        <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
-                                        <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
-                                      </motion.button>
-                                    );
-                                  })}
-                                </motion.div>
-                              </div>
-
-                              {/* RIGHT: Game Grid */}
-                              <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
-                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-                                  {displayedGames.map((game, idx) => (
-                                    <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
-                                      <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                      <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
-                                        <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                      </div>
-                                      <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                        <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                        <div className="flex items-center justify-between text-xs text-white/60">
-                                          <span>{game.genre}</span>
-                                          <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                  {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
-                                    <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
-                                      <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                    {/* 5% Left Sidebar */}
+                    <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
+                        <div className="flex flex-col items-center w-full px-2 mt-20">
+                            <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Risley<br />Play</span>
+                            <div className="w-8 h-px bg-white/20 mb-3" />
+                            <div className="flex flex-col gap-2 w-full items-center">
+                                {[1, 2, 3, 4, 5].map(i => (
+                                    <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+                                        <span className="text-white/30 text-lg font-bold">?</span>
                                     </div>
-                                  ))}
-                                </motion.div>
-                              </div>
+                                ))}
                             </div>
-                          </div>
-                        </>
-                      )}
-                    </motion.div>
-                  )
-                ) : storeMode === 'marketplace' ? (
-                  <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
-                  </motion.div>
-                ) : (
-                  <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <TradingPostContent />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        </div>
+                    </div>
 
-              {showScrollTransition && (
-                <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
-                  const url = pendingNavigateUrl;
-                  setShowScrollTransition(false);
-                  setPendingNavigateUrl(null);
-                  if (url) navigate(url);
-                }} />
-              )}
-            </div>
-          </div>
-        </div>
-        </GlassPageFrame>
+                    {/* 95% Main Area */}
+                    <div className="flex-1 relative h-full overflow-hidden flex flex-col">
+
+                        {/* Top Header */}
+                        <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
+                            <div className="flex items-center gap-2">
+                                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
+                                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
+                                <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
+                                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
+                                <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
+                            </div>
+                        </div>
+
+                        {/* Main Content */}
+                        <div className="flex-1 overflow-hidden">
+
+                            {/* Secondary Store Controls Bar */}
+                            {storeSubView === 'games' && (
+                                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-center px-4 py-2 gap-6" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    {/* CENTER: Sub-category tabs */}
+                                    <div className="flex items-center gap-1.5">
+                                        {['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'].map((tab, idx) => (
+                                            <button key={tab} onClick={() => setActiveSubCategoryIndex(idx)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${activeSubCategoryIndex === idx ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-transparent border-transparent text-white/40 hover:text-white hover:bg-white/5'}`}>
+                                                {tab}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Search + Cart */}
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative">
+                                            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
+                                                <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
+                                                <input type="text" placeholder={isRegularVoiceListening ? 'Listening...' : 'Search games...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full" />
+                                                {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white"><X className="w-3 h-3" /></button>}
+                                                <button onClick={() => setShowVoiceOptions(!showVoiceOptions)} className={`transition-colors ${isRegularVoiceListening ? 'text-purple-400' : 'text-white/30 hover:text-white'}`}><Mic className="w-3 h-3" /></button>
+                                            </div>
+                                            <AnimatePresence>
+                                                {showVoiceOptions && (
+                                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                                                        <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Sparkles className="w-4 h-4 text-purple-400" /><span className="text-sm text-white">AI Search</span></button>
+                                                        <div className="h-px bg-white/10" />
+                                                        <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Mic className="w-4 h-4 text-blue-400" /><span className="text-sm text-white">Voice Search</span></button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                            <AnimatePresence>
+                                                {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
+                                            </AnimatePresence>
+                                        </div>
+                                        <Link to={createPageUrl('Cart')} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative border border-white/10">
+                                            <ShoppingCart className="w-3 h-3 text-white/80" />
+                                            {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STORE OVERVIEW OVERLAY */}
+                            <AnimatePresence>
+                                {showOverview && (
+                                    <StoreOverview onClose={() => setShowOverview(false)} />
+                                )}
+                            </AnimatePresence>
+
+                            {/* MAIN CONTENT AREA */}
+                            <AnimatePresence mode="wait">
+                                {storeMode === 'store' && storeSubView === 'achievements' ? (
+                                    <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
+                                        <Achievements onExitToLibrary={() => setStoreSubView('library')} />
+                                    </motion.div>
+                                ) : storeMode === 'store' && storeSubView === 'library' ? (
+                                    <motion.div key="embedded-library" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full overflow-hidden">
+                                        <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
+                                    </motion.div>
+                                ) : storeMode === 'store' ? (
+                                    viewMode === 'classic' ? (
+                                        <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-28 pb-0 bg-transparent">
+                                            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+                                                <AnimatePresence mode="wait">
+                                                    {hoveredGame && (
+                                                        <motion.div key={hoveredGame?.id} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
+                                                            <img src={hoveredGame?.cover_image || hoveredGame?.image} className="w-full h-full object-cover opacity-20 blur-sm" alt="Background" />
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                            <div className="flex h-full max-w-[1920px] mx-auto">
+                                                <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
+                                                    <div className="flex items-center gap-3 mb-8">
+                                                        <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20"><Gamepad2 className="w-5 h-5 text-white" /></div>
+                                                        <h2 className="text-lg font-bold text-white tracking-wide">Catalog</h2>
+                                                    </div>
+                                                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
+                                                        <button onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>
+                                                            <span className="text-sm font-medium">All Games</span>
+                                                        </button>
+                                                        <div className="py-2"><div className="h-px bg-white/5 w-full my-2" /><p className="px-3 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Categories</p></div>
+                                                        {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
+                                                            const Icon = GENRE_ICONS[g] || Gamepad2;
+                                                            const isSelected = selectedGenres.includes(g);
+                                                            return (
+                                                                <button key={g} onClick={() => toggleGenre(g)} className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500' : 'text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent'}`}>
+                                                                    <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-white/40'}`} />
+                                                                    <span className="text-sm font-medium">{g}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
+                                                    <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
+                                                        <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
+                                                        <button onClick={() => setViewMode('cross')} className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all text-white/80 hover:text-white hover:scale-110" title="Cross View"><Gamepad2 className="w-6 h-6" /></button>
+                                                    </div>
+                                                    <StoreGridSpotlight games={filteredGridGames} onNavigate={handleNavigateToGame} />
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    ) : (
+                                        // CROSS INTERFACE VIEW
+                                        <motion.div key="cross-interface" className="w-full h-full relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                            {loading ? (
+                                                <LoadingState fullScreen message="Loading Store..." />
+                                            ) : !currentNavGenre ? null : (
+                                                <>
+                                                    {/* Dynamic Background */}
+                                                    <AnimatePresence mode="wait">
+                                                        <motion.div key={activeGame?.id || currentNavGenre?.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0 z-0">
+                                                            <div className="absolute inset-0 bg-transparent" />
+                                                            {activeGame?.cover_image && (
+                                                                <>
+                                                                    <img src={activeGame.cover_image} alt="bg" className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
+                                                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                                                                    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                                                                </>
+                                                            )}
+                                                            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                                                            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                                                        </motion.div>
+                                                    </AnimatePresence>
+
+                                                    {/* Interface Layer */}
+                                                    <div className="relative z-10 w-full h-full flex flex-col">
+                                                        {/* HERO SHOWCASE + ACHIEVEMENTS */}
+                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
+
+                                                            {/* Achievements — from game grid left edge to divider */}
+                                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
+                                                            </div>
+
+                                                            {/* Vertical divider — center portion only, thicker */}
+                                                            <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
+                                                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
+                                                            </div>
+
+                                                            {/* Slideshow — right 50% */}
+                                                            <div className="w-1/2 flex-shrink-0 overflow-hidden">
+                                                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Below showcase: genre list + game grid */}
+                                                        <div className="flex flex-1 overflow-hidden px-6 gap-8">
+                                                            {/* LEFT: Genre list */}
+                                                            <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                                                <motion.div
+                                                                    ref={genreListRef}
+                                                                    className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                                                                    onWheel={handleGenreWheel}
+                                                                    onMouseEnter={() => setIsGenreHovering(true)}
+                                                                    onMouseLeave={() => setIsGenreHovering(false)}
+                                                                    onFocus={() => setGenrePanelFocused(true)}
+                                                                    onBlur={() => setGenrePanelFocused(false)}
+                                                                    tabIndex={0}
+                                                                    initial={false}
+                                                                    animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
+                                                                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                                                                >
+                                                                    {genreData.map((genre, idx) => {
+                                                                        const Icon = genre.icon;
+                                                                        const isActive = idx === activeGenreIndex;
+                                                                        return (
+                                                                            <motion.button data-genre-item key={genre.id} onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} className="group flex items-center gap-2 text-left py-2 pl-0 pr-2" animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }} whileHover={{ x: 8 }}>
+                                                                                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
+                                                                                <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
+                                                                            </motion.button>
+                                                                        );
+                                                                    })}
+                                                                </motion.div>
+                                                            </div>
+
+                                                            {/* RIGHT: Game Grid */}
+                                                            <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
+                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                                                                    {displayedGames.map((game, idx) => (
+                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                                                            <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
+                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                                            </div>
+                                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                                                                <div className="flex items-center justify-between text-xs text-white/60">
+                                                                                    <span>{game.genre}</span>
+                                                                                    <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    ))}
+                                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </motion.div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </motion.div>
+                                    )
+                                ) : storeMode === 'marketplace' ? (
+                                    <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
+                                        <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
+                                    </motion.div>
+                                ) : (
+                                    <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
+                                        <TradingPostContent />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {showScrollTransition && (
+                                <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
+                                    const url = pendingNavigateUrl;
+                                    setShowScrollTransition(false);
+                                    setPendingNavigateUrl(null);
+                                    if (url) navigate(url);
+                                }} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </GlassPageFrame>
         </PageErrorBoundary>
     );
 }
