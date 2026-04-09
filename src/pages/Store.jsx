@@ -385,58 +385,6 @@ export default function Store() {
             {/* Main Content */}
             <div className="flex-1 overflow-hidden">
 
-              {/* Secondary Store Controls Bar */}
-              {storeSubView === 'games' && (
-                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-between px-4 py-2" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* LEFT: Mode Tabs */}
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setShowOverview(v => !v)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${showOverview ? 'bg-purple-500/20 border-purple-400/50 text-purple-300' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Overview</button>
-                    <div className="w-px h-4 bg-white/10" />
-                    <button onClick={() => setStoreMode('store')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Store</button>
-                    <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Marketplace</button>
-                    <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Trading Post</button>
-                  </div>
-
-                  {/* CENTER: Sub-category tabs */}
-                  <div className="flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
-                    {['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'].map((tab, idx) => (
-                      <button key={tab} onClick={() => setActiveSubCategoryIndex(idx)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${activeSubCategoryIndex === idx ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-transparent border-transparent text-white/40 hover:text-white hover:bg-white/5'}`}>
-                        {tab}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* RIGHT: Search + Cart */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-px h-4 bg-white/15" />
-                    <div className="relative">
-                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
-                        <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
-                        <input type="text" placeholder={isRegularVoiceListening ? 'Listening...' : 'Search games...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full" />
-                        {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white"><X className="w-3 h-3" /></button>}
-                        <button onClick={() => setShowVoiceOptions(!showVoiceOptions)} className={`transition-colors ${isRegularVoiceListening ? 'text-purple-400' : 'text-white/30 hover:text-white'}`}><Mic className="w-3 h-3" /></button>
-                      </div>
-                      <AnimatePresence>
-                        {showVoiceOptions && (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
-                            <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Sparkles className="w-4 h-4 text-purple-400" /><span className="text-sm text-white">AI Search</span></button>
-                            <div className="h-px bg-white/10" />
-                            <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Mic className="w-4 h-4 text-blue-400" /><span className="text-sm text-white">Voice Search</span></button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <AnimatePresence>
-                        {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
-                      </AnimatePresence>
-                    </div>
-                    <Link to={createPageUrl('Cart')} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative border border-white/10">
-                      <ShoppingCart className="w-3 h-3 text-white/80" />
-                      {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
-                    </Link>
-                  </div>
-                </div>
-              )}
-
               {/* App Drawer Overlay */}
               <AnimatePresence>
                 {drawerOpen && (
