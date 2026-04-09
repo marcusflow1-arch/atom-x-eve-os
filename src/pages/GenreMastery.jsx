@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Crosshair, Globe, Rocket, Crown, Swords, Map, Ghost, Monitor,
-  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft, DollarSign, Search, Mic
+  ChevronDown, Gamepad2, X, Layers, Trophy, Scroll, Library, Users, ChevronLeft, DollarSign, Search, Mic, ArrowLeftRight
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -237,6 +237,18 @@ export default function GenreMastery({ onClose }) {
               >
                 <DollarSign className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Black Market</span>
+              </button>
+              <button
+                onClick={() => setMarketView(marketView === 'tradingpost' ? 'cards' : 'tradingpost')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                  marketView === 'tradingpost'
+                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                }`}
+                style={{ backdropFilter: 'blur(12px)' }}
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Trading Post</span>
               </button>
             </div>
 
