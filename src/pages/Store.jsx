@@ -19,8 +19,6 @@ import { base44 } from '@/api/base44Client';
 import { useMotionValue, useSpring, useTransform } from 'framer-motion';
 import StoreGridSpotlight from '../components/store/StoreGridSpotlight';
 import StoreHeroShowcase from '../components/store/StoreHeroShowcase';
-import Library from './Library';
-import Achievements from './Achievements';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
@@ -29,7 +27,6 @@ import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
-import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -351,7 +348,7 @@ export default function Store() {
 
     return (
         <PageErrorBoundary pageName="Store">
-        <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={true} libraryLabel="Recently Played" />}>
+        <GlassPageFrame>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
           {/* 5% Left Sidebar */}
@@ -489,264 +486,256 @@ export default function Store() {
 
               {/* MAIN CONTENT AREA */}
               <AnimatePresence mode="wait">
-                {storeMode === 'store' && storeSubView === 'achievements' ? (
-                  <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
-                    <Achievements onExitToLibrary={() => setStoreSubView('library')} />
-                  </motion.div>
-                ) : storeMode === 'store' && storeSubView === 'library' ? (
-                  <motion.div key="embedded-library" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full overflow-hidden">
-                    <Library onSwitchToStore={() => setStoreSubView('games')} onSwitchToAchievements={() => setStoreSubView('achievements')} />
-                  </motion.div>
-                ) : storeMode === 'store' ? (
-                  viewMode === 'classic' ? (
-                    <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-28 pb-0 bg-transparent">
-                      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                        <AnimatePresence mode="wait">
-                          {hoveredGame && (
-                            <motion.div key={hoveredGame?.id} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
-                              <img src={hoveredGame?.cover_image || hoveredGame?.image} className="w-full h-full object-cover opacity-20 blur-sm" alt="Background" />
-                              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                      <div className="flex h-full max-w-[1920px] mx-auto">
-                        <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
-                          <div className="flex items-center gap-3 mb-8">
-                            <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20"><Gamepad2 className="w-5 h-5 text-white" /></div>
-                            <h2 className="text-lg font-bold text-white tracking-wide">Catalog</h2>
-                          </div>
-                          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
-                            <button onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>
-                              <span className="text-sm font-medium">All Games</span>
-                            </button>
-                            <div className="py-2"><div className="h-px bg-white/5 w-full my-2" /><p className="px-3 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Categories</p></div>
-                            {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
-                              const Icon = GENRE_ICONS[g] || Gamepad2;
-                              const isSelected = selectedGenres.includes(g);
-                              return (
-                                <button key={g} onClick={() => toggleGenre(g)} className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500' : 'text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent'}`}>
-                                  <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-white/40'}`} />
-                                  <span className="text-sm font-medium">{g}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
-                          <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
-                            <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
-                            <button onClick={() => setViewMode('cross')} className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all text-white/80 hover:text-white hover:scale-110" title="Cross View"><Gamepad2 className="w-6 h-6" /></button>
-                          </div>
-                          <StoreGridSpotlight games={filteredGridGames} onNavigate={handleNavigateToGame} />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    // CROSS INTERFACE VIEW
-                    <motion.div key="cross-interface" className="w-full h-full relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      {loading ? (
-                        <LoadingState fullScreen message="Loading Store..." />
-                      ) : !currentNavGenre ? null : (
-                        <>
-                          {/* Dynamic Background */}
-                          <AnimatePresence mode="wait">
-                            <motion.div key={activeGame?.id || currentNavGenre?.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0 z-0">
-                              <div className="absolute inset-0 bg-transparent" />
-                              {activeGame?.cover_image && (
-                                <>
-                                  <img src={activeGame.cover_image} alt="bg" className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
-                                </>
-                              )}
-                              <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
-                            </motion.div>
-                          </AnimatePresence>
+                {storeMode === 'store' ? (
+                   viewMode === 'classic' ? (
+                     <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-28 pb-0 bg-transparent">
+                       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+                         <AnimatePresence mode="wait">
+                           {hoveredGame && (
+                             <motion.div key={hoveredGame?.id} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
+                               <img src={hoveredGame?.cover_image || hoveredGame?.image} className="w-full h-full object-cover opacity-20 blur-sm" alt="Background" />
+                               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
+                             </motion.div>
+                           )}
+                         </AnimatePresence>
+                       </div>
+                       <div className="flex h-full max-w-[1920px] mx-auto">
+                         <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
+                           <div className="flex items-center gap-3 mb-8">
+                             <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20"><Gamepad2 className="w-5 h-5 text-white" /></div>
+                             <h2 className="text-lg font-bold text-white tracking-wide">Catalog</h2>
+                           </div>
+                           <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1">
+                             <button onClick={() => { setActiveCategory('All Games'); toggleGenre(null); }} className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${activeCategory === 'All Games' && selectedGenres.length === 0 ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/5 hover:text-white'}`}>
+                               <span className="text-sm font-medium">All Games</span>
+                             </button>
+                             <div className="py-2"><div className="h-px bg-white/5 w-full my-2" /><p className="px-3 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Categories</p></div>
+                             {['Action', 'RPG', 'Shooter', 'Strategy', 'Adventure', 'Sports', 'Racing', 'Simulation', 'Horror', 'Puzzle'].map((g) => {
+                               const Icon = GENRE_ICONS[g] || Gamepad2;
+                               const isSelected = selectedGenres.includes(g);
+                               return (
+                                 <button key={g} onClick={() => toggleGenre(g)} className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-gradient-to-r from-blue-600/20 to-transparent text-white border-l-2 border-blue-500' : 'text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent'}`}>
+                                   <Icon className={`w-4 h-4 ${isSelected ? 'text-blue-400' : 'text-white/40'}`} />
+                                   <span className="text-sm font-medium">{g}</span>
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         </div>
+                         <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
+                           <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
+                             <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
+                             <button onClick={() => setViewMode('cross')} className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/20 border border-white/10 flex items-center justify-center transition-all text-white/80 hover:text-white hover:scale-110" title="Cross View"><Gamepad2 className="w-6 h-6" /></button>
+                           </div>
+                           <StoreGridSpotlight games={filteredGridGames} onNavigate={handleNavigateToGame} />
+                         </div>
+                       </div>
+                     </motion.div>
+                   ) : (
+                     // CROSS INTERFACE VIEW
+                     <motion.div key="cross-interface" className="w-full h-full relative" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                       {loading ? (
+                         <LoadingState fullScreen message="Loading Store..." />
+                       ) : !currentNavGenre ? null : (
+                         <>
+                           {/* Dynamic Background */}
+                           <AnimatePresence mode="wait">
+                             <motion.div key={activeGame?.id || currentNavGenre?.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6 }} className="absolute inset-0 z-0">
+                               <div className="absolute inset-0 bg-transparent" />
+                               {activeGame?.cover_image && (
+                                 <>
+                                   <img src={activeGame.cover_image} alt="bg" className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
+                                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                                   <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                                 </>
+                               )}
+                               <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                               <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[150px] mix-blend-screen" />
+                             </motion.div>
+                           </AnimatePresence>
 
-                          {/* Interface Layer */}
-                          <div className="relative z-10 w-full h-full flex flex-col">
-                            {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                            <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
-                              {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
-                              <div className="flex-shrink-0" style={{ width: '256px' }} />
+                           {/* Interface Layer */}
+                           <div className="relative z-10 w-full h-full flex flex-col">
+                             {/* HERO SHOWCASE */}
+                             <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                               {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                               <div className="flex-shrink-0" style={{ width: '256px' }} />
 
-                              {/* Achievements — from game grid left edge to divider */}
-                              <div className="flex-1 min-w-0 overflow-hidden">
-                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
-                              </div>
+                               {/* Achievements — from game grid left edge to divider */}
+                               <div className="flex-1 min-w-0 overflow-hidden">
+                                 <StoreAchievementsStrip currentGame={currentShowcaseGame} />
+                               </div>
 
-                              {/* Vertical divider — center portion only, thicker */}
-                              <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
-                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
-                              </div>
+                               {/* Vertical divider — center portion only, thicker */}
+                               <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
+                                 <div className="w-[3px] h-full bg-white/25 rounded-full" />
+                               </div>
 
-                              {/* Slideshow / utility card — right 50% */}
-                              <div className="w-1/2 flex-shrink-0 overflow-hidden relative">
-                                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-                                  <button
-                                    onClick={() => setTopRightCardMode('blacksmith')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                                      topRightCardMode === 'blacksmith'
-                                        ? 'bg-orange-500/20 border-orange-400/50 text-orange-200'
-                                        : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                  >
-                                    <Hammer className="w-3 h-3" />
-                                    Blacksmith
-                                  </button>
-                                  <button
-                                    onClick={() => setTopRightCardMode('tradingpost')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                                      topRightCardMode === 'tradingpost'
-                                        ? 'bg-blue-500/20 border-blue-400/50 text-blue-200'
-                                        : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                  >
-                                    <ArrowLeftRight className="w-3 h-3" />
-                                    Trading Post
-                                  </button>
-                                </div>
+                               {/* Slideshow / utility card — right 50% */}
+                               <div className="w-1/2 flex-shrink-0 overflow-hidden relative">
+                                 <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                                   <button
+                                     onClick={() => setTopRightCardMode('blacksmith')}
+                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                                       topRightCardMode === 'blacksmith'
+                                         ? 'bg-orange-500/20 border-orange-400/50 text-orange-200'
+                                         : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                     }`}
+                                   >
+                                     <Hammer className="w-3 h-3" />
+                                     Blacksmith
+                                   </button>
+                                   <button
+                                     onClick={() => setTopRightCardMode('tradingpost')}
+                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                                       topRightCardMode === 'tradingpost'
+                                         ? 'bg-blue-500/20 border-blue-400/50 text-blue-200'
+                                         : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                     }`}
+                                   >
+                                     <ArrowLeftRight className="w-3 h-3" />
+                                     Trading Post
+                                   </button>
+                                 </div>
 
-                                {topRightCardMode === 'store' ? (
-                                  <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
-                                ) : topRightCardMode === 'blacksmith' ? (
-                                  <div className="w-full h-full relative overflow-hidden">
-                                    <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Blacksmith" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-                                    <div className="absolute inset-0 bg-gradient-to-l from-orange-950/70 to-transparent" />
-                                    <div className="absolute top-5 left-6 flex items-center gap-2">
-                                      <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/40 rounded-full px-3 py-1">
-                                        <Hammer className="w-3.5 h-3.5 text-orange-300" />
-                                        <span className="text-orange-200 text-xs font-bold uppercase tracking-wider">Blacksmith</span>
-                                      </div>
-                                    </div>
-                                    <div className="absolute bottom-8 left-6 right-6">
-                                      <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Forge Your Cards</h2>
-                                      <div className="flex items-center gap-4 mb-3 text-sm">
-                                        <span className="text-white/60">Level Up</span>
-                                        <span className="text-white/30">•</span>
-                                        <span className="text-white/60">Enchant</span>
-                                        <span className="text-white/30">•</span>
-                                        <span className="text-white/60">Combine</span>
-                                      </div>
-                                      <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Use the same showcase card area to highlight blacksmith actions for your collection instead of sending users to a different screen.</p>
-                                      <div className="flex flex-wrap gap-2 mt-4">
-                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Training</span>
-                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Enchanting</span>
-                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Ascension</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="w-full h-full relative overflow-hidden">
-                                    <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Trading Post" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-                                    <div className="absolute inset-0 bg-gradient-to-l from-blue-950/70 to-transparent" />
-                                    <div className="absolute top-5 left-6 flex items-center gap-2">
-                                      <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/40 rounded-full px-3 py-1">
-                                        <Layers className="w-3.5 h-3.5 text-blue-300" />
-                                        <span className="text-blue-200 text-xs font-bold uppercase tracking-wider">Trading Post</span>
-                                      </div>
-                                    </div>
-                                    <div className="absolute bottom-8 left-6 right-6">
-                                      <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Trade, Bid, or Sell</h2>
-                                      <div className="flex items-center gap-4 mb-3 text-sm">
-                                        <span className="text-white/60">Fixed Price</span>
-                                        <span className="text-white/30">•</span>
-                                        <span className="text-white/60">Auction</span>
-                                        <span className="text-white/30">•</span>
-                                        <span className="text-white/60">Trade Offers</span>
-                                      </div>
-                                      <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Reuse this same top-right card to preview marketplace actions and item listings without replacing the layout.</p>
-                                      <div className="flex flex-wrap gap-2 mt-4">
-                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Buy Now</span>
-                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Current Bids</span>
-                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Item Exchange</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                                 {topRightCardMode === 'store' ? (
+                                   <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
+                                 ) : topRightCardMode === 'blacksmith' ? (
+                                   <div className="w-full h-full relative overflow-hidden">
+                                     <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Blacksmith" className="w-full h-full object-cover" />
+                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                                     <div className="absolute inset-0 bg-gradient-to-l from-orange-950/70 to-transparent" />
+                                     <div className="absolute top-5 left-6 flex items-center gap-2">
+                                       <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/40 rounded-full px-3 py-1">
+                                         <Hammer className="w-3.5 h-3.5 text-orange-300" />
+                                         <span className="text-orange-200 text-xs font-bold uppercase tracking-wider">Blacksmith</span>
+                                       </div>
+                                     </div>
+                                     <div className="absolute bottom-8 left-6 right-6">
+                                       <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Forge Your Cards</h2>
+                                       <div className="flex items-center gap-4 mb-3 text-sm">
+                                         <span className="text-white/60">Level Up</span>
+                                         <span className="text-white/30">•</span>
+                                         <span className="text-white/60">Enchant</span>
+                                         <span className="text-white/30">•</span>
+                                         <span className="text-white/60">Combine</span>
+                                       </div>
+                                       <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Use the same showcase card area to highlight blacksmith actions for your collection instead of sending users to a different screen.</p>
+                                       <div className="flex flex-wrap gap-2 mt-4">
+                                         <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Training</span>
+                                         <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Enchanting</span>
+                                         <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Ascension</span>
+                                       </div>
+                                     </div>
+                                   </div>
+                                 ) : (
+                                   <div className="w-full h-full relative overflow-hidden">
+                                     <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Trading Post" className="w-full h-full object-cover" />
+                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                                     <div className="absolute inset-0 bg-gradient-to-l from-blue-950/70 to-transparent" />
+                                     <div className="absolute top-5 left-6 flex items-center gap-2">
+                                       <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/40 rounded-full px-3 py-1">
+                                         <Layers className="w-3.5 h-3.5 text-blue-300" />
+                                         <span className="text-blue-200 text-xs font-bold uppercase tracking-wider">Trading Post</span>
+                                       </div>
+                                     </div>
+                                     <div className="absolute bottom-8 left-6 right-6">
+                                       <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Trade, Bid, or Sell</h2>
+                                       <div className="flex items-center gap-4 mb-3 text-sm">
+                                         <span className="text-white/60">Fixed Price</span>
+                                         <span className="text-white/30">•</span>
+                                         <span className="text-white/60">Auction</span>
+                                         <span className="text-white/30">•</span>
+                                         <span className="text-white/60">Trade Offers</span>
+                                       </div>
+                                       <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Reuse this same top-right card to preview marketplace actions and item listings without replacing the layout.</p>
+                                       <div className="flex flex-wrap gap-2 mt-4">
+                                         <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Buy Now</span>
+                                         <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Current Bids</span>
+                                         <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Item Exchange</span>
+                                       </div>
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
+                             </div>
 
-                            {/* Below showcase: genre list + game grid */}
-                            <div className="flex flex-1 overflow-hidden px-6 gap-8">
-                              {/* LEFT: Genre list */}
-                              <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                {/* Android + Grid icons above genre list */}
-                                <div className="flex items-center gap-2 pl-6 py-3">
-                                  <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games"><Smartphone className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View"><LayoutGrid className="w-3.5 h-3.5" /></button>
-                                </div>
-                                <motion.div
-                                  ref={genreListRef}
-                                  onWheel={handleGenreWheel}
-                                  onMouseEnter={() => setIsGenreHovering(true)}
-                                  onMouseLeave={() => setIsGenreHovering(false)}
-                                  onFocus={() => setGenrePanelFocused(true)}
-                                  onBlur={() => setGenrePanelFocused(false)}
-                                  tabIndex={0}
-                                  initial={false}
-                                  animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
-                                  transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                                  className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
-                                >
-                                  {genreData.map((genre, idx) => {
-                                    const Icon = genre.icon;
-                                    const isActive = idx === activeGenreIndex;
-                                    return (
-                                      <motion.button data-genre-item key={genre.id} onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} className="group flex items-center gap-2 text-left py-2 pl-0 pr-2" animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }} whileHover={{ x: 8 }}>
-                                        <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
-                                        <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
-                                      </motion.button>
-                                    );
-                                  })}
-                                </motion.div>
-                              </div>
+                             {/* Below showcase: genre list + game grid */}
+                             <div className="flex flex-1 overflow-hidden px-6 gap-8">
+                               {/* LEFT: Genre list */}
+                               <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                 {/* Android + Grid icons above genre list */}
+                                 <div className="flex items-center gap-2 pl-6 py-3">
+                                   <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games"><Smartphone className="w-3.5 h-3.5" /></button>
+                                   <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View"><LayoutGrid className="w-3.5 h-3.5" /></button>
+                                 </div>
+                                 <motion.div
+                                   ref={genreListRef}
+                                   onWheel={handleGenreWheel}
+                                   onMouseEnter={() => setIsGenreHovering(true)}
+                                   onMouseLeave={() => setIsGenreHovering(false)}
+                                   onFocus={() => setGenrePanelFocused(true)}
+                                   onBlur={() => setGenrePanelFocused(false)}
+                                   tabIndex={0}
+                                   initial={false}
+                                   animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
+                                   transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                                   className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                                 >
+                                   {genreData.map((genre, idx) => {
+                                     const Icon = genre.icon;
+                                     const isActive = idx === activeGenreIndex;
+                                     return (
+                                       <motion.button data-genre-item key={genre.id} onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} className="group flex items-center gap-2 text-left py-2 pl-0 pr-2" animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }} whileHover={{ x: 8 }}>
+                                           <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
+                                           <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
+                                         </motion.button>
+                                     );
+                                   })}
+                                 </motion.div>
+                               </div>
 
-                              {/* RIGHT: Game Grid */}
-                              <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
-                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-                                  {displayedGames.map((game, idx) => (
-                                    <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
-                                      <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                      <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
-                                        <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                      </div>
-                                      <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                        <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                        <div className="flex items-center justify-between text-xs text-white/60">
-                                          <span>{game.genre}</span>
-                                          <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
-                                        </div>
-                                      </div>
-                                    </motion.div>
-                                  ))}
-                                  {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
-                                    <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
-                                      <span className="text-white/10 text-sm font-medium">Coming Soon</span>
-                                    </div>
-                                  ))}
-                                </motion.div>
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </motion.div>
-                  )
-                ) : storeMode === 'marketplace' ? (
-                  <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
-                  </motion.div>
-                ) : (
-                  <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
-                    <TradingPostContent />
-                  </motion.div>
-                )}
+                               {/* RIGHT: Game Grid */}
+                               <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
+                                 <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                                   {displayedGames.map((game, idx) => (
+                                     <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                       <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                       <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
+                                         <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                       </div>
+                                       <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                         <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                         <div className="flex items-center justify-between text-xs text-white/60">
+                                           <span>{game.genre}</span>
+                                           <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
+                                         </div>
+                                       </div>
+                                     </motion.div>
+                                   ))}
+                                   {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                     <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                       <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                                     </div>
+                                   ))}
+                                 </motion.div>
+                               </div>
+                             </div>
+                           </div>
+                         </>
+                       )}
+                     </motion.div>
+                   )
+                 ) : storeMode === 'marketplace' ? (
+                   <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
+                     <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
+                   </motion.div>
+                 ) : (
+                   <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
+                     <TradingPostContent />
+                   </motion.div>
+                 )}
               </AnimatePresence>
 
               {showScrollTransition && (
