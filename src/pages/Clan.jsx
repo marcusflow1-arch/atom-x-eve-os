@@ -46,7 +46,6 @@ export default function ClanPage() {
     const [entryState, setEntryState] = useState('pending'); // 'pending' | 'intro' | 'clan'
     const [preselectedClanId, setPreselectedClanId] = useState(null);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
-    const [isLaunched, setIsLaunched] = useState(false);
 
     useEffect(() => {
         const handler = (e) => setIsSidebarCollapsed(e.detail);
@@ -421,47 +420,24 @@ export default function ClanPage() {
 
                 {bottomTab === 'home' && (
                     <>
-                        {/* Launch Button - Top Right */}
-                        <motion.button
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            onClick={() => setIsLaunched(!isLaunched)}
-                            className={`fixed top-8 right-8 z-30 px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all ${
-                              isLaunched
-                                ? 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30'
-                                : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30'
-                            } border backdrop-blur-md shadow-lg`}
-                        >
-                            {isLaunched ? 'Close' : 'Launch'}
-                        </motion.button>
-
-                        {/* Clan Info & Stats - Top Left under header - Shows when launched */}
-                        {isLaunched && (
-                            <div className="absolute top-20 left-8 z-30 pointer-events-auto">
-                                <div className="flex items-center gap-4 mb-3">
-                                    <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-3 pr-6 shadow-lg">
-                                        <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
-                                            {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-7 h-7 text-white/50" />}
-                                        </div>
-                                        <div className="flex flex-col justify-center">
-                                            <h2 className="text-lg font-black text-white tracking-wider uppercase leading-tight mb-1">{clanForRender?.name || 'Entering Division'}</h2>
-                                            <div className="flex items-center gap-3 text-xs font-medium text-white/60">
-                                                <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
-                                                <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
-                                                <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
-                                            </div>
+                        {/* Clan Info & Stats - Top Left under header */}
+                        <div className="absolute top-20 left-8 z-30 pointer-events-auto">
+                            <div className="flex items-center gap-4 mb-3">
+                                <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl p-3 pr-6 shadow-lg">
+                                    <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
+                                        {clanForRender?.icon ? <img src={clanForRender.icon} className="w-full h-full object-cover" /> : <Shield className="w-7 h-7 text-white/50" />}
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <h2 className="text-lg font-black text-white tracking-wider uppercase leading-tight mb-1">{clanForRender?.name || 'Entering Division'}</h2>
+                                        <div className="flex items-center gap-3 text-xs font-medium text-white/60">
+                                            <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
+                                            <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
+                                            <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
-
-                        {/* Clean Slate - Clan Name Only (when not launched) */}
-                        {!isLaunched && (
-                            <div className="absolute top-8 left-8 z-30 pointer-events-auto">
-                                <h1 className="text-3xl font-black text-white tracking-wider uppercase">{clanForRender?.name || 'Division'}</h1>
-                            </div>
-                        )}
+                        </div>
 
                         {/* Central Stats - Top Middle */}
                         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-auto hidden lg:flex flex-col items-center gap-3">
@@ -484,9 +460,9 @@ export default function ClanPage() {
                                 </div>
                             </div>
 
-                            {/* Stronghold Toggle Box */}
-                            <button
-                                onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
+                        {/* Stronghold Toggle Box */}
+                        <button
+                            onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
                                 className={`px-6 py-2 rounded-xl border backdrop-blur-md shadow-lg transition-all flex items-center justify-center gap-2 w-[180px] ${
                                     isStrongholdEnabled 
                                         ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
@@ -496,11 +472,11 @@ export default function ClanPage() {
                                 <span className="text-xs font-bold uppercase tracking-widest">Stronghold</span>
                             </button>
                         </div>
-                        </>
+                    </>
                 )}
 
                 <AnimatePresence mode="wait">
-                    {bottomTab === 'home' && isLaunched && (
+                    {bottomTab === 'home' && (
                         <motion.div
                             key="home"
                             initial={{ opacity: 0 }}
