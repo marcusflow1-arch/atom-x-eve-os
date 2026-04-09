@@ -196,7 +196,7 @@ export default function BlackMarketContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex-1 overflow-y-auto px-5 pt-5 pb-0">
                 {gameCards.length > 0 ? (
                   <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                     {gameCards.map((card, i) => {
