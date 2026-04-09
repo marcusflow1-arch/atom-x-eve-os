@@ -358,7 +358,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <BlackMarketContent cardSearchQuery={cardSearchQuery} selectedGame={selectedGame} />
+                  <BlackMarketContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : marketView === 'tradingpost' ? (
                 <motion.div

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Gamepad2, DollarSign, ChevronLeft, Star } from 'lucide-react';
+import { Gamepad2, DollarSign, ChevronLeft, Star, Search, Mic } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
-export default function BlackMarketContent({ cardSearchQuery = '', selectedGame }) {
+export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch = () => {}, selectedGame }) {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMysteryCard, setSelectedMysteryCard] = useState(null);
@@ -76,18 +76,35 @@ export default function BlackMarketContent({ cardSearchQuery = '', selectedGame 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-        <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-          {selectedGame.cover_image ? (
-            <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-black/30 flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-white/10" /></div>
-          )}
+      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4 justify-between">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+            {selectedGame.cover_image ? (
+              <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-black/30 flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-white/10" /></div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
+            <div className="flex items-center gap-2 mt-0.5">
+              <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
+            </div>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
-          <div className="flex items-center gap-2 mt-0.5">
-            <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs text-white/50 whitespace-nowrap">Search Cart</span>
+          <button className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
+            <Mic className="w-3.5 h-3.5" />
+          </button>
+          <div className="relative flex items-center">
+            <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
+            <input
+              value={cardSearchQuery}
+              onChange={(e) => onCardSearch(e.target.value)}
+              placeholder=""
+              className="bg-white/5 border border-white/10 rounded-md pl-7 pr-3 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-24"
+            />
           </div>
         </div>
       </div>
