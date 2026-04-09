@@ -484,9 +484,9 @@ export default function ClanPage() {
                                 </div>
                             </div>
 
-                        {/* Stronghold Toggle Box */}
-                        <button
-                            onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
+                            {/* Stronghold Toggle Box */}
+                            <button
+                                onClick={() => setIsStrongholdEnabled(!isStrongholdEnabled)}
                                 className={`px-6 py-2 rounded-xl border backdrop-blur-md shadow-lg transition-all flex items-center justify-center gap-2 w-[180px] ${
                                     isStrongholdEnabled 
                                         ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' 
@@ -496,7 +496,7 @@ export default function ClanPage() {
                                 <span className="text-xs font-bold uppercase tracking-widest">Stronghold</span>
                             </button>
                         </div>
-                    </>
+                        </>
                 )}
 
                 <AnimatePresence mode="wait">
