@@ -237,32 +237,6 @@ export default function GenreMastery({ onClose }) {
               >
                 <DollarSign className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Black Market</span>
-                {marketView === 'blackmarket' && (
-                  <>
-                    <div className="w-px h-3 bg-red-300/30 mx-0.5" />
-                    <Search className="w-3 h-3 opacity-70" />
-                    <Mic className="w-3 h-3 opacity-70" />
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setMarketView(marketView === 'tradingpost' ? 'cards' : 'tradingpost')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                  marketView === 'tradingpost'
-                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                }`}
-                style={{ backdropFilter: 'blur(12px)' }}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Trading Post</span>
-                {marketView === 'tradingpost' && (
-                  <>
-                    <div className="w-px h-3 bg-blue-300/30 mx-0.5" />
-                    <Search className="w-3 h-3 opacity-70" />
-                    <Mic className="w-3 h-3 opacity-70" />
-                  </>
-                )}
               </button>
             </div>
 
@@ -284,7 +258,7 @@ export default function GenreMastery({ onClose }) {
             }}
           >
             {/* List Header */}
-            <div className="p-4 border-b border-white/6 flex items-center justify-between">
+            <div className="p-4 border-b border-white/6 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${selectedGenre.color} flex items-center justify-center`}>
                   <Gamepad2 className="w-3.5 h-3.5 text-white" />
@@ -294,14 +268,15 @@ export default function GenreMastery({ onClose }) {
                   <p className="text-white/35 text-[10px]">{gameData.length} game{gameData.length !== 1 ? 's' : ''}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5">
+                <Search className="w-3.5 h-3.5 text-white/40" />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  className="bg-transparent text-white text-xs placeholder-white/30 outline-none w-32"
+                />
+              </div>
             </div>
-
-            {/* Games */}
-            <div className="flex-1 overflow-y-auto p-2.5 space-y-1">
-              {gamesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-white/20 border-t-cyan-400 rounded-full animate-spin" />
-                </div>
               ) : gameData.length === 0 ? (
                 <div className="text-center py-12 text-white/25">
                   <Gamepad2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
