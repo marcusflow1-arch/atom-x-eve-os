@@ -46,6 +46,7 @@ import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalend
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
+import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
 import Leaderboard from './Leaderboard';
@@ -173,7 +174,6 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
-  const [isLaunched, setIsLaunched] = useState(false);
   const [slot1Content, setSlot1Content] = useState('questBook');
   const [slot2Content, setSlot2Content] = useState('cardCollection');
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
@@ -611,7 +611,7 @@ export default function LunaTemplate() {
 
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
-      {!showConsoleMode && !showAchievements && isLaunched &&
+      {!showConsoleMode && !showAchievements &&
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
                 left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
@@ -654,25 +654,9 @@ export default function LunaTemplate() {
         </div>
               }
 
-      {/* Launch Button - Top Right */}
-      {!showConsoleMode && !showAchievements && !uiVisible && !avatarFocusMode &&
-        <motion.button
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={() => setIsLaunched(!isLaunched)}
-          className={`fixed top-8 right-8 z-30 px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all ${
-            isLaunched
-              ? 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30'
-              : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30'
-          } border backdrop-blur-md shadow-lg`}
-        >
-          {isLaunched ? 'Close' : 'Launch'}
-        </motion.button>
-      }
-
       {/* Avatar Focus Content Panel (Appears to the right) */}
       <AnimatePresence>
-        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && isLaunched &&
+        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements &&
                 <motion.div
                   initial={{ opacity: 0, x: 20, scale: 0.95 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -815,7 +799,7 @@ export default function LunaTemplate() {
 
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !avatarFocusMode && isLaunched &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode &&
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1968,11 +1952,22 @@ export default function LunaTemplate() {
                     background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
                   }}>
 
+             {/* Close Blacksmith -> Console */}
+             {activeSubTab === 'blacksmith' &&
+                  <button
+                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
+                    className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
+                    
+                 <X className="w-5 h-5" />
+               </button>
+                  }
+
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
+              {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
-             </div>
+            </div>
           </motion.div>
                 }
       </AnimatePresence>
