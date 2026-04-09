@@ -43,7 +43,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         }}
       >
         {bottomContent && (
-          <div className="h-full flex items-center px-6 py-2">
+          <div className="h-full w-full flex items-center justify-center px-6 py-2">
             {bottomContent}
           </div>
         )}
