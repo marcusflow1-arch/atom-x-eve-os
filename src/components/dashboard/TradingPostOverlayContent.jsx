@@ -293,20 +293,24 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
           </motion.div>
 
         ) : (
-          <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex gap-4 overflow-hidden">
-            {/* LEFT: Traders List (70%) */}
-            <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
-              <div className="pb-3 border-b border-white/6 flex items-center gap-3 mb-3 flex-shrink-0">
-                <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10">
-                  {selectedGame.cover_image ? (
-                    <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-                  ) : <div className="w-full h-full bg-black/30" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-white font-bold text-sm truncate">{selectedGame.title}</h2>
-                  <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px] mt-1">{selectedGame.genre}</Badge>
-                </div>
+          <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col overflow-hidden">
+            {/* Header spanning both sections */}
+            <div className="pb-3 border-b border-white/6 flex items-center gap-3 flex-shrink-0">
+              <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10">
+                {selectedGame.cover_image ? (
+                  <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
+                ) : <div className="w-full h-full bg-black/30" />}
               </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-white font-bold text-sm truncate">{selectedGame.title}</h2>
+                <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px] mt-1">{selectedGame.genre}</Badge>
+              </div>
+            </div>
+
+            {/* Content area with 70/30 split */}
+            <div className="flex-1 flex gap-4 overflow-hidden">
+              {/* LEFT: Traders List (70%) */}
+              <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
 
               <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                 <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Traders</div>
@@ -331,33 +335,24 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
               </div>
             </div>
 
-            {/* RIGHT: Cards Grid (30%) */}
-            <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
-              <div className="pb-3 border-b border-white/6 flex items-center gap-3 mb-3 flex-shrink-0 justify-between">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <div className="w-8 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                    {selectedGame.cover_image ? (
-                      <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-                    ) : <div className="w-full h-full bg-black/30" />}
-                  </div>
-                  <h2 className="text-white font-bold text-xs truncate">{selectedGame.title}</h2>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs text-white/50 whitespace-nowrap">Search Cart</span>
-                  <button className="w-5 h-5 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
-                    <Mic className="w-3.5 h-3.5" />
-                  </button>
-                  <div className="relative flex items-center">
+              {/* RIGHT: Cards Grid (30%) */}
+              <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
+                {/* Search Bar */}
+                <div className="pb-3 mb-3 border-b border-white/6 flex items-center">
+                  <div className="relative flex items-center flex-1">
                     <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
                     <input
                       value={cardSearchQuery}
                       onChange={(e) => onCardSearch(e.target.value)}
-                      placeholder=""
-                      className="bg-white/5 border border-white/10 rounded-md pl-7 pr-3 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-24"
+                      placeholder="search cards"
+                      className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-full"
                     />
+                    <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
+                      <Mic className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-              </div>
+                <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Cards</div>
 
               <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                 <div className="space-y-2">
@@ -386,6 +381,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                   )}
                 </div>
               </div>
+            </div>
             </div>
           </motion.div>
         )}
