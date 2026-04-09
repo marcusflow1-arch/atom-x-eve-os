@@ -174,6 +174,7 @@ export default function LunaTemplate() {
   const [showConsoleMode, setShowConsoleMode] = useState(false);
   const [showFriendsHub, setShowFriendsHub] = useState(false);
   const [avatarFocusMode, setAvatarFocusMode] = useState(false);
+  const [isLaunched, setIsLaunched] = useState(false);
   const [slot1Content, setSlot1Content] = useState('questBook');
   const [slot2Content, setSlot2Content] = useState('cardCollection');
   const [activeAvatarFocusView, setActiveAvatarFocusView] = useState(null);
@@ -506,35 +507,16 @@ export default function LunaTemplate() {
   const stageContainerRef = useRef(null);
 
   useEffect(() => {
-    const onKey = (e) => {
-      const key = (e.key || '').toLowerCase();
-      if (key === 'i') {
-        if (clickedSlot) {
-          setClickedSlot(null);
-        } else {
-          setUiVisible((v) => !v);
-        }
-      }
-      if (key === 'p') {
-        setShowDevSpotlight((v) => !v);
-      }
-      if (key === '0') {
-        setHideUI((v) => !v);
-      }
-      if (key === 'escape') {
-        if (showDevSpotlight) {setShowDevSpotlight(false);return;}
-        if (hideUI) setHideUI(false);
-        if (showAvatarProgression) setShowAvatarProgression(false);
-        if (showForumOverlay) setShowForumOverlay(false);
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('panel')) {
-          navigate(createPageUrl('LunaTemplate'));
-        }
+    const handleLaunchEnvironment = (e) => {
+      const { pageKey } = e.detail || {};
+      if (!pageKey || pageKey === currentEnvId.replace('joined_', '')) {
+        setIsLaunched(prev => !prev);
+        setIsEnvironmentActive(prev => !prev);
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [showForumOverlay, showAvatarProgression, navigate]);
+    window.addEventListener('launchEnvironment', handleLaunchEnvironment);
+    return () => window.removeEventListener('launchEnvironment', handleLaunchEnvironment);
+  }, [currentEnvId]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -1964,7 +1946,6 @@ export default function LunaTemplate() {
 
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
-              {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
             </div>
