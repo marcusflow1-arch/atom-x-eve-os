@@ -521,15 +521,9 @@ export default function LibrarySidebar() {
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('launchEnvironment', {
-                    detail: { pageKey: currentEnvironmentPageKey }
-                  }));
-                  // Disable UI for both Luna dashboard and Clan
-                  window.dispatchEvent(new CustomEvent('toggleUiVisibility', {
-                    detail: { hide: true }
-                  }));
-                }}
+                onClick={() => window.dispatchEvent(new CustomEvent('launchEnvironment', {
+                  detail: { pageKey: currentEnvironmentPageKey }
+                }))}
                 className="w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/15 backdrop-blur-lg shadow-lg hover:scale-105 transition-all duration-300 -ml-1"
                 title="Launch environment"
               >

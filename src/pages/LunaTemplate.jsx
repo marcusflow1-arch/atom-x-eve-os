@@ -506,16 +506,35 @@ export default function LunaTemplate() {
   const stageContainerRef = useRef(null);
 
   useEffect(() => {
-    const handleLaunchEnvironment = (e) => {
-      const { pageKey } = e.detail || {};
-      if (!pageKey || pageKey === currentEnvId.replace('joined_', '')) {
-        setIsLaunched(prev => !prev);
-        setIsEnvironmentActive(prev => !prev);
+    const onKey = (e) => {
+      const key = (e.key || '').toLowerCase();
+      if (key === 'i') {
+        if (clickedSlot) {
+          setClickedSlot(null);
+        } else {
+          setUiVisible((v) => !v);
+        }
+      }
+      if (key === 'p') {
+        setShowDevSpotlight((v) => !v);
+      }
+      if (key === '0') {
+        setHideUI((v) => !v);
+      }
+      if (key === 'escape') {
+        if (showDevSpotlight) {setShowDevSpotlight(false);return;}
+        if (hideUI) setHideUI(false);
+        if (showAvatarProgression) setShowAvatarProgression(false);
+        if (showForumOverlay) setShowForumOverlay(false);
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('panel')) {
+          navigate(createPageUrl('LunaTemplate'));
+        }
       }
     };
-    window.addEventListener('launchEnvironment', handleLaunchEnvironment);
-    return () => window.removeEventListener('launchEnvironment', handleLaunchEnvironment);
-  }, [currentEnvId]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showForumOverlay, showAvatarProgression, navigate]);
 
   const itemCount = ORBITAL_ITEMS.length;
   const angleStep = 360 / itemCount;
@@ -592,7 +611,7 @@ export default function LunaTemplate() {
 
 
       {/* Mini 3D Viewer Box + Quest Log Book + Card Collection - positioned below the dashboard title, left column */}
-      {!showConsoleMode && !showAchievements &&
+      {!showConsoleMode && !showAchievements && isLaunched &&
               <div className="absolute z-20 pointer-events-auto flex flex-col transition-all duration-700 ease-in-out"
               style={uiVisible ? {
                 left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
@@ -635,9 +654,25 @@ export default function LunaTemplate() {
         </div>
               }
 
+      {/* Launch Button - Top Right */}
+      {!showConsoleMode && !showAchievements && !uiVisible && !avatarFocusMode &&
+        <motion.button
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={() => setIsLaunched(!isLaunched)}
+          className={`fixed top-8 right-8 z-30 px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all ${
+            isLaunched
+              ? 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30'
+              : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30'
+          } border backdrop-blur-md shadow-lg`}
+        >
+          {isLaunched ? 'Close' : 'Launch'}
+        </motion.button>
+      }
+
       {/* Avatar Focus Content Panel (Appears to the right) */}
       <AnimatePresence>
-        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements &&
+        {avatarFocusMode && activeAvatarFocusView && !uiVisible && !showConsoleMode && !showAchievements && isLaunched &&
                 <motion.div
                   initial={{ opacity: 0, x: 20, scale: 0.95 }}
                   animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -780,7 +815,7 @@ export default function LunaTemplate() {
 
       {/* Focus Mode Panel - Shows when UI is hidden (I key) */}
       <AnimatePresence>
-        {!uiVisible && !showConsoleMode && !avatarFocusMode &&
+        {!uiVisible && !showConsoleMode && !avatarFocusMode && isLaunched &&
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1933,21 +1968,11 @@ export default function LunaTemplate() {
                     background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
                   }}>
 
-             {/* Close Blacksmith -> Console */}
-             {activeSubTab === 'blacksmith' &&
-                  <button
-                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
-                    className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-                    
-                 <X className="w-5 h-5" />
-               </button>
-                  }
-
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
-            </div>
+             </div>
           </motion.div>
                 }
       </AnimatePresence>
