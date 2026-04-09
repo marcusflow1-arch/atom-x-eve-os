@@ -350,7 +350,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <BlackMarketContent selectedGenre={selectedGenre} />
+                  <BlackMarketContent />
                 </motion.div>
               ) : marketView === 'tradingpost' ? (
                 <motion.div
@@ -361,7 +361,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <TradingPostOverlayContent selectedGenre={selectedGenre} />
+                  <TradingPostOverlayContent />
                 </motion.div>
               ) : rightPanel === 'achievements' ? (
                 <motion.div

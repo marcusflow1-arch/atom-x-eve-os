@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -9,8 +9,55 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useCart } from '@/components/CartContext';
 
-export default function BlackMarketContent({ selectedGenre }) {
+const GENRE_TABS = [
+  { id: 'all', name: 'All', icon: LayoutGrid },
+  { id: 'action', name: 'Action', icon: Crosshair },
+  { id: 'rpg', name: 'RPG', icon: Globe },
+  { id: 'sci-fi', name: 'Sci-Fi', icon: Rocket },
+  { id: 'fantasy', name: 'Fantasy', icon: Sparkles },
+  { id: 'horror', name: 'Horror', icon: Ghost },
+  { id: 'racing', name: 'Racing', icon: Car },
+  { id: 'strategy', name: 'Strategy', icon: Map },
+  { id: 'simulation', name: 'Simulation', icon: Monitor },
+];
+
+function GenreScrollTabs({ tabs, selectedTab, onSelect }) {
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleWheel = (e) => { e.preventDefault(); el.scrollLeft += e.deltaY > 0 ? 80 : -80; };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  return (
+    <div className="relative flex-1 min-w-0">
+      <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
+      <div ref={scrollRef} className="flex items-center gap-1.5 overflow-x-auto px-2" style={{ scrollBehavior: 'smooth', scrollbarWidth: 'none' }}>
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => onSelect(t)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
+              selectedTab?.id === t.id
+                ? 'bg-white/12 border-white/20 text-white'
+                : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
+            }`}
+          >
+            {React.createElement(t.icon, { className: 'w-3.5 h-3.5' })}
+            <span>{t.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function BlackMarketContent() {
   const { addToCart } = useCart();
+  const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [games, setGames] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -38,9 +85,8 @@ export default function BlackMarketContent({ selectedGenre }) {
 
   const filteredGames = useMemo(() => {
     let g = [...games];
-    const genreId = selectedGenre?.id || 'all';
-    if (genreId !== 'all') {
-      g = g.filter(game => (game.genre || '').toLowerCase().includes(genreId));
+    if (selectedGenre.id !== 'all') {
+      g = g.filter(game => (game.genre || '').toLowerCase().includes(selectedGenre.id));
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -80,7 +126,8 @@ export default function BlackMarketContent({ selectedGenre }) {
         style={{ width: '225px', minWidth: '225px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
         <div className="p-4 border-b border-white/6">
-          <div className="relative">
+          <GenreScrollTabs tabs={GENRE_TABS} selectedTab={selectedGenre} onSelect={(t) => { setSelectedGenre(t); setSelectedGame(null); }} />
+          <div className="relative mt-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
             <input
               value={searchQuery}
