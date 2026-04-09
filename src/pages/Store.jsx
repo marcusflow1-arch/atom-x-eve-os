@@ -369,17 +369,7 @@ export default function Store() {
           {/* 95% Main Area */}
           <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
-            {/* Top Header */}
-            <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
-              <div className="flex items-center gap-2">
-                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
-                <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
-                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
-                <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
-              </div>
-            </div>
+
 
             {/* Main Content */}
             <div className="flex-1 overflow-hidden">
@@ -727,12 +717,17 @@ export default function Store() {
 
               {/* BOTTOM STORE CONTROLS BAR */}
               {storeSubView === 'games' && (
-                <div className="fixed bottom-0 left-[5%] right-0 z-40 flex items-center justify-center gap-4 px-6 py-4" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="fixed bottom-0 left-[5%] right-0 z-40 flex items-center justify-center gap-3 px-6 py-4" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   <button onClick={() => setShowOverview(v => !v)} className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${showOverview ? 'bg-purple-500/20 border-purple-400/50 text-purple-300' : 'bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}>Overview</button>
                   <div className="w-px h-6 bg-white/10" />
                   <button onClick={() => setStoreMode('store')} className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}>Store</button>
                   <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}>Marketplace</button>
                   <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white'}`}>Trading Post</button>
+                  <div className="w-px h-6 bg-white/10" />
+                  <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Clan</button>
+                  <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Farm</button>
+                  <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Aura</button>
+                  <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Cards</button>
                 </div>
               )}
             </div>
