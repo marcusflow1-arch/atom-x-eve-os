@@ -91,6 +91,7 @@ export default function GenreMastery({ onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [rightPanel, setRightPanel] = useState('games'); // 'games', 'skilltree', or 'achievements'
   const [marketView, setMarketView] = useState('cards'); // 'cards' | 'blackmarket' | 'tradingpost'
+  const [cardSearchQuery, setCardSearchQuery] = useState('');
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const dropdownRef = useRef(null);
@@ -165,7 +166,7 @@ export default function GenreMastery({ onClose }) {
   }, [marketView]);
 
   return (
-    <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} />}>
+    <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}>
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
         <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/10'} flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm`}>
@@ -350,7 +351,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <BlackMarketContent />
+                  <BlackMarketContent cardSearchQuery={cardSearchQuery} />
                 </motion.div>
               ) : marketView === 'tradingpost' ? (
                 <motion.div
@@ -361,7 +362,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <TradingPostOverlayContent />
+                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} />
                 </motion.div>
               ) : rightPanel === 'achievements' ? (
                 <motion.div

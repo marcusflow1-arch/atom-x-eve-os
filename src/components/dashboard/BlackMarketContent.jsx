@@ -56,7 +56,7 @@ function GenreScrollTabs({ tabs, selectedTab, onSelect }) {
   );
 }
 
-export default function BlackMarketContent() {
+export default function BlackMarketContent({ cardSearchQuery = '' }) {
   const { addToCart } = useCart();
   const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [games, setGames] = useState([]);
@@ -114,10 +114,15 @@ export default function BlackMarketContent() {
     });
   };
 
-  const mysteryCards = useMemo(() => Array.from({ length: 70 }, (_, i) => ({
-    id: `mystery-${i + 1}`,
-    label: `Card ${i + 1}`,
-  })), []);
+  const mysteryCards = useMemo(() => {
+    const all = Array.from({ length: 70 }, (_, i) => ({
+      id: `mystery-${i + 1}`,
+      label: `Card ${i + 1}`,
+    }));
+    if (!cardSearchQuery.trim()) return all;
+    const q = cardSearchQuery.toLowerCase();
+    return all.filter(c => c.label.toLowerCase().includes(q));
+  }, [cardSearchQuery]);
 
   const visibleMysteryCards = useMemo(() => {
     const start = cardRowIndex * 7;
@@ -276,13 +281,8 @@ export default function BlackMarketContent() {
 
                   <div className="shrink-0 px-5">
                     <div className="h-px bg-white/10" />
-                    <div className="flex items-center justify-between gap-4 px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                    <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
                       <div>Row {cardRowIndex + 1} / 10</div>
-                      <div className="flex items-center gap-2 text-white/40 normal-case tracking-normal text-xs w-[30%] min-w-[140px] justify-end">
-                        <span>Search bar</span>
-                        <Search className="w-3.5 h-3.5" />
-                        <Mic className="w-3.5 h-3.5" />
-                      </div>
                     </div>
                   </div>
 
