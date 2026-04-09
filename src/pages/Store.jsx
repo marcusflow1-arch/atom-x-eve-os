@@ -397,8 +397,24 @@ export default function Store() {
                   </div>
 
                   {/* RIGHT: Search + Cart */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-px h-4 bg-white/10" />
+                    <div className="relative">
+                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
+                        <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
+                        <input type="text" placeholder="Search games..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full" />
+                        {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white"><X className="w-3 h-3" /></button>}
+                      </div>
+                    </div>
+                    <Link to={createPageUrl('Cart')} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative border border-white/10">
+                      <ShoppingCart className="w-3 h-3 text-white/80" />
+                      {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
+                    </Link>
+                  </div>
+                  </div>
+                  )}
 
-              {/* App Drawer Overlay */}
+                  {/* App Drawer Overlay */}
               <AnimatePresence>
                 {drawerOpen && (
                   <>
