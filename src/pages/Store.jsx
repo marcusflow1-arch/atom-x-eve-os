@@ -28,7 +28,7 @@ import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
-import StoreBottomNav from '@/components/store/StoreBottomNav';
+import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -172,7 +172,6 @@ export default function Store() {
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
-    const [activeStoreTab, setActiveStoreTab] = useState('store');
 
     useEffect(() => {
         const subview = searchParams.get('subview');
@@ -348,29 +347,9 @@ export default function Store() {
         fetchGames();
     }, []);
 
-    const handleStoreTabChange = (tabId) => {
-    setActiveStoreTab(tabId);
-    switch (tabId) {
-      case 'overview':
-        setShowOverview(true);
-        break;
-      case 'marketplace':
-        setStoreMode('marketplace');
-        break;
-      case 'trading':
-        setStoreMode('trading');
-        break;
-      case 'store':
-      default:
-        setShowOverview(false);
-        setStoreMode('store');
-        break;
-    }
-  };
-
-  return (
+    return (
         <PageErrorBoundary pageName="Store">
-        <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
+        <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={true} libraryLabel="Recently Played" />}>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
           {/* 5% Left Sidebar */}
@@ -611,9 +590,13 @@ export default function Store() {
                             <div className="flex flex-1 overflow-hidden px-6 gap-8">
                               {/* LEFT: Genre list */}
                               <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
+                                {/* Android + Grid icons above genre list */}
+                                <div className="flex items-center gap-2 pl-6 py-3">
+                                  <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games"><Smartphone className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View"><LayoutGrid className="w-3.5 h-3.5" /></button>
+                                </div>
                                 <motion.div
                                   ref={genreListRef}
-                                  className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
                                   onWheel={handleGenreWheel}
                                   onMouseEnter={() => setIsGenreHovering(true)}
                                   onMouseLeave={() => setIsGenreHovering(false)}
