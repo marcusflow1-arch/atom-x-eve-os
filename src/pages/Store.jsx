@@ -408,18 +408,9 @@ export default function Store() {
 
               {/* Secondary Store Controls Bar */}
               {storeSubView === 'games' && (
-                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-between px-4 py-2" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* LEFT: Mode Tabs */}
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setShowOverview(v => !v)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${showOverview ? 'bg-purple-500/20 border-purple-400/50 text-purple-300' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Overview</button>
-                    <div className="w-px h-4 bg-white/10" />
-                    <button onClick={() => setStoreMode('store')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'store' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Store</button>
-                    <button onClick={() => setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'marketplace' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Marketplace</button>
-                    <button onClick={() => setStoreMode(storeMode === 'trading' ? 'store' : 'trading')} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'trading' ? 'bg-white/15 border-white/25 text-white' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Trading Post</button>
-                  </div>
-
+                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-center px-4 py-2 gap-6" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* CENTER: Sub-category tabs */}
-                  <div className="flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2">
+                  <div className="flex items-center gap-1.5">
                     {['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'].map((tab, idx) => (
                       <button key={tab} onClick={() => setActiveSubCategoryIndex(idx)} className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${activeSubCategoryIndex === idx ? 'bg-cyan-500/20 border-cyan-400/50 text-cyan-200' : 'bg-transparent border-transparent text-white/40 hover:text-white hover:bg-white/5'}`}>
                         {tab}
@@ -427,9 +418,8 @@ export default function Store() {
                     ))}
                   </div>
 
-                  {/* RIGHT: Search + Cart */}
+                  {/* Search + Cart */}
                   <div className="flex items-center gap-2">
-                    <div className="w-px h-4 bg-white/15" />
                     <div className="relative">
                       <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
                         <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
@@ -456,39 +446,7 @@ export default function Store() {
                     </Link>
                   </div>
                 </div>
-              )}
-
-              {/* App Drawer Overlay */}
-              <AnimatePresence>
-                {drawerOpen && (
-                  <>
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]" onClick={() => setDrawerOpen(false)} />
-                    <motion.div initial={{ x: -320, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -320, opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 left-0 bottom-0 w-80 z-[9999] flex flex-col rounded-r-3xl" style={{ background: 'rgba(100, 120, 140, 0.12)', backdropFilter: 'blur(30px) saturate(150%)', WebkitBackdropFilter: 'blur(30px) saturate(150%)', borderRight: '1px solid rgba(255, 255, 255, 0.10)', boxShadow: '0 4px 30px rgba(0, 0, 0, 0.3)' }}>
-                      <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-white font-bold text-xl tracking-wider">ATOM×EVE</span>
-                          <button onClick={() => setDrawerOpen(false)} className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] flex items-center justify-center transition-all"><X className="w-4 h-4 text-white/60" /></button>
-                        </div>
-                      </div>
-                      <div className="flex-1 overflow-y-auto p-4">
-                        <p className="text-white/30 text-xs font-semibold uppercase tracking-wider mb-3 px-2">Navigation</p>
-                        <div className="space-y-1">
-                          {NAV_HIERARCHY.map((mainItem) => (
-                            <div key={mainItem.name}>
-                              <Link to={mainItem.path} onClick={() => setDrawerOpen(false)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left text-white/60 hover:text-white border border-transparent hover:bg-white/[0.05]">
-                                <mainItem.icon className="w-5 h-5" />
-                                <span className="font-medium">{mainItem.name}</span>
-                              </Link>
-                              {mainItem.subPages && mainItem.subPages.length > 0 && (
-                                <div className="ml-4 mt-1 space-y-0.5 border-l border-white/10 pl-3">
-                                  {mainItem.subPages.map((subItem) => (
-                                    <Link key={subItem.name} to={subItem.path} onClick={() => setDrawerOpen(false)} className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all text-left text-white/50 hover:text-white/80 border border-transparent">
-                                      <subItem.icon className="w-4 h-4" />
-                                      <span className="text-sm">{subItem.name}</span>
-                                    </Link>
-                                  ))}
-                                </div>
-                              )}
+                )}
                             </div>
                           ))}
                         </div>
