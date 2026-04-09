@@ -76,7 +76,7 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4 justify-between">
+      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
             {selectedGame.cover_image ? (
@@ -92,23 +92,12 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
             </div>
           </div>
         </div>
-        <div className="relative flex items-center flex-shrink-0">
-          <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
-          <input
-            value={cardSearchQuery}
-            onChange={(e) => onCardSearch(e.target.value)}
-            placeholder="search cars"
-            className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-32"
-          />
-          <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
-            <Mic className="w-3 h-3" />
-          </button>
-        </div>
       </div>
 
-      {/* Sellers list */}
-      <div className="flex-1 min-h-0 overflow-hidden px-5 pt-3">
-        <div className="h-full flex flex-col overflow-hidden">
+      {/* Main content: LEFT (70%) + RIGHT (30%) */}
+      <div className="flex-1 flex gap-4 overflow-hidden px-5 pt-3 pb-3">
+        {/* LEFT: Sellers List (70%) */}
+        <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
           <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Sellers</div>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
             {(selectedMysteryCard ? sellerRows : []).map((seller) => (
@@ -125,42 +114,41 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
             )}
           </div>
         </div>
-      </div>
 
-      {/* Card row indicator */}
-      <div className="shrink-0 px-5">
-        <div className="h-px bg-white/10" />
-        <div className="flex items-center px-1 py-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
-          Row {cardRowIndex + 1} / 10
-        </div>
-      </div>
-
-      {/* Mystery cards strip */}
-      <div className="shrink-0 px-5 pb-2">
-        <div
-          className="flex gap-3 items-end"
-          onWheel={(e) => {
-            e.preventDefault();
-            setCardRowIndex((prev) => {
-              if (e.deltaY > 0) return Math.min(9, prev + 1);
-              if (e.deltaY < 0) return Math.max(0, prev - 1);
-              return prev;
-            });
-          }}
-        >
-          {visibleMysteryCards.map((card) => (
-            <LiquidGlassCard
-              key={card.id}
-              onClick={() => setSelectedMysteryCard(card)}
-              className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}
-            >
-              <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
-                <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
-              </div>
-            </LiquidGlassCard>
-          ))}
+        {/* RIGHT: Mystery Cards Grid (30%) */}
+        <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
+          <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Cards</div>
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="space-y-2">
+              {mysteryCards.length === 0 ? (
+                <div className="text-center text-white/25 text-xs py-8">No cards</div>
+              ) : (
+                Array.from({ length: Math.ceil(mysteryCards.length / 5) }, (_, rowIdx) => {
+                  const rowStart = rowIdx * 5;
+                  const rowCards = mysteryCards.slice(rowStart, rowStart + 5);
+                  return (
+                    <div key={`row-${rowIdx}`} className="flex gap-1.5">
+                      {rowCards.map((card) => (
+                        <LiquidGlassCard
+                          key={card.id}
+                          onClick={() => setSelectedMysteryCard(card)}
+                          className={`flex-1 aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
+                        >
+                          <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <span className="text-white/40 text-lg font-black">?</span>
+                          </div>
+                        </LiquidGlassCard>
+                      ))}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+{/* OLD CODE REMOVED */}
