@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import {
-  Gamepad2, Sparkles, DollarSign, ChevronLeft, ShoppingCart, Search,
+  Gamepad2, Sparkles, DollarSign, ChevronLeft, ShoppingCart, Search, Mic,
   LayoutGrid, Globe, Rocket, Crosshair, Map, Ghost, Monitor, Car, Layers,
   Star, Crown, ArrowRight
 } from 'lucide-react';
@@ -151,8 +151,11 @@ export default function BlackMarketContent() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search games..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
+              className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-10 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
             />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center">
+              <Mic className="w-3.5 h-3.5 text-white/45" />
+            </button>
           </div>
         </div>
 
@@ -216,7 +219,7 @@ export default function BlackMarketContent() {
 
               <div className="flex-1 min-h-0 px-5 pt-5 pb-0 overflow-hidden">
                 <div className="h-full grid grid-cols-[85%_15%] gap-4">
-                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.035)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.18)' }}>
+                  <div className="min-h-0 flex flex-col overflow-hidden rounded-2xl border border-white/8" style={{ background: 'rgba(255,255,255,0.035)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.18)' }}>
                     <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
                     <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
                       {(selectedMysteryCard ? sellerRows : []).map((seller) => (
@@ -237,12 +240,22 @@ export default function BlackMarketContent() {
                         <div className="h-full min-h-[220px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
                       )}
                     </div>
-                  </div>
 
-                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Cards</div>
-                    <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
-                      <div className="grid grid-cols-1 gap-3">
+                    <div className="border-t border-white/8 px-4 py-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                        <input
+                          placeholder="Search cards..."
+                          className="w-full bg-white/5 border border-white/10 rounded-lg pl-9 pr-10 py-2 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20"
+                        />
+                        <button className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center">
+                          <Mic className="w-3.5 h-3.5 text-white/45" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/8 px-4 py-3">
+                      <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
                         {mysteryCards.map((card) => (
                           <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] p-0 ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-300/50' : ''}`}>
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
@@ -253,6 +266,8 @@ export default function BlackMarketContent() {
                       </div>
                     </div>
                   </div>
+
+                  <div className="min-h-0 border-l border-white/8" />
                 </div>
               </div>
             </motion.div>

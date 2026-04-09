@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, ChevronRight, Gamepad2, Search } from 'lucide-react';
+import { Layers, ChevronRight, Gamepad2, Search, Mic } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
@@ -54,8 +54,11 @@ export default function BlacksmithGameSelect({ itemsData, onGameSelect }) {
                         placeholder="Search genres..." 
                         value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-slate-800/50 border-white/10 text-white rounded-xl focus:ring-blue-500/50"
+                        className="pl-9 pr-10 bg-slate-800/50 border-white/10 text-white rounded-xl focus:ring-blue-500/50"
                      />
+                     <button className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center">
+                        <Mic className="w-4 h-4 text-slate-300/70" />
+                     </button>
                 </div>
 
                 <div 
