@@ -1,6 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -10,7 +8,6 @@ export const glassStyle = {
 };
 
 export default function GlassPageFrame({ children, bottomContent, topContent, className = '' }) {
-  const navigate = useNavigate();
   return (
     <div className={`relative w-full h-full min-h-screen ${className}`}>
       {/* Top Glass Bar - always rendered for the visual frame effect */}
@@ -46,13 +43,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         }}
       >
         {bottomContent && (
-          <div className="h-full flex items-center px-6 py-2 gap-3 justify-center flex-wrap">
+          <div className="h-full flex items-center px-6 py-2">
             {bottomContent}
-            <div className="w-px h-6 bg-white/10" />
-            <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Clan</button>
-            <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Farm</button>
-            <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Aura</button>
-            <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-white/10 text-white/60 hover:bg-white/10 hover:text-white">Cards</button>
           </div>
         )}
       </div>
