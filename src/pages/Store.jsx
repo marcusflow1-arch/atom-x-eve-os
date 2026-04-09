@@ -28,7 +28,7 @@ import { useGameFilters } from '../components/store/hooks/useGameFilters';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
-import LunaBottomNav from '@/components/dashboard/LunaBottomNav';
+import StoreBottomNav from '@/components/store/StoreBottomNav';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -172,6 +172,7 @@ export default function Store() {
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
+    const [activeStoreTab, setActiveStoreTab] = useState('store');
 
     useEffect(() => {
         const subview = searchParams.get('subview');
@@ -347,9 +348,29 @@ export default function Store() {
         fetchGames();
     }, []);
 
-    return (
+    const handleStoreTabChange = (tabId) => {
+    setActiveStoreTab(tabId);
+    switch (tabId) {
+      case 'overview':
+        setShowOverview(true);
+        break;
+      case 'marketplace':
+        setStoreMode('marketplace');
+        break;
+      case 'trading':
+        setStoreMode('trading');
+        break;
+      case 'store':
+      default:
+        setShowOverview(false);
+        setStoreMode('store');
+        break;
+    }
+  };
+
+  return (
         <PageErrorBoundary pageName="Store">
-        <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={true} libraryLabel="Recently Played" />}>
+        <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
           {/* 5% Left Sidebar */}
