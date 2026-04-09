@@ -295,7 +295,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
         ) : (
           <motion.div key={`game-${selectedGame.id}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col overflow-hidden">
             {/* Header spanning both sections */}
-            <div className="pb-3 border-b border-white/6 flex items-center gap-3 flex-shrink-0">
+            <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
               <div className="w-10 h-14 rounded-lg overflow-hidden border border-white/10">
                 {selectedGame.cover_image ? (
                   <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
@@ -308,7 +308,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
             </div>
 
             {/* Content area with 70/30 split */}
-            <div className="flex-1 flex gap-4 overflow-hidden">
+            <div className="flex-1 flex gap-4 overflow-hidden px-5 pt-3 pb-3">
               {/* LEFT: Traders List (70%) */}
               <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
 
