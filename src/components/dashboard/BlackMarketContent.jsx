@@ -233,74 +233,75 @@ export default function BlackMarketContent() {
                 </div>
               </div>
 
-              <div className="flex-1 min-h-0 px-5 pt-5 pb-0 overflow-hidden">
-                <div className="h-full">
-                  <div className="min-h-0 h-full flex flex-col overflow-hidden">
+              <div className="flex-1 min-h-0 px-5 pt-5 pb-2 overflow-hidden">
+                <div className="h-full flex flex-col overflow-hidden justify-end">
+                  <div className="min-h-0 max-h-[calc(100%-140px)] flex flex-col overflow-hidden">
                     <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
                     {selectedCardDetails && (
-                      <div className="px-4 pb-3">
+                      <div className="px-4 pb-2">
                         <div className="flex items-center justify-between gap-4 text-white/70">
                           <div>
-                            <div className="text-sm font-semibold text-white">{selectedCardDetails.title}</div>
+                            <div className="text-sm font-semibold text-white truncate">{selectedCardDetails.title}</div>
                             <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedCardDetails.rarity} card</div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right shrink-0">
                             <div className="text-cyan-300 text-sm font-bold">${selectedCardDetails.price}</div>
                             <div className="text-[10px] text-white/35">{selectedCardDetails.sellers} sellers</div>
                           </div>
                         </div>
                       </div>
                     )}
-                    <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                    <div className="mx-4 mb-2 h-px bg-white/10" />
+                    <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
                       {(selectedMysteryCard ? sellerRows : []).map((seller) => (
                         <button
                           key={seller.id}
-                          className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-3 transition-all"
+                          className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all"
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-white text-sm font-semibold">{seller.name}</div>
-                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1">{seller.type} · {seller.stock} available</div>
+                            <div className="min-w-0">
+                              <div className="text-white text-sm font-semibold truncate">{seller.name}</div>
+                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{seller.type} · {seller.stock} available</div>
                             </div>
-                            <div className="text-cyan-300 text-sm font-bold">${seller.price}</div>
+                            <div className="text-cyan-300 text-sm font-bold shrink-0">${seller.price}</div>
                           </div>
                         </button>
                       ))}
                       {!selectedMysteryCard && (
-                        <div className="h-full min-h-[220px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
+                        <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
                       )}
                     </div>
+                  </div>
 
-                    <div className="px-4 py-3">
-                      <div className="flex items-center justify-between gap-4 text-[10px] uppercase tracking-[0.2em] text-white/35">
-                        <div>
-                          Row {cardRowIndex + 1} / 10
-                        </div>
-                        <div className="flex items-center gap-2 text-white/40 normal-case tracking-normal text-xs w-[30%] min-w-[140px] justify-end">
-                          <span>Search bar</span>
-                          <Search className="w-3.5 h-3.5" />
-                          <Mic className="w-3.5 h-3.5" />
-                        </div>
+                  <div className="px-4 pt-2 pb-2 border-t border-white/10">
+                    <div className="flex items-center justify-between gap-4 mb-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                      <div>
+                        Row {cardRowIndex + 1} / 10
                       </div>
-                      <div
-                        className="flex gap-3"
-                        onWheel={(e) => {
-                          e.preventDefault();
-                          setCardRowIndex((prev) => {
-                            if (e.deltaY > 0) return Math.min(9, prev + 1);
-                            if (e.deltaY < 0) return Math.max(0, prev - 1);
-                            return prev;
-                          });
-                        }}
-                      >
-                        {visibleMysteryCards.map((card) => (
-                          <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 ${selectedMysteryCard?.id === card.id ? 'shadow-[0_0_18px_rgba(103,232,249,0.22)]' : ''}`}>
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
-                              <span className="text-white/75 text-3xl font-black">?</span>
-                            </div>
-                          </LiquidGlassCard>
-                        ))}
+                      <div className="flex items-center gap-2 text-white/40 normal-case tracking-normal text-xs w-[30%] min-w-[140px] justify-end">
+                        <span>Search bar</span>
+                        <Search className="w-3.5 h-3.5" />
+                        <Mic className="w-3.5 h-3.5" />
                       </div>
+                    </div>
+                    <div
+                      className="flex gap-3 items-end"
+                      onWheel={(e) => {
+                        e.preventDefault();
+                        setCardRowIndex((prev) => {
+                          if (e.deltaY > 0) return Math.min(9, prev + 1);
+                          if (e.deltaY < 0) return Math.max(0, prev - 1);
+                          return prev;
+                        });
+                      }}
+                    >
+                      {visibleMysteryCards.map((card) => (
+                        <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 ${selectedMysteryCard?.id === card.id ? 'shadow-[0_0_18px_rgba(103,232,249,0.22)]' : ''}`}>
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
+                            <span className="text-white/75 text-3xl font-black">?</span>
+                          </div>
+                        </LiquidGlassCard>
+                      ))}
                     </div>
                   </div>
                 </div>
