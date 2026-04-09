@@ -75,29 +75,26 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-12 h-16 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-            {selectedGame.cover_image ? (
-              <img src={selectedGame.cover_image} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-black/30 flex items-center justify-center"><Gamepad2 className="w-5 h-5 text-white/10" /></div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-white font-bold text-lg truncate">{selectedGame.title}</h2>
-            <div className="flex items-center gap-2 mt-0.5">
-              <Badge className="bg-white/10 text-white/70 border-white/20 text-[10px]">{selectedGame.genre}</Badge>
-            </div>
-          </div>
+      {/* Header - Search Bar Only */}
+      <div className="px-5 pt-3 pb-3 border-b border-white/6 flex items-center">
+        <div className="relative flex items-center flex-1">
+          <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
+          <input
+            value={cardSearchQuery}
+            onChange={(e) => onCardSearch(e.target.value)}
+            placeholder="search cards"
+            className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-full"
+          />
+          <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
+            <Mic className="w-3 h-3" />
+          </button>
         </div>
       </div>
 
       {/* Main content: LEFT (70%) + RIGHT (30%) */}
-      <div className="flex-1 flex gap-4 overflow-hidden px-5 pt-3 pb-3">
+      <div className="flex-1 flex gap-0 overflow-hidden">
         {/* LEFT: Sellers List (70%) */}
-        <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
+        <div className="w-[70%] flex flex-col px-5 pt-3 pb-3 overflow-hidden">
           <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Sellers</div>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
             {(selectedMysteryCard ? sellerRows : []).map((seller) => (
@@ -116,22 +113,7 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
         </div>
 
         {/* RIGHT: Mystery Cards Grid (30%) */}
-        <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
-          {/* Search Bar */}
-          <div className="pb-3 mb-3 border-b border-white/6 flex items-center">
-            <div className="relative flex items-center flex-1">
-              <Search className="absolute left-2 w-3 h-3 text-white/30 pointer-events-none" />
-              <input
-                value={cardSearchQuery}
-                onChange={(e) => onCardSearch(e.target.value)}
-                placeholder="search cards"
-                className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-full"
-              />
-              <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
-                <Mic className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
+        <div className="w-[30%] flex flex-col border-l border-white/6 px-5 pt-3 pb-3 overflow-hidden">
           <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Cards</div>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
             <div className="space-y-2">
