@@ -40,6 +40,7 @@ export default function TradingPostOverlayContent() {
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
   const [selectedMysteryTradeCard, setSelectedMysteryTradeCard] = useState(null);
+  const [tradeCardRowIndex, setTradeCardRowIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +128,11 @@ export default function TradingPostOverlayContent() {
     id: `trade-mystery-${i + 1}`,
     label: `Trade Card ${i + 1}`,
   })), []);
+
+  const visibleMysteryTradeCards = useMemo(() => {
+    const start = tradeCardRowIndex * 7;
+    return mysteryTradeCards.slice(start, start + 7);
+  }, [mysteryTradeCards, tradeCardRowIndex]);
 
   const mysteryTradeRows = useMemo(() => {
     if (!selectedMysteryTradeCard) return [];
@@ -410,9 +416,22 @@ export default function TradingPostOverlayContent() {
                     </div>
 
                     <div className="border-t border-white/8 px-4 py-3">
-                      <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3">
-                        {mysteryTradeCards.map((card) => (
-                          <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] p-0 ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-300/50' : ''}`}>
+                      <div className="flex items-center justify-end mb-2 text-[10px] uppercase tracking-[0.2em] text-white/35">
+                        Row {tradeCardRowIndex + 1} / 10
+                      </div>
+                      <div
+                        className="flex gap-3"
+                        onWheel={(e) => {
+                          e.preventDefault();
+                          setTradeCardRowIndex((prev) => {
+                            if (e.deltaY > 0) return Math.min(9, prev + 1);
+                            if (e.deltaY < 0) return Math.max(0, prev - 1);
+                            return prev;
+                          });
+                        }}
+                      >
+                        {visibleMysteryTradeCards.map((card) => (
+                          <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 ${selectedMysteryTradeCard?.id === card.id ? 'shadow-[0_0_18px_rgba(103,232,249,0.22)]' : ''}`}>
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
                               <span className="text-white/75 text-3xl font-black">?</span>
                             </div>
