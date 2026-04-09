@@ -2,7 +2,7 @@ import React from 'react';
 import { Home, Trophy, Layers, Search, Mic } from 'lucide-react';
 
 export default function GenreBottomNav({ activeTab, onTabSelect, marketView, cardSearchQuery, onCardSearch }) {
-  const showSearch = marketView === 'blackmarket' || marketView === 'tradingpost';
+  const showSearch = (marketView === 'blackmarket' || marketView === 'tradingpost') && activeTab !== 'skilltree';
   return (
     <div className="flex items-center w-full h-full px-4">
       {/* Left spacer to balance layout */}
