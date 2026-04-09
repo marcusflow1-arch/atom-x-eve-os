@@ -369,7 +369,7 @@ export default function GenreMastery({ onClose }) {
                   transition={{ duration: 0.2 }}
                   className="h-full"
                 >
-                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} selectedGame={selectedGame} />
+                  <TradingPostOverlayContent cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} selectedGame={selectedGame} />
                 </motion.div>
               ) : rightPanel === 'achievements' ? (
                 <motion.div
