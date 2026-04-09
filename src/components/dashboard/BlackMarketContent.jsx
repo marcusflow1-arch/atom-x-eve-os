@@ -239,37 +239,20 @@ export default function BlackMarketContent({ cardSearchQuery = '' }) {
 
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                   <div className="flex-1 min-h-0 overflow-hidden px-5 pt-3">
-                    <div className="h-full rounded-t-2xl border border-white/6 border-b-0 bg-white/[0.02] flex flex-col overflow-hidden">
-                      <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
-                      {selectedCardDetails && (
-                        <div className="px-4 pb-2">
-                          <div className="flex items-center justify-between gap-4 text-white/70">
-                            <div className="min-w-0">
-                              <div className="text-sm font-semibold text-white truncate">{selectedCardDetails.title}</div>
-                              <div className="text-[10px] uppercase tracking-[0.18em] text-white/35 mt-1">{selectedCardDetails.rarity} card</div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <div className="text-cyan-300 text-sm font-bold">${selectedCardDetails.price}</div>
-                              <div className="text-[10px] text-white/35">{selectedCardDetails.sellers} sellers</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      <div className="mx-4 mb-2 h-px bg-white/10" />
-                      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                    <div className="h-full flex flex-col overflow-hidden">
+                      <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Sellers</div>
+                      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                         {(selectedMysteryCard ? sellerRows : []).map((seller) => (
-                          <button key={seller.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-2.5 transition-all">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="text-white text-sm font-semibold truncate">{seller.name}</div>
-                                <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1 truncate">{seller.type} · {seller.stock} available</div>
-                              </div>
-                              <div className="text-cyan-300 text-sm font-bold shrink-0">${seller.price}</div>
+                          <div key={seller.id}>
+                            <div className="flex items-center justify-between py-2.5">
+                              <span className="text-white text-sm">{seller.name}</span>
+                              <span className="text-cyan-300 text-sm font-semibold">${seller.price}</span>
                             </div>
-                          </button>
+                            <div className="h-px bg-white/10" />
+                          </div>
                         ))}
                         {!selectedMysteryCard && (
-                          <div className="h-full min-h-[120px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
+                          <div className="py-8 text-center text-white/25 text-xs">Select a card below to view sellers.</div>
                         )}
                       </div>
                     </div>
