@@ -46,7 +46,6 @@ import IntelligentCalendarOverlay from '../components/calendar/IntelligentCalend
 import PlatformUpdateModal from '../components/calendar/PlatformUpdateModal';
 import FocusModePanel from '../components/dashboard/FocusModePanel';
 import CommunityPage from './Community';
-import Blacksmith from './Blacksmith';
 import UpcomingEventsSection from '../components/dashboard/UpcomingEventsSection';
 import Achievements from './Achievements';
 import Leaderboard from './Leaderboard';
@@ -1952,22 +1951,11 @@ export default function LunaTemplate() {
                     background: 'linear-gradient(135deg, #0a0d14 0%, #111827 25%, #1a202c 50%, #111827 75%, #0a0d14 100%)'
                   }}>
 
-             {/* Close Blacksmith -> Console */}
-             {activeSubTab === 'blacksmith' &&
-                  <button
-                    onClick={() => navigate(createPageUrl('LunaTemplate') + '?panel=console')}
-                    className="fixed top-6 right-6 z-[60] w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md flex items-center justify-center transition-all border border-white/10 text-white">
-                    
-                 <X className="w-5 h-5" />
-               </button>
-                  }
-
              <div className={`h-full w-full overflow-hidden ${activeSubTab === 'entertainment' ? '' : 'pt-20'}`}>
               {activeSubTab === 'forum' && <CommunityPage />}
-              {activeSubTab === 'blacksmith' && <Blacksmith />}
               {activeSubTab === 'entertainment' && <EntertainmentHub />}
               {activeSubTab === 'clan' && <div className="text-white p-8">Clan Content Here</div>}
-            </div>
+             </div>
           </motion.div>
                 }
       </AnimatePresence>

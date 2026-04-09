@@ -4,7 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
-    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone
+    X, Mic, MicOff, Loader2, LayoutGrid, Flame, Smartphone,
+    Hammer, Layers, DollarSign, ArrowLeftRight
 } from 'lucide-react';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../components/auth/AuthContext';
@@ -191,6 +192,7 @@ export default function Store() {
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
+    const [topRightCardMode, setTopRightCardMode] = useState('store');
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -580,9 +582,92 @@ export default function Store() {
                                 <div className="w-[3px] h-full bg-white/25 rounded-full" />
                               </div>
 
-                              {/* Slideshow — right 50% */}
-                              <div className="w-1/2 flex-shrink-0 overflow-hidden">
-                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
+                              {/* Slideshow / utility card — right 50% */}
+                              <div className="w-1/2 flex-shrink-0 overflow-hidden relative">
+                                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                                  <button
+                                    onClick={() => setTopRightCardMode('blacksmith')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                                      topRightCardMode === 'blacksmith'
+                                        ? 'bg-orange-500/20 border-orange-400/50 text-orange-200'
+                                        : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                  >
+                                    <Hammer className="w-3 h-3" />
+                                    Blacksmith
+                                  </button>
+                                  <button
+                                    onClick={() => setTopRightCardMode('tradingpost')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                                      topRightCardMode === 'tradingpost'
+                                        ? 'bg-blue-500/20 border-blue-400/50 text-blue-200'
+                                        : 'bg-black/30 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                  >
+                                    <ArrowLeftRight className="w-3 h-3" />
+                                    Trading Post
+                                  </button>
+                                </div>
+
+                                {topRightCardMode === 'store' ? (
+                                  <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
+                                ) : topRightCardMode === 'blacksmith' ? (
+                                  <div className="w-full h-full relative overflow-hidden">
+                                    <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Blacksmith" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                                    <div className="absolute inset-0 bg-gradient-to-l from-orange-950/70 to-transparent" />
+                                    <div className="absolute top-5 left-6 flex items-center gap-2">
+                                      <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/40 rounded-full px-3 py-1">
+                                        <Hammer className="w-3.5 h-3.5 text-orange-300" />
+                                        <span className="text-orange-200 text-xs font-bold uppercase tracking-wider">Blacksmith</span>
+                                      </div>
+                                    </div>
+                                    <div className="absolute bottom-8 left-6 right-6">
+                                      <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Forge Your Cards</h2>
+                                      <div className="flex items-center gap-4 mb-3 text-sm">
+                                        <span className="text-white/60">Level Up</span>
+                                        <span className="text-white/30">•</span>
+                                        <span className="text-white/60">Enchant</span>
+                                        <span className="text-white/30">•</span>
+                                        <span className="text-white/60">Combine</span>
+                                      </div>
+                                      <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Use the same showcase card area to highlight blacksmith actions for your collection instead of sending users to a different screen.</p>
+                                      <div className="flex flex-wrap gap-2 mt-4">
+                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Training</span>
+                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Enchanting</span>
+                                        <span className="text-[10px] text-orange-200/80 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-md font-medium">Ascension</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="w-full h-full relative overflow-hidden">
+                                    <img src={(currentShowcaseGame?.cover_image || currentShowcaseGame?.banner_image || displayedGames[0]?.cover_image || displayedGames[0]?.banner_image)} alt="Trading Post" className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
+                                    <div className="absolute inset-0 bg-gradient-to-l from-blue-950/70 to-transparent" />
+                                    <div className="absolute top-5 left-6 flex items-center gap-2">
+                                      <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/40 rounded-full px-3 py-1">
+                                        <Layers className="w-3.5 h-3.5 text-blue-300" />
+                                        <span className="text-blue-200 text-xs font-bold uppercase tracking-wider">Trading Post</span>
+                                      </div>
+                                    </div>
+                                    <div className="absolute bottom-8 left-6 right-6">
+                                      <h2 className="text-3xl font-black text-white mb-2 drop-shadow-lg">Trade, Bid, or Sell</h2>
+                                      <div className="flex items-center gap-4 mb-3 text-sm">
+                                        <span className="text-white/60">Fixed Price</span>
+                                        <span className="text-white/30">•</span>
+                                        <span className="text-white/60">Auction</span>
+                                        <span className="text-white/30">•</span>
+                                        <span className="text-white/60">Trade Offers</span>
+                                      </div>
+                                      <p className="text-white/50 text-sm leading-relaxed line-clamp-2 max-w-md">Reuse this same top-right card to preview marketplace actions and item listings without replacing the layout.</p>
+                                      <div className="flex flex-wrap gap-2 mt-4">
+                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Buy Now</span>
+                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Current Bids</span>
+                                        <span className="text-[10px] text-blue-200/80 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md font-medium">Item Exchange</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
