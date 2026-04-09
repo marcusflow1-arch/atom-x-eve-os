@@ -611,13 +611,9 @@ export default function Store() {
                             <div className="flex flex-1 overflow-hidden px-6 gap-8">
                               {/* LEFT: Genre list */}
                               <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                {/* Android + Grid icons above genre list */}
-                                <div className="flex items-center gap-2 pl-6 py-3">
-                                  <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`p-1.5 rounded-lg border transition-all ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Android Games"><Smartphone className="w-3.5 h-3.5" /></button>
-                                  <button onClick={() => setViewMode(viewMode === 'classic' ? 'cross' : 'classic')} className={`p-1.5 rounded-lg border transition-all ${viewMode === 'classic' ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 'bg-white/5 border-white/10 text-white/50 hover:text-white'}`} title="Grid View"><LayoutGrid className="w-3.5 h-3.5" /></button>
-                                </div>
                                 <motion.div
                                   ref={genreListRef}
+                                  className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
                                   onWheel={handleGenreWheel}
                                   onMouseEnter={() => setIsGenreHovering(true)}
                                   onMouseLeave={() => setIsGenreHovering(false)}
