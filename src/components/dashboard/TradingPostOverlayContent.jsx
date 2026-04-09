@@ -177,18 +177,9 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
     <div className="h-full flex min-h-0">
       {/* LEFT: Game list */}
       <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-        style={{ width: '225px', minWidth: '225px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        style={{ width: '25%', minWidth: '200px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
         <div className="p-4 border-b border-white/6">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-              <ArrowLeftRight className="w-3.5 h-3.5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-white font-bold text-sm">Trading Post</h2>
-              <p className="text-white/35 text-[10px]">Buy, bid, or trade items</p>
-            </div>
-          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
             <input
@@ -454,9 +445,9 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '' }) {
                       }}
                     >
                       {visibleMysteryTradeCards.map((card) => (
-                        <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryTradeCard?.id === card.id ? 'shadow-[0_0_18px_rgba(103,232,249,0.22)]' : ''}`}>
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
-                            <span className="text-white/75 text-3xl font-black">?</span>
+                        <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] w-full max-w-[84px] p-0 translate-y-[1px] ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50 shadow-[0_0_20px_rgba(103,232,249,0.3)]' : ''}`}>
+                          <div className="w-full h-full flex items-center justify-center rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)', border: '1px solid rgba(255,255,255,0.14)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 20px rgba(0,0,0,0.3)' }}>
+                            <span className="text-white/50 text-3xl font-black" style={{ textShadow: '0 0 12px rgba(255,255,255,0.3)' }}>?</span>
                           </div>
                         </LiquidGlassCard>
                       ))}
