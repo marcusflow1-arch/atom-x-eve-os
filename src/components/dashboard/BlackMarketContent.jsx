@@ -124,7 +124,7 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
               <input
                 value={cardSearchQuery}
                 onChange={(e) => onCardSearch(e.target.value)}
-                placeholder="search cars"
+                placeholder="search cards"
                 className="bg-white/5 border border-white/10 rounded-md pl-7 pr-8 py-1 text-xs text-white placeholder:text-white/25 focus:outline-none focus:border-white/20 w-full"
               />
               <button className="absolute right-2 w-4 h-4 flex items-center justify-center text-white/40 hover:text-white/60 transition-colors">
