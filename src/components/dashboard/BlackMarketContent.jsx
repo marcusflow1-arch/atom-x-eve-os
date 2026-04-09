@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCart } from '@/components/CartContext';
+import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 const GENRE_TABS = [
   { id: 'all', name: 'All', icon: LayoutGrid },
@@ -63,6 +64,7 @@ export default function BlackMarketContent() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedMysteryCard, setSelectedMysteryCard] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -110,6 +112,22 @@ export default function BlackMarketContent() {
       type: 'card',
     });
   };
+
+  const mysteryCards = useMemo(() => Array.from({ length: 70 }, (_, i) => ({
+    id: `mystery-${i + 1}`,
+    label: `Card ${i + 1}`,
+  })), []);
+
+  const sellerRows = useMemo(() => {
+    if (!selectedMysteryCard) return [];
+    return Array.from({ length: 10 }, (_, i) => ({
+      id: `${selectedMysteryCard.id}-seller-${i + 1}`,
+      name: `Seller ${i + 1}`,
+      type: i % 3 === 0 ? 'Auction' : 'Sale',
+      price: (4.99 + i * 1.75).toFixed(2),
+      stock: 1 + (i % 4),
+    }));
+  }, [selectedMysteryCard]);
 
   if (loading) {
     return (
@@ -196,48 +214,46 @@ export default function BlackMarketContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-5 pt-5 pb-0">
-                {gameCards.length > 0 ? (
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                    {gameCards.map((card, i) => {
-                      const rarityColor = card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' : card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' : card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' : card.rarity === 'Mythical' ? 'border-red-500/50 text-red-400' : 'border-slate-500/50 text-slate-400';
-                      const price = card.points ? Math.max(1.99, (card.points * 0.1).toFixed(2)) : '4.99';
-                      return (
-                        <motion.div
-                          key={card.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.02 }}
-                          onClick={() => handleBuyCard(card)}
-                          whileHover={{ scale: 1.05, y: -4 }}
-                          className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-cyan-500/10"
+              <div className="flex-1 min-h-0 px-5 pt-5 pb-0 overflow-hidden">
+                <div className="h-full grid grid-cols-[85%_15%] gap-4">
+                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.035)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.18)' }}>
+                    <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Seller List</div>
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {(selectedMysteryCard ? sellerRows : []).map((seller) => (
+                        <button
+                          key={seller.id}
+                          className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-3 transition-all"
                         >
-                          <div className="relative w-full h-3/5 overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                            <span className="text-4xl">{card.icon || '🏆'}</span>
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
-                          </div>
-                          <div className="p-2 flex flex-col gap-1">
-                            <h3 className="text-white font-bold text-[10px] leading-tight line-clamp-2">{card.title}</h3>
-                            <div className="flex gap-1 flex-wrap">
-                              <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${rarityColor}`}>{card.rarity}</Badge>
-                              <Badge variant="outline" className="text-[8px] h-3.5 px-1 border-white/15 text-white/40">{card.category}</Badge>
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-white text-sm font-semibold">{seller.name}</div>
+                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1">{seller.type} · {seller.stock} available</div>
                             </div>
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-cyan-400/70 text-[9px] font-semibold">${price}</span>
-                              <ShoppingCart className="w-3 h-3 text-white/20" />
-                            </div>
+                            <div className="text-cyan-300 text-sm font-bold">${seller.price}</div>
                           </div>
-                        </motion.div>
-                      );
-                    })}
+                        </button>
+                      ))}
+                      {!selectedMysteryCard && (
+                        <div className="h-full min-h-[220px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view sellers.</div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                    <Layers className="w-12 h-12 mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No cards available for this game</p>
-                    <p className="text-[10px] mt-1 text-white/20">Cards are created from Achievements in the admin panel.</p>
+
+                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Cards</div>
+                    <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                      <div className="grid grid-cols-1 gap-3">
+                        {mysteryCards.map((card) => (
+                          <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryCard(card)} className={`aspect-[2.5/3.5] p-0 ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-300/50' : ''}`}>
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
+                              <span className="text-white/75 text-3xl font-black">?</span>
+                            </div>
+                          </LiquidGlassCard>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </motion.div>
           ) : (

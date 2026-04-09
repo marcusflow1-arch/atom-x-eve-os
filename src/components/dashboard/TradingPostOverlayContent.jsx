@@ -10,6 +10,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/components/auth/AuthContext';
+import LiquidGlassCard from '@/components/shared/LiquidGlassCard';
 
 const RarityBadge = ({ rarity }) => {
   const styles = {
@@ -38,6 +39,7 @@ export default function TradingPostOverlayContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
+  const [selectedMysteryTradeCard, setSelectedMysteryTradeCard] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,6 +122,21 @@ export default function TradingPostOverlayContent() {
 
     return offers;
   }, [selectedItem, selectedGame, tradeOffers, offerTypeFilter, offerSort]);
+
+  const mysteryTradeCards = useMemo(() => Array.from({ length: 70 }, (_, i) => ({
+    id: `trade-mystery-${i + 1}`,
+    label: `Trade Card ${i + 1}`,
+  })), []);
+
+  const mysteryTradeRows = useMemo(() => {
+    if (!selectedMysteryTradeCard) return [];
+    return Array.from({ length: 10 }, (_, i) => ({
+      id: `${selectedMysteryTradeCard.id}-offer-${i + 1}`,
+      name: `Trader ${i + 1}`,
+      type: i % 2 === 0 ? 'Trade' : 'Sale',
+      value: (12 + i * 3).toFixed(2),
+    }));
+  }, [selectedMysteryTradeCard]);
 
   const handleBack = () => {
     if (selectedOffer) setSelectedOffer(null);
@@ -355,34 +372,43 @@ export default function TradingPostOverlayContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5">
-                {gameItems.length > 0 ? (
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                    {gameItems.map((item, i) => {
-                      const rarityColor = item.rarity === 'Legendary' ? 'border-orange-500/40' : item.rarity === 'Epic' ? 'border-purple-500/40' : item.rarity === 'Rare' ? 'border-blue-500/40' : item.rarity === 'Mythical' ? 'border-red-500/40' : 'border-slate-600/40';
-                      return (
-                        <motion.button
-                          key={item.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.02 }}
-                          whileHover={{ scale: 1.04, y: -3 }}
-                          onClick={() => { setSelectedItem(item); setOfferTypeFilter('all'); }}
-                          className={`aspect-square rounded-xl overflow-hidden border-2 ${rarityColor} bg-slate-900/80 flex flex-col items-center justify-center gap-2 p-3 text-center transition-all hover:bg-white/5 cursor-pointer`}
-                        >
-                          <span className="text-3xl">{item.icon || '🎴'}</span>
-                          <h4 className="text-white text-[9px] font-bold leading-tight line-clamp-2">{item.title}</h4>
-                          <RarityBadge rarity={item.rarity} />
-                        </motion.button>
-                      );
-                    })}
+              <div className="flex-1 min-h-0 px-5 pt-5 pb-0 overflow-hidden">
+                <div className="h-full grid grid-cols-[85%_15%] gap-4">
+                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.035)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 30px rgba(0,0,0,0.18)' }}>
+                    <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Trade / Sell List</div>
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
+                        <button key={row.id} className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] px-3 py-3 transition-all">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-white text-sm font-semibold">{row.name}</div>
+                              <div className="text-white/35 text-[10px] uppercase tracking-[0.18em] mt-1">{row.type}</div>
+                            </div>
+                            <div className="text-cyan-300 text-sm font-bold">${row.value}</div>
+                          </div>
+                        </button>
+                      ))}
+                      {!selectedMysteryTradeCard && (
+                        <div className="h-full min-h-[220px] flex items-center justify-center text-center text-white/25 text-xs px-4">Select a card below to view traders and sellers.</div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="h-64 flex flex-col items-center justify-center text-slate-500">
-                    <Layers className="w-12 h-12 mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No items available for this game</p>
+
+                  <div className="min-h-0 flex flex-col rounded-2xl border border-white/8 overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="px-4 py-2 border-b border-white/6 text-[11px] uppercase tracking-[0.25em] text-white/35">Cards</div>
+                    <div className="flex-1 overflow-y-auto p-3" style={{ scrollbarWidth: 'none' }}>
+                      <div className="grid grid-cols-1 gap-3">
+                        {mysteryTradeCards.map((card) => (
+                          <LiquidGlassCard key={card.id} onClick={() => setSelectedMysteryTradeCard(card)} className={`aspect-[2.5/3.5] p-0 ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-300/50' : ''}`}>
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/10 via-white/[0.05] to-transparent">
+                              <span className="text-white/75 text-3xl font-black">?</span>
+                            </div>
+                          </LiquidGlassCard>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </motion.div>
           ) : (
