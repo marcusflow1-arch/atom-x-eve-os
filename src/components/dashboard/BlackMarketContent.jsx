@@ -123,7 +123,7 @@ export default function BlackMarketContent() {
     <div className="flex-1 flex min-h-0">
       {/* LEFT: Genre filter + game list */}
       <div className="h-full flex flex-col overflow-hidden flex-shrink-0"
-        style={{ width: '300px', minWidth: '300px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        style={{ width: '225px', minWidth: '225px', background: 'rgba(10, 14, 20, 0.65)', backdropFilter: 'blur(30px)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
 
         <div className="p-4 border-b border-white/6">
           <GenreScrollTabs tabs={GENRE_TABS} selectedTab={selectedGenre} onSelect={(t) => { setSelectedGenre(t); setSelectedGame(null); }} />
