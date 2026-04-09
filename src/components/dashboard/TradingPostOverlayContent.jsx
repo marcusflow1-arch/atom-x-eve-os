@@ -332,7 +332,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', select
             </div>
 
             {/* RIGHT: Cards Grid (30%) */}
-            <div className="w-[30%] flex flex-col border-l border-white/10 pl-4 overflow-hidden">
+            <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
               <div className="pb-3 border-b border-white/6 flex items-center gap-2 mb-3 flex-shrink-0">
                 <div className="w-8 h-12 rounded-lg overflow-hidden border border-white/10">
                   {selectedGame.cover_image ? (
