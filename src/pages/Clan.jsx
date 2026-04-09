@@ -22,7 +22,6 @@ import ClanAdminOverview from '@/components/clan/ClanAdminOverview';
 import ClanRosterPage from '@/components/clan/ClanRosterPage';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -449,14 +448,13 @@ export default function ClanPage() {
                                             <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-500" /> LVL {clanForRender?.level || 1}</span>
                                             <span className="flex items-center gap-1"><Users className="w-3 h-3 text-cyan-500" /> {members?.length || 0}/50</span>
                                             <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> 12 Online</span>
-                                        </div>
-                                        </div>
-                                        </div>
-                                        </div>
-                                        </div>
-                                        </div>}
+                                                </div>
+                                            </div>
+                                            </div>
+                                            </div>
+                                            </div>
 
-                                        {/* Clean Slate - Clan Name Only (when not launched) */}
+                                            {/* Clean Slate - Clan Name Only (when not launched) */}
                                         {!isLaunched && (
                                         <div className="absolute top-8 left-8 z-30 pointer-events-auto">
                                         <h1 className="text-3xl font-black text-white tracking-wider uppercase">{clanForRender?.name || 'Division'}</h1>
