@@ -640,7 +640,7 @@ export default function CommunityPage() {
                                             <Button
                               onClick={() => setShowCreateForm(true)}
                               size="sm"
-                              className="bg-blue-600/80 hover:bg-blue-600 border border-blue-400/30 rounded-full px-4 h-8 text-xs whitespace-nowrap">
+                              className="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 rounded px-4 h-8 text-xs whitespace-nowrap font-semibold">
                               
                                                 <Plus className="w-3 h-3 mr-1" /> New Post
                                             </Button>
