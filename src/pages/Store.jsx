@@ -376,7 +376,7 @@ export default function Store() {
 
                     {/* 5% Left Sidebar */}
                     <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
-                        <div className="flex flex-col items-center w-full px-2 mt-20">
+                        <div className="flex flex-col items-center w-full px-2 mt-auto mb-16">
                             <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Risley<br />Play</span>
                             <div className="w-8 h-px bg-white/20 mb-3" />
                             <div className="flex flex-col gap-2 w-full items-center">
