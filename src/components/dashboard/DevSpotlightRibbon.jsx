@@ -140,7 +140,7 @@ export default function DevSpotlightRibbon({ onOpenOverlay }) {
   };
 
   return (
-    <div className="w-full flex flex-col items-start gap-2 pt-6 pb-20">
+    <div className="w-full flex flex-col items-start gap-2 pt-6 pb-12">
       {/* Title above — left-aligned */}
       <div className="flex items-center gap-2 ml-1">
         <Sparkles className="w-3.5 h-3.5 text-cyan-400/60" />
