@@ -29,6 +29,7 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
+import WishlistButton from '../components/store/WishlistButton';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -593,8 +594,11 @@ export default function Store() {
                                                                         <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
                                                                             <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                                                            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10 z-10">
+                                                                            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
+                                                                              <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
                                                                                 <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                                              </div>
+                                                                              <WishlistButton game={game} />
                                                                             </div>
                                                                             <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
                                                                                 <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>

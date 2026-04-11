@@ -1,0 +1,35 @@
+{
+  "name": "Wishlist",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The ID of the user who saved this game"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "The ID of the game saved to wishlist"
+    },
+    "game_title": {
+      "type": "string",
+      "description": "Cached title of the game"
+    },
+    "game_cover": {
+      "type": "string",
+      "description": "Cached cover image URL"
+    },
+    "game_price": {
+      "type": "number",
+      "description": "Price at time of saving"
+    },
+    "game_genre": {
+      "type": "string",
+      "description": "Genre of the game"
+    }
+  },
+  "required": [
+    "user_id",
+    "game_id",
+    "game_title"
+  ]
+}
