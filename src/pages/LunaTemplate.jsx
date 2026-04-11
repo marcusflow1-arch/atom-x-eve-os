@@ -276,96 +276,68 @@ export default function LunaTemplate() {
   const { mode } = useDashboardMode();
 
   // Fetch Active Scene Layout from Admin
-  useEffect(() => {
-    const fetchScene = async () => {
-      try {
-        // 1. Try to find an ACTIVE SceneLayout
-        const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
+  // NOTE: merged with loadUserEnv to avoid duplicate Model3D.list() calls
+  const sceneLoadedRef = useRef(false);
 
+  // Combined scene + user env loader (merged to avoid duplicate API calls)
+  useEffect(() => {
+    if (sceneLoadedRef.current) return;
+    const loadScene = async () => {
+      sceneLoadedRef.current = true;
+      try {
+        // 1. Try active SceneLayout first
+        const layouts = await base44.entities.SceneLayout.filter({ is_active: true });
         if (layouts.length > 0) {
           const layout = layouts[0];
-          console.log("Loading Active Scene:", layout.name);
           setActiveScene(layout);
           if (layout.environment_url) setRoomModelUrl(layout.environment_url);
         } else {
-          // Fallback to legacy auto-fetch logic if no scene is active
-          console.warn("No active scene found, falling back to auto-discovery.");
-          const models = await base44.entities.Model3D.list();
-          const room2Fbx = models.find((m) => (m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2')) && (m.file_type === 'fbx' || m.file_url.toLowerCase().endsWith('.fbx')));
-          const room2Any = models.find((m) => m.name.toLowerCase().includes('room 2') || m.name.toLowerCase().includes('room2'));
-          const room1Asset = models.find((m) => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-          const selectedAsset = room2Fbx || room2Any || room1Asset;
+          // 2. Try user's saved env preference
+          let savedId = null;
+          if (user?.id) {
+            const states = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
+            if (states?.length > 0 && states[0].currentEnvironmentId) {
+              savedId = states[0].currentEnvironmentId;
+              setCurrentEnvId(savedId);
+            }
+          }
 
-          if (selectedAsset?.file_url) {
-            setRoomModelUrl(selectedAsset.file_url);
-            // Apply per-environment spawn & collision settings
-            if (selectedAsset.player_spawn) setPlayerSpawn(selectedAsset.player_spawn);
-            if (selectedAsset.use_mesh_collision) setUseMeshCollision(true);
-          } else
-          setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
-        }
-      } catch (e) {
-        console.error("Failed to load scene configuration:", e);
-      }
-    };
-    fetchScene();
-
-    // Model selection handled separately (Maria WProp J J Ong)
-  }, []);
-
-  // Load saved environment preference
-  useEffect(() => {
-    const loadUserEnv = async () => {
-      if (!user?.id) return;
-      try {
-        const states = await base44.entities.AvatarHomeState.filter({ avatarId: user.id });
-        if (states && states.length > 0 && states[0].currentEnvironmentId) {
-          const savedId = states[0].currentEnvironmentId;
-          setCurrentEnvId(savedId);
-
-          // 1. Try to load as SceneLayout (New System)
-          if (savedId !== 'default_room' && !savedId.startsWith('joined_')) {
+          if (savedId && savedId !== 'default_room' && !savedId.startsWith('joined_')) {
+            // Try as SceneLayout by id
             try {
-              const layouts = await base44.entities.SceneLayout.filter({ id: savedId });
-              if (layouts && layouts.length > 0) {
-                const layout = layouts[0];
-                setActiveScene(layout);
-                if (layout.environment_url) setRoomModelUrl(layout.environment_url);
+              const byId = await base44.entities.SceneLayout.filter({ id: savedId });
+              if (byId?.length > 0) {
+                setActiveScene(byId[0]);
+                if (byId[0].environment_url) setRoomModelUrl(byId[0].environment_url);
                 return;
               }
-            } catch (e) {/* Not a scene layout or fetch failed */}
-
-            // 2. Legacy Fallback (Old IDs)
-            const models = await base44.entities.Model3D.list();
-            const fbxs = await base44.entities.ModelFBX.list();
-            const all = [...(models || []), ...(fbxs || [])];
-
-            const queries = {
-              'cyber_loft': ['room 2', 'room2'],
-              'zen_garden': ['zen', 'garden'],
-              'mars_outpost': ['mars', 'outpost']
-            };
-
-            if (queries[savedId]) {
-              const found = all.find((m) => queries[savedId].some((q) => (m.name || '').toLowerCase().includes(q)));
-              if (found?.file_url) {
-                setRoomModelUrl(found.file_url);
-              }
-            }
-          } else {
-            // Default Room fallback
-            try {
-              const models = await base44.entities.Model3D.list();
-              const room1Asset = models.find((m) => m.name.toLowerCase().includes('room 1') || m.name.toLowerCase().includes('room1'));
-              if (room1Asset?.file_url) setRoomModelUrl(room1Asset.file_url);else
-              setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
-              setActiveScene(null);
             } catch {}
           }
+
+          // 3. Fallback: load Model3D list once
+          const models = await base44.entities.Model3D.list();
+          const queries = { cyber_loft: ['room 2', 'room2'], zen_garden: ['zen', 'garden'], mars_outpost: ['mars', 'outpost'] };
+          let found = null;
+          if (savedId && queries[savedId]) {
+            found = models.find(m => queries[savedId].some(q => (m.name || '').toLowerCase().includes(q)));
+          }
+          if (!found) {
+            found = models.find(m => m.name?.toLowerCase().includes('room 2') || m.name?.toLowerCase().includes('room2'))
+              || models.find(m => m.name?.toLowerCase().includes('room 1') || m.name?.toLowerCase().includes('room1'));
+          }
+          if (found?.file_url) {
+            setRoomModelUrl(found.file_url);
+            if (found.player_spawn) setPlayerSpawn(found.player_spawn);
+            if (found.use_mesh_collision) setUseMeshCollision(true);
+          } else {
+            setRoomModelUrl('https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/58d1bc849_scene.gltf');
+          }
         }
-      } catch (e) {console.error('Error loading env pref', e);}
+      } catch (e) {
+        console.error('Failed to load scene configuration:', e);
+      }
     };
-    loadUserEnv();
+    loadScene();
   }, [user?.id]);
 
   const handleEnvSelect = async (env) => {
