@@ -148,7 +148,7 @@ export default function PostComposer({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 10, opacity: 0 }}
-          className="absolute inset-4 bg-[#0f1419]/95 border border-white/10 rounded-3xl overflow-hidden flex flex-col"
+          className="absolute top-[72px] bottom-[60px] left-4 right-4 bg-[#0f1419]/95 border border-white/10 rounded-3xl overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
