@@ -83,43 +83,34 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
 
   return (
     <div className="relative flex items-center justify-between w-full">
-      <AnimatePresence>
-        {showPopup && (
-          <GameSearchPopup
-            games={games}
-            searchTerm={searchTerm}
-            onNavigate={onNavigateToGame}
-            onClose={() => { setShowPopup(false); setSearchTerm(''); }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Tabs — unchanged position */}
-      <div className="flex items-center gap-2">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <motion.button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all border ${
-                isActive
-                  ? 'bg-white/15 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-              }`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </motion.button>
-          );
-        })}
+      {/* Center: Tabs */}
+      <div className="flex items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
+        <AnimatePresence>
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all border ${
+                  isActive
+                    ? 'bg-white/15 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                    : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </motion.button>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       {/* Right: Search + Cart */}
-      <div className="flex items-center gap-2 relative">
+      <div className="flex items-center gap-2 relative ml-auto">
         {/* Clickable search bar — full width clickable except mic icon */}
         <label
           htmlFor="store-search-input"
