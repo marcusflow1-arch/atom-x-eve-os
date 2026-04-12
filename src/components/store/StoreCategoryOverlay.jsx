@@ -43,7 +43,6 @@ const FALLBACK_SCREENSHOTS = [
   'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&q=80',
 ];
 
-// Top 30% - quick preview panel shown on first click
 function GamePreviewStrip({ game, onViewDetail, onClose }) {
   const { addToCart } = useCart();
   const screenshots = (game.screenshots && game.screenshots.length > 0) ? game.screenshots : FALLBACK_SCREENSHOTS;
@@ -59,9 +58,9 @@ function GamePreviewStrip({ game, onViewDetail, onClose }) {
       transition={{ duration: 0.25 }}
       className="flex h-full gap-4 px-5 py-3"
     >
-      {/* Cover */}
-      <div className="flex-shrink-0 relative rounded-xl overflow-hidden" style={{ width: '70px', height: '94px' }}>
-        <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+      {/* Cover - Centered vertically */}
+      <div className="flex-shrink-0 relative rounded-xl overflow-hidden flex items-center justify-center" style={{ width: '70px', height: 'auto' }}>
+        <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" style={{ height: '120px' }} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
       </div>
 
@@ -146,7 +145,6 @@ function GamePreviewStrip({ game, onViewDetail, onClose }) {
   );
 }
 
-// Full detail panel (same as before, shown on second click)
 const MOCK_REVIEWS = [
   { user: 'NeuroGamer', rating: 5, text: 'Absolutely stunning visuals and gameplay. One of the best titles of the decade.', date: '2 days ago', hours: 142, helpful: 847 },
   { user: 'ShadowAce', rating: 4, text: 'Great mechanics and tight combat. Story could be deeper but online modes make up for it.', date: '1 week ago', hours: 67, helpful: 312 },
@@ -478,68 +476,81 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
           </div>
         </div>
 
-        {/* Right 30%: Details Panel */}
+        {/* Right 30%: Details Panel - Split Layout */}
         {selectedGame ? (
           <div className="overflow-y-auto p-4" style={{ scrollbarWidth: 'none', width: '30%', background: 'rgba(10,14,20,0.5)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
-            {/* Game Header */}
-            <div className="mb-4">
-              <img src={selectedGame.cover_image} alt={selectedGame.title} className="w-full rounded-lg mb-2" style={{ height: '100px', objectFit: 'cover' }} />
-              <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{selectedGame.title}</h3>
-              <div className="flex items-center gap-1 mb-2"><ReviewStars rating={avgRating} /><span className="text-yellow-400 text-xs font-bold">{avgRating}</span></div>
-            </div>
-
-            {/* Reviews Section */}
-            <div className="mb-4">
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Reviews</p>
-              {MOCK_REVIEWS.slice(0, 2).map((r, i) => (
-                <div key={i} className="py-2 border-b border-white/6">
-                  <div className="flex items-center gap-1 mb-1">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">{r.user[0]}</div>
-                    <span className="text-white/70 text-[10px] font-bold line-clamp-1">{r.user}</span>
-                    <ReviewStars rating={r.rating} />
-                  </div>
-                  <p className="text-white/50 text-[9px] leading-tight pl-6 line-clamp-2">{r.text}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* System Requirements */}
-            <div className="mb-4">
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Requirements</p>
-              {[
-                { label: 'OS', value: selectedGame.system_requirements?.os || 'Windows 10' },
-                { label: 'CPU', value: selectedGame.system_requirements?.processor || 'Intel i5' },
-                { label: 'RAM', value: selectedGame.system_requirements?.memory || '8 GB' },
-                { label: 'GPU', value: selectedGame.system_requirements?.graphics || 'GTX 1060' },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between py-1.5 border-b border-white/5">
-                  <span className="text-white/35 text-[9px]">{label}</span>
-                  <span className="text-white/70 text-[9px] text-right line-clamp-1">{value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Game Features */}
-            <div className="mb-4">
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Features</p>
-              {[
-                { icon: Users, label: 'Multiplayer', active: true },
-                { icon: User, label: 'Single Player', active: true },
-                { icon: Wifi, label: 'Online', active: true },
-              ].map(({ icon: Icon, label, active }) => (
-                <div key={label} className="flex items-center gap-2 py-1.5 text-white/60 text-[9px]">
-                  <Icon className="w-3 h-3 flex-shrink-0" />
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            {/* Recommendation */}
-            <div className="flex items-center gap-2 py-2 px-2 rounded-lg" style={{ background: 'rgba(100,255,150,0.1)', border: '1px solid rgba(100,255,150,0.2)' }}>
-              <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold flex-shrink-0">92%</div>
+            <div className="flex flex-col gap-4 h-full">
+              {/* Left Column: Features & Info */}
               <div>
-                <p className="text-white/80 text-[9px] font-bold">Recommended</p>
-                <p className="text-white/40 text-[8px]">Players recommend</p>
+                <div className="mb-4">
+                  <div className="flex items-center gap-1 mb-2"><ReviewStars rating={avgRating} /><span className="text-yellow-400 text-xs font-bold">{avgRating}</span></div>
+                </div>
+
+                {/* Game Features */}
+                <div className="mb-4">
+                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Features</p>
+                  {[
+                    { icon: Users, label: 'Multiplayer', active: true },
+                    { icon: User, label: 'Single Player', active: true },
+                    { icon: Wifi, label: 'Online', active: true },
+                  ].map(({ icon: Icon, label, active }) => (
+                    <div key={label} className="flex items-center gap-2 py-1.5 text-white/60 text-[9px]">
+                      <Icon className="w-3 h-3 flex-shrink-0" />
+                      {label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recommendation */}
+                <div className="flex items-center gap-2 py-2 px-2 rounded-lg" style={{ background: 'rgba(100,255,150,0.1)', border: '1px solid rgba(100,255,150,0.2)' }}>
+                  <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold flex-shrink-0">92%</div>
+                  <div>
+                    <p className="text-white/80 text-[9px] font-bold">Recommended</p>
+                    <p className="text-white/40 text-[8px]">Players recommend</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Screenshots, Video & Reviews */}
+              <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+                {/* Screenshots */}
+                <div>
+                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Screenshots</p>
+                  <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                    {(selectedGame.screenshots && selectedGame.screenshots.length > 0 ? selectedGame.screenshots : FALLBACK_SCREENSHOTS).slice(0, 3).map((src, i) => (
+                      <div key={i} className="flex-shrink-0 rounded-lg overflow-hidden border border-white/10" style={{ width: '70px', height: '50px' }}>
+                        <img src={src} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video/Trailer */}
+                {(selectedGame.trailer_url || (selectedGame.video_urls && selectedGame.video_urls[0])) && (
+                  <div>
+                    <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Trailer</p>
+                    <div className="rounded-lg overflow-hidden border border-white/10" style={{ aspectRatio: '16/9' }}>
+                      <iframe src={(selectedGame.trailer_url || selectedGame.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Reviews Section */}
+                <div className="flex-1 overflow-hidden flex flex-col">
+                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Reviews</p>
+                  <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                    {MOCK_REVIEWS.slice(0, 2).map((r, i) => (
+                      <div key={i} className="py-2 border-b border-white/6">
+                        <div className="flex items-center gap-1 mb-1">
+                          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">{r.user[0]}</div>
+                          <span className="text-white/70 text-[10px] font-bold line-clamp-1">{r.user}</span>
+                          <ReviewStars rating={r.rating} />
+                        </div>
+                        <p className="text-white/50 text-[9px] leading-tight pl-6 line-clamp-2">{r.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
