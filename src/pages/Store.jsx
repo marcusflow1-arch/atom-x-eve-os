@@ -487,9 +487,9 @@ export default function Store() {
                                 {activeCategoryOverlay && (
                                     <StoreCategoryOverlay
                                         key={activeCategoryOverlay}
-                                        category={activeCategoryOverlay}
                                         games={games}
                                         onClose={() => setActiveCategoryOverlay(null)}
+                                        onSelectGame={(game) => { handleNavigateToGame(game.id); setActiveCategoryOverlay(null); }}
                                     />
                                 )}
                             </AnimatePresence>
