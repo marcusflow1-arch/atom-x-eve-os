@@ -444,9 +444,7 @@ export default function Store() {
                                 <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
                             </div>
                             
-                            <div className="flex-1 ml-6">
-                              <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
-                            </div>
+                            <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
                         </div>
 
                         {/* Main Content */}
