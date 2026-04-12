@@ -622,14 +622,63 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* Achievements Section — Full Width */}
-                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                                                        {/* Achievements Section — 50/50 Split */}
+                                                        <div className="h-[350px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden px-6 gap-6">
                                                             {/* Spacer matching genre list column width */}
-                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
+                                                            <div className="flex-shrink-0" style={{ width: '200px' }} />
 
-                                                            {/* Achievements — Full Width */}
-                                                            <div className="flex-1 min-w-0 overflow-hidden">
-                                                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
+                                                            {/* Left: Game Slideshow (50%) */}
+                                                            <div className="w-1/2 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-4">
+                                                                {currentShowcaseGame && (
+                                                                    <>
+                                                                        <div className="w-32 h-40 rounded-lg overflow-hidden shadow-lg flex-shrink-0">
+                                                                            <img src={currentShowcaseGame.cover_image} alt={currentShowcaseGame.title} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                            <h3 className="text-lg font-bold text-white mb-1">{currentShowcaseGame.title}</h3>
+                                                                            <p className="text-xs text-white/60 mb-3">{currentShowcaseGame.genre}</p>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const nextIdx = displayedGames.length > 0 ? (displayedGames.indexOf(currentShowcaseGame) + 1) % displayedGames.length : 0;
+                                                                                    setCurrentShowcaseGame(displayedGames[nextIdx] || currentShowcaseGame);
+                                                                                }}
+                                                                                className="px-4 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 hover:bg-cyan-500/30 transition-all font-medium text-xs"
+                                                                            >
+                                                                                Next Game →
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Right: Achievements (50%) */}
+                                                            <div className="w-1/2 overflow-y-auto pr-2 space-y-2">
+                                                                {currentShowcaseGame && (
+                                                                    achievements
+                                                                        .filter(ach => ach.game === currentShowcaseGame.title)
+                                                                        .slice(0, 8)
+                                                                        .map(ach => (
+                                                                            <div key={ach.id} className="p-3 rounded-lg bg-gradient-to-r from-white/[0.08] to-white/[0.03] border border-white/10 hover:border-white/20 transition-all group">
+                                                                                <div className="flex items-start gap-2">
+                                                                                    <span className="text-xl shrink-0">{ach.icon}</span>
+                                                                                    <div className="flex-1 min-w-0">
+                                                                                        <h4 className="font-bold text-white text-xs truncate">{ach.title}</h4>
+                                                                                        <div className="flex items-center gap-1.5 mt-1">
+                                                                                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                                                                                                ach.rarity === 'Legendary' ? 'bg-yellow-500/30 text-yellow-300' :
+                                                                                                ach.rarity === 'Epic' ? 'bg-purple-500/30 text-purple-300' :
+                                                                                                ach.rarity === 'Rare' ? 'bg-blue-500/30 text-blue-300' :
+                                                                                                'bg-gray-500/30 text-gray-300'
+                                                                                            }`}>
+                                                                                                {ach.rarity}
+                                                                                            </span>
+                                                                                            <span className="text-[10px] text-white/40 ml-auto">{ach.points}pts</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))
+                                                                )}
                                                             </div>
                                                         </div>
 
