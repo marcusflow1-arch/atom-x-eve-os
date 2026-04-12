@@ -29,32 +29,8 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
-import StoreCategoryOverlay from '../components/store/StoreCategoryOverlay';
+import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
-
-function SwordsIcon(props) {
-    return (
-        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
-            <path d="m13 19 6-6" />
-            <path d="M16 16l4 4" />
-            <path d="M19 21l2-2" />
-        </svg>
-    );
-}
-
-const CATEGORY_DATA = [
-    { id: 'all', label: 'All', icon: Gamepad2 },
-    { id: 'action', label: 'Action', icon: Crosshair },
-    { id: 'rpg', label: 'RPG', icon: Shield },
-    { id: 'strategy', label: 'Strategy', icon: Trophy },
-    { id: 'shooter', label: 'Shooter', icon: Crosshair },
-    { id: 'sports', label: 'Sports', icon: Trophy },
-    { id: 'racing', label: 'Racing', icon: Car },
-    { id: 'horror', label: 'Horror', icon: Skull },
-    { id: 'puzzle', label: 'Puzzle', icon: Zap },
-    { id: 'adventure', label: 'Adventure', icon: Gamepad2 },
-];
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -71,6 +47,17 @@ const GENRE_ICONS = {
     'Romance': Heart,
     'Sci-Fi': Sparkles,
 };
+
+function SwordsIcon(props) {
+    return (
+        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+            <path d="m13 19 6-6" />
+            <path d="M16 16l4 4" />
+            <path d="M19 21l2-2" />
+        </svg>
+    );
+}
 
 const AIVoiceSearch = ({ onSearchResult, onClose }) => {
     const [isListening, setIsListening] = useState(false);
@@ -404,7 +391,7 @@ export default function Store() {
                             <div className="w-8 h-px mb-3" style={{ background: 'rgba(200,210,220,0.2)' }} />
 
                             <div className="flex flex-col gap-2 w-full items-center">
-                                {CATEGORY_DATA.map(cat => {
+                                {CATEGORIES.map(cat => {
                                     const Icon = cat.icon;
                                     const isActive = activeCategoryOverlay === cat.id;
                                     return (
@@ -425,7 +412,7 @@ export default function Store() {
                                             }}
                                         >
                                             <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}`} />
-                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat?.label ? cat.label.split(' ')[0] : ''}</span>
+                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat.label.split(' ')[0]}</span>
                                         </button>
                                     );
                                 })}
@@ -487,9 +474,9 @@ export default function Store() {
                                 {activeCategoryOverlay && (
                                     <StoreCategoryOverlay
                                         key={activeCategoryOverlay}
+                                        category={activeCategoryOverlay}
                                         games={games}
                                         onClose={() => setActiveCategoryOverlay(null)}
-                                        onSelectGame={(game) => { handleNavigateToGame(game.id); setActiveCategoryOverlay(null); }}
                                     />
                                 )}
                             </AnimatePresence>
@@ -634,7 +621,7 @@ export default function Store() {
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
                                                                             <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
                                                                               <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
-                                                                                <span className="text-green-400 font-bold text-sm">${game?.price ?? '0'}</span>
+                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
                                                                               </div>
                                                                               <WishlistButton game={game} />
                                                                             </div>
