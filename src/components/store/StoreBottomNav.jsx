@@ -104,8 +104,8 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
         )}
       </AnimatePresence>
 
-      {/* Tabs - Left */}
-      <div className="flex items-center gap-2">
+      {/* Tabs - Center */}
+      <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
         <div
           className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-all"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
@@ -131,8 +131,8 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
         </div>
       </div>
 
-      {/* Search + Cart - Center */}
-      <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+      {/* Search - Right */}
+      <div className="flex items-center gap-2 ml-auto">
         <div
           className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-all"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
@@ -156,19 +156,17 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
             </button>
           )}
         </div>
+        <Link
+          to={createPageUrl('Cart')}
+          className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10"
+          style={{ background: 'rgba(255,255,255,0.07)' }}
+        >
+          <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
+          )}
+        </Link>
       </div>
-
-      {/* Cart - Right */}
-      <Link
-        to={createPageUrl('Cart')}
-        className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10"
-        style={{ background: 'rgba(255,255,255,0.07)' }}
-      >
-        <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
-        {cartCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
-        )}
-      </Link>
     </div>
   );
 }
