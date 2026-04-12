@@ -449,7 +449,7 @@ export default function Store() {
 
                             {/* Secondary Store Controls Bar */}
                             {storeSubView === 'games' && (
-                                <div className="fixed top-16 left-[5%] right-0 z-40 flex items-center justify-center px-4 py-2 gap-6" style={{ background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="fixed top-16 right-0 z-40 flex items-center justify-center px-4 py-2 gap-6" style={{ left: 'max(5%, 80px)', background: 'rgba(8, 12, 18, 0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                     {/* CENTER: Sub-category tabs */}
                                     <div className="flex items-center gap-1.5">
                                         {['Trending', 'Top Rated', 'New Releases', 'Classics', 'Hidden Gems'].map((tab, idx) => (
