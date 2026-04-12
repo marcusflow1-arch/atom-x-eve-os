@@ -29,8 +29,32 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
-import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
+import StoreCategoryOverlay from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
+
+function SwordsIcon(props) {
+    return (
+        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+            <path d="m13 19 6-6" />
+            <path d="M16 16l4 4" />
+            <path d="M19 21l2-2" />
+        </svg>
+    );
+}
+
+const CATEGORY_DATA = [
+    { id: 'all', label: 'All', icon: Gamepad2 },
+    { id: 'action', label: 'Action', icon: Crosshair },
+    { id: 'rpg', label: 'RPG', icon: Shield },
+    { id: 'strategy', label: 'Strategy', icon: Trophy },
+    { id: 'shooter', label: 'Shooter', icon: Crosshair },
+    { id: 'sports', label: 'Sports', icon: Trophy },
+    { id: 'racing', label: 'Racing', icon: Car },
+    { id: 'horror', label: 'Horror', icon: Skull },
+    { id: 'puzzle', label: 'Puzzle', icon: Zap },
+    { id: 'adventure', label: 'Adventure', icon: Gamepad2 },
+];
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -47,17 +71,6 @@ const GENRE_ICONS = {
     'Romance': Heart,
     'Sci-Fi': Sparkles,
 };
-
-function SwordsIcon(props) {
-    return (
-        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
-            <path d="m13 19 6-6" />
-            <path d="M16 16l4 4" />
-            <path d="M19 21l2-2" />
-        </svg>
-    );
-}
 
 const AIVoiceSearch = ({ onSearchResult, onClose }) => {
     const [isListening, setIsListening] = useState(false);
@@ -391,7 +404,7 @@ export default function Store() {
                             <div className="w-8 h-px mb-3" style={{ background: 'rgba(200,210,220,0.2)' }} />
 
                             <div className="flex flex-col gap-2 w-full items-center">
-                                {CATEGORIES.map(cat => {
+                                {CATEGORY_DATA.map(cat => {
                                     const Icon = cat.icon;
                                     const isActive = activeCategoryOverlay === cat.id;
                                     return (
