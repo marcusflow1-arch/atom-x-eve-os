@@ -31,6 +31,7 @@ import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
+import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -572,7 +573,7 @@ export default function Store() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Below showcase: genre list + game grid */}
+                                                        {/* Below showcase: genre list + game grid + interactions */}
                                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                                             {/* LEFT: Genre list */}
                                                             <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
@@ -602,8 +603,40 @@ export default function Store() {
                                                                 </motion.div>
                                                             </div>
 
-                                                            {/* RIGHT: Game Grid */}
+                                                            {/* CENTER: Game Grid (70%) */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
+                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                                                                    {displayedGames.map((game, idx) => (
+                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                                                            <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                                            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
+                                                                              <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
+                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                                              </div>
+                                                                              <WishlistButton game={game} />
+                                                                            </div>
+                                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                                                                <div className="flex items-center justify-between text-xs text-white/60">
+                                                                                    <span>{game.genre}</span>
+                                                                                    <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    ))}
+                                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </motion.div>
+                                                            </div>
+
+                                                            {/* RIGHT: Player Interactions Panel (30%) */}
+                                                            <PlayerInteractionsPanel />
+                                                        </div>
+                                                    </div>
                                                 </>
                                             )}
                                         </motion.div>
