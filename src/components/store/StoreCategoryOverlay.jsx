@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import WishlistButton from './WishlistButton';
+import PlayerInteractionsPanel from './PlayerInteractionsPanel';
 
 const CATEGORIES = [
   { id: 'recommended', label: 'Recommended', icon: Sparkles, color: 'from-purple-500 to-pink-500', accent: 'text-purple-300', filter: (games) => [...games].sort(() => Math.random() - 0.5).slice(0, 30) },
@@ -443,36 +444,44 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
         </div>
       </div>
 
-      {/* ── BOTTOM 80%: Game grid ── */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3">
-          {filteredGames.map((game) => {
-            const isSelected = selectedGame?.id === game.id;
-            return (
-              <motion.div
-                key={game.id}
-                whileHover={{ y: -4, scale: 1.04 }}
-                onClick={() => handleGameClick(game)}
-                className={`group cursor-pointer rounded-xl overflow-hidden border transition-all relative bg-slate-900 ${isSelected ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/8 hover:border-cyan-400/30'}`}
-                style={{ aspectRatio: '3/4' }}
-              >
-                <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
-                {isSelected && (
-                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                    <Info className="w-2.5 h-2.5 text-black" />
+      {/* ── BOTTOM 80%: 70/30 Split (Game grid + Player Interactions) ── */}
+      <div className="flex-1 overflow-hidden flex gap-4 p-4">
+        {/* LEFT: 70% Game Grid */}
+        <div className="flex-[0.7] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3">
+            {filteredGames.map((game) => {
+              const isSelected = selectedGame?.id === game.id;
+              return (
+                <motion.div
+                  key={game.id}
+                  whileHover={{ y: -4, scale: 1.04 }}
+                  onClick={() => handleGameClick(game)}
+                  className={`group cursor-pointer rounded-xl overflow-hidden border transition-all relative bg-slate-900 ${isSelected ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/8 hover:border-cyan-400/30'}`}
+                  style={{ aspectRatio: '3/4' }}
+                >
+                  <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+                  {isSelected && (
+                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                      <Info className="w-2.5 h-2.5 text-black" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                    <h4 className="text-white font-bold text-[9px] leading-tight truncate">{game.title}</h4>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-white/35 text-[8px]">{game.genre}</span>
+                      <span className="text-green-400 font-bold text-[9px]">${game.price}</span>
+                    </div>
                   </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                  <h4 className="text-white font-bold text-[9px] leading-tight truncate">{game.title}</h4>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-white/35 text-[8px]">{game.genre}</span>
-                    <span className="text-green-400 font-bold text-[9px]">${game.price}</span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT: 30% Player Interactions Panel */}
+        <div className="flex-[0.3] overflow-hidden rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <PlayerInteractionsPanel />
         </div>
       </div>
     </motion.div>
