@@ -81,19 +81,8 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
 
   return (
     <div className="relative flex items-center justify-between w-full">
-      <AnimatePresence>
-        {showPopup && (
-          <GameSearchPopup
-            games={games}
-            searchTerm={searchTerm}
-            onNavigate={onNavigateToGame}
-            onClose={() => { setShowPopup(false); setSearchTerm(''); }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2">
+      {/* Tabs - centered */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
