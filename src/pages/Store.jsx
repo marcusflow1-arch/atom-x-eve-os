@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
     Gamepad2, Search, ShoppingCart, Star, Trophy, Sparkles, 
     Zap, Heart, Skull, Shield, Music, Crosshair, Car, Monitor,
@@ -32,7 +31,6 @@ import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
-import GameDetailPanel from '../components/store/GameDetailPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -171,10 +169,9 @@ export default function Store() {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const { getCartCount } = useCart();
-    const hasFetchedRef = useRef(false);
 
     const [showOverview, setShowOverview] = useState(false);
-    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null);
+    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
@@ -198,7 +195,6 @@ export default function Store() {
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
-    const [selectedGameForDetail, setSelectedGameForDetail] = useState(null);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -245,8 +241,8 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        const game = games.find(g => g.id === id);
-        setSelectedGameForDetail(game);
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
     };
 
     const {
@@ -336,9 +332,6 @@ export default function Store() {
     });
 
     useEffect(() => {
-        if (hasFetchedRef.current) return;
-        hasFetchedRef.current = true;
-
         const fetchGames = async () => {
             const isDev = import.meta.env.DEV;
             const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
@@ -380,10 +373,10 @@ export default function Store() {
 
     return (
         <PageErrorBoundary pageName="Store">
-            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} games={games} onNavigateToGame={handleNavigateToGame} cartCount={getCartCount()} onToggleVoiceSearch={() => setShowVoiceOptions(!showVoiceOptions)} />}>
+            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-                    {/* 5% Left Sidebar */}
+                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
@@ -432,7 +425,7 @@ export default function Store() {
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
-                        {/* Top Header */}
+                        {/* Top Header — liquid glass silver */}
                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
                             backdropFilter: 'blur(28px) saturate(180%)',
@@ -465,6 +458,34 @@ export default function Store() {
                                             </button>
                                         ))}
                                     </div>
+
+                                    {/* Search + Cart */}
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative">
+                                            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 w-44 focus-within:border-white/30 transition-all">
+                                                <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
+                                                <input type="text" placeholder={isRegularVoiceListening ? 'Listening...' : 'Search games...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full" />
+                                                {searchTerm && <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white"><X className="w-3 h-3" /></button>}
+                                                <button onClick={() => setShowVoiceOptions(!showVoiceOptions)} className={`transition-colors ${isRegularVoiceListening ? 'text-purple-400' : 'text-white/30 hover:text-white'}`}><Mic className="w-3 h-3" /></button>
+                                            </div>
+                                            <AnimatePresence>
+                                                {showVoiceOptions && (
+                                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full right-0 mt-2 w-44 bg-slate-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+                                                        <button onClick={() => { setVoiceSearchOpen(true); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Sparkles className="w-4 h-4 text-purple-400" /><span className="text-sm text-white">AI Search</span></button>
+                                                        <div className="h-px bg-white/10" />
+                                                        <button onClick={() => { toggleRegularVoice(); setShowVoiceOptions(false); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5"><Mic className="w-4 h-4 text-blue-400" /><span className="text-sm text-white">Voice Search</span></button>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                            <AnimatePresence>
+                                                {voiceSearchOpen && <AIVoiceSearch onSearchResult={(term) => { setSearchTerm(term); setVoiceSearchOpen(false); }} onClose={() => setVoiceSearchOpen(false)} />}
+                                            </AnimatePresence>
+                                        </div>
+                                        <Link to={createPageUrl('Cart')} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all relative border border-white/10">
+                                            <ShoppingCart className="w-3 h-3 text-white/80" />
+                                            {getCartCount() > 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{getCartCount()}</span>}
+                                        </Link>
+                                    </div>
                                 </div>
                             )}
 
@@ -489,62 +510,7 @@ export default function Store() {
 
                             {/* MAIN CONTENT AREA */}
                             <AnimatePresence mode="wait">
-                                {selectedGameForDetail && storeMode === 'store' ? (
-                                    // 15/85 Split View for Game Detail
-                                    <motion.div key="game-detail-split" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex overflow-hidden pt-16">
-                                        {/* 15% Left Sidebar - Game List */}
-                                        <div className="w-[15%] border-r border-white/10 flex flex-col bg-black/30">
-                                            <div className="p-4 border-b border-white/10">
-                                                <h3 className="text-xs font-bold text-white/70 uppercase tracking-widest">Games in {currentNavGenre?.label || 'Category'}</h3>
-                                            </div>
-                                            <ScrollArea className="flex-1">
-                                                <div className="space-y-1 p-3">
-                                                    {(displayedGames.length > 0 ? displayedGames : games).map(g => (
-                                                        <button
-                                                            key={g.id}
-                                                            onClick={() => setSelectedGameForDetail(g)}
-                                                            className={`w-full text-left px-3 py-2 rounded-lg transition-all text-xs font-medium truncate ${
-                                                                selectedGameForDetail?.id === g.id
-                                                                    ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/40'
-                                                                    : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
-                                                            }`}
-                                                            title={g.title}
-                                                        >
-                                                            {g.title}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </ScrollArea>
-                                        </div>
-                                        {/* 85% Right Content */}
-                                        <div className="flex-1 overflow-auto">
-                                            <div className="flex flex-col h-full">
-                                                <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
-                                                    <div>
-                                                        <h2 className="text-2xl font-bold text-white mb-1">{selectedGameForDetail.title}</h2>
-                                                        <div className="flex items-center gap-4 text-sm">
-                                                            <span className="text-white/60">{selectedGameForDetail.genre}</span>
-                                                            <div className="flex items-center gap-1 text-yellow-500">
-                                                                <Star className="w-4 h-4 fill-current" />
-                                                                <span className="text-white">{selectedGameForDetail.rating || 4.5}</span>
-                                                            </div>
-                                                            {selectedGameForDetail.price && <span className="text-green-400 font-bold">${selectedGameForDetail.price}</span>}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => setSelectedGameForDetail(null)}
-                                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                                                    >
-                                                        <X className="w-5 h-5 text-white" />
-                                                    </button>
-                                                </div>
-                                                <div className="flex-1 overflow-auto">
-                                                    <GameDetailPanel game={selectedGameForDetail} onClose={() => setSelectedGameForDetail(null)} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ) : storeMode === 'store' && storeSubView === 'achievements' ? (
+                                {storeMode === 'store' && storeSubView === 'achievements' ? (
                                     <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
                                         <Achievements onExitToLibrary={() => setStoreSubView('library')} />
                                     </motion.div>
@@ -622,63 +588,24 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* Achievements Section — 50/50 Split */}
-                                                        <div className="h-[350px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden px-6 gap-6">
-                                                            {/* Spacer matching genre list column width */}
-                                                            <div className="flex-shrink-0" style={{ width: '200px' }} />
+                                                        {/* HERO SHOWCASE + ACHIEVEMENTS */}
+                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
 
-                                                            {/* Left: Game Slideshow (50%) */}
-                                                            <div className="w-1/2 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-xl p-4">
-                                                                {currentShowcaseGame && (
-                                                                    <>
-                                                                        <div className="w-32 h-40 rounded-lg overflow-hidden shadow-lg flex-shrink-0">
-                                                                            <img src={currentShowcaseGame.cover_image} alt={currentShowcaseGame.title} className="w-full h-full object-cover" />
-                                                                        </div>
-                                                                        <div className="text-center">
-                                                                            <h3 className="text-lg font-bold text-white mb-1">{currentShowcaseGame.title}</h3>
-                                                                            <p className="text-xs text-white/60 mb-3">{currentShowcaseGame.genre}</p>
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    const nextIdx = displayedGames.length > 0 ? (displayedGames.indexOf(currentShowcaseGame) + 1) % displayedGames.length : 0;
-                                                                                    setCurrentShowcaseGame(displayedGames[nextIdx] || currentShowcaseGame);
-                                                                                }}
-                                                                                className="px-4 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 hover:bg-cyan-500/30 transition-all font-medium text-xs"
-                                                                            >
-                                                                                Next Game →
-                                                                            </button>
-                                                                        </div>
-                                                                    </>
-                                                                )}
+                                                            {/* Achievements — from game grid left edge to divider */}
+                                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                                                <StoreAchievementsStrip currentGame={currentShowcaseGame} />
                                                             </div>
 
-                                                            {/* Right: Achievements (50%) */}
-                                                            <div className="w-1/2 overflow-y-auto pr-2 space-y-2">
-                                                                {currentShowcaseGame && (
-                                                                    achievements
-                                                                        .filter(ach => ach.game === currentShowcaseGame.title)
-                                                                        .slice(0, 8)
-                                                                        .map(ach => (
-                                                                            <div key={ach.id} className="p-3 rounded-lg bg-gradient-to-r from-white/[0.08] to-white/[0.03] border border-white/10 hover:border-white/20 transition-all group">
-                                                                                <div className="flex items-start gap-2">
-                                                                                    <span className="text-xl shrink-0">{ach.icon}</span>
-                                                                                    <div className="flex-1 min-w-0">
-                                                                                        <h4 className="font-bold text-white text-xs truncate">{ach.title}</h4>
-                                                                                        <div className="flex items-center gap-1.5 mt-1">
-                                                                                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                                                                                                ach.rarity === 'Legendary' ? 'bg-yellow-500/30 text-yellow-300' :
-                                                                                                ach.rarity === 'Epic' ? 'bg-purple-500/30 text-purple-300' :
-                                                                                                ach.rarity === 'Rare' ? 'bg-blue-500/30 text-blue-300' :
-                                                                                                'bg-gray-500/30 text-gray-300'
-                                                                                            }`}>
-                                                                                                {ach.rarity}
-                                                                                            </span>
-                                                                                            <span className="text-[10px] text-white/40 ml-auto">{ach.points}pts</span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))
-                                                                )}
+                                                            {/* Vertical divider — center portion only, thicker */}
+                                                            <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
+                                                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
+                                                            </div>
+
+                                                            {/* Slideshow — right 50% */}
+                                                            <div className="w-1/2 flex-shrink-0 overflow-hidden">
+                                                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
                                                             </div>
                                                         </div>
 
@@ -766,8 +693,6 @@ export default function Store() {
                                     if (url) navigate(url);
                                 }} />
                             )}
-
-
                         </div>
                     </div>
                 </div>

@@ -6,34 +6,25 @@ import { useAuth } from '../auth/AuthContext';
 export default function WishlistButton({ game, className = '' }) {
   const { user, isAuthenticated } = useAuth();
   const [wishlisted, setWishlisted] = useState(false);
-  const [wishlistId, setWishlistId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id || !game?.id) return;
     base44.entities.Wishlist.filter({ user_id: user.id, game_id: game.id })
-      .then(results => {
-        if (results.length > 0) {
-          setWishlisted(true);
-          setWishlistId(results[0].id);
-        } else {
-          setWishlisted(false);
-          setWishlistId(null);
-        }
-      })
+      .then(results => setWishlisted(results.length > 0))
       .catch(() => {});
   }, [user?.id, game?.id, isAuthenticated]);
 
   const toggle = async (e) => {
     e.stopPropagation();
-    if (!isAuthenticated || !user?.id || loading) return;
+    if (!isAuthenticated || !user?.id) return;
     setLoading(true);
-    if (wishlisted && wishlistId) {
-      await base44.entities.Wishlist.delete(wishlistId);
+    if (wishlisted) {
+      const existing = await base44.entities.Wishlist.filter({ user_id: user.id, game_id: game.id });
+      if (existing.length > 0) await base44.entities.Wishlist.delete(existing[0].id);
       setWishlisted(false);
-      setWishlistId(null);
-    } else if (!wishlisted) {
-      const created = await base44.entities.Wishlist.create({
+    } else {
+      await base44.entities.Wishlist.create({
         user_id: user.id,
         game_id: game.id,
         game_title: game.title,
@@ -42,7 +33,6 @@ export default function WishlistButton({ game, className = '' }) {
         game_genre: game.genre || '',
       });
       setWishlisted(true);
-      setWishlistId(created.id);
     }
     setLoading(false);
   };

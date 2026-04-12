@@ -34,7 +34,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
 
       {/* Bottom Glass Bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[60]"
+        className="fixed bottom-0 left-0 right-0 z-[35]"
         style={{
           ...glassStyle,
           minHeight: '48px',
