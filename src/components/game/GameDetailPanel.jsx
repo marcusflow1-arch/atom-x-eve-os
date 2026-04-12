@@ -4,7 +4,8 @@ import {
   Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
-  Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy
+  Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy,
+  Package, Tag, ArrowUpCircle, Bug, Sparkles
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -1109,6 +1110,72 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     <p className="text-white/70 leading-relaxed text-sm">
                       Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
                     </p>
+                  </div>
+
+                  {/* Content Updates & Patch Notes */}
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Package className="w-5 h-5 text-cyan-400" />
+                        Content Updates
+                      </h3>
+                      <span className="text-[10px] text-white/30 uppercase tracking-wider">Recent Patch Notes</span>
+                    </div>
+                    <div className="space-y-3">
+                      {[
+                        {
+                          version: 'v2.4.1',
+                          date: 'Mar 28, 2026',
+                          type: 'patch',
+                          title: 'Stability & Balance Update',
+                          notes: ['Fixed crash on loading certain maps', 'Adjusted weapon damage scaling for PvP', 'Performance improvements for mid-range GPUs']
+                        },
+                        {
+                          version: 'v2.4.0',
+                          date: 'Mar 15, 2026',
+                          type: 'update',
+                          title: 'Season 2 Content Drop',
+                          notes: ['Added 3 new biome zones', 'Introduced ranked PvP ladder system', 'New legendary equipment tier unlocked']
+                        },
+                        {
+                          version: 'v2.3.2',
+                          date: 'Feb 20, 2026',
+                          type: 'hotfix',
+                          title: 'Hotfix — Item Duplication Bug',
+                          notes: ['Resolved item duplication exploit in Marketplace', 'Minor UI fixes for inventory overlays']
+                        },
+                      ].map((patch, i) => {
+                        const typeConfig = {
+                          patch:   { label: 'Patch',   icon: Bug,             color: 'text-yellow-400 bg-yellow-900/20 border-yellow-700/30' },
+                          update:  { label: 'Update',  icon: ArrowUpCircle,   color: 'text-cyan-400 bg-cyan-900/20 border-cyan-700/30' },
+                          hotfix:  { label: 'Hotfix',  icon: Sparkles,        color: 'text-red-400 bg-red-900/20 border-red-700/30' },
+                        }[patch.type];
+                        const TypeIcon = typeConfig.icon;
+                        return (
+                          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/[0.07] transition-colors">
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div className="flex items-center gap-3">
+                                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${typeConfig.color}`}>
+                                  <TypeIcon className="w-3 h-3" /> {typeConfig.label}
+                                </span>
+                                <span className="text-white font-bold text-sm">{patch.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0 text-right">
+                                <span className="text-[10px] font-mono text-white/30">{patch.version}</span>
+                                <span className="text-[10px] text-white/20">{patch.date}</span>
+                              </div>
+                            </div>
+                            <ul className="space-y-1">
+                              {patch.notes.map((note, j) => (
+                                <li key={j} className="text-xs text-white/50 flex items-start gap-2">
+                                  <span className="text-cyan-500/50 mt-0.5">•</span> {note}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
