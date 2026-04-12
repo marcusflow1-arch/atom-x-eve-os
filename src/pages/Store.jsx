@@ -29,6 +29,7 @@ import GlassPageFrame from '@/components/shared/GlassPageFrame';
 import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
+import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
 
 const GENRE_ICONS = {
@@ -170,6 +171,7 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
+    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
@@ -377,14 +379,28 @@ export default function Store() {
                     {/* 5% Left Sidebar */}
                     <div className="w-[5%] min-w-[80px] h-full border-r border-white/20 bg-black/20 relative z-40 flex-shrink-0 shadow-[5px_0_15px_rgba(0,0,0,0.5)] backdrop-blur-sm flex flex-col items-center py-6">
                         <div className="flex flex-col items-center w-full px-2 mt-auto mb-16">
-                            <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Risley<br />Play</span>
+                            <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Browse</span>
                             <div className="w-8 h-px bg-white/20 mb-3" />
                             <div className="flex flex-col gap-2 w-full items-center">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <div key={i} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                                        <span className="text-white/30 text-lg font-bold">?</span>
-                                    </div>
-                                ))}
+                                {CATEGORIES.map(cat => {
+                                    const Icon = cat.icon;
+                                    const isActive = activeCategoryOverlay === cat.id;
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setActiveCategoryOverlay(isActive ? null : cat.id)}
+                                            title={cat.label}
+                                            className={`group w-11 h-11 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
+                                                isActive
+                                                    ? 'border-white/30 bg-white/15 shadow-lg'
+                                                    : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
+                                            }`}
+                                        >
+                                            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}`} />
+                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat.label.split(' ')[0]}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -453,6 +469,18 @@ export default function Store() {
                             <AnimatePresence>
                                 {showOverview && (
                                     <StoreOverview onClose={() => setShowOverview(false)} />
+                                )}
+                            </AnimatePresence>
+
+                            {/* CATEGORY OVERLAY */}
+                            <AnimatePresence>
+                                {activeCategoryOverlay && (
+                                    <StoreCategoryOverlay
+                                        key={activeCategoryOverlay}
+                                        category={activeCategoryOverlay}
+                                        games={games}
+                                        onClose={() => setActiveCategoryOverlay(null)}
+                                    />
                                 )}
                             </AnimatePresence>
 
