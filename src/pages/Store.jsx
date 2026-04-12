@@ -561,24 +561,14 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* HERO SHOWCASE + ACHIEVEMENTS */}
+                                                        {/* Achievements Section — Full Width */}
                                                         <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
                                                             {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
-                                                            {/* Achievements — from game grid left edge to divider */}
+                                                            {/* Achievements — Full Width */}
                                                             <div className="flex-1 min-w-0 overflow-hidden">
                                                                 <StoreAchievementsStrip currentGame={currentShowcaseGame} />
-                                                            </div>
-
-                                                            {/* Vertical divider — center portion only, thicker */}
-                                                            <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
-                                                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
-                                                            </div>
-
-                                                            {/* Slideshow — right 50% */}
-                                                            <div className="w-1/2 flex-shrink-0 overflow-hidden">
-                                                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
                                                             </div>
                                                         </div>
 
@@ -614,35 +604,6 @@ export default function Store() {
 
                                                             {/* RIGHT: Game Grid */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
-                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-                                                                    {displayedGames.map((game, idx) => (
-                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
-                                                                            <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                                                            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
-                                                                              <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
-                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                                                              </div>
-                                                                              <WishlistButton game={game} />
-                                                                            </div>
-                                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                                                                <div className="flex items-center justify-between text-xs text-white/60">
-                                                                                    <span>{game.genre}</span>
-                                                                                    <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </motion.div>
-                                                                    ))}
-                                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
-                                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
-                                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
-                                                                        </div>
-                                                                    ))}
-                                                                </motion.div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
                                                 </>
                                             )}
                                         </motion.div>
