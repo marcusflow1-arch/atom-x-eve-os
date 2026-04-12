@@ -394,85 +394,92 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
       className="absolute inset-0 z-50 flex flex-col overflow-hidden"
       style={{ background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)', backdropFilter: 'blur(30px)' }}
     >
-      {/* Full detail overlay */}
-      <AnimatePresence>
-        {showDetail && selectedGame && (
-          <GameDetailPanel game={selectedGame} onBack={() => setShowDetail(false)} />
-        )}
-      </AnimatePresence>
+      {/* ── HEADER ── */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/8" style={{ height: '56px' }}>
+        <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+          <Icon className="w-4 h-4 text-white" />
+        </div>
+        <div>
+          <h2 className="text-white font-black text-base leading-none">{cat.label}</h2>
+          <p className="text-white/35 text-[10px]">{filteredGames.length} games</p>
+        </div>
+        <button onClick={onClose} className="ml-auto w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/15 border border-white/10 hover:border-red-500/20 flex items-center justify-center transition-all">
+          <X className="w-4 h-4 text-white/50 hover:text-red-300" />
+        </button>
+      </div>
 
-      {/* ── TOP 20%: Header + Preview strip ── */}
-      <div className="flex-shrink-0" style={{ height: '20%', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        {/* Category header bar */}
-        <div className="flex items-center gap-3 px-4 pt-3 pb-2 flex-shrink-0">
-          <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-            <Icon className="w-4 h-4 text-white" />
+      {/* ── MAIN CONTENT: Left menu + Right detail ── */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* LEFT: Game list menu */}
+        <div className="w-80 flex-shrink-0 border-r border-white/8 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex flex-col">
+            {filteredGames.map((game, idx) => {
+              const isSelected = selectedGame?.id === game.id;
+              return (
+                <motion.button
+                  key={game.id}
+                  onClick={() => {
+                    setSelectedGame(game);
+                    setShowDetail(false);
+                  }}
+                  whileHover={{ x: 4 }}
+                  className={`flex items-center gap-3 w-full text-left px-3 py-2.5 border-b border-white/5 transition-all ${
+                    isSelected
+                      ? 'bg-cyan-500/15 border-l-2 border-l-cyan-400'
+                      : 'hover:bg-white/5'
+                  }`}
+                >
+                  {/* Game cover thumbnail */}
+                  <div className="flex-shrink-0 w-12 h-16 rounded-lg overflow-hidden border border-white/10">
+                    <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                  </div>
+
+                  {/* Game info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-bold text-xs leading-tight truncate">{game.title}</h4>
+                    <p className="text-white/40 text-[9px] mt-0.5">{game.genre}</p>
+                    <span className="text-green-400 font-bold text-[9px] mt-1 inline-block">${game.price}</span>
+                  </div>
+
+                  {/* Selection indicator */}
+                  {isSelected && (
+                    <ChevronRight className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
-          <div>
-            <h2 className="text-white font-black text-base leading-none">{cat.label}</h2>
-            <p className="text-white/35 text-[10px]">{filteredGames.length} games · click once to preview, click again for full details</p>
-          </div>
-          <button onClick={onClose} className="ml-auto w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/15 border border-white/10 hover:border-red-500/20 flex items-center justify-center transition-all">
-            <X className="w-4 h-4 text-white/50 hover:text-red-300" />
-          </button>
         </div>
 
-        {/* Preview strip */}
-        <div className="flex-1 overflow-hidden" style={{ height: 'calc(100% - 52px)' }}>
+        {/* RIGHT: Game detail */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           <AnimatePresence mode="wait">
             {selectedGame ? (
-              <GamePreviewStrip
+              <motion.div
                 key={selectedGame.id}
-                game={selectedGame}
-                onViewDetail={() => setShowDetail(true)}
-                onClose={() => setSelectedGame(null)}
-              />
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex-1 overflow-hidden flex flex-col"
+              >
+                <GameDetailPanel game={selectedGame} onBack={() => setSelectedGame(null)} />
+              </motion.div>
             ) : (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex items-center justify-center h-full text-white/20 text-sm gap-2"
+                className="flex-1 flex items-center justify-center text-white/20 text-sm"
               >
-                <Icon className="w-4 h-4 opacity-40" />
-                Select a game below to preview
+                <div className="text-center">
+                  <Icon className="w-8 h-8 opacity-40 mx-auto mb-2" />
+                  <p>Select a game to view details</p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-      </div>
-
-      {/* ── BOTTOM 80%: Game grid ── */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3">
-          {filteredGames.map((game) => {
-            const isSelected = selectedGame?.id === game.id;
-            return (
-              <motion.div
-                key={game.id}
-                whileHover={{ y: -4, scale: 1.04 }}
-                onClick={() => handleGameClick(game)}
-                className={`group cursor-pointer rounded-xl overflow-hidden border transition-all relative bg-slate-900 ${isSelected ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/8 hover:border-cyan-400/30'}`}
-                style={{ aspectRatio: '3/4' }}
-              >
-                <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
-                {isSelected && (
-                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                    <Info className="w-2.5 h-2.5 text-black" />
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                  <h4 className="text-white font-bold text-[9px] leading-tight truncate">{game.title}</h4>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-white/35 text-[8px]">{game.genre}</span>
-                    <span className="text-green-400 font-bold text-[9px]">${game.price}</span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
         </div>
       </div>
     </motion.div>
