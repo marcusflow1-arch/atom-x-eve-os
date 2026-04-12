@@ -56,9 +56,24 @@ export default function ChatArea({ channel, clan, myRole }) {
             isAnnouncement: false,
             isPinned: false
         }),
-        onSuccess: () => {
+        onMutate: (content) => {
+            // Optimistic update — show message immediately
+            const optimistic = {
+                id: `opt_${Date.now()}`,
+                divisionId: clan.id,
+                channelId: channel.id,
+                author: user.full_name || user.username || user.email?.split('@')[0] || 'Unknown',
+                authorAvatar: user.avatar_url,
+                content,
+                userId: user.id,
+                role: myRole || 'member',
+                created_date: new Date().toISOString(),
+            };
+            queryClient.setQueryData(['channelMessages', channel?.id], (old = []) => [...old, optimistic]);
             setInputValue('');
-            queryClient.invalidateQueries(['channelMessages']);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['channelMessages', channel?.id] });
         }
     });
 

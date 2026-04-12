@@ -76,8 +76,10 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
 
     const memberCount = members?.length || 0;
 
-    // Filter channels based on user's role and channel role_restriction
-    const canAccessChannel = (ch) => {
+    // Everyone can SEE all channels (including restricted ones).
+    // Posting restrictions are enforced inside ChatArea / ClanChat.
+    // A lock icon distinguishes read-only channels for regular members.
+    const canPostInChannel = (ch) => {
         const restriction = ch.role_restriction || 'none';
         if (restriction === 'none') return true;
         if (restriction === 'officer') return myRole === 'officer' || myRole === 'leader';
@@ -85,8 +87,8 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
         return true;
     };
 
-    const textChannels = (channels?.filter(c => c.type === 'text') || []).filter(canAccessChannel);
-    const voiceChannels = (channels?.filter(c => c.type === 'voice') || []).filter(canAccessChannel);
+    const textChannels = channels?.filter(c => c.type === 'text') || [];
+    const voiceChannels = channels?.filter(c => c.type === 'voice') || [];
 
     // Guild Features Section
     const renderGuildHall = () => (
@@ -199,11 +201,20 @@ export default function ChannelList({ clan, activeChannelId, onSelectChannel, on
                                                 : 'text-white/60 hover:bg-white/5 hover:text-white'
                                         }`}
                                     >
-                                        <div className="flex items-center">
-                                           <Hash className={`w-4 h-4 mr-2 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
+                                        <div className="flex items-center gap-1.5">
+                                           <Hash className={`w-4 h-4 mr-1 flex-shrink-0 ${activeChannelId === channel.id ? 'text-white' : 'text-white/40'}`} />
                                            <span className="text-sm truncate">{channel.name}</span>
-                                           {channel.role_restriction === 'officer' && <Badge className="ml-1.5 h-4 px-1 bg-blue-500/15 text-blue-300/70 border-blue-500/20 text-[9px]">Officers</Badge>}
-                                           {channel.role_restriction === 'leader' && <Badge className="ml-1.5 h-4 px-1 bg-amber-500/15 text-amber-300/70 border-amber-500/20 text-[9px]"><Crown className="w-2.5 h-2.5 mr-0.5" />Leaders</Badge>}
+                                           {channel.role_restriction === 'officer' && (
+                                             <Badge className="ml-1 h-4 px-1 bg-blue-500/15 text-blue-300/70 border-blue-500/20 text-[9px] flex-shrink-0">
+                                               {canPostInChannel(channel) ? 'Officers' : '👁 Read'}
+                                             </Badge>
+                                           )}
+                                           {channel.role_restriction === 'leader' && (
+                                             <Badge className="ml-1 h-4 px-1 bg-amber-500/15 text-amber-300/70 border-amber-500/20 text-[9px] flex-shrink-0">
+                                               <Crown className="w-2.5 h-2.5 mr-0.5" />
+                                               {canPostInChannel(channel) ? 'Leaders' : '👁 Read'}
+                                             </Badge>
+                                           )}
                                         </div>
                                         {myRole === 'leader' && (
                                             <X 
