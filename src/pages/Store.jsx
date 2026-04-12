@@ -376,7 +376,7 @@ export default function Store() {
             <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-                    {/* 5% Left Sidebar — liquid glass silver */}
+                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
@@ -386,9 +386,39 @@ export default function Store() {
                             boxShadow: '4px 0 20px rgba(0,0,0,0.35), inset 1px 0 0 rgba(255,255,255,0.08)'
                         }}
                     >
-                        <div className="flex flex-col items-center w-full px-2 mt-auto mb-16">
-                            <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold text-center mb-1">Store</span>
+                        <div className="mt-12 px-2 flex flex-col items-center w-full">
+                            <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Browse</span>
                             <div className="w-8 h-px mb-3" style={{ background: 'rgba(200,210,220,0.2)' }} />
+
+                            <div className="flex flex-col gap-2 w-full items-center">
+                                {CATEGORIES.map(cat => {
+                                    const Icon = cat.icon;
+                                    const isActive = activeCategoryOverlay === cat.id;
+                                    return (
+                                        <button
+                                            key={cat.id}
+                                            onClick={() => setActiveCategoryOverlay(isActive ? null : cat.id)}
+                                            title={cat.label}
+                                            className={`group w-11 h-11 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
+                                                isActive
+                                                    ? 'border-white/30 shadow-lg'
+                                                    : 'border-white/10 hover:border-white/20'
+                                            }`}
+                                            style={isActive ? {
+                                                background: 'linear-gradient(135deg, rgba(180,190,210,0.22) 0%, rgba(140,155,175,0.15) 100%)',
+                                                boxShadow: '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)'
+                                            } : {
+                                                background: 'rgba(255,255,255,0.05)'
+                                            }}
+                                        >
+                                            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}`} />
+                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat.label.split(' ')[0]}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-3 w-8 h-px" style={{ background: 'rgba(200,210,220,0.2)' }} />
                         </div>
                     </div>
 
@@ -404,35 +434,6 @@ export default function Store() {
                             boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)'
                         }}>
                             <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
-
-                            {/* Category quick-launch buttons — centre of header */}
-                            <div className="flex items-center gap-1.5">
-                                {CATEGORIES.map(cat => {
-                                    const Icon = cat.icon;
-                                    const isActive = activeCategoryOverlay === cat.id;
-                                    return (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setActiveCategoryOverlay(isActive ? null : cat.id)}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                                                isActive
-                                                    ? 'text-white border-white/30 shadow-md'
-                                                    : 'text-white/55 border-transparent hover:text-white hover:border-white/15'
-                                            }`}
-                                            style={isActive ? {
-                                                background: 'linear-gradient(135deg, rgba(180,190,205,0.22) 0%, rgba(140,155,175,0.15) 100%)',
-                                                backdropFilter: 'blur(12px)',
-                                                boxShadow: '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)'
-                                            } : {
-                                                background: 'rgba(255,255,255,0.04)'
-                                            }}
-                                        >
-                                            <Icon className="w-3.5 h-3.5" />
-                                            <span>{cat.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
 
                             <div className="flex items-center gap-2">
                                 <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
