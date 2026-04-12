@@ -169,6 +169,7 @@ export default function Store() {
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const { getCartCount } = useCart();
+    const hasFetchedRef = useRef(false);
 
     const [showOverview, setShowOverview] = useState(false);
     const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null);
@@ -332,6 +333,9 @@ export default function Store() {
     });
 
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
+
         const fetchGames = async () => {
             const isDev = import.meta.env.DEV;
             const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
