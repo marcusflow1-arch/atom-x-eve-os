@@ -410,8 +410,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
 
       {/* ── MAIN CONTENT: Left menu + Right detail ── */}
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT: Game list menu */}
-        <div className="w-80 flex-shrink-0 border-r border-white/8 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        {/* LEFT: Game list menu (15%) */}
+        <div className="flex-shrink-0 border-r border-white/8 overflow-y-auto" style={{ width: '15%', scrollbarWidth: 'none' }}>
           <div className="flex flex-col">
             {filteredGames.map((game, idx) => {
               const isSelected = selectedGame?.id === game.id;
@@ -451,8 +451,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
           </div>
         </div>
 
-        {/* RIGHT: Game detail */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* RIGHT: Game detail (85%) */}
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ width: '85%' }}>
           <AnimatePresence mode="wait">
             {selectedGame ? (
               <motion.div
