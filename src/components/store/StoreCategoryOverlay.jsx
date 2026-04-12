@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Image, Info, ChevronLeft } from 'lucide-react';
+import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import WishlistButton from './WishlistButton';
 
@@ -40,26 +40,30 @@ function StatBadge({ icon: Icon, label, value, accent = 'text-white/70' }) {
   );
 }
 
-function ScreenshotGallery({ screenshots }) {
+function SideScreenshots({ screenshots }) {
   const [active, setActive] = useState(0);
-  if (!screenshots || screenshots.length === 0) return null;
+  const fallbacks = [
+    'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&q=80',
+    'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80',
+    'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&q=80',
+    'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&q=80',
+  ];
+  const imgs = (screenshots && screenshots.length > 0) ? screenshots : fallbacks;
   return (
-    <div>
-      <div className="relative rounded-2xl overflow-hidden aspect-video mb-2" style={glassCard}>
-        <img src={screenshots[active]} alt="Screenshot" className="w-full h-full object-cover" />
-        {screenshots.length > 1 && (
-          <>
-            <button onClick={() => setActive(p => Math.max(0, p-1))} className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-all"><ChevronLeft className="w-4 h-4 text-white" /></button>
-            <button onClick={() => setActive(p => Math.min(screenshots.length-1, p+1))} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-all"><ChevronRight className="w-4 h-4 text-white" /></button>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-              {screenshots.map((_, i) => <div key={i} onClick={() => setActive(i)} className={`w-1.5 h-1.5 rounded-full cursor-pointer transition-all ${i === active ? 'bg-cyan-400 scale-125' : 'bg-white/30'}`} />)}
-            </div>
-          </>
-        )}
+    <div className="flex flex-col gap-2 h-full">
+      <div className="relative rounded-xl overflow-hidden flex-shrink-0" style={{ aspectRatio: '16/9' }}>
+        <img src={imgs[active]} alt="Screenshot" className="w-full h-full object-cover" />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.5) 100%)' }} />
+        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1">
+          {imgs.map((_, i) => <div key={i} onClick={() => setActive(i)} className={`w-1 h-1 rounded-full cursor-pointer transition-all ${i === active ? 'bg-cyan-400 scale-150' : 'bg-white/40'}`} />)}
+        </div>
       </div>
-      <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        {screenshots.map((src, i) => (
-          <img key={i} src={src} alt="" onClick={() => setActive(i)} className={`w-20 h-12 object-cover rounded-lg flex-shrink-0 cursor-pointer border-2 transition-all ${i === active ? 'border-cyan-400' : 'border-transparent opacity-50 hover:opacity-80'}`} />
+      <div className="flex-1 overflow-y-auto space-y-1.5" style={{ scrollbarWidth: 'none' }}>
+        {imgs.map((src, i) => (
+          <div key={i} onClick={() => setActive(i)} className={`relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${i === active ? 'border-cyan-400' : 'border-transparent opacity-60 hover:opacity-90'}`} style={{ aspectRatio: '16/9' }}>
+            <img src={src} alt="" className="w-full h-full object-cover" />
+            {i === active && <div className="absolute inset-0 bg-cyan-400/10" />}
+          </div>
         ))}
       </div>
     </div>
@@ -77,9 +81,27 @@ function ReviewStars({ rating }) {
 }
 
 const MOCK_REVIEWS = [
-  { user: 'NeuroGamer', rating: 5, text: 'Absolutely stunning visuals and gameplay. One of the best titles of the decade.', date: '2 days ago' },
-  { user: 'ShadowAce', rating: 4, text: 'Great mechanics, story could be deeper. Still a must-play for genre fans.', date: '1 week ago' },
-  { user: 'CryptoKnight', rating: 5, text: 'Hours of content, amazing replayability. The online modes are fantastic.', date: '2 weeks ago' },
+  { user: 'NeuroGamer', rating: 5, text: 'Absolutely stunning visuals and gameplay. One of the best titles of the decade. The world-building is unmatched.', date: '2 days ago', hours: 142, helpful: 847 },
+  { user: 'ShadowAce', rating: 4, text: 'Great mechanics and tight combat. Story could be deeper but the online modes more than make up for it. Absolutely worth full price.', date: '1 week ago', hours: 67, helpful: 312 },
+  { user: 'CryptoKnight', rating: 5, text: 'Hours of content, amazing replayability. The online modes are fantastic and the devs keep updating with new content every month.', date: '2 weeks ago', hours: 289, helpful: 1204 },
+  { user: 'VoidWalker', rating: 4, text: 'Incredible art direction. Performance is rock solid even on mid-range hardware. A few minor bugs but nothing game-breaking.', date: '3 weeks ago', hours: 55, helpful: 198 },
+  { user: 'NovaPulse', rating: 5, text: 'Best in the genre bar none. The DLC expansions add massive value. Community is active and welcoming.', date: '1 month ago', hours: 401, helpful: 2103 },
+];
+
+const MOCK_DLC = [
+  { name: 'Expansion Pack I', desc: 'New campaign, 8 hours of story content, 3 new zones.', price: 14.99, type: 'Expansion', icon: '⚔️' },
+  { name: 'Season Pass', desc: 'All future DLC included. Best value for long-term players.', price: 29.99, type: 'Bundle', icon: '🎟️' },
+  { name: 'Cosmetic Pack', desc: 'Exclusive skins, weapon wraps and avatar items.', price: 9.99, type: 'Cosmetics', icon: '✨' },
+  { name: 'Soundtrack', desc: 'Full OST — 42 tracks from the award-winning composer.', price: 4.99, type: 'Media', icon: '🎵' },
+];
+
+const MOCK_CONTENT = [
+  { label: 'Story Missions', value: '28', icon: '📖' },
+  { label: 'Side Quests', value: '60+', icon: '🗺️' },
+  { label: 'Multiplayer Modes', value: '8', icon: '🎮' },
+  { label: 'Collectibles', value: '150', icon: '💎' },
+  { label: 'Endings', value: '5', icon: '🔀' },
+  { label: 'Game Hours', value: '40–80h', icon: '⏱️' },
 ];
 
 function GameDetailPanel({ game, onBack }) {
@@ -92,7 +114,8 @@ function GameDetailPanel({ game, onBack }) {
   const mockDownloads = Math.floor((game.price || 20) * 1247 + 8432);
   const mockPlayers = Math.floor(mockDownloads * 0.3);
   const mockAchievements = Math.floor((game.price || 10) * 3 + 12);
-  const tabs = ['overview', 'screenshots', 'reviews', 'requirements'];
+  const avgRating = game.rating || 4.2;
+  const tabs = ['overview', 'reviews', 'requirements'];
 
   return (
     <motion.div
@@ -104,214 +127,431 @@ function GameDetailPanel({ game, onBack }) {
       className="h-full flex flex-col overflow-hidden"
     >
       {/* ── HERO BANNER ── */}
-      <div className="relative flex-shrink-0 h-56 overflow-hidden">
-        <img src={game.banner_image || game.cover_image} alt={game.title} className="w-full h-full object-cover scale-105" />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(5,8,15,0.92) 100%)' }} />
-        {/* Liquid glass shimmer overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg, rgba(180,200,255,0.05) 0%, transparent 50%, rgba(100,180,255,0.03) 100%)' }} />
-
-        {/* Back button */}
-        <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={glassCard}>
+      <div className="relative flex-shrink-0 h-52 overflow-hidden">
+        <img src={game.banner_image || game.cover_image} alt={game.title} className="w-full h-full object-cover" style={{ filter: 'brightness(0.7) saturate(1.2)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(5,8,18,0.95) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(120deg, rgba(100,160,255,0.06) 0%, transparent 60%)' }} />
+        <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={glassCard}>
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
-
-        {/* Store Page button */}
-        <button onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))} className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-white transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
-          <ExternalLink className="w-3.5 h-3.5" /> Full Store Page
+        <button onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))} className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-cyan-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
+          <ExternalLink className="w-3.5 h-3.5" /> Full Page
         </button>
-
-        {/* Game identity */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
-          <img src={game.cover_image} alt="" className="w-20 h-26 object-cover rounded-xl border border-white/20 shadow-2xl flex-shrink-0" style={{ height: '104px' }} />
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-4">
+          <img src={game.cover_image} alt="" className="w-16 object-cover rounded-xl border border-white/20 shadow-2xl flex-shrink-0" style={{ height: '88px' }} />
           <div className="flex-1 min-w-0">
-            <h2 className="text-white font-black text-2xl leading-tight mb-1" style={{ textShadow: '0 2px 12px rgba(0,0,0,0.8)' }}>{game.title}</h2>
+            <h2 className="text-white font-black text-xl leading-tight mb-1.5" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.9)' }}>{game.title}</h2>
             <div className="flex items-center flex-wrap gap-2">
-              {game.genre && <span className="px-2.5 py-0.5 rounded-full text-xs font-bold" style={{ ...glassCard, color: 'rgba(150,220,255,0.9)' }}>{game.genre}</span>}
+              {game.genre && <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ ...glassCard, color: 'rgba(150,220,255,0.9)' }}>{game.genre}</span>}
               {game.original_year && <span className="text-white/40 text-xs">{game.original_year}</span>}
-              {game.status && <span className="px-2.5 py-0.5 rounded-full text-xs capitalize" style={{ ...glassCard, color: game.status === 'available' ? 'rgba(100,255,150,0.85)' : 'rgba(255,200,80,0.85)' }}>{game.status.replace(/_/g, ' ')}</span>}
-              {game.rating && <div className="flex items-center gap-1"><ReviewStars rating={game.rating} /><span className="text-yellow-400 text-xs font-bold">{game.rating}</span></div>}
+              {game.status && <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase" style={{ ...glassCard, color: game.status === 'available' ? 'rgba(100,255,150,0.9)' : 'rgba(255,200,80,0.9)' }}>{game.status.replace(/_/g,' ')}</span>}
+              <div className="flex items-center gap-1"><ReviewStars rating={avgRating} /><span className="text-yellow-400 text-xs font-bold ml-0.5">{avgRating}</span></div>
             </div>
           </div>
-          {/* Price block */}
           <div className="flex-shrink-0 text-right">
-            <div className="text-3xl font-black text-green-400" style={{ textShadow: '0 0 20px rgba(74,222,128,0.4)' }}>${game.price || '0.00'}</div>
-            <div className="text-white/30 text-xs">USD</div>
+            <div className="text-2xl font-black text-green-400" style={{ textShadow: '0 0 20px rgba(74,222,128,0.4)' }}>${game.price ?? '0.00'}</div>
+            <div className="text-white/30 text-[10px] uppercase tracking-wider">USD</div>
           </div>
         </div>
       </div>
 
-      {/* ── STAT ROW ── */}
-      <div className="flex-shrink-0 px-5 py-3 flex gap-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-        <StatBadge icon={Download} label="Downloads" value={mockDownloads.toLocaleString()} accent="text-cyan-400" />
-        <StatBadge icon={Users} label="Players" value={mockPlayers.toLocaleString()} accent="text-purple-400" />
-        <StatBadge icon={Award} label="Achievements" value={mockAchievements} accent="text-yellow-400" />
-        <StatBadge icon={Star} label="Rating" value={game.rating || 'N/A'} accent="text-yellow-400" />
-        {game.original_year && <StatBadge icon={Clock} label="Released" value={game.original_year} accent="text-blue-400" />}
+      {/* ── STAT STRIP ── */}
+      <div className="flex-shrink-0 px-4 py-2 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        {[
+          { icon: Download, label: 'Downloads', value: mockDownloads.toLocaleString(), color: 'text-cyan-400' },
+          { icon: Users, label: 'Active Players', value: mockPlayers.toLocaleString(), color: 'text-purple-400' },
+          { icon: Trophy, label: 'Achievements', value: mockAchievements, color: 'text-yellow-400' },
+          { icon: Star, label: 'Rating', value: avgRating, color: 'text-yellow-400' },
+          { icon: Clock, label: 'Avg Playtime', value: '52h', color: 'text-blue-400' },
+          { icon: Globe, label: 'Languages', value: '24', color: 'text-green-400' },
+        ].map(({ icon: Icon, label, value, color }) => (
+          <div key={label} className="flex items-center gap-2 px-3 py-2 rounded-xl flex-shrink-0" style={glassCard}>
+            <Icon className={`w-3.5 h-3.5 ${color} flex-shrink-0`} />
+            <div>
+              <div className="text-white font-black text-sm leading-none">{value}</div>
+              <div className="text-white/35 text-[9px] uppercase tracking-wider mt-0.5">{label}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* ── ACTION BUTTONS ── */}
-      <div className="flex-shrink-0 px-5 pb-3 flex items-center gap-2 flex-wrap">
-        <button onClick={() => addToCart({ id: game.id, title: game.title, image: game.cover_image, price: game.price || 0, type: 'game' })} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, rgba(0,200,255,0.25), rgba(100,100,255,0.20))', border: '1px solid rgba(0,200,255,0.35)', color: 'rgba(150,240,255,1)', boxShadow: '0 0 20px rgba(0,200,255,0.15)' }}>
+      <div className="flex-shrink-0 px-4 py-2.5 flex items-center gap-2 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <button onClick={() => addToCart({ id: game.id, title: game.title, image: game.cover_image, price: game.price || 0, type: 'game' })} className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(0,200,255,0.22), rgba(80,80,255,0.18))', border: '1px solid rgba(0,200,255,0.35)', color: 'rgba(150,240,255,1)', boxShadow: '0 0 24px rgba(0,200,255,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
           <ShoppingCart className="w-4 h-4" /> Add to Cart
         </button>
         {game.play_link && (
-          <a href={game.play_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-black transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, rgba(100,255,150,0.20), rgba(0,200,100,0.15))', border: '1px solid rgba(100,255,150,0.30)', color: 'rgba(150,255,180,1)' }}>
+          <a href={game.play_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, rgba(100,255,150,0.18), rgba(0,200,100,0.14))', border: '1px solid rgba(100,255,150,0.28)', color: 'rgba(150,255,180,1)' }}>
             <Play className="w-4 h-4" /> Play Now
           </a>
         )}
         <WishlistButton game={game} />
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-white/30 text-xs">Share</span>
+          <ExternalLink className="w-3.5 h-3.5 text-white/30" />
+        </div>
       </div>
 
       {/* ── TABS ── */}
-      <div className="flex-shrink-0 px-5 flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+      <div className="flex-shrink-0 px-4 flex gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         {tabs.map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-xl transition-all capitalize ${
-            activeTab === tab
-              ? 'text-cyan-300 border-b-2 border-cyan-400'
-              : 'text-white/40 hover:text-white/70'
-          }`}>{tab}</button>
+          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all capitalize relative ${
+            activeTab === tab ? 'text-cyan-300' : 'text-white/35 hover:text-white/60'
+          }`}>
+            {tab}
+            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full" />}
+          </button>
         ))}
       </div>
 
       {/* ── TAB CONTENT ── */}
-      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-hidden">
 
+        {/* ══════════ OVERVIEW TAB: 85/15 split ══════════ */}
         {activeTab === 'overview' && (
-          <>
-            {/* Description */}
-            {game.description && (
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-3"><Info className="w-3.5 h-3.5 text-cyan-400" /><span className="text-white/50 text-[10px] uppercase tracking-widest font-bold">About This Game</span></div>
-                <p className="text-white/75 text-sm leading-relaxed">{game.description}</p>
-              </div>
-            )}
+          <div className="flex h-full">
+            {/* LEFT 85% — scrollable content */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
 
-            {/* Tags */}
-            {game.tags && game.tags.length > 0 && (
+              {/* About */}
+              {game.description && (
+                <div className="rounded-2xl p-4" style={glassPanel}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Info className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">About This Game</span>
+                  </div>
+                  <p className="text-white/80 text-sm leading-relaxed">{game.description}</p>
+                  <p className="text-white/50 text-sm leading-relaxed mt-3">
+                    Experience a groundbreaking journey through a hand-crafted world filled with dynamic events, reactive AI, and an ever-evolving narrative that responds to every choice you make. Whether you prefer stealth, combat, or diplomacy — the world bends to your playstyle.
+                  </p>
+                </div>
+              )}
+
+              {/* Key Features */}
               <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-3"><Tag className="w-3.5 h-3.5 text-purple-400" /><span className="text-white/50 text-[10px] uppercase tracking-widest font-bold">Tags</span></div>
-                <div className="flex flex-wrap gap-1.5">
-                  {game.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1 rounded-full text-xs text-white/60 font-medium" style={glassCard}>{tag}</span>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Key Features</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { icon: '🌍', title: 'Open World', desc: 'Explore 400km² of seamless terrain' },
+                    { icon: '🤖', title: 'Dynamic AI', desc: 'Enemies adapt to your playstyle' },
+                    { icon: '⚡', title: 'Ray Tracing', desc: 'Next-gen lighting & reflections' },
+                    { icon: '🎭', title: 'Story Branching', desc: '5 unique endings, 28 choices matter' },
+                    { icon: '🌐', title: 'Cross-Play', desc: 'PC, Console & Cloud all together' },
+                    { icon: '🏆', title: 'Live Events', desc: 'Weekly community challenges & rewards' },
+                  ].map(f => (
+                    <div key={f.title} className="flex items-start gap-2.5 p-2.5 rounded-xl" style={glassCard}>
+                      <span className="text-lg flex-shrink-0">{f.icon}</span>
+                      <div>
+                        <p className="text-white/90 text-xs font-bold">{f.title}</p>
+                        <p className="text-white/40 text-[10px] leading-tight mt-0.5">{f.desc}</p>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Trailer */}
-            {(game.trailer_url || (game.video_urls && game.video_urls[0])) && (
-              <div className="rounded-2xl overflow-hidden" style={glassPanel}>
-                <div className="flex items-center gap-2 p-4 pb-2"><Play className="w-3.5 h-3.5 text-red-400" /><span className="text-white/50 text-[10px] uppercase tracking-widest font-bold">Trailer</span></div>
-                <div className="aspect-video">
-                  <iframe src={(game.trailer_url || game.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
+              {/* Content Overview */}
+              <div className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Layers className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Content Overview</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {MOCK_CONTENT.map(c => (
+                    <div key={c.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl text-center" style={glassCard}>
+                      <span className="text-2xl">{c.icon}</span>
+                      <span className="text-white font-black text-base leading-none">{c.value}</span>
+                      <span className="text-white/40 text-[9px] uppercase tracking-wider leading-tight">{c.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
 
-            {/* Achievements preview */}
-            <div className="rounded-2xl p-4" style={glassPanel}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2"><Trophy className="w-3.5 h-3.5 text-yellow-400" /><span className="text-white/50 text-[10px] uppercase tracking-widest font-bold">Achievements</span></div>
-                <span className="text-yellow-400 text-xs font-bold">{mockAchievements} Total</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {['First Blood', 'Speed Runner', 'Completionist', 'Legend', 'Explorer', 'Veteran'].slice(0, 6).map((ach, i) => (
-                  <div key={ach} className="flex items-center gap-2 p-2 rounded-xl" style={glassCard}>
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-yellow-500/30 to-orange-500/20 flex items-center justify-center flex-shrink-0 border border-yellow-500/20">
-                      <Award className="w-3.5 h-3.5 text-yellow-400" />
-                    </div>
-                    <span className="text-white/60 text-[10px] font-medium leading-tight">{ach}</span>
+              {/* Trailer */}
+              {(game.trailer_url || (game.video_urls && game.video_urls[0])) && (
+                <div className="rounded-2xl overflow-hidden" style={glassPanel}>
+                  <div className="flex items-center gap-2 p-4 pb-2">
+                    <Play className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Official Trailer</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+                  <div className="aspect-video">
+                    <iframe src={(game.trailer_url || game.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
+                  </div>
+                </div>
+              )}
 
-        {activeTab === 'screenshots' && (
-          <div className="rounded-2xl p-4" style={glassPanel}>
-            {game.screenshots && game.screenshots.length > 0 ? (
-              <ScreenshotGallery screenshots={game.screenshots} />
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 gap-3 text-white/20">
-                <Image className="w-10 h-10" />
-                <p className="text-sm">No screenshots available</p>
+              {/* Achievements */}
+              <div className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Achievements</span>
+                  </div>
+                  <span className="text-yellow-400 text-xs font-bold">{mockAchievements} Total</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {[
+                    { name: 'First Blood', rarity: 'Common', pct: '89%', icon: '⚔️', color: 'from-slate-500/30 to-slate-600/20', border: 'border-slate-500/20' },
+                    { name: 'Speed Runner', rarity: 'Rare', pct: '12%', icon: '⚡', color: 'from-blue-500/30 to-cyan-500/20', border: 'border-blue-500/20' },
+                    { name: 'Completionist', rarity: 'Legendary', pct: '2.1%', icon: '💎', color: 'from-yellow-500/30 to-orange-500/20', border: 'border-yellow-500/25' },
+                    { name: 'Shadow Master', rarity: 'Epic', pct: '6.4%', icon: '🌑', color: 'from-purple-500/30 to-pink-500/20', border: 'border-purple-500/20' },
+                    { name: 'World Explorer', rarity: 'Uncommon', pct: '44%', icon: '🗺️', color: 'from-green-500/30 to-teal-500/20', border: 'border-green-500/20' },
+                    { name: 'The Legend', rarity: 'Mythic', pct: '0.3%', icon: '👑', color: 'from-red-500/30 to-orange-500/20', border: 'border-red-500/25' },
+                  ].map(ach => (
+                    <div key={ach.name} className={`flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r ${ach.color} border ${ach.border}`}>
+                      <span className="text-xl flex-shrink-0">{ach.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white/90 text-xs font-bold truncate">{ach.name}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-white/40 text-[9px]">{ach.rarity}</span>
+                          <span className="text-white/25 text-[9px]">·</span>
+                          <span className="text-white/40 text-[9px]">{ach.pct} unlocked</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-1">
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400" style={{ width: '18%' }} />
+                    </div>
+                  </div>
+                  <span className="text-white/40 text-[10px]">18% avg completion</span>
+                </div>
               </div>
-            )}
+
+              {/* DLC & Expansions */}
+              <div className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-pink-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">DLC & Expansions</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.25)', color: 'rgba(244,114,182,1)' }}>4 Available</span>
+                </div>
+                <div className="space-y-2">
+                  {MOCK_DLC.map(dlc => (
+                    <div key={dlc.name} className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 cursor-pointer" style={glassCard}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>{dlc.icon}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white/90 text-sm font-bold">{dlc.name}</p>
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'rgba(100,150,255,0.15)', color: 'rgba(150,190,255,0.8)' }}>{dlc.type}</span>
+                        </div>
+                        <p className="text-white/40 text-[10px] mt-0.5">{dlc.desc}</p>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <span className="text-green-400 font-black text-sm">${dlc.price}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Community & Social */}
+              <div className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Community & Social</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: 'Forum Posts', value: '84.2K', icon: '💬', color: 'text-cyan-400' },
+                    { label: 'Fan Guides', value: '1,204', icon: '📝', color: 'text-purple-400' },
+                    { label: 'Discord Members', value: '215K', icon: '🎮', color: 'text-indigo-400' },
+                    { label: 'Content Creators', value: '4,800', icon: '🎥', color: 'text-pink-400' },
+                  ].map(s => (
+                    <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-xl" style={glassCard}>
+                      <span className="text-lg">{s.icon}</span>
+                      <div>
+                        <p className={`font-black text-base leading-none ${s.color}`}>{s.value}</p>
+                        <p className="text-white/40 text-[9px] uppercase tracking-wider mt-0.5">{s.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              {game.tags && game.tags.length > 0 && (
+                <div className="rounded-2xl p-4" style={glassPanel}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Tag className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Tags</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {game.tags.map(tag => (
+                      <span key={tag} className="px-3 py-1 rounded-full text-xs text-white/60 font-medium hover:text-white/90 cursor-pointer transition-all" style={glassCard}>{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* System Requirements quick preview */}
+              <div className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Minimum Requirements</span>
+                  </div>
+                  <button onClick={() => setActiveTab('requirements')} className="text-[10px] text-cyan-400 hover:text-cyan-200 transition-all">Full specs →</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { icon: Monitor, label: 'OS', val: game.system_requirements?.os || 'Windows 10 64-bit' },
+                    { icon: Cpu, label: 'CPU', val: game.system_requirements?.processor || 'Intel i5-8600K' },
+                    { icon: MemoryStick, label: 'RAM', val: game.system_requirements?.memory || '8 GB' },
+                    { icon: HardDrive, label: 'Storage', val: game.system_requirements?.storage || '50 GB SSD' },
+                  ].map(({ icon: Icon, label, val }) => (
+                    <div key={label} className="flex items-center gap-2 p-2.5 rounded-xl" style={glassCard}>
+                      <Icon className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-white/35 text-[9px] uppercase tracking-wider">{label}</p>
+                        <p className="text-white/70 text-[10px] font-semibold truncate">{val}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bottom padding */}
+              <div className="h-4" />
+            </div>
+
+            {/* RIGHT 15% — Screenshot strip */}
+            <div className="flex-shrink-0 w-[15%] border-l p-2 overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.2)' }}>
+              <p className="text-white/25 text-[9px] uppercase tracking-widest font-bold mb-2 text-center">Screenshots</p>
+              <SideScreenshots screenshots={game.screenshots} />
+            </div>
           </div>
         )}
 
+        {/* ══════════ REVIEWS TAB ══════════ */}
         {activeTab === 'reviews' && (
-          <div className="space-y-3">
-            {/* Summary */}
-            <div className="rounded-2xl p-4 flex items-center gap-6" style={glassPanel}>
-              <div className="text-center">
-                <div className="text-5xl font-black text-white">{game.rating || '4.2'}</div>
-                <ReviewStars rating={game.rating || 4.2} />
-                <div className="text-white/30 text-xs mt-1">{mockPlayers.toLocaleString()} reviews</div>
-              </div>
-              <div className="flex-1 space-y-1">
-                {[5,4,3,2,1].map(n => (
-                  <div key={n} className="flex items-center gap-2">
-                    <span className="text-white/40 text-xs w-2">{n}</span>
-                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 flex-shrink-0" />
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={glassCard}>
-                      <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400" style={{ width: `${[72,18,6,3,1][5-n]}%`, opacity: 0.8 }} />
-                    </div>
-                    <span className="text-white/30 text-xs w-6 text-right">{[72,18,6,3,1][5-n]}%</span>
+          <div className="h-full overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
+            {/* Score hero */}
+            <div className="rounded-2xl overflow-hidden" style={glassPanel}>
+              <div className="p-4" style={{ background: 'linear-gradient(135deg, rgba(250,204,21,0.08) 0%, rgba(234,88,12,0.05) 100%)' }}>
+                <div className="flex items-center gap-6">
+                  <div className="text-center flex-shrink-0">
+                    <div className="text-6xl font-black text-white" style={{ textShadow: '0 0 30px rgba(250,204,21,0.4)' }}>{avgRating}</div>
+                    <ReviewStars rating={avgRating} />
+                    <div className="text-white/35 text-[10px] mt-1">{mockPlayers.toLocaleString()} reviews</div>
                   </div>
+                  <div className="flex-1 space-y-1.5">
+                    {[5,4,3,2,1].map(n => {
+                      const pcts = [72,18,6,3,1];
+                      const pct = pcts[5-n];
+                      return (
+                        <div key={n} className="flex items-center gap-2">
+                          <div className="flex items-center gap-0.5 flex-shrink-0">
+                            <span className="text-white/40 text-xs w-2.5">{n}</span>
+                            <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+                          </div>
+                          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, rgba(250,204,21,${0.4+pct/120}) 0%, rgba(234,88,12,0.6) 100%)` }} />
+                          </div>
+                          <span className="text-white/35 text-[10px] w-6 text-right flex-shrink-0">{pct}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              {/* Sentiment tags */}
+              <div className="px-4 pb-4 flex flex-wrap gap-1.5 mt-1">
+                {[
+                  { label: 'Great Visuals', count: '4.2K' },
+                  { label: 'Deep Story', count: '3.8K' },
+                  { label: 'Addictive', count: '3.1K' },
+                  { label: 'Smooth Performance', count: '2.7K' },
+                  { label: 'Great Value', count: '2.2K' },
+                  { label: 'Active Devs', count: '1.9K' },
+                ].map(t => (
+                  <span key={t.label} className="px-2.5 py-1 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.15)', color: 'rgba(253,224,71,0.8)' }}>
+                    {t.label} · {t.count}
+                  </span>
                 ))}
               </div>
             </div>
+
             {/* Individual reviews */}
             {MOCK_REVIEWS.map((r, i) => (
-              <div key={i} className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/40 to-purple-500/40 flex items-center justify-center border border-white/10">
-                      <span className="text-white font-bold text-xs">{r.user[0]}</span>
+              <div key={i} className="rounded-2xl overflow-hidden" style={glassPanel}>
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/15 flex-shrink-0" style={{ background: `linear-gradient(135deg, hsl(${i*60},60%,30%), hsl(${i*60+40},60%,20%))` }}>
+                        <span className="text-white font-black text-sm">{r.user[0]}</span>
+                      </div>
+                      <div>
+                        <p className="text-white font-bold text-sm leading-none">{r.user}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <ReviewStars rating={r.rating} />
+                          <span className="text-white/30 text-[10px]">{r.hours}h played</span>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-white/80 text-sm font-bold">{r.user}</span>
+                    <span className="text-white/25 text-xs flex-shrink-0">{r.date}</span>
                   </div>
-                  <span className="text-white/25 text-xs">{r.date}</span>
+                  <p className="text-white/70 text-sm leading-relaxed">{r.text}</p>
+                  <div className="flex items-center gap-3 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-white/30 text-[10px]">Was this helpful?</span>
+                    <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-white/50 hover:text-white transition-all" style={glassCard}>👍 {r.helpful}</button>
+                    <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-white/50 hover:text-white transition-all" style={glassCard}>👎</button>
+                    <span className="ml-auto text-[10px] text-white/25">Report</span>
+                  </div>
                 </div>
-                <ReviewStars rating={r.rating} />
-                <p className="text-white/60 text-sm mt-2 leading-relaxed">{r.text}</p>
               </div>
             ))}
+            <div className="h-4" />
           </div>
         )}
 
+        {/* ══════════ REQUIREMENTS TAB ══════════ */}
         {activeTab === 'requirements' && (
-          <div className="rounded-2xl p-4 space-y-4" style={glassPanel}>
-            <div className="flex items-center gap-2 mb-1"><Monitor className="w-3.5 h-3.5 text-blue-400" /><span className="text-white/50 text-[10px] uppercase tracking-widest font-bold">System Requirements</span></div>
-            {game.system_requirements && Object.keys(game.system_requirements).length > 0 ? (
-              Object.entries(game.system_requirements).map(([key, val]) => (
-                <div key={key} className="flex items-start gap-3 p-3 rounded-xl" style={glassCard}>
-                  {key === 'os' && <Monitor className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />}
-                  {key === 'processor' && <Cpu className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />}
-                  {key === 'memory' && <MemoryStick className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />}
-                  {key === 'storage' && <HardDrive className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />}
-                  {!['os','processor','memory','storage'].includes(key) && <Zap className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />}
-                  <div>
-                    <p className="text-white/40 text-[10px] uppercase tracking-wider font-bold mb-0.5 capitalize">{key}</p>
-                    <p className="text-white/75 text-sm">{val}</p>
-                  </div>
+          <div className="h-full overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
+            {['Minimum', 'Recommended'].map(tier => (
+              <div key={tier} className="rounded-2xl p-4" style={glassPanel}>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className={`w-2 h-2 rounded-full ${tier === 'Minimum' ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                  <span className="text-white/60 text-[10px] uppercase tracking-widest font-black">{tier} Requirements</span>
                 </div>
-              ))
-            ) : (
-              <div className="space-y-2">
-                {[{ icon: Monitor, label: 'OS', val: 'Windows 10 / 11 (64-bit)' }, { icon: Cpu, label: 'Processor', val: 'Intel Core i5-8600K / AMD Ryzen 5 3600' }, { icon: MemoryStick, label: 'Memory', val: '8 GB RAM' }, { icon: HardDrive, label: 'Storage', val: '50 GB SSD' }].map(({ icon: Icon, label, val }) => (
-                  <div key={label} className="flex items-center gap-3 p-3 rounded-xl" style={glassCard}>
-                    <Icon className="w-4 h-4 text-white/40 flex-shrink-0" />
-                    <div>
-                      <p className="text-white/35 text-[10px] uppercase tracking-wider font-bold">{label}</p>
-                      <p className="text-white/70 text-sm">{val}</p>
+                <div className="space-y-2">
+                  {[
+                    { icon: Monitor, label: 'OS', min: game.system_requirements?.os || 'Windows 10 64-bit', rec: 'Windows 11 64-bit' },
+                    { icon: Cpu, label: 'Processor', min: game.system_requirements?.processor || 'Intel Core i5-8600K / AMD Ryzen 5 3600', rec: 'Intel Core i7-10700K / AMD Ryzen 7 5800X' },
+                    { icon: MemoryStick, label: 'Memory', min: game.system_requirements?.memory || '8 GB RAM', rec: '16 GB RAM' },
+                    { icon: Zap, label: 'Graphics', min: game.system_requirements?.graphics || 'NVIDIA GTX 1060 / AMD RX 580', rec: 'NVIDIA RTX 3070 / AMD RX 6800 XT' },
+                    { icon: HardDrive, label: 'Storage', min: game.system_requirements?.storage || '50 GB SSD', rec: '50 GB NVMe SSD' },
+                  ].map(({ icon: Icon, label, min, rec }) => (
+                    <div key={label} className="flex items-start gap-3 p-3 rounded-xl" style={glassCard}>
+                      <Icon className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white/35 text-[9px] uppercase tracking-wider font-bold mb-0.5">{label}</p>
+                        <p className="text-white/75 text-sm">{tier === 'Minimum' ? min : rec}</p>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="rounded-2xl p-4" style={glassPanel}>
+              <div className="flex items-center gap-2 mb-3">
+                <Globe className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Supported Languages</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {['English', 'Spanish', 'French', 'German', 'Japanese', 'Korean', 'Chinese (Simplified)', 'Portuguese (Brazil)', 'Russian', 'Italian', 'Polish', 'Arabic'].map(lang => (
+                  <span key={lang} className="px-2.5 py-1 rounded-full text-[10px] text-white/55 font-medium" style={glassCard}>{lang}</span>
                 ))}
               </div>
-            )}
+            </div>
+            <div className="h-4" />
           </div>
         )}
       </div>
