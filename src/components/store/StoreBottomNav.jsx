@@ -17,13 +17,13 @@ function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-      className={`absolute bottom-full left-0 right-0 mb-2 mx-4 rounded-2xl overflow-hidden transition-all ${expanded ? 'max-h-96' : 'max-h-48'}`}
+      className={`absolute bottom-full right-0 mb-2 rounded-2xl overflow-hidden transition-all ${expanded ? 'max-h-96' : 'max-h-48'}`}
       style={{
-        background: 'linear-gradient(160deg, rgba(15,20,30,0.97) 0%, rgba(10,14,22,0.98) 100%)',
-        backdropFilter: 'blur(40px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 -8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
+        background: 'linear-gradient(160deg, rgba(0,0,0,0.85) 0%, rgba(5,5,10,0.90) 100%)',
+        backdropFilter: 'blur(50px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+        boxShadow: '0 -12px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)',
+        width: 'clamp(300px, 60vw, 500px)',
       }}
     >
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
