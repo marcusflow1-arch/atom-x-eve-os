@@ -412,7 +412,7 @@ export default function Store() {
                                             }}
                                         >
                                             <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}`} />
-                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat.label.split(' ')[0]}</span>
+                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat?.label ? cat.label.split(' ')[0] : ''}</span>
                                         </button>
                                     );
                                 })}
@@ -621,7 +621,7 @@ export default function Store() {
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
                                                                             <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
                                                                               <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
-                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                                                <span className="text-green-400 font-bold text-sm">${game?.price ?? '0'}</span>
                                                                               </div>
                                                                               <WishlistButton game={game} />
                                                                             </div>
