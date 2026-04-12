@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart } from 'lucide-react';
+import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import WishlistButton from './WishlistButton';
 
@@ -14,6 +16,7 @@ const CATEGORIES = [
 
 function GameDetailPanel({ game, onBack }) {
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   if (!game) return null;
 
   return (
@@ -64,6 +67,13 @@ function GameDetailPanel({ game, onBack }) {
           >
             <ShoppingCart className="w-4 h-4" />
             Add to Cart
+          </button>
+          <button
+            onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white/80 text-sm font-bold hover:bg-white/15 transition-all"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Store Page
           </button>
           <WishlistButton game={game} />
         </div>
