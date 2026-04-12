@@ -43,7 +43,7 @@ const FALLBACK_SCREENSHOTS = [
   'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&q=80',
 ];
 
-// Top 20% - quick preview panel shown on first click
+// Top 30% - quick preview panel shown on first click
 function GamePreviewStrip({ game, onViewDetail, onClose }) {
   const { addToCart } = useCart();
   const screenshots = (game.screenshots && game.screenshots.length > 0) ? game.screenshots : FALLBACK_SCREENSHOTS;
@@ -359,6 +359,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
   const cat = CATEGORIES.find(c => c.id === category);
   const filteredGames = useMemo(() => cat ? cat.filter(games) : [], [cat, games]);
 
+  const avgRating = selectedGame?.rating || 4.2;
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
@@ -376,10 +378,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
 
   const handleGameClick = (game) => {
     if (selectedGame?.id === game.id) {
-      // Second click → open full detail
       setShowDetail(true);
     } else {
-      // First click → show preview strip
       setSelectedGame(game);
       setShowDetail(false);
     }
@@ -401,8 +401,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* ── TOP 20%: Header + Preview strip ── */}
-      <div className="flex-shrink-0" style={{ height: '20%', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* TOP 30%: Header + Preview strip */}
+      <div className="flex-shrink-0" style={{ height: '30%', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         {/* Category header bar */}
         <div className="flex items-center gap-3 px-4 pt-3 pb-2 flex-shrink-0">
           <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
@@ -443,37 +443,111 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
         </div>
       </div>
 
-      {/* ── BOTTOM 80%: Game grid ── */}
-      <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 2xl:grid-cols-12 gap-3">
-          {filteredGames.map((game) => {
-            const isSelected = selectedGame?.id === game.id;
-            return (
-              <motion.div
-                key={game.id}
-                whileHover={{ y: -4, scale: 1.04 }}
-                onClick={() => handleGameClick(game)}
-                className={`group cursor-pointer rounded-xl overflow-hidden border transition-all relative bg-slate-900 ${isSelected ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/8 hover:border-cyan-400/30'}`}
-                style={{ aspectRatio: '3/4' }}
-              >
-                <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
-                {isSelected && (
-                  <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
-                    <Info className="w-2.5 h-2.5 text-black" />
+      {/* BOTTOM 70%: Split 70% games | 30% details */}
+      <div className="flex-1 flex overflow-hidden" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Left 70%: Game Grid */}
+        <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none', width: '70%' }}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+            {filteredGames.map((game) => {
+              const isSelected = selectedGame?.id === game.id;
+              return (
+                <motion.div
+                  key={game.id}
+                  whileHover={{ y: -4, scale: 1.04 }}
+                  onClick={() => handleGameClick(game)}
+                  className={`group cursor-pointer rounded-xl overflow-hidden border transition-all relative bg-slate-900 ${isSelected ? 'border-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.4)]' : 'border-white/8 hover:border-cyan-400/30'}`}
+                  style={{ aspectRatio: '3/4' }}
+                >
+                  <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent" />
+                  {isSelected && (
+                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-cyan-400 flex items-center justify-center">
+                      <Info className="w-2.5 h-2.5 text-black" />
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5">
+                    <h4 className="text-white font-bold text-[9px] leading-tight truncate">{game.title}</h4>
+                    <div className="flex items-center justify-between mt-0.5">
+                      <span className="text-white/35 text-[8px]">{game.genre}</span>
+                      <span className="text-green-400 font-bold text-[9px]">${game.price}</span>
+                    </div>
                   </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 p-1.5">
-                  <h4 className="text-white font-bold text-[9px] leading-tight truncate">{game.title}</h4>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-white/35 text-[8px]">{game.genre}</span>
-                    <span className="text-green-400 font-bold text-[9px]">${game.price}</span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Right 30%: Details Panel */}
+        {selectedGame ? (
+          <div className="overflow-y-auto p-4" style={{ scrollbarWidth: 'none', width: '30%', background: 'rgba(10,14,20,0.5)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+            {/* Game Header */}
+            <div className="mb-4">
+              <img src={selectedGame.cover_image} alt={selectedGame.title} className="w-full rounded-lg mb-2" style={{ height: '100px', objectFit: 'cover' }} />
+              <h3 className="text-white font-bold text-sm mb-1 line-clamp-2">{selectedGame.title}</h3>
+              <div className="flex items-center gap-1 mb-2"><ReviewStars rating={avgRating} /><span className="text-yellow-400 text-xs font-bold">{avgRating}</span></div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="mb-4">
+              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Reviews</p>
+              {MOCK_REVIEWS.slice(0, 2).map((r, i) => (
+                <div key={i} className="py-2 border-b border-white/6">
+                  <div className="flex items-center gap-1 mb-1">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">{r.user[0]}</div>
+                    <span className="text-white/70 text-[10px] font-bold line-clamp-1">{r.user}</span>
+                    <ReviewStars rating={r.rating} />
+                  </div>
+                  <p className="text-white/50 text-[9px] leading-tight pl-6 line-clamp-2">{r.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* System Requirements */}
+            <div className="mb-4">
+              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Requirements</p>
+              {[
+                { label: 'OS', value: selectedGame.system_requirements?.os || 'Windows 10' },
+                { label: 'CPU', value: selectedGame.system_requirements?.processor || 'Intel i5' },
+                { label: 'RAM', value: selectedGame.system_requirements?.memory || '8 GB' },
+                { label: 'GPU', value: selectedGame.system_requirements?.graphics || 'GTX 1060' },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex items-center justify-between py-1.5 border-b border-white/5">
+                  <span className="text-white/35 text-[9px]">{label}</span>
+                  <span className="text-white/70 text-[9px] text-right line-clamp-1">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Game Features */}
+            <div className="mb-4">
+              <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Features</p>
+              {[
+                { icon: Users, label: 'Multiplayer', active: true },
+                { icon: User, label: 'Single Player', active: true },
+                { icon: Wifi, label: 'Online', active: true },
+              ].map(({ icon: Icon, label, active }) => (
+                <div key={label} className="flex items-center gap-2 py-1.5 text-white/60 text-[9px]">
+                  <Icon className="w-3 h-3 flex-shrink-0" />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* Recommendation */}
+            <div className="flex items-center gap-2 py-2 px-2 rounded-lg" style={{ background: 'rgba(100,255,150,0.1)', border: '1px solid rgba(100,255,150,0.2)' }}>
+              <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold flex-shrink-0">92%</div>
+              <div>
+                <p className="text-white/80 text-[9px] font-bold">Recommended</p>
+                <p className="text-white/40 text-[8px]">Players recommend</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center" style={{ width: '30%', background: 'rgba(10,14,20,0.5)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+            <p className="text-white/20 text-sm">Select a game</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
