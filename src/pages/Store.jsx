@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -31,8 +31,6 @@ import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
-import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
-import GameDetailPanel from '../components/game/GameDetailPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -61,6 +59,109 @@ function SwordsIcon(props) {
     );
 }
 
+const AIVoiceSearch = ({ onSearchResult, onClose }) => {
+    const [isListening, setIsListening] = useState(false);
+    const [transcript, setTranscript] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [conversationHistory, setConversationHistory] = useState([]);
+    const recognitionRef = useRef(null);
+
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = true;
+            recognitionRef.current.lang = 'en-US';
+            recognitionRef.current.onresult = (event) => {
+                const current = event.resultIndex;
+                const result = event.results[current];
+                setTranscript(result[0].transcript);
+                if (result.isFinal) handleUserMessage(result[0].transcript);
+            };
+            recognitionRef.current.onerror = () => setIsListening(false);
+            recognitionRef.current.onend = () => setIsListening(false);
+        }
+        return () => { if (recognitionRef.current) recognitionRef.current.stop(); };
+    }, []);
+
+    const startListening = () => { if (recognitionRef.current) { setTranscript(''); setIsListening(true); recognitionRef.current.start(); } };
+    const stopListening = () => { if (recognitionRef.current) { recognitionRef.current.stop(); setIsListening(false); } };
+
+    const handleUserMessage = async (message) => {
+        if (!message.trim()) return;
+        const newHistory = [...conversationHistory, { role: 'user', content: message }];
+        setConversationHistory(newHistory);
+        setIsProcessing(true);
+        setTranscript('');
+        try {
+            const response = await base44.integrations.Core.InvokeLLM({
+                prompt: `You are Sophie, a friendly AI gaming assistant. Help users find games.\n\nPrevious conversation:\n${newHistory.map(m => `${m.role}: ${m.content}`).join('\n')}\n\nUser: "${message}"\n\nRespond as JSON: {"message": "your response", "searchSuggestion": "optional search term", "genres": []}`,
+                response_json_schema: { type: "object", properties: { message: { type: "string" }, searchSuggestion: { type: "string" }, genres: { type: "array", items: { type: "string" } } }, required: ["message"] }
+            });
+            setConversationHistory([...newHistory, { role: 'assistant', content: response.message }]);
+            if (response.searchSuggestion) onSearchResult(response.searchSuggestion);
+        } catch (error) {
+            showError(error, 'AI Search');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+            <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><Sparkles className="w-4 h-4 text-white" /></div>
+                        <div><h3 className="text-white font-semibold text-sm">Sophie</h3><p className="text-white/40 text-xs">AI Game Assistant</p></div>
+                    </div>
+                    <button onClick={onClose} className="text-white/40 hover:text-white"><X className="w-5 h-5" /></button>
+                </div>
+                <div className="max-h-48 overflow-y-auto mb-4 space-y-3">
+                    {conversationHistory.length === 0 && !isListening && <p className="text-white/50 text-sm text-center py-4">Hi! I'm Sophie. Tell me what kind of game you're looking for!</p>}
+                    {conversationHistory.map((msg, idx) => (
+                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`max-w-[80%] px-3 py-2 rounded-xl text-sm ${msg.role === 'user' ? 'bg-blue-500/20 text-blue-200' : 'bg-white/10 text-white/90'}`}>{msg.content}</div>
+                        </div>
+                    ))}
+                    {isProcessing && <div className="flex justify-start"><div className="bg-white/10 px-3 py-2 rounded-xl flex items-center gap-2"><Loader2 className="w-4 h-4 text-purple-400 animate-spin" /><span className="text-white/60 text-sm">Thinking...</span></div></div>}
+                </div>
+                {(isListening || transcript) && <div className="bg-white/5 rounded-lg p-3 mb-4 border border-white/10"><p className="text-white/70 text-sm">{transcript || <span className="text-white/40 animate-pulse">Listening...</span>}</p></div>}
+                <div className="flex items-center justify-center">
+                    <button onClick={isListening ? stopListening : startListening} disabled={isProcessing} className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${isListening ? 'bg-red-500 animate-pulse' : 'bg-gradient-to-br from-purple-500 to-pink-500'} ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        {isListening ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
+                    </button>
+                </div>
+                <p className="text-white/30 text-xs text-center mt-3">{isListening ? 'Tap to stop' : 'Tap to speak'}</p>
+            </div>
+        </motion.div>
+    );
+};
+
+const useVoiceInput = (onResult) => {
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+    useEffect(() => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+            recognitionRef.current.lang = 'en-US';
+            recognitionRef.current.onresult = (event) => { onResult(event.results[0][0].transcript); setIsListening(false); };
+            recognitionRef.current.onerror = () => setIsListening(false);
+            recognitionRef.current.onend = () => setIsListening(false);
+        }
+    }, [onResult]);
+    const toggleListening = () => {
+        if (isListening) { recognitionRef.current?.stop(); setIsListening(false); }
+        else { recognitionRef.current?.start(); setIsListening(true); }
+    };
+    return { isListening, toggleListening };
+};
+
+
 export default function Store() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -70,9 +171,8 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
-    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null);
+    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
-    const [selectedGameForDetail, setSelectedGameForDetail] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
     const [activeStoreTab, setActiveStoreTab] = useState('store');
@@ -87,20 +187,23 @@ export default function Store() {
     const [viewMode, setViewMode] = useState('cross');
     const [activeGenreIndex, setActiveGenreIndex] = useState(0);
     const [activeSubCategoryIndex, setActiveSubCategoryIndex] = useState(0);
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [marketplaceSearchTerm, setMarketplaceSearchTerm] = useState('');
+    const [voiceSearchOpen, setVoiceSearchOpen] = useState(false);
+    const [showVoiceOptions, setShowVoiceOptions] = useState(false);
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
+    const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
     const wheelTsRef = useRef(0);
     const genreListRef = useRef(null);
     const [isGenreHovering, setIsGenreHovering] = useState(false);
     const [genrePanelFocused, setGenrePanelFocused] = useState(false);
-    const [showAndroidOnly, setShowAndroidOnly] = useState(false);
 
     const scrollGenreIntoView = (index) => {
         const listEl = genreListRef.current;
@@ -142,14 +245,10 @@ export default function Store() {
         setShowScrollTransition(true);
     };
 
-    const handleSelectGameForDetail = (game) => {
-        setSelectedGameForDetail(game);
-        setCurrentShowcaseGame(game);
-    };
-
     const {
         activeCategory, setActiveCategory,
         selectedGenres, toggleGenre,
+        showAndroidOnly, setShowAndroidOnly,
         genreData
     } = useGameFilters(games, loading);
 
@@ -187,7 +286,7 @@ export default function Store() {
         return currentNavGenre.items;
     }, [currentNavGenre, activeSubCategory]);
 
-    const activeGame = selectedGameForDetail;
+    const activeGame = null;
 
     useEffect(() => {
         if (storeMode !== 'store' || loading || genreData.length === 0 || viewMode !== 'cross') return;
@@ -218,7 +317,8 @@ export default function Store() {
             const el = contentScrollRef.current;
             if (el) {
                 const st = el.scrollTop;
-                setScrollDir(st > 0 ? 'down' : 'up');
+                setScrollDir(st > lastScrollTopRef.current ? 'down' : 'up');
+                lastScrollTopRef.current = st <= 0 ? 0 : st;
             }
         };
         const el = contentScrollRef.current || window;
@@ -226,16 +326,25 @@ export default function Store() {
         return () => el.removeEventListener('scroll', handleScroll, true);
     }, []);
 
+    const { isListening: isRegularVoiceListening, toggleListening: toggleRegularVoice } = useVoiceInput((text) => {
+        setSearchTerm(text);
+        setShowVoiceOptions(false);
+    });
+
     useEffect(() => {
         const fetchGames = async () => {
+            const isDev = import.meta.env.DEV;
+            const useMock = isDev && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
             try {
                 const fetchedGamesResponse = await base44.entities.Game.list();
                 const fetchedGames = fetchedGamesResponse.data || fetchedGamesResponse;
                 if (fetchedGames.length > 0) setGames(fetchedGames);
-                else setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                else if (useMock) setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                else setGames([]);
             } catch (error) {
                 showError(error, 'Load Games');
-                setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                if (useMock) setGames([...aiGamesList, ...otherSampleGames, ...androidGames, ...googlePlayGames]);
+                else setGames([]);
             }
             setLoading(false);
         };
@@ -264,10 +373,10 @@ export default function Store() {
 
     return (
         <PageErrorBoundary pageName="Store">
-            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} games={games} onNavigateToGame={handleNavigateToGame} cartCount={getCartCount()} />}>
+            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} games={games} onNavigateToGame={handleNavigateToGame} cartCount={getCartCount()} onToggleVoiceSearch={() => setShowVoiceOptions(!showVoiceOptions)} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-                    {/* 5% Left Sidebar */}
+                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
@@ -316,7 +425,7 @@ export default function Store() {
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
-                        {/* Top Header */}
+                        {/* Top Header — liquid glass silver */}
                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
                             backdropFilter: 'blur(28px) saturate(180%)',
@@ -350,7 +459,7 @@ export default function Store() {
                                         ))}
                                     </div>
 
-                                </div>
+                                        </div>
                             )}
 
                             {/* STORE OVERVIEW OVERLAY */}
@@ -452,23 +561,18 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* TOP: Achievements + Player Interactions (70/30 split) */}
-                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden px-6 gap-8">
-                                                            {/* Spacer matching genre list column width */}
-                                                            <div className="flex-shrink-0" style={{ width: '200px' }} />
+                                                        {/* Achievements Section — Full Width */}
+                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
 
-                                                            {/* LEFT: Achievements (70%) */}
-                                                            <div className="flex-[0.7] min-w-0 overflow-hidden">
+                                                            {/* Achievements — Full Width */}
+                                                            <div className="flex-1 min-w-0 overflow-hidden">
                                                                 <StoreAchievementsStrip currentGame={currentShowcaseGame} />
-                                                            </div>
-
-                                                            {/* RIGHT: Player Interactions (30%) */}
-                                                            <div className="flex-[0.3] overflow-hidden rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                                                <PlayerInteractionsPanel />
                                                             </div>
                                                         </div>
 
-                                                        {/* Below: genre list + game grid + detail panel */}
+                                                        {/* Below showcase: genre list + game grid */}
                                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                                             {/* LEFT: Genre list */}
                                                             <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
@@ -498,50 +602,8 @@ export default function Store() {
                                                                 </motion.div>
                                                             </div>
 
-                                                            {/* CENTER: Game Grid */}
+                                                            {/* RIGHT: Game Grid */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
-                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-                                                                    {displayedGames.map((game, idx) => {
-                                                                        const isDetailSelected = selectedGameForDetail?.id === game.id;
-                                                                        return (
-                                                                            <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleSelectGameForDetail(game)} onMouseEnter={() => setHoveredGame(game)} className={`group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 transition-all ${isDetailSelected ? 'border-cyan-400/60 shadow-cyan-500/30 border-2' : 'border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20'}`}>
-                                                                                <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                                                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                                                                <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
-                                                                                    <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
-                                                                                        <span className="text-green-400 font-bold text-sm">${game.price}</span>
-                                                                                    </div>
-                                                                                    <WishlistButton game={game} />
-                                                                                </div>
-                                                                                <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                                                    <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                                                                    <div className="flex items-center justify-between text-xs text-white/60">
-                                                                                        <span>{game.genre}</span>
-                                                                                        <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </motion.div>
-                                                                        );
-                                                                    })}
-                                                                </motion.div>
-                                                            </div>
-
-                                                            {/* RIGHT: Detail Panel */}
-                                                            {selectedGameForDetail && (
-                                                                <motion.div
-                                                                    initial={{ opacity: 0, x: 20 }}
-                                                                    animate={{ opacity: 1, x: 0 }}
-                                                                    exit={{ opacity: 0, x: 20 }}
-                                                                    className="w-[40%] min-w-0 flex flex-col border rounded-xl overflow-hidden flex-shrink-0"
-                                                                    style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)' }}
-                                                                >
-                                                                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                                                                        <GameDetailPanel game={selectedGameForDetail} onNavigate={handleNavigateToGame} />
-                                                                    </div>
-                                                                </motion.div>
-                                                            )}
-                                                        </div>
-                                                    </div>
                                                 </>
                                             )}
                                         </motion.div>
