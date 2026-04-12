@@ -392,7 +392,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
       className="absolute inset-0 z-50 flex flex-col overflow-hidden"
       style={{ background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)', backdropFilter: 'blur(30px)' }}
     >
-      {/* Full detail overlay */}
       <AnimatePresence>
         {showDetail && selectedGame && (
           <GameDetailPanel game={selectedGame} onBack={() => setShowDetail(false)} />
@@ -476,80 +475,46 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
           </div>
         </div>
 
-        {/* Right 30%: Details Panel - Split Layout */}
+        {/* Right 30%: Details Panel */}
         {selectedGame ? (
           <div className="overflow-y-auto p-4" style={{ scrollbarWidth: 'none', width: '30%', background: 'rgba(10,14,20,0.5)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex flex-col gap-4 h-full">
-              {/* Left Column: Features & Info */}
-              <div>
-                <div className="mb-4">
-                  <div className="flex items-center gap-1 mb-2"><ReviewStars rating={avgRating} /><span className="text-yellow-400 text-xs font-bold">{avgRating}</span></div>
+              {/* Rating & Recommendation */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <ReviewStars rating={avgRating} />
+                  <span className="text-yellow-400 text-xs font-bold">{avgRating}</span>
                 </div>
-
-                {/* Game Features */}
-                <div className="mb-4">
-                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Features</p>
-                  {[
-                    { icon: Users, label: 'Multiplayer', active: true },
-                    { icon: User, label: 'Single Player', active: true },
-                    { icon: Wifi, label: 'Online', active: true },
-                  ].map(({ icon: Icon, label, active }) => (
-                    <div key={label} className="flex items-center gap-2 py-1.5 text-white/60 text-[9px]">
-                      <Icon className="w-3 h-3 flex-shrink-0" />
-                      {label}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Recommendation */}
-                <div className="flex items-center gap-2 py-2 px-2 rounded-lg" style={{ background: 'rgba(100,255,150,0.1)', border: '1px solid rgba(100,255,150,0.2)' }}>
-                  <div className="w-8 h-8 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold flex-shrink-0">92%</div>
-                  <div>
-                    <p className="text-white/80 text-[9px] font-bold">Recommended</p>
-                    <p className="text-white/40 text-[8px]">Players recommend</p>
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full bg-green-500/30 flex items-center justify-center text-green-400 text-[9px] font-bold flex-shrink-0">92%</div>
+                  <p className="text-white/70 text-[9px]">Players recommend</p>
                 </div>
               </div>
 
-              {/* Right Column: Screenshots, Video & Reviews */}
-              <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-                {/* Screenshots */}
+              {/* Video/Trailer */}
+              {(selectedGame.trailer_url || (selectedGame.video_urls && selectedGame.video_urls[0])) && (
                 <div>
-                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Screenshots</p>
-                  <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                    {(selectedGame.screenshots && selectedGame.screenshots.length > 0 ? selectedGame.screenshots : FALLBACK_SCREENSHOTS).slice(0, 3).map((src, i) => (
-                      <div key={i} className="flex-shrink-0 rounded-lg overflow-hidden border border-white/10" style={{ width: '70px', height: '50px' }}>
-                        <img src={src} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
+                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Trailer</p>
+                  <div className="rounded-lg overflow-hidden border border-white/10" style={{ aspectRatio: '16/9' }}>
+                    <iframe src={(selectedGame.trailer_url || selectedGame.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
                   </div>
                 </div>
+              )}
 
-                {/* Video/Trailer */}
-                {(selectedGame.trailer_url || (selectedGame.video_urls && selectedGame.video_urls[0])) && (
-                  <div>
-                    <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Trailer</p>
-                    <div className="rounded-lg overflow-hidden border border-white/10" style={{ aspectRatio: '16/9' }}>
-                      <iframe src={(selectedGame.trailer_url || selectedGame.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Reviews Section */}
-                <div className="flex-1 overflow-hidden flex flex-col">
-                  <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Reviews</p>
-                  <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                    {MOCK_REVIEWS.slice(0, 2).map((r, i) => (
-                      <div key={i} className="py-2 border-b border-white/6">
-                        <div className="flex items-center gap-1 mb-1">
-                          <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">{r.user[0]}</div>
-                          <span className="text-white/70 text-[10px] font-bold line-clamp-1">{r.user}</span>
-                          <ReviewStars rating={r.rating} />
-                        </div>
-                        <p className="text-white/50 text-[9px] leading-tight pl-6 line-clamp-2">{r.text}</p>
+              {/* Reviews Section */}
+              <div className="flex-1 overflow-hidden flex flex-col">
+                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Reviews</p>
+                <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                  {MOCK_REVIEWS.slice(0, 2).map((r, i) => (
+                    <div key={i} className="py-2 border-b border-white/6">
+                      <div className="flex items-center gap-1 mb-1">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px] font-bold">{r.user[0]}</div>
+                        <span className="text-white/70 text-[10px] font-bold line-clamp-1">{r.user}</span>
+                        <ReviewStars rating={r.rating} />
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-white/50 text-[9px] leading-tight pl-6 line-clamp-2">{r.text}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
