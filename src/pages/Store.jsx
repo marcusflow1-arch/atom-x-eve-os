@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -172,7 +172,7 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
-    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
+    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null);
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
@@ -377,7 +377,7 @@ export default function Store() {
             <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} games={games} onNavigateToGame={handleNavigateToGame} cartCount={getCartCount()} onToggleVoiceSearch={() => setShowVoiceOptions(!showVoiceOptions)} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
+                    {/* 5% Left Sidebar */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
@@ -426,7 +426,7 @@ export default function Store() {
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
-                        {/* Top Header — liquid glass silver */}
+                        {/* Top Header */}
                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
                             backdropFilter: 'blur(28px) saturate(180%)',
@@ -460,7 +460,7 @@ export default function Store() {
                                         ))}
                                     </div>
 
-                                        </div>
+                                </div>
                             )}
 
                             {/* STORE OVERVIEW OVERLAY */}
@@ -562,18 +562,23 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* Achievements Section — Full Width */}
-                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
-                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
-                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
+                                                        {/* TOP: Achievements + Player Interactions (70/30 split) */}
+                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden px-6 gap-8">
+                                                            {/* Spacer matching genre list column width */}
+                                                            <div className="flex-shrink-0" style={{ width: '200px' }} />
 
-                                                            {/* Achievements — Full Width */}
-                                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                                            {/* LEFT: Achievements (70%) */}
+                                                            <div className="flex-[0.7] min-w-0 overflow-hidden">
                                                                 <StoreAchievementsStrip currentGame={currentShowcaseGame} />
+                                                            </div>
+
+                                                            {/* RIGHT: Player Interactions (30%) */}
+                                                            <div className="flex-[0.3] overflow-hidden rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                                                <PlayerInteractionsPanel />
                                                             </div>
                                                         </div>
 
-                                                        {/* Below showcase: genre list + game grid + interactions */}
+                                                        {/* Below: genre list + game grid (full width) */}
                                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                                             {/* LEFT: Genre list */}
                                                             <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
@@ -603,7 +608,7 @@ export default function Store() {
                                                                 </motion.div>
                                                             </div>
 
-                                                            {/* CENTER: Game Grid (70%) */}
+                                                            {/* CENTER: Game Grid (full width) */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
                                                                 <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                                                                     {displayedGames.map((game, idx) => (
@@ -632,9 +637,6 @@ export default function Store() {
                                                                     ))}
                                                                 </motion.div>
                                                             </div>
-
-                                                            {/* RIGHT: Player Interactions Panel (30%) */}
-                                                            <PlayerInteractionsPanel />
                                                         </div>
                                                     </div>
                                                 </>
