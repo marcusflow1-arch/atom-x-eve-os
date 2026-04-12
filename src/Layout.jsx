@@ -9,7 +9,6 @@ import { ThemeBackground } from '@/components/shared/ThemeSystem';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
-import HeaderGameSearch from './components/shared/HeaderGameSearch';
 import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
 import EnvStatus from './components/env/EnvStatus';
 
@@ -899,50 +898,164 @@ function LayoutContent({ children, currentPageName }) {
                       </div>
                     </button>
 
+
                     {showStoreHeader && (
                       <>
                         <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
                           {location.pathname.toLowerCase().includes('/gamedetail') ? 'Atom X Eve Store' : 'Atom X Eve Store'}
                         </span>
+
+                        <div className="h-6 w-px bg-white/20 mx-4"></div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button
+                            onClick={() => navigate(createPageUrl('LunaTemplate'))}
+                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                          >
+                            <Home className="w-4 h-4" />
+                            Luna
+                          </button>
+
+                          <button
+                            onClick={() => navigate(createPageUrl('Store'))}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border flex items-center gap-2 ${
+                              location.pathname.toLowerCase().includes('/store')
+                                ? 'bg-white/20 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                                : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                            }`}
+                          >
+                            <ShoppingBag className="w-4 h-4" />
+                            Store
+                          </button>
+
+                          <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+                          <button
+                            onClick={() => navigate(createPageUrl('GenreMastery'))}
+                            className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                          >
+                            <Trophy className="w-4 h-4" />
+                            Cards
+                          </button>
+
+                        </div>
                       </>
                     )}
 
+
+
                     {showNotificationsHeader && (
-                      <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
-                        Atom X Eve Updates
-                      </span>
+                      <>
+                        <span className="text-xl font-bold tracking-wider text-white/90 drop-shadow-md ml-6">
+                          Atom X Eve Updates
+                        </span>
+
+                        <div className="h-6 w-px bg-white/20 mx-4"></div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <button onClick={() => navigate(createPageUrl('LunaTemplate'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <Home className="w-4 h-4" /> Home
+                          </button>
+                          <button onClick={() => navigate(createPageUrl('Store'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <ShoppingBag className="w-4 h-4" /> Store
+                          </button>
+                          <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <Trophy className="w-4 h-4" /> Cards
+                          </button>
+                          <button onClick={() => navigate(createPageUrl('Community'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" /> Community
+                          </button>
+                          <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <Users className="w-4 h-4" /> Clan
+                          </button>
+                          <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                            <Radio className="w-4 h-4" /> Aura
+                          </button>
+                          <a href="https://discord.gg/tPqMDr6yJ" target="_blank" rel="noopener noreferrer" className="px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-[#5865F2]/20 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/30 hover:text-white flex items-center gap-2">
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                            Discord
+                          </a>
+                        </div>
+                      </>
                     )}
 
                     {showLunaHeaderBar && (
-                      <span className="min-w-0 shrink-0 truncate text-lg xl:text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
-                        {(() => {
-                          const pp = location.pathname.toLowerCase();
-                          if (pp.includes('/clan')) return 'Atom X Eve Clan';
-                          if (pp.includes('/community')) return 'Atom X Eve Forum';
-                          if (pp.includes('/farm')) return 'Atom X Eve Farm';
-                          if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
-                          if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
-                          if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
-                          if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
-                          if (pp.includes('/discover')) return 'Atom X Eve Discover';
-                          if (pp.includes('/aistory')) return 'Atom X Eve AI Story';
-                          if (pp.includes('/library')) return 'Atom X Eve Library';
-                          if (pp.includes('/genremastery')) return 'Atom X Eve Cards';
-                          if (pp.includes('/aibattle')) return 'Atom X Eve AI Battle';
-                          if (pp.includes('/leaderboard')) return 'Atom X Eve Leaderboard';
-                          if (pp.includes('/streaminghome')) return 'Atom X Eve Aura Home';
-                          return 'Atom X Eve Dashboard';
-                        })()}
-                      </span>
+                      <>
+                        {/* Title - dynamic per page */}
+                        <span className="min-w-0 shrink-0 truncate text-lg xl:text-xl font-bold tracking-wider text-white/90 drop-shadow-md">
+                          {(() => {
+                            const pp = location.pathname.toLowerCase();
+                            if (pp.includes('/clan')) return 'Atom X Eve Clan';
+                            if (pp.includes('/community')) return 'Atom X Eve Forum';
+                            if (pp.includes('/farm')) return 'Atom X Eve Farm';
+                            if (pp.includes('/entertainment') || new URLSearchParams(location.search).get('panel') === 'entertainment') return 'Atom X Eve Entertainment';
+                            if (pp.includes('/aura') || pp.includes('/streaming')) return 'Atom X Eve Aura Stream';
+                            if (pp.includes('/storyline')) return 'Atom X Eve Storyline';
+                            if (pp.includes('/worldevents')) return 'Atom X Eve World Events';
+                            if (pp.includes('/discover')) return 'Atom X Eve Discover';
+                            if (pp.includes('/aistory')) return 'Atom X Eve AI Story';
+                            if (pp.includes('/library')) return 'Atom X Eve Library';
+                            if (pp.includes('/genremastery')) return 'Atom X Eve Cards';
+                            if (pp.includes('/aibattle')) return 'Atom X Eve AI Battle';
+                            if (pp.includes('/leaderboard')) return 'Atom X Eve Leaderboard';
+                            if (pp.includes('/streaminghome')) return 'Atom X Eve Aura Home';
+                            return 'Atom X Eve Dashboard';
+                          })()}
+                        </span>
+
+                        {/* Divider */}
+                        <div className="hidden lg:block h-6 w-px bg-white/20 mx-2 shrink-0"></div>
+
+                        {/* Sub-Page Links */}
+                        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                          <DragDropContext onDragEnd={onNavDragEnd}>
+                            <Droppable droppableId="nav-items" direction="horizontal">
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className="flex items-center gap-2 min-w-0 flex-nowrap overflow-x-auto scrollbar-hide pr-2"
+                                >
+                                  {navOrder.map((id, index) => (
+                                    <Draggable key={id} draggableId={id} index={index}>
+                                      {(provided) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                        >
+                                          {renderNavButton(id)}
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                </div>
+                              )}
+                            </Droppable>
+                          </DragDropContext>
+
+
+
+                          {/* Discord */}
+                          <a
+                            href="https://discord.gg/tPqMDr6yJ"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-[#5865F2]/20 border-[#5865F2]/30 text-[#5865F2] hover:bg-[#5865F2]/30 hover:text-white items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                            </svg>
+                            Discord
+                          </a>
+                        </div>
+                      </>
                     )}
                   </>
                 )}
-              </div>
 
-              {/* Game Search - Center */}
-              {!showStoreHeader && (
-                <HeaderGameSearch onGameSelect={(gameId) => navigate(createPageUrl(`GameDetail?id=${gameId}`))} />
-              )}
+            </div>
 
             {/* Settings + View Mode Toggle - right side */}
             <div className="ml-auto flex shrink-0 items-center gap-2">
