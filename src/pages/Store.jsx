@@ -33,7 +33,6 @@ import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
 import GameDetailPanel from '../components/store/GameDetailPanel';
-import GameListPanel from '../components/store/GameListPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -200,7 +199,6 @@ export default function Store() {
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
     const [selectedGameForDetail, setSelectedGameForDetail] = useState(null);
-    const [selectedGameListCategory, setSelectedGameListCategory] = useState(null);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -406,10 +404,7 @@ export default function Store() {
                                     return (
                                         <button
                                             key={cat.id}
-                                            onClick={() => {
-                                              const categoryData = genreData.find(g => g.id === cat.id) || { label: cat.label, items: [] };
-                                              setSelectedGameListCategory(categoryData);
-                                            }}
+                                            onClick={() => setActiveCategoryOverlay(isActive ? null : cat.id)}
                                             title={cat.label}
                                             className={`group w-11 h-11 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
                                                 isActive
@@ -494,47 +489,60 @@ export default function Store() {
 
                             {/* MAIN CONTENT AREA */}
                             <AnimatePresence mode="wait">
-                                {selectedGameListCategory && storeMode === 'store' ? (
-                                    // Three-column layout: categories → games list → game detail
-                                    <motion.div key="game-list-layout" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex overflow-hidden pt-16">
-                                        {/* Left: Game List Panel */}
-                                        <GameListPanel
-                                          games={selectedGameListCategory.items || []}
-                                          selectedGame={selectedGameForDetail}
-                                          onSelectGame={setSelectedGameForDetail}
-                                          onClose={() => setSelectedGameListCategory(null)}
-                                          categoryLabel={selectedGameListCategory.label}
-                                        />
-
-                                        {/* Right: Game Detail Panel */}
-                                        {selectedGameForDetail && (
-                                          <div className="flex-1 overflow-auto">
-                                            <div className="flex flex-col h-full">
-                                              <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
-                                                <div>
-                                                  <h2 className="text-2xl font-bold text-white mb-1">{selectedGameForDetail.title}</h2>
-                                                  <div className="flex items-center gap-4 text-sm">
-                                                    <span className="text-white/60">{selectedGameForDetail.genre}</span>
-                                                    <div className="flex items-center gap-1 text-yellow-500">
-                                                      <Star className="w-4 h-4 fill-current" />
-                                                      <span className="text-white">{selectedGameForDetail.rating || 4.5}</span>
-                                                    </div>
-                                                    {selectedGameForDetail.price && <span className="text-green-400 font-bold">${selectedGameForDetail.price}</span>}
-                                                  </div>
-                                                </div>
-                                                <button
-                                                  onClick={() => setSelectedGameForDetail(null)}
-                                                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-                                                >
-                                                  <X className="w-5 h-5 text-white" />
-                                                </button>
-                                              </div>
-                                              <div className="flex-1 overflow-auto">
-                                                <GameDetailPanel game={selectedGameForDetail} onClose={() => setSelectedGameForDetail(null)} />
-                                              </div>
+                                {selectedGameForDetail && storeMode === 'store' ? (
+                                    // 15/85 Split View for Game Detail
+                                    <motion.div key="game-detail-split" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full flex overflow-hidden pt-16">
+                                        {/* 15% Left Sidebar - Game List */}
+                                        <div className="w-[15%] border-r border-white/10 flex flex-col bg-black/30">
+                                            <div className="p-4 border-b border-white/10">
+                                                <h3 className="text-xs font-bold text-white/70 uppercase tracking-widest">Games in {currentNavGenre?.label || 'Category'}</h3>
                                             </div>
-                                          </div>
-                                        )}
+                                            <ScrollArea className="flex-1">
+                                                <div className="space-y-1 p-3">
+                                                    {(displayedGames.length > 0 ? displayedGames : games).map(g => (
+                                                        <button
+                                                            key={g.id}
+                                                            onClick={() => setSelectedGameForDetail(g)}
+                                                            className={`w-full text-left px-3 py-2 rounded-lg transition-all text-xs font-medium truncate ${
+                                                                selectedGameForDetail?.id === g.id
+                                                                    ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-400/40'
+                                                                    : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                                                            }`}
+                                                            title={g.title}
+                                                        >
+                                                            {g.title}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </ScrollArea>
+                                        </div>
+                                        {/* 85% Right Content */}
+                                        <div className="flex-1 overflow-auto">
+                                            <div className="flex flex-col h-full">
+                                                <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
+                                                    <div>
+                                                        <h2 className="text-2xl font-bold text-white mb-1">{selectedGameForDetail.title}</h2>
+                                                        <div className="flex items-center gap-4 text-sm">
+                                                            <span className="text-white/60">{selectedGameForDetail.genre}</span>
+                                                            <div className="flex items-center gap-1 text-yellow-500">
+                                                                <Star className="w-4 h-4 fill-current" />
+                                                                <span className="text-white">{selectedGameForDetail.rating || 4.5}</span>
+                                                            </div>
+                                                            {selectedGameForDetail.price && <span className="text-green-400 font-bold">${selectedGameForDetail.price}</span>}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setSelectedGameForDetail(null)}
+                                                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                                                    >
+                                                        <X className="w-5 h-5 text-white" />
+                                                    </button>
+                                                </div>
+                                                <div className="flex-1 overflow-auto">
+                                                    <GameDetailPanel game={selectedGameForDetail} onClose={() => setSelectedGameForDetail(null)} />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </motion.div>
                                 ) : storeMode === 'store' && storeSubView === 'achievements' ? (
                                     <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
@@ -659,7 +667,7 @@ export default function Store() {
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
                                                                 <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                                                                     {displayedGames.map((game, idx) => (
-                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => { setSelectedGameListCategory(currentNavGenre); setSelectedGameForDetail(game); }} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
                                                                             <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
                                                                             <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
