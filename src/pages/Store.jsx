@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
@@ -171,7 +171,7 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
-    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
+    const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null);
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
     const [storeSubView, setStoreSubView] = useState(searchParams.get('subview') || 'games');
@@ -376,7 +376,7 @@ export default function Store() {
             <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} games={games} onNavigateToGame={handleNavigateToGame} cartCount={getCartCount()} onToggleVoiceSearch={() => setShowVoiceOptions(!showVoiceOptions)} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
-                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
+                    {/* 5% Left Sidebar */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
@@ -425,7 +425,7 @@ export default function Store() {
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
-                        {/* Top Header — liquid glass silver */}
+                        {/* Top Header */}
                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
                             backdropFilter: 'blur(28px) saturate(180%)',
@@ -458,8 +458,7 @@ export default function Store() {
                                             </button>
                                         ))}
                                     </div>
-
-                                        </div>
+                                </div>
                             )}
 
                             {/* STORE OVERVIEW OVERLAY */}
@@ -563,7 +562,7 @@ export default function Store() {
                                                     <div className="relative z-10 w-full h-full flex flex-col">
                                                         {/* Achievements Section — Full Width */}
                                                         <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
-                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
+                                                            {/* Spacer matching genre list column width */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
                                                             {/* Achievements — Full Width */}
@@ -604,6 +603,35 @@ export default function Store() {
 
                                                             {/* RIGHT: Game Grid */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
+                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                                                                    {displayedGames.map((game, idx) => (
+                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                                                            <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                                                                            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end z-10">
+                                                                              <div className="bg-black/60 backdrop-blur-md px-2 py-1 rounded-md border border-white/10">
+                                                                                <span className="text-green-400 font-bold text-sm">${game.price}</span>
+                                                                              </div>
+                                                                              <WishlistButton game={game} />
+                                                                            </div>
+                                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+                                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
+                                                                                <div className="flex items-center justify-between text-xs text-white/60">
+                                                                                    <span>{game.genre}</span>
+                                                                                    <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    ))}
+                                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
+                                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
+                                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </motion.div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </>
                                             )}
                                         </motion.div>
