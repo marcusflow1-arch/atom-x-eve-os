@@ -9,8 +9,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from './devSpotlightData';
 import { useCart } from '@/components/CartContext';
-import BlackMarketContent from './BlackMarketContent';
-import TradingPostOverlayContent from './TradingPostOverlayContent';
+import DevsSecretShop from './DevsSecretShop';
 
 const GENRE_TABS = [
   { id: 'all', name: 'All', icon: LayoutGrid },
@@ -205,7 +204,7 @@ function DeveloperCard({ dev, onClick, gameCount, cardCount }) {
 export default function DevSpotlightOverlay({ onClose }) {
   const [isMaximized, setIsMaximized] = useState(true);
   const { addToCart } = useCart();
-  const [activeView, setActiveView] = useState('developer'); // 'developer' | 'blackmarket' | 'tradingpost'
+  const [activeView, setActiveView] = useState('developer'); // 'developer' | 'secretshop'
   const [selectedGenre, setSelectedGenre] = useState(GENRE_TABS[0]);
   const [selectedDev, setSelectedDev] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -331,28 +330,16 @@ export default function DevSpotlightOverlay({ onClose }) {
               <div className="flex-shrink-0 w-px h-6 mx-2 relative"><div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} /></div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
-                  onClick={() => setActiveView(activeView === 'blackmarket' ? 'developer' : 'blackmarket')}
+                  onClick={() => setActiveView(activeView === 'secretshop' ? 'developer' : 'secretshop')}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                    activeView === 'blackmarket'
-                      ? 'bg-red-500/15 border-red-500/30 text-red-300'
+                    activeView === 'secretshop'
+                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
                       : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
                   }`}
                   style={{ backdropFilter: 'blur(12px)' }}
                 >
                   <DollarSign className="w-3.5 h-3.5" />
-                  <span className={!isMaximized ? "hidden 2xl:inline" : "hidden sm:inline"}>Black Market</span>
-                </button>
-                <button
-                  onClick={() => setActiveView(activeView === 'tradingpost' ? 'developer' : 'tradingpost')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
-                    activeView === 'tradingpost'
-                      ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
-                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
-                  }`}
-                  style={{ backdropFilter: 'blur(12px)' }}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span className={!isMaximized ? "hidden 2xl:inline" : "hidden sm:inline"}>Trading Post</span>
+                  <span className={!isMaximized ? "hidden 2xl:inline" : "hidden sm:inline"}>Dev's Secret Shop</span>
                 </button>
                 <button 
                   onClick={() => setIsMaximized(!isMaximized)} 
@@ -374,47 +361,9 @@ export default function DevSpotlightOverlay({ onClose }) {
         {/* ═══ MAIN CONTENT ═══ */}
         <div className="flex-1 flex min-h-0 relative z-10">
 
-          {activeView === 'blackmarket' || activeView === 'tradingpost' ? (
-            <div className="flex-1 h-full flex flex-col" style={{ background: 'rgba(8, 12, 18, 0.55)', backdropFilter: 'blur(20px)' }}>
-              <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-white font-bold text-lg">{activeView === 'blackmarket' ? 'Black Market' : 'Trading Post'}</h2>
-                  <p className="text-white/30 text-sm mt-1">{activeView === 'blackmarket' ? 'Exclusive rare items & mystery cards' : 'Trade and exchange items with other players'}</p>
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-5">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {displayCards.map((card, i) => {
-                    const rarityColor = card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' : card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' : card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' : 'border-slate-500/50 text-slate-400';
-                    return (
-                      <motion.div key={card.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.02 }} onClick={() => {
-                        const priceNum = parseFloat(String(card.price || '0').replace(/[^0-9.]/g, '')) || 4.99;
-                        addToCart({
-                          id: `${activeView}-card-${card.id}`,
-                          title: card.name,
-                          image: card.image || '',
-                          price: priceNum,
-                          type: 'card',
-                        });
-                      }} whileHover={{ scale: 1.05, y: -4 }}
-                        className="aspect-[2.5/3.5] rounded-xl overflow-hidden cursor-pointer border border-white/10 hover:border-white/25 transition-all relative bg-slate-900/80 shadow-lg hover:shadow-xl hover:shadow-cyan-500/10">
-                        <div className="relative w-full h-3/5 overflow-hidden">
-                          <img src={card.image || ''} alt={card.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent" />
-                        </div>
-                        <div className="p-2 flex flex-col gap-1">
-                          <h3 className="text-white font-bold text-[10px] leading-tight line-clamp-2">{card.name}</h3>
-                          <div className="flex gap-1 flex-wrap">
-                            <Badge variant="outline" className={`text-[8px] h-3.5 px-1 border ${rarityColor}`}>{card.rarity}</Badge>
-                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 border-white/15 text-white/40">{card.type}</Badge>
-                          </div>
-                          {card.price && <span className="text-cyan-400/70 text-[9px] font-semibold mt-0.5">{card.price}</span>}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
+          {activeView === 'secretshop' ? (
+            <div className="flex-1 h-full overflow-hidden">
+              <DevsSecretShop />
             </div>
           ) : (
           <>
