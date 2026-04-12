@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Store, ShoppingBag, ArrowRightLeft, Search, ShoppingCart, X, Mic, ChevronRight, ChevronUp } from 'lucide-react';
+import { Eye, Store, ShoppingBag, ArrowRightLeft, Search, ShoppingCart, X, Mic, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
-  const [expanded, setExpanded] = useState(false);
   const filtered = games.filter(g =>
     g.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.genre?.toLowerCase().includes(searchTerm.toLowerCase())
-  ).slice(0, expanded ? 24 : 6);
+  ).slice(0, 12);
 
   return (
     <motion.div
@@ -17,13 +16,12 @@ function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-      className={`absolute bottom-full right-0 mb-2 rounded-2xl overflow-hidden transition-all ${expanded ? 'max-h-96' : 'max-h-48'}`}
+      className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl overflow-hidden transition-all"
       style={{
         background: 'linear-gradient(160deg, rgba(0,0,0,0.85) 0%, rgba(5,5,10,0.90) 100%)',
         backdropFilter: 'blur(50px) saturate(200%)',
         WebkitBackdropFilter: 'blur(50px) saturate(200%)',
         boxShadow: '0 -12px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)',
-        width: 'clamp(300px, 60vw, 500px)',
       }}
     >
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
@@ -32,44 +30,32 @@ function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
           <span className="text-white/50 text-xs uppercase tracking-widest font-bold">Search Results</span>
           {filtered.length > 0 && <span className="text-cyan-400 text-xs font-bold">· {filtered.length}</span>}
         </div>
-        <div className="flex items-center gap-2">
-          {games.filter(g =>
-            g.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            g.genre?.toLowerCase().includes(searchTerm.toLowerCase())
-          ).length > 6 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-            >
-              <ChevronUp className={`w-3 h-3 text-white/60 transition-transform ${expanded ? '' : 'rotate-180'}`} />
-            </button>
-          )}
-          <button onClick={onClose} className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
-            <X className="w-3 h-3 text-white/60" />
-          </button>
-        </div>
+        <button onClick={onClose} className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all">
+          <X className="w-3 h-3 text-white/60" />
+        </button>
       </div>
 
       {filtered.length === 0 ? (
         <div className="flex items-center justify-center py-8 text-white/30 text-sm">No games found for "{searchTerm}"</div>
       ) : (
-        <div className={`overflow-y-auto px-5 pb-4 pt-2 transition-all ${expanded ? '' : 'max-h-40'}`} style={{ scrollbarWidth: 'none' }}>
-          {filtered.map(game => (
-            <motion.div
-              key={game.id}
-              onClick={() => { onNavigate(game.id); onClose(); }}
-              whileHover={{ x: 4 }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-white/5 transition-all border border-transparent hover:border-cyan-400/30 group"
-            >
-              <img src={game.cover_image} alt={game.title} className="w-12 h-16 rounded-lg object-cover flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-white/80 text-xs font-bold truncate group-hover:text-white">{game.title}</p>
-                <p className="text-white/35 text-[10px]">{game.genre || 'Unknown'}</p>
-                <span className="text-green-400 font-bold text-xs">${game.price ?? '0'}</span>
-              </div>
-              <ChevronRight className="w-3 h-3 text-white/30 flex-shrink-0 group-hover:text-cyan-400" />
-            </motion.div>
-          ))}
+        <div className="overflow-x-auto px-5 pb-4 pt-2" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-3 min-w-min">
+            {filtered.map(game => (
+              <motion.div
+                key={game.id}
+                onClick={() => { onNavigate(game.id); onClose(); }}
+                whileHover={{ y: -4 }}
+                className="flex flex-col items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-white/5 transition-all border border-transparent hover:border-cyan-400/30 group min-w-[120px]"
+              >
+                <img src={game.cover_image} alt={game.title} className="w-16 h-24 rounded-lg object-cover" />
+                <div className="text-center">
+                  <p className="text-white/80 text-xs font-bold truncate group-hover:text-white">{game.title}</p>
+                  <p className="text-white/35 text-[10px]">{game.genre || 'Unknown'}</p>
+                  <span className="text-green-400 font-bold text-xs">${game.price ?? '0'}</span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
     </motion.div>
