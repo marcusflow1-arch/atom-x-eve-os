@@ -476,6 +476,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
         </div>
 
         {/* Right 30%: Details Panel */}
+        <>
         {selectedGame ? (
           <div className="overflow-y-auto p-4" style={{ scrollbarWidth: 'none', width: '30%', background: 'rgba(10,14,20,0.5)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex flex-col gap-4 h-full">
@@ -524,6 +525,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
             <p className="text-white/20 text-sm">Select a game</p>
           </div>
         )}
+        </>
       </div>
     </motion.div>
   );
