@@ -10,6 +10,8 @@ import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay
 import { CartProvider } from './components/CartContext';
 import { AuthProvider, useAuth } from './components/auth/AuthContext';
 import HeaderGameSearch from './components/shared/HeaderGameSearch';
+import { DashboardModeProvider, useDashboardMode } from './components/dashboard/DashboardModeContext';
+import EnvStatus from './components/env/EnvStatus';
 
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
