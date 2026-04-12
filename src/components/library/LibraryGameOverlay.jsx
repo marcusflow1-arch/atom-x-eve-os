@@ -8,6 +8,7 @@ import GameCommunityTab from './GameCommunityTab';
 import GameDiscussionTab from './GameDiscussionTab';
 import GameStreamerAffiliateTab from './GameStreamerAffiliateTab';
 import GameSupportTab from './GameSupportTab';
+import GameChatTab from './GameChatTab';
 
 export default function LibraryGameOverlay({ game, onClose, onPlay, onStream }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -19,6 +20,7 @@ export default function LibraryGameOverlay({ game, onClose, onPlay, onStream }) 
     { id: 'content', label: 'Content' },
     { id: 'community', label: 'Community' },
     { id: 'discussion', label: 'Discussion' },
+    { id: 'chat', label: 'Game Chat' },
     { id: 'streamers', label: 'Streamer Affiliate' },
     { id: 'support', label: 'Support' },
   ];
@@ -194,6 +196,7 @@ export default function LibraryGameOverlay({ game, onClose, onPlay, onStream }) 
         {activeTab === 'content' && <GameContentTab game={game} />}
         {activeTab === 'community' && <GameCommunityTab game={game} />}
         {activeTab === 'discussion' && <GameDiscussionTab game={game} />}
+        {activeTab === 'chat' && <GameChatTab game={game} />}
         {activeTab === 'streamers' && <GameStreamerAffiliateTab game={game} />}
         {activeTab === 'support' && <GameSupportTab game={game} />}
       </div>
