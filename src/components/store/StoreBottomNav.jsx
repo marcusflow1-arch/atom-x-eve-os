@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Store, ShoppingBag, ArrowRightLeft, Search, ShoppingCart, X, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
