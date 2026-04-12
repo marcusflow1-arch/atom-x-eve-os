@@ -92,7 +92,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
   ];
 
   return (
-    <div className="relative flex items-center justify-center w-full">
+    <div className="relative flex items-center justify-between w-full">
       <AnimatePresence>
         {showPopup && (
           <GameSearchPopup
@@ -104,7 +104,34 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
         )}
       </AnimatePresence>
 
-      {/* Tabs - Centered */}
+      {/* Tabs - Left */}
+      <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-all"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
+        >
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  isActive
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/50 hover:text-white/70'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Search + Cart - Center */}
       <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
         <div
           className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-all"
@@ -129,17 +156,19 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
             </button>
           )}
         </div>
-        <Link
-          to={createPageUrl('Cart')}
-          className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10"
-          style={{ background: 'rgba(255,255,255,0.07)' }}
-        >
-          <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
-          )}
-        </Link>
       </div>
+
+      {/* Cart - Right */}
+      <Link
+        to={createPageUrl('Cart')}
+        className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10"
+        style={{ background: 'rgba(255,255,255,0.07)' }}
+      >
+        <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
+        {cartCount > 0 && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
+        )}
+      </Link>
     </div>
   );
 }
