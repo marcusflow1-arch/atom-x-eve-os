@@ -31,6 +31,8 @@ import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
+import GameDetailWithSidebar from '../components/store/GameDetailWithSidebar';
+import GameDetailPanel from '../components/store/GameDetailPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -196,6 +198,7 @@ export default function Store() {
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
+    const [selectedGameForDetail, setSelectedGameForDetail] = useState(null);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -242,8 +245,8 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
-        setShowScrollTransition(true);
+        const game = games.find(g => g.id === id);
+        setSelectedGameForDetail(game);
     };
 
     const {
@@ -659,6 +662,19 @@ export default function Store() {
                                     if (url) navigate(url);
                                 }} />
                             )}
+
+                            {/* Game Detail Modal with Sidebar */}
+                            <AnimatePresence>
+                                {selectedGameForDetail && (
+                                    <GameDetailWithSidebar
+                                        game={selectedGameForDetail}
+                                        games={displayedGames.length > 0 ? displayedGames : games}
+                                        onGameSelect={setSelectedGameForDetail}
+                                        onClose={() => setSelectedGameForDetail(null)}
+                                        detailComponent={GameDetailPanel}
+                                    />
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
