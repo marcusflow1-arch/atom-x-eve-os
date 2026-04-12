@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Store, ShoppingBag, ArrowRightLeft, Search, X, Mic, ShoppingCart } from 'lucide-react';
+import { Eye, Store, ShoppingBag, ArrowRightLeft, Search, ShoppingCart, X, Mic } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
-  const filtered = (games || []).filter(g =>
+  const filtered = games.filter(g =>
     g.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     g.genre?.toLowerCase().includes(searchTerm.toLowerCase())
   ).slice(0, 12);
@@ -16,9 +16,8 @@ function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-      className="absolute bottom-full right-0 mb-2 rounded-2xl overflow-hidden"
+      className="absolute bottom-full left-0 right-0 mb-2 mx-4 rounded-2xl overflow-hidden"
       style={{
-        width: '480px',
         background: 'linear-gradient(160deg, rgba(15,20,30,0.97) 0%, rgba(10,14,22,0.98) 100%)',
         backdropFilter: 'blur(40px) saturate(180%)',
         WebkitBackdropFilter: 'blur(40px) saturate(180%)',
@@ -68,7 +67,6 @@ function GameSearchPopup({ games, searchTerm, onNavigate, onClose }) {
 export default function StoreBottomNav({ activeTab, onTabChange, games = [], onNavigateToGame, cartCount = 0, onToggleVoiceSearch }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showPopup, setShowPopup] = useState(false);
-  const inputRef = useRef(null);
 
   useEffect(() => {
     setShowPopup(searchTerm.trim().length > 0);
@@ -83,77 +81,69 @@ export default function StoreBottomNav({ activeTab, onTabChange, games = [], onN
 
   return (
     <div className="relative flex items-center justify-between w-full">
-      {/* Center: Tabs */}
-      <div className="flex items-center gap-2 absolute left-1/2 transform -translate-x-1/2">
-        <AnimatePresence>
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <motion.button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all border ${
-                  isActive
-                    ? 'bg-white/15 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                    : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </motion.button>
-            );
-          })}
-        </AnimatePresence>
+      <AnimatePresence>
+        {showPopup && (
+          <GameSearchPopup
+            games={games}
+            searchTerm={searchTerm}
+            onNavigate={onNavigateToGame}
+            onClose={() => { setShowPopup(false); setSearchTerm(''); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-2">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <motion.button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all border ${
+                isActive
+                  ? 'bg-white/15 border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
+                  : 'bg-transparent border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* Right: Search + Cart */}
-      <div className="flex items-center gap-2 relative ml-auto">
-        {/* Clickable search bar — full width clickable except mic icon */}
-        <label
-          htmlFor="store-search-input"
-          className="flex items-center gap-2 rounded-full px-3 py-1.5 cursor-text transition-all"
-          style={{
-            background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(12px)',
-            minWidth: '180px',
-          }}
+      <div className="flex items-center gap-2 ml-4">
+        <div
+          className="flex items-center gap-2 rounded-full px-3 py-1.5 transition-all"
+          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}
         >
-          <Search className="w-3.5 h-3.5 text-white/40 flex-shrink-0 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
           <input
-            id="store-search-input"
-            ref={inputRef}
             type="text"
             placeholder="Search games..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 flex-1 min-w-0 cursor-text"
-            style={{ width: '120px' }}
+            className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-36"
           />
           {searchTerm && (
-            <button
-              onClick={(e) => { e.preventDefault(); setSearchTerm(''); inputRef.current?.focus(); }}
-              className="text-white/30 hover:text-white transition-colors flex-shrink-0"
-            >
+            <button onClick={() => setSearchTerm('')} className="text-white/30 hover:text-white transition-colors">
               <X className="w-3 h-3" />
             </button>
           )}
           {onToggleVoiceSearch && (
-            <button
-              onClick={(e) => { e.preventDefault(); onToggleVoiceSearch(); }}
-              className="text-white/30 hover:text-cyan-400 transition-colors flex-shrink-0"
-            >
+            <button onClick={onToggleVoiceSearch} className="text-white/30 hover:text-white transition-colors">
               <Mic className="w-3.5 h-3.5" />
             </button>
           )}
-        </label>
-
+        </div>
         <Link
           to={createPageUrl('Cart')}
-          className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10 flex-shrink-0"
+          className="relative w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-white/20 border border-white/10"
           style={{ background: 'rgba(255,255,255,0.07)' }}
         >
           <ShoppingCart className="w-3.5 h-3.5 text-white/80" />
