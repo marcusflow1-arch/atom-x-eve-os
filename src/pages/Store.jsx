@@ -32,6 +32,7 @@ import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreSearchDropdown from '../components/store/StoreSearchDropdown';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
+import { WishlistProvider } from '../components/store/WishlistContext';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -374,6 +375,7 @@ export default function Store() {
 
     return (
         <PageErrorBoundary pageName="Store">
+          <WishlistProvider>
             <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
@@ -660,6 +662,7 @@ export default function Store() {
                     </div>
                 </div>
             </GlassPageFrame>
+          </WishlistProvider>
         </PageErrorBoundary>
     );
 }

@@ -1,47 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { useAuth } from '../auth/AuthContext';
+import { useWishlist } from './WishlistContext';
 
 export default function WishlistButton({ game, className = '' }) {
-  const { user, isAuthenticated } = useAuth();
-  const [wishlisted, setWishlisted] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const { isWishlisted, toggle } = useWishlist();
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user?.id || !game?.id) return;
-    base44.entities.Wishlist.filter({ user_id: user.id, game_id: game.id })
-      .then(results => setWishlisted(results.length > 0))
-      .catch(() => {});
-  }, [user?.id, game?.id, isAuthenticated]);
-
-  const toggle = async (e) => {
-    e.stopPropagation();
-    if (!isAuthenticated || !user?.id) return;
-    setLoading(true);
-    if (wishlisted) {
-      const existing = await base44.entities.Wishlist.filter({ user_id: user.id, game_id: game.id });
-      if (existing.length > 0) await base44.entities.Wishlist.delete(existing[0].id);
-      setWishlisted(false);
-    } else {
-      await base44.entities.Wishlist.create({
-        user_id: user.id,
-        game_id: game.id,
-        game_title: game.title,
-        game_cover: game.cover_image || game.image || '',
-        game_price: game.price || 0,
-        game_genre: game.genre || '',
-      });
-      setWishlisted(true);
-    }
-    setLoading(false);
-  };
 
   if (!isAuthenticated) return null;
 
+  const wishlisted = isWishlisted(game?.id);
+
+  const handleClick = async (e) => {
+    e.stopPropagation();
+    setLoading(true);
+    await toggle(game);
+    setLoading(false);
+  };
+
   return (
     <button
-      onClick={toggle}
+      onClick={handleClick}
       disabled={loading}
       title={wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
       className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${
