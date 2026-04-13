@@ -380,7 +380,7 @@ export default function Store() {
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
-                    <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
+                    <div className="w-[5%] min-w-[80px] h-full border-r relative z-[65] flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
@@ -450,7 +450,7 @@ export default function Store() {
                         </div>
 
                         {/* Main Content */}
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-hidden relative">
 
     
 
