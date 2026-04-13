@@ -878,9 +878,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Streaming Box + Game Chat */}
-              <div className="flex flex-col gap-4 border-t border-white/10 pt-8">
-                {/* Stream Player */}
-                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md relative flex flex-col" style={{ height: '420px' }}>
+              <div className="flex gap-4 border-t border-white/10 pt-8" style={{ height: '500px' }}>
+                {/* Left: Stream Player */}
+                <div className="flex-[2] min-w-0 rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md relative flex flex-col h-full">
                   <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
                     <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/90 text-white text-[10px] font-black uppercase tracking-wider">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
@@ -911,8 +911,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Game Chat */}
-                <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-md flex flex-col overflow-hidden" style={{ height: '380px' }}>
+                {/* Right: Game Chat */}
+                <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black/40 backdrop-blur-md flex flex-col overflow-hidden h-full">
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
                     <MessageSquare className="w-4 h-4 text-cyan-400" />
                     <span className="text-white/60 text-sm font-bold uppercase tracking-wider">Game Chat</span>
