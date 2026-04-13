@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import WishlistButton from './WishlistButton';
+import PlayerInteractionsPanel from './PlayerInteractionsPanel';
 
 const CATEGORIES = [
   { id: 'recommended', label: 'Recommended', icon: Sparkles, color: 'from-purple-500 to-pink-500', accent: 'text-purple-300', filter: (games) => [...games].sort(() => Math.random() - 0.5).slice(0, 20) },
@@ -589,98 +590,115 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
       className="absolute inset-0 z-50 flex overflow-hidden"
       style={{ background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)', backdropFilter: 'blur(30px)' }}
     >
-      {/* ═══ LEFT: Game List (15% when game selected, 100% when not) ═══ */}
-      <motion.div
-        animate={{ width: selectedGame ? '15%' : '100%' }}
-        transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
-        className="h-full flex-shrink-0 flex flex-col overflow-hidden"
-        style={{ borderRight: selectedGame ? '1px solid rgba(255,255,255,0.08)' : 'none' }}
-      >
-        {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-white/8 flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
-            <Icon className="w-4.5 h-4.5 text-white" />
-          </div>
-          {!selectedGame && (
-            <div className="flex-1 min-w-0">
-              <h2 className="text-white font-black text-lg">{cat.label}</h2>
-              <p className="text-white/35 text-xs">{filteredGames.length} games</p>
+      {/* ═══ LEFT: Game List + Interactions (80/20 split when no game selected) ═══ */}
+      <div className="h-full flex flex-1 overflow-hidden" style={{ minWidth: 0 }}>
+        <motion.div
+          animate={{ width: selectedGame ? '15%' : '80%' }}
+          transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
+          className="h-full flex-shrink-0 flex flex-col overflow-hidden"
+          style={{ borderRight: selectedGame ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(255,255,255,0.07)' }}
+        >
+          {/* Header */}
+          <div className="flex-shrink-0 p-4 border-b border-white/8 flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+              <Icon className="w-4.5 h-4.5 text-white" />
             </div>
-          )}
-          <div className="ml-auto flex items-center gap-2">
-            {selectedGame && (
-              <button
-                onClick={() => setSelectedGame(null)}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
-                title="Back to list"
-              >
-                <ArrowLeft className="w-4 h-4 text-white/60" />
-              </button>
+            {!selectedGame && (
+              <div className="flex-1 min-w-0">
+                <h2 className="text-white font-black text-lg">{cat.label}</h2>
+                <p className="text-white/35 text-xs">{filteredGames.length} games</p>
+              </div>
             )}
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/15 border border-white/10 hover:border-red-500/20 flex items-center justify-center transition-all"
-              title="Close (Esc)"
-            >
-              <X className="w-4 h-4 text-white/50 hover:text-red-300" />
-            </button>
-          </div>
-        </div>
-
-        {/* Game list */}
-        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-          {filteredGames.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-white/20 gap-3">
-              <Icon className="w-10 h-10 opacity-30" />
-              <p className="text-sm">No games found</p>
-            </div>
-          ) : (
-            <div className={selectedGame ? 'space-y-0' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 p-4'}>
-              {filteredGames.map((game) =>
-                selectedGame ? (
-                  /* Compact list row when game selected */
-                  <motion.button
-                    key={game.id}
-                    onClick={() => setSelectedGame(game)}
-                    whileHover={{ x: 2 }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all border-l-2 ${
-                      selectedGame?.id === game.id
-                        ? `border-l-cyan-400 bg-white/8 text-white`
-                        : 'border-l-transparent text-white/50 hover:text-white hover:bg-white/4'
-                    }`}
-                  >
-                    <img src={game.cover_image} alt="" className="w-7 h-9 object-cover rounded flex-shrink-0 border border-white/10" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold leading-tight line-clamp-2">{game.title}</p>
-                    </div>
-                  </motion.button>
-                ) : (
-                  /* Grid card when no game selected */
-                  <motion.div
-                    key={game.id}
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    onClick={() => setSelectedGame(game)}
-                    className="group aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/8 hover:border-cyan-400/30 shadow-lg relative bg-slate-900 transition-all"
-                  >
-                    <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <h4 className="text-white font-bold text-sm leading-tight truncate">{game.title}</h4>
-                      <div className="flex items-center justify-between text-xs mt-1">
-                        <span className="text-white/40">{game.genre}</span>
-                        <span className="text-green-400 font-bold">${game.price}</span>
-                      </div>
-                    </div>
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="w-4 h-4 text-white/60" />
-                    </div>
-                  </motion.div>
-                )
+            <div className="ml-auto flex items-center gap-2">
+              {selectedGame && (
+                <button
+                  onClick={() => setSelectedGame(null)}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all"
+                  title="Back to list"
+                >
+                  <ArrowLeft className="w-4 h-4 text-white/60" />
+                </button>
               )}
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-red-500/15 border border-white/10 hover:border-red-500/20 flex items-center justify-center transition-all"
+                title="Close (Esc)"
+              >
+                <X className="w-4 h-4 text-white/50 hover:text-red-300" />
+              </button>
             </div>
+          </div>
+
+          {/* Game list */}
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            {filteredGames.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-white/20 gap-3">
+                <Icon className="w-10 h-10 opacity-30" />
+                <p className="text-sm">No games found</p>
+              </div>
+            ) : (
+              <div className={selectedGame ? 'space-y-0' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 p-4'}>
+                {filteredGames.map((game) =>
+                  selectedGame ? (
+                    /* Compact list row when game selected */
+                    <motion.button
+                      key={game.id}
+                      onClick={() => setSelectedGame(game)}
+                      whileHover={{ x: 2 }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-all border-l-2 ${
+                        selectedGame?.id === game.id
+                          ? `border-l-cyan-400 bg-white/8 text-white`
+                          : 'border-l-transparent text-white/50 hover:text-white hover:bg-white/4'
+                      }`}
+                    >
+                      <img src={game.cover_image} alt="" className="w-7 h-9 object-cover rounded flex-shrink-0 border border-white/10" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-semibold leading-tight line-clamp-2">{game.title}</p>
+                      </div>
+                    </motion.button>
+                  ) : (
+                    /* Grid card when no game selected */
+                    <motion.div
+                      key={game.id}
+                      whileHover={{ y: -6, scale: 1.02 }}
+                      onClick={() => setSelectedGame(game)}
+                      className="group aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border border-white/8 hover:border-cyan-400/30 shadow-lg relative bg-slate-900 transition-all"
+                    >
+                      <img src={game.cover_image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <h4 className="text-white font-bold text-sm leading-tight truncate">{game.title}</h4>
+                        <div className="flex items-center justify-between text-xs mt-1">
+                          <span className="text-white/40">{game.genre}</span>
+                          <span className="text-green-400 font-bold">${game.price}</span>
+                        </div>
+                      </div>
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ChevronRight className="w-4 h-4 text-white/60" />
+                      </div>
+                    </motion.div>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Player Interactions panel — 20% when no game selected, hidden when game selected */}
+        <AnimatePresence>
+          {!selectedGame && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: '20%' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
+              className="h-full flex-shrink-0 overflow-hidden"
+            >
+              <PlayerInteractionsPanel />
+            </motion.div>
           )}
-        </div>
-      </motion.div>
+        </AnimatePresence>
+      </div>
 
       {/* ═══ RIGHT: Game Detail (85%) ═══ */}
       <AnimatePresence>
