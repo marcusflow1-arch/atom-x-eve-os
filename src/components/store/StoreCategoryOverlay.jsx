@@ -105,7 +105,7 @@ const MOCK_CONTENT = [
   { label: 'Game Hours', value: '40–80h', icon: '⏱️' },
 ];
 
-function GameDetailPanel({ game, onBack }) {
+function GameDetailPanel({ game, onBack, onViewFullPage }) {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -135,7 +135,7 @@ function GameDetailPanel({ game, onBack }) {
         <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={glassCard}>
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
-        <button onClick={() => navigate(createPageUrl(`GameDetail?id=${game.id}`))} className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-cyan-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
+        <button onClick={onViewFullPage} className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-cyan-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
           <ExternalLink className="w-3.5 h-3.5" /> Full Page
         </button>
         <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-4">
@@ -561,22 +561,30 @@ function GameDetailPanel({ game, onBack }) {
 }
 
 export default function StoreCategoryOverlay({ category, games, onClose }) {
+  const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState(null);
+  const [fadingToDetail, setFadingToDetail] = useState(false);
 
   const cat = CATEGORIES.find(c => c.id === category);
   const filteredGames = useMemo(() => cat ? cat.filter(games) : [], [cat, games]);
+
+  const handleViewFullPage = () => {
+    setFadingToDetail(true);
+    setTimeout(() => navigate(createPageUrl(`GameDetail?id=${selectedGame.id}`)), 350);
+  };
 
   // Escape key handler
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 'Escape') {
+        if (fadingToDetail) return;
         if (selectedGame) setSelectedGame(null);
         else onClose();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedGame, onClose]);
+  }, [selectedGame, onClose, fadingToDetail]);
 
   if (!cat) return null;
   const Icon = cat.icon;
@@ -701,14 +709,14 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
         {selectedGame && (
           <motion.div
             initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: '85%' }}
+            animate={{ opacity: fadingToDetail ? 0 : 1, width: fadingToDetail ? 0 : '85%' }}
             exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
+            transition={{ duration: 0.35 }}
             className="h-full flex-1 overflow-hidden"
             style={{ background: 'rgba(8, 12, 18, 0.6)' }}
           >
             <AnimatePresence mode="wait">
-              <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} />
+              <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} />
             </AnimatePresence>
           </motion.div>
         )}
