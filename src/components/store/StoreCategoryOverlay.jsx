@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers } from 'lucide-react';
+import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import StoreGameDetailPanel from './GameDetailPanel';
 import WishlistButton from './WishlistButton';
@@ -186,6 +186,9 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView }) {
 
       {/* ── ACTION BUTTONS ── */}
       <div className="flex-shrink-0 px-4 py-2.5 flex items-center gap-2 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <button className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.22), rgba(99,102,241,0.18))', border: '1px solid rgba(168,85,247,0.35)', color: 'rgba(216,180,254,1)', boxShadow: '0 0 24px rgba(168,85,247,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+          <ShoppingBag className="w-4 h-4" /> Store
+        </button>
         <button onClick={() => addToCart({ id: game.id, title: game.title, image: game.cover_image, price: game.price || 0, type: 'game' })} className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(0,200,255,0.22), rgba(80,80,255,0.18))', border: '1px solid rgba(0,200,255,0.35)', color: 'rgba(150,240,255,1)', boxShadow: '0 0 24px rgba(0,200,255,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
           <ShoppingCart className="w-4 h-4" /> Add to Cart
         </button>
