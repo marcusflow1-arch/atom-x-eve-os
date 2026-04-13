@@ -1017,10 +1017,10 @@ export default function LibrarySidebar() {
                   bottom: '52px',
                   right: fullLibraryDetailGame ? '360px' : '0px',
                   transition: 'right 0.3s ease',
-                  background: 'rgba(10, 14, 20, 0.82)',
+                  background: 'rgba(255, 255, 255, 0.03)',
                   backdropFilter: 'blur(50px) saturate(200%)',
                   WebkitBackdropFilter: 'blur(50px) saturate(200%)',
-                  boxShadow: '0 4px 30px rgba(0,0,0,0.3)',
+                  boxShadow: '0 4px 30px rgba(0,0,0,0.2)',
                 }}
               >
                 {/* Header */}
@@ -1088,10 +1088,10 @@ export default function LibrarySidebar() {
                   top: '64px',
                   bottom: '52px',
                   width: '360px',
-                  background: 'rgba(15, 20, 26, 0.75)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-                  boxShadow: '-6px 0 30px rgba(0,0,0,0.4)',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+                  boxShadow: '-6px 0 30px rgba(0,0,0,0.2)',
                   borderLeft: '1px solid rgba(168, 85, 247, 0.18)',
                 }}
               >
@@ -1191,11 +1191,11 @@ export default function LibrarySidebar() {
                   top: '64px',
                   bottom: '52px',
                   right: '0px',
-                  background: 'rgba(12, 14, 22, 0.88)',
-                  backdropFilter: 'blur(40px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(180%)',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  backdropFilter: 'blur(50px) saturate(200%)',
+                  WebkitBackdropFilter: 'blur(50px) saturate(200%)',
                   borderLeft: '1px solid rgba(99, 102, 241, 0.2)',
-                  boxShadow: '4px 0 30px rgba(0,0,0,0.4)',
+                  boxShadow: '4px 0 30px rgba(0,0,0,0.2)',
                 }}
               >
                 {/* Toolbar */}
@@ -1854,10 +1854,10 @@ export default function LibrarySidebar() {
               right: '0px',
               top: '64px',
               bottom: '52px',
-              background: 'rgba(15, 20, 26, 0.85)',
-              backdropFilter: 'blur(40px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              boxShadow: '-6px 0 30px rgba(0,0,0,0.4)',
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(50px) saturate(200%)',
+              WebkitBackdropFilter: 'blur(50px) saturate(200%)',
+              boxShadow: '-6px 0 30px rgba(0,0,0,0.2)',
               borderLeft: '1px solid rgba(165, 243, 252, 0.15)',
             }}
           >
