@@ -106,7 +106,7 @@ const MOCK_CONTENT = [
   { label: 'Game Hours', value: '40–80h', icon: '⏱️' },
 ];
 
-function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView }) {
+function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpenStorePage }) {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -186,7 +186,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView }) {
 
       {/* ── ACTION BUTTONS ── */}
       <div className="flex-shrink-0 px-4 py-2.5 flex items-center gap-2 flex-wrap" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <button className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.22), rgba(99,102,241,0.18))', border: '1px solid rgba(168,85,247,0.35)', color: 'rgba(216,180,254,1)', boxShadow: '0 0 24px rgba(168,85,247,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+        <button onClick={onOpenStorePage} className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.22), rgba(99,102,241,0.18))', border: '1px solid rgba(168,85,247,0.35)', color: 'rgba(216,180,254,1)', boxShadow: '0 0 24px rgba(168,85,247,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
           <ShoppingBag className="w-4 h-4" /> Store
         </button>
         <button onClick={() => addToCart({ id: game.id, title: game.title, image: game.cover_image, price: game.price || 0, type: 'game' })} className="flex items-center gap-2 px-5 py-2 rounded-2xl text-sm font-black transition-all hover:scale-105 active:scale-95" style={{ background: 'linear-gradient(135deg, rgba(0,200,255,0.22), rgba(80,80,255,0.18))', border: '1px solid rgba(0,200,255,0.35)', color: 'rgba(150,240,255,1)', boxShadow: '0 0 24px rgba(0,200,255,0.18), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
@@ -576,6 +576,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [fadingToDetail, setFadingToDetail] = useState(false);
   const [storeMode, setStoreMode] = useState(false);
+  const [storePage, setStorePage] = useState(false);
 
   const cat = CATEGORIES.find(c => c.id === category);
   const filteredGames = useMemo(() => cat ? cat.filter(games) : [], [cat, games]);
@@ -590,6 +591,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
     const handler = (e) => {
       if (e.key === 'Escape') {
         if (fadingToDetail) return;
+        if (storePage) { setStorePage(false); return; }
         if (storeMode) { setStoreMode(false); return; }
         if (selectedGame) setSelectedGame(null);
         else onClose();
@@ -597,7 +599,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedGame, onClose, fadingToDetail, storeMode]);
+  }, [selectedGame, onClose, fadingToDetail, storeMode, storePage]);
 
   if (!cat) return null;
   const Icon = cat.icon;
@@ -729,12 +731,18 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
             style={{ background: 'rgba(8, 12, 18, 0.6)' }}
           >
             <AnimatePresence mode="wait">
-              {storeMode ? (
+              {storePage ? (
+                <motion.div key="store-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full relative">
+                  <button onClick={() => setStorePage(false)} className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back
+                  </button>
+                </motion.div>
+              ) : storeMode ? (
                 <motion.div key={`store-${selectedGame.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
                   <StoreGameDetailPanel gameId={selectedGame.id} onClose={() => setStoreMode(false)} />
                 </motion.div>
               ) : (
-                <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} onOpenStoreView={() => setStoreMode(true)} />
+                <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} onOpenStoreView={() => setStoreMode(true)} onOpenStorePage={() => setStorePage(true)} />
               )}
             </AnimatePresence>
           </motion.div>
