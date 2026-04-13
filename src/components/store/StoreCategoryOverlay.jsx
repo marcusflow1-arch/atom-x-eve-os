@@ -732,10 +732,8 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
           >
             <AnimatePresence mode="wait">
               {storePage ? (
-                <motion.div key="store-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full relative">
-                  <button onClick={() => setStorePage(false)} className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}>
-                    <ArrowLeft className="w-3.5 h-3.5" /> Back
-                  </button>
+                <motion.div key="store-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
+                  <StoreGameDetailPanel gameId={selectedGame.id} onClose={() => setStorePage(false)} />
                 </motion.div>
               ) : storeMode ? (
                 <motion.div key={`store-${selectedGame.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
