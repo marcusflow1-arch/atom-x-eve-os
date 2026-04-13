@@ -1001,7 +1001,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Achievement Card Strip - Below media */}
-              <div className="mt-2">
+              <div className="mt-3">
                 <AchievementCardStrip 
                   achievementCards={achievementCards} 
                   dlcList={dlcList}

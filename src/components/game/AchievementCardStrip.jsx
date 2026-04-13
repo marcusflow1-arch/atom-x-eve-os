@@ -107,7 +107,7 @@ export default function AchievementCardStrip({ achievementCards, dlcList, onSele
   };
 
   return (
-    <div className="flex flex-col h-full" style={{ background: 'rgba(10,14,20,0.6)', borderRadius: 12, padding: '12px 8px 8px' }}>
+    <div className="flex flex-col h-full" style={{ background: 'linear-gradient(180deg, rgba(8,12,22,0.72) 0%, rgba(15,20,35,0.55) 60%, rgba(5,8,18,0.80) 100%)', backdropFilter: 'blur(24px) saturate(160%)', WebkitBackdropFilter: 'blur(24px) saturate(160%)', boxShadow: '0 8px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)', borderRadius: 14, padding: '12px 8px 8px' }}>
       {/* Title */}
       <div className="flex flex-col items-center gap-1 mb-2">
         <div className="flex items-center gap-1.5">
