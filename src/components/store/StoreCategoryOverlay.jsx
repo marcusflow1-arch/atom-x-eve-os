@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
+import StoreGameDetailPanel from './GameDetailPanel';
 import WishlistButton from './WishlistButton';
 import PlayerInteractionsPanel from './PlayerInteractionsPanel';
 
@@ -105,7 +106,7 @@ const MOCK_CONTENT = [
   { label: 'Game Hours', value: '40–80h', icon: '⏱️' },
 ];
 
-function GameDetailPanel({ game, onBack, onViewFullPage }) {
+function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView }) {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -135,9 +136,16 @@ function GameDetailPanel({ game, onBack, onViewFullPage }) {
         <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/70 hover:text-white transition-all" style={glassCard}>
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
-        <button onClick={onViewFullPage} className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-cyan-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
-          <ExternalLink className="w-3.5 h-3.5" /> Full Page
-        </button>
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          {onOpenStoreView && (
+            <button onClick={onOpenStoreView} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-purple-300 hover:text-purple-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(168,85,247,0.35)' }}>
+              <Monitor className="w-3.5 h-3.5" /> Store View
+            </button>
+          )}
+          <button onClick={onViewFullPage} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-cyan-300 hover:text-cyan-100 transition-all" style={{ ...glassCard, border: '1px solid rgba(100,220,255,0.25)' }}>
+            <ExternalLink className="w-3.5 h-3.5" /> Full Page
+          </button>
+        </div>
         <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-4">
           <img src={game.cover_image} alt="" className="w-16 object-cover rounded-xl border border-white/20 shadow-2xl flex-shrink-0" style={{ height: '88px' }} />
           <div className="flex-1 min-w-0">
@@ -564,6 +572,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
   const navigate = useNavigate();
   const [selectedGame, setSelectedGame] = useState(null);
   const [fadingToDetail, setFadingToDetail] = useState(false);
+  const [storeMode, setStoreMode] = useState(false);
 
   const cat = CATEGORIES.find(c => c.id === category);
   const filteredGames = useMemo(() => cat ? cat.filter(games) : [], [cat, games]);
@@ -578,13 +587,14 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
     const handler = (e) => {
       if (e.key === 'Escape') {
         if (fadingToDetail) return;
+        if (storeMode) { setStoreMode(false); return; }
         if (selectedGame) setSelectedGame(null);
         else onClose();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedGame, onClose, fadingToDetail]);
+  }, [selectedGame, onClose, fadingToDetail, storeMode]);
 
   if (!cat) return null;
   const Icon = cat.icon;
@@ -716,7 +726,13 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
             style={{ background: 'rgba(8, 12, 18, 0.6)' }}
           >
             <AnimatePresence mode="wait">
-              <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} />
+              {storeMode ? (
+                <motion.div key={`store-${selectedGame.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
+                  <StoreGameDetailPanel gameId={selectedGame.id} onClose={() => setStoreMode(false)} />
+                </motion.div>
+              ) : (
+                <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} onOpenStoreView={() => setStoreMode(true)} />
+              )}
             </AnimatePresence>
           </motion.div>
         )}
