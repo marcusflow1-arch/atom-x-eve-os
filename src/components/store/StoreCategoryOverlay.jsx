@@ -590,8 +590,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
       className="absolute inset-0 z-50 flex overflow-hidden"
       style={{ background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)', backdropFilter: 'blur(30px)' }}
     >
-      {/* ═══ LEFT: Game List + Interactions (80/20 split when no game selected) ═══ */}
-      <div className="h-full flex flex-1 overflow-hidden" style={{ minWidth: 0 }}>
+      {/* ═══ LEFT: Game List (80% or 15% collapsed) ═══ */}
         <motion.div
           animate={{ width: selectedGame ? '15%' : '80%' }}
           transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
@@ -640,7 +639,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
               <div className={selectedGame ? 'space-y-0' : 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 p-4'}>
                 {filteredGames.map((game) =>
                   selectedGame ? (
-                    /* Compact list row when game selected */
                     <motion.button
                       key={game.id}
                       onClick={() => setSelectedGame(game)}
@@ -657,7 +655,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
                       </div>
                     </motion.button>
                   ) : (
-                    /* Grid card when no game selected */
                     <motion.div
                       key={game.id}
                       whileHover={{ y: -6, scale: 1.02 }}
@@ -684,7 +681,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
           </div>
         </motion.div>
 
-        {/* Player Interactions panel — 20% when no game selected, hidden when game selected */}
+        {/* Player Interactions panel — 20% when no game selected */}
         <AnimatePresence>
           {!selectedGame && (
             <motion.div
@@ -698,7 +695,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* ═══ RIGHT: Game Detail (85%) ═══ */}
       <AnimatePresence>
