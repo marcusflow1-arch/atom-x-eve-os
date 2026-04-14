@@ -361,37 +361,43 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   };
 
   return (
-    <div className="flex flex-col min-h-screen p-4 sm:p-6 max-w-[1600px] mx-auto w-full">
-      {/* ─── Compact Header ─── */}
-      <div className="mb-3 flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <ShoppingCart className="w-5 h-5 text-cyan-400" />
-          <h1 className="text-xl font-bold text-white">Marketplace</h1>
+    <div className="flex flex-col h-full max-w-[1600px] mx-auto w-full">
+      {/* ─── STICKY Header (no scroll) ─── */}
+      <div 
+        className="flex-shrink-0 px-4 sm:px-6 pt-1 pb-2 border-b border-white/10"
+        style={{
+          background: 'rgba(13,17,25,0.85)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
+        {/* Row 1: Marketplace title + search */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-cyan-400" />
+            <h1 className="text-xl font-bold text-white">Marketplace</h1>
+          </div>
+
+          {/* Compact search - 30% width with voice icon */}
+          <div className="relative w-[30%]">
+            <Mic className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/8 border border-white/10 focus:border-cyan-500/40 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder:text-white/25 outline-none transition-all"
+            />
+            {searchTerm && (
+              <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <X className="w-3 h-3 text-white/40 hover:text-white" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Compact search - 30% width with voice icon */}
-        <div className="relative w-[30%]">
-          <Mic className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/8 border border-white/10 focus:border-cyan-500/40 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder:text-white/25 outline-none transition-all"
-          />
-          {searchTerm && (
-            <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2">
-              <X className="w-3 h-3 text-white/40 hover:text-white" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ─── Simplified Filters ─── */}
-      <div className="flex flex-col gap-2 mb-4">
-        {/* Filter row: Companions, Abilities, Materials, Environments */}
+        {/* Row 2: Equipment + Companions + Abilities + Materials + Environments + Sort */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          {['Companions', 'Abilities', 'Materials', 'Environments & Skyboxes'].map(type => {
+          {['Equipment', 'Companions', 'Abilities', 'Materials', 'Environments & Skyboxes'].map(type => {
             const typeId = type === 'Environments & Skyboxes' ? 'Environments' : type;
             const active = activeType === typeId;
             return (
@@ -408,12 +414,9 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
               </button>
             );
           })}
-        </div>
 
-        {/* Sort + View toggle */}
-        <div className="flex items-center gap-2">
           {/* Sort dropdown */}
-          <div className="relative" ref={sortRef}>
+          <div className="relative ml-auto flex-shrink-0" ref={sortRef}>
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-white/10 bg-white/5 text-white/60 hover:bg-white/8 transition-all"
@@ -423,7 +426,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
               <ChevronDown className="w-3 h-3" />
             </button>
             {showSortDropdown && (
-              <div className="absolute left-0 top-full mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 py-1 overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 py-1 overflow-hidden">
                 {SORT_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
@@ -438,64 +441,41 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
               </div>
             )}
           </div>
-
-          {/* View mode */}
-          <div className="flex items-center bg-white/5 rounded-full p-0.5 border border-white/8">
-            <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-full transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
-              <Grid className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-full transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-white/30'}`}>
-              <List className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Clear filters */}
-          {activeFilterCount > 0 && (
-            <button
-              onClick={clearAllFilters}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-red-400/70 hover:text-red-400 border border-red-500/20 hover:border-red-500/30 transition-all ml-auto"
-            >
-              <X className="w-3 h-3" />
-              Clear
-            </button>
-          )}
         </div>
       </div>
 
-      {/* ─── Results ─── */}
-      <div className="flex-1">
-        <AnimatePresence mode="popLayout">
-          {filteredItems.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-24 text-center"
-            >
-              <Package className="w-14 h-14 text-white/10 mb-4" />
-              <h3 className="text-white/40 font-semibold mb-1">No items found</h3>
-              <p className="text-white/25 text-sm mb-4">Try adjusting your search or filters</p>
-              <Button variant="outline" onClick={clearAllFilters} className="border-white/15 text-white/50 hover:text-white">
-                Clear all filters
-              </Button>
-            </motion.div>
-          ) : viewMode === 'grid' ? (
-            <motion.div
-              key="grid"
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
-            >
-              {filteredItems.map(item => (
-                <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div key="list" className="flex flex-col gap-1.5">
-              {filteredItems.map(item => (
-                <ListRowCard key={item.id} item={item} onClick={setSelectedItem} />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <AnimatePresence mode="popLayout">
+        {filteredItems.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-24 text-center"
+          >
+            <Package className="w-14 h-14 text-white/10 mb-4" />
+            <h3 className="text-white/40 font-semibold mb-1">No items found</h3>
+            <p className="text-white/25 text-sm mb-4">Try adjusting your search or filters</p>
+            <Button variant="outline" onClick={clearAllFilters} className="border-white/15 text-white/50 hover:text-white">
+              Clear all filters
+            </Button>
+          </motion.div>
+        ) : viewMode === 'grid' ? (
+          <motion.div
+            key="grid"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+          >
+            {filteredItems.map(item => (
+              <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div key="list" className="flex flex-col gap-1.5">
+            {filteredItems.map(item => (
+              <ListRowCard key={item.id} item={item} onClick={setSelectedItem} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
 
       {/* Detail Modal */}
