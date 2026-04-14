@@ -876,12 +876,12 @@ export default function TradingPostContent() {
                                               setActiveCrossGame(game);
                                               setCrossViewLevel(1);
                                           }}
-                                          className="group w-full aspect-square rounded-lg overflow-hidden border border-white/10 bg-white/[0.02] hover:border-cyan-400/40 transition-all"
+                                          className="group w-full flex items-center gap-3 p-2 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-cyan-400/40 transition-all"
                                       >
-                                          <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                              <h4 className="font-semibold text-white text-xs truncate">{game.title}</h4>
+                                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
+                                              <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                           </div>
+                                          <h4 className="font-semibold text-white text-sm truncate">{game.title}</h4>
                                       </motion.button>
                                   ))}
                               </div>
