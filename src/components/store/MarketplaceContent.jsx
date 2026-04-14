@@ -5,7 +5,7 @@ import {
   Sparkles, DollarSign, Eye, Heart, ShoppingCart,
   Gamepad2, Package, Zap, Shield, X, Grid, List,
   Ghost, Footprints, Gem, Check, ArrowUpDown, Filter,
-  Crosshair, Trophy, Monitor, Car, Skull, Crown, Flame, SlidersHorizontal
+  Crosshair, Trophy, Monitor, Car, Skull, Crown, Flame, SlidersHorizontal, Mic
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -363,33 +363,33 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
 
   return (
     <div className="flex flex-col min-h-screen p-4 sm:p-6 max-w-[1600px] mx-auto w-full">
-      {/* ─── Hero Search Bar ─── */}
-      <div className="mb-6 pt-2">
-        <div className="flex items-center gap-3 mb-4">
+      {/* ─── Top Header Row: Title + Search ─── */}
+      <div className="flex items-center gap-4 mb-3 pt-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <ShoppingCart className="w-5 h-5 text-cyan-400" />
           <h1 className="text-xl font-bold text-white">Marketplace</h1>
-          <span className="text-white/30 text-sm">•</span>
-          <span className="text-white/40 text-sm">{filteredItems.length} items</span>
         </div>
 
-        {/* Big search input */}
-        <div className="relative mb-3">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+        {/* Compact search input — 30% width */}
+        <div className="relative w-[30%]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search items, games, rarities... (e.g. 'Legendary Weapons', 'Under 30k AGP')"
-            className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/8 border border-white/10 focus:border-cyan-500/40 rounded-2xl pl-12 pr-12 py-3.5 text-sm text-white placeholder:text-white/25 outline-none transition-all"
+            placeholder="Search..."
+            className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/8 border border-white/10 focus:border-cyan-500/40 rounded-xl pl-8 pr-14 py-2 text-xs text-white placeholder:text-white/25 outline-none transition-all"
           />
+          {/* Voice / mic icon */}
+          <button className="absolute right-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors">
+            <Mic className="w-3.5 h-3.5" />
+          </button>
           {searchTerm && (
-            <button onClick={() => handleSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2">
-              <X className="w-4 h-4 text-white/40 hover:text-white" />
+            <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+              <X className="w-3.5 h-3.5 text-white/40 hover:text-white" />
             </button>
           )}
         </div>
-
-
       </div>
 
       {/* ─── Filter Bar ─── */}
