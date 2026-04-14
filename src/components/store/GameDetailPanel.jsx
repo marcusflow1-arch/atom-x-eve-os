@@ -4,8 +4,8 @@ import {
   Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
-  Maximize2, Star, ThumbsUp, MessageSquare, User, Radio,
-  Send, Heart, Users, Eye
+  Maximize2, Star, ThumbsUp, ThumbsDown, MessageSquare, User, Radio,
+  Send, Heart, Users, Eye, Camera, Video, User2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -13,6 +13,7 @@ import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ReviewSection from './ReviewSection';
+import CommunityMomentsSection from './CommunityMomentsSection';
 
 
 // --- Components ---
@@ -878,63 +879,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Streaming Box + Game Chat */}
-              <div className="flex gap-4 border-t border-white/10 pt-8" style={{ height: '500px' }}>
-                {/* Left: Stream Player */}
-                <div className="flex-[2] min-w-0 rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md relative flex flex-col h-full">
-                  <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
-                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-500/90 text-white text-[10px] font-black uppercase tracking-wider">
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
-                    </span>
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 text-white/70 text-[10px]">
-                      <Eye className="w-3 h-3" /> 1.2K
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%)' }}>
-                    <div className="text-center">
-                      <Radio className="w-14 h-14 text-cyan-400/30 mx-auto mb-3" />
-                      <p className="text-white/20 text-sm">Live Stream • {game.title}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3 bg-black/60 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex-shrink-0" />
-                      <span className="text-white/70 text-sm font-semibold">StreamerPro_X</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button className="flex items-center gap-1 text-xs text-pink-400 hover:text-pink-300 transition-colors">
-                        <Heart className="w-4 h-4" /> 4.8K
-                      </button>
-                      <button className="flex items-center gap-1 text-xs text-white/40 hover:text-white transition-colors">
-                        <Users className="w-4 h-4" /> Follow
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Game Chat */}
-                <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black/40 backdrop-blur-md flex flex-col overflow-hidden h-full">
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
-                    <MessageSquare className="w-4 h-4 text-cyan-400" />
-                    <span className="text-white/60 text-sm font-bold uppercase tracking-wider">Game Chat</span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto px-4 py-3" style={{ scrollbarWidth: 'none' }}>
-                    <div className="flex flex-col items-center justify-center h-full gap-2 text-white/20">
-                      <MessageSquare className="w-8 h-8 opacity-30" />
-                      <p className="text-sm">No messages yet. Be the first to chat!</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5">
-                    <input
-                      placeholder="Send a message..."
-                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-cyan-400/40"
-                    />
-                    <button className="w-9 h-9 rounded-lg bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center hover:bg-cyan-500/30 transition-all">
-                      <Send className="w-4 h-4 text-cyan-300" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* Community Moments */}
+              <CommunityMomentsSection game={game} user={user} />
 
               {/* Lower Section: Content & Achievement Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/10 pt-8">
