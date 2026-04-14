@@ -37,6 +37,7 @@ const ITEM_TYPES = [
   { id: 'Mounts', name: 'Mounts', icon: Footprints },
   { id: 'Companions', name: 'Companions', icon: Ghost },
   { id: 'Materials', name: 'Materials', icon: Gem },
+  { id: 'Environments', name: 'Environments & Skyboxes', icon: Sparkles },
 ];
 
 const SORT_OPTIONS = [
@@ -388,23 +389,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
           )}
         </div>
 
-        {/* Quick search chips */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-          <span className="text-white/25 text-[10px] uppercase tracking-wider flex-shrink-0">Quick:</span>
-          {QUICK_SEARCHES.map(qs => (
-            <button
-              key={qs}
-              onClick={() => handleSearch(qs)}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] border transition-all ${
-                searchTerm === qs
-                  ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
-                  : 'bg-white/4 border-white/8 text-white/40 hover:bg-white/8 hover:text-white/70'
-              }`}
-            >
-              {qs}
-            </button>
-          ))}
-        </div>
+
       </div>
 
       {/* ─── Filter Bar ─── */}
@@ -495,25 +480,6 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
                 </button>
               );
             })}
-          </div>
-
-          <div className="w-px h-5 bg-white/10 flex-shrink-0" />
-
-          {/* Game filter dropdown-style pills */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {availableGames.map(g => (
-              <button
-                key={g}
-                onClick={() => setActiveGame(g)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium border whitespace-nowrap transition-all flex-shrink-0 ${
-                  activeGame === g
-                    ? 'bg-white/10 border-white/20 text-white'
-                    : 'bg-transparent border-transparent text-white/30 hover:text-white/50'
-                }`}
-              >
-                {g === 'all' ? 'All Games' : g}
-              </button>
-            ))}
           </div>
 
           {/* Clear all */}
