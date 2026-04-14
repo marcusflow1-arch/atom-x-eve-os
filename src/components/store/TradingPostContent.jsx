@@ -864,7 +864,7 @@ export default function TradingPostContent() {
                           className="h-full flex gap-6"
                       >
                           {/* LEFT: 30% - Simplified Game List */}
-                          <div className="w-[30%] overflow-y-auto custom-scrollbar pr-2 pb-6">
+                          <div className="w-[30%] overflow-y-auto custom-scrollbar pr-2 pb-6 -mt-6">
                               <div className="space-y-2">
                                   {crossData[activeGenreIndex]?.games.map((game, idx) => (
                                       <motion.button 
