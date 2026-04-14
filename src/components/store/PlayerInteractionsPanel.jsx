@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Paperclip, Link, Star, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { Download, TrendingUp, Flame, Zap, Star } from 'lucide-react';
 
 const glassCard = {
   background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%)',
@@ -9,205 +9,108 @@ const glassCard = {
   border: '1px solid rgba(255,255,255,0.10)',
 };
 
-const MOCK_INTERACTIONS = [
-  {
-    player: 'ShadowAce',
-    level: 42,
-    mission: 'The Final Siege',
-    comment: 'Just pulled off an insane 360 no-scope from across the map. The crowd went wild!',
-    image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&q=80',
-  },
-  {
-    player: 'NovaPulse',
-    level: 87,
-    mission: 'Shadow Realm — Boss',
-    comment: 'Beat the hardest boss on first try with full health. Pure skill, no cheats!',
-    image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80',
-  },
-  {
-    player: 'CryptoKnight',
-    level: 21,
-    mission: 'Desert Storm',
-    comment: 'Found a secret area nobody knows about. Hidden loot is unreal!',
-    image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=400&q=80',
-  },
-  {
-    player: 'VoidWalker',
-    level: 65,
-    mission: 'Cyber City Chase',
-    comment: 'Escaped 5 enemies at once with 1 HP left. Heart was pounding!',
-    image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&q=80',
-  },
-  {
-    player: 'NeuroGamer',
-    level: 33,
-    mission: 'Orbital Strike',
-    comment: 'Accidentally started a chain explosion that wiped half the map 💥',
-    image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=400&q=80',
-  },
-];
-
-const MOCK_REVIEWS = [
-  { user: 'StarBlaze', rating: 5, text: 'Unmatched visuals. Best game of the year hands down.', date: '2d ago' },
-  { user: 'NightOwl99', rating: 4, text: 'Solid mechanics, smooth performance. Minor bugs but nothing major.', date: '5d ago' },
-  { user: 'LunarFox', rating: 5, text: 'Addictive gameplay loop. I cannot stop playing even at 3am.', date: '1w ago' },
-  { user: 'RiftBreaker', rating: 3, text: 'Good game, but the servers lag occasionally.', date: '1w ago' },
-  { user: 'ArcaneVeil', rating: 5, text: 'The story is absolutely phenomenal. 10/10 would recommend.', date: '2w ago' },
-];
+const GAME_RECOMMENDATIONS = {
+  recommended: [
+    { id: 1, title: 'Cyberpunk Chronicles', downloads: '2.4M', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&h=280&fit=crop' },
+    { id: 2, title: 'Neural Warfare', downloads: '1.8M', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&h=280&fit=crop' },
+    { id: 3, title: 'Shadow Legends', downloads: '1.5M', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=280&fit=crop' },
+    { id: 4, title: 'Void Walker', downloads: '1.2M', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=200&h=280&fit=crop' },
+  ],
+  new: [
+    { id: 5, title: 'Quantum Drift 2025', downloads: '890K', image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=200&h=280&fit=crop' },
+    { id: 6, title: 'Abyss Reborn', downloads: '650K', image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=200&h=280&fit=crop' },
+    { id: 7, title: 'Nexus Protocol', downloads: '520K', image: 'https://images.unsplash.com/photo-1535671066927-ab7641ecda809?w=200&h=280&fit=crop' },
+    { id: 8, title: 'Titan Clash', downloads: '410K', image: 'https://images.unsplash.com/photo-1538481143235-5d630894cb4e?w=200&h=280&fit=crop' },
+  ],
+  hidden_gems: [
+    { id: 9, title: 'Echoes of Eternity', downloads: '340K', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=200&h=280&fit=crop' },
+    { id: 10, title: 'Silent Requiem', downloads: '280K', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&h=280&fit=crop' },
+    { id: 11, title: 'Phantom Realm', downloads: '215K', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&h=280&fit=crop' },
+    { id: 12, title: 'Whisper Chronicles', downloads: '190K', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=280&fit=crop' },
+  ],
+  trending: [
+    { id: 13, title: 'Neon City Rising', downloads: '3.2M', image: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=200&h=280&fit=crop' },
+    { id: 14, title: 'Inferno Battles', downloads: '2.9M', image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=200&h=280&fit=crop' },
+    { id: 15, title: 'Crystal Dominion', downloads: '2.5M', image: 'https://images.unsplash.com/photo-1535671066927-ab7641ecda809?w=200&h=280&fit=crop' },
+    { id: 16, title: 'Storm Riders', downloads: '2.1M', image: 'https://images.unsplash.com/photo-1538481143235-5d630894cb4e?w=200&h=280&fit=crop' },
+  ],
+  top_rated: [
+    { id: 17, title: 'Masterpiece Quest', downloads: '1.7M', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=200&h=280&fit=crop' },
+    { id: 18, title: 'Legacy of Legends', downloads: '1.6M', image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=200&h=280&fit=crop' },
+    { id: 19, title: 'Eternal Journey', downloads: '1.4M', image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=200&h=280&fit=crop' },
+    { id: 20, title: 'Ultimate Fantasy', downloads: '1.3M', image: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=200&h=280&fit=crop' },
+  ],
+};
 
 export default function PlayerInteractionsPanel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [reviewText, setReviewText] = useState('');
-  const [isHovering, setIsHovering] = useState(false);
-  const containerRef = useRef(null);
-  const total = MOCK_INTERACTIONS.length;
+  const [activeTab, setActiveTab] = useState('recommended');
 
-  const prev = () => setActiveIndex(i => (i - 1 + total) % total);
-  const next = () => setActiveIndex(i => (i + 1) % total);
+  const tabs = [
+    { id: 'recommended', label: 'Recommended', icon: TrendingUp },
+    { id: 'new', label: 'New', icon: Zap },
+    { id: 'hidden_gems', label: 'Hidden Gems', icon: Star },
+    { id: 'trending', label: 'Trending', icon: Flame },
+    { id: 'top_rated', label: 'Top-Rated', icon: Star },
+  ];
 
-  // Scroll-to-slide when hovering the interaction box
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const onWheel = (e) => {
-      if (!isHovering) return;
-      e.preventDefault();
-      if (e.deltaY > 0) next();
-      else prev();
-    };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [isHovering, activeIndex]);
-
-  const interaction = MOCK_INTERACTIONS[activeIndex];
+  const games = GAME_RECOMMENDATIONS[activeTab];
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(5,8,15,0.65)' }}>
-      
       {/* Header */}
       <div className="flex-shrink-0 px-3 py-2.5 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-3.5 h-3.5 text-cyan-400" />
-          <span className="text-white/60 text-[10px] uppercase tracking-widest font-black">Player Interactions</span>
-        </div>
+        <span className="text-white/60 text-[10px] uppercase tracking-widest font-black">Game Recommendations</span>
       </div>
 
-      {/* Interaction Box */}
-      <div
-        ref={containerRef}
-        className="flex-shrink-0 mx-3 mt-3 rounded-xl overflow-hidden cursor-pointer select-none"
-        style={glassCard}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-      >
-        {/* Meta row: player info | vertical divider | comment */}
-        <div className="flex items-stretch px-3 py-2.5 gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          {/* Left: player name, level, mission */}
-          <div className="flex flex-col justify-center gap-0.5 pr-2.5 min-w-0" style={{ width: '45%' }}>
-            <p className="text-white font-bold text-xs truncate">{interaction.player}</p>
-            <p className="text-cyan-400 text-[10px] font-semibold">Lvl {interaction.level}</p>
-            <p className="text-white/35 text-[9px] truncate">{interaction.mission}</p>
-          </div>
-          {/* Vertical divider */}
-          <div className="flex-shrink-0 w-px self-stretch mx-1" style={{ background: 'rgba(255,255,255,0.15)' }} />
-          {/* Right: comment */}
-          <div className="flex items-center pl-2.5 min-w-0" style={{ width: '55%' }}>
-            <p className="text-white/60 text-[10px] leading-tight line-clamp-3">{interaction.comment}</p>
-          </div>
-        </div>
-
-        {/* Screenshot */}
-        <div className="relative" style={{ aspectRatio: '16/9' }}>
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={activeIndex}
-              src={interaction.image}
-              alt="Player interaction"
-              className="w-full h-full object-cover"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            />
-          </AnimatePresence>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 60%, rgba(0,0,0,0.5) 100%)' }} />
-
-          {/* Nav arrows */}
-          <button onClick={prev} className="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-all">
-            <ChevronLeft className="w-3.5 h-3.5 text-white" />
-          </button>
-          <button onClick={next} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-all">
-            <ChevronRight className="w-3.5 h-3.5 text-white" />
-          </button>
-
-          {/* Dots */}
-          <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1">
-            {MOCK_INTERACTIONS.map((_, i) => (
-              <div key={i} onClick={() => setActiveIndex(i)} className={`rounded-full cursor-pointer transition-all ${i === activeIndex ? 'w-3 h-1.5 bg-cyan-400' : 'w-1.5 h-1.5 bg-white/30'}`} />
-            ))}
-          </div>
-
-          {/* Scroll hint on hover */}
-          {isHovering && (
-            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[9px] text-white/60 bg-black/50">
-              scroll ↔
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Horizontal divider */}
-      <div className="flex-shrink-0 mx-3 mt-3 h-px" style={{ background: 'rgba(255,255,255,0.10)' }} />
-
-      {/* Reviews section — scrollable */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2 min-h-0" style={{ scrollbarWidth: 'none' }}>
-        <p className="text-white/30 text-[9px] uppercase tracking-widest font-black sticky top-0 pt-1 pb-1" style={{ background: 'transparent' }}>Player Reviews</p>
-        {MOCK_REVIEWS.map((r, i) => (
-          <div key={i} className="rounded-xl p-2.5" style={glassCard}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-white font-bold text-[11px]">{r.user}</span>
-              <span className="text-white/25 text-[9px]">{r.date}</span>
-            </div>
-            <div className="flex items-center gap-0.5 mb-1">
-              {[1,2,3,4,5].map(s => (
-                <Star key={s} className={`w-2.5 h-2.5 ${s <= r.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/15'}`} />
-              ))}
-            </div>
-            <p className="text-white/55 text-[10px] leading-tight">{r.text}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Leave Review input */}
-      <div className="flex-shrink-0 px-3 pb-3 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
-        <p className="text-white/35 text-[9px] uppercase tracking-widest font-black mb-2">Leave Review</p>
-        <div className="rounded-2xl p-2.5 flex flex-col gap-2" style={{ ...glassCard, border: '1px solid rgba(255,255,255,0.12)' }}>
-          <textarea
-            value={reviewText}
-            onChange={e => setReviewText(e.target.value)}
-            placeholder="Share your experience..."
-            rows={2}
-            className="w-full bg-transparent outline-none text-[11px] text-white/75 placeholder:text-white/25 resize-none leading-relaxed"
-          />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button className="flex items-center gap-1 text-[9px] text-white/30 hover:text-white/60 transition-all" title="Attach screenshot">
-                <Paperclip className="w-3 h-3" />
-                <span>Screenshot</span>
-              </button>
-              <button className="flex items-center gap-1 text-[9px] text-white/30 hover:text-white/60 transition-all" title="Add video link">
-                <Link className="w-3 h-3" />
-                <span>Video</span>
-              </button>
-            </div>
+      {/* Tab Navigation */}
+      <div className="flex-shrink-0 flex overflow-x-auto gap-1 px-2 py-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.07)', scrollbarWidth: 'none' }}>
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          return (
             <button
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95"
-              style={{ background: reviewText.trim() ? 'linear-gradient(135deg, rgba(0,200,255,0.35), rgba(80,80,255,0.3))' : 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg whitespace-nowrap text-[10px] font-semibold transition-all flex-shrink-0 ${
+                activeTab === tab.id
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  : 'bg-transparent text-white/50 border border-transparent hover:text-white/80'
+              }`}
             >
-              <Send className="w-3 h-3 text-white/70" />
+              <Icon className="w-3 h-3" />
+              {tab.label}
             </button>
-          </div>
-        </div>
+          );
+        })}
+      </div>
+
+      {/* Games List */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 min-h-0" style={{ scrollbarWidth: 'none' }}>
+        <AnimatePresence mode="wait">
+          {games.map((game, idx) => (
+            <motion.div
+              key={game.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ delay: idx * 0.05 }}
+              className="flex gap-2 rounded-xl p-2.5 group cursor-pointer hover:bg-white/5 transition-all"
+              style={glassCard}
+            >
+              <div className="w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
+                <img src={game.image} alt={game.title} className="w-full h-full object-cover" />
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-between">
+                <div>
+                  <p className="text-white font-semibold text-[11px] line-clamp-2 group-hover:text-cyan-300 transition-colors">{game.title}</p>
+                  <p className="text-white/40 text-[9px] mt-0.5 flex items-center gap-1">
+                    <Download className="w-2.5 h-2.5" />
+                    {game.downloads}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
