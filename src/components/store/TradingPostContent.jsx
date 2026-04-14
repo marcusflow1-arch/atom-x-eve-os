@@ -8,6 +8,7 @@ import {
   SlidersHorizontal, ScrollText, Database, Hammer, Crosshair, ArrowUpDown
 } from 'lucide-react';
 import VirtualizedTradeGrid from './VirtualizedTradeGrid';
+import StoreRecommendationsSidebar from './StoreRecommendationsSidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -891,36 +892,47 @@ export default function TradingPostContent() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -20 }}
-                          className="h-full overflow-y-auto custom-scrollbar pr-2 pb-6"
+                          className="h-full flex gap-6"
                       >
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                              {crossData[activeGenreIndex]?.games.map((game) => (
-                                  <LiquidCard 
-                                      key={game.id} 
-                                      onClick={() => {
-                                          setActiveCrossGame(game);
-                                          setCrossViewLevel(1);
-                                      }}
-                                      className="h-64 flex flex-col group"
-                                  >
-                                      <div className="flex-1 relative overflow-hidden">
-                                          <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
-                                          <div className="absolute bottom-4 left-4 right-4">
-                                              <h3 className="text-xl font-bold text-white mb-1 leading-tight">{game.title}</h3>
-                                              <div className="flex items-center gap-2">
-                                                  <Badge variant="outline" className="border-white/20 text-white/70 text-[10px]">{game.genre}</Badge>
-                                                  <span className="text-[10px] text-cyan-400 font-mono">{game.filteredItems.length} items</span>
+                          {/* LEFT: Game List */}
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-6">
+                              <div className="space-y-2">
+                                  {crossData[activeGenreIndex]?.games.map((game, idx) => (
+                                      <motion.button 
+                                          key={game.id} 
+                                          initial={{ opacity: 0, y: 20 }} 
+                                          animate={{ opacity: 1, y: 0 }} 
+                                          transition={{ delay: idx * 0.05 }}
+                                          onClick={() => {
+                                              setActiveCrossGame(game);
+                                              setCrossViewLevel(1);
+                                          }}
+                                          className="group w-full flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20 transition-all text-left"
+                                      >
+                                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-800 border border-white/10">
+                                              <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                          </div>
+                                          <div className="flex-1 min-w-0">
+                                              <h4 className="font-semibold text-white truncate">{game.title}</h4>
+                                              <div className="flex items-center gap-2 text-xs text-white/50">
+                                                  <span>{game.genre}</span>
+                                                  <span>•</span>
+                                                  <span className="text-cyan-400 font-mono">{game.filteredItems.length} items</span>
                                               </div>
                                           </div>
-                                      </div>
-                                      <div className="h-12 bg-white/5 border-t border-white/10 flex items-center justify-between px-4">
-                                          <span className="text-xs text-white/50">View Market</span>
-                                          <ChevronRight className="w-4 h-4 text-white/50 group-hover:translate-x-1 transition-transform" />
-                                      </div>
-                                  </LiquidCard>
-                              ))}
+                                      </motion.button>
+                                  ))}
+                              </div>
                           </div>
+
+                          {/* DIVIDER */}
+                          <div className="w-px bg-white/10 flex-shrink-0" />
+
+                          {/* RIGHT: Recommendations Sidebar */}
+                          <StoreRecommendationsSidebar onGameSelect={(game) => {
+                              setActiveCrossGame(game);
+                              setCrossViewLevel(1);
+                          }} />
                       </motion.div>
                   ) : !selectedListingGroup ? (
                     // LEVEL 1: Item Listing View (Existing)
