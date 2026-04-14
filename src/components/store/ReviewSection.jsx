@@ -98,12 +98,53 @@ function StarDisplay({ rating, size = 'sm' }) {
   );
 }
 
+const EMOJI_GROUPS = [
+  { label: '😂 Reactions', emojis: ['😂','🤣','😭','😅','🥲','😤','😡','🤯','😱','🥹','😍','🤩','😎','🤔','😒','🫡','💀','🫠','🤡','👀'] },
+  { label: '🎮 Gaming', emojis: ['🎮','🕹️','🏆','⚔️','🛡️','💎','🔥','💥','⚡','🌀','🎯','👑','🦾','🤖','👾','🧠','🚀','💣','🪄','🎲'] },
+  { label: '👋 Gestures', emojis: ['👍','👎','🙌','👏','🤝','🫶','❤️','💔','🫂','💪','🤘','✌️','🖖','🤙','👌','🤌','🫵','🙏','🤞','💯'] },
+  { label: '✨ Glyphs', emojis: ['✨','🌟','⭐','💫','🔮','🌈','❄️','🌊','🌙','☀️','⚙️','🧩','🔑','🗝️','📜','🪙','💰','🎪','🎭','🎬'] },
+];
+
+function EmojiPicker({ onSelect }) {
+  const [activeGroup, setActiveGroup] = useState(0);
+  return (
+    <div className="rounded-xl overflow-hidden shadow-2xl" style={{ background: 'rgba(15,20,30,0.97)', border: '1px solid rgba(255,255,255,0.12)', width: '260px' }}>
+      {/* Group tabs */}
+      <div className="flex border-b border-white/10">
+        {EMOJI_GROUPS.map((g, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveGroup(i)}
+            className={`flex-1 py-2 text-[11px] font-bold transition-all truncate px-1 ${activeGroup === i ? 'text-cyan-300 border-b-2 border-cyan-400 bg-cyan-400/5' : 'text-white/30 hover:text-white/60'}`}
+          >
+            {g.emojis[0]}
+          </button>
+        ))}
+      </div>
+      {/* Emoji grid */}
+      <div className="grid grid-cols-10 gap-0.5 p-2">
+        {EMOJI_GROUPS[activeGroup].emojis.map((e, i) => (
+          <button
+            key={i}
+            onClick={() => onSelect(e)}
+            className="w-6 h-6 flex items-center justify-center text-base hover:bg-white/10 rounded transition-all"
+          >
+            {e}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CommentView({ review, onClose, user }) {
   const [page, setPage] = useState(0);
   const [comments, setComments] = useState(review.comments);
   const [commentVotes, setCommentVotes] = useState({});
   const [replyDraft, setReplyDraft] = useState('');
   const [showReplyBox, setShowReplyBox] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = React.useRef(null);
 
   const totalPages = Math.ceil(comments.length / COMMENTS_PER_PAGE);
   const pageComments = comments.slice(page * COMMENTS_PER_PAGE, (page + 1) * COMMENTS_PER_PAGE);
@@ -114,6 +155,21 @@ function CommentView({ review, onClose, user }) {
       if (existing === type) return { ...prev, [commentId]: null };
       return { ...prev, [commentId]: type };
     });
+  };
+
+  const handleInsertEmoji = (emoji) => {
+    const el = textareaRef.current;
+    if (el) {
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const next = replyDraft.slice(0, start) + emoji + replyDraft.slice(end);
+      setReplyDraft(next);
+      // Restore cursor after emoji
+      setTimeout(() => { el.focus(); el.setSelectionRange(start + emoji.length, start + emoji.length); }, 0);
+    } else {
+      setReplyDraft(prev => prev + emoji);
+    }
+    setShowEmojiPicker(false);
   };
 
   const handleSendReply = () => {
@@ -129,6 +185,7 @@ function CommentView({ review, onClose, user }) {
     setComments(prev => [...prev, newComment]);
     setReplyDraft('');
     setShowReplyBox(false);
+    setShowEmojiPicker(false);
     // Jump to last page to show new comment
     setPage(Math.floor(comments.length / COMMENTS_PER_PAGE));
   };
@@ -183,23 +240,49 @@ function CommentView({ review, onClose, user }) {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden mb-2"
             >
-              <div className="flex gap-2 p-3 rounded-xl" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)' }}>
+              <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.15)' }}>
                 <textarea
+                  ref={textareaRef}
                   autoFocus
-                  placeholder="Leave a reply…"
+                  placeholder="Leave a reply… use 😂 emojis, ⚔️ glyphs, anything!"
                   value={replyDraft}
                   onChange={e => setReplyDraft(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendReply()}
                   rows={2}
-                  className="flex-1 px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
+                  className="w-full px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
                 />
-                <button
-                  onClick={handleSendReply}
-                  className="px-2.5 py-1.5 rounded-lg text-cyan-400 hover:text-cyan-200 transition-all self-end"
-                  style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}
-                >
-                  <Send className="w-3 h-3" />
-                </button>
+                <div className="flex items-center gap-2 relative">
+                  {/* Emoji toggle */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowEmojiPicker(v => !v)}
+                      className="px-2.5 py-1.5 rounded-lg text-base hover:bg-white/10 transition-all"
+                      title="Add emoji / glyph"
+                    >
+                      😊
+                    </button>
+                    <AnimatePresence>
+                      {showEmojiPicker && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 6, scale: 0.95 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute bottom-full mb-2 left-0 z-50"
+                        >
+                          <EmojiPicker onSelect={handleInsertEmoji} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <button
+                    onClick={handleSendReply}
+                    className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-cyan-400 hover:text-cyan-200 transition-all"
+                    style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}
+                  >
+                    <Send className="w-3 h-3" /> Send
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}

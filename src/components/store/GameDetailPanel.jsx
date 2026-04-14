@@ -691,24 +691,23 @@ export default function GameDetailPanel({ gameId, onClose }) {
               transition={{ duration: 0.4 }}
               className="space-y-8"
             >
-              {/* Header Section: Title & Actions */}
-              <div className="flex flex-col gap-5 mb-8">
-                {/* Title row */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
-                    {game.title}
-                  </h1>
-                  {owned && (
-                    <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                      <Unlock className="w-3 h-3" /> In Library
-                    </span>
-                  )}
-                </div>
+              {/* Header Section: Title + Tab Switcher on same row, Price/Cart below */}
+              <div className="flex flex-col gap-4 mb-8">
+                {/* Row 1: Title (left) + Tab Switcher (far right) */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
+                      {game.title}
+                    </h1>
+                    {owned && (
+                      <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                        <Unlock className="w-3 h-3" /> In Library
+                      </span>
+                    )}
+                  </div>
 
-                {/* Tab Switcher + Price/Cart row */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  {/* Tab Switcher — moved here from top-right */}
-                  <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+                  {/* Tab Switcher — far right, same line as title */}
+                  <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full ml-auto">
                     <button
                       onClick={() => setActiveTab('system')}
                       className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
@@ -726,30 +725,31 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       Tech Specs
                     </button>
                   </div>
+                </div>
 
-                  <div className="ml-auto flex items-center gap-4">
-                    {!owned ? (
-                      <>
-                        <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
-                          ${game.price?.toFixed(2) || '0.00'}
-                        </div>
-                        <button
-                          onClick={handleAddToCart}
-                          className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
-                        >
-                          Add to Cart
-                        </button>
-                      </>
-                    ) : (
+                {/* Row 2: Price + Cart button */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  {!owned ? (
+                    <>
+                      <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
+                        ${game.price?.toFixed(2) || '0.00'}
+                      </div>
                       <button
-                        onClick={handlePlay}
+                        onClick={handleAddToCart}
                         className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
                       >
-                        <Play className="w-5 h-5 fill-white" />
-                        Play Now
+                        Add to Cart
                       </button>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handlePlay}
+                      className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
+                    >
+                      <Play className="w-5 h-5 fill-white" />
+                      Play Now
+                    </button>
+                  )}
                 </div>
               </div>
 
