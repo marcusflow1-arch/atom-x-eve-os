@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers, ShoppingBag, ThumbsUp, MessageCircle, Camera, Video, Send, Wifi, WifiOff, User2 } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
+import { useAuth } from '@/components/auth/AuthContext';
 import StoreGameDetailPanel from './GameDetailPanel';
 import WishlistButton from './WishlistButton';
 import PlayerInteractionsPanel from './PlayerInteractionsPanel';
@@ -108,6 +109,7 @@ const MOCK_CONTENT = [
 
 function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpenStorePage }) {
   const { addToCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -147,7 +149,6 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
   const [likedMoments, setLikedMoments] = useState({});
   const [openComment, setOpenComment] = useState(null);
   const [commentDraft, setCommentDraft] = useState('');
-  const [commentName, setCommentName] = useState('');
 
   const handleLike = (id) => {
     setLikedMoments(prev => ({ ...prev, [id]: !prev[id] }));
@@ -156,7 +157,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
 
   const handleAddComment = (id) => {
     if (!commentDraft.trim()) return;
-    const name = commentName.trim() || 'Anonymous';
+    const name = user?.full_name || user?.email?.split('@')[0] || 'Player';
     setMoments(prev => prev.map(m => m.id === id ? { ...m, comments: [...m.comments, { user: name, text: commentDraft.trim() }] } : m));
     setCommentDraft('');
     setOpenComment(null);
@@ -350,7 +351,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                     {/* ── RIGHT COLUMN: comments panel ── */}
                     <div className="flex-1 flex flex-col border-l" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
                       {/* Scrollable comments */}
-                      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-2 space-y-2" style={{ scrollbarWidth: 'none', maxHeight: '180px' }}>
+                      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
                         {moment.comments.length === 0 ? (
                           <p className="text-white/20 text-xs text-center mt-4">No replies yet — be first!</p>
                         ) : (
@@ -366,14 +367,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                         )}
                       </div>
 
-                      {/* Comment input — always visible */}
-                      <div className="px-3 pb-3 pt-1.5 space-y-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                        <input
-                          placeholder="Your name (optional)"
-                          value={commentName}
-                          onChange={e => setCommentName(e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40"
-                        />
+                      {/* Comment input — pinned to bottom */}
+                      <div className="px-3 pb-3 pt-2 mt-auto">
                         <div className="flex gap-1.5">
                           <textarea
                             placeholder="Share your thoughts… 😄"
