@@ -149,6 +149,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
   const [likedMoments, setLikedMoments] = useState({});
   const [openComment, setOpenComment] = useState(null);
   const [commentDraft, setCommentDraft] = useState('');
+  // activeMedia[momentId] = { url, type, name } — starts as the moment's own media
+  const [activeMedia, setActiveMedia] = useState({});
 
   const handleLike = (id) => {
     setLikedMoments(prev => ({ ...prev, [id]: !prev[id] }));
@@ -286,42 +288,71 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                     {/* ── LEFT COLUMN: image + thumbnails + actions ── */}
                     <div className="flex flex-col" style={{ width: '58%', flexShrink: 0 }}>
 
-                      {/* Main image — doubled height */}
-                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/8.4' }}>
-                        {moment.type === 'video' ? (
-                          <video src={moment.url} className="w-full h-full object-cover" controls />
-                        ) : (
-                          <img src={moment.url} alt={moment.name} className="w-full h-full object-cover" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 right-0 px-3 py-2">
-                          <p className="text-white font-black text-xs leading-tight drop-shadow-lg">{moment.name}</p>
-                          <p className="text-white/50 text-[10px] mt-0.5 flex items-center gap-1"><User2 className="w-2.5 h-2.5" />{moment.user}</p>
-                        </div>
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
-                          {moment.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
-                          {moment.type}
-                        </div>
-                      </div>
+                      {/* Main image — shows activeMedia or the moment's own media */}
+                      {(() => {
+                        const active = activeMedia[moment.id] || { url: moment.url, type: moment.type, name: moment.name };
+                        return (
+                          <div className="relative overflow-hidden" style={{ aspectRatio: '16/8.4' }}>
+                            {active.type === 'video' ? (
+                              <video key={active.url} src={active.url} className="w-full h-full object-cover" controls />
+                            ) : (
+                              <img src={active.url} alt={active.name} className="w-full h-full object-cover" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 right-0 px-3 py-2">
+                              <p className="text-white font-black text-xs leading-tight drop-shadow-lg">{active.name}</p>
+                              <p className="text-white/50 text-[10px] mt-0.5 flex items-center gap-1"><User2 className="w-2.5 h-2.5" />{moment.user}</p>
+                            </div>
+                            <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
+                              {active.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
+                              {active.type}
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Extra captures thumbnail strip */}
                       {moment.extras && moment.extras.length > 0 && (
                         <div className="flex gap-1 px-2 pt-3 pb-1">
-                          {moment.extras.map((ex, ei) => (
-                            <div key={ei} className="relative rounded-md overflow-hidden cursor-pointer group flex-1" style={{ aspectRatio: '16/9' }}>
-                              {ex.type === 'video' ? (
-                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                                  <Video className="w-3 h-3 text-white/50" />
-                                </div>
-                              ) : (
-                                <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                              )}
-                              <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
-                              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}>
-                                <p className="text-white/70 text-[7px] font-semibold truncate leading-tight">{ex.name}</p>
+                          {/* Main moment thumbnail (first slot) */}
+                          <div
+                            key="main"
+                            onClick={() => setActiveMedia(prev => ({ ...prev, [moment.id]: { url: moment.url, type: moment.type, name: moment.name } }))}
+                            className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
+                            style={{ aspectRatio: '16/9', outline: !activeMedia[moment.id] ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
+                          >
+                            {moment.type === 'video' ? (
+                              <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                                <Video className="w-3 h-3 text-white/50" />
                               </div>
-                            </div>
-                          ))}
+                            ) : (
+                              <img src={moment.url} alt={moment.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            )}
+                            <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
+                          </div>
+                          {moment.extras.map((ex, ei) => {
+                            const isActive = activeMedia[moment.id]?.url === ex.url;
+                            return (
+                              <div
+                                key={ei}
+                                onClick={() => setActiveMedia(prev => ({ ...prev, [moment.id]: ex }))}
+                                className="relative rounded-md overflow-hidden cursor-pointer group flex-1"
+                                style={{ aspectRatio: '16/9', outline: isActive ? '2px solid rgba(34,211,238,0.7)' : '2px solid transparent' }}
+                              >
+                                {ex.type === 'video' ? (
+                                  <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                                    <Video className="w-3 h-3 text-white/50" />
+                                  </div>
+                                ) : (
+                                  <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                )}
+                                <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
+                                <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}>
+                                  <p className="text-white/70 text-[7px] font-semibold truncate leading-tight">{ex.name}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 
