@@ -692,65 +692,37 @@ export default function GameDetailPanel({ gameId, onClose }) {
               transition={{ duration: 0.4 }}
               className="space-y-8"
             >
-              {/* Header Section: Title + Tab Switcher on same row, Price/Cart below */}
-              <div className="flex flex-col gap-4 mb-8">
-                {/* Row 1: Title (left) + Tab Switcher (far right) */}
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
-                      {game.title}
-                    </h1>
-                    {owned && (
-                      <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
-                        <Unlock className="w-3 h-3" /> In Library
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Tab Switcher — far right, same line as title */}
-                  <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full ml-auto">
-                    <button
-                      onClick={() => setActiveTab('system')}
-                      className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-                        activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      System Core
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('specs')}
-                      className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-                        activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      Tech Specs
-                    </button>
-                  </div>
+              {/* Header Section: Title (left) + Tab Switcher (far right) */}
+              <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
+                    {game.title}
+                  </h1>
+                  {owned && (
+                    <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                      <Unlock className="w-3 h-3" /> In Library
+                    </span>
+                  )}
                 </div>
 
-                {/* Row 2: Price + Cart button */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  {!owned ? (
-                    <>
-                      <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
-                        ${game.price?.toFixed(2) || '0.00'}
-                      </div>
-                      <button
-                        onClick={handleAddToCart}
-                        className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
-                      >
-                        Add to Cart
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={handlePlay}
-                      className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
-                    >
-                      <Play className="w-5 h-5 fill-white" />
-                      Play Now
-                    </button>
-                  )}
+                {/* Tab Switcher — far right, same line as title */}
+                <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full ml-auto">
+                  <button
+                    onClick={() => setActiveTab('system')}
+                    className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                      activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    System Core
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('specs')}
+                    className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                      activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Tech Specs
+                  </button>
                 </div>
               </div>
 
@@ -837,12 +809,37 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
                 {/* Right: Game Info Sidebar */}
-                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                 <div className="flex-1 lg:max-w-md flex flex-col gap-6">
                   {/* Info Box */}
                   <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
                     {/* Header Image (Capsule) - Reduced to 30% */}
                     <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
                       <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                    </div>
+
+                    {/* Price + Cart */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {!owned ? (
+                        <>
+                          <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
+                            ${game.price?.toFixed(2) || '0.00'}
+                          </div>
+                          <button
+                            onClick={handleAddToCart}
+                            className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                          >
+                            Add to Cart
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={handlePlay}
+                          className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                        >
+                          <Play className="w-4 h-4 fill-white" />
+                          Play Now
+                        </button>
+                      )}
                     </div>
 
                     {/* Short Description */}
@@ -1074,7 +1071,35 @@ export default function GameDetailPanel({ gameId, onClose }) {
               <ReviewSection reviews={reviews} user={user} />
             </motion.div>
           ) : (
-            <SpecsTab game={game} />
+            <motion.div
+              key="specs"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+            >
+              {/* Tab Switcher on Tech Specs page */}
+              <div className="flex items-center justify-between gap-4 flex-wrap mb-8">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
+                  {game.title}
+                </h1>
+                <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full ml-auto">
+                  <button
+                    onClick={() => setActiveTab('system')}
+                    className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none text-white/40 hover:text-white hover:bg-white/10"
+                  >
+                    System Core
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('specs')}
+                    className="relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none bg-white text-black shadow-lg"
+                  >
+                    Tech Specs
+                  </button>
+                </div>
+              </div>
+              <SpecsTab game={game} />
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
