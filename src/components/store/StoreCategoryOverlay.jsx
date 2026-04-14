@@ -165,7 +165,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
       </div>
 
       {/* ── STAT STRIP ── */}
-      <div className="flex-shrink-0 px-4 py-2 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex-shrink-0 px-4 py-2 flex gap-0 overflow-x-auto relative" style={{ scrollbarWidth: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         {[
           { icon: Download, label: 'Downloads', value: mockDownloads.toLocaleString(), color: 'text-cyan-400' },
           { icon: Users, label: 'Active Players', value: mockPlayers.toLocaleString(), color: 'text-purple-400' },
@@ -173,8 +173,10 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
           { icon: Star, label: 'Rating', value: avgRating, color: 'text-yellow-400' },
           { icon: Clock, label: 'Avg Playtime', value: '52h', color: 'text-blue-400' },
           { icon: Globe, label: 'Languages', value: '24', color: 'text-green-400' },
-        ].map(({ icon: Icon, label, value, color }) => (
-          <div key={label} className="flex items-center gap-2 px-3 py-2 rounded-xl flex-shrink-0" style={glassCard}>
+        ].map(({ icon: Icon, label, value, color }, idx, arr) => (
+          <div key={label} className="flex items-center gap-2 px-4 py-1.5 flex-shrink-0 relative">
+            {/* Subtle divider between items */}
+            {idx > 0 && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-4 bg-white/10" />}
             <Icon className={`w-3.5 h-3.5 ${color} flex-shrink-0`} />
             <div>
               <div className="text-white font-black text-sm leading-none">{value}</div>
