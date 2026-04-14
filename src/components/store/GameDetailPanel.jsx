@@ -13,7 +13,6 @@ import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ReviewSection from './ReviewSection';
-import CommunityMomentsSection from './CommunityMomentsSection';
 
 
 // --- Components ---
@@ -876,8 +875,45 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Community Moments */}
-              <CommunityMomentsSection game={game} user={user} />
+              {/* Live Streams */}
+              <div className="border-t border-white/10 pt-8 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <Radio className="w-4 h-4 text-red-400" />
+                  <span className="text-white font-black text-sm">Live Streams</span>
+                  <span className="flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 text-[9px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse inline-block" />
+                    LIVE
+                  </span>
+                  <button onClick={() => navigate(createPageUrl('Aura'))} className="ml-auto text-white/30 text-[10px] hover:text-white transition-colors">View all →</button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { name: 'ShadowAce', viewers: '2.4k', title: `Playing ${game?.title}`, avatar: 'S' },
+                    { name: 'NovaPulse', viewers: '1.1k', title: 'Epic run attempt', avatar: 'N' },
+                    { name: 'VoidWalker', viewers: '890', title: 'Chill grind session', avatar: 'V' },
+                  ].map((stream, i) => (
+                    <div key={i} onClick={() => navigate(createPageUrl('Aura'))} className="group cursor-pointer rounded-xl overflow-hidden border border-white/8 hover:border-white/20 transition-all" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <div className="relative aspect-video bg-slate-900 overflow-hidden">
+                        <img src={game?.cover_image} alt="stream" className="w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500 px-1.5 py-0.5 rounded text-[9px] font-bold text-white">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />LIVE
+                        </div>
+                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/60 px-1.5 py-0.5 rounded text-[9px] text-white/80">
+                          <Eye className="w-2.5 h-2.5" />{stream.viewers}
+                        </div>
+                      </div>
+                      <div className="p-2.5 flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-[11px] font-black text-white flex-shrink-0">{stream.avatar}</div>
+                        <div className="min-w-0">
+                          <p className="text-white text-xs font-bold truncate">{stream.name}</p>
+                          <p className="text-white/40 text-[10px] truncate">{stream.title}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Lower Section: Content & Achievement Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/10 pt-8">
