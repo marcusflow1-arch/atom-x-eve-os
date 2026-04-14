@@ -688,121 +688,88 @@ export default function TradingPostContent() {
   };
 
   return (
-    <div className="relative z-10 max-w-[1920px] mx-auto px-4 md:px-6 py-4 h-[calc(100vh-80px)]">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex gap-6">
-        
-        {/* LEFT COLUMN: Header & Sidebar Controls */}
-        <div className="w-72 flex-shrink-0 flex flex-col gap-6">
-           {/* HEADER */}
+    <div className="relative z-10 w-full h-[calc(100vh-80px)] flex flex-col">
+      {/* TOP HEADER WITH BALANCE */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)' }}>
+        <div>
+          <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-1 flex items-center gap-2">
+            <Orbit className="w-6 h-6 text-cyan-400" />
+            GALACTIC EXCHANGE
+          </h1>
+          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Interstellar Trading Post</p>
+        </div>
+
+        {/* Balance on the right */}
+        <div 
+           className="px-4 py-3 rounded-2xl flex items-center gap-3"
+           style={{
+             background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+             border: '1px solid rgba(255,255,255,0.08)',
+           }}
+         >
+           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+             <DollarSign className="w-5 h-5 text-white" />
+           </div>
            <div>
-              <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-1 flex items-center gap-2">
-                <Orbit className="w-6 h-6 text-cyan-400" />
-                GALACTIC EXCHANGE
-              </h1>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Interstellar Trading Post</p>
+             <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
+             <p className="text-lg font-bold text-white font-mono">24,500 AGP</p>
            </div>
+        </div>
+      </div>
 
-           {/* BALANCE */}
-           <div 
-              className="px-4 py-3 rounded-2xl flex items-center gap-3 w-full"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-                border: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
-                <DollarSign className="w-5 h-5 text-white" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Your Balance</p>
-                <p className="text-lg font-bold text-white font-mono truncate">24,500 AGP</p>
-              </div>
-           </div>
-
-           {/* SIDEBARS (Conditionally rendered via TabsContent) */}
-           <TabsContent value="board" className="flex-1 min-h-0 data-[state=inactive]:hidden mt-0">
-              <div className="h-full flex flex-col">
-                {crossViewLevel === 0 ? (
-                  // LEVEL 0: Genre Selection Sidebar
-                  <div className="p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg h-full overflow-y-auto custom-scrollbar">
-                    <div className="mb-4">
-                      <h3 className="text-white font-semibold text-sm mb-3 flex items-center gap-2 uppercase tracking-wider">
-                        <Grid className="w-4 h-4 text-cyan-400" />
-                        Game Genres
-                      </h3>
-                      <div className="space-y-1">
-                        {crossData.map((genre, idx) => (
-                          <button
-                            key={genre.id}
-                            onClick={() => setActiveGenreIndex(idx)}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                              activeGenreIndex === idx 
-                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                          >
-                            <genre.icon className={`w-4 h-4 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
-                            <span>{genre.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+      {/* MAIN CONTENT - Flex with sidebar controls below header */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        {/* SIDEBAR CONTROLS (Below header) */}
+        <div className="px-6 py-4 border-b border-white/10 bg-white/[0.02]">
+           <TabsContent value="board" className="m-0 data-[state=inactive]:hidden">
+              {crossViewLevel === 0 ? (
+                // LEVEL 0: Genre Selection Sidebar
+                <div className="flex items-center gap-3">
+                  <Grid className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  <h3 className="text-white font-semibold text-sm uppercase tracking-wider flex-shrink-0">Game Genres:</h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {crossData.map((genre, idx) => (
+                      <button
+                        key={genre.id}
+                        onClick={() => setActiveGenreIndex(idx)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all flex-shrink-0 ${
+                          activeGenreIndex === idx 
+                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
+                            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
+                        }`}
+                      >
+                        <genre.icon className={`w-3.5 h-3.5 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <span>{genre.label}</span>
+                      </button>
+                    ))}
                   </div>
-                ) : (
-                  // LEVEL 1: Item Filters Sidebar
-                  <TradingFilterSidebar filters={filters} setFilters={setFilters} />
-                )}
-              </div>
+                </div>
+              ) : (
+                // LEVEL 1: Show filter label
+                <div className="flex items-center gap-3">
+                  <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Item Filters</h3>
+                </div>
+              )}
            </TabsContent>
 
-           <TabsContent value="subtab" className="flex-1 min-h-0 data-[state=inactive]:hidden mt-0">
-              <div className="h-full flex flex-col gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search inventory..." 
-                    value={inventorySearch}
-                    onChange={(e) => setInventorySearch(e.target.value)}
-                    className="pl-9 bg-slate-900/40 border-white/10 text-white placeholder:text-slate-500 rounded-xl"
-                  />
-                </div>
-
-                <div className="flex-1 p-5 rounded-2xl bg-slate-900/40 backdrop-blur-xl border border-white/10 shadow-lg flex flex-col overflow-hidden">
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Grid className="w-4 h-4 text-cyan-500" />
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Game Genres</h3>
-                      </div>
-                      <p className="text-[10px] text-slate-400">Select a category</p>
-                    </div>
-                    
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-1 pr-2">
-                      {[
-                        "MMORPG", "Sci-Fi", "Fantasy", "Shooter", "RPG", "Action", "Adventure", 
-                        "Strategy", "Sports", "Racing", "Simulation", "Puzzle", "Horror", 
-                        "Survival", "MOBA", "Battle Royale", "Sandbox", "Stealth", "Fighting", "Platformer"
-                      ]
-                      .filter(genre => genre.toLowerCase().includes(inventorySearch.toLowerCase()))
-                      .map((genre) => (
-                        <button 
-                          key={genre}
-                          onClick={() => { setSubTabGenre(genre); setSubTabGame(null); }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${subTabGenre === genre ? 'bg-cyan-900/20 text-cyan-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                        >
-                          {genre}
-                          {(subTabGenre === genre) && <ChevronRight className="w-3 h-3 text-cyan-500" />}
-                        </button>
-                      ))}
-                    </div>
-                </div>
+           <TabsContent value="subtab" className="m-0 data-[state=inactive]:hidden">
+              <div className="flex items-center gap-3">
+                <Search className="w-4 h-4 text-slate-400" />
+                <Input 
+                  placeholder="Search inventory..." 
+                  value={inventorySearch}
+                  onChange={(e) => setInventorySearch(e.target.value)}
+                  className="pl-0 h-8 bg-transparent border-0 border-b border-white/20 text-white placeholder:text-slate-500 rounded-none focus:border-cyan-400 focus:ring-0"
+                />
               </div>
            </TabsContent>
         </div>
 
-        {/* RIGHT COLUMN: Tabs List & Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
-           {/* TOP BAR: TABS & SEARCH */}
-           <div className="flex items-center justify-between mb-6">
+        {/* MAIN CONTENT AREA */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+           {/* TABS & SEARCH */}
+           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/[0.02]">
               <TabsList 
                 className="p-1 rounded-full"
                 style={{
@@ -882,7 +849,7 @@ export default function TradingPostContent() {
            </div>
 
            {/* CONTENT AREA */}
-           <div className="flex-1 overflow-hidden relative">
+           <div className="flex-1 overflow-hidden relative px-6 py-4">
               <TabsContent value="board" className="h-full mt-0 data-[state=inactive]:hidden">
                 <AnimatePresence mode="wait">
                   {crossViewLevel === 0 ? (
