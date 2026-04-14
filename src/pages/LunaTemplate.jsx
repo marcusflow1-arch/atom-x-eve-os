@@ -244,16 +244,20 @@ export default function LunaTemplate() {
   const [playerSpawn, setPlayerSpawn] = useState({ x: 0, y: -0.5, z: 0 });
   const [useMeshCollision, setUseMeshCollision] = useState(false);
 
-  // Auto-select model: Lara
+  // Auto-select model: Y-Bot (Xbot.glb)
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const models = await base44.entities.Model3D.list();
-        const laraModel = models.find(m => m.name?.toLowerCase() === 'lara');
-        
-        if (laraModel && laraModel.file_url) {
-          if (!cancelled) setModelUrl(laraModel.file_url);
+        // Default to Y-bot (using Xbot.glb as standard web-ready version)
+        let url = 'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/models/gltf/Xbot.glb';
+
+        // Optional: Check for override in DB
+        // const exact = await base44.entities.ModelFBX.filter({ name: 'Y-bot' });
+        // if (exact && exact.length) url = exact[0].file_url;
+
+        if (!cancelled) {
+          setModelUrl(url);
         }
       } catch (e) {
         console.error('Dashboard model lookup failed:', e);
@@ -706,8 +710,8 @@ export default function LunaTemplate() {
                   className="fixed inset-0 z-0 pointer-events-auto"
                   style={{
                     display: isEnvironmentActive ? 'flex' : 'none',
-                    alignItems: 'stretch',
-                    justifyContent: 'stretch',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     width: '100vw',
                     height: '100vh'
                   }}>
