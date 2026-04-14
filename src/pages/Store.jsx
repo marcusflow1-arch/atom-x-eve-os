@@ -441,11 +441,9 @@ export default function Store() {
                         }}>
                             <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
+                                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Luna</button>
                                 <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
-                                <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
-                                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
                                 <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
                             </div>
                             
@@ -556,8 +554,28 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
+                                                        {/* Spacing to clear header + extra breathing room */}
+                                                         <div className="h-8 flex-shrink-0" />
+
+                                                        {/* Sub-Category Tabs */}
+                                                         <div className="flex items-center justify-start px-6 py-3 gap-3 overflow-x-auto custom-scrollbar flex-shrink-0 border-b border-white/10">
+                                                             {SUB_CATEGORIES.map((subcat, idx) => (
+                                                                 <button
+                                                                     key={idx}
+                                                                     onClick={() => setActiveSubCategoryIndex(idx)}
+                                                                     className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+                                                                         activeSubCategoryIndex === idx
+                                                                             ? 'bg-white/15 border-white/25 text-white'
+                                                                             : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'
+                                                                     }`}
+                                                                 >
+                                                                     {subcat}
+                                                                 </button>
+                                                             ))}
+                                                         </div>
+
                                                         {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                                                         <div className="h-[280px] flex-shrink-0 mt-[150px] w-full flex overflow-hidden">
+                                                         <div className="h-[280px] flex-shrink-0 mt-[16px] w-full flex overflow-hidden">
                                                             {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
