@@ -253,10 +253,17 @@ export default function LunaTemplate() {
         const models = await base44.entities.Model3D.list();
         let url = null;
         
-        // Look for Lara model
-        const lara = models.find(m => m.name && m.name.toLowerCase().includes('lara'));
+        // Look for Lara model (case-insensitive, exact name or with "lara" substring)
+        const lara = models.find(m => {
+          const name = (m.name || '').toLowerCase();
+          return name === 'lara' || (name.includes('lara') && !name.includes('xbot') && !name.includes('ybot'));
+        });
+        
         if (lara && lara.file_url) {
+          console.log('Loaded Lara model:', lara.name);
           url = lara.file_url;
+        } else {
+          console.log('Lara model not found, using Y-Bot fallback');
         }
         
         // Fallback to Y-bot (using Xbot.glb as standard web-ready version)
