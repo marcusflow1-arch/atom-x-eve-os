@@ -42,7 +42,7 @@ const GAME_RECOMMENDATIONS = {
   ],
 };
 
-export default function PlayerInteractionsPanel() {
+export default function PlayerInteractionsPanel({ onGameSelect }) {
   const [activeTab, setActiveTab] = useState('recommended');
 
   const tabs = [
@@ -54,6 +54,12 @@ export default function PlayerInteractionsPanel() {
   ];
 
   const games = GAME_RECOMMENDATIONS[activeTab];
+
+  const handleGameClick = (game) => {
+    if (onGameSelect) {
+      onGameSelect(game);
+    }
+  };
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(5,8,15,0.65)' }}>
@@ -84,20 +90,20 @@ export default function PlayerInteractionsPanel() {
       </div>
 
       {/* Games List */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2 min-h-0" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5 min-h-0" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence mode="wait">
           {games.map((game, idx) => (
-            <motion.div
+            <motion.button
               key={game.id}
+              onClick={() => handleGameClick(game)}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ delay: idx * 0.05 }}
-              className="flex gap-2 rounded-xl p-2.5 group cursor-pointer hover:bg-white/5 transition-all"
-              style={glassCard}
+              className="w-full flex gap-2 rounded-lg p-2 group cursor-pointer hover:bg-white/10 transition-all text-left"
             >
-              <div className="w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-white/10">
-                <img src={game.image} alt={game.title} className="w-full h-full object-cover" />
+              <div className="w-16 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                <img src={game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
               </div>
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
@@ -108,7 +114,7 @@ export default function PlayerInteractionsPanel() {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </AnimatePresence>
       </div>

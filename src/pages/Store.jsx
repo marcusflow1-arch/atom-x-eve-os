@@ -34,6 +34,7 @@ import StoreSearchDropdown from '../components/store/StoreSearchDropdown';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
 import { WishlistProvider } from '../components/store/WishlistContext';
+import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -556,7 +557,7 @@ export default function Store() {
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
                                                         {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                                                        <div className="h-[280px] flex-shrink-0 mt-[104px] w-full flex overflow-hidden">
+                                                         <div className="h-[280px] flex-shrink-0 mt-[150px] w-full flex overflow-hidden">
                                                             {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
@@ -638,12 +639,17 @@ export default function Store() {
                                                                         </div>
                                                                     ))}
                                                                 </motion.div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </motion.div>
+                                                                </div>
+
+                                                                {/* RIGHT: Recommendations Panel */}
+                                                                <div className="w-[280px] flex-shrink-0 h-full hidden lg:flex">
+                                                                <PlayerInteractionsPanel onGameSelect={(game) => handleNavigateToGame(game.id)} />
+                                                                </div>
+                                                                </div>
+                                                                </div>
+                                                                </>
+                                                                )}
+                                                                </motion.div>
                                     )
                                 ) : storeMode === 'marketplace' ? (
                                     <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
