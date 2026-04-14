@@ -706,8 +706,8 @@ export default function LunaTemplate() {
                   className="fixed inset-0 z-0 pointer-events-auto"
                   style={{
                     display: isEnvironmentActive ? 'flex' : 'none',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    alignItems: 'stretch',
+                    justifyContent: 'stretch',
                     width: '100vw',
                     height: '100vh'
                   }}>
