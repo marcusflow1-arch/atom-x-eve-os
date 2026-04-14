@@ -12,6 +12,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ReviewSection from './ReviewSection';
 
 
 // --- Components ---
@@ -671,32 +672,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
       </motion.div>
 
-      {/* Header / Nav */}
-      <motion.div 
-        animate={{ opacity: isViewingMedia ? 0 : 1 }}
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-20 p-8 flex justify-end items-start"
-      >
-        {/* Tabs Switcher */}
-        <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
-          <button 
-            onClick={() => setActiveTab('system')}
-            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            System Core
-          </button>
-          <button 
-            onClick={() => setActiveTab('specs')}
-            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            Tech Specs
-          </button>
-        </div>
-      </motion.div>
+      {/* Thin top spacer — keeps header clear */}
+      <div className="relative z-20 h-4 flex-shrink-0" />
 
       {/* Main Content Area */}
       <motion.div 
@@ -715,8 +692,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
               className="space-y-8"
             >
               {/* Header Section: Title & Actions */}
-              <div className="flex items-center justify-between gap-6 mb-8">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-5 mb-8">
+                {/* Title row */}
+                <div className="flex items-center gap-4 flex-wrap">
                   <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                     {game.title}
                   </h1>
@@ -727,14 +705,35 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   )}
                 </div>
 
-                {/* Actions: Price & Buy Button (Eye-level with Title) */}
-                <div className="flex items-center gap-4">
-                   {!owned ? (
+                {/* Tab Switcher + Price/Cart row */}
+                <div className="flex items-center gap-4 flex-wrap">
+                  {/* Tab Switcher — moved here from top-right */}
+                  <div className="flex p-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+                    <button
+                      onClick={() => setActiveTab('system')}
+                      className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                        activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      System Core
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('specs')}
+                      className={`relative px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                        activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      Tech Specs
+                    </button>
+                  </div>
+
+                  <div className="ml-auto flex items-center gap-4">
+                    {!owned ? (
                       <>
                         <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
                           ${game.price?.toFixed(2) || '0.00'}
                         </div>
-                        <button 
+                        <button
                           onClick={handleAddToCart}
                           className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
                         >
@@ -742,7 +741,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         </button>
                       </>
                     ) : (
-                      <button 
+                      <button
                         onClick={handlePlay}
                         className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-base shadow-lg shadow-green-900/20 transition-all flex items-center gap-2 transform hover:scale-105"
                       >
@@ -750,6 +749,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         Play Now
                       </button>
                     )}
+                  </div>
                 </div>
               </div>
 
@@ -1124,52 +1124,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Reviews Section - Full Width Below Everything */}
-              <div className="border-t border-white/10 pt-12 mt-4">
-                 <div className="flex items-center justify-between mb-8">
-                    <div>
-                       <h3 className="text-2xl font-bold text-white mb-2">Customer Reviews</h3>
-                       <div className="flex items-center gap-4">
-                          <div className="flex gap-1 text-cyan-400">
-                             {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 fill-current" />)}
-                          </div>
-                          <span className="text-white/60 text-sm">Very Positive (1,245 reviews)</span>
-                       </div>
-                    </div>
-                    <button className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-colors border border-white/10">
-                       Write a Review
-                    </button>
-                 </div>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {reviews.length > 0 ? reviews.slice(0, 4).map((review) => (
-                      <div key={review.id} className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors">
-                        <div className="flex justify-between items-start mb-4">
-                           <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                                 {review.created_by?.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                 <div className="font-bold text-white">{review.created_by}</div>
-                                 <div className="text-xs text-white/40">{new Date(review.created_date).toLocaleDateString()}</div>
-                              </div>
-                           </div>
-                           <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded text-cyan-400 text-xs font-bold">
-                               <ThumbsUp className="w-3 h-3" /> Recommended
-                           </div>
-                        </div>
-                        <p className="text-white/80 leading-relaxed text-sm">
-                           "{review.content}"
-                        </p>
-                      </div>
-                    )) : (
-                       <div className="col-span-2 py-12 text-center bg-white/5 rounded-xl border border-white/10 border-dashed">
-                          <MessageSquare className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                          <p className="text-white/40 font-medium">No reviews yet. Be the first to share your thoughts!</p>
-                       </div>
-                    )}
-                 </div>
-              </div>
+              {/* Reviews Section */}
+              <ReviewSection reviews={reviews} user={user} />
             </motion.div>
           ) : (
             <SpecsTab game={game} />
