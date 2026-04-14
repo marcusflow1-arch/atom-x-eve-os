@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers, ShoppingBag } from 'lucide-react';
+import { X, ArrowLeft, Star, ChevronRight, Flame, Sparkles, TrendingUp, Trophy, Gem, Clock, ShoppingCart, Heart, ExternalLink, Download, Users, Play, Monitor, Cpu, HardDrive, MemoryStick, Tag, Globe, Award, Zap, Info, ChevronLeft, Layers, ShoppingBag, ThumbsUp, MessageCircle, Camera, Video, Send, Wifi, WifiOff, User2 } from 'lucide-react';
 import { useCart } from '@/components/CartContext';
 import StoreGameDetailPanel from './GameDetailPanel';
 import WishlistButton from './WishlistButton';
@@ -111,13 +111,36 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
-  if (!game) return null;
-
   const mockDownloads = Math.floor((game.price || 20) * 1247 + 8432);
   const mockPlayers = Math.floor(mockDownloads * 0.3);
   const mockAchievements = Math.floor((game.price || 10) * 3 + 12);
   const avgRating = game.rating || 4.2;
-  const tabs = ['overview', 'reviews', 'requirements'];
+  const tabs = ['moments', 'reviews'];
+  const [moments, setMoments] = useState([
+    { id: 1, type: 'screenshot', name: 'Epic final boss moment 🔥', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80', user: 'ShadowAce', likes: 142, comments: [{ user: 'NeuroGamer', text: 'BRO that lighting!! 😭🙌' }, { user: 'VoidWalker', text: 'I died here 47 times lmao' }] },
+    { id: 2, type: 'screenshot', name: 'Hidden spot nobody talks about', url: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=600&q=80', user: 'CryptoKnight', likes: 89, comments: [{ user: 'NovaPulse', text: 'Where is this?? I need to know' }] },
+    { id: 3, type: 'screenshot', name: 'My character after 200hrs 👑', url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&q=80', user: 'NovaPulse', likes: 312, comments: [{ user: 'ShadowAce', text: 'The drip is REAL 🔥' }, { user: 'CryptoKnight', text: 'Goals honestly' }, { user: 'NeuroGamer', text: 'Respect the grind 🤝' }] },
+    { id: 4, type: 'screenshot', name: 'Caught the sunrise, worth it', url: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=600&q=80', user: 'NeuroGamer', likes: 201, comments: [] },
+  ]);
+  const [likedMoments, setLikedMoments] = useState({});
+  const [openComment, setOpenComment] = useState(null);
+  const [commentDraft, setCommentDraft] = useState('');
+  const [commentName, setCommentName] = useState('');
+
+  const handleLike = (id) => {
+    setLikedMoments(prev => ({ ...prev, [id]: !prev[id] }));
+    setMoments(prev => prev.map(m => m.id === id ? { ...m, likes: m.likes + (likedMoments[id] ? -1 : 1) } : m));
+  };
+
+  const handleAddComment = (id) => {
+    if (!commentDraft.trim()) return;
+    const name = commentName.trim() || 'Anonymous';
+    setMoments(prev => prev.map(m => m.id === id ? { ...m, comments: [...m.comments, { user: name, text: commentDraft.trim() }] } : m));
+    setCommentDraft('');
+    setOpenComment(null);
+  };
+
+  if (!game) return null;
 
   return (
     <motion.div
@@ -212,7 +235,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
           <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all capitalize relative ${
             activeTab === tab ? 'text-cyan-300' : 'text-white/35 hover:text-white/60'
           }`}>
-            {tab}
+            {tab === 'moments' ? '📸 Player Moments' : tab}
             {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full" />}
           </button>
         ))}
@@ -221,225 +244,180 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
       {/* ── TAB CONTENT ── */}
       <div className="flex-1 overflow-hidden">
 
-        {/* ══════════ OVERVIEW TAB: 85/15 split ══════════ */}
-        {activeTab === 'overview' && (
+        {/* ══════════ MOMENTS TAB ══════════ */}
+        {activeTab === 'moments' && (
           <div className="flex h-full">
-            {/* LEFT 85% — scrollable content */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
-
-              {/* About */}
-              {game.description && (
-                <div className="rounded-2xl p-4" style={glassPanel}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Info className="w-3.5 h-3.5 text-cyan-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">About This Game</span>
-                  </div>
-                  <p className="text-white/80 text-sm leading-relaxed">{game.description}</p>
-                  <p className="text-white/50 text-sm leading-relaxed mt-3">
-                    Experience a groundbreaking journey through a hand-crafted world filled with dynamic events, reactive AI, and an ever-evolving narrative that responds to every choice you make. Whether you prefer stealth, combat, or diplomacy — the world bends to your playstyle.
-                  </p>
-                </div>
-              )}
-
-              {/* Key Features */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-3.5 h-3.5 text-purple-400" />
-                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Key Features</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { icon: '🌍', title: 'Open World', desc: 'Explore 400km² of seamless terrain' },
-                    { icon: '🤖', title: 'Dynamic AI', desc: 'Enemies adapt to your playstyle' },
-                    { icon: '⚡', title: 'Ray Tracing', desc: 'Next-gen lighting & reflections' },
-                    { icon: '🎭', title: 'Story Branching', desc: '5 unique endings, 28 choices matter' },
-                    { icon: '🌐', title: 'Cross-Play', desc: 'PC, Console & Cloud all together' },
-                    { icon: '🏆', title: 'Live Events', desc: 'Weekly community challenges & rewards' },
-                  ].map(f => (
-                    <div key={f.title} className="flex items-start gap-2.5 p-2.5 rounded-xl" style={glassCard}>
-                      <span className="text-lg flex-shrink-0">{f.icon}</span>
-                      <div>
-                        <p className="text-white/90 text-xs font-bold">{f.title}</p>
-                        <p className="text-white/40 text-[10px] leading-tight mt-0.5">{f.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* LEFT — Player Moments Feed */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex items-center gap-2 mb-1">
+                <Camera className="w-4 h-4 text-cyan-400" />
+                <span className="text-white font-black text-sm">Community Moments</span>
+                <span className="ml-auto text-white/30 text-[10px]">{moments.length} captures</span>
               </div>
 
-              {/* Content Overview */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Layers className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Content Overview</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {MOCK_CONTENT.map(c => (
-                    <div key={c.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl text-center" style={glassCard}>
-                      <span className="text-2xl">{c.icon}</span>
-                      <span className="text-white font-black text-base leading-none">{c.value}</span>
-                      <span className="text-white/40 text-[9px] uppercase tracking-wider leading-tight">{c.label}</span>
+              {moments.map((moment) => (
+                <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={glassPanel}>
+                  {/* Media */}
+                  <div className="relative" style={{ aspectRatio: '16/9' }}>
+                    {moment.type === 'video' ? (
+                      <video src={moment.url} className="w-full h-full object-cover" controls />
+                    ) : (
+                      <img src={moment.url} alt={moment.name} className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+                    {/* Moment name overlay */}
+                    <div className="absolute bottom-0 left-0 right-0 px-4 py-3">
+                      <p className="text-white font-black text-base leading-tight drop-shadow-lg">{moment.name}</p>
+                      <p className="text-white/50 text-[11px] mt-0.5 flex items-center gap-1"><User2 className="w-3 h-3" />{moment.user}</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
+                      {moment.type === 'video' ? <Video className="w-3 h-3" /> : <Camera className="w-3 h-3" />}
+                      {moment.type}
+                    </div>
+                  </div>
 
-              {/* Trailer */}
-              {(game.trailer_url || (game.video_urls && game.video_urls[0])) && (
-                <div className="rounded-2xl overflow-hidden" style={glassPanel}>
-                  <div className="flex items-center gap-2 p-4 pb-2">
-                    <Play className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Official Trailer</span>
+                  {/* Actions */}
+                  <div className="px-4 pt-3 pb-2 flex items-center gap-3">
+                    <motion.button
+                      whileTap={{ scale: 0.85 }}
+                      onClick={() => handleLike(moment.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all ${likedMoments[moment.id] ? 'text-cyan-300' : 'text-white/40 hover:text-white/70'}`}
+                      style={{ background: likedMoments[moment.id] ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${likedMoments[moment.id] ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}` }}
+                    >
+                      <ThumbsUp className="w-3.5 h-3.5" /> {moment.likes}
+                    </motion.button>
+                    <button
+                      onClick={() => setOpenComment(openComment === moment.id ? null : moment.id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-white/40 hover:text-white/70 transition-all"
+                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> {moment.comments.length}
+                    </button>
                   </div>
-                  <div className="aspect-video">
-                    <iframe src={(game.trailer_url || game.video_urls[0]).replace('watch?v=', 'embed/')} className="w-full h-full" allow="autoplay; encrypted-media" allowFullScreen title="Trailer" />
-                  </div>
-                </div>
-              )}
 
-              {/* Achievements */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-3.5 h-3.5 text-yellow-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Achievements</span>
-                  </div>
-                  <span className="text-yellow-400 text-xs font-bold">{mockAchievements} Total</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {[
-                    { name: 'First Blood', rarity: 'Common', pct: '89%', icon: '⚔️', color: 'from-slate-500/30 to-slate-600/20', border: 'border-slate-500/20' },
-                    { name: 'Speed Runner', rarity: 'Rare', pct: '12%', icon: '⚡', color: 'from-blue-500/30 to-cyan-500/20', border: 'border-blue-500/20' },
-                    { name: 'Completionist', rarity: 'Legendary', pct: '2.1%', icon: '💎', color: 'from-yellow-500/30 to-orange-500/20', border: 'border-yellow-500/25' },
-                    { name: 'Shadow Master', rarity: 'Epic', pct: '6.4%', icon: '🌑', color: 'from-purple-500/30 to-pink-500/20', border: 'border-purple-500/20' },
-                    { name: 'World Explorer', rarity: 'Uncommon', pct: '44%', icon: '🗺️', color: 'from-green-500/30 to-teal-500/20', border: 'border-green-500/20' },
-                    { name: 'The Legend', rarity: 'Mythic', pct: '0.3%', icon: '👑', color: 'from-red-500/30 to-orange-500/20', border: 'border-red-500/25' },
-                  ].map(ach => (
-                    <div key={ach.name} className={`flex items-center gap-2.5 p-2.5 rounded-xl bg-gradient-to-r ${ach.color} border ${ach.border}`}>
-                      <span className="text-xl flex-shrink-0">{ach.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white/90 text-xs font-bold truncate">{ach.name}</p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <span className="text-white/40 text-[9px]">{ach.rarity}</span>
-                          <span className="text-white/25 text-[9px]">·</span>
-                          <span className="text-white/40 text-[9px]">{ach.pct} unlocked</span>
+                  {/* Comments */}
+                  {moment.comments.length > 0 && (
+                    <div className="px-4 pb-2 space-y-1.5">
+                      {moment.comments.map((c, ci) => (
+                        <div key={ci} className="flex items-start gap-2 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5" style={{ background: `hsl(${ci * 80 + 40},55%,30%)` }}>{c.user[0]}</div>
+                          <div className="min-w-0">
+                            <span className="text-white/60 text-[10px] font-bold">{c.user} </span>
+                            <span className="text-white/75 text-xs">{c.text}</span>
+                          </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-1">
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                      <div className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-400" style={{ width: '18%' }} />
-                    </div>
-                  </div>
-                  <span className="text-white/40 text-[10px]">18% avg completion</span>
-                </div>
-              </div>
+                  )}
 
-              {/* DLC & Expansions */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-pink-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">DLC & Expansions</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.25)', color: 'rgba(244,114,182,1)' }}>4 Available</span>
-                </div>
-                <div className="space-y-2">
-                  {MOCK_DLC.map(dlc => (
-                    <div key={dlc.name} className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 cursor-pointer" style={glassCard}>
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.05)' }}>{dlc.icon}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-white/90 text-sm font-bold">{dlc.name}</p>
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'rgba(100,150,255,0.15)', color: 'rgba(150,190,255,0.8)' }}>{dlc.type}</span>
-                        </div>
-                        <p className="text-white/40 text-[10px] mt-0.5">{dlc.desc}</p>
-                      </div>
-                      <div className="flex-shrink-0 text-right">
-                        <span className="text-green-400 font-black text-sm">${dlc.price}</span>
+                  {/* Comment input */}
+                  {openComment === moment.id && (
+                    <div className="px-4 pb-3 space-y-2">
+                      <input
+                        placeholder="Your name (optional)"
+                        value={commentName}
+                        onChange={e => setCommentName(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-lg text-xs text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          placeholder="Leave a comment... 😄"
+                          value={commentDraft}
+                          onChange={e => setCommentDraft(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleAddComment(moment.id)}
+                          className="flex-1 px-3 py-1.5 rounded-lg text-xs text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40"
+                        />
+                        <button onClick={() => handleAddComment(moment.id)} className="px-3 py-1.5 rounded-lg text-cyan-400 hover:text-cyan-200 transition-all" style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  )}
+                </motion.div>
+              ))}
+              <div className="h-4" />
+            </div>
 
-              {/* Community & Social */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Users className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Community & Social</span>
+            {/* RIGHT — Game Info Sidebar */}
+            <div className="flex-shrink-0 w-[26%] border-l overflow-y-auto px-3 py-4 space-y-4" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.25)', scrollbarWidth: 'none' }}>
+
+              {/* Online Status */}
+              <div>
+                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Status</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)] animate-pulse" />
+                  <span className="text-green-400 text-xs font-bold">Online</span>
+                  <span className="ml-auto text-white/40 text-[10px]">{mockPlayers.toLocaleString()} playing now</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   {[
-                    { label: 'Forum Posts', value: '84.2K', icon: '💬', color: 'text-cyan-400' },
-                    { label: 'Fan Guides', value: '1,204', icon: '📝', color: 'text-purple-400' },
-                    { label: 'Discord Members', value: '215K', icon: '🎮', color: 'text-indigo-400' },
-                    { label: 'Content Creators', value: '4,800', icon: '🎥', color: 'text-pink-400' },
-                  ].map(s => (
-                    <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-xl" style={glassCard}>
-                      <span className="text-lg">{s.icon}</span>
-                      <div>
-                        <p className={`font-black text-base leading-none ${s.color}`}>{s.value}</p>
-                        <p className="text-white/40 text-[9px] uppercase tracking-wider mt-0.5">{s.label}</p>
-                      </div>
+                    { label: 'Single Player', icon: '🎮', supported: true },
+                    { label: 'Multiplayer', icon: '👥', supported: true },
+                    { label: 'Co-op', icon: '🤝', supported: true },
+                    { label: 'Cross-Play', icon: '🌐', supported: true },
+                  ].map(m => (
+                    <div key={m.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <span className="text-sm">{m.icon}</span>
+                      <span className="text-white/65 text-xs">{m.label}</span>
+                      <span className="ml-auto text-[10px] font-bold" style={{ color: m.supported ? 'rgba(74,222,128,0.9)' : 'rgba(255,100,100,0.7)' }}>{m.supported ? '✓' : '✗'}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Tags */}
-              {game.tags && game.tags.length > 0 && (
-                <div className="rounded-2xl p-4" style={glassPanel}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Tag className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Tags</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {game.tags.map(tag => (
-                      <span key={tag} className="px-3 py-1 rounded-full text-xs text-white/60 font-medium hover:text-white/90 cursor-pointer transition-all" style={glassCard}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* System Requirements quick preview */}
-              <div className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Monitor className="w-3.5 h-3.5 text-blue-400" />
-                    <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Minimum Requirements</span>
-                  </div>
-                  <button onClick={() => setActiveTab('requirements')} className="text-[10px] text-cyan-400 hover:text-cyan-200 transition-all">Full specs →</button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
+              {/* System Requirements */}
+              <div>
+                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Min. Requirements</p>
+                <div className="space-y-1.5">
                   {[
                     { icon: Monitor, label: 'OS', val: game.system_requirements?.os || 'Windows 10 64-bit' },
                     { icon: Cpu, label: 'CPU', val: game.system_requirements?.processor || 'Intel i5-8600K' },
                     { icon: MemoryStick, label: 'RAM', val: game.system_requirements?.memory || '8 GB' },
+                    { icon: Zap, label: 'GPU', val: game.system_requirements?.graphics || 'GTX 1060 6GB' },
                     { icon: HardDrive, label: 'Storage', val: game.system_requirements?.storage || '50 GB SSD' },
-                  ].map(({ icon: Icon, label, val }) => (
-                    <div key={label} className="flex items-center gap-2 p-2.5 rounded-xl" style={glassCard}>
-                      <Icon className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                  ].map(({ icon: Ic, label, val }) => (
+                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
                       <div className="min-w-0">
-                        <p className="text-white/35 text-[9px] uppercase tracking-wider">{label}</p>
-                        <p className="text-white/70 text-[10px] font-semibold truncate">{val}</p>
+                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
+                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Bottom padding */}
-              <div className="h-4" />
-            </div>
+              {/* Recommended */}
+              <div>
+                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Recommended</p>
+                <div className="space-y-1.5">
+                  {[
+                    { icon: Monitor, label: 'OS', val: 'Windows 11 64-bit' },
+                    { icon: Cpu, label: 'CPU', val: 'Intel i7-10700K' },
+                    { icon: MemoryStick, label: 'RAM', val: '16 GB' },
+                    { icon: Zap, label: 'GPU', val: 'RTX 3070 / RX 6800 XT' },
+                    { icon: HardDrive, label: 'Storage', val: '50 GB NVMe SSD' },
+                  ].map(({ icon: Ic, label, val }) => (
+                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
+                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-            {/* RIGHT 15% — Screenshot strip */}
-            <div className="flex-shrink-0 w-[15%] border-l p-2 overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.2)' }}>
-              <p className="text-white/25 text-[9px] uppercase tracking-widest font-bold mb-2 text-center">Screenshots</p>
-              <SideScreenshots screenshots={game.screenshots} />
+              {/* Languages */}
+              <div>
+                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Languages</p>
+                <div className="flex flex-wrap gap-1">
+                  {['EN', 'ES', 'FR', 'DE', 'JA', 'KO', 'ZH', 'PT', 'RU', 'IT', 'PL', 'AR'].map(l => (
+                    <span key={l} className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white/40" style={{ background: 'rgba(255,255,255,0.05)' }}>{l}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -526,48 +504,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
           </div>
         )}
 
-        {/* ══════════ REQUIREMENTS TAB ══════════ */}
-        {activeTab === 'requirements' && (
-          <div className="h-full overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
-            {['Minimum', 'Recommended'].map(tier => (
-              <div key={tier} className="rounded-2xl p-4" style={glassPanel}>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className={`w-2 h-2 rounded-full ${tier === 'Minimum' ? 'bg-yellow-400' : 'bg-green-400'}`} />
-                  <span className="text-white/60 text-[10px] uppercase tracking-widest font-black">{tier} Requirements</span>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    { icon: Monitor, label: 'OS', min: game.system_requirements?.os || 'Windows 10 64-bit', rec: 'Windows 11 64-bit' },
-                    { icon: Cpu, label: 'Processor', min: game.system_requirements?.processor || 'Intel Core i5-8600K / AMD Ryzen 5 3600', rec: 'Intel Core i7-10700K / AMD Ryzen 7 5800X' },
-                    { icon: MemoryStick, label: 'Memory', min: game.system_requirements?.memory || '8 GB RAM', rec: '16 GB RAM' },
-                    { icon: Zap, label: 'Graphics', min: game.system_requirements?.graphics || 'NVIDIA GTX 1060 / AMD RX 580', rec: 'NVIDIA RTX 3070 / AMD RX 6800 XT' },
-                    { icon: HardDrive, label: 'Storage', min: game.system_requirements?.storage || '50 GB SSD', rec: '50 GB NVMe SSD' },
-                  ].map(({ icon: Icon, label, min, rec }) => (
-                    <div key={label} className="flex items-start gap-3 p-3 rounded-xl" style={glassCard}>
-                      <Icon className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white/35 text-[9px] uppercase tracking-wider font-bold mb-0.5">{label}</p>
-                        <p className="text-white/75 text-sm">{tier === 'Minimum' ? min : rec}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div className="rounded-2xl p-4" style={glassPanel}>
-              <div className="flex items-center gap-2 mb-3">
-                <Globe className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-white/50 text-[10px] uppercase tracking-widest font-black">Supported Languages</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {['English', 'Spanish', 'French', 'German', 'Japanese', 'Korean', 'Chinese (Simplified)', 'Portuguese (Brazil)', 'Russian', 'Italian', 'Polish', 'Arabic'].map(lang => (
-                  <span key={lang} className="px-2.5 py-1 rounded-full text-[10px] text-white/55 font-medium" style={glassCard}>{lang}</span>
-                ))}
-              </div>
-            </div>
-            <div className="h-4" />
-          </div>
-        )}
+
       </div>
     </motion.div>
   );
