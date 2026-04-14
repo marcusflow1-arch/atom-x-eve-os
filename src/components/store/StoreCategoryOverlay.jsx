@@ -117,10 +117,32 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
   const avgRating = game.rating || 4.2;
   const tabs = ['moments', 'reviews'];
   const [moments, setMoments] = useState([
-    { id: 1, type: 'screenshot', name: 'Epic final boss moment 🔥', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80', user: 'ShadowAce', likes: 142, comments: [{ user: 'NeuroGamer', text: 'BRO that lighting!! 😭🙌' }, { user: 'VoidWalker', text: 'I died here 47 times lmao' }] },
-    { id: 2, type: 'screenshot', name: 'Hidden spot nobody talks about', url: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=600&q=80', user: 'CryptoKnight', likes: 89, comments: [{ user: 'NovaPulse', text: 'Where is this?? I need to know' }] },
-    { id: 3, type: 'screenshot', name: 'My character after 200hrs 👑', url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&q=80', user: 'NovaPulse', likes: 312, comments: [{ user: 'ShadowAce', text: 'The drip is REAL 🔥' }, { user: 'CryptoKnight', text: 'Goals honestly' }, { user: 'NeuroGamer', text: 'Respect the grind 🤝' }] },
-    { id: 4, type: 'screenshot', name: 'Caught the sunrise, worth it', url: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=600&q=80', user: 'NeuroGamer', likes: 201, comments: [] },
+    { id: 1, type: 'screenshot', name: 'Epic final boss moment 🔥', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80', user: 'ShadowAce', likes: 142, comments: [{ user: 'NeuroGamer', text: 'BRO that lighting!! 😭🙌' }, { user: 'VoidWalker', text: 'I died here 47 times lmao' }],
+      extras: [
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&q=75', name: 'Boss phase 2' },
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=300&q=75', name: 'Victory screen' },
+        { type: 'video', url: '', name: 'Kill clip' },
+      ]
+    },
+    { id: 2, type: 'screenshot', name: 'Hidden spot nobody talks about', url: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=600&q=80', user: 'CryptoKnight', likes: 89, comments: [{ user: 'NovaPulse', text: 'Where is this?? I need to know' }],
+      extras: [
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=300&q=75', name: 'Another angle' },
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=300&q=75', name: 'Map view' },
+      ]
+    },
+    { id: 3, type: 'screenshot', name: 'My character after 200hrs 👑', url: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=600&q=80', user: 'NovaPulse', likes: 312, comments: [{ user: 'ShadowAce', text: 'The drip is REAL 🔥' }, { user: 'CryptoKnight', text: 'Goals honestly' }, { user: 'NeuroGamer', text: 'Respect the grind 🤝' }],
+      extras: [
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&q=75', name: 'Equipment set 1' },
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=300&q=75', name: 'Equipment set 2' },
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=300&q=75', name: 'Full loadout' },
+        { type: 'video', url: '', name: 'Showcase clip' },
+      ]
+    },
+    { id: 4, type: 'screenshot', name: 'Caught the sunrise, worth it', url: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=600&q=80', user: 'NeuroGamer', likes: 201, comments: [],
+      extras: [
+        { type: 'screenshot', url: 'https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=300&q=75', name: 'Sunset too' },
+      ]
+    },
   ]);
   const [likedMoments, setLikedMoments] = useState({});
   const [openComment, setOpenComment] = useState(null);
@@ -257,8 +279,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
 
               {moments.map((moment) => (
                 <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={glassPanel}>
-                  {/* Media */}
-                  <div className="relative" style={{ aspectRatio: '16/9' }}>
+                  {/* Main Media — 70% height via padding trick */}
+                  <div className="relative" style={{ aspectRatio: '16/7' }}>
                     {moment.type === 'video' ? (
                       <video src={moment.url} className="w-full h-full object-cover" controls />
                     ) : (
@@ -267,7 +289,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
                     {/* Moment name overlay */}
                     <div className="absolute bottom-0 left-0 right-0 px-4 py-3">
-                      <p className="text-white font-black text-base leading-tight drop-shadow-lg">{moment.name}</p>
+                      <p className="text-white font-black text-sm leading-tight drop-shadow-lg">{moment.name}</p>
                       <p className="text-white/50 text-[11px] mt-0.5 flex items-center gap-1"><User2 className="w-3 h-3" />{moment.user}</p>
                     </div>
                     <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
@@ -275,6 +297,27 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                       {moment.type}
                     </div>
                   </div>
+
+                  {/* Extra captures thumbnail strip */}
+                  {moment.extras && moment.extras.length > 0 && (
+                    <div className="flex gap-1.5 px-3 pt-2">
+                      {moment.extras.map((ex, ei) => (
+                        <div key={ei} className="relative flex-shrink-0 rounded-lg overflow-hidden cursor-pointer group" style={{ width: `${Math.min(100 / moment.extras.length, 28)}%`, aspectRatio: '16/9' }}>
+                          {ex.type === 'video' ? (
+                            <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              <Video className="w-3.5 h-3.5 text-white/50" />
+                            </div>
+                          ) : (
+                            <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          )}
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-all" />
+                          <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                            <p className="text-white/70 text-[8px] font-semibold truncate leading-tight">{ex.name}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Actions */}
                   <div className="px-4 pt-3 pb-2 flex items-center gap-3">
