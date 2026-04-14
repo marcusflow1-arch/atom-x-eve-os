@@ -19,11 +19,13 @@ export default function TradingPostSection({ title, items = [] }) {
   const activeItem = items[activeIndex];
 
   return (
-    <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-950/50 p-6">
-      {/* Title */}
-      <h3 className="text-lg font-bold text-white mb-4 uppercase tracking-wider">{title}</h3>
+    <div>
+      {/* Title - Outside Box */}
+      <h3 className="text-lg font-bold text-white mb-3 uppercase tracking-wider">{title}</h3>
 
-      {/* Large Preview Box */}
+      {/* Content Box */}
+      <div className="rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-slate-900/50 to-slate-950/50 p-6">
+        {/* Large Preview Box */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeItem.id}
@@ -84,6 +86,7 @@ export default function TradingPostSection({ title, items = [] }) {
         >
           <ChevronRight className="w-4 h-4 text-white" />
         </button>
+      </div>
       </div>
     </div>
   );
