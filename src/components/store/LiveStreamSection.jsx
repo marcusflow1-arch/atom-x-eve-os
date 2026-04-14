@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Radio, Eye, Send, Users, ChevronRight } from 'lucide-react';
 
 const MOCK_STREAMERS = [
-  { name: 'ShadowAce', viewers: '2.4k', title: 'Epic boss run', avatar: 'S' },
-  { name: 'NovaPulse', viewers: '1.1k', title: 'Chill grind', avatar: 'N' },
-  { name: 'VoidWalker', viewers: '890', title: 'PvP highlights', avatar: 'V' },
+  { name: 'ShadowAce', viewers: '2.4k', title: 'Epic boss run', avatar: 'S', card: 'https://images.unsplash.com/photo-1538481143235-5d630894cb4e?w=300&h=400&fit=crop' },
+  { name: 'NovaPulse', viewers: '1.1k', title: 'Chill grind', avatar: 'N', card: 'https://images.unsplash.com/photo-1535671066927-ab7641ecda809?w=300&h=400&fit=crop' },
+  { name: 'VoidWalker', viewers: '890', title: 'PvP highlights', avatar: 'V', card: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
 ];
 
 const MOCK_CHAT = [
@@ -63,29 +63,30 @@ export default function LiveStreamSection({ game, onViewAll }) {
 
           {/* Sidebar Dropdown */}
           {sidebarOpen && (
-            <div className="w-48 rounded-xl border border-white/10 overflow-hidden flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }}>
+            <div className="w-40 rounded-xl border border-white/10 overflow-hidden flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }}>
               <div className="px-3 py-2 border-b border-white/8">
                 <p className="text-white/70 text-xs font-bold">Streamers</p>
               </div>
-              <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
                 {MOCK_STREAMERS.map((s, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveStreamer(i)}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left text-xs ${
-                      i === activeStreamer
-                        ? 'bg-white/10 border border-white/20'
-                        : 'bg-transparent border border-transparent hover:bg-white/5'
+                    className={`w-full flex flex-col gap-1.5 transition-all text-left ${
+                      i === activeStreamer ? 'opacity-100' : 'opacity-75 hover:opacity-100'
                     }`}
                   >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-[8px] font-black text-white flex-shrink-0">
-                      {s.avatar}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold truncate">{s.name}</p>
-                      <p className="text-white/40 text-[9px] flex items-center gap-0.5">
+                    <p className="text-white/80 text-[10px] font-semibold truncate">{s.name}</p>
+                    <div className={`relative rounded-lg overflow-hidden border transition-all ${
+                      i === activeStreamer
+                        ? 'border-cyan-400/40 ring-2 ring-cyan-400/20'
+                        : 'border-white/10 hover:border-white/20'
+                    }`}>
+                      <img src={s.card} alt={s.name} className="w-full h-24 object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      <div className="absolute bottom-1 left-1 text-[9px] text-white/80 flex items-center gap-0.5">
                         <Users className="w-2.5 h-2.5" /> {s.viewers}
-                      </p>
+                      </div>
                     </div>
                   </button>
                 ))}
