@@ -145,7 +145,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
     },
   ]);
   const [likedMoments, setLikedMoments] = useState({});
-  const [openComment, setOpenComment] = useState(null);
+  const [reviewOpen, setReviewOpen] = useState(null);
   const [commentDraft, setCommentDraft] = useState('');
   const [commentName, setCommentName] = useState('');
 
@@ -159,7 +159,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
     const name = commentName.trim() || 'Anonymous';
     setMoments(prev => prev.map(m => m.id === id ? { ...m, comments: [...m.comments, { user: name, text: commentDraft.trim() }] } : m));
     setCommentDraft('');
-    setOpenComment(null);
+    setCommentName('');
+    setReviewOpen(null);
   };
 
   if (!game) return null;
@@ -268,9 +269,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
 
         {/* ══════════ MOMENTS TAB ══════════ */}
         {activeTab === 'moments' && (
-          <div className="flex h-full">
-            {/* LEFT — Player Moments Feed */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
+          <div className="h-full overflow-y-auto px-4 py-4 space-y-6" style={{ scrollbarWidth: 'none' }}>
               <div className="flex items-center gap-2 mb-1">
                 <Camera className="w-4 h-4 text-cyan-400" />
                 <span className="text-white font-black text-sm">Community Moments</span>
@@ -278,205 +277,155 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
               </div>
 
               {moments.map((moment) => (
-                <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={glassPanel}>
-                  {/* Two-column layout: LEFT = media stack, RIGHT = comments */}
-                  <div className="flex gap-0">
+                <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="relative">
 
-                    {/* ── LEFT COLUMN: image + thumbnails + actions ── */}
-                    <div className="flex flex-col" style={{ width: '58%', flexShrink: 0 }}>
-
-                      {/* Main image — 25% shorter: 16/5.25 ≈ original 16/7 × 0.75 */}
-                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/5.25' }}>
-                        {moment.type === 'video' ? (
-                          <video src={moment.url} className="w-full h-full object-cover" controls />
-                        ) : (
-                          <img src={moment.url} alt={moment.name} className="w-full h-full object-cover" />
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 right-0 px-3 py-2">
-                          <p className="text-white font-black text-xs leading-tight drop-shadow-lg">{moment.name}</p>
-                          <p className="text-white/50 text-[10px] mt-0.5 flex items-center gap-1"><User2 className="w-2.5 h-2.5" />{moment.user}</p>
-                        </div>
-                        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
-                          {moment.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
-                          {moment.type}
-                        </div>
-                      </div>
-
-                      {/* Extra captures thumbnail strip */}
-                      {moment.extras && moment.extras.length > 0 && (
-                        <div className="flex gap-1 px-2 pt-1.5 pb-1">
-                          {moment.extras.map((ex, ei) => (
-                            <div key={ei} className="relative rounded-md overflow-hidden cursor-pointer group flex-1" style={{ aspectRatio: '16/9' }}>
-                              {ex.type === 'video' ? (
-                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                                  <Video className="w-3 h-3 text-white/50" />
-                                </div>
-                              ) : (
-                                <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                              )}
-                              <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
-                              <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }}>
-                                <p className="text-white/70 text-[7px] font-semibold truncate leading-tight">{ex.name}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Like / Dislike below thumbnails */}
-                      <div className="flex items-center gap-2 px-2 pb-2 pt-1">
-                        <motion.button
-                          whileTap={{ scale: 0.85 }}
-                          onClick={() => handleLike(moment.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${likedMoments[moment.id] ? 'text-cyan-300' : 'text-white/40 hover:text-white/70'}`}
-                          style={{ background: likedMoments[moment.id] ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${likedMoments[moment.id] ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.08)'}` }}
-                        >
-                          <ThumbsUp className="w-3 h-3" /> {moment.likes}
-                        </motion.button>
-                        <button className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/30 hover:text-white/60 transition-all" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                          <ThumbsUp className="w-3 h-3 rotate-180" />
-                        </button>
-                        <button
-                          onClick={() => setOpenComment(openComment === moment.id ? null : moment.id)}
-                          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs text-white/40 hover:text-white/70 transition-all ml-auto"
-                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        >
-                          <MessageCircle className="w-3 h-3" /> {moment.comments.length} replies
-                        </button>
-                      </div>
+                  {/* Main screenshot — 35% taller than last iteration: 16/5.25 → 16/7.09 */}
+                  <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '16/7.09' }}>
+                    {moment.type === 'video' ? (
+                      <video src={moment.url} className="w-full h-full object-cover" controls />
+                    ) : (
+                      <img src={moment.url} alt={moment.name} className="w-full h-full object-cover" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 right-0 px-4 py-3">
+                      <p className="text-white font-black text-sm leading-tight drop-shadow-lg">{moment.name}</p>
+                      <p className="text-white/55 text-[11px] mt-0.5 flex items-center gap-1"><User2 className="w-3 h-3" />{moment.user}</p>
                     </div>
-
-                    {/* ── RIGHT COLUMN: comments panel ── */}
-                    <div className="flex-1 flex flex-col border-l" style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}>
-                      {/* Scrollable comments */}
-                      <div className="flex-1 overflow-y-auto px-3 pt-3 pb-2 space-y-2" style={{ scrollbarWidth: 'none', maxHeight: '180px' }}>
-                        {moment.comments.length === 0 ? (
-                          <p className="text-white/20 text-xs text-center mt-4">No replies yet — be first!</p>
-                        ) : (
-                          moment.comments.map((c, ci) => (
-                            <div key={ci} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5" style={{ background: `hsl(${ci * 80 + 40},55%,28%)` }}>{c.user[0]}</div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-white/70 text-[10px] font-bold mb-0.5">{c.user}</p>
-                                <p className="text-white/80 text-xs leading-relaxed">{c.text}</p>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Comment input — always visible */}
-                      <div className="px-3 pb-3 pt-1.5 space-y-1.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                        <input
-                          placeholder="Your name (optional)"
-                          value={commentName}
-                          onChange={e => setCommentName(e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40"
-                        />
-                        <div className="flex gap-1.5">
-                          <textarea
-                            placeholder="Share your thoughts… 😄"
-                            value={openComment === moment.id ? commentDraft : ''}
-                            onChange={e => { setOpenComment(moment.id); setCommentDraft(e.target.value); }}
-                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAddComment(moment.id)}
-                            rows={2}
-                            className="flex-1 px-2.5 py-1.5 rounded-lg text-[11px] text-white/80 placeholder-white/25 bg-white/5 border border-white/10 outline-none focus:border-cyan-400/40 resize-none leading-relaxed"
-                          />
-                          <button onClick={() => handleAddComment(moment.id)} className="px-2.5 py-1.5 rounded-lg text-cyan-400 hover:text-cyan-200 transition-all self-end" style={{ background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.2)' }}>
-                            <Send className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
+                    <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1" style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'rgba(255,255,255,0.7)' }}>
+                      {moment.type === 'video' ? <Video className="w-2.5 h-2.5" /> : <Camera className="w-2.5 h-2.5" />}
+                      {moment.type}
                     </div>
-
                   </div>
+
+                  {/* Thumbnail strip */}
+                  {moment.extras && moment.extras.length > 0 && (
+                    <div className="flex gap-1.5 mt-1.5">
+                      {moment.extras.map((ex, ei) => (
+                        <div key={ei} className="relative rounded-lg overflow-hidden cursor-pointer group flex-1" style={{ aspectRatio: '16/9' }}>
+                          {ex.type === 'video' ? (
+                            <div className="w-full h-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              <Video className="w-3 h-3 text-white/50" />
+                            </div>
+                          ) : (
+                            <img src={ex.url} alt={ex.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          )}
+                          <div className="absolute inset-0 bg-black/35 group-hover:bg-black/10 transition-all" />
+                          <div className="absolute bottom-0 left-0 right-0 px-1 py-0.5" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)' }}>
+                            <p className="text-white/70 text-[7px] font-semibold truncate leading-tight">{ex.name}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Like / Dislike + Review button */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <motion.button
+                      whileTap={{ scale: 0.85 }}
+                      onClick={() => handleLike(moment.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${likedMoments[moment.id] ? 'text-cyan-300' : 'text-white/40 hover:text-white/70'}`}
+                      style={{ background: likedMoments[moment.id] ? 'rgba(34,211,238,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${likedMoments[moment.id] ? 'rgba(34,211,238,0.3)' : 'rgba(255,255,255,0.09)'}` }}
+                    >
+                      <ThumbsUp className="w-3.5 h-3.5" /> {moment.likes}
+                    </motion.button>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs text-white/30 hover:text-white/60 transition-all" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                      <ThumbsUp className="w-3.5 h-3.5 rotate-180" />
+                    </button>
+                    <span className="text-white/20 text-[10px] ml-1">{moment.comments.length} reviews</span>
+                    {/* Review button — bottom right */}
+                    <button
+                      onClick={() => setReviewOpen(moment.id)}
+                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-cyan-300 hover:text-cyan-100 transition-all"
+                      style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.22)' }}
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> Review
+                    </button>
+                  </div>
+
+                  {/* ── Review overlay popup — floats above, doesn't shift layout ── */}
+                  <AnimatePresence>
+                    {reviewOpen === moment.id && (
+                      <>
+                        {/* Backdrop */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="fixed inset-0 z-[100]"
+                          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+                          onClick={() => setReviewOpen(null)}
+                        />
+                        {/* Popup */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute bottom-10 right-0 z-[101] w-80 rounded-2xl p-4 space-y-3"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(15,20,35,0.97) 0%, rgba(10,14,24,0.99) 100%)',
+                            backdropFilter: 'blur(32px)',
+                            border: '1px solid rgba(34,211,238,0.2)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+                          }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <MessageCircle className="w-4 h-4 text-cyan-400" />
+                              <span className="text-white font-bold text-sm">Leave a Review</span>
+                            </div>
+                            <button onClick={() => setReviewOpen(null)} className="w-6 h-6 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                          {/* Existing comments */}
+                          {moment.comments.length > 0 && (
+                            <div className="overflow-y-auto space-y-2 pr-0.5" style={{ maxHeight: '140px', scrollbarWidth: 'none' }}>
+                              {moment.comments.map((c, ci) => (
+                                <div key={ci} className="flex items-start gap-2 px-2.5 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0" style={{ background: `hsl(${ci * 80 + 40},50%,28%)` }}>{c.user[0]}</div>
+                                  <div className="min-w-0">
+                                    <p className="text-white/65 text-[10px] font-bold">{c.user}</p>
+                                    <p className="text-white/80 text-xs leading-relaxed">{c.text}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* Input */}
+                          <div className="space-y-2">
+                            <input
+                              placeholder="Your name (optional)"
+                              value={commentName}
+                              onChange={e => setCommentName(e.target.value)}
+                              className="w-full px-3 py-2 rounded-xl text-xs text-white/80 placeholder-white/25 outline-none focus:border-cyan-400/50 transition-all"
+                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
+                            />
+                            <textarea
+                              placeholder="Write your review… you can type as much as you like 😄"
+                              value={commentDraft}
+                              onChange={e => setCommentDraft(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAddComment(moment.id)}
+                              rows={3}
+                              className="w-full px-3 py-2 rounded-xl text-xs text-white/80 placeholder-white/25 outline-none focus:border-cyan-400/50 resize-none leading-relaxed transition-all"
+                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.10)' }}
+                            />
+                            <button
+                              onClick={() => handleAddComment(moment.id)}
+                              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02] active:scale-95"
+                              style={{ background: 'linear-gradient(135deg, rgba(34,211,238,0.25), rgba(80,100,255,0.2))', border: '1px solid rgba(34,211,238,0.3)' }}
+                            >
+                              <Send className="w-3.5 h-3.5 text-cyan-300" /> Post Review
+                            </button>
+                          </div>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+
                 </motion.div>
               ))}
               <div className="h-4" />
-            </div>
-
-            {/* RIGHT — Game Info Sidebar */}
-            <div className="flex-shrink-0 w-[26%] border-l overflow-y-auto px-3 py-4 space-y-4" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.25)', scrollbarWidth: 'none' }}>
-
-              {/* Online Status */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Status</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)] animate-pulse" />
-                  <span className="text-green-400 text-xs font-bold">Online</span>
-                  <span className="ml-auto text-white/40 text-[10px]">{mockPlayers.toLocaleString()} playing now</span>
-                </div>
-                <div className="space-y-1.5">
-                  {[
-                    { label: 'Single Player', icon: '🎮', supported: true },
-                    { label: 'Multiplayer', icon: '👥', supported: true },
-                    { label: 'Co-op', icon: '🤝', supported: true },
-                    { label: 'Cross-Play', icon: '🌐', supported: true },
-                  ].map(m => (
-                    <div key={m.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <span className="text-sm">{m.icon}</span>
-                      <span className="text-white/65 text-xs">{m.label}</span>
-                      <span className="ml-auto text-[10px] font-bold" style={{ color: m.supported ? 'rgba(74,222,128,0.9)' : 'rgba(255,100,100,0.7)' }}>{m.supported ? '✓' : '✗'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* System Requirements */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Min. Requirements</p>
-                <div className="space-y-1.5">
-                  {[
-                    { icon: Monitor, label: 'OS', val: game.system_requirements?.os || 'Windows 10 64-bit' },
-                    { icon: Cpu, label: 'CPU', val: game.system_requirements?.processor || 'Intel i5-8600K' },
-                    { icon: MemoryStick, label: 'RAM', val: game.system_requirements?.memory || '8 GB' },
-                    { icon: Zap, label: 'GPU', val: game.system_requirements?.graphics || 'GTX 1060 6GB' },
-                    { icon: HardDrive, label: 'Storage', val: game.system_requirements?.storage || '50 GB SSD' },
-                  ].map(({ icon: Ic, label, val }) => (
-                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
-                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recommended */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Recommended</p>
-                <div className="space-y-1.5">
-                  {[
-                    { icon: Monitor, label: 'OS', val: 'Windows 11 64-bit' },
-                    { icon: Cpu, label: 'CPU', val: 'Intel i7-10700K' },
-                    { icon: MemoryStick, label: 'RAM', val: '16 GB' },
-                    { icon: Zap, label: 'GPU', val: 'RTX 3070 / RX 6800 XT' },
-                    { icon: HardDrive, label: 'Storage', val: '50 GB NVMe SSD' },
-                  ].map(({ icon: Ic, label, val }) => (
-                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
-                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Languages */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Languages</p>
-                <div className="flex flex-wrap gap-1">
-                  {['EN', 'ES', 'FR', 'DE', 'JA', 'KO', 'ZH', 'PT', 'RU', 'IT', 'PL', 'AR'].map(l => (
-                    <span key={l} className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white/40" style={{ background: 'rgba(255,255,255,0.05)' }}>{l}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
