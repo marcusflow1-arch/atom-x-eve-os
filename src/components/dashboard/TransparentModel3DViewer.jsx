@@ -36,15 +36,15 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
   const companionMixerRef = useRef(null);
   const remotePlayersRef = useRef(new Map());
   
-  // --- SINGLE CHARACTER SYSTEM ---
-  const c1ModelRef = useRef(null);       // kept as ref for compatibility but unused
-  const c1MixerRef = useRef(null);
-  const c1ActionsRef = useRef({});
+  // --- DUAL CHARACTER SYSTEM ---
+  const c1ModelRef = useRef(null);       // C1 (ErikaArcher) model object
+  const c1MixerRef = useRef(null);       // C1 animation mixer
+  const c1ActionsRef = useRef({});       // C1 animation actions map
   const c1ActiveActionRef = useRef(null);
-  const activeCharacterRef = useRef('ybot'); // Always ybot
-  const [activeCharLabel, setActiveCharLabel] = useState('ybot');
+  const activeCharacterRef = useRef(localStorage.getItem('luna_active_character') || 'ybot'); // 'ybot' or 'c1'
+  const [activeCharLabel, setActiveCharLabel] = useState(localStorage.getItem('luna_active_character') || 'ybot'); // For UI display
   const [isModelLoaded, setIsModelLoaded] = useState(false);
-  const switchingRef = useRef(false);
+  const switchingRef = useRef(false);     // Prevent double-switch
   
   const [playerStats, setPlayerStats] = useState({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
   const playerStatsRef = useRef({ level: 1, xp: 0, hp: 100, maxHp: 100, attack: 25 });
@@ -1547,8 +1547,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     }, undefined, (err) => console.error('Error loading Y-Bot:', err));
 
-    // --- C1 MODEL REMOVED ---
-    if (false) new FBXLoader().load('', async (c1fbx) => {
+    // --- C1 MODEL (ErikaArcher) ---
+    const c1Url = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
+    new FBXLoader().load(c1Url, async (c1fbx) => {
       const c1 = c1fbx;
       c1.scale.set(0.001, 0.001, 0.001);
       c1.position.set(0, -0.5, 0);
@@ -1697,8 +1698,48 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
     }, undefined, (err) => console.error('Error loading C1:', err));
 
-    // Character switch removed — single character only
-    const onSwitchCharacter = () => {}; // no-op kept for cleanup reference
+    // --- CHARACTER SWITCH HANDLER ( \ key) ---
+    const onSwitchCharacter = (e) => {
+      if (e.key !== '\\') return;
+      if (switchingRef.current) return;
+      if (!modelRef.current || !c1ModelRef.current) return;
+
+      switchingRef.current = true;
+      const isYBot = activeCharacterRef.current === 'ybot';
+      const fromModel = isYBot ? modelRef.current : c1ModelRef.current;
+      const toModel = isYBot ? c1ModelRef.current : modelRef.current;
+      const toActions = isYBot ? c1ActionsRef.current : actionsRef.current;
+      const toActiveAction = isYBot ? c1ActiveActionRef : activeActionRef;
+
+      toModel.position.copy(fromModel.position);
+      toModel.quaternion.copy(fromModel.quaternion);
+
+      fromModel.visible = false;
+      toModel.visible = true;
+
+      activeCharacterRef.current = isYBot ? 'c1' : 'ybot';
+      localStorage.setItem('luna_active_character', activeCharacterRef.current);
+      window.dispatchEvent(new CustomEvent('characterSwitched', { detail: { active: activeCharacterRef.current } }));
+
+      const idleAction = toActions['idle'];
+      if (idleAction) {
+        if (toActiveAction.current && toActiveAction.current !== idleAction) {
+          toActiveAction.current.fadeOut(0.2);
+        }
+        idleAction.reset().fadeIn(0.2).play();
+        toActiveAction.current = idleAction;
+      }
+      currentActionNameRef.current = 'idle';
+
+      sequenceLockRef.current = false;
+      sequenceQueueRef.current = [];
+      sequenceIndexRef.current = -1;
+      holdActiveRef.current = null;
+      toggleActiveRef.current = null;
+      blendBackRef.current = null;
+
+      setTimeout(() => { switchingRef.current = false; }, 200);
+    };
     window.addEventListener('keydown', onSwitchCharacter);
 
       // --- MULTIPLAYER PLAYERS SYSTEM ---
@@ -1945,7 +1986,15 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
 
       <div ref={floatingTextContainerRef} className="absolute inset-0 pointer-events-none z-50 overflow-hidden" />
 
-      
+      <div className="absolute bottom-4 right-4 z-10 px-3 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase pointer-events-none"
+        style={{
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          color: 'rgba(255,255,255,0.7)'
+        }}>
+        {activeCharLabel === 'ybot' ? 'Y-Bot' : 'C1'} ⟨ \\ ⟩
+      </div>
     </div>
   );
 }
