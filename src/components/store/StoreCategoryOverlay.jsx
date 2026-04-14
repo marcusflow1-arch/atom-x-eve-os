@@ -285,8 +285,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                     {/* ── LEFT COLUMN: image + thumbnails + actions ── */}
                     <div className="flex flex-col" style={{ width: '58%', flexShrink: 0 }}>
 
-                      {/* Main image — 25% taller than previous */}
-                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/4.2' }}>
+                      {/* Main image — doubled height */}
+                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/8.4' }}>
                         {moment.type === 'video' ? (
                           <video src={moment.url} className="w-full h-full object-cover" controls />
                         ) : (
@@ -305,7 +305,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
 
                       {/* Extra captures thumbnail strip */}
                       {moment.extras && moment.extras.length > 0 && (
-                        <div className="flex gap-1 px-2 pt-1.5 pb-1">
+                        <div className="flex gap-1 px-2 pt-3 pb-1">
                           {moment.extras.map((ex, ei) => (
                             <div key={ei} className="relative rounded-md overflow-hidden cursor-pointer group flex-1" style={{ aspectRatio: '16/9' }}>
                               {ex.type === 'video' ? (
