@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Radio, Eye, Send, Users } from 'lucide-react';
+import { Radio, Eye, Send, Users, ChevronRight } from 'lucide-react';
 
 const MOCK_STREAMERS = [
   { name: 'ShadowAce', viewers: '2.4k', title: 'Epic boss run', avatar: 'S' },
@@ -20,6 +20,7 @@ export default function LiveStreamSection({ game, onViewAll }) {
   const [activeStreamer, setActiveStreamer] = useState(0);
   const [chatMessages, setChatMessages] = useState(MOCK_CHAT);
   const [chatInput, setChatInput] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const streamer = MOCK_STREAMERS[activeStreamer];
 
@@ -43,10 +44,58 @@ export default function LiveStreamSection({ game, onViewAll }) {
       </div>
 
       {/* Main layout: big stream box + chat */}
-      <div className="flex gap-4 h-[340px]">
+      <div className="flex gap-4" style={{ height: sidebarOpen ? '480px' : '340px' }}>
+
+        {/* Left Sidebar Toggle + Video Box */}
+        <div className="flex gap-2">
+          {/* Toggle Arrow */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 mt-[120px]"
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+            title={sidebarOpen ? 'Hide streamers' : 'Show streamers'}
+          >
+            <ChevronRight className={`w-4 h-4 text-white/50 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Sidebar Dropdown */}
+          {sidebarOpen && (
+            <div className="w-48 rounded-xl border border-white/10 overflow-hidden flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }}>
+              <div className="px-3 py-2 border-b border-white/8">
+                <p className="text-white/70 text-xs font-bold">Streamers</p>
+              </div>
+              <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1" style={{ scrollbarWidth: 'none' }}>
+                {MOCK_STREAMERS.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveStreamer(i)}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left text-xs ${
+                      i === activeStreamer
+                        ? 'bg-white/10 border border-white/20'
+                        : 'bg-transparent border border-transparent hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-[8px] font-black text-white flex-shrink-0">
+                      {s.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold truncate">{s.name}</p>
+                      <p className="text-white/40 text-[9px] flex items-center gap-0.5">
+                        <Users className="w-2.5 h-2.5" /> {s.viewers}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Left: Video Box */}
-        <div className="flex-1 min-w-0 flex flex-col gap-2">
+        <div className="flex-1 min-w-0 flex flex-col gap-0">
           {/* Big stream preview */}
           <div className="relative flex-1 rounded-xl overflow-hidden bg-black border border-white/10">
             <img
@@ -80,28 +129,7 @@ export default function LiveStreamSection({ game, onViewAll }) {
             </div>
           </div>
 
-          {/* Streamer switcher row */}
-          <div className="flex gap-2">
-            {MOCK_STREAMERS.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveStreamer(i)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all border flex-1 ${
-                  i === activeStreamer
-                    ? 'bg-white/10 border-white/20 text-white'
-                    : 'bg-transparent border-white/5 text-white/40 hover:bg-white/5 hover:text-white/70'
-                }`}
-              >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-[9px] font-black text-white flex-shrink-0">
-                  {s.avatar}
-                </div>
-                <span className="truncate font-semibold">{s.name}</span>
-                <span className="ml-auto text-[9px] text-white/30 flex-shrink-0 flex items-center gap-0.5">
-                  <Users className="w-2.5 h-2.5" />{s.viewers}
-                </span>
-              </button>
-            ))}
-          </div>
+
         </div>
 
         {/* Right: Live Chat */}
