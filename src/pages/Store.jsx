@@ -35,6 +35,8 @@ import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCateg
 import WishlistButton from '../components/store/WishlistButton';
 import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
+import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
+import { DollarSign } from 'lucide-react';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -432,25 +434,33 @@ export default function Store() {
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
                         {/* Top Header — liquid glass silver */}
-                        <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
-                            background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
-                            backdropFilter: 'blur(28px) saturate(180%)',
-                            WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                            borderBottom: '1px solid rgba(200,210,225,0.15)',
-                            boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)'
-                        }}>
-                            <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
+                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
+                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
+                             backdropFilter: 'blur(28px) saturate(180%)',
+                             WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+                             borderBottom: '1px solid rgba(200,210,225,0.15)',
+                             boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)'
+                         }}>
+                             <div className="flex items-center gap-8">
+                                 <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
 
-                            <div className="flex items-center gap-2">
-                                <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                                <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
-                                <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
-                                <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
-                                <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
-                            </div>
-                            
-                            <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
-                        </div>
+                                 {/* Balance Display */}
+                                 <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] border border-white/10 rounded-lg">
+                                     <DollarSign className="w-4 h-4 text-cyan-400" />
+                                     <span className="text-sm font-semibold text-white">5,240 GP</span>
+                                 </div>
+                             </div>
+
+                             <div className="flex items-center gap-2">
+                                 <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
+                                 <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
+                                 <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
+                                 <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
+                                 <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
+                             </div>
+
+                             <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                         </div>
 
                         {/* Main Content */}
                         <div className="flex-1 overflow-hidden">
@@ -607,44 +617,44 @@ export default function Store() {
                                                                 </motion.div>
                                                             </div>
 
-                                                            {/* RIGHT: Game Grid */}
+                                                            {/* CENTER: Game List */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
-                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
+                                                                <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-2">
                                                                     {displayedGames.map((game, idx) => (
-                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
-                                                                            <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
-                                                                            <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-                                                                              <WishlistButton game={game} />
-                                                                              <button
-                                                                                onClick={(e) => { e.stopPropagation(); setInPageStoreGameId(game.id); }}
-                                                                                className="w-7 h-7 rounded-md bg-black/60 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center hover:bg-cyan-500/20 transition-all opacity-0 group-hover:opacity-100"
-                                                                                title="Store View"
-                                                                              >
-                                                                                <ShoppingBag className="w-3.5 h-3.5 text-cyan-300" />
-                                                                              </button>
+                                                                        <motion.button 
+                                                                            key={game.id} 
+                                                                            initial={{ opacity: 0, y: 20 }} 
+                                                                            animate={{ opacity: 1, y: 0 }} 
+                                                                            transition={{ delay: idx * 0.05 }}
+                                                                            onClick={() => handleNavigateToGame(game.id)}
+                                                                            onMouseEnter={() => setHoveredGame(game)}
+                                                                            className="group w-full flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20 transition-all text-left"
+                                                                        >
+                                                                            <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-800 border border-white/10">
+                                                                                <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                                             </div>
-                                                                            <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-                                                                                <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
-                                                                                <div className="flex items-center justify-between text-xs text-white/60">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <h4 className="font-semibold text-white truncate">{game.title}</h4>
+                                                                                <div className="flex items-center gap-2 text-xs text-white/50">
                                                                                     <span>{game.genre}</span>
-                                                                                    <div className="flex items-center gap-1 text-yellow-500"><Star className="w-3 h-3 fill-current" /><span>{game.rating}</span></div>
+                                                                                    <span>•</span>
+                                                                                    <div className="flex items-center gap-0.5">
+                                                                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                                                                        <span>{game.rating || '4.0'}</span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </motion.div>
-                                                                    ))}
-                                                                    {displayedGames.length < 4 && Array.from({ length: 4 - displayedGames.length }).map((_, i) => (
-                                                                        <div key={`filler-${i}`} className="aspect-[3/4] rounded-xl border border-white/5 bg-white/[0.02] flex items-center justify-center">
-                                                                            <span className="text-white/10 text-sm font-medium">Coming Soon</span>
-                                                                        </div>
+                                                                            <WishlistButton game={game} />
+                                                                        </motion.button>
                                                                     ))}
                                                                 </motion.div>
-                                                                </div>
+                                                            </div>
 
-                                                                {/* RIGHT: Recommendations Panel */}
-                                                                <div className="w-[280px] flex-shrink-0 h-full hidden lg:flex">
-                                                                <PlayerInteractionsPanel onGameSelect={(game) => handleNavigateToGame(game.id)} />
-                                                                </div>
+                                                            {/* DIVIDER LINE */}
+                                                            <div className="w-px h-full bg-white/10 flex-shrink-0" />
+
+                                                            {/* RIGHT: Recommendations Panel */}
+                                                            <StoreRecommendationsSidebar onGameSelect={handleNavigateToGame} />
                                                                 </div>
                                                                 </div>
                                                                 </>
