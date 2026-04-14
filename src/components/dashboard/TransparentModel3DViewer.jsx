@@ -534,9 +534,9 @@ export default function TransparentModel3DViewer({ modelUrl, weaponModel, trigge
     };
     initRender();
 
-    // --- CHARACTER (Y-Bot) ---
+    // --- CHARACTER (Dynamic Model - Lara) ---
     const loader = new FBXLoader();
-    const yBotUrl = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+    const yBotUrl = modelUrl || 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
     
     loader.load(yBotUrl, async (fbx) => {
       const model = fbx;
