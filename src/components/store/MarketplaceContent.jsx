@@ -444,38 +444,40 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
         </div>
       </div>
 
-      <AnimatePresence mode="popLayout">
-        {filteredItems.length === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-24 text-center"
-          >
-            <Package className="w-14 h-14 text-white/10 mb-4" />
-            <h3 className="text-white/40 font-semibold mb-1">No items found</h3>
-            <p className="text-white/25 text-sm mb-4">Try adjusting your search or filters</p>
-            <Button variant="outline" onClick={clearAllFilters} className="border-white/15 text-white/50 hover:text-white">
-              Clear all filters
-            </Button>
-          </motion.div>
-        ) : viewMode === 'grid' ? (
-          <motion.div
-            key="grid"
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
-          >
-            {filteredItems.map(item => (
-              <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
-            ))}
-          </motion.div>
-        ) : (
-          <motion.div key="list" className="flex flex-col gap-1.5">
-            {filteredItems.map(item => (
-              <ListRowCard key={item.id} item={item} onClick={setSelectedItem} />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ─── Results (scrollable) ─── */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+        <AnimatePresence mode="popLayout">
+          {filteredItems.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-24 text-center"
+            >
+              <Package className="w-14 h-14 text-white/10 mb-4" />
+              <h3 className="text-white/40 font-semibold mb-1">No items found</h3>
+              <p className="text-white/25 text-sm mb-4">Try adjusting your search or filters</p>
+              <Button variant="outline" onClick={clearAllFilters} className="border-white/15 text-white/50 hover:text-white">
+                Clear all filters
+              </Button>
+            </motion.div>
+          ) : viewMode === 'grid' ? (
+            <motion.div
+              key="grid"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+            >
+              {filteredItems.map(item => (
+                <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div key="list" className="flex flex-col gap-1.5">
+              {filteredItems.map(item => (
+                <ListRowCard key={item.id} item={item} onClick={setSelectedItem} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Detail Modal */}
