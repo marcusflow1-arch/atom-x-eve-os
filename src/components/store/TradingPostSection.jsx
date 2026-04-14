@@ -31,7 +31,7 @@ export default function TradingPostSection({ title, items = [] }) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.4 }}
-          className="relative aspect-video rounded-xl overflow-hidden mb-4 group"
+          className="relative aspect-square w-48 h-48 rounded-xl overflow-hidden mb-4 group"
         >
           <img
             src={activeItem.image}
