@@ -412,7 +412,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
   const [selectedGame, setSelectedGame] = useState(null);
   const [fadingToDetail, setFadingToDetail] = useState(false);
   const [storeMode, setStoreMode] = useState(false);
-  const [storePage, setStorePage] = useState(false);
 
   const cat = CATEGORIES.find(c => c.id === category);
   const filteredGames = useMemo(() => cat ? cat.filter(games) : [], [cat, games]);
@@ -427,7 +426,6 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
     const handler = (e) => {
       if (e.key === 'Escape') {
         if (fadingToDetail) return;
-        if (storePage) { setStorePage(false); return; }
         if (storeMode) { setStoreMode(false); return; }
         if (selectedGame) setSelectedGame(null);
         else onClose();
@@ -435,7 +433,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedGame, onClose, fadingToDetail, storeMode, storePage]);
+  }, [selectedGame, onClose, fadingToDetail, storeMode]);
 
   if (!cat) return null;
   const Icon = cat.icon;
@@ -567,16 +565,12 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
             style={{ background: 'rgba(8, 12, 18, 0.6)' }}
           >
             <AnimatePresence mode="wait">
-              {storePage ? (
-                <motion.div key="store-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
-                  <StoreGameDetailPanel gameId={selectedGame.id} onClose={() => setStorePage(false)} />
-                </motion.div>
-              ) : storeMode ? (
+              {storeMode ? (
                 <motion.div key={`store-${selectedGame.id}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} className="h-full">
                   <StoreGameDetailPanel gameId={selectedGame.id} onClose={() => setStoreMode(false)} />
                 </motion.div>
               ) : (
-                <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} onOpenStoreView={() => setStoreMode(true)} onOpenStorePage={() => setStorePage(true)} />
+                <GameDetailPanel key={selectedGame.id} game={selectedGame} onBack={() => setSelectedGame(null)} onViewFullPage={handleViewFullPage} onOpenStoreView={() => setStoreMode(true)} onOpenStorePage={handleViewFullPage} />
               )}
             </AnimatePresence>
           </motion.div>
