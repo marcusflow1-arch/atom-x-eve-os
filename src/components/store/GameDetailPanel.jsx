@@ -1073,22 +1073,49 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         <div key={type} className="space-y-2">
                           <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider sticky top-0 bg-[#0d0d0d] z-10 py-1">{type}</h4>
                           <div className="grid grid-cols-2 gap-2">
-                            {typeCards.map((card, i) => (
-                              <motion.div
-                                key={i}
-                                onClick={() => setSelectedCard(card)}
-                                className="group cursor-pointer p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all hover:scale-105"
-                              >
-                                <div className="aspect-[3/4] rounded-md overflow-hidden bg-black/20 mb-2 flex items-center justify-center border border-white/5 group-hover:border-cyan-400/30">
-                                   {card.type === 'Ability' && <Zap className="w-6 h-6 text-white/20 group-hover:text-cyan-400 transition-colors" />}
-                                   {card.type === 'Equipment' && <Shield className="w-6 h-6 text-white/20 group-hover:text-purple-400 transition-colors" />}
-                                   {card.type === 'Companion' && <User className="w-6 h-6 text-white/20 group-hover:text-green-400 transition-colors" />}
-                                   {card.type === 'Teacher' && <Database className="w-6 h-6 text-white/20 group-hover:text-yellow-400 transition-colors" />}
-                                </div>
-                                <p className="text-[10px] font-bold text-white truncate">{card.name}</p>
-                                <p className="text-[9px] text-white/40 truncate">{card.edition}</p>
-                              </motion.div>
-                            ))}
+                            {typeCards.map((card, i) => {
+                              const cardColor = card.type === 'Ability' ? { accent: '#22d3ee', glow: 'rgba(34,211,238,0.3)', bg: 'from-cyan-900/40 to-blue-900/20' }
+                                : card.type === 'Equipment' ? { accent: '#a78bfa', glow: 'rgba(167,139,250,0.3)', bg: 'from-purple-900/40 to-indigo-900/20' }
+                                : card.type === 'Companion' ? { accent: '#4ade80', glow: 'rgba(74,222,128,0.3)', bg: 'from-green-900/40 to-emerald-900/20' }
+                                : { accent: '#fbbf24', glow: 'rgba(251,191,36,0.3)', bg: 'from-yellow-900/40 to-orange-900/20' };
+                              return (
+                                <motion.div
+                                  key={i}
+                                  onClick={() => setSelectedCard(card)}
+                                  className="group cursor-pointer"
+                                  whileHover={{ scale: 1.04 }}
+                                >
+                                  {/* Card Name above */}
+                                  <p className="text-[10px] font-bold text-white/70 truncate mb-1 px-0.5">{card.name}</p>
+
+                                  {/* Card Body */}
+                                  <div
+                                    className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/10 group-hover:border-white/30 transition-all bg-gradient-to-b ${cardColor.bg}`}
+                                    style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.5)` }}
+                                  >
+                                    {/* Holographic sheen */}
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
+
+                                    {/* Top accent bar */}
+                                    <div className="h-1 w-full" style={{ background: cardColor.accent }} />
+
+                                    {/* Icon center */}
+                                    <div className="flex-1 flex items-center justify-center h-[70%]">
+                                      {card.type === 'Ability' && <Zap className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Equipment' && <Shield className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Companion' && <User className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Teacher' && <Database className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                    </div>
+
+                                    {/* Bottom info bar */}
+                                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-black/50 backdrop-blur-sm border-t border-white/5">
+                                      <p className="text-[9px] font-bold text-white/80 truncate">{card.type}</p>
+                                      <p className="text-[8px] text-white/30 truncate">{card.edition}</p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
