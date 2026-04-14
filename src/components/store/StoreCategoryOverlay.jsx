@@ -111,13 +111,11 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
-
   const mockDownloads = Math.floor((game.price || 20) * 1247 + 8432);
   const mockPlayers = Math.floor(mockDownloads * 0.3);
   const mockAchievements = Math.floor((game.price || 10) * 3 + 12);
   const avgRating = game.rating || 4.2;
-  const tabs = ['moments', 'reviews'];
+
   const [moments, setMoments] = useState([
     { id: 1, type: 'screenshot', name: 'Epic final boss moment 🔥', url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&q=80', user: 'ShadowAce', likes: 142, comments: [{ user: 'NeuroGamer', text: 'BRO that lighting!! 😭🙌' }, { user: 'VoidWalker', text: 'I died here 47 times lmao' }],
       extras: [
@@ -254,26 +252,9 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
         </div>
       </div>
 
-      {/* ── TABS ── */}
-      <div className="flex-shrink-0 px-4 flex gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        {tabs.map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all capitalize relative ${
-            activeTab === tab ? 'text-cyan-300' : 'text-white/35 hover:text-white/60'
-          }`}>
-            {tab === 'moments' ? '📸 Player Moments' : tab}
-            {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full" />}
-          </button>
-        ))}
-      </div>
-
-      {/* ── TAB CONTENT ── */}
+      {/* ── PLAYER MOMENTS ── */}
       <div className="flex-1 overflow-hidden">
-
-        {/* ══════════ MOMENTS TAB ══════════ */}
-        {activeTab === 'moments' && (
-          <div className="flex h-full">
-            {/* LEFT — Player Moments Feed */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
+        <div className="h-full overflow-y-auto px-4 py-4 space-y-5" style={{ scrollbarWidth: 'none' }}>
               <div className="flex items-center gap-2 mb-1">
                 <Camera className="w-4 h-4 text-cyan-400" />
                 <span className="text-white font-black text-sm">Community Moments</span>
@@ -420,175 +401,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                 </motion.div>
               ))}
               <div className="h-6" />
-            </div>
-
-            {/* RIGHT — Game Info Sidebar */}
-            <div className="flex-shrink-0 w-[26%] border-l overflow-y-auto px-3 py-4 space-y-4" style={{ borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.25)', scrollbarWidth: 'none' }}>
-
-              {/* Online Status */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Status</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.8)] animate-pulse" />
-                  <span className="text-green-400 text-xs font-bold">Online</span>
-                  <span className="ml-auto text-white/40 text-[10px]">{mockPlayers.toLocaleString()} playing now</span>
-                </div>
-                <div className="space-y-1.5">
-                  {[
-                    { label: 'Single Player', icon: '🎮', supported: true },
-                    { label: 'Multiplayer', icon: '👥', supported: true },
-                    { label: 'Co-op', icon: '🤝', supported: true },
-                    { label: 'Cross-Play', icon: '🌐', supported: true },
-                  ].map(m => (
-                    <div key={m.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <span className="text-sm">{m.icon}</span>
-                      <span className="text-white/65 text-xs">{m.label}</span>
-                      <span className="ml-auto text-[10px] font-bold" style={{ color: m.supported ? 'rgba(74,222,128,0.9)' : 'rgba(255,100,100,0.7)' }}>{m.supported ? '✓' : '✗'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* System Requirements */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Min. Requirements</p>
-                <div className="space-y-1.5">
-                  {[
-                    { icon: Monitor, label: 'OS', val: game.system_requirements?.os || 'Windows 10 64-bit' },
-                    { icon: Cpu, label: 'CPU', val: game.system_requirements?.processor || 'Intel i5-8600K' },
-                    { icon: MemoryStick, label: 'RAM', val: game.system_requirements?.memory || '8 GB' },
-                    { icon: Zap, label: 'GPU', val: game.system_requirements?.graphics || 'GTX 1060 6GB' },
-                    { icon: HardDrive, label: 'Storage', val: game.system_requirements?.storage || '50 GB SSD' },
-                  ].map(({ icon: Ic, label, val }) => (
-                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
-                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recommended */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Recommended</p>
-                <div className="space-y-1.5">
-                  {[
-                    { icon: Monitor, label: 'OS', val: 'Windows 11 64-bit' },
-                    { icon: Cpu, label: 'CPU', val: 'Intel i7-10700K' },
-                    { icon: MemoryStick, label: 'RAM', val: '16 GB' },
-                    { icon: Zap, label: 'GPU', val: 'RTX 3070 / RX 6800 XT' },
-                    { icon: HardDrive, label: 'Storage', val: '50 GB NVMe SSD' },
-                  ].map(({ icon: Ic, label, val }) => (
-                    <div key={label} className="flex items-start gap-2 px-2 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                      <Ic className="w-3 h-3 text-white/25 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <p className="text-white/30 text-[9px] uppercase tracking-wider">{label}</p>
-                        <p className="text-white/65 text-[10px] font-semibold leading-tight">{val}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Languages */}
-              <div>
-                <p className="text-white/30 text-[9px] uppercase tracking-widest font-bold mb-2">Languages</p>
-                <div className="flex flex-wrap gap-1">
-                  {['EN', 'ES', 'FR', 'DE', 'JA', 'KO', 'ZH', 'PT', 'RU', 'IT', 'PL', 'AR'].map(l => (
-                    <span key={l} className="px-1.5 py-0.5 rounded text-[9px] font-bold text-white/40" style={{ background: 'rgba(255,255,255,0.05)' }}>{l}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ══════════ REVIEWS TAB ══════════ */}
-        {activeTab === 'reviews' && (
-          <div className="h-full overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
-            {/* Score hero */}
-            <div className="rounded-2xl overflow-hidden" style={glassPanel}>
-              <div className="p-4" style={{ background: 'linear-gradient(135deg, rgba(250,204,21,0.08) 0%, rgba(234,88,12,0.05) 100%)' }}>
-                <div className="flex items-center gap-6">
-                  <div className="text-center flex-shrink-0">
-                    <div className="text-6xl font-black text-white" style={{ textShadow: '0 0 30px rgba(250,204,21,0.4)' }}>{avgRating}</div>
-                    <ReviewStars rating={avgRating} />
-                    <div className="text-white/35 text-[10px] mt-1">{mockPlayers.toLocaleString()} reviews</div>
-                  </div>
-                  <div className="flex-1 space-y-1.5">
-                    {[5,4,3,2,1].map(n => {
-                      const pcts = [72,18,6,3,1];
-                      const pct = pcts[5-n];
-                      return (
-                        <div key={n} className="flex items-center gap-2">
-                          <div className="flex items-center gap-0.5 flex-shrink-0">
-                            <span className="text-white/40 text-xs w-2.5">{n}</span>
-                            <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
-                          </div>
-                          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                            <div className="h-full rounded-full" style={{ width: `${pct}%`, background: `linear-gradient(90deg, rgba(250,204,21,${0.4+pct/120}) 0%, rgba(234,88,12,0.6) 100%)` }} />
-                          </div>
-                          <span className="text-white/35 text-[10px] w-6 text-right flex-shrink-0">{pct}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-              {/* Sentiment tags */}
-              <div className="px-4 pb-4 flex flex-wrap gap-1.5 mt-1">
-                {[
-                  { label: 'Great Visuals', count: '4.2K' },
-                  { label: 'Deep Story', count: '3.8K' },
-                  { label: 'Addictive', count: '3.1K' },
-                  { label: 'Smooth Performance', count: '2.7K' },
-                  { label: 'Great Value', count: '2.2K' },
-                  { label: 'Active Devs', count: '1.9K' },
-                ].map(t => (
-                  <span key={t.label} className="px-2.5 py-1 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.15)', color: 'rgba(253,224,71,0.8)' }}>
-                    {t.label} · {t.count}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Individual reviews */}
-            {MOCK_REVIEWS.map((r, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden" style={glassPanel}>
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/15 flex-shrink-0" style={{ background: `linear-gradient(135deg, hsl(${i*60},60%,30%), hsl(${i*60+40},60%,20%))` }}>
-                        <span className="text-white font-black text-sm">{r.user[0]}</span>
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-sm leading-none">{r.user}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <ReviewStars rating={r.rating} />
-                          <span className="text-white/30 text-[10px]">{r.hours}h played</span>
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-white/25 text-xs flex-shrink-0">{r.date}</span>
-                  </div>
-                  <p className="text-white/70 text-sm leading-relaxed">{r.text}</p>
-                  <div className="flex items-center gap-3 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                    <span className="text-white/30 text-[10px]">Was this helpful?</span>
-                    <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-white/50 hover:text-white transition-all" style={glassCard}>👍 {r.helpful}</button>
-                    <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-white/50 hover:text-white transition-all" style={glassCard}>👎</button>
-                    <span className="ml-auto text-[10px] text-white/25">Report</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div className="h-4" />
-          </div>
-        )}
-
-
+        </div>
       </div>
     </motion.div>
   );
