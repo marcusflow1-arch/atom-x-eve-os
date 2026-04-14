@@ -278,15 +278,15 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
               </div>
 
               {moments.map((moment) => (
-                <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden" style={glassPanel}>
+                <motion.div key={moment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                   {/* Two-column layout: LEFT = media stack, RIGHT = comments */}
-                  <div className="flex gap-0">
+                  <div className="flex gap-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px', marginBottom: '4px' }}>
 
                     {/* ── LEFT COLUMN: image + thumbnails + actions ── */}
                     <div className="flex flex-col" style={{ width: '58%', flexShrink: 0 }}>
 
-                      {/* Main image — 25% shorter: 16/5.25 ≈ original 16/7 × 0.75 */}
-                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/5.25' }}>
+                      {/* Main image — 25% taller than previous */}
+                      <div className="relative overflow-hidden" style={{ aspectRatio: '16/4.2' }}>
                         {moment.type === 'video' ? (
                           <video src={moment.url} className="w-full h-full object-cover" controls />
                         ) : (
@@ -393,7 +393,7 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                   </div>
                 </motion.div>
               ))}
-              <div className="h-4" />
+              <div className="h-6" />
             </div>
 
             {/* RIGHT — Game Info Sidebar */}
