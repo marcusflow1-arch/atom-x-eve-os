@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import VirtualizedTradeGrid from './VirtualizedTradeGrid';
 import StoreRecommendationsSidebar from './StoreRecommendationsSidebar';
+import TradingPostSection from './TradingPostSection';
+import TradingPostAd from './TradingPostAd';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -861,8 +863,8 @@ export default function TradingPostContent() {
                           exit={{ opacity: 0, x: -20 }}
                           className="h-full flex gap-6"
                       >
-                          {/* LEFT: Game List */}
-                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-6">
+                          {/* LEFT: 30% - Simplified Game List */}
+                          <div className="w-[30%] overflow-y-auto custom-scrollbar pr-2 pb-6">
                               <div className="space-y-2">
                                   {crossData[activeGenreIndex]?.games.map((game, idx) => (
                                       <motion.button 
@@ -874,18 +876,11 @@ export default function TradingPostContent() {
                                               setActiveCrossGame(game);
                                               setCrossViewLevel(1);
                                           }}
-                                          className="group w-full flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/5 hover:border-white/20 transition-all text-left"
+                                          className="group w-full aspect-square rounded-lg overflow-hidden border border-white/10 bg-white/[0.02] hover:border-cyan-400/40 transition-all"
                                       >
-                                          <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-slate-800 border border-white/10">
-                                              <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                          </div>
-                                          <div className="flex-1 min-w-0">
-                                              <h4 className="font-semibold text-white truncate">{game.title}</h4>
-                                              <div className="flex items-center gap-2 text-xs text-white/50">
-                                                  <span>{game.genre}</span>
-                                                  <span>•</span>
-                                                  <span className="text-cyan-400 font-mono">{game.filteredItems.length} items</span>
-                                              </div>
+                                          <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                                              <h4 className="font-semibold text-white text-xs truncate">{game.title}</h4>
                                           </div>
                                       </motion.button>
                                   ))}
@@ -895,11 +890,59 @@ export default function TradingPostContent() {
                           {/* DIVIDER */}
                           <div className="w-px bg-white/10 flex-shrink-0" />
 
-                          {/* RIGHT: Recommendations Sidebar */}
-                          <StoreRecommendationsSidebar onGameSelect={(game) => {
-                              setActiveCrossGame(game);
-                              setCrossViewLevel(1);
-                          }} />
+                          {/* RIGHT: 70% - Slideshow Sections with Ads */}
+                          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-6 space-y-6">
+                              {/* Recommended Section */}
+                              <TradingPostSection
+                                  title="Recommended"
+                                  items={crossData[activeGenreIndex]?.games.slice(0, 5).map(g => ({
+                                      id: g.id,
+                                      title: g.title,
+                                      image: g.cover_image || g.image,
+                                      description: g.genre
+                                  })) || []}
+                              />
+
+                              {/* Advertisement 1 */}
+                              {crossData[activeGenreIndex]?.games[0] && (
+                                  <TradingPostAd game={{
+                                      title: `Featured: ${crossData[activeGenreIndex].games[0].title}`,
+                                      image: crossData[activeGenreIndex].games[0].cover_image || crossData[activeGenreIndex].games[0].image,
+                                      description: 'Check out this trending game with exclusive items available now!'
+                                  }} />
+                              )}
+
+                              {/* Hot Trades Section */}
+                              <TradingPostSection
+                                  title="Hot Trades"
+                                  items={crossData[activeGenreIndex]?.games.slice(5, 10).map(g => ({
+                                      id: g.id,
+                                      title: g.title,
+                                      image: g.cover_image || g.image,
+                                      description: g.genre
+                                  })) || []}
+                              />
+
+                              {/* Advertisement 2 */}
+                              {crossData[activeGenreIndex]?.games[1] && (
+                                  <TradingPostAd game={{
+                                      title: `Hitting Gyms: ${crossData[activeGenreIndex].games[1].title}`,
+                                      image: crossData[activeGenreIndex].games[1].cover_image || crossData[activeGenreIndex].games[1].image,
+                                      description: 'Level up your collection with powerful items from this game!'
+                                  }} />
+                              )}
+
+                              {/* Player's Choice Section */}
+                              <TradingPostSection
+                                  title="Player's Choice"
+                                  items={crossData[activeGenreIndex]?.games.slice(10, 15).map(g => ({
+                                      id: g.id,
+                                      title: g.title,
+                                      image: g.cover_image || g.image,
+                                      description: g.genre
+                                  })) || []}
+                              />
+                          </div>
                       </motion.div>
                   ) : !selectedListingGroup ? (
                     // LEVEL 1: Item Listing View (Existing)
