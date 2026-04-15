@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, Store, ShoppingBag, ArrowRightLeft } from 'lucide-react';
+import { Eye, Store, ShoppingBag, ArrowRightLeft, Library } from 'lucide-react';
 
 export default function StoreBottomNav({ activeTab, onTabChange }) {
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: Eye },
     { id: 'store', label: 'Store', icon: Store },
     { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
     { id: 'trading', label: 'Trading Post', icon: ArrowRightLeft },
+    { id: 'overview', label: 'Overview', icon: Eye },
+    { id: 'library', label: 'Library', icon: Library },
   ];
 
   return (

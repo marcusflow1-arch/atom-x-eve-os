@@ -20,6 +20,7 @@ import StoreGridSpotlight from '../components/store/StoreGridSpotlight';
 import StoreHeroShowcase from '../components/store/StoreHeroShowcase';
 import Library from './Library';
 import Achievements from './Achievements';
+import LibrarySidebar from '../components/streaming/LibrarySidebar';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
@@ -363,12 +364,19 @@ export default function Store() {
         switch (tabId) {
             case 'overview':
                 setShowOverview(true);
+                setStoreMode('store');
                 break;
             case 'marketplace':
+                setShowOverview(false);
                 setStoreMode('marketplace');
                 break;
             case 'trading':
+                setShowOverview(false);
                 setStoreMode('trading');
+                break;
+            case 'library':
+                setShowOverview(false);
+                setStoreMode('library');
                 break;
             case 'store':
             default:
@@ -488,7 +496,11 @@ export default function Store() {
 
                             {/* MAIN CONTENT AREA */}
                             <AnimatePresence mode="wait">
-                                {storeMode === 'store' && storeSubView === 'achievements' ? (
+                                {storeMode === 'library' ? (
+                                    <motion.div key="inline-library" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full overflow-hidden">
+                                        <Library onSwitchToStore={() => { setStoreMode('store'); setActiveStoreTab('store'); }} onSwitchToAchievements={() => setStoreSubView('achievements')} />
+                                    </motion.div>
+                                ) : storeMode === 'store' && storeSubView === 'achievements' ? (
                                     <motion.div key="embedded-achievements" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-16 overflow-hidden">
                                         <Achievements onExitToLibrary={() => setStoreSubView('library')} />
                                     </motion.div>
