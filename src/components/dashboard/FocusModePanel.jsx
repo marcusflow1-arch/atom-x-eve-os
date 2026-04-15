@@ -1205,6 +1205,7 @@ export function LibraryBannerSection({
     const seenIds = new Set();
     
     dbUsers.filter(isOnline).forEach(p => {
+      if (!p || !p.player_id) return;
       if (!seenIds.has(p.player_id)) {
         seenIds.add(p.player_id);
         usersList.push({
@@ -1217,7 +1218,7 @@ export function LibraryBannerSection({
       }
     });
 
-    setOnlineFriends(usersList.slice(0, 5));
+    setOnlineFriends(usersList.filter(Boolean).slice(0, 5));
   }, [dbUsers, user]);
 
   const handleFriendClick = (friend) => {
@@ -1298,7 +1299,7 @@ export function LibraryBannerSection({
 
             {/* Friends (with placeholders) & Home & Online Users Dropdown */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
-              {onlineFriends.map((friend) => (
+              {(onlineFriends || []).filter(Boolean).map((friend) => (
                 <div key={friend.id} className="flex-shrink-0">
                   <FriendReference 
                     friend={friend} 
