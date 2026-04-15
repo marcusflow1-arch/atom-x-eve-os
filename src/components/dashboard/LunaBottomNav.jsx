@@ -40,8 +40,14 @@ const RARITY_STYLES = {
   legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
 };
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
-  const [activeTab, setActiveTab] = useState('home');
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav }) {
+  const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
+
+  // Sync forced open state
+  useEffect(() => {
+    if (forceLibraryOpen) setActiveTab('library');
+    else if (activeTab === 'library') setActiveTab('home');
+  }, [forceLibraryOpen]);
   const [games, setGames] = useState([]);
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -56,11 +62,12 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
     setSelectedItem(null);
     setSelectedGame(null);
     if (tab === 'home') {
-      navigate(createPageUrl('LunaTemplate'));
+      if (!hideNav) navigate(createPageUrl('LunaTemplate'));
     } else {
       // If clicking the same tab that's already active, close it (go home)
       if (activeTab === tab) {
         setActiveTab('home');
+        onLibraryClose?.();
         // Dispatch event to notify pages to close their panels
         window.dispatchEvent(new CustomEvent('libraryPanelClose'));
         window.dispatchEvent(new CustomEvent('environmentPanelClose'));
@@ -461,7 +468,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
         )}
       </AnimatePresence>
 
-      <div className="flex items-center justify-center w-full h-full relative">
+      {!hideNav && <div className="flex items-center justify-center w-full h-full relative">
         <div className="absolute left-6 flex items-center gap-2">
           <span className="text-white/50 text-xs font-bold uppercase tracking-widest">Environment</span>
           <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm ${isEnvironmentActive ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-white/5 text-white/40 border border-white/10'}`}>
@@ -519,7 +526,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel }) {
             <span>Environment Hubs</span>
           </button>
         </div>
-      </div>
+      </div>}
     </>
   );
 }

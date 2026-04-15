@@ -21,6 +21,7 @@ import StoreHeroShowcase from '../components/store/StoreHeroShowcase';
 import Library from './Library';
 import Achievements from './Achievements';
 import LibrarySidebar from '../components/streaming/LibrarySidebar';
+import LunaBottomNav from '../components/dashboard/LunaBottomNav';
 import ScrollTransitionOverlay from '@/components/shared/ScrollTransitionOverlay';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError } from '@/components/error/ErrorToast';
@@ -178,6 +179,7 @@ export default function Store() {
     const { getCartCount } = useCart();
 
     const [showOverview, setShowOverview] = useState(false);
+    const [storeLibraryOpen, setStoreLibraryOpen] = useState(false);
     const [inPageStoreGameId, setInPageStoreGameId] = useState(null);
     const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
@@ -374,10 +376,6 @@ export default function Store() {
                 setShowOverview(false);
                 setStoreMode('trading');
                 break;
-            case 'library':
-                setShowOverview(false);
-                setStoreMode('library');
-                break;
             case 'store':
             default:
                 setShowOverview(false);
@@ -389,8 +387,23 @@ export default function Store() {
     return (
         <PageErrorBoundary pageName="Store">
           <WishlistProvider>
-            <GlassPageFrame bottomContent={<StoreBottomNav activeTab={activeStoreTab} onTabChange={handleStoreTabChange} />}>
+            <GlassPageFrame bottomContent={
+              <StoreBottomNav
+                activeTab={activeStoreTab}
+                onTabChange={handleStoreTabChange}
+                libraryActive={storeLibraryOpen}
+                onLibraryToggle={() => setStoreLibraryOpen(v => !v)}
+              />
+            }>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+
+                    {/* Library sliding panel from LunaBottomNav — rendered without its own nav bar */}
+                    <LunaBottomNav
+                      hideNav={true}
+                      forceLibraryOpen={storeLibraryOpen}
+                      onLibraryClose={() => setStoreLibraryOpen(false)}
+                      libraryLabel="Store Library"
+                    />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
                     <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
