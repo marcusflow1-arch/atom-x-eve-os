@@ -1204,7 +1204,7 @@ export function LibraryBannerSection({
     const usersList = [];
     const seenIds = new Set();
     
-    dbUsers.filter(isOnline).forEach(p => {
+    (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && isOnline(p)).forEach(p => {
       if (!p || !p.player_id) return;
       if (!seenIds.has(p.player_id)) {
         seenIds.add(p.player_id);
@@ -1218,7 +1218,7 @@ export function LibraryBannerSection({
       }
     });
 
-    setOnlineFriends(usersList.filter(Boolean).slice(0, 5));
+    setOnlineFriends(usersList.filter(f => f && f.id).slice(0, 5));
   }, [dbUsers, user]);
 
   const handleFriendClick = (friend) => {
