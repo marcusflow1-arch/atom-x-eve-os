@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -7,22 +7,22 @@ import { base44 } from '@/api/base44Client';
 
 // Mock Admin page component (simplified)
 function MockAdminPage() {
-  const [user, setUser] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch (error) {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
+  useEffect(() => {
+        const checkAuth = async () => {
+          try {
+            const currentUser = await base44.auth.me();
+            setUser(currentUser);
+          } catch (error) {
+            setUser(null);
+          } finally {
+            setLoading(false);
+          }
+        };
+        checkAuth();
+      }, []);
 
   if (loading) return <div>Loading...</div>;
 
