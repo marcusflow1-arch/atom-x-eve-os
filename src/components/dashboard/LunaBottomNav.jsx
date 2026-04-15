@@ -485,8 +485,12 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   className="w-full max-w-[1400px] mx-auto px-2 overflow-hidden"
                 >
                   <div
-                    className="w-full flex gap-2 py-2.5 px-3 overflow-x-auto"
-                    style={{ scrollbarWidth: 'none' }}
+                    className="w-full flex gap-2 py-2.5 px-3 overflow-x-auto rounded-t-xl border-t border-x border-white/10"
+                    style={{
+                      background: 'linear-gradient(to bottom, rgba(20,28,42,0.95), rgba(12,18,30,0.90))',
+                      backdropFilter: 'blur(20px)',
+                      scrollbarWidth: 'none',
+                    }}
                     ref={genreScrollRef}
                     onWheel={(e) => {
                       e.preventDefault();
