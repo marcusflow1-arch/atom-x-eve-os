@@ -663,40 +663,30 @@ export default function Store() {
                                                         <div className="flex flex-1 overflow-hidden px-6 gap-8">
                                                             {/* LEFT: Genre list */}
                                                             <div className="w-[200px] flex-shrink-0 hidden xl:flex flex-col" ref={genreScrollRef}>
-                                                                <div
+                                                                <motion.div
                                                                     ref={genreListRef}
-                                                                    className="flex flex-col gap-1 pl-0 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                                                                    className="flex flex-col gap-2 pl-6 pr-2 max-h-[60vh] overflow-y-auto custom-scrollbar"
                                                                     onWheel={handleGenreWheel}
                                                                     onMouseEnter={() => setIsGenreHovering(true)}
                                                                     onMouseLeave={() => setIsGenreHovering(false)}
                                                                     onFocus={() => setGenrePanelFocused(true)}
                                                                     onBlur={() => setGenrePanelFocused(false)}
                                                                     tabIndex={0}
+                                                                    initial={false}
+                                                                    animate={{ x: scrollDir === 'up' ? 32 : 0, y: scrollDir === 'up' ? -16 : 0 }}
+                                                                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
                                                                 >
                                                                     {genreData.map((genre, idx) => {
+                                                                        const Icon = genre.icon;
                                                                         const isActive = idx === activeGenreIndex;
                                                                         return (
-                                                                            <button 
-                                                                                data-genre-item 
-                                                                                key={genre.id} 
-                                                                                onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} 
-                                                                                className="group relative flex items-center text-left py-2 px-3 transition-colors hover:text-white"
-                                                                            >
-                                                                                <span className={`text-sm uppercase tracking-wide font-medium ${isActive ? 'text-white' : 'text-white/50'}`}>
-                                                                                    {genre.label}
-                                                                                </span>
-                                                                                {isActive && (
-                                                                                    <motion.div 
-                                                                                        layoutId="genre-underline"
-                                                                                        className="absolute bottom-1 left-3 right-3 h-[2px] bg-white"
-                                                                                        initial={false}
-                                                                                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                                                                                    />
-                                                                                )}
-                                                                            </button>
+                                                                            <motion.button data-genre-item key={genre.id} onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setGenrePanelFocused(true); }} className="group flex items-center gap-2 text-left py-2 pl-0 pr-2" animate={{ x: isActive ? 8 : (scrollDir === 'down' ? 4 : 0) }} whileHover={{ x: 8 }}>
+                                                                                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-white/60 group-hover:text-white'}`} />
+                                                                                <span className={`text-sm uppercase tracking-wide ${isActive ? 'text-cyan-400 font-black' : 'text-white/60 group-hover:text-white font-medium'}`}>{genre.label}</span>
+                                                                            </motion.button>
                                                                         );
                                                                     })}
-                                                                </div>
+                                                                </motion.div>
                                                             </div>
 
                                                             {/* CENTER: Game Grid */}

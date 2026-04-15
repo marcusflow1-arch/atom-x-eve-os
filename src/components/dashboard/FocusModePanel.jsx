@@ -1300,18 +1300,16 @@ export function LibraryBannerSection({
             {/* Friends (with placeholders) & Home & Online Users Dropdown */}
             <div className="flex flex-shrink-0 items-center gap-2 h-full">
               {(onlineFriends || []).filter(Boolean).map((friend) => (
-                friend && (
-                  <div key={friend.id || Math.random()} className="flex-shrink-0">
-                    <FriendReference 
-                      friend={friend} 
-                      onClick={handleFriendClick}
-                      onJoin={handleJoin}
-                      onInvite={handleInvite}
-                      onPartyInvite={handlePartyInvite}
-                      isActive={activeFriend?.id === friend.id}
-                    />
-                  </div>
-                )
+                <div key={friend.id} className="flex-shrink-0">
+                  <FriendReference 
+                    friend={friend} 
+                    onClick={handleFriendClick}
+                    onJoin={handleJoin}
+                    onInvite={handleInvite}
+                    onPartyInvite={handlePartyInvite}
+                    isActive={activeFriend?.id === friend.id}
+                  />
+                </div>
               ))}
               
               {/* Invisible Placeholders for Friends */}

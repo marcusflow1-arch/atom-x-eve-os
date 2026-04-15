@@ -79,7 +79,6 @@ import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOffli
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
-import AvatarStatsAndViewer from '../components/dashboard/AvatarStatsAndViewer';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -621,15 +620,14 @@ export default function LunaTemplate() {
                 left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
               } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
+          <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+          
           {!avatarFocusMode && !uiVisible &&
-            <AvatarStatsAndViewer 
-              modelUrl={modelUrl}
-              weaponModelUrl={weaponModelUrl}
-              triggerAnimation={triggerAnimation}
-              bannerBackgroundUrl={bannerBackgroundUrl}
-              playerSpawn={playerSpawn}
-            />
-          }
+                <div className="flex flex-col gap-6">
+              {slot1Content !== 'none' && <div className="w-full" style={slot1Content === 'questBook' ? { transform: 'scale(1.15)', transformOrigin: 'top left', marginBottom: 24 } : { height: 380, marginBottom: 12 }}>{slot1Content === 'questBook' ? <QuestLogBook /> : slot1Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+              {slot2Content !== 'none' && <div className="w-full" style={slot2Content === 'cardCollection' ? {} : { height: 380 }}>{slot2Content === 'cardCollection' ? <CardCollectionBrowser /> : slot2Content === 'friendsList' ? <FriendsNetworkWidget /> : <div className="w-full h-full rounded-2xl bg-black/40 border border-white/10 p-4">Recent Games</div>}</div>}
+            </div>
+                }
 
           <AnimatePresence>
             {avatarFocusMode && !uiVisible &&
