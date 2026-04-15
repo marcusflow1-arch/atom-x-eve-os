@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search } from 'lucide-react';
+import StoreFilterBar from './StoreFilterBar';
 
-export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch }) {
+export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -90,6 +91,10 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </button>
       </div>
+
+      {/* Filter options — Store only */}
+      <div className="w-px h-5 bg-white/10 mx-1" />
+      <StoreFilterBar activeFilters={activeFilters} onFilterChange={onFilterChange} />
     </div>
   );
 }
