@@ -36,6 +36,11 @@ const FILTER_OPTIONS = [
     label: 'PvP',
     type: 'toggle',
   },
+  {
+    id: 'pve',
+    label: 'PvE',
+    type: 'toggle',
+  },
 ];
 
 export default function StoreFilterBar({ activeFilters = {}, onFilterChange, onGenreExtensionChange }) {

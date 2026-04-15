@@ -263,10 +263,51 @@ export default function Store() {
         genreData
     } = useGameFilters(games, loading);
 
+    // Apply storeFilters (genre, mode, choices, free, pvp) on top of the genre-wheel selection
+    const applyStoreFilters = (gameList) => {
+        return gameList.filter(game => {
+            // Genre filter
+            if (storeFilters.genre) {
+                const g = (game.genre || '').toLowerCase();
+                if (g !== storeFilters.genre.toLowerCase()) return false;
+            }
+            // Game Mode filter
+            if (storeFilters.mode) {
+                const modes = (game.game_modes || game.modes || game.tags || [])
+                    .map(m => (m || '').toLowerCase());
+                const target = storeFilters.mode.toLowerCase();
+                // also check top-level fields like multiplayer, co_op, pvp
+                const hasMode =
+                    modes.some(m => m.includes(target.split(' ')[0])) ||
+                    (target === 'single player' && game.single_player) ||
+                    (target === 'multiplayer' && game.multiplayer) ||
+                    (target === 'co-op' && (game.co_op || game.coop)) ||
+                    (target === 'pvp' && game.pvp);
+                // If game has no mode metadata at all, let it pass through
+                if (game.game_modes || game.modes) {
+                    if (!hasMode) return false;
+                }
+            }
+            // Free to Play filter
+            if (storeFilters.free) {
+                if (!(game.price === 0 || game.price == null || game.free_to_play || game.isFree)) return false;
+            }
+            // PvP filter
+            if (storeFilters.pvp) {
+                if (!game.pvp && !(game.tags || []).some(t => (t || '').toLowerCase().includes('pvp'))) return false;
+            }
+            // PvE filter
+            if (storeFilters.pve) {
+                if (!game.pve && !(game.tags || []).some(t => (t || '').toLowerCase().includes('pve'))) return false;
+            }
+            return true;
+        });
+    };
+
     const filteredGridGames = useMemo(() => {
-        if (selectedGenres.length === 0) return games;
-        return games.filter(g => selectedGenres.includes(g.genre));
-    }, [games, selectedGenres]);
+        const base = selectedGenres.length === 0 ? games : games.filter(g => selectedGenres.includes(g.genre));
+        return applyStoreFilters(base);
+    }, [games, selectedGenres, storeFilters]);
 
     const currentNavGenre = genreData[activeGenreIndex];
 
@@ -294,8 +335,8 @@ export default function Store() {
 
     const displayedGames = useMemo(() => {
         if (!currentNavGenre) return [];
-        return currentNavGenre.items;
-    }, [currentNavGenre, activeSubCategory]);
+        return applyStoreFilters(currentNavGenre.items);
+    }, [currentNavGenre, activeSubCategory, storeFilters]);
 
     const activeGame = null;
 
