@@ -403,6 +403,7 @@ export default function Store() {
                       forceLibraryOpen={storeLibraryOpen}
                       onLibraryClose={() => setStoreLibraryOpen(false)}
                       libraryLabel="Store Library"
+                      searchTerm={searchTerm}
                     />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}

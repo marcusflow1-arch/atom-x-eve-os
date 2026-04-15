@@ -40,7 +40,7 @@ const RARITY_STYLES = {
   legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
 };
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
 
   // Sync forced open state
@@ -79,13 +79,21 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   };
 
   const getItems = () => {
-    if (activeTab === 'library') return games.map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }));
+    if (activeTab === 'library') {
+      const all = games.map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }));
+      if (searchTerm && searchTerm.trim()) {
+        const term = searchTerm.trim().toLowerCase();
+        return all.filter(g => g.displayTitle?.toLowerCase().includes(term) || g.genre?.toLowerCase().includes(term));
+      }
+      return all;
+    }
     if (activeTab === 'environment') return GENRES.map(g => ({ ...g, displayTitle: g.name, displayImage: g.image }));
     return [];
   };
 
   const items = getItems();
   const itemsPerRow = 7;
+  const rowsToShow = 2;
   const totalRows = Math.max(1, Math.ceil(items.length / itemsPerRow));
 
   const handleWheel = (e) => {
@@ -96,7 +104,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
     }
   };
 
-  const currentItems = items.slice(currentRow * itemsPerRow, (currentRow + 1) * itemsPerRow);
+  const currentItems = items.slice(currentRow * itemsPerRow, (currentRow + rowsToShow) * itemsPerRow);
 
   // When a game is selected, show its achievement cards in the row
   const achievementItems = selectedGame ? MOCK_ACHIEVEMENTS : [];
@@ -461,9 +469,45 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 w-full max-w-[1400px] mx-auto px-2">
-              {renderSlots()}
-            </div>
+            {selectedGame ? (
+              <div className="flex gap-4 w-full max-w-[1400px] mx-auto px-2">
+                {renderSlots()}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3 w-full max-w-[1400px] mx-auto px-2">
+                {[0, 1].map(rowOffset => {
+                  const rowItems = items.slice((currentRow + rowOffset) * itemsPerRow, (currentRow + rowOffset + 1) * itemsPerRow);
+                  return (
+                    <div key={rowOffset} className="flex gap-4 w-full">
+                      {Array.from({ length: itemsPerRow }).map((_, i) => {
+                        const item = rowItems[i];
+                        if (!item) return (
+                          <div key={`empty-${rowOffset}-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/10 flex items-center justify-center shadow-inner" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}>
+                            <span className="text-white/20 text-4xl font-light">?</span>
+                          </div>
+                        );
+                        return (
+                          <div
+                            key={item.id || `${rowOffset}-${i}`}
+                            className={`flex-1 relative cursor-pointer group transition-all duration-300 ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''}`}
+                            onClick={() => { if (activeTab === 'library') { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); } }}
+                            onDoubleClick={() => { if (activeTab === 'library') { setSelectedItem(item); setSelectedGame(null); } }}
+                          >
+                            <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg transition-all border border-white/10 group-hover:border-cyan-400/50">
+                              <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                              <div className="absolute bottom-3 left-3 right-3 text-center">
+                                <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
