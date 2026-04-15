@@ -40,6 +40,49 @@ const RARITY_STYLES = {
   legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
 };
 
+function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem }) {
+  const rows = [0, 1].map(offset => {
+    const start = (currentRow + offset) * itemsPerRow;
+    const rowItems = items.slice(start, start + itemsPerRow);
+    const cells = [];
+    for (let i = 0; i < itemsPerRow; i++) {
+      const item = rowItems[i];
+      if (!item) {
+        cells.push(
+          <div key={`empty-r${offset}-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <span className="text-white/20 text-4xl font-light">?</span>
+          </div>
+        );
+      } else {
+        const k = `r${offset}-${item.id || i}`;
+        cells.push(
+          <div
+            key={k}
+            className={`flex-1 relative cursor-pointer group transition-all duration-300 ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''}`}
+            onClick={() => { if (activeTab === 'library') onSelectGame(item); }}
+            onDoubleClick={() => { if (activeTab === 'library') onSelectItem(item); }}
+          >
+            <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg border border-white/10 group-hover:border-cyan-400/50">
+              <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 text-center">
+                <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    }
+    return <div key={`row-${offset}`} className="flex gap-4 w-full">{cells}</div>;
+  });
+
+  return (
+    <div className="flex flex-col gap-3 w-full max-w-[1400px] mx-auto px-2">
+      {rows}
+    </div>
+  );
+}
+
 export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
 
@@ -474,40 +517,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 {renderSlots()}
               </div>
             ) : (
-              <div className="flex flex-col gap-3 w-full max-w-[1400px] mx-auto px-2">
-                {[0, 1].map(rowOffset => {
-                  const rowItems = items.slice((currentRow + rowOffset) * itemsPerRow, (currentRow + rowOffset + 1) * itemsPerRow);
-                  return (
-                    <div key={rowOffset} className="flex gap-4 w-full">
-                      {Array.from({ length: itemsPerRow }).map((_, i) => {
-                        const item = rowItems[i];
-                        if (!item) return (
-                          <div key={`empty-${rowOffset}-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/10 flex items-center justify-center shadow-inner" style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(12px)' }}>
-                            <span className="text-white/20 text-4xl font-light">?</span>
-                          </div>
-                        );
-                        const itemKey = item.id ? String(item.id) : `item-${rowOffset}-${i}`;
-                        return (
-                          <div
-                            key={itemKey}
-                            className={`flex-1 relative cursor-pointer group transition-all duration-300 ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''}`}
-                            onClick={() => { if (activeTab === 'library') { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); } }}
-                            onDoubleClick={() => { if (activeTab === 'library') { setSelectedItem(item); setSelectedGame(null); } }}
-                          >
-                            <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg transition-all border border-white/10 group-hover:border-cyan-400/50">
-                              <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                              <div className="absolute bottom-3 left-3 right-3 text-center">
-                                <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
+              <TwoRowGrid
+                items={items}
+                currentRow={currentRow}
+                itemsPerRow={itemsPerRow}
+                selectedGame={selectedGame}
+                activeTab={activeTab}
+                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
+                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
+              />
             )}
           </motion.div>
         )}
