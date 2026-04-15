@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
-const GENRES = [
+export const GENRES = [
   'Action', 'Adventure', 'RPG', 'Strategy', 'Shooter', 'Horror',
   'Racing', 'Sports', 'Simulation', 'Puzzle', 'Fighting', 'Platformer',
   'Survival', 'Open World', 'Sandbox', 'Sci-Fi', 'Fantasy', 'MMO',
@@ -38,7 +38,7 @@ const FILTER_OPTIONS = [
   },
 ];
 
-export default function StoreFilterBar({ activeFilters = {}, onFilterChange }) {
+export default function StoreFilterBar({ activeFilters = {}, onFilterChange, onGenreExtensionChange }) {
   const [openFilter, setOpenFilter] = useState(null);
   const genreScrollRef = useRef(null);
 
@@ -50,7 +50,12 @@ export default function StoreFilterBar({ activeFilters = {}, onFilterChange }) {
   };
 
   const toggleFilter = (filterId) => {
-    setOpenFilter(prev => prev === filterId ? null : filterId);
+    const next = openFilter === filterId ? null : filterId;
+    setOpenFilter(next);
+    // Notify parent when genre extension opens/closes
+    if (filterId === 'genre') {
+      onGenreExtensionChange?.(next === 'genre');
+    }
   };
 
   const selectOption = (filterId, value) => {
@@ -111,7 +116,7 @@ export default function StoreFilterBar({ activeFilters = {}, onFilterChange }) {
             </button>
 
             <AnimatePresence>
-              {open && (
+              {open && filter.type !== 'scroll' && (
                 <motion.div
                   initial={{ opacity: 0, y: 6, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -126,46 +131,21 @@ export default function StoreFilterBar({ activeFilters = {}, onFilterChange }) {
                     boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
                   }}
                 >
-                  {filter.type === 'scroll' ? (
-                    // Horizontal scrolling genre list
-                    <div
-                      ref={genreScrollRef}
-                      onWheel={handleGenreWheel}
-                      className="flex gap-2 px-4 py-3 overflow-x-auto"
-                      style={{ width: '420px', scrollbarWidth: 'none' }}
-                    >
-                      {GENRES.map((genre) => (
-                        <button
-                          key={genre}
-                          onClick={() => selectOption(filter.id, genre)}
-                          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${
-                            activeFilters[filter.id] === genre
-                              ? 'bg-cyan-400/25 border-cyan-400/60 text-cyan-300'
-                              : 'bg-white/[0.06] border-white/10 text-white/60 hover:border-white/25 hover:text-white'
-                          }`}
-                        >
-                          {genre}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    // Vertical list options
-                    <div className="py-2 min-w-[180px]">
-                      {filter.options.map((opt) => (
-                        <button
-                          key={opt}
-                          onClick={() => selectOption(filter.id, opt)}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                            activeFilters[filter.id] === opt
-                              ? 'text-cyan-300 bg-cyan-400/10'
-                              : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
-                          }`}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div className="py-2 min-w-[180px]">
+                    {filter.options.map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => selectOption(filter.id, opt)}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                          activeFilters[filter.id] === opt
+                            ? 'text-cyan-300 bg-cyan-400/10'
+                            : 'text-white/70 hover:text-white hover:bg-white/[0.06]'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
