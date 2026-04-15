@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search } from 'lucide-react';
-import StoreFilterBar from './StoreFilterBar';
 
 export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange }) {
   const [searchValue, setSearchValue] = useState('');
@@ -92,9 +91,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
         </button>
       </div>
 
-      {/* Filter options — Store only */}
-      <div className="w-px h-5 bg-white/10 mx-1" />
-      <StoreFilterBar activeFilters={activeFilters} onFilterChange={onFilterChange} />
+
     </div>
   );
 }

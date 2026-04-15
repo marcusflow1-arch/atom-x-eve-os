@@ -407,6 +407,8 @@ export default function Store() {
                       onLibraryClose={() => setStoreLibraryOpen(false)}
                       libraryLabel="Store Library"
                       searchTerm={searchTerm}
+                      activeFilters={storeFilters}
+                      onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}

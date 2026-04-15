@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import StoreFilterBar from '@/components/store/StoreFilterBar';
 
 const GENRES = [
   { id: 'mmorpg', name: 'MMORPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600' },
@@ -83,7 +84,7 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, activeFilters, onFilterChange }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
 
   // Sync forced open state
@@ -496,6 +497,11 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   </>
                 )}
               </div>
+              {/* Filters — centered between label and row counter */}
+              {activeFilters && onFilterChange && !selectedGame && (
+                <StoreFilterBar activeFilters={activeFilters} onFilterChange={onFilterChange} />
+              )}
+
               <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
                 {selectedGame && (
                   <button
