@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -84,7 +84,7 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, activeFilters, onFilterChange }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, activeFilters, onFilterChange }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
   const [genreExtensionOpen, setGenreExtensionOpen] = useState(false);
   const genreScrollRef = useRef(null);
@@ -537,6 +537,24 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <h3 className="text-white font-bold tracking-widest uppercase text-sm">
                       {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
                     </h3>
+                    {activeTab === 'library' && (
+                      <div className="flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-md">
+                        <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
+                        <input
+                          type="text"
+                          value={searchTerm || ''}
+                          onChange={(e) => onSearchChange?.(e.target.value)}
+                          placeholder="Filter games..."
+                          className="bg-transparent text-white/80 text-xs placeholder-white/30 outline-none w-28"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {searchTerm && (
+                          <button onClick={(e) => { e.stopPropagation(); onSearchChange?.(''); }} className="text-white/30 hover:text-white/60 transition-colors">
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>

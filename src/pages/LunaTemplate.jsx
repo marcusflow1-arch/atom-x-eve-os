@@ -179,6 +179,7 @@ export default function LunaTemplate() {
   const [currentHostName, setCurrentHostName] = useState(null);
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
+  const [librarySearchTerm, setLibrarySearchTerm] = useState('');
 
   // Stream Player State
   const [isLive, setIsLive] = useState(false);
@@ -589,7 +590,7 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-    <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} />}>
+    <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}>
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />
