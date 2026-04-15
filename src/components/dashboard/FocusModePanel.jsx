@@ -1443,7 +1443,7 @@ function OnlineUsersDropdown({ onSelectEnv }) {
     const usersList = [];
     const seenIds = new Set();
     
-    dbUsers.filter(isOnline).forEach(p => {
+    (Array.isArray(dbUsers) ? dbUsers : []).filter(p => p && p.player_id && isOnline(p)).forEach(p => {
       if (!seenIds.has(p.player_id)) {
         seenIds.add(p.player_id);
         usersList.push({
