@@ -68,13 +68,21 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
 
       {/* Search bar */}
       <div className="w-px h-5 bg-white/10 mx-1" />
-      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/15 bg-white/[0.06] backdrop-blur-md" style={{ minWidth: '220px' }}>
-        <Search className="w-4 h-4 text-white/40 flex-shrink-0" />
+      <div
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all ${
+          libraryActive
+            ? 'border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_12px_rgba(34,211,238,0.3)]'
+            : 'border-white/15 bg-white/[0.06]'
+        }`}
+        style={{ minWidth: '220px' }}
+      >
+        <Search className={`w-4 h-4 flex-shrink-0 ${libraryActive ? 'text-cyan-400' : 'text-white/40'}`} />
         <input
           ref={inputRef}
           type="text"
           value={searchValue}
           onChange={handleChange}
+          onFocus={() => { if (!libraryActive) onLibraryToggle?.(); }}
           placeholder="Search bar"
           className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
         />
