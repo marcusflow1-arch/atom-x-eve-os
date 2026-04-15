@@ -547,7 +547,7 @@ function LibraryGamesSection({ onSelectGame, selectedGame, allGames, showGamePan
   return (
     <div className="h-full flex flex-col" onClick={(e) => {
       // Close panel when clicking outside of it (but not on games)
-      if (!e.target.closest('[data-game-panel]') && !e.target.closest('[data-game-card]')) {
+      if (e.target && !e.target.closest?.('[data-game-panel]') && !e.target.closest?.('[data-game-card]')) {
         onClosePanel();
       }
     }}>
