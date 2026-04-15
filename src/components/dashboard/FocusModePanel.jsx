@@ -1729,7 +1729,8 @@ export default function FocusModePanel({ onBackgroundChange, onOpenCalendar, onT
 
     if (isAuthenticated) {
       if (!allGamesFromDb) return;
-      const combinedGamePool = { ...allMockGames, ...Object.fromEntries(allGamesFromDb.map(g => [g.id, g])) };
+      const gamesArray = Array.isArray(allGamesFromDb) ? allGamesFromDb : (allGamesFromDb?.data || []);
+      const combinedGamePool = { ...allMockGames, ...Object.fromEntries(gamesArray.filter(g => g && g.id).map(g => [g.id, g])) };
       const ownedIds = JSON.parse(purchasedItemsStr);
       userGames = ownedIds.map(id => combinedGamePool[id]).filter(Boolean);
       if (testGameAlpha) userGames.unshift(testGameAlpha);
