@@ -43,28 +43,15 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
       <AnimatePresence>
         {isOpen && filteredGames.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scaleY: 0.95 }}
-            animate={{ opacity: 1, y: 0, scaleY: 1 }}
-            exit={{ opacity: 0, y: -10, scaleY: 0.95 }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
             className="absolute top-full left-0 right-0 mt-2 z-50"
-            style={{
-              background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)',
-              backdropFilter: 'blur(30px)',
-              border: '1px solid rgba(200,215,235,0.14)',
-              boxShadow: '0 12px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.09)',
-            }}
             onClick={() => setIsOpen(false)}
           >
-            <div className="rounded-2xl overflow-hidden">
-              {/* Close on background click */}
-              <div
-                className="absolute inset-0 z-0"
-                onClick={() => setIsOpen(false)}
-              />
-
               {/* Content */}
-              <div className="relative z-10 max-h-96 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+              <div className="max-h-96 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
                 <div className="grid grid-cols-2 gap-3">
                   {filteredGames.map((game) => (
                     <motion.button
@@ -94,7 +81,6 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
                   ))}
                 </div>
               </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
