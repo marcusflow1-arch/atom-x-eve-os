@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StoreFilterBar, { GENRES } from '@/components/store/StoreFilterBar';
 
-const GENRES = [
+const ENV_GENRES = [
   { id: 'mmorpg', name: 'MMORPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600' },
   { id: 'scifi', name: 'Sci-Fi', image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=600' },
   { id: 'fantasy', name: 'Fantasy', image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=600' },
@@ -133,7 +133,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       }
       return all;
     }
-    if (activeTab === 'environment') return GENRES.map(g => ({ ...g, displayTitle: g.name, displayImage: g.image }));
+    if (activeTab === 'environment') return ENV_GENRES.map(g => ({ ...g, displayTitle: g.name, displayImage: g.image }));
     return [];
   };
 
