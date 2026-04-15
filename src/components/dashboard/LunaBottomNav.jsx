@@ -486,9 +486,10 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                             <span className="text-white/20 text-4xl font-light">?</span>
                           </div>
                         );
+                        const itemKey = item.id ? String(item.id) : `item-${rowOffset}-${i}`;
                         return (
                           <div
-                            key={item.id || `${rowOffset}-${i}`}
+                            key={itemKey}
                             className={`flex-1 relative cursor-pointer group transition-all duration-300 ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''}`}
                             onClick={() => { if (activeTab === 'library') { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); } }}
                             onDoubleClick={() => { if (activeTab === 'library') { setSelectedItem(item); setSelectedGame(null); } }}
