@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StoreFilterBar, { GENRES } from '@/components/store/StoreFilterBar';
 import { useCart } from '@/components/CartContext';
+import GameContentCards from '@/components/dashboard/GameContentCards';
 
 const ENV_GENRES = [
   { id: 'mmorpg', name: 'MMORPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600' },
@@ -564,41 +565,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden border border-white/10 flex"
                 style={{ height: '280px', background: 'linear-gradient(135deg, rgba(10,14,22,0.97) 0%, rgba(8,12,20,0.99) 100%)', backdropFilter: 'blur(24px)' }}
               >
-                {/* LEFT — Achievements */}
-                <div className="w-[45%] flex flex-col border-r border-white/8 min-h-0">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/8 flex-shrink-0">
-                    <Trophy className="w-3.5 h-3.5 text-yellow-400" />
-                    <span className="text-white font-bold text-[10px] uppercase tracking-widest">Achievements</span>
-                    <span className="ml-auto text-white/30 text-[10px]">{MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length}/{MOCK_ACHIEVEMENTS.length}</span>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 content-start" style={{ scrollbarWidth: 'none' }}>
-                    {MOCK_ACHIEVEMENTS.map((ach) => {
-                      const style = RARITY_STYLES[ach.rarity];
-                      const Icon = ach.icon;
-                      return (
-                        <div
-                          key={ach.id}
-                          className="flex items-center gap-2 rounded-lg p-2 border transition-all"
-                          style={{
-                            background: ach.unlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-                            border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.06)',
-                            boxShadow: ach.unlocked ? `0 0 8px ${style.glow}` : 'none',
-                            opacity: ach.unlocked ? 1 : 0.45,
-                          }}
-                        >
-                          <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-                            style={{ background: ach.unlocked ? style.glow : 'rgba(255,255,255,0.04)', border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.06)'}` }}>
-                            {ach.unlocked ? <Icon className="w-3.5 h-3.5" style={{ color: style.text }} /> : <Lock className="w-3 h-3 text-white/20" />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-bold truncate" style={{ color: ach.unlocked ? style.text : 'rgba(255,255,255,0.25)' }}>{ach.title}</p>
-                            <p className="text-[9px] text-white/30 truncate">{ach.desc}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* LEFT — Game Content Cards */}
+                <GameContentCards selectedGame={selectedGame} />
 
                 {/* RIGHT — Store Content */}
                 <div className="flex-1 flex flex-col min-h-0">
