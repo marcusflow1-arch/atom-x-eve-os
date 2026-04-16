@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Shield, Globe, Users, ChevronLeft, ChevronRight, Trophy, Package, Lock, X, Star } from 'lucide-react';
+import { Zap, Shield, Globe, Users, ChevronLeft, ChevronRight, Lock, X, Star } from 'lucide-react';
 
 const TYPE_CONFIG = {
   Ability:     { icon: Zap,    color: '#22d3ee', label: 'Ability' },
@@ -117,15 +117,8 @@ export default function GameContentCards({ selectedGame }) {
       className="w-[52%] flex flex-col border-r border-white/8 min-h-0"
       style={{ background: 'rgba(255,255,255,0.025)', backdropFilter: 'blur(20px)' }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-white/8 flex-shrink-0">
-        <Trophy className="w-3.5 h-3.5 text-cyan-400" />
-        <span className="text-white font-bold text-[10px] uppercase tracking-widest">Achievement Cards</span>
-        <span className="ml-auto text-white/30 text-[10px]">{MOCK_CARDS.filter(c => !c.locked).length}/{MOCK_CARDS.length} Unlocked</span>
-      </div>
-
       {/* Filter pills */}
-      <div className="flex items-center justify-center flex-wrap gap-1 px-3 py-2 border-b border-white/8 flex-shrink-0">
+      <div className="flex items-center justify-center flex-wrap gap-1 px-3 py-3 border-b border-white/8 flex-shrink-0">
         {FILTER_TABS.map(tab => {
           const isActive = activeFilter === tab.key;
           return (
