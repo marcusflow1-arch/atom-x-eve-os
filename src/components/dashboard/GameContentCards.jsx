@@ -160,41 +160,142 @@ export default function GameContentCards({ selectedGame }) {
         </div>
       </div>
 
-      {/* Card detail popup */}
+      {/* Card detail modal — store-style overlay */}
       <AnimatePresence>
-        {selectedCard && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="absolute bottom-[260px] left-0 w-[52%] z-50 px-4 pb-2"
-          >
-            <div
-              className="rounded-2xl p-4 border flex gap-3 items-start"
-              style={{
-                background: 'linear-gradient(135deg, rgba(10,14,22,0.98), rgba(15,20,35,0.98))',
-                border: `1px solid ${RARITY_COLOR[selectedCard.rarity] || '#aaa'}44`,
-                boxShadow: `0 0 20px ${RARITY_COLOR[selectedCard.rarity] || '#aaa'}22`,
-                backdropFilter: 'blur(20px)',
-              }}
-            >
-              <span className="text-3xl leading-none flex-shrink-0">{selectedCard.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-black text-xs truncate">{selectedCard.name}</p>
-                <p className="text-[9px] text-white/50 mt-0.5 leading-relaxed">{selectedCard.desc}</p>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className="text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full" style={{ color: RARITY_COLOR[selectedCard.rarity], background: `${RARITY_COLOR[selectedCard.rarity]}18`, border: `1px solid ${RARITY_COLOR[selectedCard.rarity]}33` }}>{selectedCard.rarity}</span>
-                  <span className="text-[8px] text-white/40">· {selectedCard.type}</span>
-                  <Star className="w-2.5 h-2.5 text-green-400 fill-green-400 ml-auto" />
-                  <span className="text-[8px] text-green-400 font-bold">Unlocked</span>
+        {selectedCard && (() => {
+          const rc = RARITY_COLOR[selectedCard.rarity] || '#aaa';
+          const cfg = TYPE_CONFIG[selectedCard.type] || TYPE_CONFIG.Ability;
+          const Icon = cfg.icon;
+          return (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] bg-black/70 backdrop-blur-sm"
+                onClick={() => setSelectedCard(null)}
+              />
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 20 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 260 }}
+                className="fixed inset-0 z-[201] flex items-center justify-center pointer-events-none"
+              >
+                <div
+                  className="pointer-events-auto w-[340px] rounded-2xl overflow-hidden flex flex-col"
+                  style={{
+                    background: 'linear-gradient(160deg, rgba(12,16,28,0.98) 0%, rgba(8,12,22,0.99) 100%)',
+                    border: `1px solid ${rc}40`,
+                    boxShadow: `0 0 60px ${rc}22, 0 24px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07)`,
+                    backdropFilter: 'blur(40px)',
+                  }}
+                >
+                  {/* Header banner */}
+                  <div
+                    className="relative flex items-center justify-center py-8"
+                    style={{ background: `radial-gradient(circle at 50% 60%, ${rc}22 0%, transparent 70%)` }}
+                  >
+                    <div
+                      className="w-20 h-20 rounded-2xl flex items-center justify-center"
+                      style={{
+                        background: `linear-gradient(135deg, ${rc}18, ${rc}08)`,
+                        border: `1px solid ${rc}35`,
+                        boxShadow: `0 0 30px ${rc}30`,
+                      }}
+                    >
+                      <span className="text-4xl leading-none">{selectedCard.icon}</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCard(null)}
+                      className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all hover:bg-white/10"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    >
+                      <X className="w-3.5 h-3.5 text-white/50" />
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="px-5 pb-5 flex flex-col gap-3">
+                    {/* Name + badges */}
+                    <div>
+                      <h3 className="text-white font-black text-lg leading-tight">{selectedCard.name}</h3>
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span
+                          className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                          style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}35` }}
+                        >{selectedCard.rarity}</span>
+                        <span
+                          className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                          style={{ color: cfg.color, background: `${cfg.color}14`, border: `1px solid ${cfg.color}28` }}
+                        >
+                          <Icon className="w-2.5 h-2.5" />
+                          {selectedCard.type}
+                        </span>
+                        {!selectedCard.locked && (
+                          <span className="flex items-center gap-1 text-[9px] font-bold text-green-400 px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }}>
+                            <Star className="w-2.5 h-2.5 fill-green-400" /> Unlocked
+                          </span>
+                        )}
+                        {selectedCard.locked && (
+                          <span className="flex items-center gap-1 text-[9px] font-bold text-white/30 px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            🔒 Locked
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px w-full" style={{ background: `linear-gradient(to right, transparent, ${rc}30, transparent)` }} />
+
+                    {/* Description */}
+                    <p className="text-white/60 text-xs leading-relaxed">{selectedCard.desc}</p>
+
+                    {/* Type-specific stats */}
+                    {selectedCard.type === 'Equipment' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {[{ label: 'ATK Bonus', val: '+80' }, { label: 'Effect', val: 'Burn' }].map(s => (
+                          <div key={s.label} className="rounded-lg px-3 py-2 flex flex-col" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <span className="text-[8px] text-white/35 uppercase tracking-wider">{s.label}</span>
+                            <span className="text-white font-bold text-xs mt-0.5">{s.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {selectedCard.type === 'Ability' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {[{ label: 'Power', val: 'High' }, { label: 'Cooldown', val: '8s' }].map(s => (
+                          <div key={s.label} className="rounded-lg px-3 py-2 flex flex-col" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <span className="text-[8px] text-white/35 uppercase tracking-wider">{s.label}</span>
+                            <span className="text-white font-bold text-xs mt-0.5">{s.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* CTA */}
+                    <button
+                      className="w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-all mt-1"
+                      style={{
+                        background: selectedCard.locked
+                          ? 'rgba(255,255,255,0.05)'
+                          : `linear-gradient(135deg, ${rc}cc, ${rc}88)`,
+                        color: selectedCard.locked ? 'rgba(255,255,255,0.3)' : '#000',
+                        border: `1px solid ${rc}40`,
+                        boxShadow: selectedCard.locked ? 'none' : `0 0 18px ${rc}40`,
+                        cursor: selectedCard.locked ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {selectedCard.locked ? '🔒 Complete Achievement to Unlock' : `Equip ${selectedCard.type}`}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <button onClick={() => setSelectedCard(null)} className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center flex-shrink-0">
-                <X className="w-3 h-3 text-white/50" />
-              </button>
-            </div>
-          </motion.div>
-        )}
+              </motion.div>
+            </>
+          );
+        })()}
       </AnimatePresence>
     </div>
   );
