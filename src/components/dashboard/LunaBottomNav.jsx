@@ -551,24 +551,139 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
               )}
 
               <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
-                {selectedGame && (
-                  <button
-                    type="button"
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg text-xs transition-colors"
-                  >
-                    <Play className="w-3 h-3 fill-current" /> Play {selectedGame.displayTitle}
-                  </button>
-                )}
-                <span>Row {currentRow + 1} of {selectedGame ? achievementRows : totalRows}</span>
+                {!selectedGame && <span>Row {currentRow + 1} of {totalRows}</span>}
                 <div className="flex gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
                   <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                  <button onClick={() => setCurrentRow(p => Math.min((selectedGame ? achievementRows : totalRows) - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-4 h-4" /></button>
+                  <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-4 h-4" /></button>
                 </div>
               </div>
             </div>
             {selectedGame ? (
-              <div className="flex gap-4 w-full max-w-[1400px] mx-auto px-2">
-                {renderSlots()}
+              /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
+              <div
+                className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden border border-white/10 flex"
+                style={{ height: '280px', background: 'linear-gradient(135deg, rgba(10,14,22,0.97) 0%, rgba(8,12,20,0.99) 100%)', backdropFilter: 'blur(24px)' }}
+              >
+                {/* LEFT — Achievements */}
+                <div className="w-[45%] flex flex-col border-r border-white/8 min-h-0">
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/8 flex-shrink-0">
+                    <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-white font-bold text-[10px] uppercase tracking-widest">Achievements</span>
+                    <span className="ml-auto text-white/30 text-[10px]">{MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length}/{MOCK_ACHIEVEMENTS.length}</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 content-start" style={{ scrollbarWidth: 'none' }}>
+                    {MOCK_ACHIEVEMENTS.map((ach) => {
+                      const style = RARITY_STYLES[ach.rarity];
+                      const Icon = ach.icon;
+                      return (
+                        <div
+                          key={ach.id}
+                          className="flex items-center gap-2 rounded-lg p-2 border transition-all"
+                          style={{
+                            background: ach.unlocked ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+                            border: ach.unlocked ? `1px solid ${style.border}` : '1px solid rgba(255,255,255,0.06)',
+                            boxShadow: ach.unlocked ? `0 0 8px ${style.glow}` : 'none',
+                            opacity: ach.unlocked ? 1 : 0.45,
+                          }}
+                        >
+                          <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                            style={{ background: ach.unlocked ? style.glow : 'rgba(255,255,255,0.04)', border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.06)'}` }}>
+                            {ach.unlocked ? <Icon className="w-3.5 h-3.5" style={{ color: style.text }} /> : <Lock className="w-3 h-3 text-white/20" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-bold truncate" style={{ color: ach.unlocked ? style.text : 'rgba(255,255,255,0.25)' }}>{ach.title}</p>
+                            <p className="text-[9px] text-white/30 truncate">{ach.desc}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* RIGHT — Store Content */}
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Top bar: game info + action buttons */}
+                  <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
+                      <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-black text-sm truncate">{selectedGame.displayTitle}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[9px] text-cyan-300 font-bold uppercase">{selectedGame.genre || 'Action'}</span>
+                        {selectedGame.price > 0 && <span className="text-green-400 font-black text-xs">${selectedGame.price}</span>}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => navigate(createPageUrl('GameDetail') + '?id=' + selectedGame.id + '&from=library')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-[10px] font-semibold transition-all flex-shrink-0"
+                    >
+                      <ShoppingBag className="w-3 h-3" /> Store
+                    </button>
+                    <button
+                      onClick={() => addToCart({ id: selectedGame.id, title: selectedGame.displayTitle, price: selectedGame.price || 0, cover_image: selectedGame.displayImage, type: 'game' })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] transition-all shadow-[0_0_14px_rgba(34,211,238,0.3)] flex-shrink-0"
+                    >
+                      <ShoppingCart className="w-3 h-3" /> Buy ${selectedGame.price || '0.00'}
+                    </button>
+                  </div>
+
+                  {/* Content: DLC + News */}
+                  <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ scrollbarWidth: 'none' }}>
+                    {/* What's New */}
+                    <div className="rounded-xl p-3 border border-white/8 flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.10), rgba(34,211,238,0.05))' }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase rounded">Latest Update</span>
+                        <span className="text-white/25 text-[9px]">2 days ago</span>
+                      </div>
+                      <p className="text-white font-bold text-[10px]">Season 4: Cyber Dawn</p>
+                      <p className="text-white/45 text-[9px] leading-relaxed mt-0.5">New maps, weapon balance fixes, cybernetic implants added to marketplace.</p>
+                    </div>
+
+                    {/* DLC */}
+                    <div className="flex items-center gap-1.5">
+                      <Package className="w-3 h-3 text-purple-400" />
+                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">DLC</span>
+                    </div>
+                    {[
+                      { name: 'Neon District Pack', desc: '3 new maps + exclusive skins', price: 9.99 },
+                      { name: 'Cyber Armory Bundle', desc: 'Weapon skins & gear set', price: 14.99 },
+                      { name: 'Season Pass Vol.4', desc: 'Full season content unlock', price: 24.99 },
+                    ].map((dlc) => (
+                      <div key={dlc.name} className="flex items-center gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] transition-all">
+                        <div className="w-8 h-8 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                          <Package className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-[10px] font-bold truncate">{dlc.name}</p>
+                          <p className="text-white/35 text-[9px]">{dlc.desc}</p>
+                        </div>
+                        <button
+                          onClick={() => addToCart({ id: selectedGame.id + '-' + dlc.name, title: dlc.name, price: dlc.price, type: 'dlc' })}
+                          className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[9px] font-bold border border-cyan-500/20 transition-all"
+                        >${dlc.price}</button>
+                      </div>
+                    ))}
+
+                    {/* News */}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <Newspaper className="w-3 h-3 text-blue-400" />
+                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">News</span>
+                    </div>
+                    {[
+                      { headline: 'Server Maintenance Tomorrow', body: 'Scheduled downtime 03:00–05:00 AM UTC.', dot: 'bg-yellow-400' },
+                      { headline: 'Double XP Weekend', body: 'Earn 2× XP on all modes this weekend.', dot: 'bg-green-400' },
+                    ].map((item) => (
+                      <div key={item.headline} className="flex items-start gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03]">
+                        <div className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse ${item.dot}`} />
+                        <div>
+                          <p className="text-white text-[10px] font-bold">{item.headline}</p>
+                          <p className="text-white/40 text-[9px]">{item.body}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <TwoRowGrid
