@@ -562,8 +562,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             {selectedGame ? (
               /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
               <div
-                className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden border border-white/10 flex"
-                style={{ height: '280px', background: 'linear-gradient(135deg, rgba(10,14,22,0.97) 0%, rgba(8,12,20,0.99) 100%)', backdropFilter: 'blur(24px)' }}
+                className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden flex"
+                style={{
+                  height: '280px',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)',
+                  backdropFilter: 'blur(32px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2)',
+                }}
               >
                 {/* LEFT — Game Content Cards */}
                 <GameContentCards selectedGame={selectedGame} />
