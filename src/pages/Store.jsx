@@ -32,7 +32,7 @@ import StoreOverview from '../components/store/StoreOverview';
 import StoreAchievementsStrip from '../components/store/StoreAchievementsStrip';
 import StoreBottomNav from '@/components/store/StoreBottomNav';
 import StoreGameDetailPanel from '../components/store/GameDetailPanel';
-import StoreSearchDropdown from '../components/store/StoreSearchDropdown';
+import StoreSearchDropdown from '../components/store/StoreSearchDropdown.jsx';
 import StoreCategoryOverlay, { CATEGORIES } from '../components/store/StoreCategoryOverlay';
 import WishlistButton from '../components/store/WishlistButton';
 import { WishlistProvider } from '../components/store/WishlistContext';
