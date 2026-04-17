@@ -54,7 +54,7 @@ export default function PlayerInteractionsPanel({ onGameSelect }) {
 
   const handleGameClick = (game) => {
     if (onGameSelect) {
-      onGameSelect(game);
+      onGameSelect({ ...game, id: game.id });
     }
   };
 

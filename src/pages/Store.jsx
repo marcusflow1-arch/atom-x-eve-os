@@ -680,6 +680,13 @@ export default function Store() {
                                                                 </motion.div>
                                                             </div>
 
+                                                            {/* RIGHT: Game Recommendations Panel */}
+                                                            <div className="w-[300px] flex-shrink-0 hidden xl:block overflow-hidden">
+                                                                <PlayerInteractionsPanel 
+                                                                  onGameSelect={(game) => setInPageStoreGameId(game.id || game)}
+                                                                />
+                                                            </div>
+
                                                             {/* CENTER: Game Grid */}
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
                                                                 <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
