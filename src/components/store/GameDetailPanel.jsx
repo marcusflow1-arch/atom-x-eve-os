@@ -705,12 +705,18 @@ export default function GameDetailPanel({ gameId, onClose }) {
           </button>
         </div>
 
-        {/* Center: Game icon + title */}
+        {/* Center: Game icon + title + Achievements tab */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
           <div className="w-7 h-7 rounded overflow-hidden border border-white/10 flex-shrink-0">
             <img src={game?.cover_image} alt="" className="w-full h-full object-cover" />
           </div>
           <span className="text-white font-bold text-sm truncate max-w-[200px]">{game?.title}</span>
+          <button
+            onClick={() => setActiveTab('achievements')}
+            className={`ml-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'achievements' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
+            Achievements
+          </button>
         </div>
 
         {/* Right: Tab switcher (System Core / Tech Specs) */}
