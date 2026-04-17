@@ -1,10 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Mic } from 'lucide-react';
 
 export default function StoreSearchDropdown({ games, onGameSelect, isListening, toggleVoice }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef(null);
+
+  const close = () => {
+    setIsOpen(false);
+    setIsFocused(false);
+    inputRef.current?.blur();
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
 
   const filteredGames = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -22,11 +36,14 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
           type="text"
           placeholder={isListening ? 'Listening...' : 'Search games...'}
           value={searchTerm}
+          ref={inputRef}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setIsOpen(e.target.value.length > 0);
           }}
-          onFocus={() => searchTerm.length > 0 && setIsOpen(true)}
+          onFocus={() => { setIsFocused(true); if (searchTerm.length > 0) setIsOpen(true); }}
+          onBlur={() => {}}
+
           className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full"
         />
         {searchTerm && (
@@ -85,16 +102,16 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
         )}
       </AnimatePresence>
 
-      {/* Shadow overlay when dropdown is open */}
+      {/* Shadow overlay — closes on click outside or Escape */}
       <AnimatePresence>
-        {isOpen && filteredGames.length > 0 && (
+        {(isOpen || isFocused) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40"
             style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setIsOpen(false)}
+            onClick={close}
           />
         )}
       </AnimatePresence>
