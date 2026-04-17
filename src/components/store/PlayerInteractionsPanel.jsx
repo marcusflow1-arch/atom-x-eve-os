@@ -90,7 +90,7 @@ export default function PlayerInteractionsPanel({ onGameSelect }) {
       </div>
 
       {/* Games List */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5 min-h-0" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5 min-h-0 max-h-full" style={{ scrollbarWidth: 'none' }}>
         <AnimatePresence mode="wait">
           {games.map((game, idx) => (
             <motion.button
