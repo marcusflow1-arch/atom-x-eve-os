@@ -45,17 +45,8 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
-    const handleClick = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        handleClose();
-      }
-    };
     document.addEventListener('keydown', handleKey);
-    document.addEventListener('mousedown', handleClick);
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.removeEventListener('mousedown', handleClick);
-    };
+    return () => document.removeEventListener('keydown', handleKey);
   }, [libraryActive]);
   const tabs = [
     { id: 'store', label: 'Store', icon: Store },
