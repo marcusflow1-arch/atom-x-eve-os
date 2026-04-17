@@ -56,7 +56,7 @@ function CardItem({ card, onSelect, isSelected }) {
     <motion.div
       onClick={() => !card.locked && onSelect(card)}
       whileHover={{ scale: card.locked ? 1 : 1.04 }}
-      className={`flex flex-col items-center p-2 rounded-xl transition-all ${card.locked ? 'cursor-default' : 'cursor-pointer'}`}
+      className={`relative flex flex-col items-center justify-center p-1.5 rounded-lg transition-all w-20 h-24 ${card.locked ? 'cursor-default' : 'cursor-pointer'}`}
       style={{
         opacity: card.locked ? 0.45 : 1,
         background: isSelected ? `${rc}18` : 'rgba(255,255,255,0.04)',
@@ -64,24 +64,37 @@ function CardItem({ card, onSelect, isSelected }) {
         boxShadow: isSelected ? `0 0 14px ${rc}22` : 'none',
       }}
     >
-      {/* Icon circle */}
-      <div className="relative w-10 h-10 rounded-full flex items-center justify-center mb-1"
-        style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}28` }}>
-        <span className="text-xl leading-none">{card.icon}</span>
+      {/* Type label - top left corner */}
+      <span className="absolute top-1 left-1 text-[6px] font-bold uppercase px-1 py-0.5 rounded"
+        style={{ color: cfg.color, background: `${cfg.color}14` }}>
+        {card.type.substring(0, 3)}
+      </span>
+
+      {/* Rarity badge - top middle */}
+      <span className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[6px] font-black uppercase px-1.5 py-0.5 rounded-full"
+        style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}35` }}>
+        {card.rarity.substring(0, 3)}
+      </span>
+
+      {/* Centered icon with liquid glass effect */}
+      <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-2"
+        style={{
+          background: `linear-gradient(135deg, ${cfg.color}22 0%, ${cfg.color}08 100%)`,
+          backdropFilter: 'blur(12px)',
+          boxShadow: `0 0 20px ${cfg.color}30, inset 0 1px 2px rgba(255,255,255,0.2)`,
+          border: `1px solid ${cfg.color}40`
+        }}>
+        <span className="text-2xl leading-none">{card.icon}</span>
         {card.locked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
-            <Lock className="w-3 h-3 text-white/40" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
+            <Lock className="w-4 h-4 text-white/40" />
           </div>
         )}
       </div>
-      {/* Rarity badge */}
-      <span className="text-[7px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full mb-0.5"
-        style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}30` }}>
-        {card.rarity}
-      </span>
-      {/* Name */}
-      <p className="text-[9px] font-bold text-white text-center leading-tight truncate w-full px-0.5">{card.name}</p>
-      <p className="text-[8px] text-white/35 text-center">{card.type}</p>
+
+      {/* Name and rarity below */}
+      <p className="text-[7px] font-bold text-white text-center leading-tight truncate w-full px-0.5">{card.name}</p>
+      <p className="text-[6px] text-white/50 text-center">{card.rarity}</p>
     </motion.div>
   );
 }
