@@ -103,6 +103,12 @@ function CardPreview({ card }) {
   const cfg = TYPE_CONFIG[card.type] || TYPE_CONFIG.Ability;
   const Icon = cfg.icon;
 
+  const stats = (card.type === 'Equipment' || card.type === 'Ability')
+    ? (card.type === 'Equipment'
+        ? [{ label: 'ATK Bonus', val: '+80' }, { label: 'Effect', val: 'Burn' }]
+        : [{ label: 'Power', val: 'High' }, { label: 'Cooldown', val: '8s' }])
+    : null;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -111,14 +117,11 @@ function CardPreview({ card }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="flex flex-col items-center justify-end px-4 py-5 h-full overflow-y-auto"
+        className="relative flex flex-col h-full px-3 py-3"
         style={{ scrollbarWidth: 'none' }}
       >
-        {/* Name */}
-        <h3 className="text-white font-black text-sm text-center leading-tight mb-2">{card.name}</h3>
-
-        {/* Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
+        {/* TOP ROW: rarity (left) + type (right) */}
+        <div className="flex items-start justify-between w-full flex-shrink-0">
           <span className="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
             style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}35` }}>
             {card.rarity}
@@ -128,40 +131,30 @@ function CardPreview({ card }) {
             <Icon className="w-2.5 h-2.5" />
             {card.type}
           </span>
-          {!card.locked
-            ? <span className="flex items-center gap-1 text-[8px] font-bold text-green-400 px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid rgba(74,222,128,0.25)' }}>
-                <Star className="w-2.5 h-2.5 fill-green-400" /> Unlocked
-              </span>
-            : <span className="text-[8px] font-bold text-white/30 px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                🔒 Locked
-              </span>
-          }
         </div>
 
-        {/* Divider */}
-        <div className="w-full h-px mb-3 flex-shrink-0" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
+        {/* MIDDLE: description centered, then divider below it */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <p className="text-white/60 text-[10px] leading-relaxed text-center mb-2 px-1">{card.desc}</p>
+          <div className="w-full h-px" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
+        </div>
 
-        {/* Description */}
-        <p className="text-white/55 text-[10px] leading-relaxed text-center mb-3">{card.desc}</p>
-
-        {/* Stats */}
-        {(card.type === 'Equipment' || card.type === 'Ability') && (
-          <div className="w-full grid grid-cols-2 gap-1.5 mb-3">
-            {(card.type === 'Equipment'
-              ? [{ label: 'ATK Bonus', val: '+80' }, { label: 'Effect', val: 'Burn' }]
-              : [{ label: 'Power', val: 'High' }, { label: 'Cooldown', val: '8s' }]
-            ).map(s => (
-              <div key={s.label} className="rounded-lg px-2.5 py-1.5 flex flex-col"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <span className="text-[7px] text-white/35 uppercase tracking-wider">{s.label}</span>
-                <span className="text-white font-bold text-[10px] mt-0.5">{s.val}</span>
+        {/* BOTTOM ROW: stats bare text left/right + name centered at very bottom */}
+        <div className="flex-shrink-0">
+          {stats && (
+            <div className="flex justify-between w-full mb-2 px-1">
+              <div className="flex flex-col">
+                <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[0].label}</span>
+                <span className="text-white font-bold text-[10px]">{stats[0].val}</span>
               </div>
-            ))}
-          </div>
-        )}
-
+              <div className="flex flex-col items-end">
+                <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[1].label}</span>
+                <span className="text-white font-bold text-[10px]">{stats[1].val}</span>
+              </div>
+            </div>
+          )}
+          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full">{card.name}</h3>
+        </div>
 
       </motion.div>
     </AnimatePresence>
