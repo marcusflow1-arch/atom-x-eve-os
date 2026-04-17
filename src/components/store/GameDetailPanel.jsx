@@ -717,6 +717,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
           >
             Achievements
           </button>
+          <button
+            onClick={() => setActiveTab('trailer')}
+            className={`ml-1 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'trailer' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
+            <Clapperboard className="w-3 h-3" />
+            Trailer
+          </button>
         </div>
 
         {/* Right: Tab switcher (System Core / Tech Specs) */}
@@ -1107,6 +1114,86 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
               {/* Reviews Section */}
               <ReviewSection reviews={reviews} user={user} />
+            </motion.div>
+          ) : activeTab === 'trailer' ? (
+            <motion.div
+              key="trailer"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+              className="flex gap-8"
+            >
+              {/* Trailer panel — 50% width */}
+              <div className="w-1/2 flex flex-col gap-4">
+                <h2 className="text-2xl font-black text-white tracking-tight">{game.title} <span className="text-purple-400 text-lg font-bold">— Trailers</span></h2>
+
+                {/* Main video */}
+                <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/60" style={{ aspectRatio: '16/9' }}>
+                  {videos[0]?.embedUrl ? (
+                    <iframe
+                      src={videos[0].embedUrl}
+                      title={videos[0].title}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <img src={videos[0]?.image || game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <span className="px-2 py-1 bg-purple-600/80 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">Official Trailer</span>
+                  </div>
+                </div>
+
+                {/* Thumbnail strip — videos + screenshots */}
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {[...videos, ...screenshots].map((item, i) => (
+                    <div
+                      key={i}
+                      className="relative flex-shrink-0 w-24 rounded-lg overflow-hidden border border-white/10 hover:border-purple-400/50 cursor-pointer group transition-all"
+                      style={{ aspectRatio: '16/9' }}
+                    >
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {item.type === 'video' && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-white drop-shadow" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                        <p className="text-[8px] text-white/70 truncate">{item.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right side info — game meta */}
+              <div className="flex-1 flex flex-col gap-6 pt-10">
+                <div className="rounded-xl overflow-hidden border border-white/10 w-24">
+                  <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p className="text-white/40 text-xs uppercase tracking-widest">Genre</p>
+                  <p className="text-white font-bold">{game.genre || '—'}</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest mt-3">Release Year</p>
+                  <p className="text-white font-bold">{game.original_year || '2025'}</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest mt-3">Developer</p>
+                  <p className="text-cyan-300 font-bold">{game.developer || 'Studio Unknown'}</p>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  {!owned ? (
+                    <button onClick={handleAddToCart} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm transition-all">
+                      Add to Cart — ${game.price?.toFixed(2) || '0.00'}
+                    </button>
+                  ) : (
+                    <button onClick={handlePlay} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2">
+                      <Play className="w-4 h-4 fill-white" /> Play Now
+                    </button>
+                  )}
+                </div>
+              </div>
             </motion.div>
           ) : (
             <motion.div
