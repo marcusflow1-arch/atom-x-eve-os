@@ -56,7 +56,7 @@ function CardItem({ card, onSelect, isSelected }) {
     <motion.div
       onClick={() => !card.locked && onSelect(card)}
       whileHover={{ scale: card.locked ? 1 : 1.04 }}
-      className={`relative flex flex-col items-center justify-center p-1.5 rounded-lg transition-all w-20 h-24 ${card.locked ? 'cursor-default' : 'cursor-pointer'}`}
+      className={`flex flex-col items-center p-2 rounded-xl transition-all ${card.locked ? 'cursor-default' : 'cursor-pointer'}`}
       style={{
         opacity: card.locked ? 0.45 : 1,
         background: isSelected ? `${rc}18` : 'rgba(255,255,255,0.04)',
@@ -64,37 +64,24 @@ function CardItem({ card, onSelect, isSelected }) {
         boxShadow: isSelected ? `0 0 14px ${rc}22` : 'none',
       }}
     >
-      {/* Type label - top left corner */}
-      <span className="absolute top-1 left-1 text-[6px] font-bold uppercase px-1 py-0.5 rounded"
-        style={{ color: cfg.color, background: `${cfg.color}14` }}>
-        {card.type.substring(0, 3)}
-      </span>
-
-      {/* Rarity badge - top middle */}
-      <span className="absolute top-1 left-1/2 transform -translate-x-1/2 text-[6px] font-black uppercase px-1.5 py-0.5 rounded-full"
-        style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}35` }}>
-        {card.rarity.substring(0, 3)}
-      </span>
-
-      {/* Centered icon with liquid glass effect */}
-      <div className="relative w-12 h-12 rounded-2xl flex items-center justify-center mb-2"
-        style={{
-          background: `linear-gradient(135deg, ${cfg.color}22 0%, ${cfg.color}08 100%)`,
-          backdropFilter: 'blur(12px)',
-          boxShadow: `0 0 20px ${cfg.color}30, inset 0 1px 2px rgba(255,255,255,0.2)`,
-          border: `1px solid ${cfg.color}40`
-        }}>
-        <span className="text-2xl leading-none">{card.icon}</span>
+      {/* Icon circle */}
+      <div className="relative w-10 h-10 rounded-full flex items-center justify-center mb-1"
+        style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}28` }}>
+        <span className="text-xl leading-none">{card.icon}</span>
         {card.locked && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
-            <Lock className="w-4 h-4 text-white/40" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
+            <Lock className="w-3 h-3 text-white/40" />
           </div>
         )}
       </div>
-
-      {/* Name and rarity below */}
-      <p className="text-[7px] font-bold text-white text-center leading-tight truncate w-full px-0.5">{card.name}</p>
-      <p className="text-[6px] text-white/50 text-center">{card.rarity}</p>
+      {/* Rarity badge */}
+      <span className="text-[7px] font-black uppercase tracking-wide px-1.5 py-0.5 rounded-full mb-0.5"
+        style={{ color: rc, background: `${rc}18`, border: `1px solid ${rc}30` }}>
+        {card.rarity}
+      </span>
+      {/* Name */}
+      <p className="text-[9px] font-bold text-white text-center leading-tight truncate w-full px-0.5">{card.name}</p>
+      <p className="text-[8px] text-white/35 text-center">{card.type}</p>
     </motion.div>
   );
 }
@@ -149,33 +136,26 @@ function CardPreview({ card }) {
         {/* MIDDLE: spacer */}
         <div className="flex-1" />
 
-        {/* BOTTOM BLOCK */}
+        {/* BOTTOM BLOCK: desc + divider, then name + stats row */}
         <div className="flex-shrink-0 flex flex-col">
-          {/* Stats row with name/divider/desc centered between corners */}
-          {stats ? (
-            <div className="relative w-full">
-              {/* Left stat */}
-              <div className="absolute left-0 bottom-0 flex flex-col">
+          {/* Description + divider just above the name */}
+          <p className="text-white/60 text-[10px] leading-relaxed text-center mb-1.5 px-1">{card.desc}</p>
+          <div className="w-full h-px mb-1.5" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
+
+          {/* Name centered at bottom */}
+          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full mb-0">{card.name}</h3>
+
+          {/* Stats row — left and right corners, same eye level as name */}
+          {stats && (
+            <div className="flex justify-between w-full mt-1.5">
+              <div className="flex flex-col">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[0].label}</span>
-                <span className="text-white font-bold text-[9px]">{stats[0].val}</span>
+                <span className="text-white font-bold text-[10px]">{stats[0].val}</span>
               </div>
-              {/* Right stat */}
-              <div className="absolute right-0 bottom-0 flex flex-col items-end">
+              <div className="flex flex-col items-end">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[1].label}</span>
-                <span className="text-white font-bold text-[9px]">{stats[1].val}</span>
+                <span className="text-white font-bold text-[10px]">{stats[1].val}</span>
               </div>
-              {/* Centered: desc + divider + name — sized to fit between corners */}
-              <div className="flex flex-col items-center px-8 pb-0">
-                <p className="text-white/50 text-[8px] leading-tight text-center mb-1 line-clamp-1">{card.desc}</p>
-                <div className="w-full h-px mb-1" style={{ background: `linear-gradient(to right, transparent, ${rc}40, transparent)` }} />
-                <h3 className="text-white font-black text-[10px] text-center leading-tight truncate w-full">{card.name}</h3>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <p className="text-white/50 text-[8px] leading-tight text-center mb-1 line-clamp-1">{card.desc}</p>
-              <div className="w-full h-px mb-1" style={{ background: `linear-gradient(to right, transparent, ${rc}40, transparent)` }} />
-              <h3 className="text-white font-black text-[10px] text-center leading-tight truncate w-full">{card.name}</h3>
             </div>
           )}
         </div>
