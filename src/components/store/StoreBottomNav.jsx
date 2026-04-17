@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search } from 'lucide-react';
 
@@ -36,6 +36,26 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
     setSearchValue(e.target.value);
     onSearch?.(e.target.value);
   };
+
+  const handleClose = () => {
+    inputRef.current?.blur();
+    if (libraryActive) onLibraryToggle?.();
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
+    const handleClick = (e) => {
+      if (inputRef.current && !inputRef.current.closest('div').contains(e.target)) {
+        handleClose();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [libraryActive]);
   const tabs = [
     { id: 'store', label: 'Store', icon: Store },
     { id: 'marketplace', label: 'Marketplace', icon: ShoppingBag },
