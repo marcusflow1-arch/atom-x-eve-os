@@ -133,17 +133,21 @@ function CardPreview({ card }) {
           </span>
         </div>
 
-        {/* MIDDLE: description centered, then divider below it */}
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <p className="text-white/60 text-[10px] leading-relaxed text-center mb-2 px-1">{card.desc}</p>
-          <div className="w-full h-px" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
-        </div>
+        {/* MIDDLE: spacer */}
+        <div className="flex-1" />
 
-        {/* BOTTOM ROW: name centered, stats pinned to bottom-left and bottom-right */}
-        <div className="flex-shrink-0 relative">
-          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full mb-1">{card.name}</h3>
+        {/* BOTTOM BLOCK: desc + divider, then name + stats row */}
+        <div className="flex-shrink-0 flex flex-col">
+          {/* Description + divider just above the name */}
+          <p className="text-white/60 text-[10px] leading-relaxed text-center mb-1.5 px-1">{card.desc}</p>
+          <div className="w-full h-px mb-1.5" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
+
+          {/* Name centered at bottom */}
+          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full mb-0">{card.name}</h3>
+
+          {/* Stats row — left and right corners, same eye level as name */}
           {stats && (
-            <div className="flex justify-between w-full pt-2">
+            <div className="flex justify-between w-full mt-1.5">
               <div className="flex flex-col">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[0].label}</span>
                 <span className="text-white font-bold text-[10px]">{stats[0].val}</span>
