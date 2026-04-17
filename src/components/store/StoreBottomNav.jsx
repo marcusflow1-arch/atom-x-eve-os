@@ -86,14 +86,14 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
       <div className="w-px h-5 bg-white/10 mx-1" />
       <div
         ref={containerRef}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
           libraryActive
-            ? 'border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_12px_rgba(34,211,238,0.3)]'
-            : 'border-white/15 bg-white/[0.06]'
+            ? 'border-white/10 bg-transparent shadow-none'
+            : 'border-transparent bg-transparent'
         }`}
         style={{ minWidth: '220px' }}
       >
-        <Search className={`w-4 h-4 flex-shrink-0 ${libraryActive ? 'text-cyan-400' : 'text-white/40'}`} />
+        <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
         <input
           ref={inputRef}
           type="text"
