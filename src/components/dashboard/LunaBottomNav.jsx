@@ -100,6 +100,10 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [currentRow, setCurrentRow] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null); // game whose cards are shown in the row
+  const [showTrailerMode, setShowTrailerMode] = useState(false);
+
+  // Reset trailer mode when game changes
+  useEffect(() => { setShowTrailerMode(false); }, [selectedGame]);
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
@@ -517,7 +521,21 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <div className="w-6 h-6 rounded overflow-hidden border border-white/20 flex-shrink-0">
                       <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
                     </div>
-                    <h3 className="text-white font-bold tracking-widest uppercase text-sm">{selectedGame.displayTitle} — Achievements</h3>
+                    <button
+                      onClick={() => setShowTrailerMode(v => !v)}
+                      className="flex items-center gap-2 px-3 py-1 rounded-lg border transition-all hover:bg-white/10 text-left"
+                      style={showTrailerMode
+                        ? { background: 'rgba(168,85,247,0.15)', borderColor: 'rgba(168,85,247,0.35)', color: '#c084fc' }
+                        : { background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.12)', color: 'white' }
+                      }
+                    >
+                      <span className="font-bold tracking-widest uppercase text-sm">
+                        {selectedGame.displayTitle} — {showTrailerMode ? 'Trailers' : 'Achievements'}
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider opacity-50">
+                        {showTrailerMode ? '← back' : 'trailers →'}
+                      </span>
+                    </button>
                   </>
                 ) : (
                   <>
@@ -572,11 +590,11 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2)',
                 }}
               >
-                {/* LEFT — Game Content Cards */}
-                <GameContentCards selectedGame={selectedGame} />
+                {/* LEFT — Game Content Cards (expands to full width in trailer mode) */}
+                <GameContentCards selectedGame={selectedGame} fullWidth={showTrailerMode} />
 
-                {/* RIGHT — Store Content */}
-                <div className="flex-1 flex flex-col min-h-0">
+                {/* RIGHT — Store Content (hidden in trailer mode) */}
+                <div className={`flex-1 flex flex-col min-h-0 transition-all ${showTrailerMode ? 'hidden' : ''}`}>
                   {/* Top bar: game info + action buttons */}
                   <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }}>
                     <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
