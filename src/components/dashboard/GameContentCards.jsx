@@ -159,10 +159,10 @@ function CardPreview({ card }) {
         {/* Stats */}
         {(card.type === 'Equipment' || card.type === 'Ability') && (
           <div className="w-full grid grid-cols-2 gap-1.5 mb-3">
-            {card.type === 'Equipment'
+            {(card.type === 'Equipment'
               ? [{ label: 'ATK Bonus', val: '+80' }, { label: 'Effect', val: 'Burn' }]
               : [{ label: 'Power', val: 'High' }, { label: 'Cooldown', val: '8s' }]
-            }.map(s => (
+            ).map(s => (
               <div key={s.label} className="rounded-lg px-2.5 py-1.5 flex flex-col"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{s.label}</span>
