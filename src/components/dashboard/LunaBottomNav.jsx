@@ -339,13 +339,42 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
               {/* ── MAIN BODY: Achievements left | Content right ── */}
               <div className="flex flex-1 min-h-0 overflow-hidden">
 
-                {/* LEFT — Achievements */}
+                {/* LEFT — Achievements / Trailers */}
                 <div className="w-[48%] flex flex-col border-r border-white/8 min-h-0">
                   <div className="flex items-center gap-2 px-5 py-3 border-b border-white/8 flex-shrink-0">
-                    <Trophy className="w-4 h-4 text-yellow-400" />
-                    <span className="text-white font-bold text-xs uppercase tracking-widest">Achievements</span>
-                    <span className="ml-auto text-white/30 text-xs">{MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length}/{MOCK_ACHIEVEMENTS.length} Unlocked</span>
+                    {showTrailerMode ? <Play className="w-4 h-4 text-purple-400" /> : <Trophy className="w-4 h-4 text-yellow-400" />}
+                    <button
+                      onClick={() => setShowTrailerMode(v => !v)}
+                      className="font-bold text-xs uppercase tracking-widest px-2.5 py-1 rounded-full border transition-all"
+                      style={showTrailerMode
+                        ? { background: 'rgba(168,85,247,0.15)', borderColor: 'rgba(168,85,247,0.5)', color: '#c084fc' }
+                        : { background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.25)', color: 'white' }
+                      }
+                    >
+                      {showTrailerMode ? 'Trailers' : 'Achievements'}
+                    </button>
+                    {!showTrailerMode && <span className="ml-auto text-white/30 text-xs">{MOCK_ACHIEVEMENTS.filter(a => a.unlocked).length}/{MOCK_ACHIEVEMENTS.length} Unlocked</span>}
                   </div>
+                  {showTrailerMode ? (
+                    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3" style={{ scrollbarWidth: 'none' }}>
+                      {[
+                        { title: 'Official Launch Trailer', duration: '2:34', thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400' },
+                        { title: 'Gameplay Deep Dive', duration: '8:12', thumb: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400' },
+                        { title: 'Season 4 Reveal', duration: '1:55', thumb: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400' },
+                      ].map((vid) => (
+                        <div key={vid.title} className="flex items-center gap-3 rounded-xl p-2 border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] transition-all cursor-pointer group">
+                          <div className="relative w-20 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                            <img src={vid.thumb} alt={vid.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-all">
+                              <Play className="w-4 h-4 text-white fill-white" />
+                            </div>
+                            <span className="absolute bottom-1 right-1 text-[8px] font-bold text-white bg-black/70 px-1 rounded">{vid.duration}</span>
+                          </div>
+                          <p className="text-white text-xs font-semibold truncate">{vid.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
                   <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-2.5 content-start" style={{ scrollbarWidth: 'none' }}>
                     {MOCK_ACHIEVEMENTS.map((ach) => {
                       const style = RARITY_STYLES[ach.rarity];
@@ -375,6 +404,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                       );
                     })}
                   </div>
+                  )}
                 </div>
 
                 {/* RIGHT — Content: DLC + News */}
@@ -521,21 +551,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <div className="w-6 h-6 rounded overflow-hidden border border-white/20 flex-shrink-0">
                       <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
                     </div>
-                    <button
-                      onClick={() => setShowTrailerMode(v => !v)}
-                      className="flex items-center gap-2 px-3 py-1 rounded-lg border transition-all hover:bg-white/10 text-left"
-                      style={showTrailerMode
-                        ? { background: 'rgba(168,85,247,0.15)', borderColor: 'rgba(168,85,247,0.35)', color: '#c084fc' }
-                        : { background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.12)', color: 'white' }
-                      }
-                    >
-                      <span className="font-bold tracking-widest uppercase text-sm">
-                        {selectedGame.displayTitle} — {showTrailerMode ? 'Trailers' : 'Achievements'}
-                      </span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider opacity-50">
-                        {showTrailerMode ? '← back' : 'trailers →'}
-                      </span>
-                    </button>
+                    <span className="font-bold tracking-widest uppercase text-sm text-white">
+                      {selectedGame.displayTitle}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -590,11 +608,11 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2)',
                 }}
               >
-                {/* LEFT — Game Content Cards (expands to full width in trailer mode) */}
-                <GameContentCards selectedGame={selectedGame} fullWidth={showTrailerMode} />
+                {/* LEFT — Game Content Cards */}
+                <GameContentCards selectedGame={selectedGame} />
 
-                {/* RIGHT — Store Content (hidden in trailer mode) */}
-                <div className={`flex-1 flex flex-col min-h-0 transition-all ${showTrailerMode ? 'hidden' : ''}`}>
+                {/* RIGHT — Store Content (never touched) */}
+                <div className="flex-1 flex flex-col min-h-0">
                   {/* Top bar: game info + action buttons */}
                   <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }}>
                     <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">

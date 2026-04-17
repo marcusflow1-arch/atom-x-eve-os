@@ -166,7 +166,7 @@ function CardPreview({ card }) {
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-export default function GameContentCards({ selectedGame, fullWidth = false }) {
+export default function GameContentCards({ selectedGame }) {
   const [activeFilter, setActiveFilter] = useState('All');
   const [selectedCard, setSelectedCard] = useState(null);
 
@@ -174,7 +174,7 @@ export default function GameContentCards({ selectedGame, fullWidth = false }) {
 
   return (
     <div
-      className={`${fullWidth ? 'w-full' : 'w-[52%]'} flex flex-col border-r border-white/8 min-h-0 overflow-hidden`}
+      className="w-[52%] flex flex-col border-r border-white/8 min-h-0 overflow-hidden"
       style={{ background: 'rgba(255,255,255,0.025)', backdropFilter: 'blur(20px)' }}
     >
       {/* Filter pills */}
