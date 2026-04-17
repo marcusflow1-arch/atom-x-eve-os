@@ -429,7 +429,27 @@ export default function Store() {
     return (
         <PageErrorBoundary pageName="Store">
           <WishlistProvider>
-            <GlassPageFrame bottomContent={
+            <GlassPageFrame
+              topContent={
+                <div className="flex items-center justify-between w-full gap-4">
+                  <div className="flex items-center gap-6">
+                    <span className="text-lg font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] border border-white/10 rounded-lg">
+                      <DollarSign className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="text-sm font-semibold text-white">5,240 GP</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
+                    <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
+                    <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
+                    <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
+                    <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
+                  </div>
+                  <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                </div>
+              }
+              bottomContent={
               <StoreBottomNav
                 activeTab={activeStoreTab}
                 onTabChange={handleStoreTabChange}
@@ -500,35 +520,6 @@ export default function Store() {
 
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
-
-                        {/* Top Header — liquid glass silver */}
-                         <div className="h-16 flex items-center justify-between px-6 flex-shrink-0" style={{
-                             background: 'linear-gradient(135deg, rgba(160,168,180,0.14) 0%, rgba(120,130,145,0.09) 100%)',
-                             backdropFilter: 'blur(28px) saturate(180%)',
-                             WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-                             borderBottom: '1px solid rgba(200,210,225,0.15)',
-                             boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.10)'
-                         }}>
-                             <div className="flex items-center gap-8">
-                                 <span className="text-xl font-bold tracking-wider text-white/90">ATOM×EVE Store</span>
-
-                                 {/* Balance Display */}
-                                 <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.02] border border-white/10 rounded-lg">
-                                     <DollarSign className="w-4 h-4 text-cyan-400" />
-                                     <span className="text-sm font-semibold text-white">5,240 GP</span>
-                                 </div>
-                             </div>
-
-                             <div className="flex items-center gap-2">
-                                 <button className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/15 border-white/25 text-white">Store</button>
-                                 <button onClick={() => navigate(createPageUrl('Clan'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Clan</button>
-                                 <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
-                                 <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
-                                 <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
-                             </div>
-
-                             <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
-                         </div>
 
                         {/* Main Content */}
                         <div className="flex-1 overflow-hidden">
