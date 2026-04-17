@@ -811,7 +811,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 {/* Right: Game Info Sidebar */}
                  <div className="flex-1 lg:max-w-md flex flex-col gap-6">
                   {/* Info Box */}
-                  <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
+                  <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
                     {/* Header Image (Capsule) - Reduced to 30% */}
                     <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
                       <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
@@ -894,10 +894,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => {
                         const isExpanded = expandedDLC === dlc.id;
                         return (
-                          <div key={dlc.id} className="rounded-lg border border-white/5 overflow-hidden transition-all">
+                          <div key={dlc.id} className="rounded-lg border border-transparent overflow-hidden transition-all">
                             {/* Row Header - clickable */}
                             <div
-                              className="group flex items-center gap-4 p-3 bg-black/20 hover:bg-white/5 cursor-pointer transition-colors"
+                              className="group flex items-center gap-4 p-3 bg-transparent hover:bg-white/5 cursor-pointer transition-colors"
                               onClick={() => setExpandedDLC(isExpanded ? null : dlc.id)}
                             >
                               <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
@@ -937,7 +937,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                                   transition={{ duration: 0.25 }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="px-4 py-4 bg-black/30 border-t border-white/5 space-y-4">
+                                  <div className="px-4 py-4 bg-transparent border-t border-white/5 space-y-4">
                                     <p className="text-white/60 text-sm leading-relaxed">{dlc.description}</p>
                                     
                                     {/* What's Included */}
