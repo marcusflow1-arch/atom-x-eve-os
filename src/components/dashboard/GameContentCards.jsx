@@ -111,19 +111,9 @@ function CardPreview({ card }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
-        className="flex flex-col items-center px-4 py-5 h-full overflow-y-auto"
+        className="flex flex-col items-center justify-end px-4 py-5 h-full overflow-y-auto"
         style={{ scrollbarWidth: 'none' }}
       >
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 flex-shrink-0"
-          style={{
-            background: `linear-gradient(135deg, ${rc}22, ${rc}0a)`,
-            border: `1px solid ${rc}40`,
-            boxShadow: `0 0 30px ${rc}28`,
-          }}>
-          <span className="text-4xl leading-none">{card.icon}</span>
-        </div>
-
         {/* Name */}
         <h3 className="text-white font-black text-sm text-center leading-tight mb-2">{card.name}</h3>
 
@@ -172,19 +162,7 @@ function CardPreview({ card }) {
           </div>
         )}
 
-        {/* CTA */}
-        <button
-          className="w-full py-2 rounded-xl font-black text-[10px] uppercase tracking-wider mt-auto flex-shrink-0"
-          style={{
-            background: card.locked ? 'rgba(255,255,255,0.05)' : `linear-gradient(135deg, ${rc}cc, ${rc}88)`,
-            color: card.locked ? 'rgba(255,255,255,0.25)' : '#000',
-            border: `1px solid ${rc}40`,
-            boxShadow: card.locked ? 'none' : `0 0 14px ${rc}35`,
-            cursor: card.locked ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {card.locked ? '🔒 Achievement Required' : `Equip ${card.type}`}
-        </button>
+
       </motion.div>
     </AnimatePresence>
   );
