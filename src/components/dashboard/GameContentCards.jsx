@@ -136,26 +136,33 @@ function CardPreview({ card }) {
         {/* MIDDLE: spacer */}
         <div className="flex-1" />
 
-        {/* BOTTOM BLOCK: desc + divider, then name + stats row */}
+        {/* BOTTOM BLOCK */}
         <div className="flex-shrink-0 flex flex-col">
-          {/* Description + divider just above the name */}
-          <p className="text-white/60 text-[10px] leading-relaxed text-center mb-1.5 px-1">{card.desc}</p>
-          <div className="w-full h-px mb-1.5" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
-
-          {/* Name centered at bottom */}
-          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full mb-0">{card.name}</h3>
-
-          {/* Stats row — left and right corners, same eye level as name */}
-          {stats && (
-            <div className="flex justify-between w-full mt-1.5">
-              <div className="flex flex-col">
+          {/* Stats row with name/divider/desc centered between corners */}
+          {stats ? (
+            <div className="relative w-full">
+              {/* Left stat */}
+              <div className="absolute left-0 bottom-0 flex flex-col">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[0].label}</span>
-                <span className="text-white font-bold text-[10px]">{stats[0].val}</span>
+                <span className="text-white font-bold text-[9px]">{stats[0].val}</span>
               </div>
-              <div className="flex flex-col items-end">
+              {/* Right stat */}
+              <div className="absolute right-0 bottom-0 flex flex-col items-end">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[1].label}</span>
-                <span className="text-white font-bold text-[10px]">{stats[1].val}</span>
+                <span className="text-white font-bold text-[9px]">{stats[1].val}</span>
               </div>
+              {/* Centered: desc + divider + name — sized to fit between corners */}
+              <div className="flex flex-col items-center px-8 pb-0">
+                <p className="text-white/50 text-[8px] leading-tight text-center mb-1 line-clamp-1">{card.desc}</p>
+                <div className="w-full h-px mb-1" style={{ background: `linear-gradient(to right, transparent, ${rc}40, transparent)` }} />
+                <h3 className="text-white font-black text-[10px] text-center leading-tight truncate w-full">{card.name}</h3>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center">
+              <p className="text-white/50 text-[8px] leading-tight text-center mb-1 line-clamp-1">{card.desc}</p>
+              <div className="w-full h-px mb-1" style={{ background: `linear-gradient(to right, transparent, ${rc}40, transparent)` }} />
+              <h3 className="text-white font-black text-[10px] text-center leading-tight truncate w-full">{card.name}</h3>
             </div>
           )}
         </div>
