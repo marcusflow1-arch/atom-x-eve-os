@@ -7,6 +7,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
+  const containerRef = useRef(null);
 
   const handleMic = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -45,7 +46,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
     const handleClick = (e) => {
-      if (inputRef.current && !inputRef.current.closest('div').contains(e.target)) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
         handleClose();
       }
     };
@@ -93,6 +94,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
       {/* Search bar */}
       <div className="w-px h-5 bg-white/10 mx-1" />
       <div
+        ref={containerRef}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md transition-all ${
           libraryActive
             ? 'border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_12px_rgba(34,211,238,0.3)]'
