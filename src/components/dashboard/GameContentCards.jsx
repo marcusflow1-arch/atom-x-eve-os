@@ -139,10 +139,11 @@ function CardPreview({ card }) {
           <div className="w-full h-px" style={{ background: `linear-gradient(to right, transparent, ${rc}35, transparent)` }} />
         </div>
 
-        {/* BOTTOM ROW: stats bare text left/right + name centered at very bottom */}
-        <div className="flex-shrink-0">
+        {/* BOTTOM ROW: name centered, stats pinned to bottom-left and bottom-right */}
+        <div className="flex-shrink-0 relative">
+          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full mb-1">{card.name}</h3>
           {stats && (
-            <div className="flex justify-between w-full mb-2 px-1">
+            <div className="flex justify-between w-full pt-2">
               <div className="flex flex-col">
                 <span className="text-[7px] text-white/35 uppercase tracking-wider">{stats[0].label}</span>
                 <span className="text-white font-bold text-[10px]">{stats[0].val}</span>
@@ -153,7 +154,6 @@ function CardPreview({ card }) {
               </div>
             </div>
           )}
-          <h3 className="text-white font-black text-[11px] text-center leading-tight w-full">{card.name}</h3>
         </div>
 
       </motion.div>
