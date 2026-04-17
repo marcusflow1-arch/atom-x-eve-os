@@ -48,9 +48,6 @@ export default function PlayerInteractionsPanel({ onGameSelect }) {
   const tabs = [
     { id: 'recommended', label: 'Recommended', icon: TrendingUp },
     { id: 'new', label: 'New', icon: Zap },
-    { id: 'hidden_gems', label: 'Hidden Gems', icon: Star },
-    { id: 'trending', label: 'Trending', icon: Flame },
-    { id: 'top_rated', label: 'Top-Rated', icon: Star },
   ];
 
   const games = GAME_RECOMMENDATIONS[activeTab];
