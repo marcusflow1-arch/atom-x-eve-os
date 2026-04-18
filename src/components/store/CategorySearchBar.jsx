@@ -80,6 +80,8 @@ export default function CategorySearchBar({ activeCategoryOverlay, games, onGame
               backdropFilter: 'blur(40px) saturate(180%)',
               border: '1px solid rgba(255,255,255,0.12)',
               boxShadow: '0 20px 60px rgba(0,0,0,0.7)',
+              zIndex: 99999,
+              position: 'absolute',
             }}
           >
             {/* Search input */}
