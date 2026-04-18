@@ -4,7 +4,8 @@ import {
   Gamepad2, Sparkles, Layers, Users, Search, ChevronLeft,
   ArrowRight, Code2, BookOpen, Twitter, Globe, Youtube,
   Clock, Zap, Star, TrendingUp, ShoppingCart, Info,
-  Newspaper, CalendarDays, MessageSquare, Github, CheckCircle2
+  Newspaper, CalendarDays, MessageSquare, Github, CheckCircle2,
+  Play, Image as ImageIcon, FileText, Radio, Upload, X, Grid3x3, List, Plus
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DEV_SPOTLIGHT_DATA } from '@/components/dashboard/devSpotlightData';
@@ -361,6 +362,211 @@ function GamesPanel({ dev, selectedGame, onSelectGame }) {
   );
 }
 
+// ─── Studio Media Hub Content Component ────────────────────────────────────
+function MediaHub({ dev }) {
+  const [activeSection, setActiveSection] = useState('media'); // 'media' | 'todo' | 'studio'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+
+  // Mock media content (developers would upload these)
+  const studioMedia = {
+    screenshots: [
+      { id: 1, url: 'https://images.unsplash.com/photo-1538481143235-d20a8f3d3f0b?w=500&h=300&fit=crop', title: 'New Forest Biome', type: 'screenshot', date: '2 days ago' },
+      { id: 2, url: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=500&h=300&fit=crop', title: 'Combat Update', type: 'screenshot', date: '4 days ago' },
+      { id: 3, url: 'https://images.unsplash.com/photo-1511393877671-d01a34e1e897?w=500&h=300&fit=crop', title: 'UI Redesign', type: 'artwork', date: '1 week ago' },
+    ],
+    videos: [
+      { id: 1, title: 'Season 4 Reveal Trailer', duration: '2:34', views: '1.8M', thumbnail: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=600&h=340&fit=crop' },
+      { id: 2, title: 'Behind-the-Scenes Studio Tour', duration: '8:45', views: '450K', thumbnail: 'https://images.unsplash.com/photo-1559027615-cd2628902d4a?w=600&h=340&fit=crop' },
+    ],
+    todos: [
+      { id: 1, task: 'Finalize Season 4 boss arena VFX', status: 'in-progress', priority: 'high', dueDate: 'Apr 25' },
+      { id: 2, task: 'Voice-over recording sessions', status: 'in-progress', priority: 'high', dueDate: 'Apr 28' },
+      { id: 3, task: 'Card balance pass for ranked', status: 'pending', priority: 'medium', dueDate: 'May 5' },
+      { id: 4, task: 'Community cosmetic voting', status: 'pending', priority: 'low', dueDate: 'May 15' },
+    ],
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Sub-navigation tabs */}
+      <div className="flex-shrink-0 border-b border-white/5 px-5 py-3 flex items-center gap-4"
+        style={{ background: 'rgba(8,12,18,0.6)', backdropFilter: 'blur(12px)' }}>
+        <div className="flex items-center gap-2">
+          {[
+            { id: 'media', label: 'Studio Media', icon: ImageIcon },
+            { id: 'todo', label: 'Dev To-Do', icon: FileText },
+            { id: 'studio', label: 'Live Studio', icon: Radio },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveSection(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                activeSection === tab.id
+                  ? 'bg-white/10 text-white border-white/20'
+                  : 'text-white/50 border-transparent hover:text-white/80'
+              }`}>
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* View mode toggle (for media) */}
+        {activeSection === 'media' && (
+          <div className="ml-auto flex items-center gap-1 p-1 rounded-lg border border-white/10 bg-white/5">
+            <button onClick={() => setViewMode('grid')} className={`p-1 rounded transition-all ${viewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/30'}`}>
+              <Grid3x3 className="w-4 h-4" />
+            </button>
+            <button onClick={() => setViewMode('list')} className={`p-1 rounded transition-all ${viewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/30'}`}>
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+        <AnimatePresence mode="wait">
+          {activeSection === 'media' && (
+            <motion.div key="media" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5 space-y-6">
+              {/* Upload area */}
+              <div className="p-6 rounded-xl border-2 border-dashed border-cyan-400/30 bg-cyan-400/5 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-cyan-400/50 hover:bg-cyan-400/8 transition-all">
+                <Upload className="w-8 h-8 text-cyan-400/50" />
+                <div className="text-center">
+                  <p className="text-white font-semibold text-sm">Drag to upload or click</p>
+                  <p className="text-white/40 text-xs mt-1">Screenshots, artwork, videos, concept art</p>
+                </div>
+              </div>
+
+              {/* Screenshots & Artwork */}
+              <div>
+                <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-3 flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5" />Studio Media</p>
+                <div className={viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 gap-3' : 'space-y-2'}>
+                  {studioMedia.screenshots.map((item, i) => (
+                    <motion.div key={item.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                      className={`relative rounded-lg overflow-hidden border border-white/8 hover:border-white/15 group cursor-pointer transition-all ${viewMode === 'list' ? 'flex items-center gap-3 p-3 bg-white/3' : 'aspect-video bg-white/3'}`}>
+                      <img src={item.url} alt={item.title} className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${viewMode === 'list' ? 'w-20 h-12 rounded' : ''}`} />
+                      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent ${viewMode === 'list' ? 'relative w-auto h-auto' : ''}`} />
+                      <div className={`absolute bottom-2 left-2 right-2 z-10 ${viewMode === 'list' ? 'absolute relative flex-1' : ''}`}>
+                        <p className="text-white text-xs font-semibold truncate">{item.title}</p>
+                        <p className="text-white/40 text-[10px] mt-0.5">{item.date}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Videos */}
+              <div>
+                <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-3 flex items-center gap-1.5"><Youtube className="w-3.5 h-3.5" />Videos & Trailers</p>
+                <div className="space-y-3">
+                  {studioMedia.videos.map((v, i) => (
+                    <motion.div key={v.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
+                      className="relative rounded-lg overflow-hidden border border-white/8 hover:border-white/15 aspect-video group cursor-pointer">
+                      <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20" />
+                      <button className="absolute inset-0 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-full bg-white/20 border border-white/30 flex items-center justify-center group-hover:bg-white/30 transition-all">
+                          <Play className="w-5 h-5 text-white ml-0.5 fill-white" />
+                        </div>
+                      </button>
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <p className="text-white text-xs font-semibold truncate">{v.title}</p>
+                        <div className="flex items-center justify-between text-white/50 text-[10px] mt-1">
+                          <span>{v.duration}</span>
+                          <span>{v.views} views</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeSection === 'todo' && (
+            <motion.div key="todo" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5 space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5"><FileText className="w-3.5 h-3.5" />Development To-Do List</p>
+                <button className="w-7 h-7 rounded-lg bg-cyan-400/15 border border-cyan-400/30 flex items-center justify-center hover:bg-cyan-400/25 transition-all text-cyan-400">
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {studioMedia.todos.map((todo, i) => (
+                  <motion.div key={todo.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                    className="p-3 rounded-lg border border-white/6 bg-white/3 hover:bg-white/4 group transition-all">
+                    <div className="flex items-start gap-3">
+                      <input type="checkbox" className="mt-0.5 w-4 h-4 rounded border-white/20 accent-cyan-400 cursor-pointer" />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-semibold ${todo.status === 'in-progress' ? 'text-white' : 'text-white/60'}`}>{todo.task}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                            todo.priority === 'high' ? 'bg-red-500/20 text-red-300' :
+                            todo.priority === 'medium' ? 'bg-amber-500/20 text-amber-300' :
+                            'bg-white/8 text-white/50'
+                          }`}>{todo.priority}</span>
+                          <span className="text-white/30 text-[9px]">Due: {todo.dueDate}</span>
+                          {todo.status === 'in-progress' && <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-300">In Progress</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeSection === 'studio' && (
+            <motion.div key="studio" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Radio className="w-4 h-4 text-red-500 animate-pulse" />
+                <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest">Live Studio Broadcast</p>
+              </div>
+
+              {/* Live stream placeholder */}
+              <div className="relative rounded-xl overflow-hidden aspect-video bg-black/40 border border-white/8 flex items-center justify-center group cursor-pointer">
+                <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 via-transparent to-black/40" />
+                <img src="https://images.unsplash.com/photo-1559027615-cd2628902d4a?w=800&h=450&fit=crop" alt="Studio" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-70 transition-opacity" />
+                <div className="relative z-10 text-center">
+                  <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center mb-3 mx-auto">
+                    <Radio className="w-6 h-6 text-red-500" />
+                  </div>
+                  <p className="text-white font-bold text-sm">Live Now!</p>
+                  <p className="text-white/60 text-xs mt-1">Studio walkthrough with dev team</p>
+                  <p className="text-red-400 text-[10px] mt-2 flex items-center justify-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    237 watching
+                  </p>
+                </div>
+              </div>
+
+              {/* Live chat area */}
+              <div className="p-4 rounded-lg border border-white/6 bg-white/3">
+                <p className="text-white/50 text-xs font-semibold mb-3">Stream Chat</p>
+                <div className="space-y-2 h-48 overflow-y-auto mb-3" style={{ scrollbarWidth: 'thin' }}>
+                  {[
+                    { user: 'GameDev_Fan', msg: 'Amazing office setup! 🔥' },
+                    { user: 'Artist_Pro', msg: 'Those character rigs look incredible' },
+                    { user: 'Community_Lead', msg: 'Can't wait for Season 4!' },
+                  ].map((chat, i) => (
+                    <div key={i} className="text-[11px]">
+                      <span className="text-cyan-400 font-semibold">{chat.user}:</span> <span className="text-white/60">{chat.msg}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input type="text" placeholder="Send a message..." className="flex-1 bg-white/5 border border-white/10 rounded px-3 py-2 text-[11px] text-white placeholder:text-white/20 focus:outline-none focus:border-white/20" />
+                  <button className="px-3 py-2 rounded bg-cyan-500 text-white text-[11px] font-semibold hover:bg-cyan-600 transition-all">Send</button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 // ─── Right panel: Developer Insight sub-page ───────────────────────────────
 function InsightPanel({ dev }) {
   const insight = DEV_INSIGHTS[dev.id];
@@ -371,11 +577,11 @@ function InsightPanel({ dev }) {
   );
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-      {/* Hero */}
-      <div className="flex-shrink-0 p-6 border-b border-white/5">
+    <div className="h-full flex flex-col">
+      {/* Hero section */}
+      <div className="flex-shrink-0 p-5 border-b border-white/5">
         <div className="flex items-start gap-4">
-          <img src={dev.logo} alt={dev.name} className="w-16 h-16 rounded-2xl border border-white/15 shadow-xl flex-shrink-0" />
+          <img src={dev.logo} alt={dev.name} className="w-14 h-14 rounded-xl border border-white/15 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className={`flex items-center gap-1.5 text-[10px] font-bold ${insight.statusColor}`}>
@@ -383,67 +589,20 @@ function InsightPanel({ dev }) {
                 {insight.status}
               </span>
             </div>
-            <h2 className="text-white font-bold text-lg leading-snug">{dev.name}</h2>
-            <p className="text-white/40 text-xs mt-1 leading-relaxed">{insight.headline}</p>
-            {/* Socials */}
-            <div className="flex items-center gap-2 mt-3">
-              {insight.socials.twitter && <a href={insight.socials.twitter} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Twitter className="w-3 h-3 text-white/50" /></a>}
-              {insight.socials.youtube && <a href={insight.socials.youtube} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Youtube className="w-3 h-3 text-white/50" /></a>}
-              {insight.socials.github && <a href={insight.socials.github} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Github className="w-3 h-3 text-white/50" /></a>}
-              {insight.socials.website && <a href={insight.socials.website} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Globe className="w-3 h-3 text-white/50" /></a>}
+            <h2 className="text-white font-bold text-sm leading-snug">{dev.name}</h2>
+            <p className="text-white/40 text-[11px] mt-0.5 leading-relaxed">{insight.headline}</p>
+            <div className="flex items-center gap-1.5 mt-2">
+              {insight.socials.twitter && <a href={insight.socials.twitter} className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Twitter className="w-2.5 h-2.5 text-white/50" /></a>}
+              {insight.socials.youtube && <a href={insight.socials.youtube} className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Youtube className="w-2.5 h-2.5 text-white/50" /></a>}
+              {insight.socials.github && <a href={insight.socials.github} className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Github className="w-2.5 h-2.5 text-white/50" /></a>}
+              {insight.socials.website && <a href={insight.socials.website} className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 border border-white/8 flex items-center justify-center transition-all"><Globe className="w-2.5 h-2.5 text-white/50" /></a>}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 p-5 space-y-5">
-        {/* Focus tags */}
-        <div>
-          <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-2">Current Focus</p>
-          <div className="flex flex-wrap gap-2">
-            {insight.focus.map(f => (
-              <span key={f} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-400/8 border border-cyan-400/15 text-cyan-300/70 text-[10px] font-semibold">
-                <Zap className="w-2.5 h-2.5" />{f}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Dev log */}
-        <div>
-          <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5"><Newspaper className="w-3 h-3" />Dev Log</p>
-          <div className="p-4 rounded-xl border border-white/6 bg-white/3">
-            <p className="text-white/60 text-xs leading-relaxed">{insight.devlog}</p>
-          </div>
-        </div>
-
-        {/* Latest updates */}
-        <div>
-          <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5"><MessageSquare className="w-3 h-3" />Latest Updates</p>
-          <div className="space-y-2">
-            {insight.updates.map((u, i) => (
-              <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                className="flex items-start gap-3 p-3 rounded-xl border border-white/5 bg-white/3">
-                <span className="text-white/20 text-[9px] font-semibold w-10 shrink-0 pt-0.5">{u.date}</span>
-                <p className="text-white/60 text-xs leading-relaxed flex-1">{u.text}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming milestones */}
-        <div>
-          <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5"><TrendingUp className="w-3 h-3" />Upcoming Milestones</p>
-          <div className="space-y-2">
-            {insight.upcomingMilestones.map((m, i) => (
-              <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-white/5 bg-white/3">
-                <CheckCircle2 className="w-3.5 h-3.5 text-white/15 flex-shrink-0" />
-                <p className="text-white/55 text-xs">{m}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Media Hub */}
+      <MediaHub dev={dev} />
     </div>
   );
 }
