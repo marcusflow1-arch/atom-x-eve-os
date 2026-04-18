@@ -854,72 +854,87 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right: Game Info Sidebar */}
-                 <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                  {/* Info Box */}
-                  <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
-                    {/* Header Image (Capsule) - Reduced to 30% */}
-                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
-                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
+                   <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                    {/* Top: Game Info Box (30%) */}
+                    <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
+                      {/* Header Image (Capsule) */}
+                      <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                        <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                      </div>
+
+                      {/* Price + Cart */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {!owned ? (
+                          <>
+                            <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
+                              ${game.price?.toFixed(2) || '0.00'}
+                            </div>
+                            <button
+                              onClick={handleAddToCart}
+                              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                            >
+                              Add to Cart
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={handlePlay}
+                            className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                          >
+                            <Play className="w-4 h-4 fill-white" />
+                            Play Now
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Metadata Table */}
+                      <div className="text-xs space-y-2 border-t border-white/10 pt-4">
+                        <div className="flex gap-2">
+                          <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
+                          <span className="text-white/80">{game.original_year || '2025'}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
+                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
+                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                            {tag}
+                          </span>
+                        ))}
+                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                      </div>
                     </div>
 
-                    {/* Price + Cart */}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {!owned ? (
-                        <>
-                          <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
-                            ${game.price?.toFixed(2) || '0.00'}
-                          </div>
-                          <button
-                            onClick={handleAddToCart}
-                            className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                          >
-                            Add to Cart
-                          </button>
-                        </>
+                    {/* Trailer/3D Viewer Box - Trailer content */}
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
+                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                          src={selectedMediaItem.embedUrl} 
+                          title={selectedMediaItem.title}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
                       ) : (
-                        <button
-                          onClick={handlePlay}
-                          className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                        >
-                          <Play className="w-4 h-4 fill-white" />
-                          Play Now
-                        </button>
+                        <img 
+                          src={selectedMediaItem?.image || game.cover_image}
+                          alt="Trailer"
+                          className="w-full h-full object-cover"
+                        />
                       )}
                     </div>
-
-                    {/* Short Description */}
-                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
-                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
-                    </p>
-
-                    {/* Metadata Table */}
-                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                        <span className="text-white/80">{game.original_year || '2025'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                          {tag}
-                        </span>
-                      ))}
-                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
-                    </div>
                   </div>
-                </div>
               </div>
 
               {/* Live Stream Box */}
