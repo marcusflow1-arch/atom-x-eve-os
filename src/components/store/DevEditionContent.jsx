@@ -177,11 +177,11 @@ function GamesPanel({ dev, selectedGame, onSelectGame }) {
               </div>
             </div>
 
-            {/* Cards grid */}
-            <div className="flex-1 overflow-y-auto p-5" style={{ scrollbarWidth: 'none' }}>
-              <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-4">Trading Cards</p>
+            {/* Cards grid — fixed height, not scrollable */}
+            <div className="flex-shrink-0 p-4 border-b border-white/5">
+              <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-3">Trading Cards</p>
               {selectedGame.cards.length > 0 ? (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9 gap-2.5">
                   {selectedGame.cards.map((card, i) => {
                     const rc = RARITY_COLORS[card.rarity] || RARITY_COLORS.Common;
                     return (
@@ -205,16 +205,26 @@ function GamesPanel({ dev, selectedGame, onSelectGame }) {
                   })}
                 </div>
               ) : (
-                <div className="h-40 flex flex-col items-center justify-center text-slate-600">
-                  <Layers className="w-10 h-10 mb-2 opacity-20" />
+                <div className="h-24 flex flex-col items-center justify-center text-slate-600">
+                  <Layers className="w-8 h-8 mb-1.5 opacity-20" />
                   <p className="text-xs">No cards yet</p>
                 </div>
               )}
+            </div>
 
-              {/* Also working on section */}
-              <div className="mt-8 pt-5 border-t border-white/5">
-                <p className="text-white/30 text-[10px] font-semibold uppercase tracking-widest mb-3">Also In Development</p>
-                <div className="grid grid-cols-2 gap-3">
+            {/* Also In Development — scrollable feed */}
+            <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
+              {/* Section header */}
+              <div className="sticky top-0 z-10 px-5 py-2.5 flex items-center gap-2 border-b border-white/5"
+                style={{ background: 'rgba(8,12,18,0.85)', backdropFilter: 'blur(12px)' }}>
+                <Zap className="w-3.5 h-3.5 text-amber-400/70" />
+                <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Also In Development</p>
+                <span className="ml-auto text-white/15 text-[9px]">Scroll to explore</span>
+              </div>
+
+              <div className="p-5 space-y-5">
+                {/* Quick stats row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {[
                     { label: 'Next Content Drop', value: 'Season 4 Cards', icon: Sparkles, color: 'text-cyan-400' },
                     { label: 'Current Build', value: 'v2.4.1 Beta', icon: Code2, color: 'text-purple-400' },
@@ -229,6 +239,81 @@ function GamesPanel({ dev, selectedGame, onSelectGame }) {
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* News feed */}
+                <div>
+                  <p className="text-white/25 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <Newspaper className="w-3 h-3" />News & Updates
+                  </p>
+                  <div className="space-y-3">
+                    {[
+                      { tag: 'Patch Notes', date: 'Apr 15', title: 'Update 2.4 — Performance & Balance', body: 'Reduced load times by 40%, rebalanced 12 card rarities based on community tier-list feedback. Three new environmental events added to ranked queue.', color: 'border-l-cyan-400/50' },
+                      { tag: 'Dev Blog', date: 'Apr 10', title: 'Designing Season 4: Behind the Scenes', body: 'Our lead designer walks through the creative process behind Season 4\'s card set — from concept art to final stats. Includes early sketches and scrapped ideas.', color: 'border-l-purple-400/50' },
+                      { tag: 'Community', date: 'Apr 6', title: 'Card Design Contest — Winner Announced', body: 'Over 3,400 submissions were received. The winning "Ashwalker" card design will be featured as a limited Rare drop in the Season 4 launch pack.', color: 'border-l-amber-400/50' },
+                    ].map((item, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
+                        className={`p-4 rounded-xl border border-white/6 bg-white/3 border-l-2 ${item.color}`}>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/8 text-white/50">{item.tag}</span>
+                          <span className="text-white/20 text-[9px]">{item.date}</span>
+                        </div>
+                        <h4 className="text-white/80 font-semibold text-xs mb-1">{item.title}</h4>
+                        <p className="text-white/40 text-[11px] leading-relaxed">{item.body}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Upcoming releases */}
+                <div>
+                  <p className="text-white/25 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <CalendarDays className="w-3 h-3" />Upcoming Releases
+                  </p>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Season 4 Card Pack', eta: 'May 2026', status: 'In QA', dot: 'bg-amber-400' },
+                      { label: 'Ranked PvP Mode', eta: 'Q3 2026', status: 'In Development', dot: 'bg-cyan-400' },
+                      { label: 'Console Card Trading', eta: 'Q4 2026', status: 'Planned', dot: 'bg-white/20' },
+                      { label: 'Foil Card Variants', eta: '2027', status: 'Concept Phase', dot: 'bg-white/10' },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-white/5 bg-white/2">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${item.dot}`} />
+                        <p className="text-white/60 text-xs flex-1">{item.label}</p>
+                        <span className="text-white/20 text-[10px]">{item.eta}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/6 text-white/35">{item.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video teaser placeholder */}
+                <div>
+                  <p className="text-white/25 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <Youtube className="w-3 h-3" />Latest Video
+                  </p>
+                  <div className="relative rounded-xl overflow-hidden border border-white/8 bg-black/40 aspect-video flex items-center justify-center cursor-pointer group hover:border-white/15 transition-all">
+                    <img src={selectedGame.cover} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="relative z-10 w-12 h-12 rounded-full bg-white/15 border border-white/20 flex items-center justify-center group-hover:bg-white/25 transition-all">
+                      <div className="w-0 h-0 border-t-[7px] border-t-transparent border-b-[7px] border-b-transparent border-l-[12px] border-l-white/80 ml-1" />
+                    </div>
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <p className="text-white/70 text-xs font-semibold">Season 4 — Official Reveal Trailer</p>
+                      <p className="text-white/30 text-[10px]">2:34 · 1.8M views</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Community spotlight */}
+                <div className="pb-4">
+                  <p className="text-white/25 text-[10px] font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                    <MessageSquare className="w-3 h-3" />Community Spotlight
+                  </p>
+                  <div className="p-4 rounded-xl border border-white/6 bg-white/3">
+                    <p className="text-white/50 text-xs leading-relaxed italic">"The card balancing in this patch finally made Rare-tier cards viable in ranked. Really feel like the dev team is listening."</p>
+                    <p className="text-white/25 text-[10px] mt-2">— Community member · Top voted this week</p>
+                  </div>
                 </div>
               </div>
             </div>
