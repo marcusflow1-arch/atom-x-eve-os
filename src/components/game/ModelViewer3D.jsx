@@ -16,7 +16,7 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     
-    camera.position.set(0, 1.5, 4.2);
+    camera.position.set(0, 1.2, 2.4);
     camera.lookAt(0, 0.8, 0);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
@@ -57,7 +57,7 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
       const size = box.getSize(new THREE.Vector3());
       
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.5 / maxDim;
+      const scale = 3.2 / maxDim;
       
       model.scale.multiplyScalar(scale);
       model.position.sub(center.multiplyScalar(scale));
