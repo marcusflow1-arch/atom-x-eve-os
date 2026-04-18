@@ -61,6 +61,7 @@ export default function DevCardsContent({ onNavigateToGame }) {
     const [devCardFilters, setDevCardFilters] = useState({});
     const [hoveredGame, setHoveredGame] = useState(null);
     const [developerSearch, setDeveloperSearch] = useState('');
+    const [selectedDeveloper, setSelectedDeveloper] = useState(null);
     const contentScrollRef = useRef(null);
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
@@ -101,6 +102,10 @@ export default function DevCardsContent({ onNavigateToGame }) {
 
     const applyFilters = (gameList) => {
         return gameList.filter(game => {
+            if (selectedDeveloper) {
+                const dev = (game.developer || game.publisher || '').toLowerCase();
+                if (dev !== selectedDeveloper.name.toLowerCase()) return false;
+            }
             if (devCardFilters.genre) {
                 const g = (game.genre || '').toLowerCase();
                 if (g !== devCardFilters.genre.toLowerCase()) return false;
@@ -135,7 +140,7 @@ export default function DevCardsContent({ onNavigateToGame }) {
     const filteredGridGames = useMemo(() => {
         const base = selectedGenres.length === 0 ? games : games.filter(g => selectedGenres.includes(g.genre));
         return applyFilters(base);
-    }, [games, selectedGenres, devCardFilters]);
+    }, [games, selectedGenres, devCardFilters, selectedDeveloper]);
 
     const toggleGenre = (genre) => {
         setSelectedGenres(prev => 
@@ -198,7 +203,12 @@ export default function DevCardsContent({ onNavigateToGame }) {
                                     key={dev.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-400/30 transition-all cursor-pointer"
+                                    onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                                    className={`flex flex-col items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer ${
+                                        selectedDeveloper?.id === dev.id
+                                            ? 'bg-cyan-500/20 border-cyan-400/50 shadow-lg shadow-cyan-500/20'
+                                            : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/30'
+                                    }`}
                                 >
                                     <img src={dev.logo} alt={dev.name} className="w-16 h-16 rounded-lg object-cover bg-white/10" />
                                     <p className="text-xs font-medium text-white text-center line-clamp-2">{dev.name}</p>
@@ -208,6 +218,19 @@ export default function DevCardsContent({ onNavigateToGame }) {
                     </div>
 
                     {/* Games Section */}
+                    <div className="mb-4">
+                        {selectedDeveloper && (
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-white">Games by {selectedDeveloper.name}</h3>
+                                <button 
+                                    onClick={() => setSelectedDeveloper(null)}
+                                    className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm transition-all"
+                                >
+                                    Clear Filter
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
                         <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
                     </div>
