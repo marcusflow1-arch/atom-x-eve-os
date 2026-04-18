@@ -645,9 +645,9 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
               animate={{ opacity: 1, width: '20%' }}
               exit={{ opacity: 0, width: 0 }}
               transition={{ duration: 0.3, type: 'spring', bounce: 0.1 }}
-              className="h-full flex-shrink-0 overflow-hidden"
+              className="h-full flex-shrink-0 overflow-hidden relative"
             >
-              <PlayerInteractionsPanel />
+              <PlayerInteractionsPanel onGameSelect={(game) => setSelectedGame(game)} />
             </motion.div>
           )}
         </AnimatePresence>
