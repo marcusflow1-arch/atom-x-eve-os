@@ -4,7 +4,6 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import StoreFilterBar, { GENRES } from '@/components/store/StoreFilterBar';
 import { useCart } from '@/components/CartContext';
 import GameContentCards from '@/components/dashboard/GameContentCards';
 
@@ -86,11 +85,8 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, activeFilters, onFilterChange, activeCategoryLabel }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
-  const [genreExtensionOpen, setGenreExtensionOpen] = useState(false);
-  const genreScrollRef = useRef(null);
-
   // Sync forced open state
   useEffect(() => {
     if (forceLibraryOpen) setActiveTab('library');
@@ -496,47 +492,6 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             }}
             onWheel={handleWheel}
           >
-            {/* Genre Extension Panel — slides in above the header row */}
-            <AnimatePresence>
-              {genreExtensionOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeInOut' }}
-                  className="w-full max-w-[1400px] mx-auto px-2 overflow-hidden"
-                >
-                  <div
-                    className="w-full flex gap-2 py-2.5 px-3 overflow-x-auto rounded-t-xl border-t border-x border-white/10"
-                    style={{
-                      background: 'linear-gradient(to bottom, rgba(20,28,42,0.95), rgba(12,18,30,0.90))',
-                      backdropFilter: 'blur(20px)',
-                      scrollbarWidth: 'none',
-                    }}
-                    ref={genreScrollRef}
-                    onWheel={(e) => {
-                      e.preventDefault();
-                      if (genreScrollRef.current) genreScrollRef.current.scrollLeft += e.deltaY > 0 ? 100 : -100;
-                    }}
-                  >
-                    {GENRES.map((genre) => (
-                      <button
-                        key={genre}
-                        onClick={() => onFilterChange?.('genre', activeFilters?.genre === genre ? null : genre)}
-                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${
-                          activeFilters?.genre === genre
-                            ? 'bg-cyan-400/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.25)]'
-                            : 'bg-white/[0.06] border-white/10 text-white/60 hover:border-white/25 hover:text-white'
-                        }`}
-                      >
-                        {genre}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div className="w-full max-w-[1400px] mx-auto mb-4 flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
                 {selectedGame ? (
@@ -561,19 +516,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <h3 className="text-white font-bold tracking-widest uppercase text-sm">
                       {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
                     </h3>
-                    {activeTab === 'library' && activeCategoryLabel && (
-                      <div className="ml-3 px-3 py-1 rounded-full border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 text-xs font-bold">
-                        {activeCategoryLabel}
-                      </div>
-                    )}
                   </>
                 )}
               </div>
-              {/* Filters — centered between label and row counter */}
-              {activeFilters && onFilterChange && !selectedGame && (
-                <StoreFilterBar activeFilters={activeFilters} onFilterChange={onFilterChange} onGenreExtensionChange={setGenreExtensionOpen} />
-              )}
-
               <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
                 {!selectedGame && <span>Row {currentRow + 1} of {totalRows}</span>}
                 <div className="flex gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
