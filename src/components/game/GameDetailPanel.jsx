@@ -925,8 +925,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
                           {tag}
                         </span>
                       ))}
