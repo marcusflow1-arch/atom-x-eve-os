@@ -1,19 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Radio, Users, Layers, X, Gamepad2, Lightbulb, Search } from 'lucide-react';
+import { CheckCircle, ChevronRight, Layers, X, Gamepad2, Lightbulb, Search } from 'lucide-react';
 import { MOCK_DEVELOPERS } from './devEdition/mockDevData';
 import DevStudioHero from './devEdition/DevStudioHero';
 import DevCurrentProject from './devEdition/DevCurrentProject';
 import DevLogFeed from './devEdition/DevLogFeed';
 import DevGamesAndCards from './devEdition/DevGamesAndCards';
 
-const RARITY_PALETTE = {
-  Solo: { bg: 'from-violet-900/60 to-indigo-900/40', border: 'border-violet-400/30', glow: 'rgba(139,92,246,0.25)', badge: 'bg-violet-500/20 text-violet-300' },
-  'Indie (2-5)': { bg: 'from-cyan-900/60 to-blue-900/40', border: 'border-cyan-400/30', glow: 'rgba(34,211,238,0.25)', badge: 'bg-cyan-500/20 text-cyan-300' },
-  'Small Studio (6-20)': { bg: 'from-amber-900/60 to-orange-900/40', border: 'border-amber-400/30', glow: 'rgba(245,158,11,0.25)', badge: 'bg-amber-500/20 text-amber-300' },
-  'Mid Studio (21-100)': { bg: 'from-emerald-900/60 to-green-900/40', border: 'border-emerald-400/30', glow: 'rgba(52,211,153,0.25)', badge: 'bg-emerald-500/20 text-emerald-300' },
-  'AAA (100+)': { bg: 'from-rose-900/60 to-pink-900/40', border: 'border-rose-400/30', glow: 'rgba(251,113,133,0.25)', badge: 'bg-rose-500/20 text-rose-300' },
-};
+
 
 const TABS = [
   { id: 'cards', label: 'Cards', icon: Layers },
@@ -22,77 +16,64 @@ const TABS = [
 ];
 
 function DeveloperCard({ dev, isSelected, onClick }) {
-  const palette = RARITY_PALETTE[dev.team_size] || RARITY_PALETTE['Indie (2-5)'];
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -6, scale: 1.02 }}
       onClick={onClick}
-      className={`relative cursor-pointer rounded-2xl border-2 overflow-hidden flex flex-col transition-all duration-300 bg-gradient-to-b ${palette.bg} ${palette.border} ${
-        isSelected ? 'ring-2 ring-offset-1 ring-offset-transparent ring-cyan-400 shadow-2xl' : 'hover:border-opacity-60'
+      className={`group aspect-[3/4] rounded-xl overflow-hidden cursor-pointer border shadow-lg relative bg-slate-900 transition-all ${
+        isSelected
+          ? 'border-cyan-400/60 shadow-cyan-500/20'
+          : 'border-white/8 hover:border-cyan-400/30'
       }`}
-      style={{
-        boxShadow: isSelected
-          ? `0 0 0 2px rgba(34,211,238,0.6), 0 12px 40px ${palette.glow}`
-          : `0 4px 20px ${palette.glow}`,
-        aspectRatio: '3/4',
-      }}
     >
-      {/* Banner image top half */}
-      <div className="relative flex-1 overflow-hidden">
-        <img
-          src={dev.banner_url}
-          alt={dev.studio_name}
-          className="w-full h-full object-cover opacity-50"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/80" />
+      {/* Banner as full background */}
+      <img
+        src={dev.banner_url}
+        alt={dev.studio_name}
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-        {/* Live badge */}
-        {dev.is_live && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-            LIVE
-          </div>
-        )}
-
-        {/* Verified */}
-        {dev.verified && (
-          <div className="absolute top-2 right-2">
-            <CheckCircle className="w-4 h-4 text-cyan-400 drop-shadow-lg" />
-          </div>
-        )}
-
-        {/* Avatar centered */}
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-10">
-          <div className="w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden shadow-xl">
-            <img src={dev.avatar_url} alt={dev.studio_name} className="w-full h-full object-cover" />
-          </div>
+      {/* Live badge */}
+      {dev.is_live && (
+        <div className="absolute top-2 left-2 flex items-center gap-1 bg-red-500/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+          LIVE
         </div>
-      </div>
-
-      {/* Info bottom section */}
-      <div className="pt-8 pb-3 px-3 text-center space-y-1 bg-black/40 backdrop-blur-sm">
-        <p className="text-white font-bold text-xs leading-tight truncate">{dev.studio_name}</p>
-        <p className="text-white/40 text-[9px] truncate">{dev.tagline}</p>
-        <div className={`inline-block text-[8px] font-bold px-1.5 py-0.5 rounded-full ${palette.badge}`}>
-          {dev.team_size}
-        </div>
-        <div className="flex items-center justify-center gap-2 text-[9px] text-white/40 pt-0.5">
-          <span>{dev.total_games}🎮</span>
-          <span>{dev.total_cards}🃏</span>
-          <span>{(dev.followers / 1000).toFixed(1)}k</span>
-        </div>
-      </div>
-
-      {/* Selected glow border overlay */}
-      {isSelected && (
-        <motion.div
-          layoutId="devCardSelected"
-          className="absolute inset-0 border-2 border-cyan-400 rounded-2xl pointer-events-none"
-        />
       )}
+
+      {/* Verified */}
+      {dev.verified && (
+        <div className="absolute top-2 right-2">
+          <CheckCircle className="w-4 h-4 text-cyan-400 drop-shadow-lg" />
+        </div>
+      )}
+
+      {/* Bottom info */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end gap-2">
+        <img
+          src={dev.avatar_url}
+          alt={dev.studio_name}
+          className="w-8 h-8 rounded-lg object-cover border border-white/20 flex-shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <h4 className="text-white font-bold text-sm leading-tight truncate">{dev.studio_name}</h4>
+          <div className="flex items-center justify-between text-xs mt-0.5">
+            <span className="text-white/40">{dev.genres?.[0]}</span>
+            <span className="text-cyan-400 font-bold">{dev.total_cards} cards</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Selected indicator */}
+      {isSelected && (
+        <div className="absolute inset-0 border-2 border-cyan-400 rounded-xl pointer-events-none" />
+      )}
+
+      {/* Hover chevron */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <ChevronRight className="w-4 h-4 text-white/60" />
+      </div>
     </motion.div>
   );
 }
