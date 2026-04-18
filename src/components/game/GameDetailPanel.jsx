@@ -1625,7 +1625,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative z-10 w-full max-w-3xl bg-[#0f1115] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+              className="relative z-10 w-full max-w-6xl h-[600px] bg-[#0f1115] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-row"
               style={{
                 boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)'
               }}
@@ -1638,8 +1638,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <X className="w-4 h-4 text-white/60" />
               </button>
 
-              {/* Image Display */}
-              <div className="w-full h-80 overflow-hidden bg-black/40">
+              {/* Left 50%: Image Display */}
+              <div className="w-1/2 h-full overflow-hidden bg-black/40 flex items-center justify-center">
                 <img 
                   src={selectedUpdate?.image} 
                   alt={selectedUpdate?.title}
@@ -1647,9 +1647,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 />
               </div>
 
-              {/* Content */}
-              <div className="p-8 space-y-6">
-                <div className="space-y-2">
+              {/* Right 50%: Comments Section */}
+              <div className="w-1/2 h-full flex flex-col border-l border-white/10 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                {/* Header */}
+                <div className="p-6 border-b border-white/10 flex-shrink-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
                       selectedUpdate?.type === 'screenshot' 
@@ -1659,48 +1660,48 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       {selectedUpdate?.type === 'screenshot' ? 'Screenshot' : 'Coming Soon'}
                     </span>
                   </div>
-                  <h2 className="text-3xl font-bold text-white">{selectedUpdate?.title}</h2>
-                  <p className="text-white/40 text-sm">{selectedUpdate?.date}</p>
+                  <h2 className="text-2xl font-bold text-white mb-1">{selectedUpdate?.title}</h2>
+                  <p className="text-white/40 text-xs">{selectedUpdate?.date}</p>
+                  <div className="flex items-center gap-2 text-white/60 text-xs mt-3">
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{selectedUpdate?.comments} comments</span>
+                  </div>
                 </div>
 
-                {/* Feedback Section */}
-                <div className="border-t border-white/10 pt-6 space-y-4">
-                  <h3 className="text-lg font-bold text-white">Developer Feedback</h3>
-
-                  {/* Comment Count */}
-                  <div className="flex items-center gap-2 text-white/60">
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="text-sm">{selectedUpdate?.comments} comments from community</span>
-                  </div>
-
-                  {/* Comment Form */}
-                  <div className="space-y-3">
-                    <textarea
-                      placeholder="Share your feedback on this developer update..."
-                      className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white text-sm placeholder-white/30 resize-none focus:outline-none focus:border-cyan-500/50 transition-colors"
-                      rows={3}
-                    />
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-white text-sm font-medium transition-colors">
-                        Cancel
-                      </button>
-                      <button className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-bold rounded-lg transition-colors">
-                        Post Feedback
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Sample Comments */}
-                  <div className="space-y-3 mt-6 pt-6 border-t border-white/10">
-                    {[
-                      { user: 'GameDev_Pro', content: 'This looks amazing! Can\'t wait to see more.' },
-                      { user: 'CyberFan', content: 'The attention to detail is insane 🔥' }
-                    ].map((comment, i) => (
-                      <div key={i} className="bg-white/5 border border-white/5 rounded-lg p-3">
-                        <p className="text-white font-semibold text-sm mb-1">{comment.user}</p>
-                        <p className="text-white/60 text-sm">{comment.content}</p>
+                {/* Comments List */}
+                <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+                  {[
+                    { user: 'GameDev_Pro', content: 'This looks amazing! Can\'t wait to see more.', votes: 12 },
+                    { user: 'CyberFan', content: 'The attention to detail is insane 🔥', votes: 8 },
+                    { user: 'PixelMaster', content: 'Absolutely incredible work here!', votes: 15 },
+                    { user: 'NovaStrike', content: 'Best update yet! 🚀', votes: 23 },
+                    { user: 'ShadowVoid', content: 'When is this dropping?', votes: 5 },
+                    { user: 'CyberNova', content: 'Can\'t believe how good this is!', votes: 19 }
+                  ].map((comment, i) => (
+                    <div key={i} className="bg-white/5 border border-white/5 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-white font-semibold text-xs">{comment.user}</p>
+                        <span className="text-white/40 text-[10px]">+{comment.votes}</span>
                       </div>
-                    ))}
+                      <p className="text-white/60 text-xs leading-relaxed">{comment.content}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Comment Form */}
+                <div className="p-4 border-t border-white/10 flex-shrink-0 space-y-3">
+                  <textarea
+                    placeholder="Share your thoughts…"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-xs placeholder-white/30 resize-none focus:outline-none focus:border-cyan-500/50 transition-colors"
+                    rows={2}
+                  />
+                  <div className="flex gap-2">
+                    <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-white text-xs font-medium transition-colors flex-1">
+                      Cancel
+                    </button>
+                    <button className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-colors flex-1">
+                      Post
+                    </button>
                   </div>
                 </div>
               </div>
