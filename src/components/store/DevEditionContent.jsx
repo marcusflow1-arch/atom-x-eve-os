@@ -545,10 +545,10 @@ function MediaHub({ dev }) {
                 <p className="text-white/50 text-xs font-semibold mb-3">Stream Chat</p>
                 <div className="space-y-2 h-48 overflow-y-auto mb-3" style={{ scrollbarWidth: 'thin' }}>
                   {[
-                    { user: 'GameDev_Fan', msg: 'Amazing office setup! 🔥' },
-                    { user: 'Artist_Pro', msg: 'Those character rigs look incredible' },
-                    { user: 'Community_Lead', msg: 'Can't wait for Season 4!' },
-                  ].map((chat, i) => (
+                     { user: 'GameDev_Fan', msg: 'Amazing office setup! 🔥' },
+                     { user: 'Artist_Pro', msg: 'Those character rigs look incredible' },
+                     { user: 'Community_Lead', msg: "Can't wait for Season 4!" },
+                   ].map((chat, i) => (
                     <div key={i} className="text-[11px]">
                       <span className="text-cyan-400 font-semibold">{chat.user}:</span> <span className="text-white/60">{chat.msg}</span>
                     </div>
