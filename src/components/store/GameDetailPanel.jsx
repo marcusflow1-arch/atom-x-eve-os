@@ -1127,7 +1127,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
             >
               <h2 className="text-2xl font-black text-white tracking-tight mb-6">{game.title} <span className="text-purple-400 text-lg font-bold">— 3D Model Viewer</span></h2>
 
-              <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md">
+              <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/5 bg-transparent">
                 <ModelViewer3D 
                   modelPath="/models/lara.glb"
                   fileType="glb"
