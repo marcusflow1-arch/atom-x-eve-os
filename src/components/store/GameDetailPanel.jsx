@@ -941,10 +941,22 @@ export default function GameDetailPanel({ gameId, onClose }) {
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: 30-70 Split Layout */}
-              <div className="flex gap-0 border-t border-white/10 pt-8">
-                {/* Left: Game Info (30%) */}
-                <div className="w-1/3 flex flex-col gap-6 pr-6">
+              {/* Lower Section: 70/30 Split Layout */}
+              <div className="flex gap-8 border-t border-white/10 pt-8">
+                {/* Left: Achievement Cards (70%) */}
+                <div className="flex-1">
+                  <AchievementCardStrip 
+                    achievementCards={achievementCards} 
+                    dlcList={dlcList}
+                    onSelectCard={setSelectedCard}
+                  />
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
+
+                {/* Right: Game Info (30%) */}
+                <div className="w-80 flex flex-col gap-6">
                   {/* DLC Section */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -1060,18 +1072,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
                     </p>
                   </div>
-                </div>
-
-                {/* Vertical Divider */}
-                <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
-
-                {/* Right: Achievement Cards (70%) */}
-                <div className="flex-1 pl-6">
-                  <AchievementCardStrip 
-                    achievementCards={achievementCards} 
-                    dlcList={dlcList}
-                    onSelectCard={setSelectedCard}
-                  />
                 </div>
                 </div>
 
