@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
-export default function ModelViewer3D({ modelPath = '/models/lara.glb' }) {
+export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType = 'glb', bundleManifest = null }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -27,14 +28,39 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb' }) {
     scene.add(ambientLight);
     scene.add(directionalLight);
 
-    const loader = new GLTFLoader();
-    loader.load(modelPath, (gltf) => {
-      const model = gltf.scene;
+    // Setup loading manager for bundle textures
+    const manager = new THREE.LoadingManager();
+    if (bundleManifest && typeof bundleManifest === 'object') {
+      manager.setURLModifier((url) => {
+        try {
+          const u = new URL(url, window.location.href);
+          const pathname = decodeURIComponent(u.pathname).replace(/^\//, '');
+          const filename = pathname.split('/').pop();
+          if (bundleManifest[pathname]) return bundleManifest[pathname];
+          if (filename && bundleManifest[filename]) return bundleManifest[filename];
+        } catch (e) { }
+        return bundleManifest[url] || url;
+      });
+    }
+
+    // Choose loader based on file type
+    const ext = (fileType || modelPath.split('.').pop() || '').toLowerCase();
+    const useFBX = ext === 'fbx';
+    const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
+
+    loader.load(modelPath, (asset) => {
+      const model = asset?.scene || asset;
       
-      // Center the model
+      // Center and scale the model
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
-      model.position.sub(center);
+      const size = box.getSize(new THREE.Vector3());
+      
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = 2.5 / maxDim;
+      
+      model.scale.multiplyScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
       
       scene.add(model);
     });
@@ -67,7 +93,7 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb' }) {
       window.removeEventListener('resize', handleResize);
       containerRef.current?.removeChild(renderer.domElement);
     };
-  }, [modelPath]);
+  }, [modelPath, fileType, bundleManifest]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }

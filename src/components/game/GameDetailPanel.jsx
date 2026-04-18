@@ -210,6 +210,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedDLC, setSelectedDLC] = useState(null);
   const [selectedMediaItem, setSelectedMediaItem] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [storeModel, setStoreModel] = useState(null);
   
   // Auto-select first media item on load
   useEffect(() => {
@@ -424,6 +425,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
           game_title: fetchedGame.title 
         }, '-created_date');
         setReviews(gameReviews);
+        
+        // Fetch the 3D model for store from the database
+        const allModels = await base44.entities.Model3D.list('-file_size');
+        const storePageModel = allModels.find(m => m.category?.toLowerCase().includes('store') || m.name?.toLowerCase().includes('store'));
+        if (storePageModel) {
+          setStoreModel(storePageModel);
+        }
         
         // Mock dev review (in production, this would be fetched from a DevReview entity)
         setDevReview({
@@ -888,7 +896,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   {/* 3D Viewer - Seamless Integration */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
                     <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
-                    <ModelViewer3D modelPath="/models/lara.glb" />
+                    {storeModel ? (
+                      <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
+                    ) : (
+                      <ModelViewer3D modelPath="/models/lara.glb" />
+                    )}
                   </div>
 
                 </div>
