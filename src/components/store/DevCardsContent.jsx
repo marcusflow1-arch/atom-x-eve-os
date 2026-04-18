@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Star, Smartphone, Shield, Trophy, Monitor, Car, Skull, Crosshair, Music, Zap, Heart, Sparkles } from 'lucide-react';
+import { Gamepad2, Star, Smartphone, Shield, Trophy, Monitor, Car, Skull, Crosshair, Music, Zap, Heart, Sparkles, Search } from 'lucide-react';
 import { useGameFilters } from './hooks/useGameFilters';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -38,6 +38,21 @@ function SwordsIcon(props) {
     );
 }
 
+const MOCK_DEVELOPERS = [
+    { id: 1, name: 'Naughty Dog', logo: 'https://via.placeholder.com/120?text=Naughty+Dog' },
+    { id: 2, name: 'Rockstar Games', logo: 'https://via.placeholder.com/120?text=Rockstar' },
+    { id: 3, name: 'CD Projekt Red', logo: 'https://via.placeholder.com/120?text=CD+Projekt' },
+    { id: 4, name: 'FromSoftware', logo: 'https://via.placeholder.com/120?text=FromSoftware' },
+    { id: 5, name: 'Valve', logo: 'https://via.placeholder.com/120?text=Valve' },
+    { id: 6, name: 'Epic Games', logo: 'https://via.placeholder.com/120?text=Epic' },
+    { id: 7, name: 'Activision Blizzard', logo: 'https://via.placeholder.com/120?text=Activision' },
+    { id: 8, name: 'Electronic Arts', logo: 'https://via.placeholder.com/120?text=EA' },
+    { id: 9, name: 'Take-Two Interactive', logo: 'https://via.placeholder.com/120?text=Take-Two' },
+    { id: 10, name: 'Ubisoft', logo: 'https://via.placeholder.com/120?text=Ubisoft' },
+    { id: 11, name: 'Microsoft Game Studios', logo: 'https://via.placeholder.com/120?text=Microsoft' },
+    { id: 12, name: 'Sony Interactive', logo: 'https://via.placeholder.com/120?text=Sony' },
+];
+
 export default function DevCardsContent({ onNavigateToGame }) {
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -45,6 +60,7 @@ export default function DevCardsContent({ onNavigateToGame }) {
     const [showAndroidOnly, setShowAndroidOnly] = useState(false);
     const [devCardFilters, setDevCardFilters] = useState({});
     const [hoveredGame, setHoveredGame] = useState(null);
+    const [developerSearch, setDeveloperSearch] = useState('');
     const contentScrollRef = useRef(null);
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
@@ -127,18 +143,15 @@ export default function DevCardsContent({ onNavigateToGame }) {
         );
     };
 
+    const filteredDevelopers = useMemo(() => {
+        return MOCK_DEVELOPERS.filter(dev =>
+            dev.name.toLowerCase().includes(developerSearch.toLowerCase())
+        );
+    }, [developerSearch]);
+
     return (
         <div className="w-full h-full pt-28 pb-0 bg-transparent">
-            <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-                <AnimatePresence mode="wait">
-                    {hoveredGame && (
-                        <motion.div key={hoveredGame?.id} initial={{ opacity: 0, scale: 1.1 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0">
-                            <img src={hoveredGame?.cover_image || hoveredGame?.image} className="w-full h-full object-cover opacity-20 blur-sm" alt="Background" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/40" />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+
             <div className="flex h-full max-w-[1920px] mx-auto">
                 <div className="w-[280px] flex-shrink-0 h-full p-6 border-r border-white/5 flex-col hidden lg:flex bg-black/20 backdrop-blur-sm">
                     <div className="flex items-center gap-3 mb-8">
@@ -163,6 +176,38 @@ export default function DevCardsContent({ onNavigateToGame }) {
                     </div>
                 </div>
                 <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
+                    {/* Developers Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Gaming Studios</h3>
+                            <div className="relative w-64">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                <input
+                                    type="text"
+                                    placeholder="Search developers..."
+                                    value={developerSearch}
+                                    onChange={(e) => setDeveloperSearch(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-400/50 transition-all"
+                                />
+                            </div>
+                        </div>
+                        <div className="h-px bg-white/10 mb-6 w-full" />
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 overflow-y-auto max-h-[240px] pr-2">
+                            {filteredDevelopers.map((dev) => (
+                                <motion.div
+                                    key={dev.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="flex flex-col items-center gap-3 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-400/30 transition-all cursor-pointer"
+                                >
+                                    <img src={dev.logo} alt={dev.name} className="w-16 h-16 rounded-lg object-cover bg-white/10" />
+                                    <p className="text-xs font-medium text-white text-center line-clamp-2">{dev.name}</p>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Games Section */}
                     <div className="flex items-center justify-end gap-3 mb-8 sticky top-0 z-20 py-4">
                         <button onClick={() => setShowAndroidOnly(!showAndroidOnly)} className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all hover:scale-110 ${showAndroidOnly ? 'bg-green-500/20 border-green-400/50 text-green-300' : 'bg-white/5 hover:bg-white/20 border-white/10 text-white/80'}`} title="Android Games"><Smartphone className="w-6 h-6" /></button>
                     </div>
