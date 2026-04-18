@@ -16,8 +16,8 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     
-    camera.position.set(0, 1.5, 1.2);
-    camera.lookAt(0, 1.5, 0);
+    camera.position.set(0, 0.8, 2.8);
+    camera.lookAt(0, 0.8, 0);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
