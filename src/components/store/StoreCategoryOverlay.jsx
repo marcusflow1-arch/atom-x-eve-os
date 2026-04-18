@@ -358,7 +358,10 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
 
         {/* ── LIQUID GLASS COMMENTS POPUP (slides in from right) ── */}
         <AnimatePresence>
-          {commentPopup && commentPopupMoment && (
+          {commentPopup && commentPopupMoment && (() => {
+            const popupActiveMedia = activeMedia[commentPopup] || { url: commentPopupMoment.url, type: commentPopupMoment.type, name: commentPopupMoment.name };
+            const hasVideo = popupActiveMedia.type === 'video' && popupActiveMedia.url;
+            return (
             <>
               {/* Backdrop */}
               <motion.div
@@ -369,7 +372,48 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                 style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
                 onClick={() => setCommentPopup(null)}
               />
-              {/* Panel */}
+
+              {/* Video PiP — slides in to the left of comment panel */}
+              <AnimatePresence>
+                {hasVideo && (
+                  <motion.div
+                    initial={{ x: '100%', opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 260, delay: 0.05 }}
+                    className="absolute top-0 bottom-0 z-50 flex flex-col overflow-hidden"
+                    style={{
+                      right: '360px',
+                      width: '380px',
+                      background: 'linear-gradient(135deg, rgba(10,14,22,0.88) 0%, rgba(20,28,45,0.82) 100%)',
+                      backdropFilter: 'blur(32px) saturate(160%)',
+                      WebkitBackdropFilter: 'blur(32px) saturate(160%)',
+                      borderLeft: '1px solid rgba(200,220,255,0.12)',
+                      boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
+                    }}
+                  >
+                    <div className="flex-shrink-0 px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                      <Video className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="text-white/70 text-xs font-semibold truncate flex-1">{popupActiveMedia.name}</span>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center p-3">
+                      <video
+                        key={popupActiveMedia.url}
+                        src={popupActiveMedia.url}
+                        className="w-full rounded-xl"
+                        style={{ maxHeight: '100%', aspectRatio: '16/9', objectFit: 'cover' }}
+                        controls
+                        autoPlay
+                      />
+                    </div>
+                    <div className="flex-shrink-0 px-3 py-2 text-center">
+                      <p className="text-white/25 text-[10px]">Video continues while you comment</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Comment Panel */}
               <motion.div
                 initial={{ x: '100%', opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -437,7 +481,8 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
                 </div>
               </motion.div>
             </>
-          )}
+            );
+          })()}
         </AnimatePresence>
       </div>
     </motion.div>
