@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X } from 'lucide-react';
+import { Search, X, Layers, Gamepad2, Lightbulb } from 'lucide-react';
 import { MOCK_DEVELOPERS } from './devEdition/mockDevData';
 import DevSidebar from './devEdition/DevSidebar';
 import DevStudioHero from './devEdition/DevStudioHero';
 import DevCurrentProject from './devEdition/DevCurrentProject';
 import DevLogFeed from './devEdition/DevLogFeed';
 import DevGamesAndCards from './devEdition/DevGamesAndCards';
+
+const TABS = [
+  { id: 'cards', label: 'Cards', icon: Layers },
+  { id: 'games', label: 'Games', icon: Gamepad2 },
+  { id: 'insight', label: 'Developer Insight', icon: Lightbulb },
+];
 
 export default function DevEditionContent() {
   const [selectedDev, setSelectedDev] = useState(MOCK_DEVELOPERS[0]);
