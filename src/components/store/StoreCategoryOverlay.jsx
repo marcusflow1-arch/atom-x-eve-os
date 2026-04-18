@@ -356,127 +356,142 @@ function GameDetailPanel({ game, onBack, onViewFullPage, onOpenStoreView, onOpen
           <div className="h-6" />
         </div>
 
-        {/* ── LIQUID GLASS COMMENTS POPUP (slides in from right) ── */}
+        {/* ── LIQUID GLASS COMMENTS POPUP (slides in from right, stops above bottom header) ── */}
         <AnimatePresence>
           {commentPopup && commentPopupMoment && (() => {
             const popupActiveMedia = activeMedia[commentPopup] || { url: commentPopupMoment.url, type: commentPopupMoment.type, name: commentPopupMoment.name };
-            const hasVideo = popupActiveMedia.type === 'video' && popupActiveMedia.url;
+            const hasMedia = !!popupActiveMedia.url;
+            const isVideo = popupActiveMedia.type === 'video';
+            // Bottom header is ~56px tall; top nav is ~64px. Panel sits between them.
+            const BOTTOM_NAV = 56; // px — matches StoreBottomNav height
             return (
             <>
-              {/* Backdrop */}
+              {/* Backdrop — only covers the content area, not the headers */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-40"
-                style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+                className="absolute left-0 right-0 z-40"
+                style={{ top: 0, bottom: BOTTOM_NAV, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
                 onClick={() => setCommentPopup(null)}
               />
 
-              {/* Video PiP — slides in to the left of comment panel */}
-              <AnimatePresence>
-                {hasVideo && (
-                  <motion.div
-                    initial={{ x: '100%', opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: '100%', opacity: 0 }}
-                    transition={{ type: 'spring', damping: 28, stiffness: 260, delay: 0.05 }}
-                    className="absolute top-0 bottom-0 z-50 flex flex-col overflow-hidden"
-                    style={{
-                      right: '360px',
-                      width: '380px',
-                      background: 'linear-gradient(135deg, rgba(10,14,22,0.88) 0%, rgba(20,28,45,0.82) 100%)',
-                      backdropFilter: 'blur(32px) saturate(160%)',
-                      WebkitBackdropFilter: 'blur(32px) saturate(160%)',
-                      borderLeft: '1px solid rgba(200,220,255,0.12)',
-                      boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    <div className="flex-shrink-0 px-3 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                      <Video className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="text-white/70 text-xs font-semibold truncate flex-1">{popupActiveMedia.name}</span>
-                    </div>
-                    <div className="flex-1 flex items-center justify-center p-3">
-                      <video
-                        key={popupActiveMedia.url}
-                        src={popupActiveMedia.url}
-                        className="w-full rounded-xl"
-                        style={{ maxHeight: '100%', aspectRatio: '16/9', objectFit: 'cover' }}
-                        controls
-                        autoPlay
-                      />
-                    </div>
-                    <div className="flex-shrink-0 px-3 py-2 text-center">
-                      <p className="text-white/25 text-[10px]">Video continues while you comment</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Comment Panel */}
+              {/* Combined panel row — sits above bottom nav, slides up from bottom edge */}
               <motion.div
-                initial={{ x: '100%', opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: '100%', opacity: 0 }}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 260 }}
-                className="absolute top-0 right-0 bottom-0 z-50 flex flex-col"
+                className="absolute left-0 right-0 z-50 flex overflow-hidden"
                 style={{
-                  width: '360px',
-                  background: 'linear-gradient(135deg, rgba(180,200,230,0.12) 0%, rgba(100,130,180,0.08) 60%, rgba(60,80,120,0.10) 100%)',
-                  backdropFilter: 'blur(40px) saturate(200%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-                  borderLeft: '1px solid rgba(200,220,255,0.18)',
-                  boxShadow: '-12px 0 60px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.12)',
+                  bottom: BOTTOM_NAV,
+                  top: 0,
+                  borderTop: '1px solid rgba(255,255,255,0.10)',
                 }}
               >
-                {/* Sheen overlay */}
-                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, transparent 50%)', borderRadius: 'inherit' }} />
+                {/* ── LEFT: Media continuation panel (fills remaining space) ── */}
+                {hasMedia && (
+                  <div
+                    className="flex-1 flex flex-col overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(6,10,18,0.92) 0%, rgba(14,20,36,0.88) 100%)',
+                      backdropFilter: 'blur(32px) saturate(160%)',
+                      WebkitBackdropFilter: 'blur(32px) saturate(160%)',
+                      borderRight: '1px solid rgba(200,220,255,0.10)',
+                    }}
+                  >
+                    {/* Media title bar */}
+                    <div className="flex-shrink-0 px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                      {isVideo ? <Video className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" /> : <Camera className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />}
+                      <span className="text-white/70 text-xs font-semibold truncate flex-1">{popupActiveMedia.name}</span>
+                      <span className="text-white/25 text-[10px] flex-shrink-0">{isVideo ? 'Playing while you comment' : 'Screenshot'}</span>
+                    </div>
+                    {/* Media content — fills all remaining space */}
+                    <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+                      {isVideo ? (
+                        <video
+                          key={popupActiveMedia.url}
+                          src={popupActiveMedia.url}
+                          className="max-w-full max-h-full rounded-xl object-contain"
+                          style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
+                          controls
+                          autoPlay
+                        />
+                      ) : (
+                        <img
+                          key={popupActiveMedia.url}
+                          src={popupActiveMedia.url}
+                          alt={popupActiveMedia.name}
+                          className="max-w-full max-h-full rounded-xl object-contain"
+                          style={{ boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                {/* Header */}
-                <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
-                  <MessageCircle className="w-4 h-4 text-cyan-400" />
-                  <span className="text-white font-black text-sm flex-1 truncate">{commentPopupMoment.name}</span>
-                  <button onClick={() => setCommentPopup(null)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
-                    <X className="w-4 h-4 text-white/50" />
-                  </button>
-                </div>
+                {/* ── RIGHT: Comment Panel (fixed 360px width) ── */}
+                <div
+                  className="flex-shrink-0 flex flex-col"
+                  style={{
+                    width: '360px',
+                    background: 'linear-gradient(135deg, rgba(180,200,230,0.12) 0%, rgba(100,130,180,0.08) 60%, rgba(60,80,120,0.10) 100%)',
+                    backdropFilter: 'blur(40px) saturate(200%)',
+                    WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+                    borderLeft: hasMedia ? '1px solid rgba(200,220,255,0.18)' : undefined,
+                    boxShadow: '-12px 0 60px rgba(0,0,0,0.5), inset 1px 0 0 rgba(255,255,255,0.12)',
+                    position: 'relative',
+                  }}
+                >
+                  {/* Sheen */}
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, transparent 50%)' }} />
 
-                {/* Comments list */}
-                <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5" style={{ scrollbarWidth: 'none' }}>
-                  {commentPopupMoment.comments.length === 0 ? (
-                    <p className="text-white/25 text-xs text-center mt-8">No replies yet — be first!</p>
-                  ) : (
-                    commentPopupMoment.comments.map((c, ci) => (
-                      <div key={ci} className="flex items-start gap-2.5 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 mt-0.5" style={{ background: `hsl(${ci * 80 + 40},55%,28%)` }}>{c.user[0]}</div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-white/70 text-[10px] font-bold mb-0.5">{c.user}</p>
-                          <p className="text-white/85 text-xs leading-relaxed">{c.text}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                {/* Comment input */}
-                <div className="flex-shrink-0 px-4 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div className="flex gap-2">
-                    <textarea
-                      placeholder="Share your thoughts… 😄"
-                      value={commentDraft}
-                      onChange={e => setCommentDraft(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAddComment(commentPopup)}
-                      rows={2}
-                      className="flex-1 px-3 py-2 rounded-xl text-xs text-white/80 placeholder-white/25 outline-none resize-none leading-relaxed"
-                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
-                    />
-                    <button
-                      onClick={() => handleAddComment(commentPopup)}
-                      className="px-3 py-2 rounded-xl text-cyan-400 hover:text-cyan-200 transition-all self-end"
-                      style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}
-                    >
-                      <Send className="w-3.5 h-3.5" />
+                  {/* Header */}
+                  <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
+                    <MessageCircle className="w-4 h-4 text-cyan-400" />
+                    <span className="text-white font-black text-sm flex-1 truncate">{commentPopupMoment.name}</span>
+                    <button onClick={() => setCommentPopup(null)} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-white/10 transition-all">
+                      <X className="w-4 h-4 text-white/50" />
                     </button>
+                  </div>
+
+                  {/* Comments list */}
+                  <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5" style={{ scrollbarWidth: 'none' }}>
+                    {commentPopupMoment.comments.length === 0 ? (
+                      <p className="text-white/25 text-xs text-center mt-8">No replies yet — be first!</p>
+                    ) : (
+                      commentPopupMoment.comments.map((c, ci) => (
+                        <div key={ci} className="flex items-start gap-2.5 p-2.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black flex-shrink-0 mt-0.5" style={{ background: `hsl(${ci * 80 + 40},55%,28%)` }}>{c.user[0]}</div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white/70 text-[10px] font-bold mb-0.5">{c.user}</p>
+                            <p className="text-white/85 text-xs leading-relaxed">{c.text}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Comment input */}
+                  <div className="flex-shrink-0 px-4 pb-4 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <div className="flex gap-2">
+                      <textarea
+                        placeholder="Share your thoughts… 😄"
+                        value={commentDraft}
+                        onChange={e => setCommentDraft(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAddComment(commentPopup)}
+                        rows={2}
+                        className="flex-1 px-3 py-2 rounded-xl text-xs text-white/80 placeholder-white/25 outline-none resize-none leading-relaxed"
+                        style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
+                      />
+                      <button
+                        onClick={() => handleAddComment(commentPopup)}
+                        className="px-3 py-2 rounded-xl text-cyan-400 hover:text-cyan-200 transition-all self-end"
+                        style={{ background: 'rgba(34,211,238,0.12)', border: '1px solid rgba(34,211,238,0.25)' }}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
