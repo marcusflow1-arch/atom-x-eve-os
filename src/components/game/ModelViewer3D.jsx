@@ -16,8 +16,8 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     
-    camera.position.set(0, 1.5, 3);
-    camera.lookAt(0, 1, 0);
+    camera.position.set(0, 1.5, 1.2);
+    camera.lookAt(0, 1.5, 0);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
@@ -65,13 +65,16 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
       scene.add(model);
     });
 
-    let rotation = 0;
+    let time = 0;
     const animate = () => {
       requestAnimationFrame(animate);
-      rotation += 0.005;
+      time += 0.016;
+      
       scene.children.forEach(child => {
         if (child.isMesh || child.isGroup) {
-          child.rotation.y = rotation;
+          // Subtle idle bob and sway
+          child.position.y = Math.sin(time * 1.5) * 0.05;
+          child.rotation.z = Math.sin(time * 0.8) * 0.02;
         }
       });
       renderer.render(scene, camera);
