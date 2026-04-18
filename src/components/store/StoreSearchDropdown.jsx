@@ -64,7 +64,8 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 right-0 mt-2 z-50"
+            className="absolute top-full left-0 right-0 mt-2"
+            style={{ zIndex: 99999 }}
             onClick={() => setIsOpen(false)}
           >
               {/* Content */}
@@ -109,7 +110,8 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40"
+            className="fixed inset-0"
+            style={{ zIndex: 99998 }}
             style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
             onClick={close}
           />
