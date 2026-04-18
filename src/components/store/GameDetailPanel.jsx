@@ -950,13 +950,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     dlcList={dlcList}
                     onSelectCard={setSelectedCard}
                   />
-                </div>
+</div>
 
-                {/* Vertical Divider */}
-                <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
+{/* Vertical Divider */}
+<div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
 
-                {/* Right: Game Info (30%) */}
-                <div className="w-80 flex flex-col gap-6">
+{/* Right: Game Info + 3D Viewer (30%) */}
+<div className="w-80 flex flex-col gap-6">
                   {/* DLC Section */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -1073,9 +1073,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </p>
                   </div>
                 </div>
-                </div>
 
-                {/* Reviews Section */}
+
+              </div>
+
+              {/* Reviews Section */}
               <ReviewSection reviews={reviews} user={user} />
             </motion.div>
           ) : activeTab === 'trailer' ? (

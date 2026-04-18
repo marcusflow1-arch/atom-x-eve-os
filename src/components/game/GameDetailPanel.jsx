@@ -15,6 +15,7 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
+import ModelViewer3D from './ModelViewer3D';
 
 
 // --- Components ---
@@ -209,6 +210,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedDLC, setSelectedDLC] = useState(null);
   const [selectedMediaItem, setSelectedMediaItem] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [storeModel, setStoreModel] = useState(null);
   
   // Auto-select first media item on load
   useEffect(() => {
@@ -423,6 +425,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
           game_title: fetchedGame.title 
         }, '-created_date');
         setReviews(gameReviews);
+        
+        // Fetch the 3D model for store from the database
+        const allModels = await base44.entities.Model3D.list('-file_size');
+        const storePageModel = allModels.find(m => m.category?.toLowerCase().includes('store') || m.name?.toLowerCase().includes('store'));
+        if (storePageModel) {
+          setStoreModel(storePageModel);
+        }
         
         // Mock dev review (in production, this would be fetched from a DevReview entity)
         setDevReview({
@@ -886,11 +895,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                   {/* 3D Viewer - Seamless Integration */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                    <div className="relative z-10 text-center">
-                      <div className="text-white/40 text-sm">3D Model Viewer</div>
-                      <p className="text-white/20 text-xs mt-1">(Ready for 3D model)</p>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
+                    {storeModel ? (
+                      <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
+                    ) : (
+                      <ModelViewer3D modelPath="/models/lara.glb" />
+                    )}
                   </div>
 
                 </div>
@@ -927,8 +937,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
                           {tag}
                         </span>
                       ))}
