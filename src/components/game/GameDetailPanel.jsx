@@ -825,18 +825,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right (50%): Live Stream */}
+                {/* Right (50%): Demo/Video */}
                 <div className="flex-1 min-w-0 flex flex-col gap-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <h4 className="text-lg font-bold text-white">Developer Release</h4>
-                      <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
-                      <h4 className="text-lg font-bold text-white">Live Stream</h4>
-                    </div>
-                  </div>
+                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
                   
                   {/* Demo Video/AR Box */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview">
@@ -958,8 +949,15 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                     </div>
 
+                  {/* Separator Line */}
+                  <div className="flex items-center gap-4 my-6">
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
+                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
+                  </div>
+
                   {/* Live Stream + Chat Row */}
-              <div className="flex flex-col lg:flex-row gap-4 mt-4">
+                  <div className="flex flex-col lg:flex-row gap-4">
               {/* Live Stream Box — same aspect ratio as media preview */}
               <div className="flex-[2] min-w-0">
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col">
