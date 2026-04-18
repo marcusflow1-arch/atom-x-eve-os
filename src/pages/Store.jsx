@@ -738,7 +738,7 @@ export default function Store() {
                                         <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
                                     </motion.div>
                                 ) : storeMode === 'devcards' ? (
-                                    <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full overflow-hidden pt-16">
+                                    <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
                                         <DevEditionContent />
                                     </motion.div>
                                 ) : (
