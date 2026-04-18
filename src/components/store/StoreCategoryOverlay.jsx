@@ -544,7 +544,7 @@ export default function StoreCategoryOverlay({ category, games, onClose }) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
       className="absolute inset-0 flex overflow-hidden"
-      style={{ zIndex: 40 }}
+      style={{ zIndex: 9000 }}
       style={{ background: 'linear-gradient(135deg, rgba(10,14,20,0.98) 0%, rgba(15,20,30,0.99) 100%)', backdropFilter: 'blur(30px)' }}
     >
       {/* ═══ LEFT: Game List (80% or 15% collapsed) ═══ */}
