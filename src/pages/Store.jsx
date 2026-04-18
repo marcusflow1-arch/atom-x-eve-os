@@ -38,6 +38,7 @@ import WishlistButton from '../components/store/WishlistButton';
 import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
+import CategorySearchBar from '../components/store/CategorySearchBar';
 import { DollarSign } from 'lucide-react';
 
 const GENRE_ICONS = {
@@ -446,7 +447,14 @@ export default function Store() {
                     <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
                     <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
                   </div>
-                  <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                  <div className="flex items-center gap-3">
+                    <CategorySearchBar
+                      activeCategoryOverlay={activeCategoryOverlay}
+                      games={games}
+                      onGameSelect={(game) => { setActiveCategoryOverlay(null); handleNavigateToGame(game.id); }}
+                    />
+                    <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                  </div>
                 </div>
               }
               bottomContent={
@@ -468,6 +476,7 @@ export default function Store() {
                       onLibraryClose={() => setStoreLibraryOpen(false)}
                       libraryLabel="Store Library"
                       searchTerm={searchTerm}
+                      activeCategoryLabel={activeCategoryOverlay ? { recommended: 'Recommended', new_releases: 'New Releases', top_rated: 'Top Games', trending: 'Trending', hidden_gems: 'Hidden Gems' }[activeCategoryOverlay] : null}
                       activeFilters={storeFilters}
                       onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />

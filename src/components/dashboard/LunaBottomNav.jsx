@@ -86,7 +86,7 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   );
 }
 
-export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, activeFilters, onFilterChange }) {
+export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, forceLibraryOpen, onLibraryClose, hideNav, searchTerm, onSearchChange, activeFilters, onFilterChange, activeCategoryLabel }) {
   const [activeTab, setActiveTab] = useState(forceLibraryOpen ? 'library' : 'home');
   const [genreExtensionOpen, setGenreExtensionOpen] = useState(false);
   const genreScrollRef = useRef(null);
@@ -561,22 +561,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <h3 className="text-white font-bold tracking-widest uppercase text-sm">
                       {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
                     </h3>
-                    {activeTab === 'library' && (
-                      <div className="flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-lg border border-white/15 bg-white/[0.06] backdrop-blur-md">
-                        <Search className="w-3 h-3 text-white/40 flex-shrink-0" />
-                        <input
-                          type="text"
-                          value={searchTerm || ''}
-                          onChange={(e) => onSearchChange?.(e.target.value)}
-                          placeholder="Filter games..."
-                          className="bg-transparent text-white/80 text-xs placeholder-white/30 outline-none w-28"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        {searchTerm && (
-                          <button onClick={(e) => { e.stopPropagation(); onSearchChange?.(''); }} className="text-white/30 hover:text-white/60 transition-colors">
-                            <X className="w-3 h-3" />
-                          </button>
-                        )}
+                    {activeTab === 'library' && activeCategoryLabel && (
+                      <div className="ml-3 px-3 py-1 rounded-full border border-cyan-400/40 bg-cyan-400/10 text-cyan-300 text-xs font-bold">
+                        {activeCategoryLabel}
                       </div>
                     )}
                   </>
