@@ -39,7 +39,7 @@ import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
-import DevEditionContent from '../components/store/DevEditionContent';
+import DevCardsContent from '../components/store/DevCardsContent';
 import { DollarSign } from 'lucide-react';
 
 const GENRE_ICONS = {
@@ -739,7 +739,7 @@ export default function Store() {
                                     </motion.div>
                                 ) : storeMode === 'devcards' ? (
                                     <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden">
-                                        <DevEditionContent />
+                                        <DevCardsContent onNavigateToGame={handleNavigateToGame} />
                                     </motion.div>
                                 ) : (
                                     <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
