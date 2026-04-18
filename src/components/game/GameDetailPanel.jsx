@@ -946,11 +946,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
                     </div>
                   </div>
-                </div>
-              </div>
-              </div>
+                  </div>
 
-              {/* Live Stream + Chat Row */}
+                  {/* Demo/AR Placeholder Box */}
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
+                   <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-purple-900/20" />
+                   <div className="text-center z-10">
+                     <Play className="w-16 h-16 text-cyan-400/50 mx-auto mb-4" />
+                     <p className="text-white/60 font-medium">Live Demo or AR Avatar</p>
+                     <p className="text-white/40 text-sm mt-1">Interactive demonstration</p>
+                   </div>
+                  </div>
+                  </div>
+                  </div>
+
+                  {/* Live Stream + Chat Row */}
               <div className="flex flex-col lg:flex-row gap-4 mt-4">
               {/* Live Stream Box — same aspect ratio as media preview */}
               <div className="flex-[2] min-w-0">
