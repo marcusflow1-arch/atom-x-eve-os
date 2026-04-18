@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Star, Smartphone, ShoppingBag } from 'lucide-react';
+import { Gamepad2, Star, Smartphone, Shield, Trophy, Monitor, Car, Skull, Crosshair, Music, Zap, Heart, Sparkles } from 'lucide-react';
 import { useGameFilters } from './hooks/useGameFilters';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -13,18 +13,18 @@ import LoadingState from '../error/LoadingState';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
-    'RPG': require('lucide-react').Shield,
-    'Strategy': require('lucide-react').Trophy,
-    'Simulation': require('lucide-react').Monitor,
-    'Sports': require('lucide-react').Trophy,
-    'Racing': require('lucide-react').Car,
-    'Horror': require('lucide-react').Skull,
-    'Shooter': require('lucide-react').Crosshair,
-    'Music': require('lucide-react').Music,
+    'RPG': Shield,
+    'Strategy': Trophy,
+    'Simulation': Monitor,
+    'Sports': Trophy,
+    'Racing': Car,
+    'Horror': Skull,
+    'Shooter': Crosshair,
+    'Music': Music,
     'Adventure': Gamepad2,
-    'Puzzle': require('lucide-react').Zap,
-    'Romance': require('lucide-react').Heart,
-    'Sci-Fi': require('lucide-react').Sparkles,
+    'Puzzle': Zap,
+    'Romance': Heart,
+    'Sci-Fi': Sparkles,
 };
 
 function SwordsIcon(props) {
