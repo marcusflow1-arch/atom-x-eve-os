@@ -3,13 +3,9 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 
 const Model = ({ modelPath }) => {
-  try {
-    const { scene } = useGLTF(modelPath);
-    return scene ? <primitive object={scene} /> : null;
-  } catch (error) {
-    console.warn('Failed to load model:', modelPath, error);
-    return null;
-  }
+  const { scene } = useGLTF(modelPath);
+  if (!scene) return null;
+  return <primitive object={scene} />;
 };
 
 const LoadingFallback = () => (
