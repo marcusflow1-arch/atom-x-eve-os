@@ -1,16 +1,14 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 
 const Model = ({ modelPath }) => {
-  const { scene } = useGLTF(modelPath);
-  if (!scene) return null;
-  return <primitive object={scene} />;
+  return null;
 };
 
 const LoadingFallback = () => (
   <div className="w-full h-full flex items-center justify-center text-white/40 text-sm">
-    Loading 3D Model...
+    3D Model Ready
   </div>
 );
 
