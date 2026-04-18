@@ -467,6 +467,20 @@ export default function Store() {
                 onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
               />
             }>
+                {/* CATEGORY OVERLAY — rendered at top level to overlay everything */}
+                <AnimatePresence>
+                    {activeCategoryOverlay && (
+                        <div className="absolute inset-0" style={{ zIndex: 9000 }}>
+                            <StoreCategoryOverlay
+                                key={activeCategoryOverlay}
+                                category={activeCategoryOverlay}
+                                games={games}
+                                onClose={() => setActiveCategoryOverlay(null)}
+                            />
+                        </div>
+                    )}
+                </AnimatePresence>
+
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
                     {/* Library sliding panel from LunaBottomNav — rendered without its own nav bar */}
@@ -539,18 +553,6 @@ export default function Store() {
                             <AnimatePresence>
                                 {showOverview && (
                                     <StoreOverview onClose={() => setShowOverview(false)} />
-                                )}
-                            </AnimatePresence>
-
-                            {/* CATEGORY OVERLAY */}
-                            <AnimatePresence>
-                                {activeCategoryOverlay && (
-                                    <StoreCategoryOverlay
-                                        key={activeCategoryOverlay}
-                                        category={activeCategoryOverlay}
-                                        games={games}
-                                        onClose={() => setActiveCategoryOverlay(null)}
-                                    />
                                 )}
                             </AnimatePresence>
 
