@@ -867,41 +867,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     )}
                   </div>
 
-                  {/* Thumbnails Strip */}
-                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                    {videos.map((video, i) => (
-                      <div 
-                        key={i}
-                        onClick={() => handleMediaTrigger(i)}
-                        className={`relative w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all flex-shrink-0 ${
-                          selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
-                        }`}
-                      >
-                        <img 
-                          src={video.image} 
-                          alt={video.title}
-                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <Play className="w-4 h-4 text-white drop-shadow-md" />
-                        </div>
-                      </div>
-                    ))}
-                    {screenshots.map((screenshot, i) => (
-                      <div 
-                        key={i}
-                        onClick={() => handleMediaTrigger(videos.length + i)}
-                        className={`w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
-                          selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
-                        }`}
-                      >
-                        <img 
-                          src={screenshot.image} 
-                          alt={screenshot.title}
-                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    ))}
+                  {/* 3D Viewer - Seamless Integration */}
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                    <div className="relative z-10 text-center">
+                      <div className="text-white/40 text-sm">3D Model Viewer</div>
+                      <p className="text-white/20 text-xs mt-1">(Ready for 3D model)</p>
+                    </div>
                   </div>
 
                 </div>
