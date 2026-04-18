@@ -1211,115 +1211,147 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                   </div>
 
-                  {/* About This Game */}
-                  <div className="space-y-4 pt-4">
-                    <h3 className="text-xl font-bold text-white border-b border-white/10 pb-2">About This Game</h3>
-                    <p className="text-white/70 leading-relaxed text-sm">
-                      {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
-                    </p>
-                    <p className="text-white/70 leading-relaxed text-sm">
-                      Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
-                    </p>
-                  </div>
+                  {/* Developer Studio & Content Updates */}
+                  <div className="space-y-8 pt-4 border-t border-white/10">
+                    {/* Header */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">SU</span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-white">Studio Unknown</h3>
+                          <p className="text-white/40 text-xs uppercase tracking-wider">Award-Winning Game Developer</p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-white/70 leading-relaxed text-sm">
+                        Studio Unknown is a passionate indie collective dedicated to crafting immersive gaming experiences. Founded in 2019, our team of 40+ developers, artists, and designers work collaboratively to push creative boundaries and deliver unforgettable adventures.
+                      </p>
 
-                  {/* Developer Updates Gallery */}
-                  <div className="space-y-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <Image className="w-5 h-5 text-cyan-400" />
-                        Developer Updates
-                      </h3>
-                      <span className="text-[10px] text-white/30 uppercase tracking-wider">Screenshots & What's Coming</span>
+                      <div className="flex flex-wrap gap-2">
+                        {['Story-Driven', 'Innovative Gameplay', 'Beautiful Worlds', 'Community First'].map((tag, i) => (
+                          <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-white/60">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    
-                    {/* Gallery Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {[
-                        {
-                          id: 1,
-                          type: 'screenshot',
-                          title: 'New Biome Preview',
-                          image: 'https://images.unsplash.com/photo-1579546589027-ed7b1cdd7f86?w=400&h=300&fit=crop',
-                          date: 'Apr 10, 2026',
-                          comments: 12
-                        },
-                        {
-                          id: 2,
-                          type: 'coming',
-                          title: 'Upcoming Boss Design',
-                          image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=400&h=300&fit=crop',
-                          date: 'Coming Soon',
-                          comments: 28
-                        },
-                        {
-                          id: 3,
-                          type: 'screenshot',
-                          title: 'UI Redesign Mockup',
-                          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-                          date: 'Apr 8, 2026',
-                          comments: 15
-                        },
-                        {
-                          id: 4,
-                          type: 'coming',
-                          title: 'Seasonal Battle Pass',
-                          image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=300&fit=crop',
-                          date: 'Coming Soon',
-                          comments: 42
-                        },
-                        {
-                          id: 5,
-                          type: 'screenshot',
-                          title: 'PvP Arena Showcase',
-                          image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=400&h=300&fit=crop',
-                          date: 'Apr 5, 2026',
-                          comments: 33
-                        },
-                        {
-                          id: 6,
-                          type: 'coming',
-                          title: 'New Weapon Line',
-                          image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=400&h=300&fit=crop',
-                          date: 'Coming Soon',
-                          comments: 19
-                        },
-                      ].map((update) => (
-                        <motion.div
-                          key={update.id}
-                          whileHover={{ scale: 1.03, y: -4 }}
-                          onClick={() => setSelectedUpdate(update)}
-                          className="group relative bg-black/40 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
-                        >
-                          <img 
-                            src={update.image} 
-                            alt={update.title}
-                            className="w-full h-40 object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          
-                          {/* Type Badge */}
-                          <div className="absolute top-2 right-2 z-10">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
-                              update.type === 'screenshot' 
-                                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
-                                : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                            }`}>
-                              {update.type === 'screenshot' ? 'Screenshot' : 'Coming'}
-                            </span>
-                          </div>
 
-                          {/* Content Overlay */}
-                          <div className="absolute inset-0 p-3 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <h4 className="text-white font-bold text-sm leading-tight mb-1">{update.title}</h4>
-                            <div className="flex items-center justify-between text-[10px] text-white/60">
-                              <span>{update.date}</span>
-                              <span className="flex items-center gap-1">
-                                <MessageSquare className="w-3 h-3" /> {update.comments}
+                    {/* Content & Updates Gallery */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                          <Image className="w-5 h-5 text-cyan-400" />
+                          What's Coming & Behind the Scenes
+                        </h4>
+                      </div>
+                      
+                      {/* Gallery Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {[
+                          {
+                            id: 1,
+                            type: 'coming',
+                            title: 'Season 3: Void Nexus',
+                            image: 'https://images.unsplash.com/photo-1579546589027-ed7b1cdd7f86?w=400&h=300&fit=crop',
+                            date: 'May 2026',
+                            comments: 156
+                          },
+                          {
+                            id: 2,
+                            type: 'behind-scenes',
+                            title: 'Studio Tour & Team',
+                            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
+                            date: 'Featured',
+                            comments: 89
+                          },
+                          {
+                            id: 3,
+                            type: 'coming',
+                            title: 'New Character Class',
+                            image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=400&h=300&fit=crop',
+                            date: 'June 2026',
+                            comments: 124
+                          },
+                          {
+                            id: 4,
+                            type: 'behind-scenes',
+                            title: 'Art Direction Process',
+                            image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=300&fit=crop',
+                            date: 'Featured',
+                            comments: 67
+                          },
+                          {
+                            id: 5,
+                            type: 'coming',
+                            title: 'Cross-Game Collaboration',
+                            image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=400&h=300&fit=crop',
+                            date: 'Q3 2026',
+                            comments: 201
+                          },
+                          {
+                            id: 6,
+                            type: 'behind-scenes',
+                            title: 'Music & Sound Design',
+                            image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=400&h=300&fit=crop',
+                            date: 'Featured',
+                            comments: 45
+                          },
+                        ].map((item) => (
+                          <motion.div
+                            key={item.id}
+                            whileHover={{ scale: 1.03, y: -4 }}
+                            onClick={() => setSelectedUpdate(item)}
+                            className="group relative bg-black/40 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
+                          >
+                            <img 
+                              src={item.image} 
+                              alt={item.title}
+                              className="w-full h-40 object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                            
+                            {/* Type Badge */}
+                            <div className="absolute top-2 right-2 z-10">
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
+                                item.type === 'coming' 
+                                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
+                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                              }`}>
+                                {item.type === 'coming' ? 'Coming Soon' : 'Studio'}
                               </span>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+
+                            {/* Content Overlay */}
+                            <div className="absolute inset-0 p-3 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                              <h4 className="text-white font-bold text-sm leading-tight mb-1">{item.title}</h4>
+                              <div className="flex items-center justify-between text-[10px] text-white/60">
+                                <span>{item.date}</span>
+                                <span className="flex items-center gap-1">
+                                  <MessageSquare className="w-3 h-3" /> {item.comments}
+                                </span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Studio Stats */}
+                    <div className="grid grid-cols-3 gap-4 pt-4">
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                        <p className="text-2xl font-bold text-cyan-400 mb-1">40+</p>
+                        <p className="text-xs text-white/60 uppercase tracking-wider">Team Members</p>
+                      </div>
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                        <p className="text-2xl font-bold text-cyan-400 mb-1">7</p>
+                        <p className="text-xs text-white/60 uppercase tracking-wider">Games Shipped</p>
+                      </div>
+                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
+                        <p className="text-2xl font-bold text-cyan-400 mb-1">2M+</p>
+                        <p className="text-xs text-white/60 uppercase tracking-wider">Players Worldwide</p>
+                      </div>
                     </div>
                   </div>
                 </div>
