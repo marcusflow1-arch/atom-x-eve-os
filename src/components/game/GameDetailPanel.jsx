@@ -849,15 +849,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                             
-                            {/* Centered Separator */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <div className="flex items-center gap-4">
-                                <div className="w-24 h-px bg-gradient-to-r from-white/20 to-transparent" />
-                                <span className="text-xs text-white/40 uppercase tracking-wider font-semibold whitespace-nowrap">Live Stream</span>
-                                <div className="w-24 h-px bg-gradient-to-l from-white/20 to-transparent" />
-                              </div>
-                            </div>
-                            
                             {/* Media Title Overlay */}
                             <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
                                 <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
@@ -957,6 +948,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                     </div>
                     </div>
+
+                  {/* Separator Line */}
+                  <div className="flex items-center gap-4 my-6">
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
+                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
+                  </div>
 
                   {/* Live Stream + Chat Row */}
                   <div className="flex flex-col lg:flex-row gap-4">
