@@ -781,13 +781,55 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Main Grid: Media Left, Info Right */}
+              {/* Achievement Cards Section - First */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-white mb-4">Developer Cards</h3>
+                <AchievementCardStrip 
+                  achievementCards={achievementCards} 
+                  dlcList={dlcList}
+                  onSelectCard={setSelectedCard} 
+                />
+              </div>
+
+              {/* Main Grid: Cards Left (50%), Demo Right (50%) */}
               <div className="flex flex-col lg:flex-row gap-8">
                 
-                {/* Left: Media Area */}
-                <div className="flex-[2] min-w-0 flex flex-col gap-4">
+                {/* Left (50%): Developer Cards Grid */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                  <h4 className="text-lg font-bold text-white">Released Cards</h4>
+                  
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 min-h-[400px]">
+                    {achievementCards.slice(0, 12).map((card, idx) => (
+                      <motion.div
+                        key={card.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        onClick={() => setSelectedCard(card)}
+                        className="relative group cursor-pointer aspect-[2/3] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20 transition-all hover:scale-105"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/30" />
+                        <img 
+                          src={card.image || game.cover_image}
+                          alt={card.name}
+                          className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 transition-transform">
+                          <p className="text-xs font-bold text-white truncate">{card.name}</p>
+                          <p className="text-[10px] text-white/60">{card.type}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* Media Preview Box */}
+                {/* Right (50%): Demo/Video */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
+                  
+                  {/* Demo Video/AR Box */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview">
                     {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
                         <iframe 
@@ -906,11 +948,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
               </div>
+              </div>
 
               {/* Live Stream + Chat Row */}
               <div className="flex flex-col lg:flex-row gap-4 mt-4">
-                {/* Live Stream Box — same aspect ratio as media preview */}
-                <div className="flex-[2] min-w-0">
+              {/* Live Stream Box — same aspect ratio as media preview */}
+              <div className="flex-[2] min-w-0">
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col">
                     {/* Stream Header Bar */}
                     <div className="flex items-center justify-between px-4 py-2 bg-black/60 border-b border-white/10 flex-shrink-0">
@@ -999,15 +1042,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Achievement Card Strip - Below media */}
-              <div className="mt-3">
-                <AchievementCardStrip 
-                  achievementCards={achievementCards} 
-                  dlcList={dlcList}
-                  onSelectCard={setSelectedCard} 
-                />
               </div>
 
               {/* Lower Section: Content */}
