@@ -224,7 +224,7 @@ const IntelligentCalendarOverlay = lazy(() => import('./components/calendar/Inte
 
 // Route-level lazy loading fallback
 const RouteLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1a1a2e 0%, #0f0f1e 25%, #000000 50%, #0a0a14 75%, #000000 100%)' }}>
+  <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
     <div className="text-center">
       <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-6"></div>
       <p className="text-white/60 text-lg font-medium tracking-wider">Loading...</p>
@@ -540,7 +540,10 @@ function LayoutContent({ children, currentPageName }) {
   // Mobile mode rendering
   if (isMobile) {
     return (
-      <div className="h-screen w-screen text-slate-300 font-sans overflow-hidden relative" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1a1a2e 0%, #0f0f1e 25%, #000000 50%, #0a0a14 75%, #000000 100%)' }}>
+      <div className="h-screen w-screen text-slate-300 font-sans overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+        <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
         <div className="absolute inset-0 -z-10">
           <ThemeBackground themeId="moon_essence" />
         </div>
@@ -566,9 +569,11 @@ function LayoutContent({ children, currentPageName }) {
   }
 
   return (
-    <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'radial-gradient(ellipse at 20% 50%, #1a1a2e 0%, #0f0f1e 25%, #000000 50%, #0a0a14 75%, #000000 100%)' }}>
+    <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-950 via-black to-slate-900 opacity-90" />
+      <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+      <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-cyan-500/8 via-purple-500/4 to-transparent blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-blue-500/8 via-cyan-500/4 to-transparent blur-3xl" />
       <div className="absolute inset-0 -z-10">
         <ThemeBackground themeId="moon_essence" />
       </div>
