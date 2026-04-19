@@ -878,45 +878,48 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
                 {/* RIGHT: Game Info Sidebar */}
-                <div className="w-72 flex-shrink-0 flex flex-col gap-4">
+                <div className="w-72 flex-shrink-0 flex flex-col rounded-xl overflow-hidden border border-white/10 bg-black/30">
                   {/* Cover image */}
-                  <div className="rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <img
                       src={game.cover_image}
                       alt={game.title}
-                      className="w-full h-40 object-cover"
+                      className="w-full object-cover"
+                      style={{ height: '160px' }}
                     />
                   </div>
 
                   {/* Description */}
-                  <p className="text-white/70 text-sm leading-relaxed">
-                    {game.description?.slice(0, 200) || 'Explore a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions.'}
-                    {(game.description?.length || 0) > 200 ? '…' : ''}
-                  </p>
+                  <div className="p-4 flex flex-col gap-4 flex-1">
+                    <p className="text-white/75 text-sm leading-relaxed">
+                      {game.description?.slice(0, 180) || 'Explore a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions.'}
+                      {(game.description?.length || 0) > 180 ? '…' : ''}
+                    </p>
 
-                  {/* Meta info */}
-                  <div className="space-y-2 border-t border-white/10 pt-3">
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Release Date:</span>
-                      <span className="text-white/80">{game.original_year || '2025'}</span>
+                    {/* Meta info */}
+                    <div className="space-y-2 border-t border-white/10 pt-3">
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Release Date:</span>
+                        <span className="text-white/80">{game.original_year || '2025'}</span>
+                      </div>
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Developer:</span>
+                        <span className="text-cyan-400">{game.developer || 'Studio Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2 text-xs">
+                        <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Publisher:</span>
+                        <span className="text-cyan-400">{game.publisher || 'Atom Publishing'}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Developer:</span>
-                      <span className="text-cyan-400">{game.developer || 'Studio Unknown'}</span>
-                    </div>
-                    <div className="flex gap-2 text-xs">
-                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Publisher:</span>
-                      <span className="text-cyan-400">{game.publisher || 'Atom Publishing'}</span>
-                    </div>
-                  </div>
 
-                  {/* Genre / Tags */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {[game.genre, ...(game.tags || [])].filter(Boolean).slice(0, 6).map((tag, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded text-[10px] bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 cursor-pointer transition-colors">
-                        {tag.replace(/_/g, ' ')}
-                      </span>
-                    ))}
+                    {/* Genre / Tags */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {[game.genre, ...(game.tags || [])].filter(Boolean).slice(0, 6).map((tag, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded text-[10px] bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 cursor-pointer transition-colors">
+                          {tag.replace(/_/g, ' ')}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
