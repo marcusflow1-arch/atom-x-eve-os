@@ -942,12 +942,10 @@ export default function GameDetailPanel({ gameId, onClose, isFromDevCards = fals
                          <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
                        </div>
                      </div>
-
-
-                   </div>
-                   </div>
-                   </>
-                   )}
+                     </div>
+                     </div>
+                     </>
+                     )}
 
               {/* Live Stream Dropdown */}
               <motion.div className="w-full">
