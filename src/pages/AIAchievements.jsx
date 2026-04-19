@@ -22,6 +22,7 @@ import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
 import ReviewInsights from '@/components/reviews/ReviewInsights';
 import LiveReviewFeed from '@/components/reviews/LiveReviewFeed';
+import ModelViewer3D from '@/components/game/ModelViewer3D';
 import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -577,19 +578,14 @@ function AIAchievementsView({ onClosePage }) {
 
             </ShinySidebarBox>
 
-            {/* Game Banner Section - Below Library */}
+            {/* Live Demo Section - 3D Model Viewer */}
             <div className="mt-2">
-              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Game Banner</h3>
-              <div className="h-[80px] rounded-xl overflow-hidden border border-white/10 bg-white/5 relative cursor-pointer hover:border-cyan-400/30 transition-all">
-                <img 
-                  src={selectedGame?.cover_image || selectedGame?.cover || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800'} 
-                  alt="Game Banner" 
-                  className="w-full h-full object-cover opacity-80"
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3">Live Demo</h3>
+              <div className="h-[200px] rounded-xl overflow-hidden border border-white/10 bg-black/30 relative">
+                <ModelViewer3D 
+                  modelPath="/models/4StorePage.glb"
+                  fileType="glb"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <div className="absolute bottom-2 left-3">
-                  <p className="text-white font-bold text-sm">{selectedGame?.title || 'Select a Game'}</p>
-                </div>
               </div>
             </div>
 
@@ -672,62 +668,45 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* FAR LEFT: Card Display */}
-                <div className="w-[220px] flex-shrink-0 flex flex-col">
-                  <div className="aspect-[2.5/3.5] w-full">
-                    <ShinyCard 
-                      index={0} 
-                      onClick={() => {
-                        const card = tradingCards[0];
-                        if (blacksmithMode) {
-                          setBlacksmithCard(card);
-                        } else {
-                          setSelectedCard(card);
-                        }
-                      }}
-                    >
-                      <div className="absolute inset-0 flex flex-col p-3">
-                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                          <img src={tradingCards[0].image} alt={tradingCards[0].title} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-white font-bold text-xs leading-tight mb-1">{tradingCards[0].title}</h3>
-                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                              tradingCards[0].rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                              tradingCards[0].rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                              tradingCards[0].rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                              'border-slate-500/50 text-slate-400'
-                            }`}>
-                              {tradingCards[0].rarity}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </ShinyCard>
+                {/* Achievement Cards Grid - 3 Columns */}
+                  <div className="flex-1 flex flex-col">
+                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards Released</h3>
+                    <div className="grid grid-cols-3 gap-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                      {tradingCards.map((card, i) => (
+                        <motion.div
+                          key={card.id}
+                          onClick={() => setSelectedCard(card)}
+                          whileHover={{ scale: 1.05 }}
+                          className="aspect-[2.5/3.5] cursor-pointer group"
+                        >
+                          <ShinyCard index={i}>
+                            <div className="absolute inset-0 flex flex-col p-3">
+                              <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
+                                <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                              </div>
+                              <div className="flex-1 flex flex-col justify-between">
+                                <div>
+                                  <h3 className="text-white font-bold text-xs leading-tight mb-1">{card.title}</h3>
+                                  <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
+                                    card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                    card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                    card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                    'border-slate-500/50 text-slate-400'
+                                  }`}>
+                                    {card.rarity}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </ShinyCard>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Card Thumbnails */}
-                  {tradingCards.length > 1 && (
-                    <div className="mt-3">
-                      <div className="flex gap-1.5 overflow-x-auto pb-2 custom-scrollbar">
-                        {tradingCards.slice(0, 5).map((card, i) => (
-                          <button
-                            key={card.id}
-                            onClick={() => setSelectedCard(card)}
-                            className="w-10 h-14 rounded-md overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all flex-shrink-0"
-                          >
-                            <img src={card.image} alt="" className="w-full h-full object-cover" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* RIGHT: Combined Skill Tree Box (Side-by-Side) */}
-                <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
+                  {/* Skill Tree Box - Below Cards */}
+                  <ShinySidebarBox className="mt-6 flex flex-col overflow-hidden max-h-[400px]">
                   {/* Header Info */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
                     <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Skill Progression</h3>
@@ -846,13 +825,13 @@ function AIAchievementsView({ onClosePage }) {
                   </div>
                 </ShinySidebarBox>
               </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
-                <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
-                <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
-                <p className="max-w-md text-center">Choose a game from the sidebar to view your collection.</p>
-              </div>
-            )}
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
+                  <Gamepad2 className="w-24 h-24 mb-6 opacity-20" />
+                  <h2 className="text-2xl font-bold text-slate-400 mb-2">Select a Game</h2>
+                  <p className="max-w-md text-center">Choose a game from the sidebar to view your collection.</p>
+                </div>
+              )}
           </div>
 
         </div>
