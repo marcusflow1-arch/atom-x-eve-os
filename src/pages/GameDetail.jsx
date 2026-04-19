@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import GameDetailPanel from '../components/store/GameDetailPanel';
+import GameDetailPanel from '../components/game/GameDetailPanel';
 import { createPageUrl } from '@/utils';
 
 export default function GameDetail() {
@@ -17,14 +17,11 @@ export default function GameDetail() {
   };
 
   return (
-    <div
-      className="absolute inset-0 overflow-hidden"
-      style={{ top: '64px', bottom: '48px', left: '80px', right: '0' }}
-    >
-      <GameDetailPanel 
-        gameId={gameId}
-        onClose={handleClose}
-      />
-    </div>
+    <GameDetailPanel 
+      gameId={gameId} 
+      onClose={handleClose}
+      showBackButton={true}
+      from={from}
+    />
   );
 }
