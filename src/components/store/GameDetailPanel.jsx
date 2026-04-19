@@ -977,10 +977,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 {/* 50/50: 3D Viewer left, Achievement Cards right */}
                 <div className="flex gap-8 min-h-[500px]">
                   {/* Left: 3D Viewer (50%) */}
-                  <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
+                  <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5" style={{ background: '#000000' }}>
                     <ModelViewer3D 
                       modelPath="/models/4StorePage.glb"
-                      fileType="glb"
                     />
                   </div>
 
@@ -1135,10 +1134,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
               {/* 3D Viewer + Achievement Cards side by side */}
               <div className="flex gap-8 flex-1 min-h-0">
                 {/* Left: 3D Viewer */}
-                <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
+                <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5" style={{ background: '#000000' }}>
                   <ModelViewer3D 
                     modelPath="/models/lara.glb"
-                    fileType="glb"
                   />
                 </div>
 
