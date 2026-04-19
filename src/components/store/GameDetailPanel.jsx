@@ -1087,15 +1087,50 @@ export default function GameDetailPanel({ gameId, onClose }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
-              className="w-full h-full flex flex-col"
+              className="w-full h-full flex flex-col gap-6"
             >
-              <h2 className="text-2xl font-black text-white tracking-tight mb-6">{game.title} <span className="text-purple-400 text-lg font-bold">— 3D Model Viewer</span></h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">{game.title} <span className="text-purple-400 text-lg font-bold">— 3D Model Viewer</span></h2>
 
-              <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/5 bg-transparent">
-                <ModelViewer3D 
-                  modelPath="/models/lara.glb"
-                  fileType="glb"
-                />
+              {/* 3D Viewer + Achievement Cards side by side */}
+              <div className="flex gap-8 flex-1 min-h-0">
+                {/* Left: 3D Viewer */}
+                <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
+                  <ModelViewer3D 
+                    modelPath="/models/lara.glb"
+                    fileType="glb"
+                  />
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20 flex-shrink-0" />
+
+                {/* Right: Achievement Cards */}
+                <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
+                  <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {achievementCards.map((card, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedCard(card)}
+                        className="group cursor-pointer relative aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/40 transition-all hover:scale-105"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                          backdropFilter: 'blur(12px)',
+                        }}
+                      >
+                        <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
+                          <span className="text-3xl mb-2">
+                            {card.type === 'Ability' ? '⚡' : card.type === 'Equipment' ? '🛡️' : card.type === 'Companion' ? '🤖' : '📖'}
+                          </span>
+                          <span className="text-white font-bold text-xs leading-tight mb-1">{card.name}</span>
+                          <span className="text-cyan-400 text-[9px] uppercase tracking-wider">{card.type}</span>
+                          <span className="text-white/30 text-[8px] mt-1 truncate w-full">{card.edition}</span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </motion.div>
           ) : (
