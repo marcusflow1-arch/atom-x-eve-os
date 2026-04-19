@@ -974,7 +974,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   {/* Left: 3D Viewer (50%) */}
                   <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
                     <ModelViewer3D 
-                      modelPath="/models/lara.glb"
+                      modelPath="/models/4StorePage.glb"
                       fileType="glb"
                     />
                   </div>
