@@ -1085,6 +1085,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
+              </div>
+
               {/* Reviews Section */}
               <ReviewSection reviews={reviews} user={user} />
             </motion.div>
