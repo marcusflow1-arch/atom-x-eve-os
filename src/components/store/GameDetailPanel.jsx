@@ -194,7 +194,7 @@ const SpecsTab = ({ game }) => {
 
 // PurchaseModal component removed - now using global CartDrawer
 
-export default function GameDetailPanel({ gameId, onClose }) {
+export default function GameDetailPanel({ gameId, onClose, isFromDevCards = false }) {
   const { user, isAuthenticated } = useAuth();
   const { addToCart, isPurchased } = useCart();
   const navigate = useNavigate();
@@ -818,9 +818,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
+              {!isFromDevCards && (
               {/* Main Grid: Media Left, Info Right */}
               <div className="flex flex-col lg:flex-row gap-8">
-                
+
                 {/* Left: Media Area */}
                 <div className="flex-[2] min-w-0 flex flex-col gap-4">
 
@@ -843,7 +844,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                            
+
                             {/* Media Title Overlay */}
                             <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
                                 <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
@@ -944,6 +945,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                    </div>
               </div>
+              )}
 
               {/* Live Stream Dropdown */}
               <motion.div className="w-full">

@@ -777,7 +777,7 @@ export default function Store() {
                                         transition={{ duration: 0.3 }}
                                         className="absolute inset-0 z-50"
                                     >
-                                        <StoreGameDetailPanel gameId={inPageDevCardsGameId} onClose={() => setInPageDevCardsGameId(null)} />
+                                        <StoreGameDetailPanel gameId={inPageDevCardsGameId} onClose={() => setInPageDevCardsGameId(null)} isFromDevCards={true} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>
