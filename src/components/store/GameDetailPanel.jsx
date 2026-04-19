@@ -774,29 +774,47 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </span>
                   )}
                 </div>
-                {/* Price + Cart — right side, eye-level with title */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {!owned ? (
-                    <>
-                      <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-white font-bold text-lg border border-white/10 shadow-lg">
-                        ${game.price?.toFixed(2) || '0.00'}
-                      </div>
+                {/* Right: Tab Buttons + Price/Cart */}
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  {/* Tab Buttons */}
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setActiveTab('system')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                    >
+                      System Core
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('specs')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                    >
+                      Tech Specs
+                    </button>
+                  </div>
+                  {/* Price + Cart */}
+                  <div className="flex items-center gap-3">
+                    {!owned ? (
+                      <>
+                        <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-xl text-white font-bold text-lg border border-white/10 shadow-lg">
+                          ${game.price?.toFixed(2) || '0.00'}
+                        </div>
+                        <button
+                          onClick={handleAddToCart}
+                          className="px-5 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center gap-2 hover:scale-105"
+                        >
+                          Add to Cart
+                        </button>
+                      </>
+                    ) : (
                       <button
-                        onClick={handleAddToCart}
+                        onClick={handlePlay}
                         className="px-5 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center gap-2 hover:scale-105"
                       >
-                        Add to Cart
+                        <Play className="w-4 h-4 fill-white" />
+                        Play Now
                       </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={handlePlay}
-                      className="px-5 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center gap-2 hover:scale-105"
-                    >
-                      <Play className="w-4 h-4 fill-white" />
-                      Play Now
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
