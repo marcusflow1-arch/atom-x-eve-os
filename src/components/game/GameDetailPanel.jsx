@@ -769,7 +769,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               className="space-y-8"
             >
               {/* Header Section: Title & Actions */}
-              <div className="flex items-center justify-between gap-6 mb-8">
+              <div className="flex items-center justify-between gap-6 mb-6">
                 <div className="flex items-center gap-4">
                   <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                     {game.title}
@@ -781,8 +781,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   )}
                 </div>
 
-                {/* Actions: Price & Buy Button (Eye-level with Title) */}
-                <div className="flex items-center gap-4">
+                {/* Actions: Price & Buy Button */}
+                <div className="flex items-center gap-4 flex-shrink-0">
                    {!owned ? (
                       <>
                         <div className="bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
@@ -807,90 +807,118 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Main 50/50 Split: 3D Viewer Left | Achievement Cards Right */}
-              <div className="flex gap-0 mb-8" style={{ minHeight: '520px' }}>
-
-                {/* LEFT 50%: 3D Viewer */}
-                <div className="flex-1 min-w-0 flex flex-col gap-3 pr-6">
-                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
-                  <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1" style={{ minHeight: '480px' }}>
-                    {storeModel ? (
-                      <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
+              {/* Main Media + Info Row (Steam-style) */}
+              <div className="flex gap-6 mb-4">
+                {/* LEFT: Main Media Viewer */}
+                <div className="flex-1 min-w-0 flex flex-col gap-3">
+                  {/* Main video/screenshot display */}
+                  <div 
+                    className="relative rounded-xl overflow-hidden bg-black cursor-pointer group"
+                    style={{ aspectRatio: '16/9' }}
+                    onClick={handleFullscreen}
+                  >
+                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                      <iframe
+                        src={selectedMediaItem.embedUrl}
+                        title={selectedMediaItem.title}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
                     ) : (
-                      <ModelViewer3D modelPath="/models/lara.glb" />
+                      <img
+                        src={selectedMediaItem?.image || game.cover_image}
+                        alt={selectedMediaItem?.title || game.title}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                    {/* Fullscreen button */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleFullscreen(); }}
+                      className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Maximize2 className="w-4 h-4 text-white" />
+                    </button>
+                    {/* Media label */}
+                    {selectedMediaItem?.title && (
+                      <div className="absolute bottom-3 left-3 text-white text-sm font-semibold bg-black/50 px-2 py-1 rounded">
+                        {selectedMediaItem.title}
+                      </div>
                     )}
                   </div>
+
+                  {/* Thumbnail strip */}
+                  <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                    {[...videos, ...screenshots].map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleMediaTrigger(idx)}
+                        className={`relative flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                          selectedMediaItem === item || (idx === 0 && !selectedMediaItem)
+                            ? 'border-white/70 opacity-100' 
+                            : 'border-transparent opacity-60 hover:opacity-90'
+                        }`}
+                      >
+                        {item.type === 'video' && (
+                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <div className="w-6 h-6 bg-black/60 rounded-full flex items-center justify-center">
+                              <Play className="w-3 h-3 text-white fill-white" />
+                            </div>
+                          </div>
+                        )}
+                        <img
+                          src={item.image || game.cover_image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* White Vertical Divider */}
-                <div className="w-px bg-white/20 self-stretch flex-shrink-0" />
-
-                {/* RIGHT 50%: Achievement Cards - vertical scrollable grid */}
-                <div className="flex-1 min-w-0 flex flex-col gap-3 pl-6 overflow-hidden">
-                  {/* Strip header (title + DLC toggle) */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Trophy className="w-4 h-4 text-cyan-400" />
-                    <h4 className="text-lg font-bold text-white">Achievement Cards Released</h4>
+                {/* RIGHT: Game Info Sidebar */}
+                <div className="w-72 flex-shrink-0 flex flex-col gap-4">
+                  {/* Cover image */}
+                  <div className="rounded-xl overflow-hidden border border-white/10 flex-shrink-0">
+                    <img
+                      src={game.cover_image}
+                      alt={game.title}
+                      className="w-full h-40 object-cover"
+                    />
                   </div>
 
-                  {/* Filter pills */}
-                  <div className="flex flex-wrap gap-1 flex-shrink-0">
-                    {['All','Ability','Equipment','Companion','Environment'].map(f => {
-                      const colors = { All: '#fff', Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
-                      const c = colors[f];
-                      const active = f === 'All'; // static default; AchievementCardStrip manages its own state
-                      return (
-                        <span key={f} className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                          style={{ background: `${c}18`, border: `1px solid ${c}40`, color: c }}>
-                          {f}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  {/* Description */}
+                  <p className="text-white/70 text-sm leading-relaxed">
+                    {game.description?.slice(0, 200) || 'Explore a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions.'}
+                    {(game.description?.length || 0) > 200 ? '…' : ''}
+                  </p>
 
-                  {/* Cards — 3-column vertical grid, scrollable */}
-                  <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-                    <div className="grid grid-cols-3 gap-3">
-                      {achievementCards.slice(0, 9).map((card, idx) => {
-                        const typeColors = { Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
-                        const col = typeColors[card.type] || '#fff';
-                        return (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.04 }}
-                            onClick={() => setSelectedCard(card)}
-                            whileHover={{ scale: 1.04, y: -2 }}
-                            className="cursor-pointer rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all"
-                            style={{ background: 'rgba(255,255,255,0.04)' }}
-                          >
-                            <div className="relative aspect-[2/2.5] flex flex-col items-center justify-center p-3">
-                              <img
-                                src={game.cover_image}
-                                alt={card.name}
-                                className="absolute inset-0 w-full h-full object-cover opacity-20"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                              <div className="relative z-10 flex flex-col items-center gap-1 text-center">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
-                                  style={{ background: `${col}18`, border: `1px solid ${col}40` }}>
-                                  <span style={{ color: col }} className="text-sm">✦</span>
-                                </div>
-                                <p className="text-[10px] font-bold text-white leading-tight line-clamp-2">{card.name}</p>
-                                <p className="text-[8px] font-medium" style={{ color: col }}>{card.type}</p>
-                              </div>
-                            </div>
-                            <div className="px-2 py-1.5 border-t border-white/5">
-                              <p className="text-[8px] text-white/35 truncate">{card.edition}</p>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                  {/* Meta info */}
+                  <div className="space-y-2 border-t border-white/10 pt-3">
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Release Date:</span>
+                      <span className="text-white/80">{game.original_year || '2025'}</span>
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Developer:</span>
+                      <span className="text-cyan-400">{game.developer || 'Studio Unknown'}</span>
+                    </div>
+                    <div className="flex gap-2 text-xs">
+                      <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Publisher:</span>
+                      <span className="text-cyan-400">{game.publisher || 'Atom Publishing'}</span>
                     </div>
                   </div>
-                </div>
 
+                  {/* Genre / Tags */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {[game.genre, ...(game.tags || [])].filter(Boolean).slice(0, 6).map((tag, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded text-[10px] bg-white/10 border border-white/10 text-white/70 hover:bg-white/15 cursor-pointer transition-colors">
+                        {tag.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
 
