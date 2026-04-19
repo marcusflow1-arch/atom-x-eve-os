@@ -807,177 +807,91 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Achievement Cards Section - First */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-4">Developer Cards</h3>
-                <AchievementCardStrip 
-                  achievementCards={achievementCards} 
-                  dlcList={dlcList}
-                  onSelectCard={setSelectedCard} 
-                />
-              </div>
+              {/* Main 50/50 Split: 3D Viewer Left | Achievement Cards Right */}
+              <div className="flex gap-0 mb-8" style={{ minHeight: '520px' }}>
 
-              {/* Main Grid: 3D Viewer + Info */}
-              <div className="flex flex-col lg:flex-row gap-8">
-                
-                {/* Left: 3D Viewer + Live Stream below it */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                {/* LEFT 50%: 3D Viewer */}
+                <div className="flex-1 min-w-0 flex flex-col gap-3 pr-6">
                   <h4 className="text-lg font-bold text-white">Live Demo</h4>
-                  
-                  {/* 3D Viewer - Full Height */}
-                  <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ height: '520px' }}>
+                  <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1" style={{ minHeight: '480px' }}>
                     {storeModel ? (
                       <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
                     ) : (
                       <ModelViewer3D modelPath="/models/lara.glb" />
                     )}
                   </div>
-
-                  {/* Live Stream Separator - centered under 3D viewer */}
-                  <div className="flex items-center gap-4 my-2">
-                    <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
-                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
-                    <div className="flex-1 h-px bg-gradient-to-l from-white/20 to-transparent" />
-                  </div>
-
-                  {/* Live Stream + Chat Row */}
-                  <div className="flex flex-col lg:flex-row gap-4">
-              {/* Live Stream Box — same aspect ratio as media preview */}
-              <div className="flex-[2] min-w-0">
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col">
-                    {/* Stream Header Bar */}
-                    <div className="flex items-center justify-between px-4 py-2 bg-black/60 border-b border-white/10 flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                        <span className="text-white font-bold text-xs uppercase tracking-wider">Live Stream</span>
-                        <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-bold">LIVE</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-[10px] text-white/40">
-                        <span className="flex items-center gap-1"><Radio className="w-3 h-3 text-red-400" /> 1,204 watching</span>
-                        <span>StreamerXO is playing {game?.title}</span>
-                      </div>
-                    </div>
-                    {/* Stream Embed / Placeholder */}
-                    <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-                      <img
-                        src={game?.banner_image || game?.cover_image}
-                        alt="Live Stream"
-                        className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/50" />
-                      <div className="relative z-10 flex flex-col items-center gap-3">
-                        <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.3)]">
-                          <Play className="w-7 h-7 text-white fill-white ml-1" />
-                        </div>
-                        <p className="text-white font-bold text-sm">Tap to Watch Live</p>
-                        <p className="text-white/40 text-xs">StreamerXO • {game?.genre} • Started 2h ago</p>
-                      </div>
-                      {/* Stream overlays */}
-                      <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white border-2 border-white/20">S</div>
-                        <div className="px-2 py-1 rounded bg-black/70 backdrop-blur-sm text-xs text-white font-medium">StreamerXO</div>
-                      </div>
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded bg-black/70 backdrop-blur-sm">
-                        <Users className="w-3 h-3 text-white/60" />
-                        <span className="text-white/60 text-xs">1,204</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Chat Box */}
-                <div className="lg:w-72 flex-shrink-0 flex flex-col" style={{ aspectRatio: undefined }}>
-                  <div className="flex flex-col h-full min-h-[280px] lg:min-h-0 bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
-                    {/* Chat Header */}
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-black/60 border-b border-white/10 flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
-                        <span className="text-white font-bold text-xs uppercase tracking-wider">Stream Chat</span>
-                      </div>
-                      <span className="text-white/30 text-[10px]">842 chatters</span>
-                    </div>
-                    {/* Chat Messages */}
-                    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
-                      {[
-                        { user: 'NovaPulse', color: 'text-purple-400', msg: 'insane run omg!! 🔥' },
-                        { user: 'CyberAce', color: 'text-cyan-400', msg: 'bro just one-shotted that boss' },
-                        { user: 'VoidWalker', color: 'text-pink-400', msg: 'what build is this? 👀' },
-                        { user: 'ShadowX', color: 'text-yellow-400', msg: 'W streamer always coming through' },
-                        { user: 'NeonKid', color: 'text-green-400', msg: 'PogChamp PogChamp PogChamp' },
-                        { user: 'DataStream', color: 'text-blue-400', msg: 'this game is actually underrated' },
-                        { user: 'NovaPulse', color: 'text-purple-400', msg: 'how many hours do you have??' },
-                        { user: 'CryptoMage', color: 'text-orange-400', msg: 'just bought this game watching this lol' },
-                        { user: 'Axion_7', color: 'text-red-400', msg: 'clip that!! clip that!!' },
-                        { user: 'LunarDev', color: 'text-cyan-300', msg: 'EZ Clap the devs cooked' },
-                      ].map((msg, i) => (
-                        <div key={i} className="text-xs leading-relaxed">
-                          <span className={`font-bold ${msg.color}`}>{msg.user}</span>
-                          <span className="text-white/20 mx-1">:</span>
-                          <span className="text-white/70">{msg.msg}</span>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Chat Input */}
-                    <div className="px-3 py-2.5 border-t border-white/10 flex-shrink-0">
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
-                        <input
-                          type="text"
-                          placeholder="Send a message..."
-                          className="flex-1 bg-transparent text-xs text-white/80 placeholder-white/25 outline-none"
-                        />
-                        <button className="text-cyan-400 hover:text-cyan-200 transition-colors">
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
+                {/* White Vertical Divider */}
+                <div className="w-px bg-white/20 self-stretch flex-shrink-0" />
+
+                {/* RIGHT 50%: Achievement Cards - vertical scrollable grid */}
+                <div className="flex-1 min-w-0 flex flex-col gap-3 pl-6 overflow-hidden">
+                  {/* Strip header (title + DLC toggle) */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Trophy className="w-4 h-4 text-cyan-400" />
+                    <h4 className="text-lg font-bold text-white">Achievement Cards Released</h4>
                   </div>
-                </div>
-              </div>
 
-                </div>
-
-                {/* Right: Game Info Sidebar */}
-                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                  {/* Info Box */}
-                  <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
-                    {/* Header Image (Capsule) - Reduced to 30% */}
-                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
-                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
-                    </div>
-
-                    {/* Short Description */}
-                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
-                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
-                    </p>
-
-                    {/* Metadata Table */}
-                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                        <span className="text-white/80">{game.original_year || '2025'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                          {tag}
+                  {/* Filter pills */}
+                  <div className="flex flex-wrap gap-1 flex-shrink-0">
+                    {['All','Ability','Equipment','Companion','Environment'].map(f => {
+                      const colors = { All: '#fff', Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
+                      const c = colors[f];
+                      const active = f === 'All'; // static default; AchievementCardStrip manages its own state
+                      return (
+                        <span key={f} className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                          style={{ background: `${c}18`, border: `1px solid ${c}40`, color: c }}>
+                          {f}
                         </span>
-                      ))}
-                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cards — 3-column vertical grid, scrollable */}
+                  <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+                    <div className="grid grid-cols-3 gap-3">
+                      {achievementCards.slice(0, 9).map((card, idx) => {
+                        const typeColors = { Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
+                        const col = typeColors[card.type] || '#fff';
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.04 }}
+                            onClick={() => setSelectedCard(card)}
+                            whileHover={{ scale: 1.04, y: -2 }}
+                            className="cursor-pointer rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all"
+                            style={{ background: 'rgba(255,255,255,0.04)' }}
+                          >
+                            <div className="relative aspect-[2/2.5] flex flex-col items-center justify-center p-3">
+                              <img
+                                src={game.cover_image}
+                                alt={card.name}
+                                className="absolute inset-0 w-full h-full object-cover opacity-20"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                              <div className="relative z-10 flex flex-col items-center gap-1 text-center">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
+                                  style={{ background: `${col}18`, border: `1px solid ${col}40` }}>
+                                  <span style={{ color: col }} className="text-sm">✦</span>
+                                </div>
+                                <p className="text-[10px] font-bold text-white leading-tight line-clamp-2">{card.name}</p>
+                                <p className="text-[8px] font-medium" style={{ color: col }}>{card.type}</p>
+                              </div>
+                            </div>
+                            <div className="px-2 py-1.5 border-t border-white/5">
+                              <p className="text-[8px] text-white/35 truncate">{card.edition}</p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
                     </div>
-                    </div>
-                    </div>
-                    </div>
+                  </div>
+                </div>
+
+              </div>
 
 
 
