@@ -16,6 +16,7 @@ import ReviewSection from './ReviewSection';
 import LiveStreamSection from './LiveStreamSection';
 import ModelViewer3D from '@/components/game/ModelViewer3D';
 import AchievementCardStrip from '@/components/game/AchievementCardStrip';
+import ContentForGamePanel from './ContentForGamePanel';
 
 
 // --- Components ---
@@ -1001,110 +1002,11 @@ export default function GameDetailPanel({ gameId, onClose, isFromDevCards = fals
 
                 {/* Content For This Game — full width below */}
                 <div className="flex flex-col gap-6">
-                  {/* DLC Section */}
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-xl font-bold text-white">Content For This Game</h3>
-                      <button className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full transition-colors">Browse All DLC</button>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => {
-                        const isExpanded = expandedDLC === dlc.id;
-                        return (
-                          <div key={dlc.id} className="rounded-lg border border-transparent overflow-hidden transition-all">
-                            {/* Row Header - clickable */}
-                            <div
-                              className="group flex items-center gap-4 p-3 bg-transparent hover:bg-white/5 cursor-pointer transition-colors"
-                              onClick={() => setExpandedDLC(isExpanded ? null : dlc.id)}
-                            >
-                              <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
-                                <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" alt="" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-bold text-white truncate">{dlc.name}</h4>
-                                <div className="flex gap-2 mt-0.5">
-                                  {dlc.abilities?.length > 0 && <span className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded">Abilities</span>}
-                                  {dlc.equipment?.length > 0 && <span className="text-[10px] text-purple-400 bg-purple-900/20 px-1.5 py-0.5 rounded">Equipment</span>}
-                                  {dlc.achievements?.length > 0 && <span className="text-[10px] text-yellow-400 bg-yellow-900/20 px-1.5 py-0.5 rounded">Achievements</span>}
-                                </div>
-                              </div>
-                              <div className="text-right flex items-center gap-3">
-                                <span className="text-sm font-bold text-white/90">${dlc.price}</span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddDLCToCart(dlc);
-                                  }}
-                                  className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
-                                  title="Add to Cart"
-                                >
-                                  <Download className="w-4 h-4" />
-                                </button>
-                                <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                              </div>
-                            </div>
-
-                            {/* Dropdown Details */}
-                            <AnimatePresence>
-                              {isExpanded && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: 'auto', opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.25 }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="px-4 py-4 bg-transparent border-t border-white/5 space-y-4">
-                                    <p className="text-white/60 text-sm leading-relaxed">{dlc.description}</p>
-                                    
-                                    {/* What's Included */}
-                                    {dlc.offers?.length > 0 && (
-                                      <div>
-                                        <h5 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">What's Included</h5>
-                                        <div className="grid grid-cols-2 gap-1.5">
-                                          {dlc.offers.map((offer, i) => (
-                                            <div key={i} className="flex items-center gap-2 text-xs text-white/70">
-                                              <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
-                                              {offer}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {/* Abilities */}
-                                    {dlc.abilities?.length > 0 && (
-                                      <div>
-                                        <h5 className="text-xs font-bold text-cyan-400/60 uppercase tracking-wider mb-2">Abilities Unlocked</h5>
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {dlc.abilities.map((ab, i) => (
-                                            <span key={i} className="text-[10px] px-2 py-0.5 bg-cyan-900/20 border border-cyan-500/20 text-cyan-300 rounded-full">{ab}</span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {/* Achievements */}
-                                    {dlc.achievements?.length > 0 && (
-                                      <div>
-                                        <h5 className="text-xs font-bold text-yellow-400/60 uppercase tracking-wider mb-2">Achievements</h5>
-                                        <div className="flex flex-wrap gap-1.5">
-                                          {dlc.achievements.map((ach, i) => (
-                                            <span key={i} className="text-[10px] px-2 py-0.5 bg-yellow-900/20 border border-yellow-500/20 text-yellow-300 rounded-full">🏆 {ach}</span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <ContentForGamePanel 
+                    game={game}
+                    dlcList={dlcList}
+                    onAddDLC={handleAddDLCToCart}
+                  />
 
                   {/* About This Game */}
                   <div className="space-y-4 pt-4">
