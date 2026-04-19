@@ -975,7 +975,8 @@ export default function GameDetailPanel({ gameId, onClose, isFromDevCards = fals
               </motion.div>
 
               {/* Lower Section: 3D Viewer + Achievement Cards, then Content below */}
-              <div className="flex flex-col gap-8 border-t border-white/10 pt-8">
+              <h3 className="text-xl font-bold text-white">Card Demos</h3>
+              <div className="flex flex-col gap-8">
                 {/* 50/50: 3D Viewer left, Achievement Cards right */}
                 <div className="flex gap-8 min-h-[500px]">
                   {/* Left: 3D Viewer (50%) */}
