@@ -858,61 +858,45 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
                    <div className="flex-1 lg:max-w-md flex flex-col gap-6">
                     {/* Top: Game Info Box (30%) */}
-                    <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
-                      {/* Header Image (Capsule) */}
-                      <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
-                        <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                    <div className="rounded-xl overflow-hidden border border-white/10 bg-black/30 backdrop-blur-sm flex flex-col">
+                      {/* Cover image */}
+                      <div className="overflow-hidden">
+                        <img src={game.cover_image} alt={game.title} className="w-full object-cover" style={{ maxHeight: '200px' }} />
                       </div>
 
-                      {/* Price + Cart */}
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {!owned ? (
-                          <>
-                            <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
-                              ${game.price?.toFixed(2) || '0.00'}
-                            </div>
-                            <button
-                              onClick={handleAddToCart}
-                              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                            >
-                              Add to Cart
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={handlePlay}
-                            className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                          >
-                            <Play className="w-4 h-4 fill-white" />
-                            Play Now
-                          </button>
-                        )}
-                      </div>
+                      <div className="p-4 space-y-4">
+                        {/* Short description */}
+                        <p className="text-white/70 text-sm leading-relaxed">
+                          {game.description
+                            ? game.description.slice(0, 160) + (game.description.length > 160 ? '…' : '')
+                            : `Explore Cyrodiil like never before with stunning new visuals and refined gameplay in ${game.title}.`}
+                        </p>
 
-                      {/* Metadata Table */}
-                      <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                          <span className="text-white/80">{game.original_year || '2025'}</span>
+                        {/* Metadata rows */}
+                        <div className="text-xs space-y-2 border-t border-white/10 pt-3">
+                          <div className="flex gap-2">
+                            <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Release Date:</span>
+                            <span className="text-white/80">{game.original_year || '2025'}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Developer:</span>
+                            <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-white/40 uppercase tracking-wider w-24 flex-shrink-0">Publisher:</span>
+                            <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                        </div>
-                      </div>
 
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-1.5 pt-2">
-                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                            {tag}
-                          </span>
-                        ))}
-                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                        {/* Genre / Tag pills */}
+                        <div className="flex flex-wrap gap-1.5">
+                          {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].filter(Boolean).map((tag, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-white/8 border border-white/15 rounded text-[10px] text-white/70 hover:bg-white/15 cursor-pointer transition-colors">
+                              {tag?.replace(/_/g, ' ')}
+                            </span>
+                          ))}
+                          <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                        </div>
                       </div>
                     </div>
 
