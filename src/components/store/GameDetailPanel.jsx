@@ -926,11 +926,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
               <motion.div className="w-full">
                 <button
                   onClick={() => setStreamDropdownOpen(!streamDropdownOpen)}
-                  className="w-full px-6 py-3 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                  className="mx-auto flex items-center justify-center gap-2 border-b border-white/30 hover:border-white/60 transition-all pb-2"
                 >
-                  <Radio className="w-4 h-4 text-red-400" />
                   <span className="font-bold text-white uppercase tracking-wide">Live Stream</span>
-                  <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 <AnimatePresence>
