@@ -48,19 +48,6 @@ export default function LiveStreamSection({ game, onViewAll }) {
 
         {/* Left Sidebar Toggle + Video Box */}
         <div className="flex gap-2">
-          {/* Toggle Arrow */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 mt-[120px]"
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            }}
-            title={sidebarOpen ? 'Hide streamers' : 'Show streamers'}
-          >
-            <ChevronRight className={`w-4 h-4 text-white/50 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
-          </button>
-
           {/* Sidebar Dropdown */}
           {sidebarOpen && (
             <div className="w-40 rounded-xl border border-white/10 overflow-hidden flex flex-col" style={{ background: 'rgba(0,0,0,0.4)' }}>
