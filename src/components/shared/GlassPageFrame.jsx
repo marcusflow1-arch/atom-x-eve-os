@@ -17,7 +17,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         style={{
           ...glassStyle,
           height: '64px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(255,255,255,0.10)',
           pointerEvents: topContent ? 'auto' : 'none',
         }}
       >
@@ -39,7 +39,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         style={{
           ...glassStyle,
           minHeight: '48px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
           pointerEvents: bottomContent ? 'auto' : 'none',
         }}
       >
