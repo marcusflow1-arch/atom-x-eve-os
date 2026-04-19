@@ -254,8 +254,7 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
-        setShowScrollTransition(true);
+        setInPageStoreGameId(id);
     };
 
     const {
@@ -748,14 +747,7 @@ export default function Store() {
                                 )}
                             </AnimatePresence>
 
-                            {showScrollTransition && (
-                                <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
-                                    const url = pendingNavigateUrl;
-                                    setShowScrollTransition(false);
-                                    setPendingNavigateUrl(null);
-                                    if (url) navigate(url);
-                                }} />
-                            )}
+
 
                             {/* IN-PAGE STORE VIEW OVERLAY */}
                             <AnimatePresence>
