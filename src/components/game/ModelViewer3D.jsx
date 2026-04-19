@@ -13,18 +13,19 @@ export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb', fi
     const height = containerRef.current.clientHeight;
     
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     
-    camera.position.set(0, 0.5, 3.5);
+    camera.position.set(0, 1, 4);
     camera.lookAt(0, 0, 0);
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    directionalLight.position.set(8, 8, 8);
+    directionalLight.castShadow = true;
     scene.add(ambientLight);
     scene.add(directionalLight);
 
@@ -57,10 +58,11 @@ export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb', fi
       const size = box.getSize(new THREE.Vector3());
       
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = (3.2 * 0.85) / maxDim;
+      const scale = 2.5 / maxDim;
       
       model.scale.multiplyScalar(scale);
       model.position.sub(center.multiplyScalar(scale));
+      model.position.y += 0.5;
       
       scene.add(model);
     });
@@ -69,14 +71,6 @@ export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb', fi
     const animate = () => {
       requestAnimationFrame(animate);
       time += 0.016;
-      
-      scene.children.forEach(child => {
-        if (child.isMesh || child.isGroup) {
-          // Subtle idle bob and sway
-          child.position.y = Math.sin(time * 1.5) * 0.05;
-          child.rotation.z = Math.sin(time * 0.8) * 0.02;
-        }
-      });
       renderer.render(scene, camera);
     };
     animate();
