@@ -817,41 +817,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 />
               </div>
 
-              {/* Main Grid: Cards Left (50%), Demo Right (50%) */}
+              {/* Main Grid: 3D Viewer + Info */}
               <div className="flex flex-col lg:flex-row gap-8">
                 
-                {/* Left (50%): Developer Cards Grid */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4">
-                  <h4 className="text-lg font-bold text-white">Released Cards</h4>
-                  
-                  {/* Cards Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 min-h-[400px]">
-                    {achievementCards.slice(0, 12).map((card, idx) => (
-                      <motion.div
-                        key={card.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        onClick={() => setSelectedCard(card)}
-                        className="relative group cursor-pointer aspect-[2/3] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20 transition-all hover:scale-105"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/30" />
-                        <img 
-                          src={card.image || game.cover_image}
-                          alt={card.name}
-                          className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 transition-transform">
-                          <p className="text-xs font-bold text-white truncate">{card.name}</p>
-                          <p className="text-[10px] text-white/60">{card.type}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Right (50%): Demo/Video */}
+                {/* Left: 3D Viewer + Live Stream below it */}
                 <div className="flex-1 min-w-0 flex flex-col gap-4">
                   <h4 className="text-lg font-bold text-white">Live Demo</h4>
                   
@@ -864,56 +833,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     )}
                   </div>
 
-                </div>
-
-                {/* Right: Game Info Sidebar */}
-                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                  {/* Info Box */}
-                  <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
-                    {/* Header Image (Capsule) - Reduced to 30% */}
-                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
-                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
-                    </div>
-
-                    {/* Short Description */}
-                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
-                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
-                    </p>
-
-                    {/* Metadata Table */}
-                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                        <span className="text-white/80">{game.original_year || '2025'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag) => (
-                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                          {tag}
-                        </span>
-                      ))}
-                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-
-                  {/* Separator Line */}
-                  <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
+                  {/* Live Stream Separator - centered under 3D viewer */}
+                  <div className="flex items-center gap-4 my-2">
+                    <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
                     <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
-                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
+                    <div className="flex-1 h-px bg-gradient-to-l from-white/20 to-transparent" />
                   </div>
 
                   {/* Live Stream + Chat Row */}
@@ -1009,6 +933,53 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
               </div>
+
+                </div>
+
+                {/* Right: Game Info Sidebar */}
+                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                  {/* Info Box */}
+                  <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
+                    {/* Header Image (Capsule) - Reduced to 30% */}
+                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
+                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                    </div>
+
+                    {/* Short Description */}
+                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
+                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
+                    </p>
+
+                    {/* Metadata Table */}
+                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
+                        <span className="text-white/80">{game.original_year || '2025'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag) => (
+                        <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                          {tag}
+                        </span>
+                      ))}
+                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+
+
 
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">

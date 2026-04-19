@@ -108,28 +108,25 @@ export default function AchievementCardStrip({ achievementCards, dlcList, onSele
 
   return (
     <div className="flex flex-col h-full">
-      {/* Title */}
+      {/* Title Row */}
       <div className="flex flex-col items-center gap-1 mb-2">
-        <div className="flex items-center gap-1.5">
-          <Trophy className="w-3.5 h-3.5 text-cyan-400" />
-          <h3 className="text-sm font-bold text-white tracking-wider">Achievement Cards</h3>
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+          <h3 className="text-sm font-bold text-white tracking-wider">Achievement Cards Released</h3>
+          {/* DLC toggle inline */}
+          <button
+            onClick={() => { setMode(mode === 'dlc' ? 'achievements' : 'dlc'); setDlcIndex(0); setActiveFilter('All'); }}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all ml-1"
+            style={mode === 'dlc'
+              ? { background: 'rgba(251,146,60,0.2)', border: '1px solid rgba(251,146,60,0.4)', color: '#fb923c' }
+              : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }
+            }
+          >
+            <Package className="w-2.5 h-2.5" />
+            DLC
+          </button>
         </div>
         <div className="w-20 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent)' }} />
-      </div>
-
-      {/* DLC toggle */}
-      <div className="flex items-center justify-center mb-2">
-        <button
-          onClick={() => { setMode(mode === 'dlc' ? 'achievements' : 'dlc'); setDlcIndex(0); setActiveFilter('All'); }}
-          className="flex items-center gap-1 px-3 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all"
-          style={mode === 'dlc'
-            ? { background: 'rgba(251,146,60,0.2)', border: '1px solid rgba(251,146,60,0.4)', color: '#fb923c' }
-            : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }
-          }
-        >
-          <Package className="w-2.5 h-2.5" />
-          DLC
-        </button>
       </div>
 
       {/* DLC name switcher */}
