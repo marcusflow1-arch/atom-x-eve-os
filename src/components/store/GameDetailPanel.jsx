@@ -912,7 +912,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                             {tag}
                           </span>
                     )}
-                        <span className="w-full h-full object-cover hidden">+</span>
+                        
                       </div>
                     </div>
 
