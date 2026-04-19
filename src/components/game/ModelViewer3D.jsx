@@ -10,7 +10,7 @@ export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb' }) 
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0a);
+    scene.background = null;
     
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -21,26 +21,25 @@ export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb' }) 
     camera.position.set(0, 2, 5);
     camera.lookAt(0, 0, 0);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
     renderer.shadowMap.enabled = true;
     mountRef.current.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    directionalLight.position.set(10, 10, 10);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+    directionalLight.position.set(5, 8, 5);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0x4488ff, 0.8);
-    pointLight.position.set(-5, 5, 5);
-    scene.add(pointLight);
+    const backLight = new THREE.DirectionalLight(0x6699ff, 0.8);
+    backLight.position.set(-5, 5, -5);
+    scene.add(backLight);
 
     // Load model
     const loader = new GLTFLoader();
