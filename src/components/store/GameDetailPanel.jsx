@@ -902,42 +902,48 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                 {/* Right: Game Info sidebar */}
                    <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                    {/* Top: Game Info Box */}
-                    <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
-                      {/* Header Image (Capsule) — reduced to ~30% width, aligned top */}
-                      <div className="w-[30%] rounded-lg overflow-hidden border border-white/10 shadow-lg">
-                        <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
-                      </div>
+                     {/* Top: Game Info Box */}
+                     <div className="rounded-xl p-5 space-y-4 border border-white/15 bg-white/[0.02]" style={{ backdropFilter: 'blur(12px)' }}>
+                       {/* Header Image (Capsule) — reduced to ~30% width, aligned top */}
+                       <div className="w-[30%] rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                         <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                       </div>
 
-                      {/* Metadata Table */}
-                      <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                          <span className="text-white/80">{game.original_year || '2025'}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                        </div>
-                      </div>
+                       {/* Metadata Table */}
+                       <div className="text-xs space-y-2 border-t border-white/10 pt-4">
+                         <div className="flex gap-2">
+                           <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
+                           <span className="text-white/80">{game.original_year || '2025'}</span>
+                         </div>
+                         <div className="flex gap-2">
+                           <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
+                           <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                         </div>
+                         <div className="flex gap-2">
+                           <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
+                           <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                         </div>
+                       </div>
 
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-1.5 pt-2">
-                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                            {tag}
-                          </span>
-                        ))}
-                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
-                      </div>
-                    </div>
+                       {/* Tags */}
+                       <div className="flex flex-wrap gap-1.5 pt-2">
+                         {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
+                           <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                             {tag}
+                           </span>
+                         ))}
+                         <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                       </div>
+                     </div>
 
-
-                  </div>
+                     {/* General Information & Description Box */}
+                     <div className="rounded-xl p-5 space-y-4 border border-white/15 bg-white/[0.02]" style={{ backdropFilter: 'blur(12px)' }}>
+                       <h4 className="text-sm font-bold text-white uppercase tracking-wider">General Information</h4>
+                       <p className="text-white/70 text-sm leading-relaxed">
+                         {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
+                       </p>
+                     </div>
+                   </div>
               </div>
 
               {/* Live Stream Dropdown */}
