@@ -855,47 +855,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <div className="flex-1 min-w-0 flex flex-col gap-4">
                   <h4 className="text-lg font-bold text-white">Live Demo</h4>
                   
-                  {/* Demo Video/AR Box */}
-                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
-                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
-                        <iframe 
-                            src={selectedMediaItem.embedUrl} 
-                            title={selectedMediaItem.title}
-                            className="w-full h-full"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        />
-                    ) : (
-                        <>
-                            <img 
-                              src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
-                              alt={selectedMediaItem?.title || game.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                            
-                            {/* Media Title Overlay */}
-                            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
-                                <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
-                                  {selectedMediaItem?.title || game.title}
-                                </h4>
-                            </div>
-
-                            {/* Fullscreen Button */}
-                            <button
-                              onClick={handleFullscreen}
-                              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group opacity-0 group-hover/preview:opacity-100"
-                            >
-                              <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
-                            </button>
-                        </>
-                    )}
-                  </div>
-
-                  {/* 3D Viewer - Seamless Integration */}
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none z-10" />
+                  {/* 3D Viewer - Full Height */}
+                  <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ height: '520px' }}>
                     {storeModel ? (
                       <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
                     ) : (
