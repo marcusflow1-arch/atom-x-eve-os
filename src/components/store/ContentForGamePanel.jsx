@@ -95,7 +95,7 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
                   transition={{ duration: 0.3 }}
                   className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"
                 >
-                  <div className="grid grid-cols-2 gap-0 p-6">
+                  <div className="grid gap-0 p-6" style={{ gridTemplateColumns: '1fr 1px 1fr' }}>
                     {/* LEFT: Dropdown content */}
                     <div className="space-y-6 pr-6">
                       {/* Includes Section */}
