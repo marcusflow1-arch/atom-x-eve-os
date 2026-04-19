@@ -941,22 +941,19 @@ export default function GameDetailPanel({ gameId, onClose }) {
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: 70/30 Split Layout */}
-              <div className="flex gap-8 border-t border-white/10 pt-8">
-                {/* Left: Achievement Cards (70%) */}
-                <div className="flex-1">
+              {/* Lower Section: Achievement Cards then Content below */}
+              <div className="flex flex-col gap-8 border-t border-white/10 pt-8">
+                {/* Achievement Cards */}
+                <div>
                   <AchievementCardStrip 
                     achievementCards={achievementCards} 
                     dlcList={dlcList}
                     onSelectCard={setSelectedCard}
                   />
-</div>
+                </div>
 
-{/* Vertical Divider */}
-<div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
-
-{/* Right: Game Info + 3D Viewer (30%) */}
-<div className="w-80 flex flex-col gap-6">
+                {/* Content For This Game — full width below */}
+                <div className="flex flex-col gap-6">
                   {/* DLC Section */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -1073,9 +1070,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </p>
                   </div>
                 </div>
-
-
-              </div>
 
               {/* Reviews Section */}
               <ReviewSection reviews={reviews} user={user} />
