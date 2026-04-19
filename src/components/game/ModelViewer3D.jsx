@@ -1,96 +1,123 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
-export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb', fileType = 'glb', bundleManifest = null }) {
-  const containerRef = useRef(null);
+export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb' }) {
+  const mountRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!mountRef.current) return;
 
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight;
-    
+    // Scene setup
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    scene.background = new THREE.Color(0x0a0a0a);
     
-    camera.position.set(0, 1, 4);
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      mountRef.current.clientWidth / mountRef.current.clientHeight,
+      0.1,
+      10000
+    );
+    camera.position.set(0, 2, 5);
     camera.lookAt(0, 0, 0);
-    renderer.setSize(width, height);
-    renderer.setClearColor(0x000000, 0);
-    containerRef.current.appendChild(renderer.domElement);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    directionalLight.position.set(8, 8, 8);
-    directionalLight.castShadow = true;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
     scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    directionalLight.position.set(10, 10, 10);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    // Setup loading manager for bundle textures
-    const manager = new THREE.LoadingManager();
-    if (bundleManifest && typeof bundleManifest === 'object') {
-      manager.setURLModifier((url) => {
-        try {
-          const u = new URL(url, window.location.href);
-          const pathname = decodeURIComponent(u.pathname).replace(/^\//, '');
-          const filename = pathname.split('/').pop();
-          if (bundleManifest[pathname]) return bundleManifest[pathname];
-          if (filename && bundleManifest[filename]) return bundleManifest[filename];
-        } catch (e) { }
-        return bundleManifest[url] || url;
-      });
-    }
+    const pointLight = new THREE.PointLight(0x4488ff, 0.8);
+    pointLight.position.set(-5, 5, 5);
+    scene.add(pointLight);
 
-    // Choose loader based on file type
-    const ext = (fileType || modelPath.split('.').pop() || '').toLowerCase();
-    const useFBX = ext === 'fbx';
-    const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
+    // Load model
+    const loader = new GLTFLoader();
+    let model;
 
-    loader.load(modelPath, (asset) => {
-      const model = asset?.scene || asset;
-      
-      // Center and scale the model
-      const box = new THREE.Box3().setFromObject(model);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      
-      const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const scale = 2.5 / maxDim;
-      
-      model.scale.multiplyScalar(scale);
-      model.position.sub(center.multiplyScalar(scale));
-      model.position.y += 0.5;
-      
-      scene.add(model);
-    });
+    loader.load(
+      modelPath,
+      (gltf) => {
+        model = gltf.scene;
+        
+        // Calculate bounding box to center the model
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        // Center the model
+        model.position.sub(center);
+        
+        // Scale to fit in view
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 3.5 / maxDim;
+        model.scale.multiplyScalar(scale);
+        
+        // Position slightly up
+        model.position.y += 0.5;
+        
+        // Enable shadows
+        model.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        
+        scene.add(model);
+      },
+      (progress) => {
+        // Loading progress
+        console.log(`Loading: ${(progress.loaded / progress.total * 100).toFixed(0)}%`);
+      },
+      (error) => {
+        console.error('Error loading model:', error);
+      }
+    );
 
-    let time = 0;
+    // Animation loop
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
-      time += 0.016;
+      animationId = requestAnimationFrame(animate);
+      
+      if (model) {
+        model.rotation.y += 0.003;
+      }
+      
       renderer.render(scene, camera);
     };
     animate();
 
+    // Handle resize
     const handleResize = () => {
-      if (containerRef.current) {
-        const w = containerRef.current.clientWidth;
-        const h = containerRef.current.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      }
+      if (!mountRef.current) return;
+      const width = mountRef.current.clientWidth;
+      const height = mountRef.current.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
     };
     window.addEventListener('resize', handleResize);
 
+    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      containerRef.current?.removeChild(renderer.domElement);
+      cancelAnimationFrame(animationId);
+      mountRef.current?.removeChild(renderer.domElement);
+      renderer.dispose();
     };
-  }, [modelPath, fileType, bundleManifest]);
+  }, [modelPath]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  return <div ref={mountRef} className="w-full h-full" />;
 }
