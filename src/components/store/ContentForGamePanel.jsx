@@ -47,11 +47,11 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
             {/* DLC Item Header */}
             <motion.div
               onClick={() => setExpandedDLC(expandedDLC?.id === dlc.id ? null : dlc)}
-              className="group flex items-center gap-4 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 cursor-pointer transition-all"
+              className="group flex items-center gap-3 p-2 rounded-lg bg-cyan-100/40 border border-cyan-200/50 hover:bg-cyan-100/50 hover:border-cyan-300/60 cursor-pointer transition-all"
               whileHover={{ x: 4 }}
             >
               {/* Thumbnail */}
-              <div className="w-16 h-16 rounded border border-white/10 flex-shrink-0 overflow-hidden">
+              <div className="w-12 h-12 rounded border border-cyan-200/30 flex-shrink-0 overflow-hidden">
                 <img
                   src={game.cover_image}
                   className="w-full h-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all"
@@ -61,12 +61,12 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-white truncate">{dlc.name}</h4>
-                <div className="flex gap-1.5 mt-1">
+                <h4 className="text-xs font-bold text-slate-900 truncate">{dlc.name}</h4>
+                <div className="flex gap-1 mt-0.5">
                   {dlc.offers?.slice(0, 2).map((offer, i) => (
                     <span
                       key={i}
-                      className="text-[10px] text-cyan-400 bg-cyan-900/20 px-1.5 py-0.5 rounded"
+                      className="text-[9px] text-cyan-700 bg-cyan-200/60 px-1 py-0.5 rounded"
                     >
                       {offer.split(' ').slice(0, 2).join(' ')}
                     </span>
@@ -75,11 +75,11 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
               </div>
 
               {/* Price */}
-              <span className="text-sm font-bold text-white flex-shrink-0">${dlc.price?.toFixed(2)}</span>
+              <span className="text-xs font-bold text-slate-900 flex-shrink-0">${dlc.price?.toFixed(2)}</span>
 
               {/* Chevron Icon */}
               <ChevronDown
-                className={`w-4 h-4 text-white/40 flex-shrink-0 transition-transform ${
+                className={`w-3 h-3 text-slate-600 flex-shrink-0 transition-transform ${
                   expandedDLC?.id === dlc.id ? 'rotate-180' : ''
                 }`}
               />
@@ -93,17 +93,17 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"
+                  className="overflow-hidden rounded-lg border border-cyan-200/30 bg-cyan-50/60"
                 >
-                  <div className="grid gap-0 p-6" style={{ gridTemplateColumns: '1fr 1px 1fr' }}>
+                  <div className="grid gap-0 p-4" style={{ gridTemplateColumns: '1fr 1px 1fr' }}>
                     {/* LEFT: Dropdown content */}
-                    <div className="space-y-6 pr-6">
+                    <div className="space-y-4 pr-4">
                       {/* Includes Section */}
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest">Includes</h4>
-                        <div className="space-y-2">
-                          {dlc.offers?.map((offer, i) => (
-                            <div key={i} className="flex items-center gap-2 text-sm text-white/80">
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-bold text-slate-600 uppercase tracking-widest">Includes</h4>
+                        <div className="space-y-1">
+                           {dlc.offers?.map((offer, i) => (
+                             <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
                               <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                               {offer}
                             </div>
@@ -112,11 +112,11 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
                       </div>
 
                       {/* New Achievements */}
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest">New Achievements</h4>
-                        <div className="space-y-2">
-                          {dlc.achievements?.map((ach, i) => (
-                            <div key={i} className="flex items-center gap-2 text-sm text-white/80">
+                       <div className="space-y-2">
+                         <h4 className="text-xs font-bold text-slate-600 uppercase tracking-widest">New Achievements</h4>
+                        <div className="space-y-1">
+                           {dlc.achievements?.map((ach, i) => (
+                             <div key={i} className="flex items-center gap-2 text-xs text-slate-700">
                               <span className="text-yellow-400 font-bold">🏆</span>
                               {ach}
                             </div>
@@ -125,90 +125,90 @@ export default function ContentForGamePanel({ game, dlcList, onAddDLC }) {
                       </div>
 
                       {/* Available Quests */}
-                      <div className="space-y-3">
-                        <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest">Available Quests</h4>
-                        <div className="space-y-2">
-                          {mockQuests.map((quest, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-                            >
-                              <span className="text-lg">{quest.icon}</span>
-                              <span className="text-sm text-white/80">{quest.name}</span>
-                              <ChevronRight className="w-3 h-3 text-white/40 ml-auto" />
+                       <div className="space-y-2">
+                         <h4 className="text-xs font-bold text-slate-600 uppercase tracking-widest">Available Quests</h4>
+                        <div className="space-y-1">
+                           {mockQuests.map((quest, i) => (
+                             <div
+                               key={i}
+                               className="flex items-center gap-2 px-2 py-1.5 bg-cyan-100/30 rounded-lg border border-cyan-200/30 hover:bg-cyan-100/40 transition-colors cursor-pointer"
+                             >
+                               <span className="text-sm">{quest.icon}</span>
+                               <span className="text-xs text-slate-700">{quest.name}</span>
+                               <ChevronRight className="w-3 h-3 text-slate-500 ml-auto" />
                             </div>
                           ))}
                         </div>
                       </div>
 
                       {/* Add to Cart Button */}
-                      <button
-                        onClick={() => {
-                          onAddDLC(dlc);
-                          setExpandedDLC(null);
-                        }}
-                        className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
-                      >
+                       <button
+                         onClick={() => {
+                           onAddDLC(dlc);
+                           setExpandedDLC(null);
+                         }}
+                         className="w-full py-2 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-lg transition-all flex items-center justify-center gap-2"
+                       >
                         <Download className="w-4 h-4" />
                         ADD TO CART — ${dlc.price?.toFixed(2)}
                       </button>
                     </div>
 
                     {/* Vertical Divider */}
-                    <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
+                     <div className="w-px bg-gradient-to-b from-cyan-300/30 via-cyan-200/20 to-cyan-300/30" />
 
-                    {/* RIGHT: Description + Rating + Community Highlights */}
-                    <div className="space-y-6 pl-6">
-                      {/* Title & Description */}
-                      <div>
-                        <h2 className="text-lg font-bold text-white mb-2">{dlc.name}</h2>
-                        <p className="text-white/60 text-xs leading-relaxed">
+                     {/* RIGHT: Description + Rating + Community Highlights */}
+                     <div className="space-y-4 pl-4">
+                       {/* Title & Description */}
+                       <div>
+                         <h2 className="text-sm font-bold text-slate-900 mb-1">{dlc.name}</h2>
+                         <p className="text-slate-600 text-xs leading-relaxed">
                           {dlc.description || 'Unlock new abilities, exclusive content, and expand your gameplay experience with this comprehensive expansion pack.'}
                         </p>
                       </div>
 
                       {/* Rating */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <div className="flex gap-0.5">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                              className={`w-3 h-3 ${i < 4 ? 'fill-yellow-500 text-yellow-500' : 'text-slate-300'}`}
                             />
                           ))}
                         </div>
-                        <span className="text-white text-xs font-bold">4.6</span>
-                        <span className="text-white/40 text-[10px]">(12.6K)</span>
+                        <span className="text-slate-900 text-xs font-bold">4.6</span>
+                        <span className="text-slate-500 text-[10px]">(12.6K)</span>
                       </div>
 
                       {/* Community Highlights */}
                       <div>
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                           <Users className="w-3 h-3" />
                           Community Highlights
                         </h3>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           {communityHighlights.map((highlight) => (
                             <div
                               key={highlight.id}
-                              className="flex gap-2 p-2 rounded border border-white/5 bg-white/[0.02]"
+                              className="flex gap-2 p-1.5 rounded border border-cyan-200/40 bg-cyan-100/20"
                             >
                               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-xs flex-shrink-0">
                                 {highlight.avatar}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1 mb-0.5">
-                                  <p className="text-[10px] font-bold text-white">{highlight.author}</p>
+                                  <p className="text-[9px] font-bold text-slate-900">{highlight.author}</p>
                                   <div className="flex gap-0.5">
                                     {[...Array(5)].map((_, i) => (
                                       <Star
                                         key={i}
-                                        className={`w-2 h-2 ${i < highlight.rating ? 'fill-yellow-400 text-yellow-400' : 'text-white/20'}`}
+                                        className={`w-1.5 h-1.5 ${i < highlight.rating ? 'fill-yellow-500 text-yellow-500' : 'text-slate-300'}`}
                                       />
                                     ))}
                                   </div>
                                 </div>
-                                <p className="text-[10px] text-white/50">{highlight.comment}</p>
+                                <p className="text-[9px] text-slate-600">{highlight.comment}</p>
                               </div>
                             </div>
                           ))}
