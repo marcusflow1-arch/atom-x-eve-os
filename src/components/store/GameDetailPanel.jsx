@@ -225,6 +225,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
   const [expandedDLC, setExpandedDLC] = useState(null);
   const [detailTab, setDetailTab] = useState('card_info'); // 'card_info' or 'trailer'
+  const [streamDropdownOpen, setStreamDropdownOpen] = useState(false);
 
   // Helper to extract YouTube ID
   const getYouTubeId = (url) => {
@@ -921,8 +922,33 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
               </div>
 
-              {/* Live Stream Box */}
-              <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
+              {/* Live Stream Dropdown */}
+              <motion.div className="w-full">
+                <button
+                  onClick={() => setStreamDropdownOpen(!streamDropdownOpen)}
+                  className="w-full px-6 py-3 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all"
+                >
+                  <Radio className="w-4 h-4 text-red-400" />
+                  <span className="font-bold text-white uppercase tracking-wide">Live Stream</span>
+                  <ChevronDown className={`w-4 h-4 ml-auto transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {streamDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="pt-4">
+                        <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Lower Section: 3D Viewer + Achievement Cards, then Content below */}
               <div className="flex flex-col gap-8 border-t border-white/10 pt-8">
