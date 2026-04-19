@@ -909,6 +909,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                          <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
                        </div>
 
+                       {/* Game Description */}
+                       <p className="text-white/70 text-sm leading-relaxed">
+                         {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
+                       </p>
+
                        {/* Metadata Table */}
                        <div className="text-xs space-y-2 border-t border-white/10 pt-4">
                          <div className="flex gap-2">
@@ -936,13 +941,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                        </div>
                      </div>
 
-                     {/* General Information & Description Box */}
-                     <div className="rounded-xl p-5 space-y-4 border border-white/15 bg-white/[0.02]" style={{ backdropFilter: 'blur(12px)' }}>
-                       <h4 className="text-sm font-bold text-white uppercase tracking-wider">General Information</h4>
-                       <p className="text-white/70 text-sm leading-relaxed">
-                         {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
-                       </p>
-                     </div>
+
                    </div>
               </div>
 
