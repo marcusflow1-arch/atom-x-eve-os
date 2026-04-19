@@ -881,12 +881,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
+                {/* Right: Game Info sidebar */}
                    <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                    {/* Top: Game Info Box (30%) */}
+                    {/* Top: Game Info Box */}
                     <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
-                      {/* Header Image (Capsule) */}
-                      <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                      {/* Header Image (Capsule) — reduced to ~30% width, aligned top */}
+                      <div className="w-[30%] rounded-lg overflow-hidden border border-white/10 shadow-lg">
                         <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
                       </div>
 
