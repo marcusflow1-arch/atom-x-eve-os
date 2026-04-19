@@ -62,6 +62,7 @@ import AvatarStatsOverlay from '../components/dashboard/AvatarStatsOverlay';
 import EnvironmentSelector from '../components/avatarHome/EnvironmentSelector';
 import GlassPageFrame from '../components/shared/GlassPageFrame';
 import Mini3DViewerBox from '../components/dashboard/Mini3DViewerBox';
+import ModelViewer3D from '../components/game/ModelViewer3D';
 import DevSpotlightOverlay from '../components/dashboard/DevSpotlightOverlay';
 import CardCollectionBrowser from '../components/dashboard/CardCollectionBrowser';
 import QuestLogBook from '../components/dashboard/QuestLogBook';
@@ -291,6 +292,7 @@ export default function LunaTemplate() {
   const [showAvatarProgression, setShowAvatarProgression] = useState(false);
   const [hideUI, setHideUI] = useState(false); // Toggle with '0' key
   const [showDevSpotlight, setShowDevSpotlight] = useState(false); // Toggle with 'P' key
+  const [showLaraViewer, setShowLaraViewer] = useState(false); // Toggle with '\' key
   const [currentEnvId, setCurrentEnvId] = useState('default_room');
 
   const { mode } = useDashboardMode();
@@ -513,16 +515,8 @@ export default function LunaTemplate() {
         setHideUI((v) => !v);
       }
       if (key === '\\') {
-        // Backslash key: switch to Lara model
-        try {
-          const models = await base44.entities.Model3D.list();
-          const lara = models.find(m => m.name && m.name.toLowerCase().includes('lara'));
-          if (lara && lara.file_url) {
-            setModelUrl(lara.file_url);
-          }
-        } catch (err) {
-          console.error('Failed to load Lara model:', err);
-        }
+        // Backslash key: toggle Lara GLB viewer in Mini3DViewerBox area
+        setShowLaraViewer((v) => !v);
       }
       if (key === 'escape') {
         if (showDevSpotlight) {setShowDevSpotlight(false);return;}
@@ -620,7 +614,13 @@ export default function LunaTemplate() {
                 left: '32px', top: '80px', bottom: '0px', width: '388px', gap: '0px'
               } : { left: '32px', top: '80px', width: '322px', gap: '12px' }}>
              
-          <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+          {showLaraViewer ? (
+            <div className="rounded-2xl overflow-hidden border border-white/10" style={{ width: '200px', height: '280px', flexShrink: 0 }}>
+              <ModelViewer3D modelPath="/models/lara.glb" fileType="glb" />
+            </div>
+          ) : (
+            <Mini3DViewerBox isUiVisible={uiVisible} hostName={currentHostName} />
+          )}
           
           {!avatarFocusMode && !uiVisible &&
                 <div className="flex flex-col gap-6">
