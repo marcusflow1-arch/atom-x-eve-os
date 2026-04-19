@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
-export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType = 'glb', bundleManifest = null }) {
+export default function ModelViewer3D({ modelPath = '/models/4StorePage.glb', fileType = 'glb', bundleManifest = null }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
