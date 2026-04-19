@@ -1177,11 +1177,26 @@ export default function GameDetailPanel({ gameId, onClose }) {
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
             >
-              {/* Tech Specs header */}
-              <div className="mb-8">
+              {/* Tech Specs header with tab buttons */}
+              <div className="mb-8 flex items-start justify-between gap-4">
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                   {game.title}
                 </h1>
+                {/* Tab Buttons */}
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => setActiveTab('system')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                  >
+                    System Core
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('specs')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+                  >
+                    Tech Specs
+                  </button>
+                </div>
               </div>
               <SpecsTab game={game} />
             </motion.div>
