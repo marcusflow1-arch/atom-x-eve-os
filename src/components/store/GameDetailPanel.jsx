@@ -819,8 +819,9 @@ export default function GameDetailPanel({ gameId, onClose, isFromDevCards = fals
               </div>
 
               {!isFromDevCards && (
-              {/* Main Grid: Media Left, Info Right */}
-              <div className="flex flex-col lg:flex-row gap-8">
+                <>
+                  {/* Main Grid: Media Left, Info Right */}
+                  <div className="flex flex-col lg:flex-row gap-8">
 
                 {/* Left: Media Area */}
                 <div className="flex-[2] min-w-0 flex flex-col gap-4">
@@ -944,8 +945,9 @@ export default function GameDetailPanel({ gameId, onClose, isFromDevCards = fals
 
 
                    </div>
-              </div>
-              )}
+                   </div>
+                   </>
+                   )}
 
               {/* Live Stream Dropdown */}
               <motion.div className="w-full">
