@@ -941,15 +941,29 @@ export default function GameDetailPanel({ gameId, onClose }) {
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: Achievement Cards then Content below */}
+              {/* Lower Section: 3D Viewer + Achievement Cards, then Content below */}
               <div className="flex flex-col gap-8 border-t border-white/10 pt-8">
-                {/* Achievement Cards */}
-                <div>
-                  <AchievementCardStrip 
-                    achievementCards={achievementCards} 
-                    dlcList={dlcList}
-                    onSelectCard={setSelectedCard}
-                  />
+                {/* 50/50: 3D Viewer left, Achievement Cards right */}
+                <div className="flex gap-8 min-h-[500px]">
+                  {/* Left: 3D Viewer (50%) */}
+                  <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
+                    <ModelViewer3D 
+                      modelPath="/models/lara.glb"
+                      fileType="glb"
+                    />
+                  </div>
+
+                  {/* Vertical Divider */}
+                  <div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20 flex-shrink-0" />
+
+                  {/* Right: Achievement Cards (50%) */}
+                  <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
+                    <AchievementCardStrip 
+                      achievementCards={achievementCards} 
+                      dlcList={dlcList}
+                      onSelectCard={setSelectedCard}
+                    />
+                  </div>
                 </div>
 
                 {/* Content For This Game — full width below */}
