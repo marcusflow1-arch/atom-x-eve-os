@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock,
+import { 
+  Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
   Maximize2, Star, ThumbsUp, ThumbsDown, MessageSquare, User, Radio,
-  Send, Heart, Users, Eye, Camera, Video, User2, ArrowLeft, ChevronsLeftRight, Clapperboard } from
-'lucide-react';
+  Send, Heart, Users, Eye, Camera, Video, User2, ArrowLeft, ChevronsLeftRight, Clapperboard
+} from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useCart } from '@/components/CartContext';
@@ -20,21 +20,21 @@ import AchievementCardStrip from '@/components/game/AchievementCardStrip';
 
 // --- Components ---
 
-const DataPoint = ({ label, value, icon: Icon, color = "text-white" }) =>
-<div className="flex flex-col bg-white/5 border border-white/5 rounded-xl p-4 backdrop-blur-sm">
+const DataPoint = ({ label, value, icon: Icon, color = "text-white" }) => (
+  <div className="flex flex-col bg-white/5 border border-white/5 rounded-xl p-4 backdrop-blur-sm">
     <div className="flex items-center gap-2 mb-2">
       {Icon && <Icon className={`w-4 h-4 ${color} opacity-80`} />}
       <span className="text-[10px] uppercase tracking-widest text-white/40 font-bold">{label}</span>
     </div>
     <span className="text-lg font-medium text-white tracking-tight">{value}</span>
-  </div>;
+  </div>
+);
 
-
-const SystemPreviewCard = ({ type, title, subtitle, onClick }) =>
-<div
-  onClick={onClick}
-  className="relative group overflow-hidden rounded-xl border border-white/10 bg-black/20 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:scale-105">
-  
+const SystemPreviewCard = ({ type, title, subtitle, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="relative group overflow-hidden rounded-xl border border-white/10 bg-black/20 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:scale-105"
+  >
     <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-transparent via-cyan-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity" />
     <div className="p-4">
       <div className="flex justify-between items-start mb-3">
@@ -48,19 +48,19 @@ const SystemPreviewCard = ({ type, title, subtitle, onClick }) =>
       <h4 className="text-white font-bold text-sm mb-1 group-hover:text-cyan-300 transition-colors">{title}</h4>
       <p className="text-white/40 text-xs group-hover:text-white/60 transition-colors">{subtitle}</p>
     </div>
-  </div>;
-
+  </div>
+);
 
 const SpecsTab = ({ game }) => {
   // Enhanced mock data logic for demonstration if actual data is missing
   const specs = game?.system_requirements || {};
-
-  const RequirementSection = ({ title, data, icon: Icon, color, level = "mid" }) =>
-  <div className={`flex-1 min-w-[300px] border rounded-xl p-6 backdrop-blur-md transition-colors ${
-  level === 'low' ? 'bg-slate-900/40 border-slate-700/50 hover:bg-slate-900/60' :
-  level === 'high' ? 'bg-purple-900/10 border-purple-500/20 hover:bg-purple-900/20' :
-  'bg-white/5 border-white/10 hover:bg-white/[0.07]'}`
-  }>
+  
+  const RequirementSection = ({ title, data, icon: Icon, color, level = "mid" }) => (
+    <div className={`flex-1 min-w-[300px] border rounded-xl p-6 backdrop-blur-md transition-colors ${
+        level === 'low' ? 'bg-slate-900/40 border-slate-700/50 hover:bg-slate-900/60' :
+        level === 'high' ? 'bg-purple-900/10 border-purple-500/20 hover:bg-purple-900/20' :
+        'bg-white/5 border-white/10 hover:bg-white/[0.07]'
+    }`}>
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
         <div className={`w-10 h-10 rounded-lg ${color} bg-opacity-20 flex items-center justify-center border border-white/10 shadow-lg`}>
           <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
@@ -73,30 +73,30 @@ const SpecsTab = ({ game }) => {
       
       <div className="space-y-5">
         {[
-      { label: 'OS', value: data.os || 'Windows 10 64-bit' },
-      { label: 'Processor', value: data.processor },
-      { label: 'Memory', value: data.memory },
-      { label: 'Graphics', value: data.graphics },
-      { label: 'DirectX', value: 'Version 12' },
-      { label: 'Storage', value: data.storage },
-      { label: 'Sound Card', value: 'DirectX Compatible' },
-      { label: 'VR Support', value: level === 'high' ? 'Supported' : 'Not Required' }].
-      map((item, idx) =>
-      <div key={idx} className="group flex flex-col gap-1">
+            { label: 'OS', value: data.os || 'Windows 10 64-bit' },
+            { label: 'Processor', value: data.processor },
+            { label: 'Memory', value: data.memory },
+            { label: 'Graphics', value: data.graphics },
+            { label: 'DirectX', value: 'Version 12' },
+            { label: 'Storage', value: data.storage },
+            { label: 'Sound Card', value: 'DirectX Compatible' },
+            { label: 'VR Support', value: level === 'high' ? 'Supported' : 'Not Required' }
+        ].map((item, idx) => (
+            <div key={idx} className="group flex flex-col gap-1">
                 <span className="text-white/30 text-[10px] font-bold uppercase tracking-widest group-hover:text-cyan-400 transition-colors">{item.label}</span>
                 <span className="text-white/90 text-sm font-medium border-b border-white/5 pb-1 group-hover:border-cyan-500/30 transition-colors">{item.value}</span>
             </div>
-      )}
+        ))}
       </div>
-    </div>;
-
+    </div>
+  );
 
   return (
-    <motion.div
+    <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-8">
-      
+      className="space-y-8"
+    >
       {/* Dev Info Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col justify-center">
@@ -132,8 +132,8 @@ const SpecsTab = ({ game }) => {
         </div>
         
         <div className="flex flex-col xl:flex-row gap-6 overflow-x-auto pb-4">
-          <RequirementSection
-            title="Minimum"
+          <RequirementSection 
+            title="Minimum" 
             level="low"
             data={{
               os: specs.os || "Windows 10 64-bit",
@@ -143,11 +143,11 @@ const SpecsTab = ({ game }) => {
               storage: specs.storage || "40 GB available space"
             }}
             icon={Shield}
-            color="bg-slate-500" />
+            color="bg-slate-500"
+          />
           
-          
-          <RequirementSection
-            title="Recommended"
+          <RequirementSection 
+            title="Recommended" 
             level="mid"
             data={{
               os: "Windows 10/11 64-bit",
@@ -157,11 +157,11 @@ const SpecsTab = ({ game }) => {
               storage: specs.storage || "40 GB available space (SSD)"
             }}
             icon={Zap}
-            color="bg-blue-500" />
+            color="bg-blue-500"
+          />
           
-          
-          <RequirementSection
-            title="Ultra (4K)"
+          <RequirementSection 
+            title="Ultra (4K)" 
             level="high"
             data={{
               os: "Windows 11 64-bit",
@@ -171,8 +171,8 @@ const SpecsTab = ({ game }) => {
               storage: specs.storage ? `${specs.storage} (NVMe SSD)` : "40 GB available space (NVMe SSD)"
             }}
             icon={Star}
-            color="bg-purple-500" />
-          
+            color="bg-purple-500"
+          />
         </div>
       </div>
 
@@ -188,8 +188,8 @@ const SpecsTab = ({ game }) => {
           </p>
         </div>
       </div>
-    </motion.div>);
-
+    </motion.div>
+  );
 };
 
 // PurchaseModal component removed - now using global CartDrawer
@@ -210,7 +210,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedDLC, setSelectedDLC] = useState(null);
   const [selectedMediaItem, setSelectedMediaItem] = useState(null);
   const [reviews, setReviews] = useState([]);
-
+  
   // Auto-select first media item on load
   useEffect(() => {
     if (videos.length > 0 && !selectedMediaItem) {
@@ -231,112 +231,112 @@ export default function GameDetailPanel({ gameId, onClose }) {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
-    return match && match[2].length === 11 ? match[2] : null;
+    return (match && match[2].length === 11) ? match[2] : null;
   };
 
   // Process Real Media
-  const realVideos = (game?.video_urls?.length > 0 ? game.video_urls : game?.trailer_url ? [game.trailer_url] : []).
-  filter((url) => url && typeof url === 'string').
-  map((url, i) => {
-    const id = getYouTubeId(url);
-    return {
-      type: 'video',
-      title: i === 0 ? 'Gameplay Trailer' : `Video Showcase ${i + 1}`,
-      url: url,
-      image: id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : game?.cover_image,
-      embedUrl: id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : null
-    };
-  });
+  const realVideos = (game?.video_urls?.length > 0 ? game.video_urls : (game?.trailer_url ? [game.trailer_url] : []))
+    .filter(url => url && typeof url === 'string')
+    .map((url, i) => {
+        const id = getYouTubeId(url);
+        return {
+            type: 'video',
+            title: i === 0 ? 'Gameplay Trailer' : `Video Showcase ${i + 1}`,
+            url: url,
+            image: id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : game?.cover_image,
+            embedUrl: id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : null
+        };
+    });
 
   // Ensure at least placeholders if no real videos
   const videos = realVideos.length > 0 ? realVideos : [
-  { title: 'Gameplay Trailer', image: game?.cover_image, type: 'image' } // Fallback to image if no video
+    { title: 'Gameplay Trailer', image: game?.cover_image, type: 'image' } // Fallback to image if no video
   ];
 
-  const realScreenshots = (game?.screenshots?.length > 0 ? game.screenshots : []).
-  map((url, i) => ({
-    type: 'image',
-    title: `Screenshot ${i + 1}`,
-    image: url
-  }));
+  const realScreenshots = (game?.screenshots?.length > 0 ? game.screenshots : [])
+    .map((url, i) => ({
+        type: 'image',
+        title: `Screenshot ${i + 1}`,
+        image: url
+    }));
 
   // Ensure at least 3 images as requested, using cover as fallback if needed
   const screenshots = realScreenshots.length > 0 ? realScreenshots : [
-  { title: 'Screenshot 1', image: game?.cover_image, type: 'image' },
-  { title: 'Screenshot 2', image: game?.cover_image, type: 'image' },
-  { title: 'Screenshot 3', image: game?.cover_image, type: 'image' }];
-
+    { title: 'Screenshot 1', image: game?.cover_image, type: 'image' },
+    { title: 'Screenshot 2', image: game?.cover_image, type: 'image' },
+    { title: 'Screenshot 3', image: game?.cover_image, type: 'image' },
+  ];
 
   const achievements = [
-  { name: 'Neural Shock', icon: '⚡' },
-  { name: 'Cyber Metabolism', icon: '💚' },
-  { name: 'Void Walker', icon: '👻' },
-  { name: 'Tactical Mind', icon: '🧠' },
-  { name: 'Data Stream', icon: '📡' }];
-
+    { name: 'Neural Shock', icon: '⚡' },
+    { name: 'Cyber Metabolism', icon: '💚' },
+    { name: 'Void Walker', icon: '👻' },
+    { name: 'Tactical Mind', icon: '🧠' },
+    { name: 'Data Stream', icon: '📡' },
+  ];
 
   const achievementCards = [
-  { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
-  { name: 'Cyber Metabolism', type: 'Ability', description: '+10% Regeneration', edition: 'Standard Edition' },
-  { name: 'Void Walker Set', type: 'Equipment', description: 'Stealth Bonus', edition: 'Neural Expansion' },
-  { name: 'Tactical Mind', type: 'Teacher', description: 'AI Behavior Mod', edition: 'Digital Edition' },
-  { name: 'Data Stream', type: 'Ability', description: 'Hack networks', edition: 'Void Arsenal DLC' },
-  { name: 'Shadow Clone', type: 'Ability', description: 'Create decoys', edition: 'Void Arsenal DLC' },
-  { name: 'Drone Companion', type: 'Companion', description: 'Automated support unit', edition: 'Standard Edition' },
-  { name: 'Master Swordsman', type: 'Teacher', description: 'Learn advanced combat', edition: 'Dojo Pack' },
-  { name: 'Heavy Armor', type: 'Equipment', description: 'Increased defense', edition: 'Standard Edition' },
-  { name: 'Stealth Suit', type: 'Equipment', description: 'Invisible to cameras', edition: 'Void Arsenal DLC' },
-  { name: 'Hacking Tool', type: 'Equipment', description: 'Speed up hacking', edition: 'Standard Edition' },
-  { name: 'Combat Drone', type: 'Companion', description: 'Fights alongside you', edition: 'Standard Edition' }];
-
+    { name: 'Neural Shock', type: 'Ability', description: 'Stun enemies in radius', edition: 'Standard Edition' },
+    { name: 'Cyber Metabolism', type: 'Ability', description: '+10% Regeneration', edition: 'Standard Edition' },
+    { name: 'Void Walker Set', type: 'Equipment', description: 'Stealth Bonus', edition: 'Neural Expansion' },
+    { name: 'Tactical Mind', type: 'Teacher', description: 'AI Behavior Mod', edition: 'Digital Edition' },
+    { name: 'Data Stream', type: 'Ability', description: 'Hack networks', edition: 'Void Arsenal DLC' },
+    { name: 'Shadow Clone', type: 'Ability', description: 'Create decoys', edition: 'Void Arsenal DLC' },
+    { name: 'Drone Companion', type: 'Companion', description: 'Automated support unit', edition: 'Standard Edition' },
+    { name: 'Master Swordsman', type: 'Teacher', description: 'Learn advanced combat', edition: 'Dojo Pack' },
+    { name: 'Heavy Armor', type: 'Equipment', description: 'Increased defense', edition: 'Standard Edition' },
+    { name: 'Stealth Suit', type: 'Equipment', description: 'Invisible to cameras', edition: 'Void Arsenal DLC' },
+    { name: 'Hacking Tool', type: 'Equipment', description: 'Speed up hacking', edition: 'Standard Edition' },
+    { name: 'Combat Drone', type: 'Companion', description: 'Fights alongside you', edition: 'Standard Edition' },
+  ];
 
   // Mock DLC data
   const dlcList = [
-  {
-    id: 'standard',
-    name: 'Standard Edition',
-    description: 'The base game experience with all core features and content.',
-    offers: ['Base Game Content', 'Core Story Campaign', 'Standard Abilities', 'Base Card Collection'],
-    price: 0,
-    stats: {},
-    achievements: [],
-    abilities: []
-  },
-  {
-    id: 'dlc_1',
-    name: 'Neural Expansion Pack',
-    description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
-    offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
-    price: 14.99,
-    stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
-    achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
-    abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst']
-  },
-  {
-    id: 'dlc_2',
-    name: 'Void Walker Arsenal',
-    description: 'Gain access to stealth-focused equipment and void manipulation powers.',
-    offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
-    price: 9.99,
-    stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
-    achievements: ['Shadow Master', 'Void Walker'],
-    abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation']
-  },
-  {
-    id: 'dlc_3',
-    name: 'Season Pass: Year One',
-    description: 'All future DLC releases for the first year, plus exclusive seasonal rewards.',
-    offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
-    price: 29.99,
-    stats: { dlcAccess: 'unlimited', genreXP: 50 },
-    achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
-    abilities: ['All DLC Abilities']
-  }];
+    {
+      id: 'standard',
+      name: 'Standard Edition',
+      description: 'The base game experience with all core features and content.',
+      offers: ['Base Game Content', 'Core Story Campaign', 'Standard Abilities', 'Base Card Collection'],
+      price: 0,
+      stats: {},
+      achievements: [],
+      abilities: []
+    },
+    {
+      id: 'dlc_1',
+      name: 'Neural Expansion Pack',
+      description: 'Unlock advanced neural abilities and new storyline chapters set in the cybernetic underworld.',
+      offers: ['5 New Abilities', '+20% XP Boost', '3 Legendary Cards', '10 Story Missions'],
+      price: 14.99,
+      stats: { abilities: 5, xpBoost: 20, cards: 3, missions: 10 },
+      achievements: ['Neural Master', 'Cyber Overlord', 'Data Stream Complete'],
+      abilities: ['Neural Shock', 'Mind Control', 'Synaptic Burst']
+    },
+    {
+      id: 'dlc_2',
+      name: 'Void Walker Arsenal',
+      description: 'Gain access to stealth-focused equipment and void manipulation powers.',
+      offers: ['7 New Equipment Sets', '+15% Stealth Rating', '2 Epic Traits', '5 New Weapons'],
+      price: 9.99,
+      stats: { equipment: 7, stealthBoost: 15, traits: 2, weapons: 5 },
+      achievements: ['Shadow Master', 'Void Walker'],
+      abilities: ['Phase Shift', 'Shadow Clone', 'Void Manipulation']
+    },
+    {
+      id: 'dlc_3',
+      name: 'Season Pass: Year One',
+      description: 'All future DLC releases for the first year, plus exclusive seasonal rewards.',
+      offers: ['All DLC Access', '+50% Genre XP', 'Exclusive Avatar Skin', 'Priority Updates'],
+      price: 29.99,
+      stats: { dlcAccess: 'unlimited', genreXP: 50 },
+      achievements: ['Season Champion', 'Year One Veteran', 'Ultimate Collector'],
+      abilities: ['All DLC Abilities']
+    }
+  ];
 
-
-  const currentContent = mediaTab === 'content' ?
-  [...videos, ...screenshots] :
-  achievements;
+  const currentContent = mediaTab === 'content' 
+    ? [...videos, ...screenshots] 
+    : achievements;
 
   // ESC key and arrow keys
   useEffect(() => {
@@ -385,21 +385,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const handlePrevious = () => {
     setCurrentMediaIndex((prev) => (prev - 1 + currentContent.length) % currentContent.length);
   }; // Use CartContext check or local state if preferred, but context is better for syncing.
-
+  
   useEffect(() => {
     const fetchGame = async () => {
       if (!gameId) return;
       try {
         const fetchedGame = await base44.entities.Game.get(gameId);
         setGame(fetchedGame);
-
+        
         // Fetch reviews
-        const gameReviews = await base44.entities.Post.filter({
-          type: 'game_review',
-          game_title: fetchedGame.title
+        const gameReviews = await base44.entities.Post.filter({ 
+          type: 'game_review', 
+          game_title: fetchedGame.title 
         }, '-created_date');
         setReviews(gameReviews);
-
+        
         // Mock dev review (in production, this would be fetched from a DevReview entity)
         setDevReview({
           dev_name: "Studio Unknown",
@@ -422,7 +422,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
       return;
     }
     if (!newReview.content.trim()) return;
-
+    
     try {
       await base44.entities.Post.create({
         title: `Review: ${game.title}`,
@@ -433,11 +433,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
         rating: newReview.rating,
         community: 'reviews'
       });
-
+      
       // Refresh reviews
-      const gameReviews = await base44.entities.Post.filter({
-        type: 'game_review',
-        game_title: game.title
+      const gameReviews = await base44.entities.Post.filter({ 
+        type: 'game_review', 
+        game_title: game.title 
       }, '-created_date');
       setReviews(gameReviews);
       setNewReview({ rating: 5, content: '' });
@@ -451,13 +451,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
       alert("Please sign in to react");
       return;
     }
-
+    
     try {
       const existingReactions = await base44.entities.Reaction.filter({
         target_id: reviewId,
         created_by: user.email
       });
-
+      
       if (existingReactions.length > 0) {
         const existingReaction = existingReactions[0];
         if (existingReaction.type === reactionType) {
@@ -475,13 +475,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
           type: reactionType
         });
       }
-
+      
       // Refresh user reactions
       const allUserReactions = await base44.entities.Reaction.filter({
         created_by: user.email
       });
       const reactionsMap = {};
-      allUserReactions.forEach((r) => {
+      allUserReactions.forEach(r => {
         reactionsMap[r.target_id] = r.type;
       });
       setUserReactions(reactionsMap);
@@ -499,7 +499,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
           created_by: user.email
         });
         const reactionsMap = {};
-        allUserReactions.forEach((r) => {
+        allUserReactions.forEach(r => {
           reactionsMap[r.target_id] = r.type;
         });
         setUserReactions(reactionsMap);
@@ -512,49 +512,49 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      alert("Authentication Required: Identity Protocol.");
-      return;
+        alert("Authentication Required: Identity Protocol.");
+        return;
     }
     addToCart({
-      id: game.id,
-      type: 'game',
-      title: game.title,
-      price: game.price,
-      image: game.cover_image,
-      genre: game.genre
+        id: game.id,
+        type: 'game',
+        title: game.title,
+        price: game.price,
+        image: game.cover_image,
+        genre: game.genre
     });
   };
 
   const handleAddDLCToCart = (dlc) => {
     if (!isAuthenticated) {
-      alert("Authentication Required: Identity Protocol.");
-      return;
+        alert("Authentication Required: Identity Protocol.");
+        return;
     }
     addToCart({
-      id: dlc.id,
-      type: 'dlc',
-      title: dlc.name,
-      price: dlc.price,
-      image: game.cover_image,
-      gameTitle: game.title,
-      gameId: game.id
+        id: dlc.id,
+        type: 'dlc',
+        title: dlc.name,
+        price: dlc.price,
+        image: game.cover_image,
+        gameTitle: game.title,
+        gameId: game.id
     });
   };
 
   const handleTransactionConfirm = async () => {
     setUnlocking(true);
     try {
-      await base44.functions.invoke('unlockGameSystem', { gameId });
-      // Cart context will handle ownership state
+        await base44.functions.invoke('unlockGameSystem', { gameId });
+        // Cart context will handle ownership state
     } catch (err) {
-      console.error("Unlock failed", err);
+        console.error("Unlock failed", err);
     } finally {
-      setUnlocking(false);
+        setUnlocking(false);
     }
   };
 
   const handlePlay = () => {
-    navigate(createPageUrl('Library'));
+      navigate(createPageUrl('Library'));
   };
 
   if (loading) {
@@ -569,82 +569,82 @@ export default function GameDetailPanel({ gameId, onClose }) {
     <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
-        {isViewingMedia &&
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          className="absolute inset-0 z-40"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsViewingMedia(false);
-              setCurrentMediaIndex(0);
-            }
-          }}
-          onMouseMove={handleMouseMove}>
-          
+        {isViewingMedia && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="absolute inset-0 z-40"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsViewingMedia(false);
+                setCurrentMediaIndex(0);
+              }
+            }}
+            onMouseMove={handleMouseMove}
+          >
             {/* Video/Media Background */}
             <div className="absolute inset-0 bg-black flex items-center justify-center">
-              {currentContent[currentMediaIndex]?.type === 'video' && currentContent[currentMediaIndex]?.embedUrl ?
-            <iframe
-              src={currentContent[currentMediaIndex].embedUrl}
-              title={currentContent[currentMediaIndex].title}
-              className="w-[80%] h-[80%] shadow-2xl border border-white/10 rounded-xl z-20"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen /> :
-
-
-            <img
-              src={currentContent[currentMediaIndex]?.image || currentContent[currentMediaIndex]?.icon || game.cover_image}
-              alt={currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
-              className="w-full h-full object-contain" />
-
-            }
+              {currentContent[currentMediaIndex]?.type === 'video' && currentContent[currentMediaIndex]?.embedUrl ? (
+                  <iframe 
+                      src={currentContent[currentMediaIndex].embedUrl} 
+                      title={currentContent[currentMediaIndex].title}
+                      className="w-[80%] h-[80%] shadow-2xl border border-white/10 rounded-xl z-20"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                  />
+              ) : (
+                  <img 
+                    src={currentContent[currentMediaIndex]?.image || currentContent[currentMediaIndex]?.icon || game.cover_image}
+                    alt={currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
+                    className="w-full h-full object-contain"
+                  />
+              )}
               <div className="absolute inset-0 bg-black/20 -z-10" />
             </div>
 
             {/* Navigation Arrows */}
             <AnimatePresence>
-              {showNavArrows &&
-            <>
+              {showNavArrows && (
+                <>
                   <motion.button
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                onClick={(e) => {e.stopPropagation();handlePrevious();}}
-                className="absolute left-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10">
-                
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+                    className="absolute left-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10"
+                  >
                     <ChevronRight className="w-8 h-8 text-white rotate-180" />
                   </motion.button>
 
                   <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                onClick={(e) => {e.stopPropagation();handleNext();}}
-                className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10">
-                
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 hover:scale-110 transition-all z-10"
+                  >
                     <ChevronRight className="w-8 h-8 text-white" />
                   </motion.button>
                 </>
-            }
+              )}
             </AnimatePresence>
 
             {/* Subtle UI Hint - Only visible when hovering */}
             <AnimatePresence>
-              {showNavArrows &&
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              {showNavArrows && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.3 }}
-                className="text-center">
-                
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center"
+                  >
                     <h3 className="text-white text-2xl font-bold mb-2">
                       {currentContent[currentMediaIndex]?.title || currentContent[currentMediaIndex]?.name}
                     </h3>
@@ -653,23 +653,23 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </p>
                   </motion.div>
                 </div>
-            }
+              )}
             </AnimatePresence>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
 
       {/* Immersive Background */}
-      <motion.div
+      <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="absolute inset-0 z-0">
-        
-        <img
-          src={game.cover_image}
-          alt={game.title}
-          className="w-full h-full object-cover opacity-40 blur-sm scale-105" />
-        
+        className="absolute inset-0 z-0"
+      >
+        <img 
+          src={game.cover_image} 
+          alt={game.title} 
+          className="w-full h-full object-cover opacity-40 blur-sm scale-105"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/80 to-black/40" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-transparent to-[#0d0d0d]" />
         {/* Scanlines */}
@@ -681,8 +681,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
         {/* Left: Back button */}
         <button
           onClick={onClose}
-          className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider">
-          
+          className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
+        >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
@@ -694,14 +694,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setDetailTab('card_info')}
-            className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'card_info' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}>
-            
+            className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'card_info' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}
+          >
             Card Info
           </button>
           <button
             onClick={() => setDetailTab('trailer')}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'trailer' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}>
-            
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'trailer' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}
+          >
             <Clapperboard className="w-3 h-3" />
             Trailer
           </button>
@@ -715,14 +715,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
           <span className="text-white font-bold text-sm truncate max-w-[200px]">{game?.title}</span>
           <button
             onClick={() => setActiveTab('achievements')}
-            className={`ml-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'achievements' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}>
-            
+            className={`ml-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'achievements' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
             Achievements
           </button>
           <button
             onClick={() => setActiveTab('trailer')}
-            className={`ml-1 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'trailer' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}>
-            
+            className={`ml-1 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'trailer' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
             <Clapperboard className="w-3 h-3" />
             Trailer
           </button>
@@ -732,45 +732,45 @@ export default function GameDetailPanel({ gameId, onClose }) {
         <div className="ml-auto flex p-0.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
           <button
             onClick={() => setActiveTab('system')}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'system' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}>
-            
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'system' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}
+          >
             System Core
           </button>
           <button
             onClick={() => setActiveTab('specs')}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'specs' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}>
-            
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'specs' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}
+          >
             Tech Specs
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <motion.div
+      <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
         transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="relative z-10 flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-12 py-12">
-        
+        className="relative z-10 flex-1 overflow-y-auto max-w-7xl mx-auto w-full px-12 py-12"
+      >
         <AnimatePresence mode="wait">
-          {activeTab === 'system' ?
-          <motion.div
-            key="system"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.4 }}
-            className="space-y-8">
-            
+          {activeTab === 'system' ? (
+            <motion.div 
+              key="system"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-8"
+            >
               {/* Header Section: Title + owned badge */}
               <div className="flex items-center gap-4 flex-wrap mb-8">
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
                   {game.title}
                 </h1>
-                {owned &&
-              <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
+                {owned && (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded bg-green-500/20 border border-green-500/30 text-[10px] font-bold uppercase tracking-widest text-green-400">
                     <Unlock className="w-3 h-3" /> In Library
                   </span>
-              }
+                )}
               </div>
 
               {/* Main Grid: Media Left, Info Right */}
@@ -781,22 +781,22 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                   {/* Media Preview Box */}
                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview">
-                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ?
-                  <iframe
-                    src={selectedMediaItem.embedUrl}
-                    title={selectedMediaItem.title}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen /> :
-
-
-                  <>
-                            <img
-                      src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
-                      alt={selectedMediaItem?.title || game.title}
-                      className="w-full h-full object-cover" />
-                    
+                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                            src={selectedMediaItem.embedUrl} 
+                            title={selectedMediaItem.title}
+                            className="w-full h-full"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <>
+                            <img 
+                              src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
+                              alt={selectedMediaItem?.title || game.title}
+                              className="w-full h-full object-cover"
+                            />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
                             
                             {/* Media Title Overlay */}
@@ -808,50 +808,50 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                             {/* Fullscreen Button */}
                             <button
-                      onClick={handleFullscreen}
-                      className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group opacity-0 group-hover/preview:opacity-100">
-                      
+                              onClick={handleFullscreen}
+                              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group opacity-0 group-hover/preview:opacity-100"
+                            >
                               <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
                             </button>
                         </>
-                  }
+                    )}
                   </div>
 
                   {/* Thumbnails Strip */}
                   <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
-                    {videos.map((video, i) =>
-                  <div
-                    key={i}
-                    onClick={() => handleMediaTrigger(i)}
-                    className={`relative w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all flex-shrink-0 ${
-                    selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'}`
-                    }>
-                    
-                        <img
-                      src={video.image}
-                      alt={video.title}
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                    
+                    {videos.map((video, i) => (
+                      <div 
+                        key={i}
+                        onClick={() => handleMediaTrigger(i)}
+                        className={`relative w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all flex-shrink-0 ${
+                          selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                        }`}
+                      >
+                        <img 
+                          src={video.image} 
+                          alt={video.title}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <Play className="w-4 h-4 text-white drop-shadow-md" />
                         </div>
                       </div>
-                  )}
-                    {screenshots.map((screenshot, i) =>
-                  <div
-                    key={i}
-                    onClick={() => handleMediaTrigger(videos.length + i)}
-                    className={`w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
-                    selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'}`
-                    }>
-                    
-                        <img
-                      src={screenshot.image}
-                      alt={screenshot.title}
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                    
+                    ))}
+                    {screenshots.map((screenshot, i) => (
+                      <div 
+                        key={i}
+                        onClick={() => handleMediaTrigger(videos.length + i)}
+                        className={`w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
+                          selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                        }`}
+                      >
+                        <img 
+                          src={screenshot.image} 
+                          alt={screenshot.title}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
                       </div>
-                  )}
+                    ))}
                   </div>
                 </div>
 
@@ -866,27 +866,27 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                       {/* Price + Cart */}
                       <div className="flex items-center gap-3 flex-wrap">
-                        {!owned ?
-                    <>
+                        {!owned ? (
+                          <>
                             <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
                               ${game.price?.toFixed(2) || '0.00'}
                             </div>
                             <button
-                        onClick={handleAddToCart}
-                        className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105">
-                        
+                              onClick={handleAddToCart}
+                              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                            >
                               Add to Cart
                             </button>
-                          </> :
-
-                    <button
-                      onClick={handlePlay}
-                      className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105">
-                      
+                          </>
+                        ) : (
+                          <button
+                            onClick={handlePlay}
+                            className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                          >
                             <Play className="w-4 h-4 fill-white" />
                             Play Now
                           </button>
-                    }
+                        )}
                       </div>
 
                       {/* Metadata Table */}
@@ -907,33 +907,33 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                       {/* Tags */}
                       <div className="flex flex-wrap gap-1.5 pt-2">
-                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) =>
-                    <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
                             {tag}
                           </span>
-                    )}
-                        
+                        ))}
+                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
                       </div>
                     </div>
 
                     {/* Trailer/3D Viewer Box - Trailer content */}
                     <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ?
-                  <iframe
-                    src={selectedMediaItem.embedUrl}
-                    title={selectedMediaItem.title}
-                    className="w-full h-full"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen /> :
-
-
-                  <img
-                    src={selectedMediaItem?.image || game.cover_image}
-                    alt="Trailer"
-                    className="w-full h-full object-cover" />
-
-                  }
+                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                          src={selectedMediaItem.embedUrl} 
+                          title={selectedMediaItem.title}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <img 
+                          src={selectedMediaItem?.image || game.cover_image}
+                          alt="Trailer"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                   </div>
               </div>
@@ -947,10 +947,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <div className="flex gap-8 min-h-[500px]">
                   {/* Left: 3D Viewer (50%) */}
                   <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
-                    <ModelViewer3D
-                    modelPath="/models/lara.glb"
-                    fileType="glb" />
-                  
+                    <ModelViewer3D 
+                      modelPath="/models/lara.glb"
+                      fileType="glb"
+                    />
                   </div>
 
                   {/* Vertical Divider */}
@@ -958,11 +958,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                   {/* Right: Achievement Cards (50%) */}
                   <div className="flex-1 flex flex-col gap-4 overflow-y-auto">
-                    <AchievementCardStrip
-                    achievementCards={achievementCards}
-                    dlcList={dlcList}
-                    onSelectCard={setSelectedCard} />
-                  
+                    <AchievementCardStrip 
+                      achievementCards={achievementCards} 
+                      dlcList={dlcList}
+                      onSelectCard={setSelectedCard}
+                    />
                   </div>
                 </div>
 
@@ -976,15 +976,15 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                     
                     <div className="space-y-1">
-                      {dlcList.filter((dlc) => dlc.id !== 'standard').map((dlc) => {
-                      const isExpanded = expandedDLC === dlc.id;
-                      return (
-                        <div key={dlc.id} className="rounded-lg border border-transparent overflow-hidden transition-all">
+                      {dlcList.filter(dlc => dlc.id !== 'standard').map((dlc) => {
+                        const isExpanded = expandedDLC === dlc.id;
+                        return (
+                          <div key={dlc.id} className="rounded-lg border border-transparent overflow-hidden transition-all">
                             {/* Row Header - clickable */}
                             <div
-                            className="group flex items-center gap-4 p-3 bg-transparent hover:bg-white/5 cursor-pointer transition-colors"
-                            onClick={() => setExpandedDLC(isExpanded ? null : dlc.id)}>
-                            
+                              className="group flex items-center gap-4 p-3 bg-transparent hover:bg-white/5 cursor-pointer transition-colors"
+                              onClick={() => setExpandedDLC(isExpanded ? null : dlc.id)}
+                            >
                               <div className="w-24 h-12 bg-gray-800 rounded border border-white/10 flex-shrink-0 overflow-hidden">
                                 <img src={game.cover_image} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all" alt="" />
                               </div>
@@ -999,13 +999,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               <div className="text-right flex items-center gap-3">
                                 <span className="text-sm font-bold text-white/90">${dlc.price}</span>
                                 <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleAddDLCToCart(dlc);
-                                }}
-                                className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
-                                title="Add to Cart">
-                                
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddDLCToCart(dlc);
+                                  }}
+                                  className="p-2 bg-green-600/20 hover:bg-green-600 hover:text-white text-green-400 rounded-md transition-colors"
+                                  title="Add to Cart"
+                                >
                                   <Download className="w-4 h-4" />
                                 </button>
                                 <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -1014,62 +1014,62 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                             {/* Dropdown Details */}
                             <AnimatePresence>
-                              {isExpanded &&
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.25 }}
-                              className="overflow-hidden">
-                              
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.25 }}
+                                  className="overflow-hidden"
+                                >
                                   <div className="px-4 py-4 bg-transparent border-t border-white/5 space-y-4">
                                     <p className="text-white/60 text-sm leading-relaxed">{dlc.description}</p>
                                     
                                     {/* What's Included */}
-                                    {dlc.offers?.length > 0 &&
-                                <div>
+                                    {dlc.offers?.length > 0 && (
+                                      <div>
                                         <h5 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-2">What's Included</h5>
                                         <div className="grid grid-cols-2 gap-1.5">
-                                          {dlc.offers.map((offer, i) =>
-                                    <div key={i} className="flex items-center gap-2 text-xs text-white/70">
+                                          {dlc.offers.map((offer, i) => (
+                                            <div key={i} className="flex items-center gap-2 text-xs text-white/70">
                                               <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
                                               {offer}
                                             </div>
-                                    )}
+                                          ))}
                                         </div>
                                       </div>
-                                }
+                                    )}
 
                                     {/* Abilities */}
-                                    {dlc.abilities?.length > 0 &&
-                                <div>
+                                    {dlc.abilities?.length > 0 && (
+                                      <div>
                                         <h5 className="text-xs font-bold text-cyan-400/60 uppercase tracking-wider mb-2">Abilities Unlocked</h5>
                                         <div className="flex flex-wrap gap-1.5">
-                                          {dlc.abilities.map((ab, i) =>
-                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-cyan-900/20 border border-cyan-500/20 text-cyan-300 rounded-full">{ab}</span>
-                                    )}
+                                          {dlc.abilities.map((ab, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 bg-cyan-900/20 border border-cyan-500/20 text-cyan-300 rounded-full">{ab}</span>
+                                          ))}
                                         </div>
                                       </div>
-                                }
+                                    )}
 
                                     {/* Achievements */}
-                                    {dlc.achievements?.length > 0 &&
-                                <div>
+                                    {dlc.achievements?.length > 0 && (
+                                      <div>
                                         <h5 className="text-xs font-bold text-yellow-400/60 uppercase tracking-wider mb-2">Achievements</h5>
                                         <div className="flex flex-wrap gap-1.5">
-                                          {dlc.achievements.map((ach, i) =>
-                                    <span key={i} className="text-[10px] px-2 py-0.5 bg-yellow-900/20 border border-yellow-500/20 text-yellow-300 rounded-full">🏆 {ach}</span>
-                                    )}
+                                          {dlc.achievements.map((ach, i) => (
+                                            <span key={i} className="text-[10px] px-2 py-0.5 bg-yellow-900/20 border border-yellow-500/20 text-yellow-300 rounded-full">🏆 {ach}</span>
+                                          ))}
                                         </div>
                                       </div>
-                                }
+                                    )}
                                   </div>
                                 </motion.div>
-                            }
+                              )}
                             </AnimatePresence>
-                          </div>);
-
-                    })}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -1089,26 +1089,26 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
               {/* Reviews Section */}
               <ReviewSection reviews={reviews} user={user} />
-            </motion.div> :
-          activeTab === 'trailer' ?
-          <motion.div
-            key="trailer"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.4 }}
-            className="w-full h-full flex flex-col gap-6">
-            
+            </motion.div>
+          ) : activeTab === 'trailer' ? (
+            <motion.div
+              key="trailer"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+              className="w-full h-full flex flex-col gap-6"
+            >
               <h2 className="text-2xl font-black text-white tracking-tight">{game.title} <span className="text-purple-400 text-lg font-bold">— 3D Model Viewer</span></h2>
 
               {/* 3D Viewer + Achievement Cards side by side */}
               <div className="flex gap-8 flex-1 min-h-0">
                 {/* Left: 3D Viewer */}
                 <div className="flex-1 min-h-[500px] rounded-xl overflow-hidden border border-white/5 bg-transparent">
-                  <ModelViewer3D
-                  modelPath="/models/lara.glb"
-                  fileType="glb" />
-                
+                  <ModelViewer3D 
+                    modelPath="/models/lara.glb"
+                    fileType="glb"
+                  />
                 </div>
 
                 {/* Vertical Divider */}
@@ -1118,16 +1118,16 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <div className="w-80 flex-shrink-0 flex flex-col gap-4 overflow-y-auto">
                   <h3 className="text-lg font-bold text-white">Achievement Cards</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {achievementCards.map((card, i) =>
-                  <div
-                    key={i}
-                    onClick={() => setSelectedCard(card)}
-                    className="group cursor-pointer relative aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/40 transition-all hover:scale-105"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
-                      backdropFilter: 'blur(12px)'
-                    }}>
-                    
+                    {achievementCards.map((card, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedCard(card)}
+                        className="group cursor-pointer relative aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/40 transition-all hover:scale-105"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)',
+                          backdropFilter: 'blur(12px)',
+                        }}
+                      >
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center">
                           <span className="text-3xl mb-2">
                             {card.type === 'Ability' ? '⚡' : card.type === 'Equipment' ? '🛡️' : card.type === 'Companion' ? '🤖' : '📖'}
@@ -1138,19 +1138,19 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                  )}
+                    ))}
                   </div>
                 </div>
               </div>
-            </motion.div> :
-
-          <motion.div
-            key="specs"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.4 }}>
-            
+            </motion.div>
+          ) : (
+            <motion.div
+              key="specs"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+            >
               {/* Tech Specs header */}
               <div className="mb-8">
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">
@@ -1159,56 +1159,56 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
               <SpecsTab game={game} />
             </motion.div>
-          }
+          )}
         </AnimatePresence>
       </motion.div>
 
       {/* Card Detail Overlay */}
       <AnimatePresence>
-        {selectedCard &&
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-8"
-          onClick={() => setSelectedCard(null)}>
-          
+        {selectedCard && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-8"
+            onClick={() => setSelectedCard(null)}
+          >
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
             
             <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative z-10 max-w-5xl w-full flex gap-8 items-center">
-            
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 max-w-5xl w-full flex gap-8 items-center"
+            >
               {/* Left: Card Display */}
               <div className="flex-shrink-0 flex items-center justify-center">
                 <motion.div
-                className="relative group perspective-1000"
-                style={{ width: '280px' }}
-                whileHover={{ scale: 1.05 }}
-                onMouseMove={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const x = (e.clientX - rect.left) / rect.width - 0.5;
-                  const y = (e.clientY - rect.top) / rect.height - 0.5;
-                  e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
-                }}>
-                
-                  <div
-                  className="relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden border-2 border-white/40"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
-                    backdropFilter: 'blur(30px) saturate(200%)',
-                    WebkitBackdropFilter: 'blur(30px) saturate(200%)',
-                    boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.3)',
-                    transformStyle: 'preserve-3d',
-                    transition: 'transform 0.1s ease-out'
-                  }}>
-                  
+                  className="relative group perspective-1000"
+                  style={{ width: '280px' }}
+                  whileHover={{ scale: 1.05 }}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    e.currentTarget.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale(1.05)`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+                  }}
+                >
+                  <div 
+                    className="relative w-full aspect-[2.5/3.5] rounded-2xl overflow-hidden border-2 border-white/40"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
+                      backdropFilter: 'blur(30px) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(30px) saturate(200%)',
+                      boxShadow: '0 12px 48px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.3)',
+                      transformStyle: 'preserve-3d',
+                      transition: 'transform 0.1s ease-out'
+                    }}
+                  >
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                     <div className="absolute inset-0 flex items-center justify-center text-9xl opacity-10 text-white">
                       ?
@@ -1241,18 +1241,18 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
                 <button
-                onClick={() => setSelectedCard(null)}
-                className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition-all">
-                
+                  onClick={() => setSelectedCard(null)}
+                  className="mt-6 px-6 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition-all"
+                >
                   Close
                 </button>
               </div>
             </motion.div>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
 
       {/* Transaction Modal removed in favor of global Cart */}
-    </div>);
-
+    </div>
+  );
 }
