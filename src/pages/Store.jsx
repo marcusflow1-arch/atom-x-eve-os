@@ -462,7 +462,7 @@ export default function Store() {
                   </div>
                 </div>
               }
-              bottomContent={inPageStoreGameId ? null :
+              bottomContent={
               <StoreBottomNav
                 activeTab={activeStoreTab}
                 onTabChange={handleStoreTabChange}
@@ -487,7 +487,7 @@ export default function Store() {
                     />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
-                    <div className={`w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex-col items-center py-6 ${inPageStoreGameId ? 'hidden' : 'flex'}`}
+                    <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
@@ -766,8 +766,8 @@ export default function Store() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="fixed inset-0 z-[60]"
-                                        style={{ top: '64px' }}
+                                        className="fixed z-[60]"
+                                        style={{ top: '64px', left: '80px', right: 0, bottom: '48px' }}
                                     >
                                         <StoreGameDetailPanel gameId={inPageStoreGameId} onClose={() => setInPageStoreGameId(null)} />
                                     </motion.div>
