@@ -445,6 +445,7 @@ export default function LibrarySidebar() {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
+
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
               <div className="flex flex-col items-center gap-3">
