@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gamepad2, Star, Smartphone, Shield, Trophy, Monitor, Car, Skull, Crosshair, Music, Zap, Heart, Sparkles, Search } from 'lucide-react';
+import { Gamepad2, Star, Smartphone, Shield, Trophy, Monitor, Car, Skull, Crosshair, Music, Zap, Heart, Sparkles, Search, X } from 'lucide-react';
 import { useGameFilters } from './hooks/useGameFilters';
 import { useAuth } from '../auth/AuthContext';
 import { base44 } from '@/api/base44Client';
@@ -10,6 +10,7 @@ import StoreGridSpotlight from './StoreGridSpotlight';
 import WishlistButton from './WishlistButton';
 import { showError } from '../error/ErrorToast';
 import LoadingState from '../error/LoadingState';
+import GameDetailPanel from './GameDetailPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -65,6 +66,7 @@ export default function DevCardsContent({ onNavigateToGame }) {
     const contentScrollRef = useRef(null);
     const lastScrollTopRef = useRef(0);
     const [scrollDir, setScrollDir] = useState('down');
+    const [activeGameId, setActiveGameId] = useState(null);
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -239,7 +241,7 @@ export default function DevCardsContent({ onNavigateToGame }) {
                     ) : (
                         <motion.div key={`dev-cards`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                             {filteredGridGames.map((game, idx) => (
-                                <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => onNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => setActiveGameId(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
                                     <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
                                     <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
@@ -263,6 +265,23 @@ export default function DevCardsContent({ onNavigateToGame }) {
                     )}
                 </div>
             </div>
+
+            {/* Dev Cards own game detail overlay — completely separate from Store */}
+            <AnimatePresence>
+                {activeGameId && (
+                    <motion.div
+                        key={activeGameId}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[70]"
+                        style={{ top: '64px' }}
+                    >
+                        <GameDetailPanel gameId={activeGameId} onClose={() => setActiveGameId(null)} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
