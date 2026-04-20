@@ -682,7 +682,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
             </button>
 
-          </motion.div>
+          </motion.div>}
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
