@@ -599,7 +599,23 @@ export default function GameDetailPanel({ gameId, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-30">
+    <div className="absolute inset-0 top-16 left-20 right-0 bottom-20 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-30">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-8 h-16 bg-black/40 backdrop-blur-md border-b border-white/10 flex-shrink-0 z-50">
+        <span className="text-xl font-bold tracking-wider">Atom X Eve Store</span>
+        <div className="flex items-center gap-6">
+          <button className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-2">
+            <Radio className="w-4 h-4" /> Luna
+          </button>
+          <button className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4" /> Store
+          </button>
+          <button className="text-sm font-medium text-white/70 hover:text-white transition-colors flex items-center gap-2">
+            <Trophy className="w-4 h-4" /> Cards
+          </button>
+        </div>
+      </div>
+
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (

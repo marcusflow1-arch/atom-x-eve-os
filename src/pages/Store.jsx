@@ -435,7 +435,8 @@ export default function Store() {
     return (
         <PageErrorBoundary pageName="Store">
           <WishlistProvider>
-            <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+            <GlassPageFrame>
+                <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
                     {/* Library sliding panel from LunaBottomNav — rendered without its own nav bar */}
                     <LunaBottomNav
@@ -692,6 +693,7 @@ export default function Store() {
                         </div>
                     </div>
                 </div>
+            </GlassPageFrame>
           </WishlistProvider>
         </PageErrorBoundary>
     );
