@@ -33,21 +33,23 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
       </div>
 
       {/* Bottom Glass Bar */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-[35]"
-        style={{
-          ...glassStyle,
-          minHeight: '48px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          pointerEvents: bottomContent ? 'auto' : 'none',
-        }}
-      >
-        {bottomContent && (
-          <div className="h-full w-full flex items-center justify-center px-6 py-2">
-            {bottomContent}
-          </div>
-        )}
-      </div>
+      {bottomContent !== null && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-[35]"
+          style={{
+            ...glassStyle,
+            minHeight: '48px',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            pointerEvents: bottomContent ? 'auto' : 'none',
+          }}
+        >
+          {bottomContent && (
+            <div className="h-full w-full flex items-center justify-center px-6 py-2">
+              {bottomContent}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

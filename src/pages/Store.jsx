@@ -462,7 +462,7 @@ export default function Store() {
                   </div>
                 </div>
               }
-              bottomContent={
+              bottomContent={inPageStoreGameId ? null :
               <StoreBottomNav
                 activeTab={activeStoreTab}
                 onTabChange={handleStoreTabChange}
@@ -487,7 +487,7 @@ export default function Store() {
                     />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
-                    <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
+                    <div className={`w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex-col items-center py-6 ${inPageStoreGameId ? 'hidden' : 'flex'}`}
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
