@@ -333,13 +333,10 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
-          {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
+          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only - REMOVED */}
+          {false && (isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
             <motion.div
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100"
+              className="hidden"
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
@@ -438,14 +435,9 @@ export default function LibrarySidebar() {
             </motion.div>
           )}
 
-          {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
-          <motion.div
-            initial={{ x: -100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
-          >
-            {/* Top Slot Placeholder (Luna only) */}
+          {/* Navigation buttons sidebar removed */}
+          {false && <motion.div className="hidden">
+            {/* Top Slot Placeholder (Luna only) - REMOVED */}
             {pathname.includes('/lunatemplate') && (
               <div className="flex flex-col items-center gap-3">
                 <div className="relative group">
