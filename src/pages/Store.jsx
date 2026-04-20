@@ -690,17 +690,6 @@ export default function Store() {
                                 )}
                             </AnimatePresence>
                         </div>
-
-                        {/* Bottom Nav — hidden when game detail is open */}
-                        {!inPageStoreGameId && (
-                            <StoreBottomNav
-                                activeTab={activeStoreTab}
-                                onTabChange={handleStoreTabChange}
-                                searchTerm={storeMode === 'marketplace' ? marketplaceSearchTerm : searchTerm}
-                                onSearchChange={storeMode === 'marketplace' ? setMarketplaceSearchTerm : setSearchTerm}
-                                onVoiceSearch={() => setVoiceSearchOpen(true)}
-                            />
-                        )}
                     </div>
                 </div>
           </WishlistProvider>
