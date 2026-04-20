@@ -575,7 +575,7 @@ export default function Store() {
                                     </motion.div>
                                 ) : storeMode === 'store' ? (
                                     viewMode === 'classic' ? (
-                                        <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-28 pb-0 bg-transparent">
+                                        <motion.div key="classic-store" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full h-full pt-4 pb-0 bg-transparent">
                                             <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
                                                 <AnimatePresence mode="wait">
                                                     {hoveredGame && (
@@ -644,7 +644,7 @@ export default function Store() {
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
                                                         {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                                                         <div className="h-[280px] flex-shrink-0 mt-[150px] w-full flex overflow-hidden">
+                                                        <div className="h-[280px] flex-shrink-0 mt-4 w-full flex overflow-hidden">
                                                             {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
