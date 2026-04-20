@@ -599,7 +599,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-30">
+    <div className="fixed inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-[60]">
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
