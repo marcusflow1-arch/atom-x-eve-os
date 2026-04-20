@@ -183,7 +183,6 @@ export default function Store() {
     const [showOverview, setShowOverview] = useState(false);
     const [storeLibraryOpen, setStoreLibraryOpen] = useState(false);
     const [inPageStoreGameId, setInPageStoreGameId] = useState(null);
-    const [inPageDevCardsGameId, setInPageDevCardsGameId] = useState(null);
     const [activeCategoryOverlay, setActiveCategoryOverlay] = useState(null); // category id
     const [currentShowcaseGame, setCurrentShowcaseGame] = useState(null);
     const [storeMode, setStoreMode] = useState(searchParams.get('mode') || 'store');
@@ -255,7 +254,8 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setInPageStoreGameId(id);
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
     };
 
     const {
@@ -739,7 +739,7 @@ export default function Store() {
                                     </motion.div>
                                 ) : storeMode === 'devcards' ? (
                                     <motion.div key="devcards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden">
-                                        <DevCardsContent onNavigateToGame={(id) => setInPageDevCardsGameId(id)} />
+                                        <DevCardsContent onNavigateToGame={handleNavigateToGame} />
                                     </motion.div>
                                 ) : (
                                     <motion.div key="trading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
@@ -748,13 +748,20 @@ export default function Store() {
                                 )}
                             </AnimatePresence>
 
-
+                            {showScrollTransition && (
+                                <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
+                                    const url = pendingNavigateUrl;
+                                    setShowScrollTransition(false);
+                                    setPendingNavigateUrl(null);
+                                    if (url) navigate(url);
+                                }} />
+                            )}
 
                             {/* IN-PAGE STORE VIEW OVERLAY */}
                             <AnimatePresence>
                                 {inPageStoreGameId && (
                                     <motion.div
-                                        key={`store-${inPageStoreGameId}`}
+                                        key={inPageStoreGameId}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
@@ -762,22 +769,6 @@ export default function Store() {
                                         className="absolute inset-0 z-50"
                                     >
                                         <StoreGameDetailPanel gameId={inPageStoreGameId} onClose={() => setInPageStoreGameId(null)} />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* IN-PAGE DEVcards VIEW OVERLAY */}
-                            <AnimatePresence>
-                                {inPageDevCardsGameId && (
-                                    <motion.div
-                                        key={`devcards-${inPageDevCardsGameId}`}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="absolute inset-0 z-50"
-                                    >
-                                        <StoreGameDetailPanel gameId={inPageDevCardsGameId} onClose={() => setInPageDevCardsGameId(null)} isFromDevCards={true} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

@@ -29,16 +29,16 @@ import AuraWatchedStreamsDrawer from './components/streaming/AuraWatchedStreamsD
 // Global styles (extracted for CSP compliance)
 const globalStyles = `
         :root {
-          --glass-bg: rgba(255, 255, 255, 0.04);
-          --glass-bg-strong: rgba(255, 255, 255, 0.08);
-          --glass-border: rgba(255, 255, 255, 0.08);
-          --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+          --glass-bg: rgba(255, 255, 255, 0.06);
+          --glass-bg-strong: rgba(255, 255, 255, 0.10);
+          --glass-border: rgba(255, 255, 255, 0.10);
+          --glass-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
           --glass-blur: 16px;
-          --ink-900: #1a1410;
-          --ink-800: #2d1f14;
-          --ink-700: #1f1410;
-          --text-primary: #f5e6d3;
-          --text-secondary: rgba(245, 230, 211, 0.7);
+          --ink-900: #0f1419;
+          --ink-800: #1a1f2e;
+          --ink-700: #0d1117;
+          --text-primary: #ffffff;
+          --text-secondary: rgba(255, 255, 255, 0.7);
         }
 
         * {
@@ -224,7 +224,7 @@ const IntelligentCalendarOverlay = lazy(() => import('./components/calendar/Inte
 
 // Route-level lazy loading fallback
 const RouteLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1a1410 0%, #2d1f14 25%, #1f1410 50%, #2d1f14 75%, #1a1410 100%)' }}>
+  <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
     <div className="text-center">
       <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-6"></div>
       <p className="text-white/60 text-lg font-medium tracking-wider">Loading...</p>
@@ -540,10 +540,7 @@ function LayoutContent({ children, currentPageName }) {
   // Mobile mode rendering
   if (isMobile) {
     return (
-      <div className="h-screen w-screen text-slate-300 font-sans overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #1a1410 0%, #2d1f14 25%, #1f1410 50%, #2d1f14 75%, #1a1410 100%)' }}>
-        <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-        <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-amber-600/12 via-orange-600/6 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-amber-700/12 via-orange-600/6 to-transparent blur-3xl" />
+      <div className="h-screen w-screen text-slate-300 font-sans overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
         <div className="absolute inset-0 -z-10">
           <ThemeBackground themeId="moon_essence" />
         </div>
@@ -569,11 +566,8 @@ function LayoutContent({ children, currentPageName }) {
   }
 
   return (
-    <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #1a1410 0%, #2d1f14 25%, #1f1410 50%, #2d1f14 75%, #1a1410 100%)' }}>
+    <div className="h-screen w-screen text-slate-300 font-sans flex flex-col overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
       {/* Animated Background */}
-      <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
-      <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-amber-600/12 via-orange-600/6 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-t from-amber-700/12 via-orange-600/6 to-transparent blur-3xl" />
       <div className="absolute inset-0 -z-10">
         <ThemeBackground themeId="moon_essence" />
       </div>

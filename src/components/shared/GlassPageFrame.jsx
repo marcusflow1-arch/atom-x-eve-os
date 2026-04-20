@@ -1,11 +1,10 @@
 import React from 'react';
 
 export const glassStyle = {
-  background: 'rgba(100, 120, 140, 0.12)',
-  backdropFilter: 'blur(20px) saturate(130%)',
-  WebkitBackdropFilter: 'blur(20px) saturate(130%)',
-  borderColor: 'rgba(255, 255, 255, 0.10)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)'
+  background: 'rgba(8, 12, 18, 0.42)',
+  backdropFilter: 'blur(30px) saturate(150%)',
+  WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
 export default function GlassPageFrame({ children, bottomContent, topContent, className = '' }) {
@@ -17,7 +16,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         style={{
           ...glassStyle,
           height: '64px',
-          borderBottom: '1px solid rgba(255,255,255,0.10)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
           pointerEvents: topContent ? 'auto' : 'none',
         }}
       >
@@ -39,7 +38,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
         style={{
           ...glassStyle,
           minHeight: '48px',
-          borderTop: '1px solid rgba(255,255,255,0.10)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
           pointerEvents: bottomContent ? 'auto' : 'none',
         }}
       >
