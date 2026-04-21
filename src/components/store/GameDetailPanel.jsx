@@ -847,6 +847,14 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </div>
                     </div>
 
+                    {/* Live 3D Viewer Box (copy) */}
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
+                      <ModelViewer3D 
+                        modelPath="/models/lara.glb"
+                        fileType="glb"
+                      />
+                    </div>
+
                     {/* Live 3D Viewer Box */}
                     <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
                       <ModelViewer3D 
