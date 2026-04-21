@@ -793,6 +793,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
+              {/* Trailer & Gameplay Box - MOVED UP */}
+              <GameTrailerBox game={game} />
+
               {/* Main 50/50 Split: 3D Viewer Left | Achievement Cards Right */}
               <div className="flex gap-0 mb-8" style={{ minHeight: '520px' }}>
 
@@ -821,9 +824,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
 
               </div>
-
-              {/* Trailer & Gameplay Box */}
-              <GameTrailerBox game={game} />
 
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">
