@@ -178,7 +178,7 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
   return (
     <canvas
-      ref={canvasRef} className="w-full h-full hidden hidden hidden hidden hidden"
+      ref={canvasRef} className="w-full h-full hidden hidden hidden hidden hidden hidden hidden"
 
       style={{
         display: 'block',
