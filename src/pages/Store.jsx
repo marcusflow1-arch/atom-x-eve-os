@@ -254,7 +254,8 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setInPageStoreGameId(id);
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
     };
 
     const {
@@ -761,20 +762,13 @@ export default function Store() {
                                 {inPageStoreGameId && (
                                     <motion.div
                                         key={inPageStoreGameId}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 20 }}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="fixed z-[60] overflow-hidden"
-                                        style={{ top: '64px', bottom: '48px', left: '80px', right: 0 }}
+                                        className="fixed z-[60]"
+                                        style={{ top: '64px', left: '80px', right: 0, bottom: '48px' }}
                                     >
-                                        {/* Close button */}
-                                        <button
-                                            onClick={() => setInPageStoreGameId(null)}
-                                            className="absolute top-4 right-4 z-[70] w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all"
-                                        >
-                                            <X className="w-4 h-4 text-white" />
-                                        </button>
                                         <StoreGameDetailPanel gameId={inPageStoreGameId} onClose={() => setInPageStoreGameId(null)} />
                                     </motion.div>
                                 )}
