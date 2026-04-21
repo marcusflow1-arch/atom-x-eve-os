@@ -22,17 +22,15 @@ export default function GameTrailerBox({ game }) {
   const trailerEmbedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0` : null;
 
   return (
-    <div className="space-y-4 mb-8">
-      <h3 className="text-lg font-bold text-white">Trailers & Gameplay</h3>
-      
-      {/* 70-30 Layout */}
-      <div className="flex gap-6" style={{ minHeight: '420px' }}>
+    <div className="mb-8">
+      {/* 70-30 Layout - No vertical divider */}
+      <div className="flex gap-0" style={{ minHeight: '480px' }}>
         
         {/* LEFT 70%: Trailer & Preview Boxes */}
-        <div className="flex-1 min-w-0 flex flex-col gap-3" style={{ flex: '0 0 70%' }}>
+        <div className="flex-1 flex flex-col gap-3" style={{ flex: '0 0 70%' }}>
           
-          {/* Main Trailer */}
-          <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10">
+          {/* Main Trailer with Label */}
+          <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10 group">
             {trailerEmbedUrl ? (
               <iframe
                 src={trailerEmbedUrl}
@@ -50,15 +48,20 @@ export default function GameTrailerBox({ game }) {
                 </div>
               </div>
             )}
+            {/* Gameplay Trailer Label */}
+            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded text-white text-xs font-bold">
+              Gameplay Trailer
+            </div>
           </div>
 
           {/* Preview Boxes Grid */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             {previewBoxes.map((box) => (
               <motion.div
                 key={box.id}
                 whileHover={{ scale: 1.05 }}
-                className="group relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 cursor-pointer"
+                className="group relative flex-shrink-0 rounded-lg overflow-hidden border border-white/10 bg-black/40 cursor-pointer"
+                style={{ width: '100px', height: '70px' }}
               >
                 <img
                   src={box.image}
@@ -66,69 +69,64 @@ export default function GameTrailerBox({ game }) {
                   className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* RIGHT 30%: Game Info */}
-        <div className="flex-shrink-0 w-[30%] flex flex-col gap-4 overflow-y-auto scrollbar-hide">
+        {/* RIGHT 30%: Game Info Panel */}
+        <div className="flex-shrink-0 flex flex-col gap-4 pl-6" style={{ width: '30%' }}>
           
-          {/* Game Cover & Title */}
-          <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40">
+          {/* Game Cover */}
+          <div className="rounded-lg overflow-hidden border border-white/10">
             <img
               src={game?.cover_image}
               alt={game?.title}
               className="w-full aspect-[2/3] object-cover"
             />
-            <div className="p-3">
-              <h4 className="font-bold text-white text-sm truncate">{game?.title}</h4>
-              <p className="text-[11px] text-white/50 mt-1 line-clamp-2">{game?.description}</p>
+          </div>
+
+          {/* Description */}
+          <div>
+            <p className="text-xs text-white/70 leading-relaxed">{game?.description}</p>
+          </div>
+
+          {/* Metadata Items */}
+          <div className="space-y-2 text-xs">
+            {game?.original_year && (
+              <div className="flex items-start gap-2">
+                <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Release Date:</span>
+                <span className="text-white">{game.original_year}</span>
+              </div>
+            )}
+            
+            <div className="flex items-start gap-2">
+              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Developer:</span>
+              <span className="text-cyan-400">Studio Unknown</span>
+            </div>
+
+            <div className="flex items-start gap-2">
+              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Publisher:</span>
+              <span className="text-white">Atom Publishing</span>
             </div>
           </div>
 
-          {/* Rating */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-2"
-          >
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-sm font-bold text-white">4.8/5</span>
-            <span className="text-[10px] text-white/40">(2.4K reviews)</span>
-          </motion.div>
-
-          {/* Quick Info */}
-          <div className="space-y-2">
+          {/* Tags */}
+          <div className="flex flex-wrap gap-2 pt-2">
             {game?.genre && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Genre</p>
-                <p className="text-sm text-white capitalize">{game.genre}</p>
-              </div>
+              <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded text-[10px] font-semibold text-white/80 hover:bg-white/15 transition-colors cursor-pointer">
+                {game.genre.replace(/_/g, ' ')}
+              </span>
             )}
-
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Type</p>
-              <p className="text-sm text-white">Multiplayer</p>
-            </div>
-
-            {game?.original_year && (
-              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Released</p>
-                <p className="text-sm text-white">{game.original_year}</p>
-              </div>
-            )}
-
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Publisher</p>
-              <p className="text-sm text-white">Atom Studios</p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Platform</p>
-              <p className="text-sm text-white">PC, PlayStation, Xbox</p>
-            </div>
+            <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded text-[10px] font-semibold text-white/80 hover:bg-white/15 transition-colors cursor-pointer">
+              Action
+            </span>
+            <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded text-[10px] font-semibold text-white/80 hover:bg-white/15 transition-colors cursor-pointer">
+              Multiplayer
+            </span>
+            <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded text-[10px] font-semibold text-white/80 hover:bg-white/15 transition-colors cursor-pointer">
+              Open World
+            </span>
           </div>
         </div>
 
