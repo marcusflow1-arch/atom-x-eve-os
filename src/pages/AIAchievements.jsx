@@ -672,62 +672,44 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* FAR LEFT: Card Display */}
+                {/* FAR LEFT: Empty Box */}
                 <div className="w-[220px] flex-shrink-0 flex flex-col">
-                  <div className="aspect-[2.5/3.5] w-full">
-                    <ShinyCard 
-                      index={0} 
-                      onClick={() => {
-                        const card = tradingCards[0];
-                        if (blacksmithMode) {
-                          setBlacksmithCard(card);
-                        } else {
-                          setSelectedCard(card);
-                        }
-                      }}
-                    >
-                      <div className="absolute inset-0 flex flex-col p-3">
-                        <div className="relative w-full h-3/5 rounded-lg overflow-hidden mb-2 border border-white/10">
-                          <img src={tradingCards[0].image} alt={tradingCards[0].title} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-white font-bold text-xs leading-tight mb-1">{tradingCards[0].title}</h3>
-                            <Badge variant="outline" className={`text-[9px] h-4 px-1 border ${
-                              tradingCards[0].rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                              tradingCards[0].rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                              tradingCards[0].rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                              'border-slate-500/50 text-slate-400'
-                            }`}>
-                              {tradingCards[0].rarity}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </ShinyCard>
-                  </div>
+                  <div className="aspect-[2.5/3.5] w-full rounded-2xl border border-white/10 bg-white/5" />
+                </div>
 
-                  {/* Card Thumbnails */}
-                  {tradingCards.length > 1 && (
-                    <div className="mt-3">
-                      <div className="flex gap-1.5 overflow-x-auto pb-2 custom-scrollbar">
-                        {tradingCards.slice(0, 5).map((card, i) => (
+                {/* RIGHT: Achievement Cards Grid */}
+                <div className="flex-1 flex flex-col gap-6 overflow-visible">
+                  {/* Achievement Cards Section */}
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards</h3>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      <div className="grid grid-cols-5 gap-3">
+                        {tradingCards.map((card, i) => (
                           <button
                             key={card.id}
                             onClick={() => setSelectedCard(card)}
-                            className="w-10 h-14 rounded-md overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all flex-shrink-0"
+                            className="aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20 bg-black/30"
                           >
-                            <img src={card.image} alt="" className="w-full h-full object-cover" />
+                            <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
+                              <h4 className="text-white font-bold text-[10px] leading-tight truncate">{card.title}</h4>
+                              <Badge variant="outline" className={`text-[8px] h-3 px-0.5 border ${
+                                card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                'border-slate-500/50 text-slate-400'
+                              }`}>
+                                {card.rarity}
+                              </Badge>
+                            </div>
                           </button>
                         ))}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* RIGHT: Combined Skill Tree Box (Side-by-Side) */}
-                <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
+                  {/* Skill Tree Box */}
+                  <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
                   {/* Header Info */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
                     <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Skill Progression</h3>
@@ -845,6 +827,7 @@ function AIAchievementsView({ onClosePage }) {
                     </div>
                   </div>
                 </ShinySidebarBox>
+                </div>
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
