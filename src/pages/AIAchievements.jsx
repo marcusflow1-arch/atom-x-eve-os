@@ -673,40 +673,6 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* LEFT: Achievement Cards Grid */}
-                <div className="flex-1 flex flex-col gap-6 overflow-visible">
-                  {/* Achievement Cards Section */}
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards</h3>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      <div className="grid grid-cols-5 gap-3">
-                        {tradingCards.map((card, i) => (
-                          <button
-                            key={card.id}
-                            onClick={() => setSelectedCard(card)}
-                            className="aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20 bg-black/30"
-                          >
-                            <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
-                              <h4 className="text-white font-bold text-[10px] leading-tight truncate">{card.title}</h4>
-                              <Badge variant="outline" className={`text-[8px] h-3 px-0.5 border ${
-                                card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                'border-slate-500/50 text-slate-400'
-                              }`}>
-                                {card.rarity}
-                              </Badge>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-
-                </div>
-
                 {/* Skill Tree Box */}
                 <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
                   {/* Header Info */}
@@ -826,6 +792,39 @@ function AIAchievementsView({ onClosePage }) {
                     </div>
                   </div>
                 </ShinySidebarBox>
+
+                {/* RIGHT: Achievement Cards Grid */}
+                <div className="flex-1 flex flex-col gap-6 overflow-visible">
+                  {/* Achievement Cards Section */}
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards</h3>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' }}>
+                        {tradingCards.map((card, i) => (
+                          <button
+                            key={card.id}
+                            onClick={() => setSelectedCard(card)}
+                            className="aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20 bg-black/30"
+                          >
+                            <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
+                              <h4 className="text-white font-bold text-[10px] leading-tight truncate">{card.title}</h4>
+                              <Badge variant="outline" className={`text-[8px] h-3 px-0.5 border ${
+                                card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                                card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                                card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                                'border-slate-500/50 text-slate-400'
+                              }`}>
+                                {card.rarity}
+                              </Badge>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">

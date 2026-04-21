@@ -107,9 +107,9 @@ export default function AchievementCardStrip({ achievementCards, dlcList, onSele
   };
 
   return (
-    <div className="flex flex-col h-full" style={{ background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(50px) saturate(200%)', WebkitBackdropFilter: 'blur(50px) saturate(200%)', boxShadow: '0 4px 30px rgba(0,0,0,0.2)', borderRadius: 14, padding: '12px 8px 8px' }}>
+    <div className="flex flex-col h-full">
       {/* Title */}
-      <div className="flex flex-col items-center gap-1 mb-2">
+      <div className="flex flex-col items-center gap-1 mb-4">
         <div className="flex items-center gap-1.5">
           <Trophy className="w-3.5 h-3.5 text-cyan-400" />
           <h3 className="text-sm font-bold text-white tracking-wider">Achievement Cards</h3>
@@ -178,25 +178,14 @@ export default function AchievementCardStrip({ achievementCards, dlcList, onSele
         })}
       </div>
 
-      {/* Scrollable card strip */}
-      <div className="relative flex-1 min-h-0 group/strip" onWheel={handleWheel}>
-        <button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <ChevronLeft className="w-3 h-3 text-white/70" />
-        </button>
-        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <ChevronRight className="w-3 h-3 text-white/70" />
-        </button>
-
-        <div
-          ref={scrollRef}
-          className="flex items-start gap-2 overflow-x-auto px-3 pb-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', height: '100%' }}
-        >
+      {/* Grid card layout */}
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+        <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' }}>
           {flatCards.map((card, i) => (
             <CardItem key={`${card.name}-${i}`} card={card} onSelect={onSelectCard} />
           ))}
           {flatCards.length === 0 && (
-            <div className="w-full text-center py-4 text-white/25 text-xs">
+            <div className="col-span-full text-center py-8 text-white/25 text-xs">
               No cards found
             </div>
           )}
