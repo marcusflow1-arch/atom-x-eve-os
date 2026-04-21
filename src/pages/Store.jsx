@@ -765,7 +765,8 @@ export default function Store() {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 20 }}
                                         transition={{ duration: 0.3 }}
-                                        className="absolute inset-0 z-[60] overflow-hidden"
+                                        className="fixed z-[60] overflow-hidden"
+                                        style={{ top: '64px', bottom: '48px', left: '80px', right: 0 }}
                                     >
                                         {/* Close button */}
                                         <button
