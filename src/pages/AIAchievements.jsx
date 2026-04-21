@@ -704,11 +704,9 @@ function AIAchievementsView({ onClosePage }) {
                     </div>
                   </div>
 
-                  {/* FAR RIGHT: 3D Model Viewer */}
+                  {/* FAR RIGHT: Empty Space */}
                   <div className="w-[220px] flex-shrink-0 flex flex-col">
-                    <ShinySidebarBox className="aspect-[2.5/3.5] w-full overflow-hidden p-0">
-                      <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf" />
-                    </ShinySidebarBox>
+                    <ShinySidebarBox className="aspect-[2.5/3.5] w-full overflow-hidden p-0" />
                   </div>
                 </div>
 
