@@ -847,24 +847,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </div>
                     </div>
 
-                    {/* Trailer/3D Viewer Box - Trailer content */}
+                    {/* Live 3D Viewer Box */}
                     <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
-                        <iframe 
-                          src={selectedMediaItem.embedUrl} 
-                          title={selectedMediaItem.title}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <img 
-                          src={selectedMediaItem?.image || game.cover_image}
-                          alt="Trailer"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
+                      <ModelViewer3D 
+                        modelPath="/models/lara.glb"
+                        fileType="glb"
+                      />
                     </div>
                   </div>
               </div>
