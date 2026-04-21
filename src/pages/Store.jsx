@@ -698,11 +698,18 @@ export default function Store() {
                                                             <div className="flex-1 h-full overflow-y-auto custom-scrollbar pb-24 pr-2 pt-6" ref={contentScrollRef}>
                                                                 <motion.div key={`${activeGenreIndex}-${activeSubCategoryIndex}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
                                                                     {displayedGames.map((game, idx) => (
-                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => setInPageStoreGameId(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
+                                                                        <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} whileHover={{ y: -8, scale: 1.02 }} onClick={() => handleNavigateToGame(game.id)} onMouseEnter={() => setHoveredGame(game)} className="group relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer shadow-lg bg-slate-900 border border-white/5 hover:border-cyan-400/40 hover:shadow-cyan-500/20 transition-all">
                                                                             <img src={game.cover_image || game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                                                             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
                                                                             <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                                                                               <WishlistButton game={game} />
+                                                                              <button
+                                                                                onClick={(e) => { e.stopPropagation(); setInPageStoreGameId(game.id); }}
+                                                                                className="w-7 h-7 rounded-md bg-black/60 backdrop-blur-md border border-cyan-400/40 flex items-center justify-center hover:bg-cyan-500/20 transition-all opacity-0 group-hover:opacity-100"
+                                                                                title="Store View"
+                                                                              >
+                                                                                <ShoppingBag className="w-3.5 h-3.5 text-cyan-300" />
+                                                                              </button>
                                                                             </div>
                                                                             <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-2 group-hover:translate-y-0 transition-transform">
                                                                                 <h4 className="text-white font-bold text-lg leading-tight mb-1 truncate">{game.title}</h4>
@@ -759,8 +766,8 @@ export default function Store() {
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
-                                        className="fixed z-[70]"
-                                        style={{ top: '64px', left: 0, right: 0, bottom: '48px' }}
+                                        className="fixed z-[60]"
+                                        style={{ top: '64px', left: '80px', right: 0, bottom: '48px' }}
                                     >
                                         <StoreGameDetailPanel gameId={inPageStoreGameId} onClose={() => setInPageStoreGameId(null)} />
                                     </motion.div>
