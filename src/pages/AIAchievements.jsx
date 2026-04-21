@@ -673,14 +673,7 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* FAR LEFT: 3D Model Viewer */}
-                <div className="w-[220px] flex-shrink-0 flex flex-col">
-                  <ShinySidebarBox className="aspect-[2.5/3.5] w-full overflow-hidden p-0">
-                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf" />
-                  </ShinySidebarBox>
-                </div>
-
-                {/* RIGHT: Achievement Cards Grid */}
+                {/* LEFT: Achievement Cards Grid */}
                 <div className="flex-1 flex flex-col gap-6 overflow-visible">
                   {/* Achievement Cards Section */}
                   <div className="flex-1 flex flex-col overflow-hidden">
@@ -711,8 +704,16 @@ function AIAchievementsView({ onClosePage }) {
                     </div>
                   </div>
 
-                  {/* Skill Tree Box */}
-                  <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
+                  {/* FAR RIGHT: 3D Model Viewer */}
+                  <div className="w-[220px] flex-shrink-0 flex flex-col">
+                    <ShinySidebarBox className="aspect-[2.5/3.5] w-full overflow-hidden p-0">
+                      <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf" />
+                    </ShinySidebarBox>
+                  </div>
+                </div>
+
+                {/* Skill Tree Box */}
+                <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
                   {/* Header Info */}
                   <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
                     <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Skill Progression</h3>
@@ -830,7 +831,6 @@ function AIAchievementsView({ onClosePage }) {
                     </div>
                   </div>
                 </ShinySidebarBox>
-                </div>
               </>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center text-slate-500 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
