@@ -782,15 +782,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Achievement Cards Section - First */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-4">Developer Cards</h3>
-                <AchievementCardStrip 
-                  achievementCards={achievementCards} 
-                  dlcList={dlcList}
-                  onSelectCard={setSelectedCard} 
-                />
-              </div>
+
 
               {/* Main Grid: Trailer Left, Info Right */}
               <div className="flex flex-col lg:flex-row gap-8">
@@ -1020,12 +1012,30 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* 3D Viewer Section - Full Width Below */}
-              <div className="flex flex-col gap-4">
-                <h4 className="text-lg font-bold text-white">3D Model Viewer</h4>
-                <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                  <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/fbx/Samba Dancing.fbx" />
+              {/* Achievement Cards + 3D Viewer - 50/50 Side by Side */}
+              <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10">
+
+                {/* Left (50%): Achievement Cards */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6">
+                  <h3 className="text-xl font-bold text-white mb-2">Developer Cards</h3>
+                  <AchievementCardStrip 
+                    achievementCards={achievementCards} 
+                    dlcList={dlcList}
+                    onSelectCard={setSelectedCard} 
+                  />
                 </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
+
+                {/* Right (50%): 3D Model Viewer */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6 bg-gradient-to-br from-white/3 to-transparent">
+                  <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
+                  <div className="relative flex-1 bg-gradient-to-b from-black/60 to-black/40 backdrop-blur-md border border-white/15 rounded-lg overflow-hidden shadow-lg shadow-black/30 hover:border-white/25 transition-colors">
+                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/fbx/Samba Dancing.fbx" />
+                  </div>
+                </div>
+
               </div>
 
               {/* Lower Section: Content */}
