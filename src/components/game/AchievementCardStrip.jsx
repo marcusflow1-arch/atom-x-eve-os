@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Shield, User, Trees, ChevronLeft, ChevronRight, Trophy, Package } from 'lucide-react';
 
@@ -24,27 +24,27 @@ function CardItem({ card, onSelect }) {
   return (
     <motion.div
       onClick={() => onSelect(card)}
-      whileHover={{ scale: 1.05, y: -3 }}
-      className="flex-shrink-0 w-[80px] cursor-pointer group"
+      whileHover={{ scale: 1.05, y: -2 }}
+      className="cursor-pointer group flex flex-col"
     >
       {/* Card body */}
       <div
         className="relative flex flex-col items-center justify-center rounded-xl overflow-hidden transition-all"
         style={{
-          height: 96,
+          height: 88,
           background: 'rgba(255,255,255,0.04)',
           border: '1px solid rgba(255,255,255,0.08)',
         }}
       >
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center mb-1"
+          className="w-9 h-9 rounded-full flex items-center justify-center mb-1"
           style={{ background: `${cfg.color}18`, boxShadow: `0 0 12px ${cfg.color}30` }}
         >
-          <Icon style={{ color: cfg.color }} className="w-5 h-5" />
+          <Icon style={{ color: cfg.color }} className="w-4 h-4" />
         </div>
       </div>
       {/* Labels */}
-      <div className="mt-1.5 text-center px-0.5">
+      <div className="mt-1 text-center px-0.5">
         <p className="text-[9px] font-bold text-white leading-tight truncate">{card.name}</p>
         {card.edition && <p className="text-[8px] text-white/35 leading-tight truncate">{card.edition}</p>}
       </div>
@@ -53,26 +53,12 @@ function CardItem({ card, onSelect }) {
 }
 
 export default function AchievementCardStrip({ achievementCards, dlcList, onSelectCard }) {
-  const scrollRef = useRef(null);
   const [activeFilter, setActiveFilter] = useState('All');
   const [mode, setMode] = useState('achievements'); // 'achievements' or 'dlc'
   const [dlcIndex, setDlcIndex] = useState(0);
 
   // DLC items (filter out 'standard' base game entry)
   const dlcItems = (dlcList || []).filter(d => d.id !== 'standard');
-
-  const scroll = (direction) => {
-    if (!scrollRef.current) return;
-    const amount = direction === 'left' ? -300 : 300;
-    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-  };
-
-  const handleWheel = useCallback((e) => {
-    if (!scrollRef.current) return;
-    e.preventDefault();
-    const amount = e.deltaY < 0 ? 300 : -300;
-    scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-  }, []);
 
   // When in DLC mode, build cards from the current DLC's achievements
   const currentDlc = dlcItems[dlcIndex] || null;
@@ -175,29 +161,17 @@ export default function AchievementCardStrip({ achievementCards, dlcList, onSele
         })}
       </div>
 
-      {/* Scrollable card strip */}
-      <div className="relative flex-1 min-h-0 group/strip" onWheel={handleWheel}>
-        <button onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <ChevronLeft className="w-3 h-3 text-white/70" />
-        </button>
-        <button onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/strip:opacity-100 transition-opacity" style={{ background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <ChevronRight className="w-3 h-3 text-white/70" />
-        </button>
-
-        <div
-          ref={scrollRef}
-          className="flex items-start gap-2 overflow-x-auto px-3 pb-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', height: '100%' }}
-        >
-          {flatCards.map((card, i) => (
-            <CardItem key={`${card.name}-${i}`} card={card} onSelect={onSelectCard} />
-          ))}
-          {flatCards.length === 0 && (
-            <div className="w-full text-center py-4 text-white/25 text-xs">
-              No cards found
-            </div>
-          )}
-        </div>
+      {/* Scrollable card grid — 5 columns, rows scroll vertically */}
+      <div className="flex-1 min-h-0 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+        {flatCards.length === 0 ? (
+          <div className="w-full text-center py-4 text-white/25 text-xs">No cards found</div>
+        ) : (
+          <div className="grid gap-2 px-1" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
+            {flatCards.map((card, i) => (
+              <CardItem key={`${card.name}-${i}`} card={card} onSelect={onSelectCard} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
