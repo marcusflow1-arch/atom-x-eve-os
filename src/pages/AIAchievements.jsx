@@ -18,6 +18,7 @@ import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import MysteryCardDetail from '../components/streaming/MysteryCardDetail';
+import AdvancedModel3DViewer from '../components/3d/AdvancedModel3DViewer';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
 import ReviewInsights from '@/components/reviews/ReviewInsights';
@@ -672,9 +673,11 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* FAR LEFT: Empty Box */}
+                {/* FAR LEFT: 3D Model Viewer */}
                 <div className="w-[220px] flex-shrink-0 flex flex-col">
-                  <div className="aspect-[2.5/3.5] w-full rounded-2xl border border-white/10 bg-white/5" />
+                  <ShinySidebarBox className="aspect-[2.5/3.5] w-full overflow-hidden p-0">
+                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf" />
+                  </ShinySidebarBox>
                 </div>
 
                 {/* RIGHT: Achievement Cards Grid */}
