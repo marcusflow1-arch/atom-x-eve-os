@@ -643,24 +643,19 @@ export default function Store() {
 
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
-                                                        {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                                                         <div className="h-[280px] flex-shrink-0 mt-[150px] w-full flex overflow-hidden">
-                                                            {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
-                                                            <div className="flex-shrink-0" style={{ width: '256px' }} />
+                                                        {/* HERO SHOWCASE */}
+                                                         <div className="flex-shrink-0 mt-[150px] w-full h-auto overflow-hidden">
+                                                            <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
+                                                        </div>
 
-                                                            {/* Achievements — from game grid left edge to divider */}
-                                                            <div className="flex-1 min-w-0 overflow-hidden">
+                                                        {/* ACHIEVEMENT CARDS - 50/50 Layout */}
+                                                        <div className="flex-1 flex overflow-hidden mt-8 px-6 gap-8">
+                                                            {/* Left side - empty */}
+                                                            <div className="w-1/2 flex-shrink-0" />
+
+                                                            {/* Right side - achievement cards scrolling */}
+                                                            <div className="w-1/2 flex-shrink-0 h-full overflow-y-auto custom-scrollbar pb-12">
                                                                 <StoreAchievementsStrip currentGame={currentShowcaseGame} />
-                                                            </div>
-
-                                                            {/* Vertical divider — center portion only, thicker */}
-                                                            <div className="flex-shrink-0 w-[3px] self-stretch flex flex-col justify-center py-10">
-                                                                <div className="w-[3px] h-full bg-white/25 rounded-full" />
-                                                            </div>
-
-                                                            {/* Slideshow — right 50% */}
-                                                            <div className="w-1/2 flex-shrink-0 overflow-hidden">
-                                                                <StoreHeroShowcase games={displayedGames.length > 0 ? displayedGames : games.slice(0, 8)} activeSubCategory={activeSubCategory} onGameChange={setCurrentShowcaseGame} />
                                                             </div>
                                                         </div>
 
