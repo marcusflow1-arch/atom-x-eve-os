@@ -15,6 +15,7 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
+import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
 
 
 // --- Components ---
@@ -868,12 +869,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
 
                   {/* 3D Viewer - Seamless Integration */}
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                    <div className="relative z-10 text-center">
-                      <div className="text-white/40 text-sm">3D Model Viewer</div>
-                      <p className="text-white/20 text-xs mt-1">(Ready for 3D model)</p>
-                    </div>
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
+                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/fbx/Samba Dancing.fbx" />
                   </div>
 
                 </div>
