@@ -1050,8 +1050,7 @@ function Large3DCard({ card, isActive }) {
 function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironmentActive, onToggleEnvironment }) {
   return (
     <div 
-      onClick={onToggle}
-      className="w-full h-full rounded-xl overflow-hidden relative group cursor-pointer"
+      className="w-full h-full rounded-xl overflow-hidden relative group"
       style={{
         background: isOpen
           ? 'linear-gradient(145deg, rgba(18,32,52,0.98) 0%, rgba(10,20,36,0.99) 100%)'
@@ -1063,40 +1062,40 @@ function EnvironmentHubTile({ isOpen, onToggle, onQuickChangeToggle, isEnvironme
         transition: 'all 0.3s ease'
       }}
     >
-      <img 
-        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
-        alt="Environment Hub"
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50 absolute inset-0"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+      <button className="absolute inset-0 w-full h-full cursor-pointer" onClick={onToggle}>
+        <img 
+          src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80" 
+          alt="Environment Hub"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }}
+          className="absolute top-2 left-2 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 border border-white/10 text-white text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-all z-10 flex items-center gap-1.5 group-hover:border-cyan-400/50 cursor-pointer"
+        >
+          {isEnvironmentActive ? (
+            <><div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" /> Luna Dashboard</>
+          ) : (
+            <><div className="w-1.5 h-1.5 rounded-full bg-white/40" /> Luna Dashboard</>
+          )}
+        </button>
+        <div className="absolute bottom-3 left-3 right-3 text-left">
+          <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
+            <Globe className="w-4 h-4 text-cyan-400" />
+            Environment Hub
+          </h4>
+          <p className="text-white/50 text-[10px]">Change your 3D world</p>
+        </div>
+      </button>
       
-      <div 
-        onClick={(e) => { e.stopPropagation(); onToggleEnvironment?.(); }}
-        className="absolute top-2 left-2 px-3 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 border border-white/10 text-white text-[10px] font-bold tracking-wider uppercase backdrop-blur-md transition-all z-10 flex items-center gap-1.5 group-hover:border-cyan-400/50 cursor-pointer"
-      >
-        {isEnvironmentActive ? (
-          <><div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" /> Luna Dashboard</>
-        ) : (
-          <><div className="w-1.5 h-1.5 rounded-full bg-white/40" /> Luna Dashboard</>
-        )}
-      </div>
-      
-      <div className="absolute bottom-3 left-3 right-3 text-left">
-        <h4 className="text-white font-bold text-sm truncate flex items-center gap-2">
-          <Globe className="w-4 h-4 text-cyan-400" />
-          Environment Hub
-        </h4>
-        <p className="text-white/50 text-[10px]">Change your 3D world</p>
-      </div>
-      
-      <div 
+      <button 
         onClick={(e) => { e.stopPropagation(); onQuickChangeToggle(); }}
         className="absolute top-2 right-2 w-7 h-7 rounded-md bg-white/10 hover:bg-cyan-500/30 border border-white/20 flex items-center justify-center z-10 transition-colors cursor-pointer group-hover:bg-white/20"
         title="Quick Change Environments"
       >
         <LibraryIcon className="w-3.5 h-3.5 text-white" />
-      </div>
+      </button>
     </div>
   );
 }

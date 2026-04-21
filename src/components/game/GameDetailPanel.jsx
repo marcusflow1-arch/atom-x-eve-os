@@ -5,7 +5,7 @@ import {
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
   Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy, Users,
-  Package, Tag, ArrowUpCircle, Bug, Sparkles, Image, ShoppingBag
+  Package, Tag, ArrowUpCircle, Bug, Sparkles
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -15,7 +15,6 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
-import ModelViewer3D from './ModelViewer3D';
 
 
 // --- Components ---
@@ -210,7 +209,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedDLC, setSelectedDLC] = useState(null);
   const [selectedMediaItem, setSelectedMediaItem] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [storeModel, setStoreModel] = useState(null);
   
   // Auto-select first media item on load
   useEffect(() => {
@@ -225,7 +223,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
-  const [selectedUpdate, setSelectedUpdate] = useState(null);
 
   // Helper to extract YouTube ID
   const getYouTubeId = (url) => {
@@ -426,13 +423,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
         }, '-created_date');
         setReviews(gameReviews);
         
-        // Fetch the 3D model for store from the database
-        const allModels = await base44.entities.Model3D.list('-file_size');
-        const storePageModel = allModels.find(m => m.category?.toLowerCase().includes('store') || m.name?.toLowerCase().includes('store'));
-        if (storePageModel) {
-          setStoreModel(storePageModel);
-        }
-        
         // Mock dev review (in production, this would be fetched from a DevReview entity)
         setDevReview({
           dev_name: "Studio Unknown",
@@ -599,7 +589,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-[60]">
+    <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
@@ -791,93 +781,246 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Main 50/50 Split: 3D Viewer Left | Achievement Cards Right */}
-              <div className="flex gap-0 mb-8" style={{ minHeight: '520px' }}>
+              {/* Achievement Cards Section - First */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-white mb-4">Developer Cards</h3>
+                <AchievementCardStrip 
+                  achievementCards={achievementCards} 
+                  dlcList={dlcList}
+                  onSelectCard={setSelectedCard} 
+                />
+              </div>
 
-                {/* LEFT 50%: 3D Viewer */}
-                <div className="flex-1 min-w-0 flex flex-col gap-3 pr-6">
-                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
-                  <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1" style={{ minHeight: '480px' }}>
-                    {storeModel ? (
-                      <ModelViewer3D modelPath={storeModel.file_url} fileType={storeModel.file_type} bundleManifest={storeModel.bundle_manifest} />
-                    ) : (
-                      <ModelViewer3D modelPath="/models/lara.glb" />
-                    )}
+              {/* Main Grid: Cards Left (50%), Demo Right (50%) */}
+              <div className="flex flex-col lg:flex-row gap-8">
+                
+                {/* Left (50%): Developer Cards Grid */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                  <h4 className="text-lg font-bold text-white">Released Cards</h4>
+                  
+                  {/* Cards Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 min-h-[400px]">
+                    {achievementCards.slice(0, 12).map((card, idx) => (
+                      <motion.div
+                        key={card.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        onClick={() => setSelectedCard(card)}
+                        className="relative group cursor-pointer aspect-[2/3] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20 transition-all hover:scale-105"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/30" />
+                        <img 
+                          src={card.image || game.cover_image}
+                          alt={card.name}
+                          className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 transition-transform">
+                          <p className="text-xs font-bold text-white truncate">{card.name}</p>
+                          <p className="text-[10px] text-white/60">{card.type}</p>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
 
-                {/* White Vertical Divider */}
-                <div className="w-px bg-white/20 self-stretch flex-shrink-0" />
+                {/* Right (50%): Demo/Video */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
+                  
+                  {/* Demo Video/AR Box */}
+                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
+                    {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                            src={selectedMediaItem.embedUrl} 
+                            title={selectedMediaItem.title}
+                            className="w-full h-full"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <>
+                            <img 
+                              src={selectedMediaItem?.image || selectedMediaItem?.icon || game.cover_image}
+                              alt={selectedMediaItem?.title || game.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                            
+                            {/* Media Title Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+                                <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
+                                  {selectedMediaItem?.title || game.title}
+                                </h4>
+                            </div>
 
-                {/* RIGHT 50%: Achievement Cards - vertical scrollable grid */}
-                <div className="flex-1 min-w-0 flex flex-col gap-3 pl-6 overflow-hidden">
-                  {/* Strip header (title + DLC toggle) */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <Trophy className="w-4 h-4 text-cyan-400" />
-                    <h4 className="text-lg font-bold text-white">Achievement Cards Released</h4>
+                            {/* Fullscreen Button */}
+                            <button
+                              onClick={handleFullscreen}
+                              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/80 hover:scale-110 transition-all group opacity-0 group-hover/preview:opacity-100"
+                            >
+                              <Maximize2 className="w-4 h-4 text-white group-hover:text-cyan-400" />
+                            </button>
+                        </>
+                    )}
                   </div>
 
-                  {/* Filter pills */}
-                  <div className="flex flex-wrap gap-1 flex-shrink-0">
-                    {['All','Ability','Equipment','Companion','Environment'].map(f => {
-                      const colors = { All: '#fff', Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
-                      const c = colors[f];
-                      const active = f === 'All'; // static default; AchievementCardStrip manages its own state
-                      return (
-                        <span key={f} className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                          style={{ background: `${c}18`, border: `1px solid ${c}40`, color: c }}>
-                          {f}
+                  {/* 3D Viewer - Seamless Integration */}
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+                    <div className="relative z-10 text-center">
+                      <div className="text-white/40 text-sm">3D Model Viewer</div>
+                      <p className="text-white/20 text-xs mt-1">(Ready for 3D model)</p>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Right: Game Info Sidebar */}
+                <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                  {/* Info Box */}
+                  <div className="bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-5 space-y-4">
+                    {/* Header Image (Capsule) - Reduced to 30% */}
+                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
+                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                    </div>
+
+                    {/* Short Description */}
+                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
+                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
+                    </p>
+
+                    {/* Metadata Table */}
+                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
+                        <span className="text-white/80">{game.original_year || '2025'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                          {tag}
                         </span>
-                      );
-                    })}
+                      ))}
+                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+
+                  {/* Separator Line */}
+                  <div className="flex items-center gap-4 my-6">
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
+                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
+                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
                   </div>
 
-                  {/* Cards — 3-column vertical grid, scrollable */}
-                  <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
-                    <div className="grid grid-cols-3 gap-3">
-                      {achievementCards.slice(0, 9).map((card, idx) => {
-                        const typeColors = { Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
-                        const col = typeColors[card.type] || '#fff';
-                        return (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.04 }}
-                            onClick={() => setSelectedCard(card)}
-                            whileHover={{ scale: 1.04, y: -2 }}
-                            className="cursor-pointer rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all"
-                            style={{ background: 'rgba(255,255,255,0.04)' }}
-                          >
-                            <div className="relative aspect-[2/2.5] flex flex-col items-center justify-center p-3">
-                              <img
-                                src={game.cover_image}
-                                alt={card.name}
-                                className="absolute inset-0 w-full h-full object-cover opacity-20"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                              <div className="relative z-10 flex flex-col items-center gap-1 text-center">
-                                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
-                                  style={{ background: `${col}18`, border: `1px solid ${col}40` }}>
-                                  <span style={{ color: col }} className="text-sm">✦</span>
-                                </div>
-                                <p className="text-[10px] font-bold text-white leading-tight line-clamp-2">{card.name}</p>
-                                <p className="text-[8px] font-medium" style={{ color: col }}>{card.type}</p>
-                              </div>
-                            </div>
-                            <div className="px-2 py-1.5 border-t border-white/5">
-                              <p className="text-[8px] text-white/35 truncate">{card.edition}</p>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
+                  {/* Live Stream + Chat Row */}
+                  <div className="flex flex-col lg:flex-row gap-4">
+              {/* Live Stream Box — same aspect ratio as media preview */}
+              <div className="flex-[2] min-w-0">
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col">
+                    {/* Stream Header Bar */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-black/60 border-b border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                        <span className="text-white font-bold text-xs uppercase tracking-wider">Live Stream</span>
+                        <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-bold">LIVE</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-[10px] text-white/40">
+                        <span className="flex items-center gap-1"><Radio className="w-3 h-3 text-red-400" /> 1,204 watching</span>
+                        <span>StreamerXO is playing {game?.title}</span>
+                      </div>
+                    </div>
+                    {/* Stream Embed / Placeholder */}
+                    <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                      <img
+                        src={game?.banner_image || game?.cover_image}
+                        alt="Live Stream"
+                        className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/50" />
+                      <div className="relative z-10 flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                          <Play className="w-7 h-7 text-white fill-white ml-1" />
+                        </div>
+                        <p className="text-white font-bold text-sm">Tap to Watch Live</p>
+                        <p className="text-white/40 text-xs">StreamerXO • {game?.genre} • Started 2h ago</p>
+                      </div>
+                      {/* Stream overlays */}
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white border-2 border-white/20">S</div>
+                        <div className="px-2 py-1 rounded bg-black/70 backdrop-blur-sm text-xs text-white font-medium">StreamerXO</div>
+                      </div>
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded bg-black/70 backdrop-blur-sm">
+                        <Users className="w-3 h-3 text-white/60" />
+                        <span className="text-white/60 text-xs">1,204</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Chat Box */}
+                <div className="lg:w-72 flex-shrink-0 flex flex-col" style={{ aspectRatio: undefined }}>
+                  <div className="flex flex-col h-full min-h-[280px] lg:min-h-0 bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
+                    {/* Chat Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-black/60 border-b border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="text-white font-bold text-xs uppercase tracking-wider">Stream Chat</span>
+                      </div>
+                      <span className="text-white/30 text-[10px]">842 chatters</span>
+                    </div>
+                    {/* Chat Messages */}
+                    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {[
+                        { user: 'NovaPulse', color: 'text-purple-400', msg: 'insane run omg!! 🔥' },
+                        { user: 'CyberAce', color: 'text-cyan-400', msg: 'bro just one-shotted that boss' },
+                        { user: 'VoidWalker', color: 'text-pink-400', msg: 'what build is this? 👀' },
+                        { user: 'ShadowX', color: 'text-yellow-400', msg: 'W streamer always coming through' },
+                        { user: 'NeonKid', color: 'text-green-400', msg: 'PogChamp PogChamp PogChamp' },
+                        { user: 'DataStream', color: 'text-blue-400', msg: 'this game is actually underrated' },
+                        { user: 'NovaPulse', color: 'text-purple-400', msg: 'how many hours do you have??' },
+                        { user: 'CryptoMage', color: 'text-orange-400', msg: 'just bought this game watching this lol' },
+                        { user: 'Axion_7', color: 'text-red-400', msg: 'clip that!! clip that!!' },
+                        { user: 'LunarDev', color: 'text-cyan-300', msg: 'EZ Clap the devs cooked' },
+                      ].map((msg, i) => (
+                        <div key={i} className="text-xs leading-relaxed">
+                          <span className={`font-bold ${msg.color}`}>{msg.user}</span>
+                          <span className="text-white/20 mx-1">:</span>
+                          <span className="text-white/70">{msg.msg}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Chat Input */}
+                    <div className="px-3 py-2.5 border-t border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                        <input
+                          type="text"
+                          placeholder="Send a message..."
+                          className="flex-1 bg-transparent text-xs text-white/80 placeholder-white/25 outline-none"
+                        />
+                        <button className="text-cyan-400 hover:text-cyan-200 transition-colors">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-
 
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">
@@ -1067,147 +1210,80 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                   </div>
 
-                  {/* Developer Studio & Content Updates */}
-                  <div className="space-y-8 pt-4 border-t border-white/10">
-                    {/* Header */}
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">SU</span>
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-bold text-white">Studio Unknown</h3>
-                          <p className="text-white/40 text-xs uppercase tracking-wider">Award-Winning Game Developer</p>
-                        </div>
-                      </div>
-                      
-                      <p className="text-white/70 leading-relaxed text-sm">
-                        Studio Unknown is a passionate indie collective dedicated to crafting immersive gaming experiences. Founded in 2019, our team of 40+ developers, artists, and designers work collaboratively to push creative boundaries and deliver unforgettable adventures.
-                      </p>
+                  {/* About This Game */}
+                  <div className="space-y-4 pt-4">
+                    <h3 className="text-xl font-bold text-white border-b border-white/10 pb-2">About This Game</h3>
+                    <p className="text-white/70 leading-relaxed text-sm">
+                      {game.description || 'Dive into a sprawling universe where your choices matter. Engage in tactical combat, solve complex puzzles, and unravel a narrative that adapts to your decisions. Featuring state-of-the-art graphics and immersive sound design, this title pushes the boundaries of the genre.'}
+                    </p>
+                    <p className="text-white/70 leading-relaxed text-sm">
+                      Explore unique biomes, from neon-lit cityscapes to desolate wastelands. Customize your loadout with thousands of combinations of weapons, armor, and abilities. Join forces with friends or go it alone in this unforgettable journey.
+                    </p>
+                  </div>
 
-                      <div className="flex flex-wrap gap-2">
-                        {['Story-Driven', 'Innovative Gameplay', 'Beautiful Worlds', 'Community First'].map((tag, i) => (
-                          <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs text-white/60">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                  {/* Content Updates & Patch Notes */}
+                  <div className="space-y-4 pt-4 border-t border-white/10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Package className="w-5 h-5 text-cyan-400" />
+                        Content Updates
+                      </h3>
+                      <span className="text-[10px] text-white/30 uppercase tracking-wider">Recent Patch Notes</span>
                     </div>
-
-                    {/* Content & Updates Gallery */}
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-lg font-bold text-white flex items-center gap-2">
-                          <Image className="w-5 h-5 text-cyan-400" />
-                          What's Coming & Behind the Scenes
-                        </h4>
-                      </div>
-                      
-                      {/* Gallery Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {[
-                          {
-                            id: 1,
-                            type: 'coming',
-                            title: 'Season 3: Void Nexus',
-                            image: 'https://images.unsplash.com/photo-1579546589027-ed7b1cdd7f86?w=400&h=300&fit=crop',
-                            date: 'May 2026',
-                            comments: 156
-                          },
-                          {
-                            id: 2,
-                            type: 'behind-scenes',
-                            title: 'Studio Tour & Team',
-                            image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-                            date: 'Featured',
-                            comments: 89
-                          },
-                          {
-                            id: 3,
-                            type: 'coming',
-                            title: 'New Character Class',
-                            image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=400&h=300&fit=crop',
-                            date: 'June 2026',
-                            comments: 124
-                          },
-                          {
-                            id: 4,
-                            type: 'behind-scenes',
-                            title: 'Art Direction Process',
-                            image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=300&fit=crop',
-                            date: 'Featured',
-                            comments: 67
-                          },
-                          {
-                            id: 5,
-                            type: 'coming',
-                            title: 'Cross-Game Collaboration',
-                            image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=400&h=300&fit=crop',
-                            date: 'Q3 2026',
-                            comments: 201
-                          },
-                          {
-                            id: 6,
-                            type: 'behind-scenes',
-                            title: 'Music & Sound Design',
-                            image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=400&h=300&fit=crop',
-                            date: 'Featured',
-                            comments: 45
-                          },
-                        ].map((item) => (
-                          <motion.div
-                            key={item.id}
-                            whileHover={{ scale: 1.03, y: -4 }}
-                            onClick={() => setSelectedUpdate(item)}
-                            className="group relative bg-black/40 border border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-cyan-400/50 transition-all"
-                          >
-                            <img 
-                              src={item.image} 
-                              alt={item.title}
-                              className="w-full h-40 object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                            
-                            {/* Type Badge */}
-                            <div className="absolute top-2 right-2 z-10">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
-                                item.type === 'coming' 
-                                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30' 
-                                  : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                              }`}>
-                                {item.type === 'coming' ? 'Coming Soon' : 'Studio'}
-                              </span>
-                            </div>
-
-                            {/* Content Overlay */}
-                            <div className="absolute inset-0 p-3 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                              <h4 className="text-white font-bold text-sm leading-tight mb-1">{item.title}</h4>
-                              <div className="flex items-center justify-between text-[10px] text-white/60">
-                                <span>{item.date}</span>
-                                <span className="flex items-center gap-1">
-                                  <MessageSquare className="w-3 h-3" /> {item.comments}
+                    <div className="space-y-3">
+                      {[
+                        {
+                          version: 'v2.4.1',
+                          date: 'Mar 28, 2026',
+                          type: 'patch',
+                          title: 'Stability & Balance Update',
+                          notes: ['Fixed crash on loading certain maps', 'Adjusted weapon damage scaling for PvP', 'Performance improvements for mid-range GPUs']
+                        },
+                        {
+                          version: 'v2.4.0',
+                          date: 'Mar 15, 2026',
+                          type: 'update',
+                          title: 'Season 2 Content Drop',
+                          notes: ['Added 3 new biome zones', 'Introduced ranked PvP ladder system', 'New legendary equipment tier unlocked']
+                        },
+                        {
+                          version: 'v2.3.2',
+                          date: 'Feb 20, 2026',
+                          type: 'hotfix',
+                          title: 'Hotfix — Item Duplication Bug',
+                          notes: ['Resolved item duplication exploit in Marketplace', 'Minor UI fixes for inventory overlays']
+                        },
+                      ].map((patch, i) => {
+                        const typeConfig = {
+                          patch:   { label: 'Patch',   icon: Bug,             color: 'text-yellow-400 bg-yellow-900/20 border-yellow-700/30' },
+                          update:  { label: 'Update',  icon: ArrowUpCircle,   color: 'text-cyan-400 bg-cyan-900/20 border-cyan-700/30' },
+                          hotfix:  { label: 'Hotfix',  icon: Sparkles,        color: 'text-red-400 bg-red-900/20 border-red-700/30' },
+                        }[patch.type];
+                        const TypeIcon = typeConfig.icon;
+                        return (
+                          <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/[0.07] transition-colors">
+                            <div className="flex items-start justify-between gap-3 mb-3">
+                              <div className="flex items-center gap-3">
+                                <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${typeConfig.color}`}>
+                                  <TypeIcon className="w-3 h-3" /> {typeConfig.label}
                                 </span>
+                                <span className="text-white font-bold text-sm">{patch.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0 text-right">
+                                <span className="text-[10px] font-mono text-white/30">{patch.version}</span>
+                                <span className="text-[10px] text-white/20">{patch.date}</span>
                               </div>
                             </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Studio Stats */}
-                    <div className="grid grid-cols-3 gap-4 pt-4">
-                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                        <p className="text-2xl font-bold text-cyan-400 mb-1">40+</p>
-                        <p className="text-xs text-white/60 uppercase tracking-wider">Team Members</p>
-                      </div>
-                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                        <p className="text-2xl font-bold text-cyan-400 mb-1">7</p>
-                        <p className="text-xs text-white/60 uppercase tracking-wider">Games Shipped</p>
-                      </div>
-                      <div className="bg-white/5 border border-white/10 rounded-lg p-4 text-center">
-                        <p className="text-2xl font-bold text-cyan-400 mb-1">2M+</p>
-                        <p className="text-xs text-white/60 uppercase tracking-wider">Players Worldwide</p>
-                      </div>
+                            <ul className="space-y-1">
+                              {patch.notes.map((note, j) => (
+                                <li key={j} className="text-xs text-white/50 flex items-start gap-2">
+                                  <span className="text-cyan-500/50 mt-0.5">•</span> {note}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1463,110 +1539,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* Developer Update Detail Overlay */}
-      <AnimatePresence>
-        {selectedUpdate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
-            onClick={() => setSelectedUpdate(null)}
-          >
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
-
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative z-10 w-full max-w-6xl h-[600px] bg-[#0f1115] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-row"
-              style={{
-                boxShadow: '0 0 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05)'
-              }}
-            >
-              {/* Close Button */}
-              <button 
-                onClick={() => setSelectedUpdate(null)}
-                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4 text-white/60" />
-              </button>
-
-              {/* Left 50%: Image Display */}
-              <div className="w-1/2 h-full overflow-hidden bg-black/40 flex items-center justify-center">
-                <img 
-                  src={selectedUpdate?.image} 
-                  alt={selectedUpdate?.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Right 50%: Comments Section */}
-              <div className="w-1/2 h-full flex flex-col border-l border-white/10 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                {/* Header */}
-                <div className="p-6 border-b border-white/10 flex-shrink-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
-                      selectedUpdate?.type === 'screenshot' 
-                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' 
-                        : 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                    }`}>
-                      {selectedUpdate?.type === 'screenshot' ? 'Screenshot' : 'Coming Soon'}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{selectedUpdate?.title}</h2>
-                  <p className="text-white/40 text-xs">{selectedUpdate?.date}</p>
-                  <div className="flex items-center gap-2 text-white/60 text-xs mt-3">
-                    <MessageSquare className="w-3 h-3" />
-                    <span>{selectedUpdate?.comments} comments</span>
-                  </div>
-                </div>
-
-                {/* Comments List */}
-                <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-                  {[
-                    { user: 'GameDev_Pro', content: 'This looks amazing! Can\'t wait to see more.', votes: 12 },
-                    { user: 'CyberFan', content: 'The attention to detail is insane 🔥', votes: 8 },
-                    { user: 'PixelMaster', content: 'Absolutely incredible work here!', votes: 15 },
-                    { user: 'NovaStrike', content: 'Best update yet! 🚀', votes: 23 },
-                    { user: 'ShadowVoid', content: 'When is this dropping?', votes: 5 },
-                    { user: 'CyberNova', content: 'Can\'t believe how good this is!', votes: 19 }
-                  ].map((comment, i) => (
-                    <div key={i} className="bg-white/5 border border-white/5 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-white font-semibold text-xs">{comment.user}</p>
-                        <span className="text-white/40 text-[10px]">+{comment.votes}</span>
-                      </div>
-                      <p className="text-white/60 text-xs leading-relaxed">{comment.content}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Comment Form */}
-                <div className="p-4 border-t border-white/10 flex-shrink-0 space-y-3">
-                  <textarea
-                    placeholder="Share your thoughts…"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2.5 text-white text-xs placeholder-white/30 resize-none focus:outline-none focus:border-cyan-500/50 transition-colors"
-                    rows={2}
-                  />
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/10 rounded-lg text-white text-xs font-medium transition-colors flex-1">
-                      Cancel
-                    </button>
-                    <button className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-lg transition-colors flex-1">
-                      Post
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Transaction Modal removed in favor of global Cart */}
-      </div>
-      );
-      }
+    </div>
+  );
+}

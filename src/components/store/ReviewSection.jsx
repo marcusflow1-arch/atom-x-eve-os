@@ -408,15 +408,20 @@ export default function ReviewSection({ reviews: dbReviews, user }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-2xl font-bold text-white mb-1">Developer Feedback</h3>
-          <p className="text-white/50 text-sm">Community feedback about Studio Unknown and their work</p>
+          <h3 className="text-2xl font-bold text-white mb-1">Customer Reviews</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex gap-0.5">
+              {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-cyan-400 fill-cyan-400" />)}
+            </div>
+            <span className="text-white/50 text-sm">Very Positive ({localReviews.length.toLocaleString()} reviews)</span>
+          </div>
         </div>
         <button
           onClick={() => setShowWriteBox(v => !v)}
           className="flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-sm transition-all hover:scale-105"
           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}
         >
-          <MessageSquare className="w-4 h-4" /> Give Feedback
+          <MessageSquare className="w-4 h-4" /> Write a Review
         </button>
       </div>
 
@@ -441,7 +446,7 @@ export default function ReviewSection({ reviews: dbReviews, user }) {
                 </div>
               </div>
               <textarea
-                placeholder="Tell us about the developer team, communication, updates, community support, vision, or any other aspects about Studio Unknown…"
+                placeholder="Share your thoughts about the game…"
                 value={newReviewDraft}
                 onChange={e => setNewReviewDraft(e.target.value)}
                 rows={4}

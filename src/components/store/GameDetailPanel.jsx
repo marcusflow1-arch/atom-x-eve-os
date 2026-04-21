@@ -14,8 +14,6 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import ReviewSection from './ReviewSection';
 import LiveStreamSection from './LiveStreamSection';
-import ModelViewer3D from '@/components/game/ModelViewer3D';
-import AchievementCardStrip from '@/components/game/AchievementCardStrip';
 
 
 // --- Components ---
@@ -676,6 +674,75 @@ export default function GameDetailPanel({ gameId, onClose }) {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none" />
       </motion.div>
 
+      {/* Top Navigation Bar */}
+      <div className="relative z-20 flex-shrink-0 flex items-center h-12 px-4 border-b border-white/8" style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(20px)' }}>
+        {/* Left: Back button */}
+        <button
+          onClick={onClose}
+          className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors text-xs font-bold uppercase tracking-wider"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        {/* Vertical divider */}
+        <div className="w-px h-5 bg-white/15 mx-4" />
+
+        {/* Sub-tabs: Card Info + Trailer */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setDetailTab('card_info')}
+            className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'card_info' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}
+          >
+            Card Info
+          </button>
+          <button
+            onClick={() => setDetailTab('trailer')}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${detailTab === 'trailer' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white'}`}
+          >
+            <Clapperboard className="w-3 h-3" />
+            Trailer
+          </button>
+        </div>
+
+        {/* Center: Game icon + title + Achievements tab */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <div className="w-7 h-7 rounded overflow-hidden border border-white/10 flex-shrink-0">
+            <img src={game?.cover_image} alt="" className="w-full h-full object-cover" />
+          </div>
+          <span className="text-white font-bold text-sm truncate max-w-[200px]">{game?.title}</span>
+          <button
+            onClick={() => setActiveTab('achievements')}
+            className={`ml-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'achievements' ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
+            Achievements
+          </button>
+          <button
+            onClick={() => setActiveTab('trailer')}
+            className={`ml-1 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all ${activeTab === 'trailer' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-white/40 hover:text-white border border-transparent hover:border-white/20'}`}
+          >
+            <Clapperboard className="w-3 h-3" />
+            Trailer
+          </button>
+        </div>
+
+        {/* Right: Tab switcher (System Core / Tech Specs) */}
+        <div className="ml-auto flex p-0.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+          <button
+            onClick={() => setActiveTab('system')}
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'system' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}
+          >
+            System Core
+          </button>
+          <button
+            onClick={() => setActiveTab('specs')}
+            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${activeTab === 'specs' ? 'bg-white text-black shadow' : 'text-white/40 hover:text-white'}`}
+          >
+            Tech Specs
+          </button>
+        </div>
+      </div>
+
       {/* Main Content Area */}
       <motion.div 
         animate={{ opacity: isViewingMedia ? 0 : 1 }}
@@ -786,108 +853,81 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
-                   <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                    {/* Top: Game Info Box (30%) */}
-                    <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
-                      {/* Header Image (Capsule) */}
-                      <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
-                        <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
-                      </div>
-
-                      {/* Price + Cart */}
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {!owned ? (
-                          <>
-                            <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
-                              ${game.price?.toFixed(2) || '0.00'}
-                            </div>
-                            <button
-                              onClick={handleAddToCart}
-                              className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                            >
-                              Add to Cart
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={handlePlay}
-                            className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
-                          >
-                            <Play className="w-4 h-4 fill-white" />
-                            Play Now
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Metadata Table */}
-                      <div className="text-xs space-y-2 border-t border-white/10 pt-4">
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
-                          <span className="text-white/80">{game.original_year || '2025'}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
-                          <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
-                        </div>
-                      </div>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-1.5 pt-2">
-                        {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
-                            {tag}
-                          </span>
-                        ))}
-                        <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
-                      </div>
+                {/* Right: Game Info Sidebar */}
+                 <div className="flex-1 lg:max-w-md flex flex-col gap-6">
+                  {/* Info Box */}
+                  <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
+                    {/* Header Image (Capsule) - Reduced to 30% */}
+                    <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg w-[30%]">
+                      <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
                     </div>
 
-                    {/* Trailer/3D Viewer Box - Trailer content */}
-                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
-                        <iframe 
-                          src={selectedMediaItem.embedUrl} 
-                          title={selectedMediaItem.title}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
+                    {/* Price + Cart */}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {!owned ? (
+                        <>
+                          <div className="bg-black/40 backdrop-blur-md px-4 py-2.5 rounded-xl text-white font-bold text-xl border border-white/10 shadow-lg">
+                            ${game.price?.toFixed(2) || '0.00'}
+                          </div>
+                          <button
+                            onClick={handleAddToCart}
+                            className="flex-1 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                          >
+                            Add to Cart
+                          </button>
+                        </>
                       ) : (
-                        <img 
-                          src={selectedMediaItem?.image || game.cover_image}
-                          alt="Trailer"
-                          className="w-full h-full object-cover"
-                        />
+                        <button
+                          onClick={handlePlay}
+                          className="w-full px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm shadow-lg transition-all flex items-center justify-center gap-2 hover:scale-105"
+                        >
+                          <Play className="w-4 h-4 fill-white" />
+                          Play Now
+                        </button>
                       )}
                     </div>
+
+                    {/* Short Description */}
+                    <p className="text-sm text-white/80 leading-relaxed line-clamp-6">
+                      {game.description || 'Experience a world transformed by technology and ancient power. Master unique abilities, collect rare artifacts, and forge your destiny in this immersive adventure.'}
+                    </p>
+
+                    {/* Metadata Table */}
+                    <div className="text-xs space-y-2 border-t border-white/10 pt-4">
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Release Date:</span>
+                        <span className="text-white/80">{game.original_year || '2025'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
+                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.publisher || 'Atom Publishing'}</span>
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {[game.genre, 'Action', 'Multiplayer', 'Sci-Fi'].map((tag, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-cyan-200/80 hover:bg-white/10 hover:text-cyan-200 cursor-pointer transition-colors">
+                          {tag}
+                        </span>
+                      ))}
+                      <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
+                    </div>
                   </div>
+                </div>
               </div>
 
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: 70/30 Split Layout */}
-              <div className="flex gap-8 border-t border-white/10 pt-8">
-                {/* Left: Achievement Cards (70%) */}
-                <div className="flex-1">
-                  <AchievementCardStrip 
-                    achievementCards={achievementCards} 
-                    dlcList={dlcList}
-                    onSelectCard={setSelectedCard}
-                  />
-</div>
-
-{/* Vertical Divider */}
-<div className="w-px bg-gradient-to-b from-white/20 via-white/10 to-white/20" />
-
-{/* Right: Game Info + 3D Viewer (30%) */}
-<div className="w-80 flex flex-col gap-6">
+              {/* Lower Section: Content & Achievement Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 border-t border-white/10 pt-8">
+                {/* Left: Content For This Game (DLCs & About) */}
+                <div className="lg:col-span-2 space-y-8">
                   {/* DLC Section */}
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
@@ -1005,7 +1045,71 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
+                {/* Right: Achievement Cards (Restored Vertical Layout) */}
+                <div className="space-y-6">
+                   <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <Database className="w-4 h-4 text-cyan-400" />
+                    Achievement Cards
+                  </h3>
+                  
+                  <div className="space-y-6 pr-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    {['Ability', 'Equipment', 'Companion', 'Teacher'].map(type => {
+                      const typeCards = achievementCards.filter(c => c.type === type);
+                      if (typeCards.length === 0) return null;
+                      
+                      return (
+                        <div key={type} className="space-y-2">
+                          <h4 className="text-xs font-bold text-white/40 uppercase tracking-wider sticky top-0 bg-[#0d0d0d] z-10 py-1">{type}</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            {typeCards.map((card, i) => {
+                              const cardColor = card.type === 'Ability' ? { accent: '#22d3ee', glow: 'rgba(34,211,238,0.3)', bg: 'from-cyan-900/40 to-blue-900/20' }
+                                : card.type === 'Equipment' ? { accent: '#a78bfa', glow: 'rgba(167,139,250,0.3)', bg: 'from-purple-900/40 to-indigo-900/20' }
+                                : card.type === 'Companion' ? { accent: '#4ade80', glow: 'rgba(74,222,128,0.3)', bg: 'from-green-900/40 to-emerald-900/20' }
+                                : { accent: '#fbbf24', glow: 'rgba(251,191,36,0.3)', bg: 'from-yellow-900/40 to-orange-900/20' };
+                              return (
+                                <motion.div
+                                  key={i}
+                                  onClick={() => setSelectedCard(card)}
+                                  className="group cursor-pointer"
+                                  whileHover={{ scale: 1.04 }}
+                                >
+                                  {/* Card Name above */}
+                                  <p className="text-[10px] font-bold text-white/70 truncate mb-1 px-0.5">{card.name}</p>
 
+                                  {/* Card Body */}
+                                  <div
+                                    className={`relative aspect-[2.5/3.5] rounded-xl overflow-hidden border border-white/10 group-hover:border-white/30 transition-all bg-gradient-to-b ${cardColor.bg}`}
+                                    style={{ boxShadow: `0 0 0 1px rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.5)` }}
+                                  >
+                                    {/* Holographic sheen */}
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
+
+                                    {/* Top accent bar */}
+                                    <div className="h-1 w-full" style={{ background: cardColor.accent }} />
+
+                                    {/* Icon center */}
+                                    <div className="flex-1 flex items-center justify-center h-[70%]">
+                                      {card.type === 'Ability' && <Zap className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Equipment' && <Shield className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Companion' && <User className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                      {card.type === 'Teacher' && <Database className="w-10 h-10 transition-colors" style={{ color: cardColor.accent, filter: `drop-shadow(0 0 8px ${cardColor.glow})` }} />}
+                                    </div>
+
+                                    {/* Bottom info bar */}
+                                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-black/50 backdrop-blur-sm border-t border-white/5">
+                                      <p className="text-[9px] font-bold text-white/80 truncate">{card.type}</p>
+                                      <p className="text-[8px] text-white/30 truncate">{card.edition}</p>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               {/* Reviews Section */}
@@ -1018,15 +1122,77 @@ export default function GameDetailPanel({ gameId, onClose }) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
-              className="w-full h-full flex flex-col"
+              className="flex gap-8"
             >
-              <h2 className="text-2xl font-black text-white tracking-tight mb-6">{game.title} <span className="text-purple-400 text-lg font-bold">— 3D Model Viewer</span></h2>
+              {/* Trailer panel — 50% width */}
+              <div className="w-1/2 flex flex-col gap-4">
+                <h2 className="text-2xl font-black text-white tracking-tight">{game.title} <span className="text-purple-400 text-lg font-bold">— Trailers</span></h2>
 
-              <div className="flex-1 min-h-0 rounded-xl overflow-hidden border border-white/5 bg-transparent">
-                <ModelViewer3D 
-                  modelPath="/models/lara.glb"
-                  fileType="glb"
-                />
+                {/* Main video */}
+                <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black/60" style={{ aspectRatio: '16/9' }}>
+                  {videos[0]?.embedUrl ? (
+                    <iframe
+                      src={videos[0].embedUrl}
+                      title={videos[0].title}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <img src={videos[0]?.image || game.cover_image} alt={game.title} className="w-full h-full object-cover" />
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <span className="px-2 py-1 bg-purple-600/80 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">Official Trailer</span>
+                  </div>
+                </div>
+
+                {/* Thumbnail strip — videos + screenshots */}
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {[...videos, ...screenshots].map((item, i) => (
+                    <div
+                      key={i}
+                      className="relative flex-shrink-0 w-24 rounded-lg overflow-hidden border border-white/10 hover:border-purple-400/50 cursor-pointer group transition-all"
+                      style={{ aspectRatio: '16/9' }}
+                    >
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                      {item.type === 'video' && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="w-4 h-4 text-white drop-shadow" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                        <p className="text-[8px] text-white/70 truncate">{item.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right side info — game meta */}
+              <div className="flex-1 flex flex-col gap-6 pt-10">
+                <div className="rounded-xl overflow-hidden border border-white/10 w-24">
+                  <img src={game.cover_image} alt={game.title} className="w-full h-auto object-cover" />
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p className="text-white/40 text-xs uppercase tracking-widest">Genre</p>
+                  <p className="text-white font-bold">{game.genre || '—'}</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest mt-3">Release Year</p>
+                  <p className="text-white font-bold">{game.original_year || '2025'}</p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest mt-3">Developer</p>
+                  <p className="text-cyan-300 font-bold">{game.developer || 'Studio Unknown'}</p>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  {!owned ? (
+                    <button onClick={handleAddToCart} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold rounded-xl text-sm transition-all">
+                      Add to Cart — ${game.price?.toFixed(2) || '0.00'}
+                    </button>
+                  ) : (
+                    <button onClick={handlePlay} className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-xl text-sm transition-all flex items-center gap-2">
+                      <Play className="w-4 h-4 fill-white" /> Play Now
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           ) : (
