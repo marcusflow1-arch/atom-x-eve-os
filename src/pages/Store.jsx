@@ -254,7 +254,8 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setInPageStoreGameId(id);
+        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
+        setShowScrollTransition(true);
     };
 
     const {
@@ -747,6 +748,15 @@ export default function Store() {
                                 )}
                             </AnimatePresence>
 
+                            {showScrollTransition && (
+                                <ScrollTransitionOverlay mode="fade" duration={0.4} onComplete={() => {
+                                    const url = pendingNavigateUrl;
+                                    setShowScrollTransition(false);
+                                    setPendingNavigateUrl(null);
+                                    if (url) navigate(url);
+                                }} />
+                            )}
+
                             {/* IN-PAGE STORE VIEW OVERLAY */}
                             <AnimatePresence>
                                 {inPageStoreGameId && (
@@ -757,7 +767,7 @@ export default function Store() {
                                         exit={{ opacity: 0 }}
                                         transition={{ duration: 0.3 }}
                                         className="fixed z-[60]"
-                                        style={{ top: '64px', left: 0, right: 0, bottom: '48px' }}
+                                        style={{ top: '64px', left: '80px', right: 0, bottom: '48px' }}
                                     >
                                         <StoreGameDetailPanel gameId={inPageStoreGameId} onClose={() => setInPageStoreGameId(null)} />
                                     </motion.div>
