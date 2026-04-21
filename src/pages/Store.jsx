@@ -472,7 +472,7 @@ export default function Store() {
                 onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
               />
             }>
-                <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
+                <div className="w-full flex flex-col relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)', height: 'calc(100vh - 120px)' }}>
 
                     {/* Library sliding panel from LunaBottomNav — rendered without its own nav bar */}
                     <LunaBottomNav
