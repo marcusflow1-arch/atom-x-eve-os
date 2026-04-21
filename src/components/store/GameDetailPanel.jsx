@@ -847,7 +847,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </div>
                     </div>
 
-                    {/* Live 3D Viewer Box */}
+                    {/* Live 3D Viewer Box (copy) */}
                     <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
                       <ModelViewer3D 
                         modelPath="/models/lara.glb"
@@ -855,61 +855,12 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       />
                     </div>
 
-                    {/* Media Preview Box (Trailer + Thumbnails) */}
-                    <div className="flex flex-col gap-2">
-                      <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                        {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
-                          <iframe
-                            src={selectedMediaItem.embedUrl}
-                            title={selectedMediaItem.title}
-                            className="w-full h-full"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                          />
-                        ) : (
-                          <>
-                            <img
-                              src={selectedMediaItem?.image || game.cover_image}
-                              alt={selectedMediaItem?.title || game.title}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                            <div className="absolute bottom-2 left-3">
-                              <p className="text-white font-bold text-sm drop-shadow">{selectedMediaItem?.title || game.title}</p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Thumbnails Strip */}
-                      <div className="flex gap-2 overflow-x-auto pb-1">
-                        {videos.map((video, i) => (
-                          <div
-                            key={i}
-                            onClick={() => setSelectedMediaItem(video)}
-                            className={`relative w-20 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border transition-all ${
-                              selectedMediaItem === video ? 'border-cyan-400 ring-1 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/40'
-                            }`}
-                          >
-                            <img src={video.image} alt={video.title} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                              <Play className="w-3 h-3 text-white drop-shadow" />
-                            </div>
-                          </div>
-                        ))}
-                        {screenshots.map((shot, i) => (
-                          <div
-                            key={i}
-                            onClick={() => setSelectedMediaItem(shot)}
-                            className={`w-20 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer flex-shrink-0 border transition-all ${
-                              selectedMediaItem === shot ? 'border-cyan-400 ring-1 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/40'
-                            }`}
-                          >
-                            <img src={shot.image} alt={shot.title} className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-opacity" />
-                          </div>
-                        ))}
-                      </div>
+                    {/* Live 3D Viewer Box */}
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
+                      <ModelViewer3D 
+                        modelPath="/models/lara.glb"
+                        fileType="glb"
+                      />
                     </div>
                   </div>
               </div>
