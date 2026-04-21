@@ -254,8 +254,7 @@ export default function Store() {
     }, [isGenreHovering, genrePanelFocused]);
 
     const handleNavigateToGame = (id) => {
-        setPendingNavigateUrl(createPageUrl(`GameDetail?id=${id}`));
-        setShowScrollTransition(true);
+        setInPageStoreGameId(id);
     };
 
     const {
