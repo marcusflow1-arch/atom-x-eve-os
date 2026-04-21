@@ -16,7 +16,6 @@ import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
 import ModelViewer3D from './ModelViewer3D';
-import GameTrailerBox from './GameTrailerBox';
 
 
 // --- Components ---
@@ -600,8 +599,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-30">
-
+    <div className="fixed inset-0 bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col z-[60]">
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
@@ -793,9 +791,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Trailer & Gameplay Box - MOVED UP */}
-              <GameTrailerBox game={game} />
-
               {/* Main 50/50 Split: 3D Viewer Left | Achievement Cards Right */}
               <div className="flex gap-0 mb-8" style={{ minHeight: '520px' }}>
 
@@ -814,16 +809,75 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 {/* White Vertical Divider */}
                 <div className="w-px bg-white/20 self-stretch flex-shrink-0" />
 
-                {/* RIGHT 50%: Achievement Card Strip */}
-                <div className="flex-1 min-w-0 pl-6 overflow-hidden flex flex-col">
-                  <AchievementCardStrip
-                    achievementCards={achievementCards}
-                    dlcList={dlcList}
-                    onSelectCard={setSelectedCard}
-                  />
+                {/* RIGHT 50%: Achievement Cards - vertical scrollable grid */}
+                <div className="flex-1 min-w-0 flex flex-col gap-3 pl-6 overflow-hidden">
+                  {/* Strip header (title + DLC toggle) */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Trophy className="w-4 h-4 text-cyan-400" />
+                    <h4 className="text-lg font-bold text-white">Achievement Cards Released</h4>
+                  </div>
+
+                  {/* Filter pills */}
+                  <div className="flex flex-wrap gap-1 flex-shrink-0">
+                    {['All','Ability','Equipment','Companion','Environment'].map(f => {
+                      const colors = { All: '#fff', Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
+                      const c = colors[f];
+                      const active = f === 'All'; // static default; AchievementCardStrip manages its own state
+                      return (
+                        <span key={f} className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                          style={{ background: `${c}18`, border: `1px solid ${c}40`, color: c }}>
+                          {f}
+                        </span>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cards — 3-column vertical grid, scrollable */}
+                  <div className="flex-1 overflow-y-auto pr-1" style={{ scrollbarWidth: 'none' }}>
+                    <div className="grid grid-cols-3 gap-3">
+                      {achievementCards.slice(0, 9).map((card, idx) => {
+                        const typeColors = { Ability: '#22d3ee', Equipment: '#a78bfa', Companion: '#4ade80', Environment: '#fbbf24' };
+                        const col = typeColors[card.type] || '#fff';
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.04 }}
+                            onClick={() => setSelectedCard(card)}
+                            whileHover={{ scale: 1.04, y: -2 }}
+                            className="cursor-pointer rounded-xl overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all"
+                            style={{ background: 'rgba(255,255,255,0.04)' }}
+                          >
+                            <div className="relative aspect-[2/2.5] flex flex-col items-center justify-center p-3">
+                              <img
+                                src={game.cover_image}
+                                alt={card.name}
+                                className="absolute inset-0 w-full h-full object-cover opacity-20"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                              <div className="relative z-10 flex flex-col items-center gap-1 text-center">
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center mb-1"
+                                  style={{ background: `${col}18`, border: `1px solid ${col}40` }}>
+                                  <span style={{ color: col }} className="text-sm">✦</span>
+                                </div>
+                                <p className="text-[10px] font-bold text-white leading-tight line-clamp-2">{card.name}</p>
+                                <p className="text-[8px] font-medium" style={{ color: col }}>{card.type}</p>
+                              </div>
+                            </div>
+                            <div className="px-2 py-1.5 border-t border-white/5">
+                              <p className="text-[8px] text-white/35 truncate">{card.edition}</p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
               </div>
+
+
 
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">

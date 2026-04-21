@@ -704,7 +704,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 )}
               </div>
 
-              {/* Game Trailer Box - MOVED UP ABOVE LIVE DEMO & ACHIEVEMENTS */}
               {/* Main Grid: Media Left, Info Right */}
               <div className="flex flex-col lg:flex-row gap-8">
                 
@@ -787,9 +786,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right: Game Info Box (30%) */}
+                {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
                    <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                    {/* Top: Game Info Box */}
+                    {/* Top: Game Info Box (30%) */}
                     <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
                       {/* Header Image (Capsule) */}
                       <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
@@ -847,13 +846,33 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
                       </div>
                     </div>
+
+                    {/* Trailer/3D Viewer Box - Trailer content */}
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
+                      {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
+                        <iframe 
+                          src={selectedMediaItem.embedUrl} 
+                          title={selectedMediaItem.title}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <img 
+                          src={selectedMediaItem?.image || game.cover_image}
+                          alt="Trailer"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
                   </div>
               </div>
 
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: 70/30 Split Layout - SWAPPED: Game Trailer Above */}
+              {/* Lower Section: 70/30 Split Layout */}
               <div className="flex gap-8 border-t border-white/10 pt-8">
                 {/* Left: Achievement Cards (70%) */}
                 <div className="flex-1">
