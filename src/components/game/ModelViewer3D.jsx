@@ -1,14 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
-// Publicly available GLB fallback when local model is missing
-const FALLBACK_GLB = 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb';
-
 export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType = 'glb', bundleManifest = null }) {
   const containerRef = useRef(null);
-  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -47,39 +43,27 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
       });
     }
 
+    // Choose loader based on file type
+    const ext = (fileType || modelPath.split('.').pop() || '').toLowerCase();
+    const useFBX = ext === 'fbx';
+    const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
 
-
-    const loadModel = (path) => {
-      const ext = (fileType || path.split('.').pop() || '').toLowerCase();
-      const useFBX = ext === 'fbx';
-      const loader = useFBX ? new FBXLoader(manager) : new GLTFLoader(manager);
-      loader.load(
-        path,
-        (asset) => {
-          const model = asset?.scene || asset;
-          const box = new THREE.Box3().setFromObject(model);
-          const center = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z) || 1;
-          const scale = (3.2 * 0.85) / maxDim;
-          model.scale.multiplyScalar(scale);
-          model.position.sub(center.multiplyScalar(scale));
-          scene.add(model);
-          setLoadError(false);
-        },
-        undefined,
-        () => {
-          // Primary path failed — try fallback GLB
-          if (path !== FALLBACK_GLB) {
-            loadModel(FALLBACK_GLB);
-          } else {
-            setLoadError(true);
-          }
-        }
-      );
-    };
-
-    loadModel(modelPath);
+    loader.load(modelPath, (asset) => {
+      const model = asset?.scene || asset;
+      
+      // Center and scale the model
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      const scale = (3.2 * 0.85) / maxDim;
+      
+      model.scale.multiplyScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      
+      scene.add(model);
+    });
 
     let time = 0;
     const animate = () => {
@@ -114,14 +98,5 @@ export default function ModelViewer3D({ modelPath = '/models/lara.glb', fileType
     };
   }, [modelPath, fileType, bundleManifest]);
 
-  return (
-    <div ref={containerRef} className="w-full h-full relative">
-      {loadError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/30 text-xs gap-2">
-          <span className="text-2xl">🎮</span>
-          <span>3D Model Unavailable</span>
-        </div>
-      )}
-    </div>
-  );
+  return <div ref={containerRef} className="w-full h-full" />;
 }
