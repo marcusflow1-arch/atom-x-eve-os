@@ -11,6 +11,7 @@ import WishlistButton from './WishlistButton';
 import { showError } from '../error/ErrorToast';
 import LoadingState from '../error/LoadingState';
 import GameDetailPanel from './GameDetailPanel';
+import ModelViewer3D from '@/components/game/ModelViewer3D';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -180,6 +181,15 @@ export default function DevCardsContent({ onNavigateToGame }) {
                                 </button>
                             );
                         })}
+                    </div>
+
+                    {/* Live 3D Model Viewer */}
+                    <div className="mt-4 flex-shrink-0">
+                        <div className="h-px bg-white/5 w-full mb-3" />
+                        <p className="px-1 text-xs font-bold text-white/30 uppercase tracking-wider mb-2">Live 3D Viewer</p>
+                        <div className="w-full aspect-square rounded-xl overflow-hidden border border-white/10 bg-black/40 backdrop-blur-md">
+                            <ModelViewer3D modelPath="/models/lara.glb" fileType="glb" />
+                        </div>
                     </div>
                 </div>
                 <div className="flex-1 h-full overflow-y-auto custom-scrollbar px-8 pb-12">
