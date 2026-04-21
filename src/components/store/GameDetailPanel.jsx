@@ -704,6 +704,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 )}
               </div>
 
+              {/* Game Trailer Box - MOVED UP ABOVE LIVE DEMO & ACHIEVEMENTS */}
               {/* Main Grid: Media Left, Info Right */}
               <div className="flex flex-col lg:flex-row gap-8">
                 
@@ -786,9 +787,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   </div>
                 </div>
 
-                {/* Right: 70/30 Layout - Achievement Cards (70%) + Game Info (30%) */}
+                {/* Right: Game Info Box (30%) */}
                    <div className="flex-1 lg:max-w-md flex flex-col gap-6">
-                    {/* Top: Game Info Box (30%) */}
+                    {/* Top: Game Info Box */}
                     <div className="bg-transparent border-transparent rounded-xl p-5 space-y-4">
                       {/* Header Image (Capsule) */}
                       <div className="rounded-lg overflow-hidden border border-white/10 shadow-lg">
@@ -846,29 +847,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                         <span className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-white/40 hover:bg-white/10 cursor-pointer transition-colors">+</span>
                       </div>
                     </div>
-
-                    {/* Live 3D Viewer Box (copy) */}
-                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                      <ModelViewer3D 
-                        modelPath="/models/lara.glb"
-                        fileType="glb"
-                      />
-                    </div>
-
-                    {/* Live 3D Viewer Box */}
-                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video">
-                      <ModelViewer3D 
-                        modelPath="/models/lara.glb"
-                        fileType="glb"
-                      />
-                    </div>
                   </div>
               </div>
 
               {/* Live Stream Box */}
               <LiveStreamSection game={game} onViewAll={() => navigate(createPageUrl('Aura'))} />
 
-              {/* Lower Section: 70/30 Split Layout */}
+              {/* Lower Section: 70/30 Split Layout - SWAPPED: Game Trailer Above */}
               <div className="flex gap-8 border-t border-white/10 pt-8">
                 {/* Left: Achievement Cards (70%) */}
                 <div className="flex-1">
