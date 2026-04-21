@@ -16,6 +16,7 @@ import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
 import ModelViewer3D from './ModelViewer3D';
+import GameTrailerBox from './GameTrailerBox';
 
 
 // --- Components ---
@@ -821,7 +822,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
               </div>
 
-
+              {/* Trailer & Gameplay Box */}
+              <GameTrailerBox game={game} />
 
               {/* Lower Section: Content */}
               <div className="border-t border-white/10 pt-8">
