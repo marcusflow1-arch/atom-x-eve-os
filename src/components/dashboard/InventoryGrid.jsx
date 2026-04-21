@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import AIAttributesBox from './AIAttributesBox';
 
-export default function InventoryGrid({ equippedItems, handleBoxClick }) {
+export default function InventoryGrid({ equippedItems = {}, handleBoxClick = () => {} }) {
   return (
     <motion.div
       key="boxes"
