@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Users, Zap, Star, Calendar, Trophy } from 'lucide-react';
+import { Play, Star } from 'lucide-react';
 
 export default function GameTrailerBox({ game }) {
-  const [hoveredPreview, setHoveredPreview] = useState(null);
-  
-  // Mock preview images for the smaller boxes
   const previewBoxes = [
-    { id: 1, title: 'Campaign Intro', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=200&h=200&fit=crop' },
-    { id: 2, title: 'Multiplayer Chaos', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop' },
-    { id: 3, title: 'Boss Battle', image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=200&h=200&fit=crop' },
-    { id: 4, title: 'Story Arc', image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=200&h=200&fit=crop' },
-    { id: 5, title: 'Endgame Content', image: 'https://images.unsplash.com/photo-1579546589027-ed7b1cdd7f86?w=200&h=200&fit=crop' },
+    { id: 1, image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=200&h=200&fit=crop' },
+    { id: 2, image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop' },
+    { id: 3, image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=200&h=200&fit=crop' },
+    { id: 4, image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=200&h=200&fit=crop' },
   ];
 
-  // Get YouTube ID from trailer URL
   const getYouTubeId = (url) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -26,55 +21,15 @@ export default function GameTrailerBox({ game }) {
   const youtubeId = getYouTubeId(trailerUrl);
   const trailerEmbedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0` : null;
 
-  const gameInfo = [
-    { 
-      label: 'Free to Play', 
-      value: game?.price === 0 ? 'Yes' : 'No',
-      icon: Zap,
-      color: 'text-yellow-400'
-    },
-    { 
-      label: 'Multiplayer', 
-      value: 'Yes',
-      icon: Users,
-      color: 'text-cyan-400'
-    },
-    { 
-      label: 'Release Year', 
-      value: game?.original_year || '2025',
-      icon: Calendar,
-      color: 'text-purple-400'
-    },
-    { 
-      label: 'Genre', 
-      value: game?.genre ? game.genre.charAt(0).toUpperCase() + game.genre.slice(1) : 'Adventure',
-      icon: Trophy,
-      color: 'text-orange-400'
-    },
-    { 
-      label: 'Rating', 
-      value: '4.8/5',
-      icon: Star,
-      color: 'text-pink-400'
-    },
-    { 
-      label: 'Status', 
-      value: game?.status === 'available' ? 'Live' : 'Coming Soon',
-      icon: Zap,
-      color: 'text-green-400'
-    },
-  ];
-
   return (
     <div className="space-y-4 mb-8">
-      {/* Section Title */}
       <h3 className="text-lg font-bold text-white">Trailers & Gameplay</h3>
       
-      {/* Main 50/50 Container */}
-      <div className="flex gap-0" style={{ minHeight: '480px' }}>
+      {/* 70-30 Layout */}
+      <div className="flex gap-6" style={{ minHeight: '420px' }}>
         
-        {/* LEFT 50%: Trailer & Preview Boxes */}
-        <div className="flex-1 min-w-0 flex flex-col gap-3 pr-6">
+        {/* LEFT 70%: Trailer & Preview Boxes */}
+        <div className="flex-1 min-w-0 flex flex-col gap-3" style={{ flex: '0 0 70%' }}>
           
           {/* Main Trailer */}
           <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10">
@@ -98,74 +53,83 @@ export default function GameTrailerBox({ game }) {
           </div>
 
           {/* Preview Boxes Grid */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {previewBoxes.map((box) => (
               <motion.div
                 key={box.id}
-                onMouseEnter={() => setHoveredPreview(box.id)}
-                onMouseLeave={() => setHoveredPreview(null)}
                 whileHover={{ scale: 1.05 }}
-                className="group relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-black/40 cursor-pointer"
+                className="group relative aspect-video rounded-lg overflow-hidden border border-white/10 bg-black/40 cursor-pointer"
               >
                 <img
                   src={box.image}
-                  alt={box.title}
+                  alt={`Preview ${box.id}`}
                   className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 left-0 right-0 p-1 text-[10px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  {box.title}
-                </div>
+                <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* White Vertical Divider */}
-        <div className="w-px bg-white/20 self-stretch flex-shrink-0" />
-
-        {/* RIGHT 50%: Game Info */}
-        <div className="flex-1 min-w-0 pl-6 overflow-hidden flex flex-col">
-          <h4 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Game Information</h4>
+        {/* RIGHT 30%: Game Info */}
+        <div className="flex-shrink-0 w-[30%] flex flex-col gap-4 overflow-y-auto scrollbar-hide">
           
-          <div className="space-y-3 flex-1">
-            {gameInfo.map((info, idx) => {
-              const Icon = info.icon;
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/8 hover:border-white/15 transition-all"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0 border border-white/10`}>
-                      <Icon className={`w-5 h-5 ${info.color}`} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-0.5">{info.label}</p>
-                      <p className="text-white font-bold text-sm truncate">{info.value}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+          {/* Game Cover & Title */}
+          <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40">
+            <img
+              src={game?.cover_image}
+              alt={game?.title}
+              className="w-full aspect-[2/3] object-cover"
+            />
+            <div className="p-3">
+              <h4 className="font-bold text-white text-sm truncate">{game?.title}</h4>
+              <p className="text-[11px] text-white/50 mt-1 line-clamp-2">{game?.description}</p>
+            </div>
           </div>
 
-          {/* Additional Info Box */}
+          {/* Rating */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mt-4 p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl"
+            className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-2"
           >
-            <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-2">Pro Tip</p>
-            <p className="text-xs text-white/70 leading-relaxed">
-              Check out the gameplay previews above to see the game in action. Each video showcases different aspects of the experience.
-            </p>
+            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+            <span className="text-sm font-bold text-white">4.8/5</span>
+            <span className="text-[10px] text-white/40">(2.4K reviews)</span>
           </motion.div>
+
+          {/* Quick Info */}
+          <div className="space-y-2">
+            {game?.genre && (
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Genre</p>
+                <p className="text-sm text-white capitalize">{game.genre}</p>
+              </div>
+            )}
+
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Type</p>
+              <p className="text-sm text-white">Multiplayer</p>
+            </div>
+
+            {game?.original_year && (
+              <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Released</p>
+                <p className="text-sm text-white">{game.original_year}</p>
+              </div>
+            )}
+
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Publisher</p>
+              <p className="text-sm text-white">Atom Studios</p>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+              <p className="text-[10px] uppercase text-white/40 font-bold mb-1">Platform</p>
+              <p className="text-sm text-white">PC, PlayStation, Xbox</p>
+            </div>
+          </div>
         </div>
 
       </div>
