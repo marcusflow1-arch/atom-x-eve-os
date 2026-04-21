@@ -1,14 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Star } from 'lucide-react';
+import { Play, Star, Loader2 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
 export default function GameTrailerBox({ game }) {
-  const previewBoxes = [
-    { id: 1, image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=200&h=200&fit=crop' },
-    { id: 2, image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop' },
-    { id: 3, image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=200&h=200&fit=crop' },
-    { id: 4, image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=200&h=200&fit=crop' },
-  ];
+  const [screenshots, setScreenshots] = useState([]);
+  const [trailerUrl, setTrailerUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch trailer from internet if not provided
+  useEffect(() => {
+    const fetchGameData = async () => {
+      setLoading(true);
+      try {
+        // Use provided trailer or screenshots
+        let finalTrailerUrl = game?.trailer_url || game?.video_urls?.[0];
+        let finalScreenshots = game?.screenshots || [];
+
+        // If no trailer URL, search the internet for one
+        if (!finalTrailerUrl && game?.title) {
+          const response = await base44.integrations.Core.InvokeLLM({
+            prompt: `Find a YouTube trailer link for the game "${game.title}". Only return the direct YouTube URL (youtube.com/watch?v=... or youtu.be/...). If you cannot find one, return "NOT_FOUND".`,
+            add_context_from_internet: true
+          });
+          if (response && response !== 'NOT_FOUND') {
+            finalTrailerUrl = response;
+          }
+        }
+
+        // If no screenshots, use the cover image or search for them
+        if (finalScreenshots.length === 0) {
+          if (game?.cover_image) {
+            finalScreenshots = [game.cover_image];
+          } else {
+            const screenshotResponse = await base44.integrations.Core.InvokeLLM({
+              prompt: `Find 3-4 official screenshot/gameplay image URLs for the game "${game?.title}". Return as a JSON array of URLs. If none found, return empty array.`,
+              add_context_from_internet: true,
+              response_json_schema: {
+                type: 'object',
+                properties: {
+                  urls: { type: 'array', items: { type: 'string' } }
+                }
+              }
+            });
+            finalScreenshots = screenshotResponse?.urls || [game?.cover_image].filter(Boolean);
+          }
+        }
+
+        setTrailerUrl(finalTrailerUrl);
+        setScreenshots(finalScreenshots);
+      } catch (error) {
+        console.error('Error fetching game data:', error);
+        setScreenshots(game?.screenshots || [game?.cover_image].filter(Boolean));
+        setTrailerUrl(game?.trailer_url || game?.video_urls?.[0]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGameData();
+  }, [game]);
+
+  const previewBoxes = screenshots.slice(0, 4).map((img, idx) => ({
+    id: idx + 1,
+    image: img
+  }));
 
   const getYouTubeId = (url) => {
     if (!url) return null;
@@ -17,7 +73,6 @@ export default function GameTrailerBox({ game }) {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const trailerUrl = game?.trailer_url || (game?.video_urls?.[0] || null);
   const youtubeId = getYouTubeId(trailerUrl);
   const trailerEmbedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0` : null;
 
@@ -31,7 +86,14 @@ export default function GameTrailerBox({ game }) {
           
           {/* Main Trailer with Label */}
           <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10 group">
-            {trailerEmbedUrl ? (
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black/60 to-black/40">
+                <div className="text-center">
+                  <Loader2 className="w-12 h-12 text-white/40 mx-auto mb-4 animate-spin" />
+                  <p className="text-white/40 text-sm">Loading trailer...</p>
+                </div>
+              </div>
+            ) : trailerEmbedUrl ? (
               <iframe
                 src={trailerEmbedUrl}
                 title="Game Trailer"
@@ -49,9 +111,11 @@ export default function GameTrailerBox({ game }) {
               </div>
             )}
             {/* Gameplay Trailer Label */}
-            <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded text-white text-xs font-bold">
-              Gameplay Trailer
-            </div>
+            {!loading && (
+              <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded text-white text-xs font-bold">
+                Gameplay Trailer
+              </div>
+            )}
           </div>
 
           {/* Preview Boxes Grid */}
