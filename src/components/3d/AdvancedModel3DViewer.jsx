@@ -176,17 +176,17 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     };
   }, [modelUrl]);
 
-  return (
-    <canvas
-      ref={canvasRef} className="w-full h-full hidden hidden hidden hidden hidden hidden hidden"
+  return null;
 
-      style={{
-        display: 'block',
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'auto',
-        background: 'transparent'
-      }} />);
+
+
+
+
+
+
+
+
+
 
 
 }
