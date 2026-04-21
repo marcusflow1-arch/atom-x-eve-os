@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Users, Zap, Star, Calendar, Trophy } from 'lucide-react';
+import { Play, Users, Zap, Star, Calendar, Trophy, ChevronRight } from 'lucide-react';
 
-export default function GameTrailerBox({ game }) {
-  const [hoveredPreview, setHoveredPreview] = useState(null);
+export default function GameTrailerBox({ game, videos = [], screenshots = [] }) {
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [showNavArrows, setShowNavArrows] = useState(false);
   
-  // Mock preview images for the smaller boxes
-  const previewBoxes = [
-    { id: 1, title: 'Campaign Intro', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd8d2c17?w=200&h=200&fit=crop' },
-    { id: 2, title: 'Multiplayer Chaos', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop' },
-    { id: 3, title: 'Boss Battle', image: 'https://images.unsplash.com/photo-1552168324-d612d080e601?w=200&h=200&fit=crop' },
-    { id: 4, title: 'Story Arc', image: 'https://images.unsplash.com/photo-1578482846511-04ba529f0b50?w=200&h=200&fit=crop' },
-    { id: 5, title: 'Endgame Content', image: 'https://images.unsplash.com/photo-1579546589027-ed7b1cdd7f86?w=200&h=200&fit=crop' },
-  ];
-
   // Get YouTube ID from trailer URL
   const getYouTubeId = (url) => {
     if (!url) return null;
@@ -22,9 +14,24 @@ export default function GameTrailerBox({ game }) {
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
-  const trailerUrl = game?.trailer_url || (game?.video_urls?.[0] || null);
-  const youtubeId = getYouTubeId(trailerUrl);
-  const trailerEmbedUrl = youtubeId ? `https://www.youtube.com/embed/${youtubeId}?autoplay=0&rel=0` : null;
+  const realVideos = (game?.video_urls?.length > 0 ? game.video_urls : (game?.trailer_url ? [game.trailer_url] : []))
+    .filter(url => url && typeof url === 'string')
+    .map((url, i) => {
+      const id = getYouTubeId(url);
+      return {
+        type: 'video',
+        title: i === 0 ? 'Gameplay Trailer' : `Video Showcase ${i + 1}`,
+        url: url,
+        image: id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : game?.cover_image,
+        embedUrl: id ? `https://www.youtube.com/embed/${id}?autoplay=1&rel=0` : null
+      };
+    });
+
+  const allMedia = realVideos.length > 0 ? realVideos : [
+    { title: 'Gameplay Trailer', image: game?.cover_image, type: 'image' }
+  ];
+
+  const currentMedia = allMedia[currentMediaIndex] || allMedia[0];
 
   const gameInfo = [
     { 
@@ -73,53 +80,86 @@ export default function GameTrailerBox({ game }) {
       {/* Main 50/50 Container */}
       <div className="flex gap-0" style={{ minHeight: '480px' }}>
         
-        {/* LEFT 50%: Trailer & Preview Boxes */}
+        {/* LEFT 50%: Media Viewer & Thumbnails */}
         <div className="flex-1 min-w-0 flex flex-col gap-3 pr-6">
           
-          {/* Main Trailer */}
-          <div className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10">
-            {trailerEmbedUrl ? (
-              <iframe
-                src={trailerEmbedUrl}
-                title="Game Trailer"
+          {/* Main Media Viewer */}
+          <div 
+            className="relative rounded-xl overflow-hidden flex items-center justify-center flex-1 min-h-0 bg-black/40 border border-white/10"
+            onMouseEnter={() => setShowNavArrows(true)}
+            onMouseLeave={() => setShowNavArrows(false)}
+          >
+            {currentMedia?.type === 'video' && currentMedia?.embedUrl ? (
+              <iframe 
+                src={currentMedia.embedUrl} 
+                title={currentMedia.title}
                 className="w-full h-full"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black/60 to-black/40">
-                <div className="text-center">
-                  <Play className="w-16 h-16 text-white/30 mx-auto mb-4" />
-                  <p className="text-white/40 text-sm">Trailer not available</p>
-                </div>
-              </div>
+              <img 
+                src={currentMedia?.image || game?.cover_image}
+                alt={currentMedia?.title || 'Game Media'}
+                className="w-full h-full object-cover"
+              />
+            )}
+
+            {/* Navigation Arrows */}
+            {showNavArrows && allMedia.length > 1 && (
+              <>
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  onClick={() => setCurrentMediaIndex((prev) => (prev - 1 + allMedia.length) % allMedia.length)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 transition-all z-10"
+                >
+                  <ChevronRight className="w-5 h-5 text-white rotate-180" />
+                </motion.button>
+
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onClick={() => setCurrentMediaIndex((prev) => (prev + 1) % allMedia.length)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-black/60 transition-all z-10"
+                >
+                  <ChevronRight className="w-5 h-5 text-white" />
+                </motion.button>
+              </>
             )}
           </div>
 
-          {/* Preview Boxes Grid */}
-          <div className="grid grid-cols-5 gap-2">
-            {previewBoxes.map((box) => (
-              <motion.div
-                key={box.id}
-                onMouseEnter={() => setHoveredPreview(box.id)}
-                onMouseLeave={() => setHoveredPreview(null)}
-                whileHover={{ scale: 1.05 }}
-                className="group relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-black/40 cursor-pointer"
-              >
-                <img
-                  src={box.image}
-                  alt={box.title}
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Play className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-0 left-0 right-0 p-1 text-[10px] text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-                  {box.title}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {/* Preview Thumbnails */}
+          {allMedia.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {allMedia.map((media, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={() => setCurrentMediaIndex(idx)}
+                  whileHover={{ scale: 1.05 }}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    idx === currentMediaIndex 
+                      ? 'border-cyan-400 shadow-lg shadow-cyan-500/50' 
+                      : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <img
+                    src={media.image}
+                    alt={media.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {media.type === 'video' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <Play className="w-4 h-4 text-white fill-white" />
+                    </div>
+                  )}
+                </motion.button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* White Vertical Divider */}
@@ -163,7 +203,7 @@ export default function GameTrailerBox({ game }) {
           >
             <p className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider mb-2">Pro Tip</p>
             <p className="text-xs text-white/70 leading-relaxed">
-              Check out the gameplay previews above to see the game in action. Each video showcases different aspects of the experience.
+              Check out the trailers above to see the game in action. Click thumbnails to switch between videos.
             </p>
           </motion.div>
         </div>
