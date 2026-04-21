@@ -12,6 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '../components/auth/AuthContext';
 import { Game } from '@/entities/Game';
 import Model3DManager from '../components/admin/Model3DManager';
+import ModelViewer3D from '../components/game/ModelViewer3D';
 import AnimationFBXManager from '../components/admin/AnimationFBXManager';
 import ModelFBXManager from '../components/admin/ModelFBXManager';
 import Model3DScriptManager from '../components/admin/Model3DScriptManager';
@@ -922,7 +923,16 @@ export default function Admin() {
                     </TabsContent>
 
           <TabsContent value="models">
-            <Model3DManager />
+            <div className="space-y-6">
+              {/* Live 3D Preview — same viewer as the Store game page */}
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <h2 className="text-xl font-bold text-white mb-4">Live 3D Preview</h2>
+                <div className="rounded-xl overflow-hidden border border-white/10 bg-black/40" style={{ height: '400px' }}>
+                  <ModelViewer3D modelPath="/models/lara.glb" fileType="glb" />
+                </div>
+              </div>
+              <Model3DManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="animations">
