@@ -75,14 +75,15 @@ export default function GameTrailerBox({ game }) {
         </div>
 
         {/* RIGHT 30%: Game Info Panel */}
-        <div className="flex-shrink-0 flex flex-col gap-4 pl-6" style={{ width: '30%' }}>
+        <div className="flex-shrink-0 flex flex-col gap-3 pl-6 overflow-y-auto scrollbar-hide" style={{ width: '30%' }}>
           
-          {/* Game Cover */}
-          <div className="rounded-lg overflow-hidden border border-white/10">
+          {/* Game Cover - Small */}
+          <div className="rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
             <img
               src={game?.cover_image}
               alt={game?.title}
               className="w-full aspect-[2/3] object-cover"
+              style={{ maxWidth: '150px' }}
             />
           </div>
 
@@ -95,18 +96,18 @@ export default function GameTrailerBox({ game }) {
           <div className="space-y-2 text-xs">
             {game?.original_year && (
               <div className="flex items-start gap-2">
-                <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Release Date:</span>
+                <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit flex-shrink-0">Release Date:</span>
                 <span className="text-white">{game.original_year}</span>
               </div>
             )}
             
             <div className="flex items-start gap-2">
-              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Developer:</span>
+              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit flex-shrink-0">Developer:</span>
               <span className="text-cyan-400">Studio Unknown</span>
             </div>
 
             <div className="flex items-start gap-2">
-              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit">Publisher:</span>
+              <span className="text-white/40 font-bold uppercase tracking-wider min-w-fit flex-shrink-0">Publisher:</span>
               <span className="text-white">Atom Publishing</span>
             </div>
           </div>
