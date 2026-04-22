@@ -224,8 +224,12 @@ export default function LibrarySidebar() {
   // We'll keep existing logic but just note that if they want it "here", they are likely seeing it.
   
   const isGenreMastery = pathname.includes('/genremastery');
+  const isGameDetail = pathname.includes('/gamedetail');
   
   const shouldShow = !(isEntertainment || isLibraryPage || overlayActive);
+  
+  // On gamedetail page, use fixed positioning so the sidebar shows over the page
+  const positionClass = isGameDetail ? 'fixed' : 'absolute';
 
   useEffect(() => {
     const enabled = localStorage.getItem(`environment_enabled_${currentEnvironmentPageKey}`) !== 'false';
@@ -339,7 +343,7 @@ export default function LibrarySidebar() {
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="absolute left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100"
+              className={`${positionClass} left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100`}
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
@@ -443,7 +447,7 @@ export default function LibrarySidebar() {
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`absolute left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
+            className={`${positionClass} left-6 top-[45%] -translate-y-1/2 z-[70] flex flex-col items-center gap-3 py-3 w-10 transition-opacity duration-500 ${isSidebarCollapsed ? 'opacity-90' : 'opacity-100'}`}
           >
             {/* Top Slot Placeholder (Luna only) */}
             {pathname.includes('/lunatemplate') && (
@@ -1263,7 +1267,7 @@ export default function LibrarySidebar() {
           initial={{ x: -50 }}
           animate={{ x: 0 }}
           onClick={() => setShowLeftNav(true)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300"
+          className={`${positionClass} left-0 top-1/2 -translate-y-1/2 z-[70] w-6 h-12 rounded-r-xl flex items-center justify-center border border-l-0 border-white/10 bg-white/5 text-white/50 backdrop-blur-lg shadow-lg hover:bg-white/10 hover:text-white transition-all duration-300`}
           title="Show UI"
         >
           <Eye className="w-3 h-3" />
@@ -1289,7 +1293,7 @@ export default function LibrarySidebar() {
         animate={{ x: isOpen ? "0%" : "-100%" }}
         exit={{ x: "-100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="absolute top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col"
+        className={`${positionClass} top-0 left-0 bottom-0 w-80 sm:w-96 z-[70] overflow-hidden flex flex-col`}
         style={{ 
           background: 'rgba(10, 14, 20, 0.5)',
           backdropFilter: 'blur(40px) saturate(180%)',
