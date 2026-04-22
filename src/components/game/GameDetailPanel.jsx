@@ -788,11 +788,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
               <div className="flex flex-col lg:flex-row gap-8">
 
                 {/* Left: Trailer Section */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4">
+                <div className="flex-[1.4] min-w-0 flex flex-col gap-4">
                   <h4 className="text-lg font-bold text-white">Game Trailer</h4>
 
                   {/* Main Trailer Box */}
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden group/preview flex items-center justify-center" style={{ aspectRatio: '16/10' }}>
                     {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
                         <iframe 
                             src={selectedMediaItem.embedUrl} 
