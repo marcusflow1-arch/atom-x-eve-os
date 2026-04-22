@@ -289,40 +289,30 @@ function AIAchievementsView({ onClosePage }) {
   const [showReviewPanel, setShowReviewPanel] = useState(false);
 
   useEffect(() => {
-    const fetchUserCards = async () => {
+    const fetchGameData = async () => {
       if (!user || !selectedGame) return;
       
       try {
-        const cards = await base44.entities.UserCard.filter({ 
-          user_id: user.id,
-          game_name: selectedGame.title 
-        });
-        setUserCards(cards);
+        const [cards, reviews] = await Promise.all([
+          base44.entities.UserCard.filter({ 
+            user_id: user.id,
+            game_name: selectedGame.title 
+          }).catch(() => []),
+          base44.entities.Post.filter({ 
+            type: 'game_review',
+            game_title: selectedGame.title 
+          }, '-created_date').catch(() => [])
+        ]);
+        setUserCards(cards || []);
+        setGameReviews(reviews || []);
       } catch (error) {
-        console.error('Failed to fetch user cards:', error);
+        console.error('Failed to fetch game data:', error);
       }
     };
 
-    fetchUserCards();
+    const timer = setTimeout(fetchGameData, 300);
+    return () => clearTimeout(timer);
   }, [user, selectedGame]);
-
-  useEffect(() => {
-    const fetchReviews = async () => {
-      if (!selectedGame) return;
-      
-      try {
-        const reviews = await base44.entities.Post.filter({ 
-          type: 'game_review',
-          game_title: selectedGame.title 
-        }, '-created_date');
-        setGameReviews(reviews);
-      } catch (error) {
-        console.error('Failed to fetch reviews:', error);
-      }
-    };
-
-    fetchReviews();
-  }, [selectedGame]);
 
   useEffect(() => {
     const fetchUserReactions = async () => {
@@ -340,7 +330,9 @@ function AIAchievementsView({ onClosePage }) {
         console.error('Failed to fetch reactions:', err);
       }
     };
-    fetchUserReactions();
+    
+    const timer = setTimeout(fetchUserReactions, 500);
+    return () => clearTimeout(timer);
   }, [isAuthenticated, user]);
 
   const handleReaction = async (reviewId, reactionType) => {
