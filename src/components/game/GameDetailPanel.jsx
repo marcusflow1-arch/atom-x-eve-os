@@ -725,7 +725,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* Dev Modal */}
+      {/* Dev Modal - Full Space Between Headers */}
       <AnimatePresence>
         {devModalOpen && (
           <>
@@ -734,33 +734,26 @@ export default function GameDetailPanel({ gameId, onClose }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setDevModalOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xl z-[60]"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[61] w-[90vw] h-[80vh] rounded-2xl overflow-hidden flex flex-col"
-              style={{ background: 'rgba(13, 13, 13, 0.95)', backdropFilter: 'blur(10px)' }}
+              className="fixed top-16 bottom-0 left-0 right-0 z-[61] flex flex-col"
+              style={{ background: 'rgba(13, 13, 13, 0.98)', backdropFilter: 'blur(10px)' }}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/60">
-                <h2 className="text-xl font-bold text-white">{game?.developer || 'Developer Updates'}</h2>
-                <button
-                  onClick={() => setDevModalOpen(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-                >
-                  <X className="w-4 h-4 text-white/60" />
-                </button>
-              </div>
+              {/* Close Button */}
+              <button
+                onClick={() => setDevModalOpen(false)}
+                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-white/60" />
+              </button>
 
-              {/* Blank Content Area */}
-              <div className="flex-1 p-8 overflow-y-auto">
-                <div className="flex items-center justify-center h-full text-white/40 text-center">
-                  <p className="text-lg">Developer updates and company information coming soon...</p>
-                </div>
-              </div>
+              {/* Blank Developer Page Canvas */}
+              <div className="flex-1 w-full overflow-y-auto" />
             </motion.div>
           </>
         )}
