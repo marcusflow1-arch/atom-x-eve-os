@@ -1,9 +1,25 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Environment, Center } from '@react-three/drei';
+import { OrbitControls, useGLTF, Center } from '@react-three/drei';
+import * as THREE from 'three';
 
 function Model({ url }) {
   const { scene } = useGLTF(url);
+
+  // Ensure all materials are valid before rendering
+  useEffect(() => {
+    if (!scene) return;
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        if (!child.material) {
+          child.material = new THREE.MeshStandardMaterial({ color: '#888888' });
+        }
+        if (!child.geometry) return;
+      }
+    });
+  }, [scene]);
+
+  if (!scene) return null;
   return <Center><primitive object={scene} /></Center>;
 }
 
@@ -12,6 +28,15 @@ function FallbackBox() {
     <mesh>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="#4f46e5" />
+    </mesh>
+  );
+}
+
+function ModelErrorFallback() {
+  return (
+    <mesh>
+      <sphereGeometry args={[0.8, 16, 16]} />
+      <meshStandardMaterial color="#ef4444" wireframe />
     </mesh>
   );
 }
@@ -26,12 +51,18 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }
 
   return (
-    <Canvas camera={{ position: [0, 1, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 5, 5]} intensity={1} />
+    <Canvas
+      camera={{ position: [0, 1, 3], fov: 50 }}
+      style={{ width: '100%', height: '100%' }}
+      onCreated={({ gl }) => {
+        gl.setClearColor(new THREE.Color(0x000000), 0);
+      }}
+    >
+      <ambientLight intensity={0.8} />
+      <directionalLight position={[5, 5, 5]} intensity={1.2} />
+      <pointLight position={[-5, -5, -5]} intensity={0.4} />
       <Suspense fallback={<FallbackBox />}>
         <Model url={modelUrl} />
-        <Environment preset="city" />
       </Suspense>
       <OrbitControls autoRotate autoRotateSpeed={2} enablePan={false} />
     </Canvas>
