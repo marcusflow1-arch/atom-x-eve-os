@@ -1,11 +1,26 @@
 import React, { Suspense, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Center, PerspectiveCamera } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Center } from '@react-three/drei';
 import * as THREE from 'three';
+
+function SceneSetup() {
+  const { scene } = useThree();
+  useEffect(() => {
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(5, 5, 5);
+    scene.add(ambient, dir);
+    return () => {
+      scene.remove(ambient, dir);
+      ambient.dispose();
+      dir.dispose();
+    };
+  }, [scene]);
+  return null;
+}
 
 function Model({ url }) {
   const { scene } = useGLTF(url);
-
   useEffect(() => {
     if (!scene) return;
     scene.traverse((child) => {
@@ -14,7 +29,6 @@ function Model({ url }) {
       }
     });
   }, [scene]);
-
   if (!scene) return null;
   return (
     <Center>
@@ -24,27 +38,26 @@ function Model({ url }) {
 }
 
 function FallbackBox() {
-  return (
-    <mesh>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#4f46e5" />
-    </mesh>
-  );
+  const meshRef = useRef();
+  useEffect(() => {
+    if (!meshRef.current) return;
+    const geo = new THREE.BoxGeometry(1, 1, 1);
+    const mat = new THREE.MeshStandardMaterial({ color: '#4f46e5' });
+    meshRef.current.geometry = geo;
+    meshRef.current.material = mat;
+    return () => { geo.dispose(); mat.dispose(); };
+  }, []);
+  return <mesh ref={meshRef} />;
 }
 
-function SceneLights() {
-  const dirRef = useRef();
+function CameraSetup() {
+  const { camera } = useThree();
   useEffect(() => {
-    if (dirRef.current) {
-      dirRef.current.position.set(5, 5, 5);
-    }
-  }, []);
-  return (
-    <>
-      <ambientLight intensity={0.8} />
-      <directionalLight ref={dirRef} intensity={1.2} />
-    </>
-  );
+    camera.position.set(0, 1, 3);
+    camera.fov = 50;
+    camera.updateProjectionMatrix();
+  }, [camera]);
+  return null;
 }
 
 export default function AdvancedModel3DViewer({ modelUrl }) {
@@ -58,8 +71,8 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
   return (
     <Canvas style={{ width: '100%', height: '100%' }}>
-      <PerspectiveCamera makeDefault fov={50} position={[0, 1, 3]} />
-      <SceneLights />
+      <CameraSetup />
+      <SceneSetup />
       <Suspense fallback={<FallbackBox />}>
         <Model url={modelUrl} />
       </Suspense>
