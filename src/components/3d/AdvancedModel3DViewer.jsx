@@ -46,6 +46,8 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     // Orbit Controls
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.2;
 
     // HDR ENVIRONMENT (Balanced so it won't brighten background)
     const pmrem = new THREE.PMREMGenerator(renderer);
@@ -131,11 +133,15 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
         scene.add(model);
 
-        // Enable animation
+        // Enable animation — find idle clip or fall back to first
         const animations = isFbx ? asset.animations : asset.animations;
         if (animations && animations.length > 0) {
           mixer = new THREE.AnimationMixer(model);
-          const action = mixer.clipAction(animations[0]);
+          const idleClip = animations.find(a =>
+            /idle/i.test(a.name)
+          ) || animations[0];
+          const action = mixer.clipAction(idleClip);
+          action.setLoop(THREE.LoopRepeat, Infinity);
           action.play();
         }
       },

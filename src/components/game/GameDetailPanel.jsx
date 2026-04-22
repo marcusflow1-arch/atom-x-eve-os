@@ -1016,9 +1016,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
               <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10" style={{ minHeight: 420 }}>
 
                 {/* Left (50%): 3D Model Viewer */}
-                <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6 bg-black/20">
+                <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6" style={{ background: 'rgba(255,255,255,0.04)' }}>
                   <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
-                  <div className="relative flex-1 rounded-lg overflow-hidden border border-white/10 bg-black/40">
+                  <div className="relative flex-1 rounded-xl overflow-hidden" style={{
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    backdropFilter: 'blur(24px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 32px rgba(0,0,0,0.25)',
+                  }}>
+                    {/* Liquid glass shimmer highlight */}
+                    <div className="absolute inset-0 pointer-events-none" style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 100%)',
+                      borderRadius: 'inherit',
+                      zIndex: 1,
+                    }} />
                     <AdvancedModel3DViewer modelUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/c586602ff_tomb_raider_laracroft.glb" />
                   </div>
                 </div>
