@@ -1,10 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { base44 } from '@/api/base44Client';
 
-const YBOT_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/608211a0f_YBot1.fbx';
+const MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/c586602ff_tomb_raider_laracroft.glb';
 
 export default function StoreIdleViewer() {
   const containerRef = useRef(null);
@@ -42,49 +40,32 @@ export default function StoreIdleViewer() {
     let animFrameId;
     const clock = new THREE.Clock();
 
-    // --- Load Y-Bot ---
-    const fbxLoader = new FBXLoader();
+    // --- Load GLB model ---
     const gltfLoader = new GLTFLoader();
 
-    fbxLoader.load(YBOT_URL, async (fbx) => {
-      fbx.scale.set(0.001, 0.001, 0.001);
-      fbx.position.set(0, -0.5, 0);
-      fbx.traverse(c => {
-        if (c.isMesh) { c.castShadow = !c.isSkinnedMesh; c.receiveShadow = true; }
-      });
-      scene.add(fbx);
+    gltfLoader.load(MODEL_URL, (gltf) => {
+      const model = gltf.scene;
 
-      mixer = new THREE.AnimationMixer(fbx);
-      mixer.timeScale = 1.0;
+      // Auto-center and scale
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2 / maxDim;
+      model.scale.multiplyScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
 
-      // Fetch idle animation from admin
-      try {
-        const animations = await base44.entities.AnimationFBX.list();
-        const idleAnim = animations.find(a => (a.name || '').toLowerCase().trim() === 'idle');
-        if (idleAnim) {
-          const lower = (idleAnim.file_url || '').toLowerCase();
-          let animAsset;
-          if (lower.endsWith('.glb') || lower.endsWith('.gltf')) {
-            const gltf = await gltfLoader.loadAsync(idleAnim.file_url);
-            animAsset = { animations: gltf.animations || [] };
-          } else {
-            animAsset = await fbxLoader.loadAsync(idleAnim.file_url);
-          }
-          if (animAsset?.animations?.length > 0) {
-            const action = mixer.clipAction(animAsset.animations[0]);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.play();
-          }
-        } else if (fbx.animations?.length > 0) {
-          // Fallback to embedded animation
-          const action = mixer.clipAction(fbx.animations[0]);
-          action.setLoop(THREE.LoopRepeat, Infinity);
-          action.play();
-        }
-      } catch (e) {
-        console.warn('StoreIdleViewer: could not load idle anim', e);
+      scene.add(model);
+
+      // Play idle animation (find idle clip or fall back to first)
+      if (gltf.animations?.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        const idleClip = gltf.animations.find(a => /idle/i.test(a.name)) || gltf.animations[0];
+        const action = mixer.clipAction(idleClip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
       }
-    }, undefined, (err) => console.error('StoreIdleViewer: Y-Bot load error', err));
+    }, undefined, (err) => console.error('StoreIdleViewer: model load error', err));
 
     // --- Render Loop ---
     const animate = () => {
