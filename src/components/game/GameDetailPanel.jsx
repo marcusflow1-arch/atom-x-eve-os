@@ -1013,7 +1013,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Achievement Cards + 3D Viewer - 50/50 Side by Side */}
-              <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10" style={{ minHeight: 420 }}>
+              <div className="flex gap-0" style={{ minHeight: 420 }}>
 
                 {/* Left (50%): 3D Model Viewer */}
                 <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6" style={{ background: 'rgba(255,255,255,0.04)' }}>
