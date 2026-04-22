@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Center } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, useGLTF, Center, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 
 function Model({ url }) {
@@ -57,7 +57,8 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }
 
   return (
-    <Canvas camera={{ position: [0, 1, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
+    <Canvas style={{ width: '100%', height: '100%' }}>
+      <PerspectiveCamera makeDefault fov={50} position={[0, 1, 3]} />
       <SceneLights />
       <Suspense fallback={<FallbackBox />}>
         <Model url={modelUrl} />
