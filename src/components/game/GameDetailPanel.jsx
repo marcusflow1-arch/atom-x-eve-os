@@ -15,7 +15,7 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
-import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
+import StoreIdleViewer from '@/components/3d/StoreIdleViewer';
 
 
 // --- Components ---
@@ -1019,7 +1019,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6">
                   <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
                   <div className="relative flex-1">
-                    <AdvancedModel3DViewer modelUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/c586602ff_tomb_raider_laracroft.glb" />
+                    <StoreIdleViewer />
                   </div>
                 </div>
 
