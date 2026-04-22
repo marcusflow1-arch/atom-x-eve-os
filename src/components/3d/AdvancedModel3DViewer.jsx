@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Environment, Center } from '@react-three/drei';
 
@@ -26,10 +26,7 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }
 
   return (
-    <Canvas
-      camera={{ position: [0, 1, 3], fov: 50 }}
-      style={{ width: '100%', height: '100%' }}
-    >
+    <Canvas camera={{ position: [0, 1, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 5, 5]} intensity={1} />
       <Suspense fallback={<FallbackBox />}>

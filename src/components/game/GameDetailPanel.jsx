@@ -15,7 +15,7 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
-import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer.jsx';
+import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
 
 
 // --- Components ---
