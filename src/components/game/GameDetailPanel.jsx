@@ -1013,10 +1013,21 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Achievement Cards + 3D Viewer - 50/50 Side by Side */}
-              <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10">
+              <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10" style={{ minHeight: 420 }}>
 
-                {/* Left (50%): Achievement Cards */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6">
+                {/* Left (50%): 3D Model Viewer */}
+                <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6 bg-black/20">
+                  <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
+                  <div className="relative flex-1 rounded-lg overflow-hidden border border-white/10 bg-black/40">
+                    <AdvancedModel3DViewer modelUrl="https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/c586602ff_tomb_raider_laracroft.glb" />
+                  </div>
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
+
+                {/* Right (50%): Achievement Cards */}
+                <div className="w-1/2 flex-shrink-0 flex flex-col gap-4 p-6">
                   <h3 className="text-xl font-bold text-white mb-2">Developer Cards</h3>
                   <AchievementCardStrip 
                     achievementCards={achievementCards} 
@@ -1024,8 +1035,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     onSelectCard={setSelectedCard} 
                   />
                 </div>
-
-
 
               </div>
 
