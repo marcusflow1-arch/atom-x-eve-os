@@ -45,11 +45,12 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     );
     camera.position.set(0, 1.4, 3);
 
-    // Orbit Controls
+    // Orbit Controls — no auto-rotation, manual drag only
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.2;
+    controls.autoRotate = false;
+    controls.enableZoom = false;
+    controls.target.set(0, 0, 0);
 
     // HDR ENVIRONMENT (Balanced so it won't brighten background)
     const pmrem = new THREE.PMREMGenerator(renderer);
@@ -185,16 +186,37 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }, [modelUrl]);
 
   return (
-    <div style={{ width: '100%', height: '100%', background: 'transparent', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', borderRadius: '1rem', overflow: 'hidden' }}>
+      {/* Liquid glass background — see-through with shimmer */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(180,200,255,0.04) 40%, rgba(255,255,255,0.03) 100%)',
+        backdropFilter: 'blur(2px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(2px) saturate(120%)',
+        borderRadius: 'inherit',
+        pointerEvents: 'none',
+        zIndex: 0,
+      }} />
+      {/* Subtle top shimmer line */}
+      <div style={{
+        position: 'absolute',
+        top: 0, left: 0, right: 0,
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }} />
       <canvas
         ref={canvasRef}
         style={{
           display: 'block',
           width: '100%',
           height: '100%',
+          position: 'relative',
+          zIndex: 2,
           pointerEvents: 'auto',
           background: 'transparent',
-          mixBlendMode: 'normal',
         }}
       />
     </div>
