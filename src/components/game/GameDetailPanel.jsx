@@ -913,9 +913,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
                   {/* Separator Line */}
                   <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-r from-white/20 to-transparent" />
-                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold">Live Stream</span>
-                    <div className="flex-1 max-w-[150px] h-px bg-gradient-to-l from-white/20 to-transparent" />
+                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-white/20" />
+                    <span className="text-xs text-white/40 uppercase tracking-wider font-semibold flex-shrink-0">Live Stream</span>
+                    <div className="flex-1 h-px bg-gradient-to-l from-transparent via-white/20 to-white/20" />
                   </div>
 
                   {/* Live Stream + Chat Row */}
