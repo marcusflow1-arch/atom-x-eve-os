@@ -224,6 +224,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
+  const [liveModalOpen, setLiveModalOpen] = useState(false);
+  const [devModalOpen, setDevModalOpen] = useState(false);
 
   // Helper to extract YouTube ID
   const getYouTubeId = (url) => {
@@ -366,7 +368,9 @@ export default function GameDetailPanel({ gameId, onClose }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (isViewingMedia) {
+        if (devModalOpen) {
+          setDevModalOpen(false);
+        } else if (isViewingMedia) {
           setIsViewingMedia(false);
           setCurrentMediaIndex(0);
         } else {
@@ -383,7 +387,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isViewingMedia, currentMediaIndex, currentContent.length, onClose]);
+  }, [isViewingMedia, currentMediaIndex, currentContent.length, devModalOpen, onClose]);
 
   // Mouse move handler for arrows
   const handleMouseMove = () => {
@@ -591,6 +595,173 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   return (
     <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
+      {/* Left Sidebar Buttons */}
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4">
+        <button
+          onClick={() => setLiveModalOpen(true)}
+          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 rounded-lg text-red-400 font-bold text-sm uppercase tracking-wider transition-all"
+        >
+          Live
+        </button>
+        <button
+          onClick={() => setDevModalOpen(true)}
+          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 rounded-lg text-cyan-400 font-bold text-sm uppercase tracking-wider transition-all"
+        >
+          Dev
+        </button>
+      </div>
+
+      {/* Live Stream Modal */}
+      <AnimatePresence>
+        {liveModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setLiveModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[61] w-[90vw] h-[80vh] rounded-2xl overflow-hidden"
+              style={{ background: 'rgba(13, 13, 13, 0.95)', backdropFilter: 'blur(10px)' }}
+            >
+              <div className="flex flex-col lg:flex-row gap-4 h-full p-4">
+                {/* Live Stream Box */}
+                <div className="flex-[2] min-w-0">
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col h-full">
+                    {/* Stream Header Bar */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-black/60 border-b border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                        <span className="text-white font-bold text-xs uppercase tracking-wider">Live Stream</span>
+                        <span className="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/30 text-red-400 text-[10px] font-bold">LIVE</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-[10px] text-white/40">
+                        <span className="flex items-center gap-1"><Radio className="w-3 h-3 text-red-400" /> 1,204 watching</span>
+                        <span>StreamerXO is playing {game?.title}</span>
+                      </div>
+                    </div>
+                    {/* Stream Embed / Placeholder */}
+                    <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                      <img
+                        src={game?.banner_image || game?.cover_image}
+                        alt="Live Stream"
+                        className="absolute inset-0 w-full h-full object-cover opacity-50 blur-sm scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/50" />
+                      <div className="relative z-10 flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500/40 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.3)]">
+                          <Play className="w-7 h-7 text-white fill-white ml-1" />
+                        </div>
+                        <p className="text-white font-bold text-sm">Tap to Watch Live</p>
+                        <p className="text-white/40 text-xs">StreamerXO • {game?.genre} • Started 2h ago</p>
+                      </div>
+                      {/* Stream overlays */}
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white border-2 border-white/20">S</div>
+                        <div className="px-2 py-1 rounded bg-black/70 backdrop-blur-sm text-xs text-white font-medium">StreamerXO</div>
+                      </div>
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded bg-black/70 backdrop-blur-sm">
+                        <Users className="w-3 h-3 text-white/60" />
+                        <span className="text-white/60 text-xs">1,204</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chat Box */}
+                <div className="lg:w-72 flex-shrink-0 flex flex-col">
+                  <div className="flex flex-col h-full bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
+                    {/* Chat Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 bg-black/60 border-b border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="text-white font-bold text-xs uppercase tracking-wider">Stream Chat</span>
+                      </div>
+                      <span className="text-white/30 text-[10px]">842 chatters</span>
+                    </div>
+                    {/* Chat Messages */}
+                    <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2" style={{ scrollbarWidth: 'none' }}>
+                      {[
+                        { user: 'NovaPulse', color: 'text-purple-400', msg: 'insane run omg!! 🔥' },
+                        { user: 'CyberAce', color: 'text-cyan-400', msg: 'bro just one-shotted that boss' },
+                        { user: 'VoidWalker', color: 'text-pink-400', msg: 'what build is this? 👀' },
+                        { user: 'ShadowX', color: 'text-yellow-400', msg: 'W streamer always coming through' },
+                      ].map((msg, i) => (
+                        <div key={i} className="text-xs leading-relaxed">
+                          <span className={`font-bold ${msg.color}`}>{msg.user}</span>
+                          <span className="text-white/20 mx-1">:</span>
+                          <span className="text-white/70">{msg.msg}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Chat Input */}
+                    <div className="px-3 py-2.5 border-t border-white/10 flex-shrink-0">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+                        <input
+                          type="text"
+                          placeholder="Send a message..."
+                          className="flex-1 bg-transparent text-xs text-white/80 placeholder-white/25 outline-none"
+                        />
+                        <button className="text-cyan-400 hover:text-cyan-200 transition-colors">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Dev Modal */}
+      <AnimatePresence>
+        {devModalOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDevModalOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[61] w-[90vw] h-[80vh] rounded-2xl overflow-hidden flex flex-col"
+              style={{ background: 'rgba(13, 13, 13, 0.95)', backdropFilter: 'blur(10px)' }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/60">
+                <h2 className="text-xl font-bold text-white">{game?.developer || 'Developer Updates'}</h2>
+                <button
+                  onClick={() => setDevModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                >
+                  <X className="w-4 h-4 text-white/60" />
+                </button>
+              </div>
+
+              {/* Blank Content Area */}
+              <div className="flex-1 p-8 overflow-y-auto">
+                <div className="flex items-center justify-center h-full text-white/40 text-center">
+                  <p className="text-lg">Developer updates and company information coming soon...</p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
         {isViewingMedia && (
