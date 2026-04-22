@@ -673,157 +673,54 @@ function AIAchievementsView({ onClosePage }) {
               </div>
             ) : selectedGame && tradingCards.length > 0 ? (
               <>
-                {/* Skill Tree Box */}
-                <ShinySidebarBox className="flex-1 flex flex-col overflow-hidden">
-                  {/* Header Info */}
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-black/20">
-                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider">Skill Progression</h3>
-                    <div className="flex items-center gap-3">
-                      <div className="text-xs text-white/40">
-                        <span className="text-purple-400 font-bold">1150</span> SP Available
+                {/* LEFT 50%: Empty 3D Viewer Box */}
+                <div className="flex-1 flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03]"
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                  }}
+                >
+                  <div className="px-4 py-3 border-b border-white/10 bg-black/20">
+                    <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider">3D Viewer</h3>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center text-white/20">
+                    <div className="text-center">
+                      <div className="w-16 h-16 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center mx-auto mb-3">
+                        <Layers className="w-8 h-8 opacity-30" />
                       </div>
-                      <Badge variant="outline" className="text-[10px] border-white/10 bg-white/5">
-                        {selectedGame.title}
-                      </Badge>
+                      <p className="text-sm">3D Viewer Coming Soon</p>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex-1 flex overflow-hidden relative">
-                    {/* LEFT COLUMN: Power Path */}
-                    <div className="flex-1 flex flex-col border-r border-white/10 bg-gradient-to-b from-purple-500/[0.02] to-transparent">
-                      <div className="p-4 text-center border-b border-white/5">
-                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/20 text-purple-300 mb-2">
-                          <Swords className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-sm font-bold text-white">Power Path</h3>
-                        <p className="text-[10px] text-white/40">Strength & Combat</p>
-                      </div>
-                      
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                        <div className="flex flex-col items-center gap-4">
-                          {/* Tier 1 */}
-                          <div className="flex items-center justify-center">
-                            <SkillNode icon={Zap} name="Power Strike" sp={100} unlocked={true} color="purple" />
+                {/* RIGHT 50%: Achievement Cards Grid */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards</h3>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' }}>
+                      {tradingCards.map((card) => (
+                        <button
+                          key={card.id}
+                          onClick={() => setSelectedCard(card)}
+                          className="relative aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20 bg-black/30"
+                        >
+                          <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
+                            <h4 className="text-white font-bold text-[10px] leading-tight truncate">{card.title}</h4>
+                            <Badge variant="outline" className={`text-[8px] h-3 px-0.5 border ${
+                              card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
+                              card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
+                              card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
+                              'border-slate-500/50 text-slate-400'
+                            }`}>
+                              {card.rarity}
+                            </Badge>
                           </div>
-                          <div className="w-0.5 h-6 bg-purple-500/50" />
-                          
-                          {/* Tier 2 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={TrendingUp} name="Momentum" sp={100} unlocked={true} color="purple" />
-                            <SkillNode icon={Zap} name="Surge" sp={100} unlocked={true} color="purple" />
-                          </div>
-                          <div className="flex items-center justify-center gap-16 w-full">
-                            <div className="w-0.5 h-6 bg-purple-500/30" />
-                            <div className="w-0.5 h-6 bg-purple-500/50" />
-                          </div>
-                          
-                          {/* Tier 3 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={Crown} name="Dominance" sp={250} unlocked={false} color="purple" />
-                            <SkillNode icon={Swords} name="Fury" sp={250} unlocked={false} color="purple" />
-                          </div>
-                          <div className="flex items-center justify-center gap-16 w-full">
-                            <div className="w-0.5 h-6 bg-white/10" />
-                            <div className="w-0.5 h-6 bg-white/10" />
-                          </div>
-                          
-                          {/* Tier 4 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={Target} name="Precision" sp={500} unlocked={false} color="purple" />
-                            <SkillNode icon={Swords} name="Rampage" sp={500} unlocked={false} color="purple" />
-                          </div>
-                          <div className="w-0.5 h-6 bg-white/10" />
-                          
-                          {/* Tier 5 */}
-                          <SkillNode icon={Crown} name="Ascendant" sp={1000} unlocked={false} color="purple" ultimate />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* RIGHT COLUMN: AI Path */}
-                    <div className="flex-1 flex flex-col bg-gradient-to-b from-cyan-500/[0.02] to-transparent">
-                      <div className="p-4 text-center border-b border-white/5">
-                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 mb-2">
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-sm font-bold text-white">AI Adaptation</h3>
-                        <p className="text-[10px] text-white/40">Versatility & Behavior</p>
-                      </div>
-                      
-                      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                        <div className="flex flex-col items-center gap-4 opacity-70">
-                          {/* Tier 1 */}
-                          <div className="flex items-center justify-center">
-                            <SkillNode icon={Sparkles} name="Neural Link" sp={100} unlocked={false} color="cyan" />
-                          </div>
-                          <div className="w-0.5 h-6 bg-white/10" />
-                          
-                          {/* Tier 2 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={TrendingUp} name="Adaptive" sp={100} unlocked={false} color="cyan" />
-                            <SkillNode icon={Star} name="Instinct" sp={100} unlocked={false} color="cyan" />
-                          </div>
-                          <div className="flex items-center justify-center gap-16 w-full">
-                            <div className="w-0.5 h-6 bg-white/10" />
-                            <div className="w-0.5 h-6 bg-white/10" />
-                          </div>
-                          
-                          {/* Tier 3 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={BookOpen} name="Memory" sp={250} unlocked={false} color="cyan" />
-                            <SkillNode icon={Target} name="Predict" sp={250} unlocked={false} color="cyan" />
-                          </div>
-                          <div className="flex items-center justify-center gap-16 w-full">
-                            <div className="w-0.5 h-6 bg-white/10" />
-                            <div className="w-0.5 h-6 bg-white/10" />
-                          </div>
-                          
-                          {/* Tier 4 */}
-                          <div className="flex items-center gap-8 justify-center w-full">
-                            <SkillNode icon={Sparkles} name="Evolve" sp={500} unlocked={false} color="cyan" />
-                            <SkillNode icon={Zap} name="Sync" sp={500} unlocked={false} color="cyan" />
-                          </div>
-                          <div className="w-0.5 h-6 bg-white/10" />
-                          
-                          {/* Tier 5 */}
-                          <SkillNode icon={Sparkles} name="Transcend" sp={1000} unlocked={false} color="cyan" ultimate />
-                        </div>
-                      </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </ShinySidebarBox>
-
-                {/* RIGHT: Achievement Cards Grid */}
-                <div className="flex-1 flex flex-col gap-6 overflow-visible">
-                  {/* Achievement Cards Section */}
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                    <h3 className="text-sm font-bold text-white/80 uppercase tracking-wider mb-4">Achievement Cards</h3>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar">
-                      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))' }}>
-                        {tradingCards.map((card, i) => (
-                          <button
-                            key={card.id}
-                            onClick={() => setSelectedCard(card)}
-                            className="aspect-[2.5/3.5] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 transition-all hover:shadow-lg hover:shadow-cyan-500/20 bg-black/30"
-                          >
-                            <img src={card.image} alt={card.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
-                              <h4 className="text-white font-bold text-[10px] leading-tight truncate">{card.title}</h4>
-                              <Badge variant="outline" className={`text-[8px] h-3 px-0.5 border ${
-                                card.rarity === 'Legendary' ? 'border-orange-500/50 text-orange-400' :
-                                card.rarity === 'Epic' ? 'border-purple-500/50 text-purple-400' :
-                                card.rarity === 'Rare' ? 'border-blue-500/50 text-blue-400' :
-                                'border-slate-500/50 text-slate-400'
-                              }`}>
-                                {card.rarity}
-                              </Badge>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
               </>
             ) : (
