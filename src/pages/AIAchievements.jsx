@@ -18,6 +18,7 @@ import SkillTreeOverlay from '../components/achievements/SkillTreeOverlay';
 import BlacksmithOverlay from '../components/achievements/BlacksmithOverlay';
 import ShinyCard from '../components/shared/ShinyCard';
 import MysteryCardDetail from '../components/streaming/MysteryCardDetail';
+import AdvancedModel3DViewer from '../components/3d/AdvancedModel3DViewer';
 import ReviewCard from '@/components/reviews/ReviewCard';
 import ReviewComposer from '@/components/reviews/ReviewComposer';
 import ReviewInsights from '@/components/reviews/ReviewInsights';
