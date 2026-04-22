@@ -21,11 +21,13 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
       alpha: true,
-      antialias: true
+      antialias: true,
+      premultipliedAlpha: false,
     });
     
-    // Prevent any background color
-    renderer.setClearColor(0x000000, 0); // FULLY TRANSPARENT
+    // Prevent any background color — fully transparent
+    renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = true;
     
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -183,16 +185,18 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }, [modelUrl]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-full"
-      style={{
-        display: 'block',
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'auto',
-        background: 'transparent'
-      }}
-    />
+    <div style={{ width: '100%', height: '100%', background: 'transparent', position: 'relative' }}>
+      <canvas
+        ref={canvasRef}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: '100%',
+          pointerEvents: 'auto',
+          background: 'transparent',
+          mixBlendMode: 'normal',
+        }}
+      />
+    </div>
   );
 }
