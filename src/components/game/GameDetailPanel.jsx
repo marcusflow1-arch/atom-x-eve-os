@@ -15,6 +15,7 @@ import { createPageUrl } from '@/utils';
 import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
+import AdvancedModel3DViewer from '@/components/3d/AdvancedModel3DViewer';
 
 
 // --- Components ---
@@ -781,56 +782,17 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Achievement Cards Section - First */}
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-4">Developer Cards</h3>
-                <AchievementCardStrip 
-                  achievementCards={achievementCards} 
-                  dlcList={dlcList}
-                  onSelectCard={setSelectedCard} 
-                />
-              </div>
 
-              {/* Main Grid: Cards Left (50%), Demo Right (50%) */}
+
+              {/* Main Grid: Trailer Left, Info Right */}
               <div className="flex flex-col lg:flex-row gap-8">
-                
-                {/* Left (50%): Developer Cards Grid */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4">
-                  <h4 className="text-lg font-bold text-white">Released Cards</h4>
-                  
-                  {/* Cards Grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-black/20 backdrop-blur-sm border border-white/10 rounded-xl p-6 min-h-[400px]">
-                    {achievementCards.slice(0, 12).map((card, idx) => (
-                      <motion.div
-                        key={card.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        onClick={() => setSelectedCard(card)}
-                        className="relative group cursor-pointer aspect-[2/3] rounded-lg overflow-hidden border border-white/10 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20 transition-all hover:scale-105"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/30 to-purple-900/30" />
-                        <img 
-                          src={card.image || game.cover_image}
-                          alt={card.name}
-                          className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 group-hover:translate-y-0 transition-transform">
-                          <p className="text-xs font-bold text-white truncate">{card.name}</p>
-                          <p className="text-[10px] text-white/60">{card.type}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Right (50%): Demo/Video */}
+                {/* Left: Trailer Section */}
                 <div className="flex-1 min-w-0 flex flex-col gap-4">
-                  <h4 className="text-lg font-bold text-white">Live Demo</h4>
-                  
-                  {/* Demo Video/AR Box */}
-                   <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
+                  <h4 className="text-lg font-bold text-white">Game Trailer</h4>
+
+                  {/* Main Trailer Box */}
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video group/preview flex items-center justify-center">
                     {selectedMediaItem?.type === 'video' && selectedMediaItem?.embedUrl ? (
                         <iframe 
                             src={selectedMediaItem.embedUrl} 
@@ -848,7 +810,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                               className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
-                            
+
                             {/* Media Title Overlay */}
                             <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
                                 <h4 className="text-white font-bold text-lg mb-1 drop-shadow-md">
@@ -867,13 +829,41 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     )}
                   </div>
 
-                  {/* 3D Viewer - Seamless Integration */}
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex items-center justify-center">
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
-                    <div className="relative z-10 text-center">
-                      <div className="text-white/40 text-sm">3D Model Viewer</div>
-                      <p className="text-white/20 text-xs mt-1">(Ready for 3D model)</p>
-                    </div>
+                  {/* Thumbnails Strip */}
+                  <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+                    {videos.map((video, i) => (
+                      <div 
+                        key={i}
+                        onClick={() => handleMediaTrigger(i)}
+                        className={`relative w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group border transition-all flex-shrink-0 ${
+                          selectedMediaItem === currentContent[i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                        }`}
+                      >
+                        <img 
+                          src={video.image} 
+                          alt={video.title}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <Play className="w-4 h-4 text-white drop-shadow-md" />
+                        </div>
+                      </div>
+                    ))}
+                    {screenshots.map((screenshot, i) => (
+                      <div 
+                        key={i}
+                        onClick={() => handleMediaTrigger(videos.length + i)}
+                        className={`w-28 aspect-video bg-black rounded-lg overflow-hidden cursor-pointer group flex-shrink-0 border transition-all ${
+                          selectedMediaItem === currentContent[videos.length + i] ? 'border-cyan-400 ring-2 ring-cyan-400/30' : 'border-white/10 hover:border-cyan-400/30'
+                        }`}
+                      >
+                        <img 
+                          src={screenshot.image} 
+                          alt={screenshot.title}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    ))}
                   </div>
 
                 </div>
@@ -1020,6 +1010,32 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Achievement Cards + 3D Viewer - 50/50 Side by Side */}
+              <div className="flex gap-0 bg-gradient-to-b from-white/2 to-transparent rounded-xl overflow-hidden border border-white/10">
+
+                {/* Left (50%): Achievement Cards */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6">
+                  <h3 className="text-xl font-bold text-white mb-2">Developer Cards</h3>
+                  <AchievementCardStrip 
+                    achievementCards={achievementCards} 
+                    dlcList={dlcList}
+                    onSelectCard={setSelectedCard} 
+                  />
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
+
+                {/* Right (50%): 3D Model Viewer */}
+                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6 bg-transparent">
+                  <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
+                  <div className="relative flex-1 bg-gradient-to-b from-white/8 via-white/5 to-transparent backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg shadow-white/10 hover:border-white/20 transition-colors">
+                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/fbx/Samba Dancing.fbx" />
+                  </div>
+                </div>
+
               </div>
 
               {/* Lower Section: Content */}

@@ -23,10 +23,10 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
       alpha: true,
       antialias: true
     });
-
+    
     // Prevent any background color
     renderer.setClearColor(0x000000, 0); // FULLY TRANSPARENT
-
+    
     renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
 
@@ -49,18 +49,18 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
     // HDR ENVIRONMENT (Balanced so it won't brighten background)
     const pmrem = new THREE.PMREMGenerator(renderer);
-    new RGBELoader().
-    setDataType(THREE.HalfFloatType).
-    load(
-      "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
-      (hdr) => {
-        const envMap = pmrem.fromEquirectangular(hdr).texture;
-
-        // Apply only to scene lighting — NOT as visible background
-        scene.environment = envMap;
-        scene.background = null; // 100% transparent
-      }
-    );
+    new RGBELoader()
+      .setDataType(THREE.HalfFloatType)
+      .load(
+        "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr",
+        (hdr) => {
+          const envMap = pmrem.fromEquirectangular(hdr).texture;
+          
+          // Apply only to scene lighting — NOT as visible background
+          scene.environment = envMap;
+          scene.background = null; // 100% transparent
+        }
+      );
 
     // LIGHTING (Balanced)
     // Key Light
@@ -87,9 +87,9 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
-      0.55, // reduced bloom strength
-      0.5, // radius
-      0.1 // threshold
+      0.55,  // reduced bloom strength
+      0.5,   // radius
+      0.1    // threshold
     );
     composer.addPass(bloomPass);
 
@@ -97,7 +97,7 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     let mixer;
     const isFbx = modelUrl.toLowerCase().includes('.fbx');
     const loader = isFbx ? new FBXLoader() : new GLTFLoader();
-
+    
     loader.load(
       modelUrl,
       (asset) => {
@@ -176,17 +176,17 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     };
   }, [modelUrl]);
 
-  return null;
-
-
-
-
-
-
-
-
-
-
-
-
+  return (
+    <canvas
+      ref={canvasRef}
+      className="w-full h-full"
+      style={{
+        display: 'block',
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'auto',
+        background: 'transparent'
+      }}
+    />
+  );
 }
