@@ -1025,16 +1025,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
                   />
                 </div>
 
-                {/* Vertical Divider */}
-                <div className="w-px bg-gradient-to-b from-transparent via-white/20 to-transparent flex-shrink-0" />
 
-                {/* Right (50%): 3D Model Viewer */}
-                <div className="flex-1 min-w-0 flex flex-col gap-4 p-6 bg-transparent">
-                  <h3 className="text-xl font-bold text-white mb-2">3D Model Viewer</h3>
-                  <div className="relative flex-1 bg-gradient-to-b from-white/8 via-white/5 to-transparent backdrop-blur-sm border border-white/10 rounded-lg overflow-hidden shadow-lg shadow-white/10 hover:border-white/20 transition-colors">
-                    <AdvancedModel3DViewer modelUrl="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/models/fbx/Samba Dancing.fbx" />
-                  </div>
-                </div>
 
               </div>
 
