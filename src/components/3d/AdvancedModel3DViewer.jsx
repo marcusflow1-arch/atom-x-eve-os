@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Center } from '@react-three/drei';
 import * as THREE from 'three';
@@ -54,13 +54,10 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
     <Canvas
       camera={{ position: [0, 1, 3], fov: 50 }}
       style={{ width: '100%', height: '100%' }}
-      onCreated={({ gl }) => {
-        gl.setClearColor(new THREE.Color(0x000000), 0);
-      }}
+      gl={{ alpha: true }}
     >
       <ambientLight intensity={0.8} />
       <directionalLight position={[5, 5, 5]} intensity={1.2} />
-      <pointLight position={[-5, -5, -5]} intensity={0.4} />
       <Suspense fallback={<FallbackBox />}>
         <Model url={modelUrl} />
       </Suspense>
