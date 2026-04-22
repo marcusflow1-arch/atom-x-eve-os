@@ -615,7 +615,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
         </button>
       </div>
 
-      {/* Live Stream Modal */}
+      {/* Live Stream Modal - Centered Overlay with Blurred Background */}
       <AnimatePresence>
         {liveModalOpen && (
           <>
@@ -624,20 +624,20 @@ export default function GameDetailPanel({ gameId, onClose }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setLiveModalOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-xl z-[60]"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[61] w-[90vw] h-[80vh] rounded-2xl overflow-hidden"
-              style={{ background: 'rgba(13, 13, 13, 0.95)', backdropFilter: 'blur(10px)' }}
+              className="fixed top-16 bottom-0 left-1/2 -translate-x-1/2 z-[61] w-[80vw] overflow-hidden rounded-t-3xl flex flex-col"
+              style={{ background: 'rgba(13, 13, 13, 0.98)', backdropFilter: 'blur(10px)' }}
             >
-              <div className="flex flex-col lg:flex-row gap-4 h-full p-4">
+              <div className="flex flex-col lg:flex-row gap-4 h-full p-6">
                 {/* Live Stream Box */}
                 <div className="flex-[2] min-w-0">
-                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden aspect-video flex flex-col h-full">
+                  <div className="relative bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden aspect-video flex flex-col h-full">
                     {/* Stream Header Bar */}
                     <div className="flex items-center justify-between px-4 py-2 bg-black/60 border-b border-white/10 flex-shrink-0">
                       <div className="flex items-center gap-2">
