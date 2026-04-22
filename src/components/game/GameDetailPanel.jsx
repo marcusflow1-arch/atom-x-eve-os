@@ -5,7 +5,7 @@ import {
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
   Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy, Users,
-  Package, Tag, ArrowUpCircle, Bug, Sparkles
+  Package, Tag, ArrowUpCircle, Bug, Sparkles, Code
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -595,19 +595,23 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   return (
     <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
-      {/* Left Sidebar Buttons */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4">
+      {/* Left Sidebar Buttons - Positioned Above Play Button */}
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 -translate-x-16 z-50 flex flex-col gap-3">
         <button
           onClick={() => setLiveModalOpen(true)}
-          className="px-4 py-2 bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 rounded-lg text-red-400 font-bold text-sm uppercase tracking-wider transition-all"
+          className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 border-red-400/50 bg-red-500/20 text-red-400 hover:bg-red-500/30`}
+          title="Live Stream"
         >
-          Live
+          <Radio className="w-4 h-4" />
+          <span className="text-[7px] font-bold uppercase tracking-wider">Live</span>
         </button>
         <button
           onClick={() => setDevModalOpen(true)}
-          className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 rounded-lg text-cyan-400 font-bold text-sm uppercase tracking-wider transition-all"
+          className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 border-cyan-400/50 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30`}
+          title="Developer Updates"
         >
-          Dev
+          <Code className="w-4 h-4" />
+          <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
         </button>
       </div>
 
