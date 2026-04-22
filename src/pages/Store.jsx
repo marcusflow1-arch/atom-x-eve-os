@@ -40,7 +40,8 @@ import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
 import DevCardsContent from '../components/store/DevCardsContent';
-import { DollarSign } from 'lucide-react';
+import { DollarSign, Building2 } from 'lucide-react';
+import StudioDrawer from '../components/store/StudioDrawer';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -208,6 +209,7 @@ export default function Store() {
     const [showScrollTransition, setShowScrollTransition] = useState(false);
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
+    const [studioDrawerOpen, setStudioDrawerOpen] = useState(false);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -458,6 +460,14 @@ export default function Store() {
                       games={games}
                       onGameSelect={(game) => { setActiveCategoryOverlay(null); handleNavigateToGame(game.id); }}
                     />
+                    <button
+                      onClick={() => setStudioDrawerOpen(true)}
+                      className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 flex items-center gap-2"
+                      title="Gaming Studios"
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      Studios
+                    </button>
                     <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
                   </div>
                 </div>
@@ -776,6 +786,13 @@ export default function Store() {
                     </div>
                 </div>
             </GlassPageFrame>
+
+            {/* Studio Drawer */}
+            <StudioDrawer
+              isOpen={studioDrawerOpen}
+              onClose={() => setStudioDrawerOpen(false)}
+              games={games}
+            />
           </WishlistProvider>
         </PageErrorBoundary>
     );
