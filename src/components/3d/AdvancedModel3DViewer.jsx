@@ -1,26 +1,26 @@
-import React, { Suspense, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useRef, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Center } from '@react-three/drei';
 import * as THREE from 'three';
 
 function Model({ url }) {
   const { scene } = useGLTF(url);
 
-  // Ensure all materials are valid before rendering
   useEffect(() => {
     if (!scene) return;
     scene.traverse((child) => {
-      if (child.isMesh) {
-        if (!child.material) {
-          child.material = new THREE.MeshStandardMaterial({ color: '#888888' });
-        }
-        if (!child.geometry) return;
+      if (child.isMesh && !child.material) {
+        child.material = new THREE.MeshStandardMaterial({ color: '#888888' });
       }
     });
   }, [scene]);
 
   if (!scene) return null;
-  return <Center><primitive object={scene} /></Center>;
+  return (
+    <Center>
+      <primitive object={scene} />
+    </Center>
+  );
 }
 
 function FallbackBox() {
@@ -32,12 +32,13 @@ function FallbackBox() {
   );
 }
 
-function ModelErrorFallback() {
+function Lights() {
+  const dirLightRef = useRef();
   return (
-    <mesh>
-      <sphereGeometry args={[0.8, 16, 16]} />
-      <meshStandardMaterial color="#ef4444" wireframe />
-    </mesh>
+    <>
+      <ambientLight intensity={0.8} />
+      <directionalLight ref={dirLightRef} intensity={1.2} position={[5, 5, 5]} />
+    </>
   );
 }
 
@@ -51,13 +52,8 @@ export default function AdvancedModel3DViewer({ modelUrl }) {
   }
 
   return (
-    <Canvas
-      camera={{ position: [0, 1, 3], fov: 50 }}
-      style={{ width: '100%', height: '100%' }}
-      gl={{ alpha: true }}
-    >
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 5, 5]} intensity={1.2} />
+    <Canvas camera={{ position: [0, 1, 3], fov: 50 }} style={{ width: '100%', height: '100%' }}>
+      <Lights />
       <Suspense fallback={<FallbackBox />}>
         <Model url={modelUrl} />
       </Suspense>
