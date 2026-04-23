@@ -16,6 +16,7 @@ import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
 import StoreIdleViewer from '@/components/3d/StoreIdleViewer';
+import DevZonePanel from './DevZonePanel';
 
 
 // --- Components ---
@@ -595,25 +596,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
 
   return (
     <div className="h-full w-full relative bg-[#0d0d0d] text-white font-sans overflow-hidden flex flex-col">
-      {/* Left Sidebar Buttons - Positioned Above Play Button */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 -translate-x-16 z-50 flex flex-col gap-3">
-        <button
-          onClick={() => setLiveModalOpen(true)}
-          className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 border-red-400/50 bg-red-500/20 text-red-400 hover:bg-red-500/30`}
-          title="Live Stream"
-        >
-          <Radio className="w-4 h-4" />
-          <span className="text-[7px] font-bold uppercase tracking-wider">Live</span>
-        </button>
-        <button
-          onClick={() => setDevModalOpen(true)}
-          className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-0.5 border backdrop-blur-lg shadow-lg transition-all hover:scale-105 border-cyan-400/50 bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30`}
-          title="Developer Updates"
-        >
-          <Code className="w-4 h-4" />
-          <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
-        </button>
-      </div>
+
 
       {/* Live Stream Modal - Centered Overlay with Blurred Background */}
       <AnimatePresence>
@@ -725,39 +708,8 @@ export default function GameDetailPanel({ gameId, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* Dev Modal - Full Space Between Headers */}
-      <AnimatePresence>
-        {devModalOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setDevModalOpen(false)}
-              className="fixed inset-0 bg-black/40 backdrop-blur-xl z-[60]"
-            />
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed top-16 bottom-0 left-0 right-0 z-[61] flex flex-col"
-              style={{ background: 'rgba(13, 13, 13, 0.98)', backdropFilter: 'blur(10px)' }}
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setDevModalOpen(false)}
-                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4 text-white/60" />
-              </button>
-
-              {/* Blank Developer Page Canvas */}
-              <div className="flex-1 w-full overflow-y-auto" />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Dev Zone Panel - slides in from the right */}
+      <DevZonePanel isOpen={devModalOpen} onClose={() => setDevModalOpen(false)} game={game} />
 
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
@@ -874,23 +826,38 @@ export default function GameDetailPanel({ gameId, onClose }) {
         transition={{ duration: 0.4, ease: "easeInOut" }}
         className="relative z-20 p-8 pt-20 flex justify-end items-start"
       >
-        {/* Tabs Switcher */}
-        <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
-          <button 
-            onClick={() => setActiveTab('system')}
-            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-              activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+        <div className="flex items-center gap-3">
+          {/* Tabs Switcher */}
+          <div className="flex p-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+            <button 
+              onClick={() => setActiveTab('system')}
+              className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                activeTab === 'system' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              System Core
+            </button>
+            <button 
+              onClick={() => setActiveTab('specs')}
+              className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Tech Specs
+            </button>
+          </div>
+
+          {/* Dev Zone Button */}
+          <button
+            onClick={() => setDevModalOpen(true)}
+            className={`flex items-center gap-2 px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all border backdrop-blur-xl cursor-pointer select-none ${
+              devModalOpen
+                ? 'bg-violet-500/20 border-violet-400/40 text-violet-300 shadow-[0_0_20px_rgba(139,92,246,0.25)]'
+                : 'bg-black/40 border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20'
             }`}
           >
-            System Core
-          </button>
-          <button 
-            onClick={() => setActiveTab('specs')}
-            className={`relative px-6 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-              activeTab === 'specs' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            Tech Specs
+            <Code className="w-3.5 h-3.5" />
+            Dev Zone
           </button>
         </div>
       </motion.div>
