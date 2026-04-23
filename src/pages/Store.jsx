@@ -767,6 +767,13 @@ export default function Store() {
                                 }} />
                             )}
 
+                            {/* STUDIO DRAWER */}
+                            <StudioDrawer
+                              isOpen={studioDrawerOpen}
+                              onClose={() => setStudioDrawerOpen(false)}
+                              games={games}
+                            />
+
                             {/* IN-PAGE STORE VIEW OVERLAY */}
                             <AnimatePresence>
                                 {inPageStoreGameId && (
@@ -786,13 +793,6 @@ export default function Store() {
                     </div>
                 </div>
             </GlassPageFrame>
-
-            {/* Studio Drawer */}
-            <StudioDrawer
-              isOpen={studioDrawerOpen}
-              onClose={() => setStudioDrawerOpen(false)}
-              games={games}
-            />
           </WishlistProvider>
         </PageErrorBoundary>
     );

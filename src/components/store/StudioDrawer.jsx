@@ -4,46 +4,13 @@ import { X, ArrowRight, Star } from 'lucide-react';
 import StudioGamesPanel from './StudioGamesPanel';
 
 const MOCK_STUDIOS = [
-  {
-    id: 'studio-1',
-    name: 'Neon Studios',
-    logo: 'https://via.placeholder.com/40?text=NS',
-    description: 'Crafting immersive cyberpunk experiences',
-    gamesCount: 8,
-    gameIds: ['game-1', 'game-2', 'game-3', 'game-4'],
-  },
-  {
-    id: 'studio-2',
-    name: 'Phantom Games',
-    logo: 'https://via.placeholder.com/40?text=PG',
-    description: 'Masters of action-packed adventures',
-    gamesCount: 12,
-    gameIds: ['game-5', 'game-6', 'game-7'],
-  },
-  {
-    id: 'studio-3',
-    name: 'Apex Digital',
-    logo: 'https://via.placeholder.com/40?text=AD',
-    description: 'Revolutionary indie game developers',
-    gamesCount: 5,
-    gameIds: ['game-8', 'game-9'],
-  },
-  {
-    id: 'studio-4',
-    name: 'Ethereal Studios',
-    logo: 'https://via.placeholder.com/40?text=ES',
-    description: 'Pioneering next-gen RPG experiences',
-    gamesCount: 15,
-    gameIds: ['game-10', 'game-11', 'game-12', 'game-13'],
-  },
-  {
-    id: 'studio-5',
-    name: 'Quantum Games',
-    logo: 'https://via.placeholder.com/40?text=QG',
-    description: 'Sci-fi simulation specialists',
-    gamesCount: 6,
-    gameIds: ['game-14', 'game-15'],
-  },
+  { id: 'studio-1', name: 'Neon Studios', initials: 'NS', description: 'Crafting immersive cyberpunk experiences', gamesCount: 8 },
+  { id: 'studio-2', name: 'Phantom Games', initials: 'PG', description: 'Masters of action-packed adventures', gamesCount: 12 },
+  { id: 'studio-3', name: 'Apex Digital', initials: 'AD', description: 'Revolutionary indie game developers', gamesCount: 5 },
+  { id: 'studio-4', name: 'Ethereal Studios', initials: 'ES', description: 'Pioneering next-gen RPG experiences', gamesCount: 15 },
+  { id: 'studio-5', name: 'Quantum Games', initials: 'QG', description: 'Sci-fi simulation specialists', gamesCount: 6 },
+  { id: 'studio-6', name: 'Iron Wolf', initials: 'IW', description: 'Hardcore survival and strategy games', gamesCount: 9 },
+  { id: 'studio-7', name: 'Pixel Forge', initials: 'PF', description: 'Retro-inspired modern classics', gamesCount: 11 },
 ];
 
 export default function StudioDrawer({ isOpen, onClose, games }) {
@@ -107,7 +74,7 @@ export default function StudioDrawer({ isOpen, onClose, games }) {
                   >
                     {/* Logo */}
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">
-                      {studio.logo}
+                      {studio.initials}
                     </div>
 
                     {/* Studio Info */}
