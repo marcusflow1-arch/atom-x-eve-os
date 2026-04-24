@@ -173,29 +173,24 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
             </div>
 
             {/* Trade details - 60/40 split layout */}
-             <div className="flex-1 flex gap-6 overflow-hidden">
+             <div className="flex-1 flex gap-6 overflow-hidden pt-4">
                {/* LEFT: Trade visualization (60%) */}
-               <div className="flex-1 flex flex-col justify-center gap-6 border-r border-white/10 pr-6">
-                 {/* Trader name */}
-                 <div className="pb-3 border-b border-white/10">
-                   <h3 className="text-sm text-white/60 uppercase tracking-widest mb-1">Trading With</h3>
-                   <p className="text-white font-bold text-lg">{selectedTrader?.name || 'Trader'}</p>
-                 </div>
-
+               <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6">
                  {/* Trade exchange visualization */}
-                 <div className="flex items-center gap-4 justify-center">
+                 <div className="flex items-start gap-3 justify-center">
                    {/* Their card */}
                    <div className="flex-1 flex flex-col items-center gap-2">
                      <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
                      <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </div>
+                     <p className="text-xs text-white/40 text-center mt-2">Card description goes here</p>
                    </div>
 
                    {/* Arrow */}
-                   <div className="flex flex-col items-center gap-1 shrink-0">
-                     <ArrowRight className="w-6 h-6 text-white/40" />
-                     <span className="text-[9px] text-white/30 uppercase tracking-wide">For</span>
+                   <div className="flex flex-col items-center gap-1 shrink-0 pt-6">
+                     <ArrowRight className="w-5 h-5 text-white/40" />
+                     <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
                    </div>
 
                    {/* Your card */}
@@ -204,13 +199,14 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                      <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </div>
+                     <p className="text-xs text-white/40 text-center mt-2">Card description goes here</p>
                    </div>
                  </div>
 
                  {/* Confirm button */}
                  <button
                    onClick={() => setTradeConfirming(!tradeConfirming)}
-                   className="py-2.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors"
+                   className="py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors mt-auto"
                  >
                    Confirm
                  </button>
