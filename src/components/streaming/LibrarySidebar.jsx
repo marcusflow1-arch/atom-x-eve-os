@@ -180,13 +180,6 @@ export default function LibrarySidebar() {
     { name: "Elden Ring", image: "https://source.unsplash.com/random/200x300?dragon,game" },
   ];
 
-  const recentSearches = [
-    "Elden Ring Builds",
-    "Starfield Reviews",
-    "Valorant Crosshairs",
-    "Minecraft Mods"
-  ];
-
   const entertainmentApps = [
             { name: "YouTube", category: "Video", url: "https://www.youtube.com", image: "https://source.unsplash.com/random/200x200?youtube,logo" },
             { name: "Twitch", category: "Live", url: "https://www.twitch.tv", image: "https://source.unsplash.com/random/200x200?twitch,logo" },
@@ -524,22 +517,26 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Dev & Livestream buttons */}
-            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-white">
-              <Code className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
-            </button>
-            <button
-              onClick={() => setLivestreamOpen(true)}
-              className={`w-12 h-12 rounded-2xl border backdrop-blur-lg shadow-lg transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 ${
-                livestreamOpen
-                  ? 'bg-red-500/20 border-red-400/40 text-red-400'
-                  : 'bg-white/5 border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10'
-              }`}
-            >
-              <Radio className="w-4 h-4" />
-              <span className="text-[7px] font-bold uppercase tracking-wider">Livestream</span>
-            </button>
+            {/* Dev & Livestream buttons — only on game detail pages */}
+            {(isGameDetail || pathname.includes('/game/')) && (
+              <>
+                <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-white">
+                  <Code className="w-4 h-4" />
+                  <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
+                </button>
+                <button
+                  onClick={() => setLivestreamOpen(true)}
+                  className={`w-12 h-12 rounded-2xl border backdrop-blur-lg shadow-lg transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 ${
+                    livestreamOpen
+                      ? 'bg-red-500/20 border-red-400/40 text-red-400'
+                      : 'bg-white/5 border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10'
+                  }`}
+                >
+                  <Radio className="w-4 h-4" />
+                  <span className="text-[7px] font-bold uppercase tracking-wider">Livestream</span>
+                </button>
+              </>
+            )}
 
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
