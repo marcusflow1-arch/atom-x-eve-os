@@ -1,123 +1,27 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown } from 'lucide-react';
-import StreamerCard from './StreamerCard';
-import StreamerRightPane from './StreamerRightPane';
-
-const GAMES = [
-  'Valorant', 'Apex Legends', 'League of Legends', 'Fortnite', 'Overwatch 2',
-  'Elden Ring', 'Cyberpunk 2077', 'Minecraft', 'GTA V', 'Destiny 2',
-  'Call of Duty', 'Rocket League', 'CS2', 'Genshin Impact'
-];
-
-const mockStreamers = Array.from({ length: 14 }).map((_, i) => ({
-  id: `str_${i + 1}`,
-  name: [
-    'NovaKnight','PixelSage','ZeroShift','LunaVox','CrimsonByte','EchoBlade','SolarFlare',
-    'FrostSpark','NeonRift','AstraWave','NightPulse','QuantumFox','VortexEdge','ZenithKai'
-  ][i],
-  avatar: `https://i.pravatar.cc/400?img=${i + 10}`,
-  game: GAMES[i % GAMES.length],
-}));
+import React, { useState } from 'react';
+import StreamerFilterPanel from './StremerFilterPanel';
+import StreamerDiscoveryGrid from './StreamerDiscoveryGrid';
 
 export default function DiscoverStreamingList() {
-  const [selected, setSelected] = useState(0);
-  const [isListCollapsed, setIsListCollapsed] = useState(false);
-  const itemRefs = useRef([]);
+  const [filters, setFilters] = useState({
+    personalities: [],
+    genres: [],
+    frequency: []
+  });
 
-  // A = up, S = down navigation
-  useEffect(() => {
-    const onKey = (e) => {
-      const key = e.key?.toLowerCase();
-      if (key === 'a' || key === 's') {
-        e.preventDefault();
-        setSelected((prev) => {
-          if (key === 'a') return Math.max(0, prev - 1);
-          if (key === 's') return Math.min(mockStreamers.length - 1, prev + 1);
-          return prev;
-        });
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  // Keep selected card in view
-  React.useEffect(() => {
-    const el = itemRefs.current[selected];
-    if (el && el.scrollIntoView) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [selected]);
+  const handleFiltersChange = (newFilters) => {
+    setFilters(newFilters);
+  };
 
   return (
     <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl flex flex-col relative transition-all duration-500">
-        
-        {/* Top: Horizontal Streamer List */}
-        <AnimatePresence>
-          {!isListCollapsed && (
-            <motion.div
-              initial={{ height: 'auto', opacity: 1, marginBottom: 32 }}
-              animate={{ height: 'auto', opacity: 1, marginBottom: 32 }}
-              exit={{ height: 0, opacity: 0, marginBottom: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full overflow-hidden"
-            >
-              <div className="w-full overflow-x-auto no-scrollbar pb-2">
-                <div className="flex gap-5 px-2">
-                  {mockStreamers.map((s, idx) => (
-                    <motion.div
-                      key={s.id}
-                      ref={(el) => (itemRefs.current[idx] = el)}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: idx * 0.03 }}
-                    >
-                      <StreamerCard
-                        name={s.name}
-                        avatar={s.avatar}
-                        game={s.game}
-                        isSelected={selected === idx}
-                        onClick={() => setSelected(idx)}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="mx-auto max-w-7xl">
+        {/* Filter Panel */}
+        <StreamerFilterPanel onFiltersChange={handleFiltersChange} />
 
-        {/* Collapse/Expand Arrow */}
-        <div className="flex justify-center -mt-4 mb-6 relative z-10">
-            <button 
-                onClick={() => setIsListCollapsed(!isListCollapsed)}
-                className="w-12 h-8 bg-white/5 hover:bg-white/15 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center transition-all hover:scale-110 group shadow-lg"
-                title={isListCollapsed ? "Show Streamers" : "Hide Streamers"}
-            >
-                {isListCollapsed ? (
-                    <ChevronDown className="w-5 h-5 text-white/70 group-hover:text-white" />
-                ) : (
-                    <ChevronDown className="w-5 h-5 text-white/70 group-hover:text-white" />
-                )}
-            </button>
-        </div>
-
-        {/* Main Content */}
-        <motion.div
-            layout
-            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-        >
-            <StreamerRightPane streamer={mockStreamers[selected]} allowEditing={false} />
-        </motion.div>
+        {/* Grid */}
+        <StreamerDiscoveryGrid filters={filters} />
       </div>
-
-      {/* Local styles for hidden scrollbar */}
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
   );
 }
