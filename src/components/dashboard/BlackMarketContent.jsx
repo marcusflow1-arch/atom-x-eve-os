@@ -10,6 +10,7 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
   const [loading, setLoading] = useState(true);
   const [selectedMysteryCard, setSelectedMysteryCard] = useState(null);
   const [cardRowIndex, setCardRowIndex] = useState(0);
+  const [sellerFilter, setSellerFilter] = useState('highest');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,12 +47,17 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
 
   const sellerRows = useMemo(() => {
     if (!selectedMysteryCard) return [];
-    return Array.from({ length: 10 }, (_, i) => ({
+    const rows = Array.from({ length: 10 }, (_, i) => ({
       id: `${selectedMysteryCard.id}-seller-${i + 1}`,
       name: `Seller ${i + 1}`,
-      price: (4.99 + i * 1.75).toFixed(2),
+      price: parseFloat((4.99 + i * 1.75).toFixed(2)),
+      isBid: i % 3 === 2,
     }));
-  }, [selectedMysteryCard]);
+    if (sellerFilter === 'highest') return [...rows].sort((a, b) => b.price - a.price);
+    if (sellerFilter === 'lowest') return [...rows].sort((a, b) => a.price - b.price);
+    if (sellerFilter === 'bid') return rows.filter(r => r.isBid);
+    return rows;
+  }, [selectedMysteryCard, sellerFilter]);
 
   if (loading) {
     return (
@@ -98,13 +104,39 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
       <div className="flex-1 flex gap-4 overflow-hidden px-5 pt-3 pb-3">
         {/* LEFT: Sellers List (70%) */}
         <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
-          <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Sellers</div>
+          {/* Header row: Sellers | filter chips | Price */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Sellers</span>
+            <div className="flex items-center gap-1 flex-1">
+              {[
+                { key: 'highest', label: 'Highest' },
+                { key: 'lowest', label: 'Lowest' },
+                { key: 'bid', label: 'Bid' },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSellerFilter(key)}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide transition-all border ${
+                    sellerFilter === key
+                      ? 'bg-white/20 border-white/30 text-white'
+                      : 'border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Price</span>
+          </div>
           <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
             {(selectedMysteryCard ? sellerRows : []).map((seller) => (
               <div key={seller.id}>
                 <div className="flex items-center justify-between py-2.5">
-                  <span className="text-white text-sm">{seller.name}</span>
-                  <span className="text-cyan-300 text-sm font-semibold">${seller.price}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white text-sm">{seller.name}</span>
+                    {seller.isBid && <span className="text-[9px] uppercase tracking-wide text-amber-400/80 border border-amber-400/30 px-1.5 py-0.5 rounded-full">Bid</span>}
+                  </div>
+                  <span className="text-cyan-300 text-sm font-semibold">${seller.price.toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-white/10" />
               </div>
