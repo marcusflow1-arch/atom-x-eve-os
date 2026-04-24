@@ -172,63 +172,61 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
               <h2 className="text-white font-bold text-lg">{selectedTrader.name}</h2>
             </div>
 
-            {/* Trade details */}
-            <div className="flex-1 flex flex-col gap-6 overflow-hidden">
-              {/* Trader name at top left */}
-              <div className="pb-4 border-b border-white/10">
-                <h3 className="text-sm text-white/60 uppercase tracking-widest mb-2">Trading With</h3>
-                <p className="text-white font-bold text-lg">{selectedTrader.name}</p>
-              </div>
+            {/* Trade details - 60/40 split layout */}
+             <div className="flex-1 flex gap-6 overflow-hidden">
+               {/* LEFT: Trade visualization (60%) */}
+               <div className="flex-1 flex flex-col justify-center gap-6 border-r border-white/10 pr-6">
+                 {/* Trader name */}
+                 <div className="pb-3 border-b border-white/10">
+                   <h3 className="text-sm text-white/60 uppercase tracking-widest mb-1">Trading With</h3>
+                   <p className="text-white font-bold text-lg">{selectedTrader?.name || 'Trader'}</p>
+                 </div>
 
-              {/* Trade visualization */}
-              <div className="flex-1 flex flex-col gap-6 justify-center">
-                <div className="flex items-center gap-4">
-                  {/* Card they have */}
-                  <div className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
-                    <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="text-white/40 text-3xl font-black">?</span>
-                    </div>
-                  </div>
+                 {/* Trade exchange visualization */}
+                 <div className="flex items-center gap-4 justify-center">
+                   {/* Their card */}
+                   <div className="flex-1 flex flex-col items-center gap-2">
+                     <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
+                     <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                       <span className="text-white/40 text-3xl font-black">?</span>
+                     </div>
+                   </div>
 
-                  {/* Arrow */}
-                  <div className="flex flex-col items-center gap-1">
-                    <ArrowRight className="w-6 h-6 text-white/40" />
-                    <span className="text-[9px] text-white/30 uppercase tracking-wide">For</span>
-                  </div>
+                   {/* Arrow */}
+                   <div className="flex flex-col items-center gap-1 shrink-0">
+                     <ArrowRight className="w-6 h-6 text-white/40" />
+                     <span className="text-[9px] text-white/30 uppercase tracking-wide">For</span>
+                   </div>
 
-                  {/* Card they want */}
-                  <div className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs text-white/40 uppercase tracking-wider">Wants</span>
-                    <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="text-white/40 text-3xl font-black">?</span>
-                    </div>
-                  </div>
-                </div>
+                   {/* Your card */}
+                   <div className="flex-1 flex flex-col items-center gap-2">
+                     <span className="text-xs text-white/40 uppercase tracking-wider">Your Card</span>
+                     <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                       <span className="text-white/40 text-3xl font-black">?</span>
+                     </div>
+                   </div>
+                 </div>
 
-                {/* Card info boxes */}
-                <div className="flex gap-3 justify-center">
-                  <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/60 transition-colors">Card Info</button>
-                  <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/60 transition-colors">Card Info</button>
-                </div>
-              </div>
+                 {/* Confirm button */}
+                 <button
+                   onClick={() => setTradeConfirming(!tradeConfirming)}
+                   className="py-2.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors"
+                 >
+                   Confirm
+                 </button>
+               </div>
 
-              {/* Trade & Counter buttons */}
-              <div className="flex gap-3 pt-4 border-t border-white/10">
-                <button
-                  onClick={() => setTradeConfirming(!tradeConfirming)}
-                  className="flex-1 py-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors"
-                >
-                  {tradeConfirming ? 'Confirm Trade' : 'Trade'}
-                </button>
-                <button
-                  onClick={() => setCounterOfferDrawerOpen(true)}
-                  className="flex-1 py-3 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-400 font-bold uppercase text-xs tracking-wider transition-colors"
-                >
-                  Counter Offer
-                </button>
-              </div>
-            </div>
+               {/* RIGHT: Counter offer box (40%) */}
+               <div className="w-[40%] flex flex-col pl-4">
+                 <button
+                   onClick={() => setCounterOfferDrawerOpen(true)}
+                   className="flex-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-500/50 hover:border-purple-500/80 hover:bg-purple-500/10 transition-colors"
+                 >
+                   <span className="text-white/60 text-sm uppercase tracking-wider mb-2">Enter Counter</span>
+                   <span className="text-white/40 text-xs">Offer</span>
+                 </button>
+               </div>
+             </div>
 
             {/* Counter Offer Drawer */}
             {counterOfferDrawerOpen && (
@@ -259,6 +257,12 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                   </div>
                 </div>
 
+                {/* Header */}
+                <div className="p-4 border-b border-white/10">
+                  <h3 className="text-white font-bold text-sm mb-2">Enter Your Counter Offer</h3>
+                  <p className="text-xs text-white/40">Select a card below to send as counter offer</p>
+                </div>
+
                 {/* Cards list */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
                   {Array.from({ length: 12 }, (_, i) => (
@@ -281,7 +285,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
 
                 {selectedCounterCard !== null && (
                   <div className="p-4 border-t border-white/10">
-                    <button className="w-full py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm uppercase tracking-wider transition-colors">
+                    <button className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm uppercase tracking-wider transition-colors">
                       Send Counter Offer
                     </button>
                   </div>
