@@ -545,6 +545,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                 </div>
               </div>
             </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
