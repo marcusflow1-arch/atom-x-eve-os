@@ -138,21 +138,23 @@ export default function BlackMarketContent({ cardSearchQuery = '', onCardSearch 
               {mysteryCards.length === 0 ? (
                 <div className="text-center text-white/25 text-xs py-8">No cards</div>
               ) : (
-                Array.from({ length: Math.ceil(mysteryCards.length / 5) }, (_, rowIdx) => {
-                  const rowStart = rowIdx * 5;
-                  const rowCards = mysteryCards.slice(rowStart, rowStart + 5);
+                Array.from({ length: Math.ceil(mysteryCards.length / 4) }, (_, rowIdx) => {
+                  const rowStart = rowIdx * 4;
+                  const rowCards = mysteryCards.slice(rowStart, rowStart + 4);
                   return (
-                    <div key={`row-${rowIdx}`} className="flex gap-1.5">
+                    <div key={`row-${rowIdx}`} className="flex gap-2">
                       {rowCards.map((card) => (
-                        <LiquidGlassCard
-                          key={card.id}
-                          onClick={() => setSelectedMysteryCard(card)}
-                          className={`flex-1 aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
-                        >
-                          <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <span className="text-white/40 text-lg font-black">?</span>
-                          </div>
-                        </LiquidGlassCard>
+                        <div key={card.id} className="flex-1 flex flex-col items-center gap-1">
+                          <LiquidGlassCard
+                            onClick={() => setSelectedMysteryCard(card)}
+                            className={`w-full aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
+                          >
+                            <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                              <span className="text-white/40 text-xl font-black">?</span>
+                            </div>
+                          </LiquidGlassCard>
+                          <span className="text-white/50 text-[9px] font-medium text-center leading-tight truncate w-full px-0.5">{card.name || card.title || 'Unknown'}</span>
+                        </div>
                       ))}
                     </div>
                   );
