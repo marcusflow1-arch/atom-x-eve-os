@@ -107,7 +107,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
     return all.filter(c => c.label.toLowerCase().includes(q));
   }, [cardSearchQuery]);
 
-  const CARDS_PER_ROW = 5;
+  const CARDS_PER_ROW = 4;
   const totalRows = Math.ceil(mysteryTradeCards.length / CARDS_PER_ROW);
 
   const visibleMysteryTradeCards = useMemo(() => {
@@ -322,13 +322,16 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
               </div>
             </div>
 
-            {/* Content area with 70/30 split */}
+            {/* Content area with 60/40 split */}
             <div className="flex-1 flex gap-4 overflow-hidden px-5 pt-8 pb-3">
-              {/* LEFT: Traders List (70%) */}
-              <div className="w-[70%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
+              {/* LEFT: Traders List (60%) */}
+              <div className="w-[60%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
 
               <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                <div className="text-[11px] uppercase tracking-[0.25em] text-white/35 mb-2">Traders</div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] uppercase tracking-[0.25em] text-white/35">Traders</span>
+                  <span className="text-[11px] uppercase tracking-[0.25em] text-white/35">Offer</span>
+                </div>
                 {(selectedMysteryTradeCard ? mysteryTradeRows : []).map((row) => (
                   <div key={row.id}>
                     <div className="flex items-center justify-between py-2.5">
@@ -350,8 +353,8 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
               </div>
             </div>
 
-              {/* RIGHT: Cards Grid (30%) */}
-              <div className="w-[30%] flex flex-col pl-4 overflow-hidden">
+              {/* RIGHT: Cards Grid (40%) */}
+              <div className="w-[40%] flex flex-col pl-4 overflow-hidden">
                 {/* Search Bar */}
                 <div className="pb-3 mb-3 border-b border-white/6 flex items-center">
                   <div className="relative flex items-center flex-1">
@@ -378,18 +381,25 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                       const rowStart = rowIdx * CARDS_PER_ROW;
                       const rowCards = mysteryTradeCards.slice(rowStart, rowStart + CARDS_PER_ROW);
                       return (
-                        <div key={`row-${rowIdx}`} className="flex gap-1.5">
-                          {rowCards.map((card) => (
-                            <LiquidGlassCard
-                              key={card.id}
-                              onClick={() => setSelectedMysteryTradeCard(card)}
-                              className={`flex-1 aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
-                            >
-                              <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                <span className="text-white/40 text-lg font-black">?</span>
-                              </div>
-                            </LiquidGlassCard>
-                          ))}
+                        <div key={`row-${rowIdx}`} className="flex flex-col gap-2">
+                          <div className="flex gap-1.5">
+                            {rowCards.map((card) => (
+                              <LiquidGlassCard
+                                key={card.id}
+                                onClick={() => setSelectedMysteryTradeCard(card)}
+                                className={`flex-1 aspect-[2.5/3.5] p-0 cursor-pointer ${selectedMysteryTradeCard?.id === card.id ? 'ring-1 ring-cyan-400/50' : ''}`}
+                              >
+                                <div className="w-full h-full flex items-center justify-center rounded-lg overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                  <span className="text-white/40 text-lg font-black">?</span>
+                                </div>
+                              </LiquidGlassCard>
+                            ))}
+                          </div>
+                          <div className="flex gap-1.5 px-1">
+                            {rowCards.map((card) => (
+                              <span key={`label-${card.id}`} className="flex-1 text-center text-[9px] text-white/50 truncate">{card.label}</span>
+                            ))}
+                          </div>
                         </div>
                       );
                     })
