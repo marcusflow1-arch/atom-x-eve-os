@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import DepsArt from './pages/DepsArt';
 import GameHub from './pages/GameHub';
+import Studio from './pages/Studio';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -75,6 +76,14 @@ const AuthenticatedApp = () => {
         element={
           <LayoutWrapper currentPageName="GameHub">
             <GameHub />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/studio"
+        element={
+          <LayoutWrapper currentPageName="Studio">
+            <Studio />
           </LayoutWrapper>
         }
       />

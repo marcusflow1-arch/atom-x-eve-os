@@ -1406,11 +1406,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
                 </div>
               </div>
 
-              {/* Developer Zone Section */}
-              <div ref={devZoneRef} className="border-t border-white/10 pt-8">
-                <DevZoneSection game={game} />
-              </div>
-
               {/* Reviews Section - Full Width Below Everything */}
               <ReviewSection reviews={reviews} user={user} />
             </motion.div>
