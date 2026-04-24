@@ -231,63 +231,78 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
 
         ) : selectedItem ? (
           <motion.div key="item-offers" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="h-full flex flex-col">
-            <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-4">
+            {/* Item title + back */}
+            <div className="p-5 pb-3 border-b border-white/6 flex items-center gap-3">
               <button onClick={handleBack} className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center border border-white/8">
                 <ChevronLeftIcon className="w-4 h-4 text-white/60" />
               </button>
               <div className="flex-1 min-w-0">
-                <h2 className="text-white font-bold text-lg truncate">{selectedItem.title}</h2>
+                <h2 className="text-white font-bold text-base truncate">{selectedItem.title}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
                   <RarityBadge rarity={selectedItem.rarity} />
-                  <span className="text-white/30 text-xs">{itemOffers.length} seller{itemOffers.length !== 1 ? 's' : ''}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <select value={offerTypeFilter} onChange={(e) => setOfferTypeFilter(e.target.value)} className="bg-slate-800 border border-white/20 text-white text-[10px] rounded-lg px-2 py-1.5">
-                  <option value="all">All Types</option>
-                  <option value="sale">Buy</option>
-                  <option value="bid">Bid</option>
-                  <option value="trade">Trade</option>
-                </select>
-                <select value={offerSort} onChange={(e) => setOfferSort(e.target.value)} className="bg-slate-800 border border-white/20 text-white text-[10px] rounded-lg px-2 py-1.5">
-                  <option value="price-low">Price ↑</option>
-                  <option value="price-high">Price ↓</option>
-                </select>
-              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-5 space-y-2" style={{ scrollbarWidth: 'none' }}>
-              {itemOffers.map((offer, idx) => (
-                <motion.div
-                  key={offer.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  onClick={() => setSelectedOffer(offer)}
-                  className="p-4 rounded-xl cursor-pointer border border-white/10 hover:border-blue-500/30 transition-all"
-                  style={{ background: 'rgba(255,255,255,0.03)' }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {offer.seller.avatar ? (
-                        <img src={offer.seller.avatar} className="w-full h-full object-cover" alt="" />
-                      ) : (
-                        <span className="text-white/30 text-sm font-bold">{(offer.seller.name || 'U')[0]}</span>
+
+            {/* Traders | filter chips | Offers header row */}
+            <div className="flex items-center gap-2 px-5 pt-3 pb-2">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Traders</span>
+              <div className="flex items-center gap-1 flex-1 justify-center">
+                {[
+                  { key: 'price-high', label: 'Highest', typeKey: null },
+                  { key: 'price-low',  label: 'Lowest',  typeKey: null },
+                  { key: 'bid',        label: 'Bid',     typeKey: 'bid' },
+                  { key: 'trade',      label: 'Trade',   typeKey: 'trade' },
+                ].map(({ key, label, typeKey }) => {
+                  const isActive = typeKey
+                    ? offerTypeFilter === typeKey
+                    : offerSort === key && offerTypeFilter === 'all';
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        if (typeKey) {
+                          setOfferTypeFilter(prev => prev === typeKey ? 'all' : typeKey);
+                        } else {
+                          setOfferTypeFilter('all');
+                          setOfferSort(key);
+                        }
+                      }}
+                      className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide transition-all border ${
+                        isActive
+                          ? 'bg-white/20 border-white/30 text-white'
+                          : 'border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Offers</span>
+            </div>
+
+            {/* Offer rows */}
+            <div className="flex-1 overflow-y-auto px-5 pb-4" style={{ scrollbarWidth: 'none' }}>
+              {itemOffers.map((offer) => (
+                <div key={offer.id}>
+                  <div
+                    className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-white/5 rounded px-1 transition-colors"
+                    onClick={() => setSelectedOffer(offer)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-sm font-medium">{offer.seller.name}</span>
+                      {offer.type === 'bid' && (
+                        <span className="text-[9px] uppercase tracking-wide text-amber-400/80 border border-amber-400/30 px-1.5 py-0.5 rounded-full">Bid</span>
+                      )}
+                      {offer.type === 'trade' && (
+                        <span className="text-[9px] uppercase tracking-wide text-blue-400/80 border border-blue-400/30 px-1.5 py-0.5 rounded-full">Trade</span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white font-bold text-sm">{offer.seller.name}</span>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Badge variant="secondary" className="text-[9px] uppercase bg-white/10 text-white/60 h-4">
-                          {offer.type === 'sale' ? 'Selling' : offer.type === 'bid' ? 'Auction' : 'Trading'}
-                        </Badge>
-                        <span className="text-[10px] text-white/25">{offer.postedAt}</span>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-lg font-bold text-white">{(offer.price || 0).toLocaleString()} <span className="text-[10px] text-white/40">AGP</span></div>
-                    </div>
+                    <span className="text-cyan-300 text-sm font-semibold">{(offer.price || 0).toLocaleString()} AGP</span>
                   </div>
-                </motion.div>
+                  <div className="h-px bg-white/10" />
+                </div>
               ))}
             </div>
           </motion.div>
