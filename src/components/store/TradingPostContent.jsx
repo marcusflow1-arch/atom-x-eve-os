@@ -1103,135 +1103,74 @@ export default function TradingPostContent() {
 
                       {/* Right: Offers List */}
                       <div className="flex-1 flex flex-col min-w-0">
-                        {/* Filter & Sort Controls */}
-                        <div className="flex items-center gap-3 mb-4 flex-wrap">
-                          <div className="flex items-center gap-2">
-                            <Filter className="w-4 h-4 text-white/50" />
-                            <span className="text-white/60 text-sm font-medium">Type:</span>
-                          </div>
-                          <select
-                            value={offerTypeFilter}
-                            onChange={(e) => {
-                              setOfferTypeFilter(e.target.value);
-                              // Re-filter current offers
-                              if (selectedListingGroup) {
-                                const allOffers = selectedListingGroup.allOffers || selectedListingGroup.offers;
-                                let filtered = [...allOffers];
-                                if (e.target.value !== 'all') {
-                                  filtered = filtered.filter(o => o.modes.includes(e.target.value));
-                                }
-                                // Apply sort
-                                if (offerSort === 'price-low') {
-                                  filtered.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
-                                } else if (offerSort === 'price-high') {
-                                  filtered.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
-                                } else if (offerSort === 'newest') {
-                                  filtered.sort((a, b) => b.createdAt - a.createdAt);
-                                }
-                                setSelectedListingGroup({ ...selectedListingGroup, allOffers: allOffers, offers: filtered });
-                              }
-                            }}
-                            className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-                          >
-                            <option value="all">All</option>
-                            <option value="sale">Cash Buy</option>
-                            <option value="bid">Bid Buy</option>
-                            <option value="trade">Trade Offer</option>
-                          </select>
+                       {/* Header: Sellers | filter chips | Price */}
+                       <div className="flex items-center gap-2 mb-4">
+                         <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Sellers</span>
+                         <div className="flex items-center gap-1 flex-1">
+                           {[
+                             { key: 'price-high', label: 'Highest' },
+                             { key: 'price-low',  label: 'Lowest' },
+                             { key: 'bid',        label: 'Bid' },
+                           ].map(({ key, label }) => (
+                             <button
+                               key={key}
+                               onClick={() => {
+                                 if (key === 'bid') {
+                                   setOfferTypeFilter('bid');
+                                 } else {
+                                   setOfferTypeFilter('all');
+                                   setOfferSort(key);
+                                 }
+                                 if (selectedListingGroup) {
+                                   const allOffers = selectedListingGroup.allOffers || selectedListingGroup.offers;
+                                   let filtered = [...allOffers];
+                                   if (key === 'bid') {
+                                     filtered = filtered.filter(o => o.modes.includes('bid'));
+                                   }
+                                   if (key === 'price-low') filtered.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
+                                   if (key === 'price-high') filtered.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
+                                   setSelectedListingGroup({ ...selectedListingGroup, allOffers, offers: filtered });
+                                 }
+                               }}
+                               className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide transition-all border ${
+                                 (key === 'bid' ? offerTypeFilter === 'bid' : offerSort === key && offerTypeFilter !== 'bid')
+                                   ? 'bg-white/20 border-white/30 text-white'
+                                   : 'border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                               }`}
+                             >
+                               {label}
+                             </button>
+                           ))}
+                         </div>
+                         <span className="text-[11px] uppercase tracking-[0.25em] text-white/35 shrink-0">Price</span>
+                       </div>
 
-                          <div className="flex items-center gap-2 ml-auto">
-                            <ArrowUpDown className="w-4 h-4 text-white/50" />
-                            <span className="text-white/60 text-sm font-medium">Sort:</span>
-                          </div>
-                          <select
-                            value={offerSort}
-                            onChange={(e) => {
-                              setOfferSort(e.target.value);
-                              // Re-sort current offers
-                              if (selectedListingGroup) {
-                                const allOffers = selectedListingGroup.allOffers || selectedListingGroup.offers;
-                                let filtered = [...allOffers];
-                                if (offerTypeFilter !== 'all') {
-                                  filtered = filtered.filter(o => o.modes.includes(offerTypeFilter));
-                                }
-                                // Apply new sort
-                                if (e.target.value === 'price-low') {
-                                  filtered.sort((a, b) => (a.price || a.currentBid || 0) - (b.price || b.currentBid || 0));
-                                } else if (e.target.value === 'price-high') {
-                                  filtered.sort((a, b) => (b.price || b.buyoutPrice || 0) - (a.price || a.buyoutPrice || 0));
-                                } else if (e.target.value === 'newest') {
-                                  filtered.sort((a, b) => b.createdAt - a.createdAt);
-                                }
-                                setSelectedListingGroup({ ...selectedListingGroup, allOffers: allOffers, offers: filtered });
-                              }
-                            }}
-                            className="bg-slate-800 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5"
-                          >
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                            <option value="newest">Newest First</option>
-                          </select>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                          {selectedListingGroup.offers.map((offer, idx) => (
-                            <motion.div
-                              key={offer.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                              className="group"
-                              onClick={() => setSelectedOffer(offer)}
-                            >
-                              <div 
-                                className="p-4 rounded-xl transition-all duration-300 hover:scale-[1.01] hover:bg-white/5 cursor-pointer border border-white/10 group-hover:border-blue-500/30"
-                                style={{
-                                  background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-                                }}
-                              >
-                                <div className="flex items-center gap-4">
-                                  <img 
-                                    src={offer.seller.avatar} 
-                                    alt={offer.seller.name}
-                                    className="w-12 h-12 rounded-full border-2 border-white/20"
-                                  />
-
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setSellerAction({ open: true, offer }); }}
-                                        className="text-white font-bold underline decoration-white/30 hover:decoration-cyan-400"
-                                      >
-                                        {offer.seller.name}
-                                      </button>
-                                      <div className="flex items-center gap-1 bg-yellow-500/10 px-1.5 py-0.5 rounded">
-                                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                        <span className="text-yellow-200 text-xs font-bold">{offer.seller.rating}</span>
-                                      </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {offer.modes.map(mode => (
-                                            <Badge key={mode} variant="secondary" className="text-[10px] uppercase bg-white/10 text-white/70">
-                                                {mode === 'sale' ? 'Selling' : mode === 'bid' ? 'Auction' : 'Trading'}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                  </div>
-
-                                  <div className="text-right">
-                                    {(offer.price || offer.currentBid) && (
-                                      <div className="text-xl font-bold text-white">
-                                        {(offer.price || offer.currentBid).toLocaleString()}
-                                        <span className="text-xs text-white/40 ml-1">AGP</span>
-                                      </div>
-                                    )}
-                                    <span className="text-xs text-white/30">Click for details</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
+                       <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'none' }}>
+                         {selectedListingGroup.offers.map((offer, idx) => (
+                           <div key={offer.id}>
+                             <div
+                               className="flex items-center justify-between py-2.5 cursor-pointer hover:bg-white/5 rounded px-1 transition-colors"
+                               onClick={() => setSelectedOffer(offer)}
+                             >
+                               <div className="flex items-center gap-2">
+                                 <button
+                                   onClick={(e) => { e.stopPropagation(); setSellerAction({ open: true, offer }); }}
+                                   className="text-white text-sm font-medium hover:text-cyan-400 transition-colors"
+                                 >
+                                   {offer.seller.name}
+                                 </button>
+                                 {offer.modes.includes('bid') && (
+                                   <span className="text-[9px] uppercase tracking-wide text-amber-400/80 border border-amber-400/30 px-1.5 py-0.5 rounded-full">Bid</span>
+                                 )}
+                               </div>
+                               <span className="text-cyan-300 text-sm font-semibold">
+                                 {(offer.price || offer.currentBid || 0).toLocaleString()} AGP
+                               </span>
+                             </div>
+                             <div className="h-px bg-white/10" />
+                           </div>
+                         ))}
+                       </div>
                       </div>
                     </motion.div>
                   ) : (
