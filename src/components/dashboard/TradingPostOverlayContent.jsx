@@ -181,43 +181,52 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
               </div>
 
               {/* Trade visualization */}
-              <div className="flex-1 flex flex-col gap-6 justify-center">
-                <div className="flex items-center gap-4">
+              <div className="flex-1 flex flex-col gap-4 justify-center">
+                <div className="flex items-center gap-4 justify-center">
                   {/* Card they have */}
-                  <div className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
-                    <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="text-white/40 text-3xl font-black">?</span>
+                  <div className="flex flex-col items-center gap-2 w-20">
+                    <span className="text-[9px] text-white/40 uppercase tracking-wider">Their Card</span>
+                    <div
+                      className="w-full aspect-[3/4] rounded-lg flex items-center justify-center cursor-pointer hover:border-white/30 transition-all"
+                      style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      onClick={() => setSelectedCounterCard('their-card')}
+                    >
+                      <span className="text-white/40 text-xl font-black">?</span>
                     </div>
+                    {selectedCounterCard === 'their-card' && (
+                      <p className="text-[8px] text-white/50 text-center mt-1 italic">Legendary Sword of Dawn — A mystical blade forged in ancient times with unparalleled power.</p>
+                    )}
                   </div>
 
                   {/* Arrow */}
                   <div className="flex flex-col items-center gap-1">
-                    <ArrowRight className="w-6 h-6 text-white/40" />
-                    <span className="text-[9px] text-white/30 uppercase tracking-wide">For</span>
+                    <ArrowRight className="w-5 h-5 text-white/40" />
+                    <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
                   </div>
 
                   {/* Card they want */}
-                  <div className="flex-1 flex flex-col items-center gap-2">
-                    <span className="text-xs text-white/40 uppercase tracking-wider">Wants</span>
-                    <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="text-white/40 text-3xl font-black">?</span>
+                  <div className="flex flex-col items-center gap-2 w-20">
+                    <span className="text-[9px] text-white/40 uppercase tracking-wider">Wants</span>
+                    <div
+                      className="w-full aspect-[3/4] rounded-lg flex items-center justify-center cursor-pointer hover:border-white/30 transition-all"
+                      style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      onClick={() => setSelectedCounterCard('your-card')}
+                    >
+                      <span className="text-white/40 text-xl font-black">?</span>
                     </div>
+                    {selectedCounterCard === 'your-card' && (
+                      <p className="text-[8px] text-white/50 text-center mt-1 italic">Shield of Eternity — An ancient relic that grants protection against all forms of harm.</p>
+                    )}
                   </div>
-                </div>
-
-                {/* Card info boxes */}
-                <div className="flex gap-3 justify-center">
-                  <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/60 transition-colors">Card Info</button>
-                  <button className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-white/60 transition-colors">Card Info</button>
                 </div>
               </div>
 
               {/* Trade & Counter buttons */}
               <div className="flex gap-3 pt-4 border-t border-white/10">
                 <button
-                  onClick={() => setTradeConfirming(!tradeConfirming)}
-                  className="flex-1 py-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors"
+                  onClick={() => setTradeConfirming(true)}
+                  className="flex-1 py-3 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors disabled:opacity-50"
+                  disabled={!selectedCounterCard}
                 >
                   {tradeConfirming ? 'Confirm Trade' : 'Trade'}
                 </button>
@@ -228,6 +237,41 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                   Counter Offer
                 </button>
               </div>
+
+              {/* Confirm Trade Modal */}
+              {tradeConfirming && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center"
+                  onClick={() => setTradeConfirming(false)}
+                >
+                  <motion.div
+                    className="bg-slate-900/95 border border-white/10 rounded-2xl p-6 max-w-sm shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <h3 className="text-white font-bold text-lg mb-4">Confirm Trade</h3>
+                    <p className="text-white/60 text-sm mb-6">Complete this trade with {selectedTrader.name}?</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setTradeConfirming(false)}
+                        className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 font-bold text-sm transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTradeConfirming(false);
+                          setSelectedTrader(null);
+                        }}
+                        className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition-colors"
+                      >
+                        Confirm
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
             </div>
 
             {/* Counter Offer Drawer */}
