@@ -7,7 +7,7 @@ export const glassStyle = {
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
-export default function GlassPageFrame({ children, bottomContent, topContent, className = '' }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '' }) {
   return (
     <div className={`relative w-full h-full min-h-screen ${className}`}>
       {/* Top Glass Bar - always rendered for the visual frame effect */}
@@ -42,18 +42,21 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
           pointerEvents: bottomContent ? 'auto' : 'none',
         }}
       >
-        {/* Trigger Tab - centered, partially inside bottom bar */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-5 w-24 h-10 pointer-events-auto"
-          style={{
-            background: 'rgba(8, 12, 18, 0.42)',
-            backdropFilter: 'blur(30px) saturate(150%)',
-            WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderBottom: 'none',
-            borderRadius: '8px 8px 0 0',
-            boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
-          }}
-        />
+        {/* Trigger Tab - only shown on game pages, ~10% inside bottom bar */}
+        {showTriggerTab && (
+          <div className="absolute left-1/2 -translate-x-1/2 w-24 h-10 pointer-events-auto"
+            style={{
+              top: '-36px',
+              background: 'rgba(8, 12, 18, 0.42)',
+              backdropFilter: 'blur(30px) saturate(150%)',
+              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderBottom: 'none',
+              borderRadius: '8px 8px 0 0',
+              boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
+            }}
+          />
+        )}
 
         {bottomContent && (
           <div className="h-full w-full flex items-center justify-center px-6 py-2">

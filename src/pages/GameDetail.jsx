@@ -30,6 +30,7 @@ export default function GameDetail() {
 
   return (
     <GlassPageFrame
+      showTriggerTab={true}
       topContent={null}
       bottomContent={
         <StoreBottomNav
