@@ -27,8 +27,11 @@ const MOCK_STUDIO_GAMES = [
   { id: 14, title: 'Crystal Edge', cover: 'https://images.unsplash.com/photo-1487088678257-3a541e6e3922?w=120&h=80&fit=crop' },
 ];
 
+const GENRES = ['All', 'Action', 'Runner', 'Shooter', 'RPG', 'Strategy', 'Horror', 'Puzzle', 'Sports', 'Racing', 'Adventure', 'Simulation'];
+
 function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'Studio' }) {
   const [searchValue, setSearchValue] = useState('');
+  const [activeGenre, setActiveGenre] = useState('All');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
@@ -57,9 +60,11 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
 
-  const filtered = studioGames.filter(g =>
-    g.title.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const filtered = studioGames.filter(g => {
+    const matchesSearch = g.title.toLowerCase().includes(searchValue.toLowerCase());
+    const matchesGenre = activeGenre === 'All' || (g.genre && g.genre === activeGenre);
+    return matchesSearch && matchesGenre;
+  });
 
   // Split into rows of 7
   const rows = [];
@@ -86,27 +91,50 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
             boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
           }}
         >
-          {/* Left — Search (35%) */}
-          <div className="flex flex-col justify-center px-6 gap-3" style={{ width: '35%', flexShrink: 0 }}>
-            <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">{studioName} · All Titles</p>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04]">
-              <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
+          {/* Left — Title + Search + Genre (35%) */}
+          <div className="flex flex-col justify-center items-center px-6 gap-3" style={{ width: '35%', flexShrink: 0 }}>
+            {/* Big centered title */}
+            <p className="text-white font-extrabold text-center leading-tight" style={{ fontSize: '2.8rem', letterSpacing: '0.04em', lineHeight: 1.1 }}>
+              Developer<br />
+              <span className="text-white/50">You Games</span><br />
+              <span className="text-white/30 text-[1.6rem]">Entitled</span>
+            </p>
+
+            {/* Smaller search bar */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04]" style={{ width: '60%' }}>
+              <Search className="w-3 h-3 flex-shrink-0 text-white/30" />
               <input
                 ref={inputRef}
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search studio games..."
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+                placeholder="Search..."
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none"
               />
               <button
                 onClick={handleMic}
                 className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
               >
-                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                {isListening ? <MicOff className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
               </button>
             </div>
-            <p className="text-white/20 text-[10px]">{filtered.length} game{filtered.length !== 1 ? 's' : ''} found</p>
+
+            {/* Genre filter chips */}
+            <div className="flex flex-wrap gap-1 justify-center">
+              {GENRES.map(g => (
+                <button
+                  key={g}
+                  onClick={() => setActiveGenre(g)}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide transition-all border ${
+                    activeGenre === g
+                      ? 'bg-white/20 border-white/30 text-white'
+                      : 'border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Vertical Divider */}
