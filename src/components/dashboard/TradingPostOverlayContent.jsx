@@ -178,6 +178,14 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
              <div className="flex-1 flex gap-6 overflow-hidden pt-4 min-h-0">
                {/* LEFT: Trade visualization (60%) */}
                <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                 {/* Confirm button */}
+                 <button
+                   onClick={() => setTradeConfirming(!tradeConfirming)}
+                   className="py-1 px-2 rounded text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase tracking-wider transition-colors shrink-0"
+                 >
+                   Confirm
+                 </button>
+
                  {/* Trade exchange visualization */}
                  <div className="flex items-start gap-3 justify-center">
                    {/* Their card */}
@@ -204,14 +212,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                      <p className="text-xs text-white/40 text-center mt-2">Card details</p>
                    </div>
                  </div>
-
-                 {/* Confirm button */}
-                 <button
-                   onClick={() => setTradeConfirming(!tradeConfirming)}
-                   className="py-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase text-xs tracking-wider transition-colors mt-auto"
-                 >
-                   Confirm
-                 </button>
                </div>
 
                {/* RIGHT: Counter offer box (40%) */}
