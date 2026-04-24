@@ -9,7 +9,25 @@ export const glassStyle = {
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
-function GamesTopPanel({ open }) {
+// Mock studio games — in production pass these via props
+const MOCK_STUDIO_GAMES = [
+  { id: 1, title: 'Cyber Havoc', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120&h=80&fit=crop' },
+  { id: 2, title: 'Void Walker', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120&h=80&fit=crop' },
+  { id: 3, title: 'Iron Forge', cover: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120&h=80&fit=crop' },
+  { id: 4, title: 'Neon Drift', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120&h=80&fit=crop' },
+  { id: 5, title: 'Dark Realm', cover: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=120&h=80&fit=crop' },
+  { id: 6, title: 'Solar Wars', cover: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=120&h=80&fit=crop' },
+  { id: 7, title: 'Phantom Run', cover: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=120&h=80&fit=crop' },
+  { id: 8, title: 'Storm Knight', cover: 'https://images.unsplash.com/photo-1528938102132-4a9276b8e320?w=120&h=80&fit=crop' },
+  { id: 9, title: 'Echo Prime', cover: 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=120&h=80&fit=crop' },
+  { id: 10, title: 'Galactic Hunt', cover: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=120&h=80&fit=crop' },
+  { id: 11, title: 'Blaze Strike', cover: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=120&h=80&fit=crop' },
+  { id: 12, title: 'Mech Arena', cover: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=80&fit=crop' },
+  { id: 13, title: 'Shadow Pact', cover: 'https://images.unsplash.com/photo-1505506874110-6a7a69069a08?w=120&h=80&fit=crop' },
+  { id: 14, title: 'Crystal Edge', cover: 'https://images.unsplash.com/photo-1487088678257-3a541e6e3922?w=120&h=80&fit=crop' },
+];
+
+function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'Studio' }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
@@ -28,9 +46,7 @@ function GamesTopPanel({ open }) {
     rec.continuous = false;
     rec.interimResults = false;
     rec.lang = 'en-US';
-    rec.onresult = (e) => {
-      setSearchValue(e.results[0][0].transcript);
-    };
+    rec.onresult = (e) => setSearchValue(e.results[0][0].transcript);
     rec.onerror = () => setIsListening(false);
     rec.onend = () => setIsListening(false);
     rec.start();
@@ -41,6 +57,16 @@ function GamesTopPanel({ open }) {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
 
+  const filtered = studioGames.filter(g =>
+    g.title.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
+  // Split into rows of 7
+  const rows = [];
+  for (let i = 0; i < filtered.length; i += 7) {
+    rows.push(filtered.slice(i, i + 7));
+  }
+
   return (
     <AnimatePresence>
       {open && (
@@ -49,34 +75,81 @@ function GamesTopPanel({ open }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="fixed left-0 right-0 z-[34] flex items-center justify-center px-6 py-3"
+          className="fixed left-0 right-0 z-[34] flex"
           style={{
             top: '64px',
-            background: 'rgba(6, 8, 14, 0.88)',
+            height: '180px',
+            background: 'rgba(6, 8, 14, 0.92)',
             backdropFilter: 'blur(40px) saturate(160%)',
             WebkitBackdropFilter: 'blur(40px) saturate(160%)',
             borderBottom: '1px solid rgba(255,255,255,0.07)',
             boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
           }}
         >
+          {/* Left — Search (35%) */}
+          <div className="flex flex-col justify-center px-6 gap-3" style={{ width: '35%', flexShrink: 0 }}>
+            <p className="text-white/30 text-[10px] uppercase tracking-widest font-bold">{studioName} · All Titles</p>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.04]">
+              <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                placeholder="Search studio games..."
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+              />
+              <button
+                onClick={handleMic}
+                className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-white/20 text-[10px]">{filtered.length} game{filtered.length !== 1 ? 's' : ''} found</p>
+          </div>
+
+          {/* Vertical Divider */}
+          <div className="self-stretch w-px bg-white/10 my-3 flex-shrink-0" />
+
+          {/* Right — Games Grid (scrollable, 2 rows of 7 visible) */}
           <div
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] w-full max-w-lg"
+            className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-4"
+            style={{ scrollSnapType: 'y mandatory' }}
           >
-            <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search games..."
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-            />
-            <button
-              onClick={handleMic}
-              className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
-            >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </button>
+            {rows.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <span className="text-white/20 text-sm">No games found</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {rows.map((row, ri) => (
+                  <div key={ri} className="flex gap-2" style={{ scrollSnapAlign: 'start' }}>
+                    {row.map(game => (
+                      <div
+                        key={game.id}
+                        className="flex-shrink-0 cursor-pointer group relative rounded overflow-hidden border border-white/10 hover:border-white/30 transition-all"
+                        style={{ width: 'calc((100% - 48px) / 7)', aspectRatio: '3/2' }}
+                        title={game.title}
+                      >
+                        <img
+                          src={game.cover}
+                          alt={game.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+                          <span className="text-white text-[9px] font-semibold leading-tight truncate w-full">{game.title}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Fill empty slots in the last row */}
+                    {row.length < 7 && Array.from({ length: 7 - row.length }).map((_, i) => (
+                      <div key={`empty-${i}`} style={{ width: 'calc((100% - 48px) / 7)' }} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
       )}
