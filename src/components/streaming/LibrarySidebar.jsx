@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight } from 'lucide-react';
+import { Library, Gamepad2, User, Search, Play, ChevronRight, ChevronLeft, X, Settings, Trash2, RefreshCw, Download, Package, Zap, Shield, Trophy, ExternalLink, Tv, Book, Layers, Eye, EyeOff, Swords, Sparkles, Crown, Wheat, MoreVertical, MessageSquare as Msg, UserCircle, UserPlus, LogIn, Plus, Maximize2, Minimize2, ArrowLeftRight, Code, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import QuickInfoOverlay from '@/components/streaming/QuickInfoOverlay';
@@ -522,9 +522,15 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Blank placeholder buttons */}
-            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1" />
-            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1" />
+            {/* Dev & Livestream buttons */}
+            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-white">
+              <Code className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
+            </button>
+            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-red-400 hover:border-red-400/30">
+              <Radio className="w-4 h-4" />
+              <span className="text-[7px] font-bold uppercase tracking-wider">Livestream</span>
+            </button>
 
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
