@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Mic, MicOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import LiveStreamBox from './LiveStreamBox';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -184,7 +185,7 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
   );
 }
 
-export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '' }) {
+export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '', gameData }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
   const [gamesOpen, setGamesOpen] = useState(false);
 
@@ -256,11 +257,17 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               WebkitBackdropFilter: 'blur(40px) saturate(160%)',
               borderTop: '1px solid rgba(255,255,255,0.06)',
               borderBottom: '1px solid rgba(255,255,255,0.06)',
+              overflowY: 'auto',
             }}
           >
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-white/10 text-xs uppercase tracking-widest font-bold">{overlay}</span>
-            </div>
+            {overlay === 'stream' && gameData && (
+              <LiveStreamBox game={gameData} />
+            )}
+            {overlay === 'studio' && (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-white/10 text-xs uppercase tracking-widest font-bold">Studio</span>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
