@@ -197,12 +197,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
 
                    {/* Your cards - right */}
                    <div className="flex-1 flex flex-col items-center gap-2">
-                     <button
-                       onClick={() => setTradeConfirming(!tradeConfirming)}
-                       className="py-1 px-2 rounded text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase tracking-wider transition-colors shrink-0"
-                     >
-                       Confirm
-                     </button>
                      <span className="text-xs text-white/40 uppercase tracking-wider">Your Cards</span>
                      <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
@@ -214,6 +208,16 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
 
                {/* RIGHT: Counter offer box (40%) */}
                <div className="w-[40%] flex flex-col pl-4 overflow-y-auto min-h-0" style={{ scrollbarWidth: 'none' }}>
+                 {/* Confirm Button */}
+                 <div className="shrink-0 mb-4">
+                   <button
+                     onClick={() => setTradeConfirming(!tradeConfirming)}
+                     className="py-1 px-2 rounded text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase tracking-wider transition-colors"
+                   >
+                     Confirm
+                   </button>
+                 </div>
+
                  {/* Cards Grid */}
                  <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0" style={{ scrollbarWidth: 'none' }}>
                    <h3 className="text-white font-bold text-sm">Your Cards</h3>
