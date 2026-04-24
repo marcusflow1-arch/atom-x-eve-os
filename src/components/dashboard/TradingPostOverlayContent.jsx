@@ -196,10 +196,10 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                    {/* Your card */}
                    <div className="flex-1 flex flex-col items-center gap-2">
                      <span className="text-xs text-white/40 uppercase tracking-wider">Your Card</span>
-                     <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                     <button onClick={() => setCounterOfferDrawerOpen(true)} className="w-full aspect-[3/4] rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
-                     </div>
-                     <p className="text-xs text-white/40 text-center mt-2">Card description goes here</p>
+                     </button>
+                     <p className="text-xs text-white/40 text-center mt-2">Click to select card</p>
                    </div>
                  </div>
 
