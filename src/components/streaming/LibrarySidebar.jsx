@@ -522,6 +522,10 @@ export default function LibrarySidebar() {
               </button>
             )}
 
+            {/* Blank placeholder buttons */}
+            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1" />
+            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1" />
+
             {/* Original Library Button with Restore Arrow */}
             <div className="relative flex items-center">
               <button
