@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
 import { Code, Newspaper, Users, Zap, Star, ArrowUpCircle, Bug, Sparkles, MessageSquare, ChevronRight, Radio } from 'lucide-react';
 
 const MOCK_DEV_TEAM = [

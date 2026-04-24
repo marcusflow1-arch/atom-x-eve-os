@@ -12,7 +12,8 @@ import { libraryGames } from '../dashboard/gamehub/mockLibraryData';
 import FriendProfileOverlay from './FriendProfileOverlay';
 import FriendMessenger from './FriendMessenger';
 import FriendTradePanel from './FriendTradePanel';
-import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
+import InventoryFullPanel from './inventory/InventoryFullPanel';
+import DevZoneSection from '@/components/game/DevZoneSection';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
 import LibraryAchievementsUniverse from './LibraryAchievementsUniverse';
 import LivestreamOverlay from './LivestreamOverlay';
@@ -53,6 +54,7 @@ export default function LibrarySidebar() {
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [entertainmentFullscreen, setEntertainmentFullscreen] = useState(false);
   const [livestreamOpen, setLivestreamOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const closeAllSidebarUi = () => {
@@ -517,10 +519,12 @@ export default function LibrarySidebar() {
               </button>
             )}
 
-            {/* Dev & Livestream buttons — only on game detail pages */}
             {(isGameDetail || pathname.includes('/game/')) && (
               <>
-                <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-white">
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('showDevZone'))}
+                  className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-violet-500/20 hover:border-violet-400/40 hover:text-violet-400 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50"
+                >
                   <Code className="w-4 h-4" />
                   <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
                 </button>

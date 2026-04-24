@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Shield, Cpu, ChevronRight, ChevronDown, Lock, 
@@ -200,6 +200,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const { user, isAuthenticated } = useAuth();
   const { addToCart, isPurchased } = useCart();
   const navigate = useNavigate();
+  const devZoneRef = useRef(null);
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unlocking, setUnlocking] = useState(false);
@@ -364,6 +365,18 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const currentContent = mediaTab === 'content' 
     ? [...videos, ...screenshots] 
     : achievements;
+
+  // Listen for Dev button click from sidebar to scroll to DevZone
+  useEffect(() => {
+    const handler = () => {
+      setActiveTab('system');
+      setTimeout(() => {
+        devZoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    };
+    window.addEventListener('showDevZone', handler);
+    return () => window.removeEventListener('showDevZone', handler);
+  }, []);
 
   // ESC key and arrow keys
   useEffect(() => {
@@ -1394,7 +1407,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
               </div>
 
               {/* Developer Zone Section */}
-              <div className="border-t border-white/10 pt-8">
+              <div ref={devZoneRef} className="border-t border-white/10 pt-8">
                 <DevZoneSection game={game} />
               </div>
 
