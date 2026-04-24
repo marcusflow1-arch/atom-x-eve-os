@@ -175,9 +175,9 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
             </div>
 
             {/* Trade details - 60/40 split layout */}
-             <div className="flex-1 flex gap-6 overflow-hidden pt-4">
+             <div className="flex-1 flex gap-6 overflow-hidden pt-4 min-h-0">
                {/* LEFT: Trade visualization (60%) */}
-               <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6">
+               <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                  {/* Trade exchange visualization */}
                  <div className="flex items-start gap-3 justify-center">
                    {/* Their card */}
@@ -215,9 +215,9 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                </div>
 
                {/* RIGHT: Counter offer box (40%) */}
-               <div className="w-[40%] flex flex-col pl-4 pb-20">
+               <div className="w-[40%] flex flex-col pl-4 overflow-y-auto min-h-0" style={{ scrollbarWidth: 'none' }}>
                  {/* Cards Grid */}
-                 <div className="flex-1 flex flex-col gap-3 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                 <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0" style={{ scrollbarWidth: 'none' }}>
                    <h3 className="text-white font-bold text-sm">Your Cards</h3>
                    <div className="space-y-2">
                      {Array.from({ length: Math.ceil(12 / 4) }, (_, rowIdx) => (
