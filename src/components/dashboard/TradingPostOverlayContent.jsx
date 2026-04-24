@@ -178,19 +178,17 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
              <div className="flex-1 flex gap-6 overflow-hidden pt-4 min-h-0">
                {/* LEFT: Trade visualization (60%) */}
                <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                 {/* Confirm button */}
-                 <button
-                   onClick={() => setTradeConfirming(!tradeConfirming)}
-                   className="py-1 px-2 rounded text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase tracking-wider transition-colors shrink-0"
-                 >
-                   Confirm
-                 </button>
-
                  {/* Trade exchange visualization */}
                  <div className="flex items-start gap-3 justify-center">
                    {/* Their card */}
                    <div className="flex-1 flex flex-col items-center gap-2">
-                     <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
+                     <button
+                       onClick={() => setTradeConfirming(!tradeConfirming)}
+                       className="py-1 px-2 rounded text-xs bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 font-bold uppercase tracking-wider transition-colors shrink-0"
+                     >
+                       Confirm
+                     </button>
+                     <span className="text-xs text-white/40 uppercase tracking-wider">Your Cards</span>
                      <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </div>
@@ -205,7 +203,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
 
                    {/* Your card */}
                    <div className="flex-1 flex flex-col items-center gap-2">
-                     <span className="text-xs text-white/40 uppercase tracking-wider">Their Card</span>
+                     <span className="text-xs text-white/40 uppercase tracking-wider">Trader's Card</span>
                      <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </div>
