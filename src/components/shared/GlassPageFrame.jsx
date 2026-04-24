@@ -92,16 +92,14 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
           }}
         >
           {/* Left — Title + Search + Genre (35%) */}
-          <div className="flex flex-col justify-center items-center px-6 gap-3" style={{ width: '35%', flexShrink: 0 }}>
-            {/* Big centered title */}
-            <p className="text-white font-extrabold text-center leading-tight" style={{ fontSize: '2.8rem', letterSpacing: '0.04em', lineHeight: 1.1 }}>
-              Developer<br />
-              <span className="text-white/50">You Games</span><br />
-              <span className="text-white/30 text-[1.6rem]">Entitled</span>
+          <div className="flex flex-col items-center px-4 gap-2 overflow-hidden" style={{ width: '35%', flexShrink: 0, paddingTop: '10px', paddingBottom: '10px' }}>
+            {/* Title at top center */}
+            <p className="text-white font-extrabold text-center leading-none tracking-widest uppercase" style={{ fontSize: '1rem', letterSpacing: '0.15em' }}>
+              Dev Games
             </p>
 
-            {/* Smaller search bar */}
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04]" style={{ width: '60%' }}>
+            {/* Search bar centered */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] w-full max-w-[220px]">
               <Search className="w-3 h-3 flex-shrink-0 text-white/30" />
               <input
                 ref={inputRef}
@@ -109,7 +107,7 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder="Search..."
-                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none min-w-0"
               />
               <button
                 onClick={handleMic}
@@ -119,8 +117,8 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
               </button>
             </div>
 
-            {/* Genre filter chips */}
-            <div className="flex flex-wrap gap-1 justify-center">
+            {/* Genre filter chips under search */}
+            <div className="flex flex-wrap gap-1 justify-center overflow-hidden" style={{ maxHeight: '80px' }}>
               {GENRES.map(g => (
                 <button
                   key={g}
