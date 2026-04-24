@@ -59,7 +59,7 @@ const rarityStyles = {
   Mythic: { text: 'text-red-400', bg: 'bg-red-500/20', border: 'border-red-500/30' },
 };
 
-// ── Compact Item Card ──
+// ── Compact Item Card (Cards-style with liquid glass) ──
 function ItemCard({ item, onClick }) {
   const rarity = rarityStyles[item.rarity] || rarityStyles.Common;
   const hasDiscount = item.originalPrice && item.originalPrice > item.price;
@@ -70,56 +70,77 @@ function ItemCard({ item, onClick }) {
       layout
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -6, scale: 1.02 }}
       onClick={() => onClick(item)}
-      className="cursor-pointer group rounded-2xl border border-white/8 hover:border-white/20 transition-all relative overflow-hidden flex flex-col"
+      className="cursor-pointer group rounded-xl border border-white/10 hover:border-cyan-400/30 transition-all relative overflow-hidden flex flex-col h-full"
       style={{
-        background: 'rgba(255,255,255,0.03)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(16px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
       }}
     >
-      {/* Image */}
-      <div className="aspect-square overflow-hidden relative">
-        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+      {/* Image Container */}
+      <div className="aspect-square overflow-hidden relative bg-black/20">
+        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
         {/* Top-left badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {item.isNew && (
-            <Badge className="bg-cyan-500 text-black text-[9px] font-bold px-1.5 h-5">NEW</Badge>
+            <Badge className="bg-cyan-500 text-black text-[9px] font-bold px-2 h-5">NEW</Badge>
           )}
           {hasDiscount && (
-            <Badge className="bg-red-500 text-white text-[9px] font-bold px-1.5 h-5">-{discountPct}%</Badge>
+            <Badge className="bg-red-500 text-white text-[9px] font-bold px-2 h-5">-{discountPct}%</Badge>
           )}
         </div>
 
         {/* Rarity bottom-left */}
         <div className="absolute bottom-2 left-2">
-          <Badge className={`${rarity.bg} ${rarity.text} border-none text-[9px] backdrop-blur-md`}>{item.rarity}</Badge>
+          <Badge className={`${rarity.bg} ${rarity.text} border-none text-[9px] backdrop-blur-md font-semibold`}>{item.rarity}</Badge>
         </div>
 
         {/* Seller rating bottom-right */}
-        <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-1.5 py-0.5">
+        <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10">
           <Star className="w-3 h-3 text-amber-400 fill-current" />
-          <span className="text-white text-[10px] font-bold">{item.seller.rating}</span>
+          <span className="text-white text-[10px] font-semibold">{item.seller.rating}</span>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="p-3 flex-1 flex flex-col gap-1.5">
-        <h3 className="text-white font-semibold text-sm leading-tight line-clamp-2 group-hover:text-cyan-300 transition-colors">{item.name}</h3>
-        <p className="text-white/35 text-[11px] truncate">{item.game}</p>
+      {/* Info Section */}
+      <div className="p-3.5 flex-1 flex flex-col gap-2">
+        <h3 className="text-white font-bold text-sm leading-tight line-clamp-2 group-hover:text-cyan-300 transition-colors">
+          {item.name}
+        </h3>
+        <p className="text-white/40 text-[11px] truncate">{item.game}</p>
 
-        <div className="mt-auto pt-2 border-t border-white/6 flex items-end justify-between">
-          <div>
-            {hasDiscount && (
-              <span className="text-white/30 text-[10px] line-through block">{item.originalPrice.toLocaleString()}</span>
-            )}
-            <span className="text-white font-bold text-base">{item.price.toLocaleString()} <span className="text-cyan-400 text-[10px] font-normal">AGP</span></span>
+        {/* Stats preview */}
+        {item.stats && (
+          <div className="flex gap-1 text-[9px] text-white/30">
+            {Object.entries(item.stats).slice(0, 2).map(([key, val]) => (
+              <span key={key} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/8">
+                {val}
+              </span>
+            ))}
           </div>
-          <div className="flex items-center gap-1 text-white/30 text-[10px]">
+        )}
+
+        {/* Divider */}
+        <div className="h-px bg-white/8 my-1" />
+
+        {/* Price & Views Footer */}
+        <div className="flex items-end justify-between">
+          <div className="flex-1">
+            {hasDiscount && (
+              <span className="text-white/25 text-[10px] line-through block">{item.originalPrice.toLocaleString()}</span>
+            )}
+            <span className="text-white font-bold text-sm block">
+              {item.price.toLocaleString()} 
+              <span className="text-cyan-400 text-[10px] font-normal ml-1">AGP</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-white/30 text-[10px] flex-shrink-0">
             <Eye className="w-3 h-3" />
-            {item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}
+            <span>{item.views > 1000 ? `${(item.views / 1000).toFixed(1)}k` : item.views}</span>
           </div>
         </div>
       </div>
@@ -275,6 +296,7 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   const [activeRarities, setActiveRarities] = useState([]);
   const [activeGame, setActiveGame] = useState('all');
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [priceMax, setPriceMax] = useState(200000);
   const sortRef = useRef(null);
 
@@ -361,78 +383,118 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
   };
 
   return (
-    <div className="flex flex-col h-full max-w-[1600px] mx-auto w-full">
-      {/* ─── STICKY Header (no scroll) ─── */}
+    <div className="flex flex-col h-full w-full">
+      {/* ═══ HEADER (matching Store theme) ═══ */}
       <div 
-        className="flex-shrink-0 px-4 sm:px-6 pt-1 pb-2 border-b border-white/10"
+        className="flex-shrink-0 px-6 py-3 border-b border-white/10"
         style={{
-          background: 'rgba(13,17,25,0.85)',
+          background: 'rgba(13,17,25,0.65)',
           backdropFilter: 'blur(20px)',
         }}
       >
-        {/* Row 1: Marketplace title + search */}
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-cyan-400" />
-            <h1 className="text-xl font-bold text-white">Marketplace</h1>
+        {/* Row 1: Title + Search Bar */}
+        <div className="flex items-center gap-4 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <ShoppingCart className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-white tracking-wide">Marketplace</h1>
           </div>
 
-          {/* Compact search - 30% width with voice icon */}
-          <div className="relative w-[30%]">
-            <Mic className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Search Bar - centered, wider */}
+          <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Search..."
-              className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/8 border border-white/10 focus:border-cyan-500/40 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder:text-white/25 outline-none transition-all"
+              placeholder="Search items, games, rarity..."
+              className="w-full bg-white/5 hover:bg-white/8 focus:bg-white/10 border border-white/15 focus:border-cyan-400/50 rounded-xl pl-10 pr-3 py-2 text-sm text-white placeholder:text-white/35 outline-none transition-all"
             />
             {searchTerm && (
-              <button onClick={() => handleSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2">
-                <X className="w-3 h-3 text-white/40 hover:text-white" />
+              <button onClick={() => handleSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <X className="w-4 h-4 text-white/40 hover:text-white" />
               </button>
             )}
           </div>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                viewMode === 'grid' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              <Grid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                viewMode === 'list' ? 'bg-white/15 text-white' : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        {/* Row 2: Equipment + Companions + Abilities + Materials + Environments + Sort */}
+        {/* Row 2: Type Filters + Sort */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-          {['Equipment', 'Companions', 'Abilities', 'Materials', 'Environments & Skyboxes'].map(type => {
-            const typeId = type === 'Environments & Skyboxes' ? 'Environments' : type;
-            const active = activeType === typeId;
+          <button
+            onClick={() => setActiveType('all')}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all flex-shrink-0 ${
+              activeType === 'all'
+                ? 'bg-white/15 border-white/25 text-white'
+                : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70'
+            }`}
+          >
+            All Items
+          </button>
+
+          {ITEM_TYPES.filter(t => t.id !== 'all').map(type => {
+            const Icon = type.icon;
+            const active = activeType === type.id;
             return (
               <button
-                key={typeId}
-                onClick={() => setActiveType(active ? 'all' : typeId)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap border transition-all flex-shrink-0 ${
+                key={type.id}
+                onClick={() => setActiveType(active ? 'all' : type.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-all flex-shrink-0 ${
                   active
-                    ? 'bg-white/12 border-white/20 text-white'
-                    : 'bg-transparent border-transparent text-white/40 hover:bg-white/5 hover:text-white/60'
+                    ? 'bg-cyan-500/20 border-cyan-400/30 text-cyan-100'
+                    : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white/70'
                 }`}
               >
-                {type}
+                <Icon className="w-3.5 h-3.5" />
+                {type.name}
               </button>
             );
           })}
 
+          {/* Spacer */}
+          <div className="flex-1 min-w-[12px]" />
+
           {/* Sort dropdown */}
-          <div className="relative ml-auto flex-shrink-0" ref={sortRef}>
+          <div className="relative flex-shrink-0" ref={sortRef}>
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-white/10 bg-white/5 text-white/60 hover:bg-white/8 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-white/10 bg-white/5 text-white/60 hover:bg-white/10 transition-all"
             >
               <ArrowUpDown className="w-3.5 h-3.5" />
               Sort
               <ChevronDown className="w-3 h-3" />
             </button>
             {showSortDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 py-1 overflow-hidden">
+              <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900/98 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 py-1 overflow-hidden">
                 {SORT_OPTIONS.map(opt => (
                   <button
                     key={opt.id}
                     onClick={() => { setSortBy(opt.id); setShowSortDropdown(false); }}
-                    className={`w-full text-left px-4 py-2 text-xs transition-colors ${
-                      sortBy === opt.id ? 'bg-cyan-500/10 text-cyan-300' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    className={`w-full text-left px-4 py-2.5 text-xs font-medium transition-colors ${
+                      sortBy === opt.id ? 'bg-cyan-500/15 text-cyan-300' : 'text-white/60 hover:bg-white/5 hover:text-white'
                     }`}
                   >
                     {opt.label}
@@ -444,34 +506,36 @@ export default function MarketplaceContent({ searchTerm: propSearchTerm, onSearc
         </div>
       </div>
 
-      {/* ─── Results (scrollable) ─── */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+      {/* ═══ Results (scrollable) ═══ */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
         <AnimatePresence mode="popLayout">
           {filteredItems.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-24 text-center"
+              className="flex flex-col items-center justify-center py-32 text-center"
             >
-              <Package className="w-14 h-14 text-white/10 mb-4" />
-              <h3 className="text-white/40 font-semibold mb-1">No items found</h3>
-              <p className="text-white/25 text-sm mb-4">Try adjusting your search or filters</p>
-              <Button variant="outline" onClick={clearAllFilters} className="border-white/15 text-white/50 hover:text-white">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
+                <Package className="w-8 h-8 text-white/20" />
+              </div>
+              <h3 className="text-white/50 font-semibold mb-2">No items found</h3>
+              <p className="text-white/30 text-sm mb-6 max-w-md">Try adjusting your search or filters to discover amazing marketplace items</p>
+              <Button onClick={clearAllFilters} className="bg-white/10 hover:bg-white/15 border border-white/20 text-white">
                 Clear all filters
               </Button>
             </motion.div>
           ) : viewMode === 'grid' ? (
             <motion.div
               key="grid"
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4"
             >
               {filteredItems.map(item => (
                 <ItemCard key={item.id} item={item} onClick={setSelectedItem} />
               ))}
             </motion.div>
           ) : (
-            <motion.div key="list" className="flex flex-col gap-1.5">
+            <motion.div key="list" className="flex flex-col gap-2 max-w-2xl">
               {filteredItems.map(item => (
                 <ListRowCard key={item.id} item={item} onClick={setSelectedItem} />
               ))}
