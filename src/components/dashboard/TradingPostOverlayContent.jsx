@@ -180,7 +180,22 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                  {/* Trade exchange visualization */}
                  <div className="flex items-start gap-3 justify-center">
-                   {/* Their card */}
+                   {/* Trader's card - left */}
+                   <div className="flex-1 flex flex-col items-center gap-2">
+                     <span className="text-xs text-white/40 uppercase tracking-wider">Trader's Card</span>
+                     <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                       <span className="text-white/40 text-3xl font-black">?</span>
+                     </div>
+                     <p className="text-xs text-white/40 text-center mt-2">Card details</p>
+                   </div>
+
+                   {/* Arrow */}
+                   <div className="flex flex-col items-center gap-1 shrink-0">
+                     <ArrowRight className="w-5 h-5 text-white/40" />
+                     <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
+                   </div>
+
+                   {/* Your cards - right */}
                    <div className="flex-1 flex flex-col items-center gap-2">
                      <button
                        onClick={() => setTradeConfirming(!tradeConfirming)}
@@ -193,21 +208,6 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </div>
                      <p className="text-xs text-white/40 text-center mt-2">Card description goes here</p>
-                   </div>
-
-                   {/* Arrow */}
-                   <div className="flex flex-col items-center gap-1 shrink-0">
-                     <ArrowRight className="w-5 h-5 text-white/40" />
-                     <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
-                   </div>
-
-                   {/* Your card */}
-                   <div className="flex-1 flex flex-col items-center gap-2">
-                     <span className="text-xs text-white/40 uppercase tracking-wider">Trader's Card</span>
-                     <div className="w-full aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                       <span className="text-white/40 text-3xl font-black">?</span>
-                     </div>
-                     <p className="text-xs text-white/40 text-center mt-2">Card details</p>
                    </div>
                  </div>
                </div>
