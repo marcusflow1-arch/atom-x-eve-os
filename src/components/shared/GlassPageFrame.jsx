@@ -42,8 +42,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, cl
           pointerEvents: bottomContent ? 'auto' : 'none',
         }}
       >
-        {/* Trigger Tab - centered, attached to top of bottom bar */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-8 w-16 h-8 pointer-events-auto"
+        {/* Trigger Tab - centered, partially inside bottom bar */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-5 w-24 h-10 pointer-events-auto"
           style={{
             background: 'rgba(8, 12, 18, 0.42)',
             backdropFilter: 'blur(30px) saturate(150%)',
