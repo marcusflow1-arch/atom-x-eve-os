@@ -179,7 +179,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                {/* LEFT: Trade visualization (60%) */}
                <div className="flex-1 flex flex-col gap-4 border-r border-white/10 pr-6 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
                  {/* Trade exchange visualization */}
-                 <div className="flex items-start gap-3 justify-center">
+                 <div className="flex items-center gap-3 justify-center">
                    {/* Trader's card - left */}
                    <div className="flex-1 flex flex-col items-center gap-2">
                      <span className="text-xs text-white/40 uppercase tracking-wider">Trader's Card</span>
@@ -190,7 +190,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                    </div>
 
                    {/* Arrow */}
-                   <div className="flex flex-col items-center gap-1 shrink-0">
+                   <div className="flex flex-col items-center justify-center shrink-0 h-48">
                      <ArrowRight className="w-5 h-5 text-white/40" />
                      <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
                    </div>
