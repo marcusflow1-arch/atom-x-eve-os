@@ -277,21 +277,31 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
       >
         {/* Trigger Tab */}
         {showTriggerTab && (
-          <div
-            className="absolute left-1/2 -translate-x-1/2 flex overflow-hidden pointer-events-auto"
-            style={{
-              top: '-36px',
-              width: '216px',
-              height: '40px',
-              background: 'rgba(8, 12, 18, 0.42)',
-              backdropFilter: 'blur(30px) saturate(150%)',
-              WebkitBackdropFilter: 'blur(30px) saturate(150%)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderBottom: 'none',
-              borderRadius: '8px 8px 0 0',
-              boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
-            }}
-          >
+          <>
+            {/* Dev Info Label */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{
+                top: '-48px',
+              }}
+            >
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">Dev Info</span>
+            </div>
+            <div
+              className="absolute left-1/2 -translate-x-1/2 flex overflow-hidden pointer-events-auto"
+              style={{
+                top: '-36px',
+                width: '216px',
+                height: '40px',
+                background: 'rgba(8, 12, 18, 0.42)',
+                backdropFilter: 'blur(30px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(30px) saturate(150%)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderBottom: 'none',
+                borderRadius: '8px 8px 0 0',
+                boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
+              }}
+            >
             {/* Games */}
             <div
               onClick={toggleGames}
@@ -315,7 +325,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
             >
               <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
             </div>
-          </div>
+            </div>
+          </>
         )}
 
         {bottomContent && (
