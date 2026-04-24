@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Search, Mic, MicOff } from 'lucide-react';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -8,16 +9,107 @@ export const glassStyle = {
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
+function GamesTopPanel({ open }) {
+  const [searchValue, setSearchValue] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const handleMic = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.onresult = (e) => {
+      setSearchValue(e.results[0][0].transcript);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    rec.start();
+    setIsListening(true);
+  };
+
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 150);
+  }, [open]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+          className="fixed left-0 right-0 z-[34] flex items-center justify-center px-6 py-3"
+          style={{
+            top: '64px',
+            background: 'rgba(6, 8, 14, 0.88)',
+            backdropFilter: 'blur(40px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(160%)',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          }}
+        >
+          <div
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] w-full max-w-lg"
+          >
+            <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search games..."
+              className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+            />
+            <button
+              onClick={handleMic}
+              className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function GlassPageFrame({ children, bottomContent, topContent, showTriggerTab = false, className = '' }) {
   const [overlay, setOverlay] = useState(null); // null | 'studio' | 'stream'
+  const [gamesOpen, setGamesOpen] = useState(false);
+
+  const closeAll = () => {
+    setOverlay(null);
+    setGamesOpen(false);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setOverlay(null);
+      if (e.key === 'Escape') closeAll();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const toggleOverlay = (name) => {
+    setGamesOpen(false);
+    setOverlay(prev => prev === name ? null : name);
+  };
+
+  const toggleGames = () => {
+    setOverlay(null);
+    setGamesOpen(prev => !prev);
+  };
 
   return (
     <div className={`relative w-full h-full min-h-screen ${className}`}>
@@ -38,12 +130,15 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
         )}
       </div>
 
+      {/* Games Top Panel */}
+      {showTriggerTab && <GamesTopPanel open={gamesOpen} />}
+
       {/* Page Content */}
       <div className="relative z-[1]">
         {children}
       </div>
 
-      {/* Overlay - between top and bottom bars */}
+      {/* Studio / Stream Overlay - between top and bottom bars */}
       <AnimatePresence>
         {overlay && (
           <motion.div
@@ -63,7 +158,6 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
-            {/* Empty overlay — content TBD */}
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-white/10 text-xs uppercase tracking-widest font-bold">{overlay}</span>
             </div>
@@ -98,16 +192,17 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
             }}
           >
-            {/* Games - no action */}
+            {/* Games */}
             <div
-              className="flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
+              onClick={toggleGames}
+              className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${gamesOpen ? 'bg-white/10' : 'hover:bg-white/5'}`}
             >
-              <span className="text-[9px] font-bold uppercase tracking-widest text-white/50">Games</span>
+              <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${gamesOpen ? 'text-white/90' : 'text-white/50'}`}>Games</span>
             </div>
 
             {/* Studio */}
             <div
-              onClick={() => setOverlay(overlay === 'studio' ? null : 'studio')}
+              onClick={() => toggleOverlay('studio')}
               className={`flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer transition-colors ${overlay === 'studio' ? 'bg-white/10' : 'hover:bg-white/5'}`}
             >
               <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'studio' ? 'text-white/90' : 'text-white/50'}`}>Studio</span>
@@ -115,7 +210,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
 
             {/* Stream */}
             <div
-              onClick={() => setOverlay(overlay === 'stream' ? null : 'stream')}
+              onClick={() => toggleOverlay('stream')}
               className={`flex-1 flex items-center justify-center cursor-pointer transition-colors ${overlay === 'stream' ? 'bg-white/10' : 'hover:bg-white/5'}`}
             >
               <span className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${overlay === 'stream' ? 'text-white/90' : 'text-white/50'}`}>Stream</span>
