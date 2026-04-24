@@ -44,7 +44,8 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
       >
         {/* Trigger Tab - only shown on game pages, ~10% inside bottom bar */}
         {showTriggerTab && (
-          <div className="absolute left-1/2 -translate-x-1/2 w-24 h-10 pointer-events-auto"
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-24 h-10 pointer-events-auto flex overflow-hidden"
             style={{
               top: '-36px',
               background: 'rgba(8, 12, 18, 0.42)',
@@ -55,7 +56,16 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               borderRadius: '8px 8px 0 0',
               boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.3)',
             }}
-          />
+          >
+            {/* Left 50% - Depth */}
+            <div className="flex-1 flex items-center justify-center border-r border-white/10 cursor-pointer hover:bg-white/5 transition-colors">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/50">Depth</span>
+            </div>
+            {/* Right 50% - Streaming */}
+            <div className="flex-1 flex items-center justify-center cursor-pointer hover:bg-white/5 transition-colors">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-white/50">Stream</span>
+            </div>
+          </div>
         )}
 
         {bottomContent && (
