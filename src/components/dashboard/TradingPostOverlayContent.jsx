@@ -196,7 +196,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                    </div>
 
                    {/* Arrow */}
-                   <div className="flex flex-col items-center gap-1 shrink-0 pt-6">
+                   <div className="flex flex-col items-center gap-1 shrink-0">
                      <ArrowRight className="w-5 h-5 text-white/40" />
                      <span className="text-[8px] text-white/30 uppercase tracking-wide">For</span>
                    </div>
