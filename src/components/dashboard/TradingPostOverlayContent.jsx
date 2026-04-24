@@ -213,12 +213,12 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                </div>
 
                {/* RIGHT: Counter offer box (40%) */}
-               <div className="w-[40%] flex flex-col pl-4">
+               <div className="w-[40%] flex flex-col pl-4 pb-20">
                  <div className="flex-1 flex flex-col items-center justify-end gap-3">
-                   <div className="h-px w-full bg-white/10 mb-2" />
+                   <div className="h-px w-full bg-white/10 mb-4" />
                    <button
                      onClick={() => setCounterOfferDrawerOpen(true)}
-                     className="w-20 h-16 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-500/50 hover:border-purple-500/80 hover:bg-purple-500/10 transition-colors"
+                     className="w-20 h-[120px] flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-purple-500/50 hover:border-purple-500/80 hover:bg-purple-500/10 transition-colors"
                    >
                      <span className="text-white/60 text-[10px] uppercase tracking-wider mb-1">Enter</span>
                      <span className="text-white/40 text-[9px]">Counter</span>
