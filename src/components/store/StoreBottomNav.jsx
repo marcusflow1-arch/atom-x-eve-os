@@ -72,7 +72,7 @@ function SearchDropdownPanel({ onClose }) {
   );
 }
 
-export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange }) {
+export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
 
@@ -131,6 +131,11 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
 
   return (
     <>
+      {showDevLabel && (
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+          <span className="text-white/40 text-[11px] font-semibold tracking-widest uppercase">DEV INFO</span>
+        </div>
+      )}
       <div className="flex items-center justify-center gap-2 relative">
         {tabs.slice(0, 2).map((tab) => {
           const isActive = activeTab === tab.id;

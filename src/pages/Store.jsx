@@ -473,17 +473,15 @@ export default function Store() {
                 </div>
               }
               bottomContent={
-              <div className="flex flex-col items-center w-full">
-                <span className="text-white/40 text-[11px] font-semibold tracking-widest uppercase mb-1">DEV INFO</span>
-                <StoreBottomNav
+              <StoreBottomNav
                 activeTab={activeStoreTab}
                 onTabChange={handleStoreTabChange}
                 libraryActive={storeLibraryOpen}
                 onLibraryToggle={() => setStoreLibraryOpen(v => !v)}
                 activeFilters={storeFilters}
                 onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
+                showDevLabel={true}
               />
-              </div>
             }>
                 <div className="h-screen w-full flex relative overflow-hidden text-white font-sans" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>
 
