@@ -34,6 +34,8 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
   const [tradeConfirming, setTradeConfirming] = useState(false);
   const [counterOfferDrawerOpen, setCounterOfferDrawerOpen] = useState(false);
   const [selectedCounterCard, setSelectedCounterCard] = useState(null);
+  const [yourCardDrawerOpen, setYourCardDrawerOpen] = useState(false);
+  const [selectedYourCard, setSelectedYourCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [offerSort, setOfferSort] = useState('price-low');
   const [offerTypeFilter, setOfferTypeFilter] = useState('all');
@@ -196,7 +198,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                    {/* Your card */}
                    <div className="flex-1 flex flex-col items-center gap-2">
                      <span className="text-xs text-white/40 uppercase tracking-wider">Your Card</span>
-                     <button onClick={() => setCounterOfferDrawerOpen(true)} className="w-full aspect-[3/4] rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                     <button onClick={() => setYourCardDrawerOpen(true)} className="w-full aspect-[3/4] rounded-lg flex items-center justify-center hover:opacity-80 transition-opacity" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                        <span className="text-white/40 text-3xl font-black">?</span>
                      </button>
                      <p className="text-xs text-white/40 text-center mt-2">Click to select card</p>
@@ -227,6 +229,49 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                </div>
              </div>
 
+            {/* Your Card Picker Drawer (inline, full width) */}
+            {yourCardDrawerOpen && (
+              <motion.div
+                initial={{ y: -300, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -300, opacity: 0 }}
+                className="absolute top-0 left-0 right-0 bg-slate-900/95 border-b border-white/10 shadow-2xl z-40 p-4 max-h-96 overflow-y-auto"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold text-sm">Select Your Card</h3>
+                  <button onClick={() => setYourCardDrawerOpen(false)} className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10">
+                    <X className="w-4 h-4 text-white/60" />
+                  </button>
+                </div>
+                <div className="grid gap-4">
+                  {Array.from({ length: 8 }, (_, rowIdx) => (
+                    <div key={`your-cards-row-${rowIdx}`} className="grid grid-cols-4 gap-2">
+                      {Array.from({ length: 4 }, (_, cardIdx) => {
+                        const cardId = rowIdx * 4 + cardIdx;
+                        return (
+                          <button
+                            key={cardId}
+                            onClick={() => {
+                              setSelectedYourCard(cardId);
+                              setYourCardDrawerOpen(false);
+                            }}
+                            className={`aspect-[3/4] rounded-lg flex items-center justify-center transition-all ${
+                              selectedYourCard === cardId
+                                ? 'ring-2 ring-cyan-400/80 bg-cyan-400/10'
+                                : 'hover:bg-white/10'
+                            }`}
+                            style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}
+                          >
+                            <span className="text-white/40 text-xl font-black">?</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
             {/* Counter Offer Drawer */}
             {counterOfferDrawerOpen && (
               <motion.div
@@ -236,7 +281,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                 className="fixed right-0 top-0 bottom-0 w-80 bg-slate-900/95 border-l border-white/10 shadow-2xl z-50 flex flex-col"
               >
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
-                  <h3 className="text-white font-bold text-sm">Select Your Card</h3>
+                  <h3 className="text-white font-bold text-sm">Enter Counter Offer</h3>
                   <button onClick={() => setCounterOfferDrawerOpen(false)} className="w-6 h-6 flex items-center justify-center rounded hover:bg-white/10">
                     <X className="w-4 h-4 text-white/60" />
                   </button>
