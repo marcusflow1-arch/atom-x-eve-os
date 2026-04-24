@@ -303,7 +303,7 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                     onClick={() => setSelectedOffer(offer)}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-white text-sm font-medium">{offer.seller.name}</span>
+                      <span className="text-white text-sm font-medium">{offer.seller?.name || 'Unknown Seller'}</span>
                       {offer.type === 'bid' && (
                         <span className="text-[9px] uppercase tracking-wide text-amber-400/80 border border-amber-400/30 px-1.5 py-0.5 rounded-full">Bid</span>
                       )}
