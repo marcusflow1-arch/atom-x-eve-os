@@ -5,7 +5,7 @@ import {
   Unlock, Database, Server, Info, AlertCircle,
   Download, Play, CreditCard, Check, X, Loader2,
   Maximize2, Star, ThumbsUp, MessageSquare, User, Radio, Trophy, Users,
-  Package, Tag, ArrowUpCircle, Bug, Sparkles, Code
+  Package, Tag, ArrowUpCircle, Bug, Sparkles
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -16,7 +16,7 @@ import AchievementCardStrip from './AchievementCardStrip';
 import DLCInfoPanel from './DLCInfoPanel';
 import ReviewSection from '@/components/store/ReviewSection';
 import StoreIdleViewer from '@/components/3d/StoreIdleViewer';
-import DevZonePanel from './DevZonePanel';
+import DevZoneSection from './DevZoneSection';
 
 
 // --- Components ---
@@ -226,7 +226,6 @@ export default function GameDetailPanel({ gameId, onClose }) {
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   const [selectedAIPerk, setSelectedAIPerk] = useState(null);
   const [liveModalOpen, setLiveModalOpen] = useState(false);
-  const [devModalOpen, setDevModalOpen] = useState(false);
 
   // Helper to extract YouTube ID
   const getYouTubeId = (url) => {
@@ -369,13 +368,10 @@ export default function GameDetailPanel({ gameId, onClose }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (devModalOpen) {
-          setDevModalOpen(false);
-        } else if (isViewingMedia) {
+        if (isViewingMedia) {
           setIsViewingMedia(false);
           setCurrentMediaIndex(0);
         } else {
-          // Go back to Store when not in media view
           onClose();
         }
       } else if (isViewingMedia) {
@@ -388,7 +384,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isViewingMedia, currentMediaIndex, currentContent.length, devModalOpen, onClose]);
+  }, [isViewingMedia, currentMediaIndex, currentContent.length, onClose]);
 
   // Mouse move handler for arrows
   const handleMouseMove = () => {
@@ -708,8 +704,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
         )}
       </AnimatePresence>
 
-      {/* Dev Zone Panel - slides in from the right */}
-      <DevZonePanel isOpen={devModalOpen} onClose={() => setDevModalOpen(false)} game={game} />
+
 
       {/* Immersive Background Media Layer */}
       <AnimatePresence>
@@ -847,18 +842,7 @@ export default function GameDetailPanel({ gameId, onClose }) {
             </button>
           </div>
 
-          {/* Dev Zone Button */}
-          <button
-            onClick={() => setDevModalOpen(true)}
-            className={`flex items-center gap-2 px-5 py-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all border backdrop-blur-xl cursor-pointer select-none ${
-              devModalOpen
-                ? 'bg-violet-500/20 border-violet-400/40 text-violet-300 shadow-[0_0_20px_rgba(139,92,246,0.25)]'
-                : 'bg-black/40 border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20'
-            }`}
-          >
-            <Code className="w-3.5 h-3.5" />
-            Dev Zone
-          </button>
+
         </div>
       </motion.div>
 
@@ -1438,6 +1422,11 @@ export default function GameDetailPanel({ gameId, onClose }) {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Developer Zone Section */}
+              <div className="border-t border-white/10 pt-8">
+                <DevZoneSection game={game} />
               </div>
 
               {/* Reviews Section - Full Width Below Everything */}
