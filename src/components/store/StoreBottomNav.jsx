@@ -75,7 +75,7 @@ function SearchDropdownPanel({ onClose }) {
 export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const [searchPanelOpen, setSearchPanelOpen] = useState(false);
+
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
@@ -115,12 +115,7 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
   };
 
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        handleClose();
-        setSearchPanelOpen(false);
-      }
-    };
+    const handleKey = (e) => { if (e.key === 'Escape') handleClose(); };
     document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
   }, [libraryActive]);
@@ -136,13 +131,6 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
 
   return (
     <>
-      {/* Search dropdown panel — appears above the bottom bar */}
-      <AnimatePresence>
-        {searchPanelOpen && (
-          <SearchDropdownPanel onClose={() => setSearchPanelOpen(false)} />
-        )}
-      </AnimatePresence>
-
       <div className="flex items-center justify-center gap-2 relative">
         {tabs.slice(0, 2).map((tab) => {
           const isActive = activeTab === tab.id;
@@ -224,7 +212,6 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
               : 'border-transparent bg-transparent'
           }`}
           style={{ minWidth: '220px' }}
-          onClick={() => setSearchPanelOpen(true)}
         >
           <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
           <input
@@ -232,13 +219,9 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
             type="text"
             value={searchValue}
             onChange={handleChange}
-            onFocus={() => {
-              setSearchPanelOpen(true);
-              if (!libraryActive) onLibraryToggle?.();
-            }}
+            onFocus={() => { if (!libraryActive) onLibraryToggle?.(); }}
             placeholder="Search bar"
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none cursor-pointer"
-            readOnly
+            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
           />
           <button onClick={(e) => { e.stopPropagation(); handleMic(); }} className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}>
             {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
