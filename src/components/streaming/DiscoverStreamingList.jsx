@@ -8,19 +8,29 @@ export default function DiscoverStreamingList() {
     genres: [],
     frequency: []
   });
+  const [search, setSearch] = useState('');
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
   };
 
   return (
-    <div className="w-full min-h-screen pt-20 pb-24 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Filter Panel */}
-        <StreamerFilterPanel onFiltersChange={handleFiltersChange} />
+    <div className="w-full min-h-screen pt-16 pb-10 px-6 text-white">
+      <div className="max-w-[1920px] mx-auto">
+        <div className="flex gap-8">
+          {/* LEFT: Filters */}
+          <StreamerFilterPanel 
+            onFiltersChange={handleFiltersChange}
+            search={search}
+            onSearchChange={setSearch}
+          />
 
-        {/* Grid */}
-        <StreamerDiscoveryGrid filters={filters} />
+          {/* RIGHT: Streamers Grid */}
+          <StreamerDiscoveryGrid 
+            filters={filters}
+            search={search}
+          />
+        </div>
       </div>
     </div>
   );
