@@ -213,9 +213,16 @@ function ItemDetailModal({ item, isOpen, onClose, onAddToCart, onBuyNow }) {
           </div>
 
           {/* Right: Details */}
-          <div className="flex-1 p-5 overflow-y-auto">
-            <h1 className="text-xl font-bold text-white mb-1">{item.name}</h1>
-            <div className="flex items-center gap-2 text-xs mb-4">
+          <div 
+            className="flex-1 p-6 overflow-y-auto"
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              backdropFilter: 'blur(20px)',
+              borderLeft: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <h1 className="text-2xl font-bold text-white mb-1">{item.name}</h1>
+            <div className="flex items-center gap-2 text-xs mb-6">
               <span className="text-white/50">{item.game}</span>
               <span className="text-white/20">•</span>
               <span className="text-white/50">{item.itemType}</span>
@@ -223,31 +230,47 @@ function ItemDetailModal({ item, isOpen, onClose, onAddToCart, onBuyNow }) {
               <span className="text-white/40 flex items-center gap-1"><Star className="w-3 h-3 text-amber-400 fill-current" />{item.seller.rating} ({item.reviews} reviews)</span>
             </div>
 
-            <p className="text-white/60 text-sm leading-relaxed mb-4">{item.description}</p>
+            <p className="text-white/60 text-sm leading-relaxed mb-6 pb-6 border-b border-white/10">{item.description}</p>
 
             {/* Stats */}
             {item.stats && (
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {Object.entries(item.stats).map(([key, val]) => (
-                  <div key={key} className="flex justify-between p-2 rounded-lg bg-white/5">
-                    <span className="text-white/40 text-xs">{key}</span>
-                    <span className="text-white font-bold text-xs">{val}</span>
-                  </div>
-                ))}
+              <div className="mb-6">
+                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">Stats</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(item.stats).map(([key, val]) => (
+                    <div 
+                      key={key} 
+                      className="flex justify-between p-3 rounded-lg border border-white/10"
+                      style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      <span className="text-white/40 text-xs font-medium">{key}</span>
+                      <span className="text-white font-bold text-sm">{val}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Price & Actions */}
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/8 mb-4">
-              <div>
+            <div 
+              className="p-4 rounded-xl border border-white/15 mb-6"
+              style={{
+                background: 'rgba(34, 211, 238, 0.08)',
+                backdropFilter: 'blur(16px)',
+              }}
+            >
+              <div className="mb-4">
                 {hasDiscount && <span className="text-white/30 text-xs line-through block">{item.originalPrice.toLocaleString()} AGP</span>}
-                <span className="text-2xl font-bold text-white">{item.price.toLocaleString()} <span className="text-cyan-400 text-sm">AGP</span></span>
+                <span className="text-3xl font-bold text-white block">{item.price.toLocaleString()} <span className="text-cyan-400 text-sm">AGP</span></span>
               </div>
               <div className="flex gap-2">
-                <Button onClick={() => onAddToCart(item)} variant="outline" className="border-white/15 text-white hover:bg-white/10">
+                <Button onClick={() => onAddToCart(item)} variant="outline" className="flex-1 border-white/20 text-white hover:bg-white/10">
                   <ShoppingCart className="w-4 h-4 mr-1" /> Add to Cart
                 </Button>
-                <Button onClick={() => onBuyNow(item)} className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
+                <Button onClick={() => onBuyNow(item)} className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
                   Buy Now
                 </Button>
               </div>
@@ -256,15 +279,21 @@ function ItemDetailModal({ item, isOpen, onClose, onAddToCart, onBuyNow }) {
             {/* Related */}
             {relatedItems.length > 0 && (
               <div>
-                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">You might also like</p>
-                <div className="flex gap-2 overflow-x-auto pb-1">
+                <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-3">You might also like</p>
+                <div className="flex gap-3 overflow-x-auto pb-2">
                   {relatedItems.map(r => (
-                    <div key={r.id} className="w-20 flex-shrink-0 cursor-pointer" onClick={() => { onClose(); setTimeout(() => {}, 100); }}>
-                      <div className="aspect-square rounded-lg overflow-hidden border border-white/8 mb-1">
-                        <img src={r.image} className="w-full h-full object-cover" />
+                    <div key={r.id} className="w-24 flex-shrink-0 cursor-pointer" onClick={() => { onClose(); setTimeout(() => {}, 100); }}>
+                      <div 
+                        className="aspect-square rounded-lg overflow-hidden border border-white/15 mb-2"
+                        style={{
+                          background: 'rgba(255,255,255,0.05)',
+                          backdropFilter: 'blur(8px)',
+                        }}
+                      >
+                        <img src={r.image} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                       </div>
                       <p className="text-[10px] text-white/60 truncate">{r.name}</p>
-                      <p className="text-[10px] text-cyan-400">{r.price.toLocaleString()}</p>
+                      <p className="text-[10px] text-cyan-400 font-semibold">{r.price.toLocaleString()} AGP</p>
                     </div>
                   ))}
                 </div>
