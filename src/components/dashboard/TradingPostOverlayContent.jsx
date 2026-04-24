@@ -256,6 +256,21 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                   </div>
                 </div>
 
+                {/* Your Cards Grid */}
+                <div className="p-4 border-b border-white/10">
+                  <h3 className="text-white font-bold text-sm mb-3">Your Cards</h3>
+                  <div className="grid grid-cols-4 gap-2">
+                    {Array.from({ length: 4 }, (_, i) => (
+                      <div key={i} className="aspect-[3/4] rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <span className="text-white/40 text-xl font-black">?</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-px w-full bg-white/10" />
+
                 {/* Header */}
                 <div className="p-4 border-b border-white/10">
                   <h3 className="text-white font-bold text-sm mb-2">Enter Your Counter Offer</h3>
