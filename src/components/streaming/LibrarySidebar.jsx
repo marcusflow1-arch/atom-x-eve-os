@@ -15,6 +15,7 @@ import FriendTradePanel from './FriendTradePanel';
 import InventoryFullPanel, { InventoryItemDetailPanel } from './inventory/InventoryFullPanel';
 import LibraryGameDetailModal from './LibraryGameDetailModal';
 import LibraryAchievementsUniverse from './LibraryAchievementsUniverse';
+import LivestreamOverlay from './LivestreamOverlay';
 
 export default function LibrarySidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +52,7 @@ export default function LibrarySidebar() {
   const [newLinkName, setNewLinkName] = useState('');
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [entertainmentFullscreen, setEntertainmentFullscreen] = useState(false);
+  const [livestreamOpen, setLivestreamOpen] = useState(false);
   const navigate = useNavigate();
 
   const closeAllSidebarUi = () => {
@@ -527,7 +529,14 @@ export default function LibrarySidebar() {
               <Code className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Dev</span>
             </button>
-            <button className="w-12 h-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-lg shadow-lg hover:bg-white/10 transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 text-white/50 hover:text-red-400 hover:border-red-400/30">
+            <button
+              onClick={() => setLivestreamOpen(true)}
+              className={`w-12 h-12 rounded-2xl border backdrop-blur-lg shadow-lg transition-all duration-300 -ml-1 flex flex-col items-center justify-center gap-0.5 ${
+                livestreamOpen
+                  ? 'bg-red-500/20 border-red-400/40 text-red-400'
+                  : 'bg-white/5 border-white/10 text-white/50 hover:text-red-400 hover:border-red-400/30 hover:bg-red-500/10'
+              }`}
+            >
               <Radio className="w-4 h-4" />
               <span className="text-[7px] font-bold uppercase tracking-wider">Livestream</span>
             </button>
@@ -1972,6 +1981,9 @@ export default function LibrarySidebar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Livestream Overlay */}
+      <LivestreamOverlay isOpen={livestreamOpen} onClose={() => setLivestreamOpen(false)} />
 
       {/* Quick Info Overlay - Moved outside to fill the rest of the screen */}
       <QuickInfoOverlay
