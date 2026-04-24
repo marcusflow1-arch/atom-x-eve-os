@@ -163,23 +163,10 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <AnimatePresence mode="wait">
-        {selectedTrader || selectedMysteryTradeCard ? (
-          <motion.div key="empty-with-cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex gap-4 overflow-hidden px-5 pt-8 pb-3">
-            {/* LEFT: Empty State (60%) */}
-            <div className="w-[60%] flex flex-col border-r border-white/10 pr-4 overflow-hidden">
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mx-auto mb-4 flex items-center justify-center">
-                    <ArrowLeftRight className="w-8 h-8 text-white/30" />
-                  </div>
-                  <h3 className="text-white/60 font-semibold text-sm mb-1">Ready to Trade</h3>
-                  <p className="text-white/30 text-xs">Select a card from the right to begin</p>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT: Cards Grid (40%) */}
-            <div className="w-[40%] flex flex-col pl-4 overflow-hidden">
+        {selectedMysteryTradeCard ? (
+          <motion.div key="game-with-traders" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex gap-4 overflow-hidden px-5 pt-8 pb-3">
+            {/* LEFT: Cards Grid (40%) */}
+            <div className="w-[40%] flex flex-col pr-4 overflow-hidden border-r border-white/10">
               {/* Search Bar */}
               <div className="pb-3 mb-3 border-b border-white/6 flex items-center">
                 <div className="relative flex items-center flex-1">
@@ -230,6 +217,33 @@ export default function TradingPostOverlayContent({ cardSearchQuery = '', onCard
                     })
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* RIGHT: Traders List (60%) */}
+            <div className="w-[60%] flex flex-col pl-4 overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] uppercase tracking-[0.25em] text-white/35">Traders</span>
+                <span className="text-[11px] uppercase tracking-[0.25em] text-white/35">Offer</span>
+              </div>
+              <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                {(mysteryTradeRows || []).map((row) => (
+                  <div key={row.id}>
+                    <div
+                      className="flex items-center justify-between py-3 px-2 cursor-pointer hover:bg-white/5 rounded transition-colors"
+                      onClick={() => setSelectedTrader(row)}
+                    >
+                      <span className="text-white text-sm font-medium">{row.name}</span>
+                      <div className="w-12 h-16 rounded flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <span className="text-white/40 text-lg font-black">?</span>
+                      </div>
+                    </div>
+                    <div className="h-px bg-white/10" />
+                  </div>
+                ))}
+                {(!mysteryTradeRows || mysteryTradeRows.length === 0) && (
+                  <div className="py-8 text-center text-white/25 text-xs">No traders available.</div>
+                )}
               </div>
             </div>
           </motion.div>
