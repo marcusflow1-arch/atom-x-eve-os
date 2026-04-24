@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Mic, MicOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -9,22 +10,22 @@ export const glassStyle = {
   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
 };
 
-// Mock studio games — in production pass these via props
+// Placeholder dev games — no real covers yet
 const MOCK_STUDIO_GAMES = [
-  { id: 1, title: 'Cyber Havoc', cover: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=120&h=80&fit=crop' },
-  { id: 2, title: 'Void Walker', cover: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=120&h=80&fit=crop' },
-  { id: 3, title: 'Iron Forge', cover: 'https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=120&h=80&fit=crop' },
-  { id: 4, title: 'Neon Drift', cover: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=120&h=80&fit=crop' },
-  { id: 5, title: 'Dark Realm', cover: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=120&h=80&fit=crop' },
-  { id: 6, title: 'Solar Wars', cover: 'https://images.unsplash.com/photo-1560419015-7c427e8ae5ba?w=120&h=80&fit=crop' },
-  { id: 7, title: 'Phantom Run', cover: 'https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=120&h=80&fit=crop' },
-  { id: 8, title: 'Storm Knight', cover: 'https://images.unsplash.com/photo-1528938102132-4a9276b8e320?w=120&h=80&fit=crop' },
-  { id: 9, title: 'Echo Prime', cover: 'https://images.unsplash.com/photo-1574169208507-84376144848b?w=120&h=80&fit=crop' },
-  { id: 10, title: 'Galactic Hunt', cover: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=120&h=80&fit=crop' },
-  { id: 11, title: 'Blaze Strike', cover: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=120&h=80&fit=crop' },
-  { id: 12, title: 'Mech Arena', cover: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=80&fit=crop' },
-  { id: 13, title: 'Shadow Pact', cover: 'https://images.unsplash.com/photo-1505506874110-6a7a69069a08?w=120&h=80&fit=crop' },
-  { id: 14, title: 'Crystal Edge', cover: 'https://images.unsplash.com/photo-1487088678257-3a541e6e3922?w=120&h=80&fit=crop' },
+  { id: 'dev-1', title: 'Cyber Havoc' },
+  { id: 'dev-2', title: 'Void Walker' },
+  { id: 'dev-3', title: 'Iron Forge' },
+  { id: 'dev-4', title: 'Neon Drift' },
+  { id: 'dev-5', title: 'Dark Realm' },
+  { id: 'dev-6', title: 'Solar Wars' },
+  { id: 'dev-7', title: 'Phantom Run' },
+  { id: 'dev-8', title: 'Storm Knight' },
+  { id: 'dev-9', title: 'Echo Prime' },
+  { id: 'dev-10', title: 'Galactic Hunt' },
+  { id: 'dev-11', title: 'Blaze Strike' },
+  { id: 'dev-12', title: 'Mech Arena' },
+  { id: 'dev-13', title: 'Shadow Pact' },
+  { id: 'dev-14', title: 'Crystal Edge' },
 ];
 
 const GENRES = ['All', 'Action', 'Runner', 'Shooter', 'RPG', 'Strategy', 'Horror', 'Puzzle', 'Sports', 'Racing', 'Adventure', 'Simulation'];
@@ -35,6 +36,7 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleMic = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -154,18 +156,17 @@ function GamesTopPanel({ open, studioGames = MOCK_STUDIO_GAMES, studioName = 'St
                     {row.map(game => (
                       <div
                         key={game.id}
-                        className="flex-shrink-0 cursor-pointer group relative rounded overflow-hidden border border-white/10 hover:border-white/30 transition-all"
-                        style={{ width: 'calc((100% - 48px) / 7)', aspectRatio: '3/2' }}
+                        onClick={() => navigate(`/GameDetail?gameId=${game.id}&title=${encodeURIComponent(game.title)}`)}
+                        className="flex-shrink-0 cursor-pointer group relative rounded overflow-hidden border border-white/20 hover:border-white/50 transition-all flex flex-col items-center justify-center gap-1"
+                        style={{
+                          width: 'calc((100% - 48px) / 7)',
+                          aspectRatio: '3/2',
+                          background: 'rgba(255,255,255,0.04)',
+                        }}
                         title={game.title}
                       >
-                        <img
-                          src={game.cover}
-                          alt={game.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
-                          <span className="text-white text-[9px] font-semibold leading-tight truncate w-full">{game.title}</span>
-                        </div>
+                        <span className="text-white/20 group-hover:text-white/40 transition-colors font-bold" style={{ fontSize: '1.4rem' }}>?</span>
+                        <span className="text-white/50 group-hover:text-white/80 text-[8px] font-semibold text-center leading-tight px-1 truncate w-full transition-colors" style={{ textAlign: 'center' }}>{game.title}</span>
                       </div>
                     ))}
                     {/* Fill empty slots in the last row */}
