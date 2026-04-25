@@ -834,7 +834,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             </div>
-            {selectedGame ? (
+            {selectedGame && !isLibraryExpanded ? (
               /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
               <div
                 className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden flex"
@@ -936,15 +936,98 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             ) : (
-              <TwoRowGrid
-                items={items}
-                currentRow={currentRow}
-                itemsPerRow={itemsPerRow}
-                selectedGame={selectedGame}
-                activeTab={activeTab}
-                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
-                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
-              />
+              isLibraryExpanded && activeTab === 'library' ? (
+                /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
+                <div className="w-full h-full flex gap-4">
+                  {/* LEFT: Games Grid */}
+                  <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                    <div className="flex flex-col gap-4">
+                      {[0, 1, 2, 3].map((rowIdx) => {
+                        const start = (currentRow + rowIdx) * itemsPerRow;
+                        const rowItems = items.slice(start, start + itemsPerRow);
+                        if (rowItems.length === 0) return null;
+                        return (
+                          <div key={`expanded-row-${rowIdx}`} className="flex gap-3">
+                            {rowItems.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex-1 relative cursor-pointer group transition-all"
+                                onClick={() => { setSelectedGame(item); setCurrentRow(0); }}
+                              >
+                                <div className="aspect-[16/9] rounded-lg overflow-hidden border border-white/10 group-hover:border-cyan-400/50 shadow-lg">
+                                  <img
+                                    src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'}
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    alt={item.displayTitle}
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                                  <div className="absolute bottom-2 left-2 right-2">
+                                    <p className="text-white text-xs font-bold truncate">{item.displayTitle}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Filter Panel */}
+                  <div className="w-56 flex flex-col gap-4 p-4 overflow-y-auto border-l border-white/10" style={{ scrollbarWidth: 'none' }}>
+                    <div>
+                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Filters</p>
+                      <div className="flex flex-col gap-2">
+                        {GENRE_FILTERS.map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                            className={`w-full px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all text-left ${
+                              selectedGenreFilter === g.id
+                                ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300'
+                                : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white'
+                            }`}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="w-full h-px bg-white/10" />
+
+                    <div>
+                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Studios</p>
+                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                        {filteredDevelopers.slice(0, 6).map((dev) => (
+                          <button
+                            key={dev.id}
+                            onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left text-[9px] ${
+                              selectedDeveloper?.id === dev.id
+                                ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300'
+                                : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08]'
+                            }`}
+                          >
+                            <img src={dev.logo} alt={dev.name} className="w-5 h-5 rounded object-cover flex-shrink-0" />
+                            <span className="truncate">{dev.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <TwoRowGrid
+                  items={items}
+                  currentRow={currentRow}
+                  itemsPerRow={itemsPerRow}
+                  selectedGame={selectedGame}
+                  activeTab={activeTab}
+                  onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
+                  onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
+                />
+              )
             )}
           </motion.div>
         )}
