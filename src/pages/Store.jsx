@@ -456,29 +456,6 @@ export default function Store() {
                     <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
                     <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
                   </div>
-                  <div className="w-px h-5 bg-white/10 mx-1" />
-                  <div
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-                      storeLibraryOpen ? 'border-white/10 bg-transparent' : 'border-transparent bg-transparent'
-                    }`}
-                    style={{ minWidth: '220px' }}
-                  >
-                    <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onFocus={() => { if (!storeLibraryOpen) setStoreLibraryOpen(true); }}
-                      placeholder="Search bar"
-                      className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
-                    />
-                    <button
-                      onClick={toggleRegularVoice}
-                      className={`flex-shrink-0 transition-colors ${isRegularVoiceListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
-                    >
-                      {isRegularVoiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
-                  </div>
                   <div className="flex items-center gap-3">
                     <CategorySearchBar
                       activeCategoryOverlay={activeCategoryOverlay}
@@ -493,18 +470,8 @@ export default function Store() {
                       <Building2 className="w-3.5 h-3.5" />
                       Studios
                     </button>
-                    <div
-                      onClick={() => setHeaderSearchOpen(true)}
-                      className="cursor-pointer"
-                      style={{ pointerEvents: 'auto' }}
-                    >
-                      <StoreSearchDropdown
-                        games={games}
-                        onGameSelect={handleNavigateToGame}
-                        isListening={isRegularVoiceListening}
-                        toggleVoice={toggleRegularVoice}
-                        disabled={true}
-                      />
+                    <div onClick={() => setHeaderSearchOpen(true)} className="cursor-pointer">
+                      <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
                     </div>
                   </div>
                 </div>
