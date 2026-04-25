@@ -481,14 +481,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="fixed top-[64px] right-0 z-[34] p-6 flex flex-col justify-start"
             style={{ 
               left: '5%',
-              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 70%, transparent 100%)',
-              backdropFilter: 'blur(12px)'
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
+              backdropFilter: 'blur(12px)',
             }}
             onWheel={handleWheel}
           >
