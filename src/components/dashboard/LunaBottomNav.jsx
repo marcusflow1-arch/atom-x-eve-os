@@ -478,6 +478,38 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
+      {/* ── BOTTOM panel (original position — pulls up from bottom nav) ── */}
+      <AnimatePresence>
+        {activeTab !== 'home' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
+            style={{
+              left: '5%',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
+              backdropFilter: 'blur(12px)',
+              pointerEvents: 'none',
+            }}
+          >
+            <div className="w-full max-w-[1400px] mx-auto" style={{ pointerEvents: 'all' }}>
+              <TwoRowGrid
+                items={items}
+                currentRow={currentRow}
+                itemsPerRow={itemsPerRow}
+                selectedGame={selectedGame}
+                activeTab={activeTab}
+                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
+                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── TOP panel (drops from header) ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
