@@ -764,11 +764,11 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
+            className={`fixed right-0 z-[34] p-6 ${isExpanded ? 'flex flex-col' : 'flex flex-col justify-end bottom-[48px]'}`}
             style={{ 
               left: '5%',
               top: isExpanded ? '264px' : 'auto',
-              bottom: isExpanded ? 'auto' : '48px',
+              bottom: isExpanded ? '48px' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
               transition: 'top 0.3s ease, bottom 0.3s ease',
