@@ -768,7 +768,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             style={{ 
               left: '5%',
               top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
-              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 344px)' : 'auto',
+              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 312px)' : 'auto',
+              maxHeight: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 264px - 48px)' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
             }}
