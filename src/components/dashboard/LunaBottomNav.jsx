@@ -135,7 +135,7 @@ function StudioGameCarousel({ games }) {
   );
 }
 
-function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem }) {
+function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem, onDoubleClickEmpty }) {
   const rows = [0, 1].map(offset => {
     const start = (currentRow + offset) * itemsPerRow;
     const rowItems = items.slice(start, start + itemsPerRow);
@@ -144,8 +144,8 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
       const item = rowItems[i];
       if (!item) {
         cells.push(
-          <div key={`empty-r${offset}-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-            <span className="text-white/20 text-4xl font-light">?</span>
+          <div key={`empty-r${offset}-${i}`} onDoubleClick={onDoubleClickEmpty} className="flex-1 aspect-[16/9] rounded-xl border border-white/10 flex items-center justify-center cursor-pointer hover:border-white/20 transition-all" style={{ background: 'rgba(255,255,255,0.03)' }}>
+            <span className="text-white/10 text-2xl font-light">↑</span>
           </div>
         );
       } else {
@@ -193,6 +193,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [developerSearch, setDeveloperSearch] = useState('');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [librarySearch, setLibrarySearch] = useState('');
 
   const GENRE_FILTERS = [
     { id: 'action', label: 'Action' },
@@ -231,6 +233,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       // If clicking the same tab that's already active, close it (go home)
       if (activeTab === tab) {
         setActiveTab('home');
+        setExpanded(false);
         onLibraryClose?.();
         // Dispatch event to notify pages to close their panels
         window.dispatchEvent(new CustomEvent('libraryPanelClose'));
@@ -267,6 +270,10 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
       if (searchTerm && searchTerm.trim()) {
         const term = searchTerm.trim().toLowerCase();
         all = all.filter(g => g.displayTitle?.toLowerCase().includes(term) || g.genre?.toLowerCase().includes(term));
+      }
+      if (librarySearch && librarySearch.trim()) {
+        const term = librarySearch.trim().toLowerCase();
+        all = all.filter(g => g.displayTitle?.toLowerCase().includes(term) || g.genre?.toLowerCase().includes(term) || g.description?.toLowerCase().includes(term));
       }
       return all;
     }
@@ -760,68 +767,142 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         {activeTab !== 'home' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0, top: expanded ? '264px' : undefined }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
-              background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
-              backdropFilter: 'blur(12px)',
+              top: expanded ? '264px' : undefined,
+              background: expanded
+                ? 'rgba(0,0,0,0.97)'
+                : 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
+              backdropFilter: 'blur(20px)',
             }}
             onWheel={handleWheel}
           >
             {/* ── Persistent filter bar — always visible ── */}
-            <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-              {/* Left: Library icon + label, or Back button when in game detail */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {selectedGame ? (
-                  <button
-                    onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
-                    className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
+            <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex flex-col gap-2">
+
+              {/* Expanded: search + full genre grid */}
+              <AnimatePresence>
+                {expanded && !selectedGame && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Back
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
-                    <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
-                  </div>
+                    {/* Search bar */}
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search games, genres, studios..."
+                        value={librarySearch}
+                        onChange={e => setLibrarySearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white/[0.06] border border-white/15 rounded-xl text-white text-sm placeholder-white/30 focus:outline-none focus:border-cyan-400/60 transition-all"
+                      />
+                      {librarySearch && (
+                        <button onClick={() => setLibrarySearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Full genre filter grid */}
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {[
+                        ...GENRE_FILTERS,
+                        { id: 'mmo', label: 'MMO' },
+                        { id: 'mmorpg', label: 'MMORPG' },
+                        { id: 'racing', label: 'Racing' },
+                        { id: 'puzzle', label: 'Puzzle' },
+                        { id: 'platformer', label: 'Platformer' },
+                        { id: 'survival', label: 'Survival' },
+                        { id: 'open_world', label: 'Open World' },
+                        { id: 'sandbox', label: 'Sandbox' },
+                        { id: 'fighting', label: 'Fighting' },
+                      ].map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                          className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                            selectedGenreFilter === g.id
+                              ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                              : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
+                          }`}
+                        >
+                          {g.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Result count */}
+                    <p className="text-white/25 text-[10px] mb-2">{items.length} game{items.length !== 1 ? 's' : ''} found</p>
+                  </motion.div>
                 )}
-              </div>
+              </AnimatePresence>
 
-              {/* Vertical divider */}
-              <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
+              {/* Main filter row */}
+              <div className="flex items-center gap-3">
+                {/* Left: Library icon + label, or Back button */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {selectedGame ? (
+                    <button
+                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
+                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Back
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setExpanded(v => !v)}
+                      className="flex items-center gap-2 group"
+                      title="Double-click empty slots to expand"
+                    >
+                      <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                      <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
+                      <span className={`text-[9px] transition-transform duration-200 ${expanded ? 'rotate-180' : ''} text-white/30`}>▲</span>
+                    </button>
+                  )}
+                </div>
 
-              {/* Genre filter pills — left of center, scrollable */}
-              <div
-                className="flex gap-2 overflow-x-auto"
-                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
-              >
-                {GENRE_FILTERS.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                      selectedGenreFilter === g.id
-                        ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                        : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
-                    }`}
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
+                {/* Vertical divider */}
+                <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
 
-              {/* Spacer pushes row nav to far right */}
-              <div className="flex-1" />
+                {/* Genre filter pills — scrollable compact row */}
+                <div
+                  className="flex gap-2 overflow-x-auto"
+                  style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
+                >
+                  {GENRE_FILTERS.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                      className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                        selectedGenreFilter === g.id
+                          ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                          : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
 
-              {/* Row nav */}
-              <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
-                {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
-                <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
-                  <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* Row nav */}
+                <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
+                  {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
+                  <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
+                    <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -933,8 +1014,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 itemsPerRow={itemsPerRow}
                 selectedGame={selectedGame}
                 activeTab={activeTab}
-                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
-                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
+                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); setExpanded(false); }}
+                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); setExpanded(false); }}
+                onDoubleClickEmpty={() => setExpanded(v => !v)}
               />
             )}
           </motion.div>
