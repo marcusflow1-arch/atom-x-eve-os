@@ -607,28 +607,52 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                       transition={{ duration: 0.3 }}
                       className="absolute inset-0"
                     >
-                      {/* Banner image — use first matching game's banner or a genre image */}
+                      {/* Banner: dev info + latest game */}
                       {(() => {
                         const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
-                        const bannerImg = devGames[0]?.banner_image || devGames[0]?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
+                        // Sort by original_year descending to get newest game
+                        const sorted = [...devGames].sort((a, b) => (b.original_year || 0) - (a.original_year || 0));
+                        const latestGame = sorted[0];
+                        const bannerImg = latestGame?.banner_image || latestGame?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
                         return (
                           <>
                             <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
-                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%)' }} />
-                            <div className="absolute inset-0 flex flex-col justify-center px-8">
-                              <div className="flex items-center gap-3 mb-3">
-                                <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-12 h-12 rounded-xl border border-white/20 object-cover bg-white/10" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 100%)' }} />
+                            <div className="absolute inset-0 flex flex-col justify-center px-6 gap-3">
+
+                              {/* Developer info */}
+                              <div className="flex items-center gap-3">
+                                <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-10 h-10 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0" />
                                 <div>
-                                  <p className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Studio Spotlight</p>
-                                  <h2 className="text-white font-black text-xl tracking-wide">{selectedDeveloper.name}</h2>
+                                  <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Developer</p>
+                                  <h2 className="text-white font-black text-base tracking-wide leading-tight">{selectedDeveloper.name}</h2>
+                                  <span className="text-white/50 text-[9px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''} in library</span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold uppercase rounded-full">
-                                  {devGames.length} Game{devGames.length !== 1 ? 's' : ''}
-                                </span>
-                                <span className="px-2 py-0.5 bg-white/10 border border-white/15 text-white/70 text-[9px] font-bold uppercase rounded-full">View Library ↓</span>
-                              </div>
+
+                              {/* Divider */}
+                              <div className="w-full h-px bg-white/10" />
+
+                              {/* Latest game */}
+                              {latestGame && (
+                                <div>
+                                  <p className="text-cyan-400/80 text-[9px] font-bold uppercase tracking-widest mb-1.5">Latest Release</p>
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
+                                      <img src={latestGame.cover_image || latestGame.banner_image} alt={latestGame.title} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-white font-bold text-xs truncate">{latestGame.title}</p>
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{latestGame.genre || 'Action'}</span>
+                                        {latestGame.original_year && <span className="text-white/35 text-[9px]">{latestGame.original_year}</span>}
+                                        {latestGame.price > 0 && <span className="text-green-400 font-black text-[9px]">${latestGame.price}</span>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
                             </div>
                           </>
                         );
