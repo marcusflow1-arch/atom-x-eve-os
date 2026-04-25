@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Mic } from 'lucide-react';
 
-export default function StoreSearchDropdown({ games, onGameSelect, isListening, toggleVoice }) {
+export default function StoreSearchDropdown({ games, onGameSelect, isListening, toggleVoice, disabled = false }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -38,10 +38,12 @@ export default function StoreSearchDropdown({ games, onGameSelect, isListening, 
           value={searchTerm}
           ref={inputRef}
           onChange={(e) => {
+            if (disabled) return;
             setSearchTerm(e.target.value);
             setIsOpen(e.target.value.length > 0);
           }}
-          onFocus={() => { setIsFocused(true); if (searchTerm.length > 0) setIsOpen(true); }}
+          onFocus={() => { if (disabled) return; setIsFocused(true); if (searchTerm.length > 0) setIsOpen(true); }}
+          readOnly={disabled}
           onBlur={() => {}}
 
           className="bg-transparent border-none outline-none text-xs text-white placeholder:text-white/30 w-full"

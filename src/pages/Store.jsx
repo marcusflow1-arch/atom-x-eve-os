@@ -470,8 +470,18 @@ export default function Store() {
                       <Building2 className="w-3.5 h-3.5" />
                       Studios
                     </button>
-                    <div onClick={() => setHeaderSearchOpen(true)} className="cursor-pointer">
-                      <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                    <div
+                      onClick={() => setHeaderSearchOpen(true)}
+                      className="cursor-pointer"
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <StoreSearchDropdown
+                        games={games}
+                        onGameSelect={handleNavigateToGame}
+                        isListening={isRegularVoiceListening}
+                        toggleVoice={toggleRegularVoice}
+                        disabled={true}
+                      />
                     </div>
                   </div>
                 </div>
