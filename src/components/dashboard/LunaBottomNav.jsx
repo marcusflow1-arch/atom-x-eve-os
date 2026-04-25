@@ -536,7 +536,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <div className="w-full h-full max-w-[1400px] mx-auto flex gap-0 overflow-hidden">
 
               {/* LEFT 50% — Studios list */}
-              <div className="w-1/2 flex flex-col h-full border-r border-white/8 px-6 py-3">
+              <div className="w-1/2 flex flex-col h-full px-6 py-3">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2 flex-shrink-0">
                   <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
@@ -551,26 +551,29 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     />
                   </div>
                 </div>
-                {/* Studios scrollable grid */}
-                <div className="flex flex-wrap gap-2 overflow-y-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+                {/* Studios — 5-per-row grid, scrollable, min 2 rows visible */}
+                <div
+                  className="grid overflow-y-auto flex-1"
+                  style={{
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '6px',
+                    scrollbarWidth: 'none',
+                    minHeight: '80px',
+                  }}
+                >
                   {filteredDevelopers.map((dev) => (
-                    <motion.div
+                    <div
                       key={dev.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
                       onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all cursor-pointer flex-shrink-0 ${
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all cursor-pointer ${
                         selectedDeveloper?.id === dev.id
-                          ? 'bg-cyan-500/20 border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.25)]'
-                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/30'
+                          ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                          : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/10'
                       }`}
                     >
-                      <img src={dev.logo} alt={dev.name} className="w-6 h-6 rounded-md object-cover bg-white/10 flex-shrink-0" />
-                      <p className={`text-[10px] font-semibold whitespace-nowrap ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/80'}`}>{dev.name}</p>
-                      {selectedDeveloper?.id === dev.id && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
-                      )}
-                    </motion.div>
+                      <img src={dev.logo} alt={dev.name} className="w-7 h-7 rounded-md object-cover bg-white/10 flex-shrink-0" />
+                      <p className={`text-[9px] font-semibold leading-tight line-clamp-2 ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/75'}`}>{dev.name}</p>
+                    </div>
                   ))}
                 </div>
               </div>
