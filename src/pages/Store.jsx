@@ -546,6 +546,85 @@ export default function Store() {
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
+                        {/* ═══ GENRE MASTERY SUB-NAV (matches Depth Cards style) ═══ */}
+                        <div className="flex-shrink-0 mt-16 relative z-30">
+                          <div className="flex items-center px-6 py-2 gap-0"
+                            style={{
+                              background: 'rgba(8, 12, 18, 0.5)',
+                              backdropFilter: 'blur(20px)',
+                              borderBottom: '1px solid rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            {/* Label */}
+                            <span className="text-white/50 text-xs font-bold uppercase tracking-widest whitespace-nowrap flex-shrink-0 mr-4 select-none">
+                              Gaming Studio
+                            </span>
+
+                            {/* Fade divider */}
+                            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+                              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+                            </div>
+
+                            {/* Scrollable genre tabs */}
+                            <div className="flex-1 min-w-0 relative overflow-hidden">
+                              <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
+                              <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
+                              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2">
+                                {genreData.map((genre, idx) => {
+                                  const Icon = genre.icon;
+                                  const isActive = idx === activeGenreIndex;
+                                  return (
+                                    <button
+                                      key={genre.id}
+                                      onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setStoreMode('store'); }}
+                                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
+                                        isActive
+                                          ? 'bg-white/12 border-white/20 text-white'
+                                          : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
+                                      }`}
+                                    >
+                                      {Icon && <Icon className="w-3.5 h-3.5" />}
+                                      <span>{genre.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div className="flex-shrink-0 w-px h-8 mx-3 relative">
+                              <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
+                            </div>
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <button
+                                onClick={() => { setStoreMode(storeMode === 'marketplace' ? 'store' : 'marketplace'); handleStoreTabChange(storeMode === 'marketplace' ? 'store' : 'marketplace'); }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                                  storeMode === 'marketplace'
+                                    ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300'
+                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                                }`}
+                                style={{ backdropFilter: 'blur(12px)' }}
+                              >
+                                <ShoppingCart className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Marketplace</span>
+                              </button>
+                              <button
+                                onClick={() => { setStoreMode(storeMode === 'trading' ? 'store' : 'trading'); handleStoreTabChange(storeMode === 'trading' ? 'store' : 'trading'); }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border whitespace-nowrap ${
+                                  storeMode === 'trading'
+                                    ? 'bg-blue-500/15 border-blue-500/30 text-blue-300'
+                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/15'
+                                }`}
+                                style={{ backdropFilter: 'blur(12px)' }}
+                              >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Trading Post</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Main Content */}
                         <div className="flex-1 overflow-hidden">
 
@@ -655,7 +734,7 @@ export default function Store() {
                                                     {/* Interface Layer */}
                                                     <div className="relative z-10 w-full h-full flex flex-col">
                                                         {/* HERO SHOWCASE + ACHIEVEMENTS */}
-                                                         <div className="h-[280px] flex-shrink-0 mt-[150px] w-full flex overflow-hidden">
+                                                         <div className="h-[280px] flex-shrink-0 mt-[60px] w-full flex overflow-hidden">
                                                             {/* Spacer matching genre list column width (px-6 + 200px + gap-8) */}
                                                             <div className="flex-shrink-0" style={{ width: '256px' }} />
 
