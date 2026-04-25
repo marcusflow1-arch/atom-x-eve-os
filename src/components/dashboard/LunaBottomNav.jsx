@@ -135,7 +135,39 @@ function StudioGameCarousel({ games }) {
   );
 }
 
-function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem, onDoubleClickEmpty }) {
+function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem, onDoubleClickEmpty, expanded }) {
+  if (expanded) {
+    // In expanded mode: scrollable grid of all items
+    return (
+      <div className="flex-1 overflow-y-auto w-full max-w-[1400px] mx-auto px-2" style={{ scrollbarWidth: 'none' }}>
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${itemsPerRow}, 1fr)` }}
+        >
+          {items.map((item, i) => (
+            <div
+              key={item.id || i}
+              className={`relative cursor-pointer group transition-all duration-300 ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400' : ''}`}
+              onClick={() => { if (activeTab === 'library') onSelectGame(item); }}
+              onDoubleClick={() => { if (activeTab === 'library') onSelectItem(item); }}
+            >
+              <div className="aspect-[16/9] rounded-xl overflow-hidden relative shadow-lg border border-white/10 group-hover:border-cyan-400/50">
+                <img src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.displayTitle} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 text-center">
+                  <p className="text-white text-xs font-bold truncate tracking-wide">{item.displayTitle}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          {items.length === 0 && (
+            <div className="col-span-7 flex items-center justify-center py-16 text-white/20 text-sm">No games found</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const rows = [0, 1].map(offset => {
     const start = (currentRow + offset) * itemsPerRow;
     const rowItems = items.slice(start, start + itemsPerRow);
@@ -767,13 +799,14 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         {activeTab !== 'home' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0, top: expanded ? '264px' : undefined }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
+            className={`fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col ${expanded ? '' : 'justify-end'}`}
             style={{ 
               left: '5%',
-              top: expanded ? '264px' : undefined,
+              top: expanded ? '264px' : 'auto',
+              transition: 'top 0.35s cubic-bezier(0.4,0,0.2,1), background 0.35s ease',
               background: expanded
                 ? 'rgba(0,0,0,0.97)'
                 : 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
@@ -1014,6 +1047,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 itemsPerRow={itemsPerRow}
                 selectedGame={selectedGame}
                 activeTab={activeTab}
+                expanded={expanded}
                 onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); setExpanded(false); }}
                 onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); setExpanded(false); }}
                 onDoubleClickEmpty={() => setExpanded(v => !v)}
