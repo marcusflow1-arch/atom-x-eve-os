@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,6 +6,21 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useCart } from '@/components/CartContext';
 import GameContentCards from '@/components/dashboard/GameContentCards';
+
+const MOCK_DEVELOPERS = [
+  { id: 1, name: 'Naughty Dog', logo: 'https://via.placeholder.com/120?text=Naughty+Dog' },
+  { id: 2, name: 'Rockstar Games', logo: 'https://via.placeholder.com/120?text=Rockstar' },
+  { id: 3, name: 'CD Projekt Red', logo: 'https://via.placeholder.com/120?text=CD+Projekt' },
+  { id: 4, name: 'FromSoftware', logo: 'https://via.placeholder.com/120?text=FromSoftware' },
+  { id: 5, name: 'Valve', logo: 'https://via.placeholder.com/120?text=Valve' },
+  { id: 6, name: 'Epic Games', logo: 'https://via.placeholder.com/120?text=Epic' },
+  { id: 7, name: 'Activision Blizzard', logo: 'https://via.placeholder.com/120?text=Activision' },
+  { id: 8, name: 'Electronic Arts', logo: 'https://via.placeholder.com/120?text=EA' },
+  { id: 9, name: 'Take-Two Interactive', logo: 'https://via.placeholder.com/120?text=Take-Two' },
+  { id: 10, name: 'Ubisoft', logo: 'https://via.placeholder.com/120?text=Ubisoft' },
+  { id: 11, name: 'Microsoft Game Studios', logo: 'https://via.placeholder.com/120?text=Microsoft' },
+  { id: 12, name: 'Sony Interactive', logo: 'https://via.placeholder.com/120?text=Sony' },
+];
 
 const ENV_GENRES = [
   { id: 'mmorpg', name: 'MMORPG', image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600' },
@@ -97,6 +112,14 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedGame, setSelectedGame] = useState(null); // game whose cards are shown in the row
   const [showTrailerMode, setShowTrailerMode] = useState(false);
+  const [developerSearch, setDeveloperSearch] = useState('');
+  const [selectedDeveloper, setSelectedDeveloper] = useState(null);
+
+  const filteredDevelopers = useMemo(() => {
+    return MOCK_DEVELOPERS.filter(dev =>
+      dev.name.toLowerCase().includes(developerSearch.toLowerCase())
+    );
+  }, [developerSearch]);
 
   // Reset trailer mode when game changes
   useEffect(() => { setShowTrailerMode(false); }, [selectedGame]);
@@ -478,7 +501,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
-      {/* ── TOP panel (drops from header) — empty box ── */}
+      {/* ── TOP panel (drops from header) — Gaming Studios ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
@@ -486,15 +509,49 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed top-[64px] right-0 z-[34] p-6"
+            className="fixed top-[64px] right-0 z-[34] px-8 py-4"
             style={{
               left: '5%',
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
-              backdropFilter: 'blur(12px)',
-              pointerEvents: 'none',
-              height: '160px',
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 80%, transparent 100%)',
+              backdropFilter: 'blur(16px)',
             }}
-          />
+          >
+            <div className="w-full max-w-[1400px] mx-auto">
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-white tracking-widest uppercase">Gaming Studios</h3>
+                <div className="relative w-52">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                  <input
+                    type="text"
+                    placeholder="Search studios..."
+                    value={developerSearch}
+                    onChange={(e) => setDeveloperSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-white/40 focus:outline-none focus:border-cyan-400/50 transition-all"
+                  />
+                </div>
+              </div>
+              {/* Studios grid */}
+              <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {filteredDevelopers.map((dev) => (
+                  <motion.div
+                    key={dev.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                    className={`flex-shrink-0 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer w-[88px] ${
+                      selectedDeveloper?.id === dev.id
+                        ? 'bg-cyan-500/20 border-cyan-400/50 shadow-lg shadow-cyan-500/20'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/30'
+                    }`}
+                  >
+                    <img src={dev.logo} alt={dev.name} className="w-10 h-10 rounded-lg object-cover bg-white/10" />
+                    <p className="text-[9px] font-medium text-white text-center line-clamp-2 leading-tight">{dev.name}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
