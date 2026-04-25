@@ -114,6 +114,20 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [showTrailerMode, setShowTrailerMode] = useState(false);
   const [developerSearch, setDeveloperSearch] = useState('');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
+  const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
+
+  const GENRE_FILTERS = [
+    { id: 'action', label: 'Action' },
+    { id: 'adventure', label: 'Adventure' },
+    { id: 'rpg', label: 'RPG' },
+    { id: 'shooting', label: 'Shooter' },
+    { id: 'fantasy', label: 'Fantasy' },
+    { id: 'sci-fi', label: 'Sci-Fi' },
+    { id: 'horror', label: 'Horror' },
+    { id: 'sports', label: 'Sports' },
+    { id: 'strategy', label: 'Strategy' },
+    { id: 'simulation', label: 'Simulation' },
+  ];
 
   const filteredDevelopers = useMemo(() => {
     return MOCK_DEVELOPERS.filter(dev =>
@@ -168,6 +182,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             .map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }))
             .filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
         }
+      }
+      if (selectedGenreFilter) {
+        all = all.filter(g => g.genre?.toLowerCase().includes(selectedGenreFilter));
       }
       if (searchTerm && searchTerm.trim()) {
         const term = searchTerm.trim().toLowerCase();
@@ -656,49 +673,48 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             }}
             onWheel={handleWheel}
           >
-            <div className="w-full max-w-[1400px] mx-auto mb-4 flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
+            {/* ── Persistent genre filter bar — always visible ── */}
+            <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
+              {/* Left: back button or label */}
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {selectedGame ? (
-                  <>
-                    <button
-                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
-                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Back
-                    </button>
-                    <div className="w-px h-4 bg-white/20" />
-                    <div className="w-6 h-6 rounded overflow-hidden border border-white/20 flex-shrink-0">
-                      <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
-                    </div>
-                    <span className="font-bold tracking-widest uppercase text-sm text-white">
-                      {selectedGame.displayTitle}
-                    </span>
-                  </>
+                  <button
+                    onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
+                    className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back
+                  </button>
                 ) : (
-                  <>
-                    {activeTab === 'library' ? <Library className="w-5 h-5 text-cyan-400" /> : <Globe className="w-5 h-5 text-purple-400" />}
-                    <h3 className="text-white font-bold tracking-widest uppercase text-sm">
-                      {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
-                    </h3>
-                    {selectedDeveloper && activeTab === 'library' && (
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-bold">
-                        <span>{selectedDeveloper.name}</span>
-                        <button
-                          onClick={() => setSelectedDeveloper(null)}
-                          className="w-3.5 h-3.5 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 flex items-center justify-center transition-all"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    )}
-                  </>
+                  <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Filter</span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-white/50 text-xs font-medium">
-                {!selectedGame && <span>Row {currentRow + 1} of {totalRows}</span>}
-                <div className="flex gap-1 bg-white/5 rounded-lg p-1 border border-white/10">
-                  <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                  <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-4 h-4" /></button>
+
+              {/* Genre filter pills — scrollable on hover, 2 visible at a time */}
+              <div
+                className="flex gap-2 overflow-x-auto flex-1"
+                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+              >
+                {GENRE_FILTERS.map((g) => (
+                  <button
+                    key={g.id}
+                    onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                      selectedGenreFilter === g.id
+                        ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                        : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right: row nav */}
+              <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
+                {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
+                <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
+                  <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             </div>
