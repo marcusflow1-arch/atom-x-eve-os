@@ -692,13 +692,13 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 )}
               </div>
 
-              {/* Spacer */}
-              <div className="flex-1" />
+              {/* Vertical divider */}
+              <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
 
-              {/* Genre filter pills — right-aligned, scrollable */}
+              {/* Genre filter pills — left of center, scrollable */}
               <div
                 className="flex gap-2 overflow-x-auto"
-                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '70%' }}
+                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
               >
                 {GENRE_FILTERS.map((g) => (
                   <button
@@ -714,6 +714,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   </button>
                 ))}
               </div>
+
+              {/* Spacer pushes row nav to far right */}
+              <div className="flex-1" />
 
               {/* Row nav */}
               <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
