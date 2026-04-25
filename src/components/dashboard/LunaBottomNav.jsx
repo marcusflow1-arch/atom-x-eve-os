@@ -673,9 +673,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             }}
             onWheel={handleWheel}
           >
-            {/* ── Persistent genre filter bar — always visible ── */}
+            {/* ── Persistent filter bar — always visible ── */}
             <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-              {/* Left: back button or label */}
+              {/* Left: Library icon + label, or Back button when in game detail */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {selectedGame ? (
                   <button
@@ -685,14 +685,20 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <ChevronLeft className="w-4 h-4" /> Back
                   </button>
                 ) : (
-                  <span className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Filter</span>
+                  <div className="flex items-center gap-2">
+                    <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                    <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
+                  </div>
                 )}
               </div>
 
-              {/* Genre filter pills — scrollable on hover, 2 visible at a time */}
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Genre filter pills — right-aligned, scrollable */}
               <div
-                className="flex gap-2 overflow-x-auto flex-1"
-                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                className="flex gap-2 overflow-x-auto"
+                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '70%' }}
               >
                 {GENRE_FILTERS.map((g) => (
                   <button
@@ -709,7 +715,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 ))}
               </div>
 
-              {/* Right: row nav */}
+              {/* Row nav */}
               <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
                 {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
                 <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
