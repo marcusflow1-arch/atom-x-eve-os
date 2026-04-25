@@ -57,6 +57,84 @@ const RARITY_STYLES = {
   legendary: { glow: 'rgba(255,180,40,0.45)', border: 'rgba(255,180,40,0.45)', text: '#ffb828' },
 };
 
+const SHOWCASE_LABELS = ['Trending', 'New Release', 'Top Rated', 'Staff Pick', 'Fan Favorite'];
+
+function StudioGameCarousel({ games }) {
+  const [idx, setIdx] = useState(0);
+  const [dir, setDir] = useState(1);
+
+  const pool = games.slice(0, 10);
+
+  useEffect(() => {
+    if (pool.length === 0) return;
+    const t = setInterval(() => {
+      setDir(1);
+      setIdx(p => (p + 1) % pool.length);
+    }, 3500);
+    return () => clearInterval(t);
+  }, [pool.length]);
+
+  const game = pool[idx];
+  const label = SHOWCASE_LABELS[idx % SHOWCASE_LABELS.length];
+
+  if (!game) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <Flame className="w-8 h-8 text-white/10" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <AnimatePresence mode="wait" custom={dir}>
+        <motion.div
+          key={game.id + '-' + idx}
+          custom={dir}
+          initial={{ opacity: 0, x: dir * 60 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: dir * -60 }}
+          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          className="absolute inset-0"
+        >
+          <img src={game.banner_image || game.cover_image} alt={game.title} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-l from-black/40 to-transparent" />
+
+          {/* Label badge */}
+          <div className="absolute top-3 left-4">
+            <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/40 rounded-full px-2.5 py-0.5">
+              <Flame className="w-2.5 h-2.5 text-orange-400" />
+              <span className="text-orange-300 text-[9px] font-bold uppercase tracking-wider">{label}</span>
+            </div>
+          </div>
+
+          {/* Game info */}
+          <div className="absolute bottom-3 left-4 right-10">
+            <h3 className="text-white font-black text-sm leading-tight truncate drop-shadow-lg">{game.title}</h3>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-white/50 text-[9px]">{game.genre}</span>
+              {game.price > 0 && <span className="text-green-400 font-bold text-[9px]">${game.price}</span>}
+              {game.original_year && <span className="text-white/30 text-[9px]">{game.original_year}</span>}
+            </div>
+          </div>
+
+          {/* Dot nav */}
+          <div className="absolute bottom-3 right-3 flex flex-col gap-1">
+            {pool.slice(0, 6).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => { setDir(i > idx ? 1 : -1); setIdx(i); }}
+                className={`rounded-full transition-all ${i === idx ? 'w-1.5 h-4 bg-white' : 'w-1.5 h-1.5 bg-white/30'}`}
+              />
+            ))}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, onSelectGame, onSelectItem }) {
   const rows = [0, 1].map(offset => {
     const start = (currentRow + offset) * itemsPerRow;
@@ -664,10 +742,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 flex flex-col items-center justify-center gap-3"
-                      style={{ background: 'rgba(255,255,255,0.02)' }}
+                      className="absolute inset-0"
                     >
-
+                      <StudioGameCarousel games={games} />
                     </motion.div>
                   )}
                 </AnimatePresence>
