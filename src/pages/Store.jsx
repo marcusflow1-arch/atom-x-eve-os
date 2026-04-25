@@ -41,7 +41,7 @@ import StoreRecommendationsSidebar from '../components/store/StoreRecommendation
 import CategorySearchBar from '../components/store/CategorySearchBar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import { DollarSign, Building2 } from 'lucide-react';
-import StudioDrawer from '../components/store/StudioDrawer';
+import StudioDrawer, { MOCK_STUDIOS } from '../components/store/StudioDrawer';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -565,29 +565,23 @@ export default function Store() {
                               <div className="absolute inset-x-0 top-0 bottom-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.15) 65%, transparent 100%)' }} />
                             </div>
 
-                            {/* Scrollable genre tabs */}
+                            {/* Scrollable studio tabs */}
                             <div className="flex-1 min-w-0 relative overflow-hidden">
                               <div className="absolute left-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(8,12,18,0.9), transparent)' }} />
                               <div className="absolute right-0 top-0 bottom-0 w-6 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(8,12,18,0.9), transparent)' }} />
                               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth px-2">
-                                {genreData.map((genre, idx) => {
-                                  const Icon = genre.icon;
-                                  const isActive = idx === activeGenreIndex;
-                                  return (
-                                    <button
-                                      key={genre.id}
-                                      onClick={() => { setActiveGenreIndex(idx); setActiveSubCategoryIndex(0); setStoreMode('store'); }}
-                                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 ${
-                                        isActive
-                                          ? 'bg-white/12 border-white/20 text-white'
-                                          : 'bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70'
-                                      }`}
-                                    >
-                                      {Icon && <Icon className="w-3.5 h-3.5" />}
-                                      <span>{genre.label}</span>
-                                    </button>
-                                  );
-                                })}
+                                {MOCK_STUDIOS.map((studio) => (
+                                  <button
+                                    key={studio.id}
+                                    onClick={() => setStudioDrawerOpen(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-full whitespace-nowrap border transition-all text-xs font-semibold flex-shrink-0 bg-transparent border-transparent text-white/45 hover:bg-white/5 hover:text-white/70"
+                                  >
+                                    <div className="w-4 h-4 rounded bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-[8px] flex-shrink-0">
+                                      {studio.initials}
+                                    </div>
+                                    <span>{studio.name}</span>
+                                  </button>
+                                ))}
                               </div>
                             </div>
 

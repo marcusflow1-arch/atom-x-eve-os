@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Star } from 'lucide-react';
 import StudioGamesPanel from './StudioGamesPanel';
 
-const MOCK_STUDIOS = [
+export const MOCK_STUDIOS = [
   { id: 'studio-1', name: 'Neon Studios', initials: 'NS', description: 'Crafting immersive cyberpunk experiences', gamesCount: 8 },
   { id: 'studio-2', name: 'Phantom Games', initials: 'PG', description: 'Masters of action-packed adventures', gamesCount: 12 },
   { id: 'studio-3', name: 'Apex Digital', initials: 'AD', description: 'Revolutionary indie game developers', gamesCount: 5 },
