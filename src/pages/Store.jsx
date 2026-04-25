@@ -42,6 +42,7 @@ import CategorySearchBar from '../components/store/CategorySearchBar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import { DollarSign, Building2 } from 'lucide-react';
 import StudioDrawer, { MOCK_STUDIOS } from '../components/store/StudioDrawer';
+import StoreHeaderSearchPanel from '../components/store/StoreHeaderSearchPanel';
 
 const GENRE_ICONS = {
     'Action': SwordsIcon,
@@ -210,6 +211,7 @@ export default function Store() {
     const [pendingNavigateUrl, setPendingNavigateUrl] = useState(null);
     const [hoveredGame, setHoveredGame] = useState(null);
     const [studioDrawerOpen, setStudioDrawerOpen] = useState(false);
+    const [headerSearchOpen, setHeaderSearchOpen] = useState(false);
     const genreRefs = useRef([]);
     const genreScrollRef = useRef(null);
     const contentScrollRef = useRef(null);
@@ -468,7 +470,9 @@ export default function Store() {
                       <Building2 className="w-3.5 h-3.5" />
                       Studios
                     </button>
-                    <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                    <div onClick={() => setHeaderSearchOpen(true)} className="cursor-pointer">
+                      <StoreSearchDropdown games={games} onGameSelect={handleNavigateToGame} isListening={isRegularVoiceListening} toggleVoice={() => { toggleRegularVoice(); }} />
+                    </div>
                   </div>
                 </div>
               }
@@ -840,6 +844,12 @@ export default function Store() {
                                     if (url) navigate(url);
                                 }} />
                             )}
+
+                            {/* HEADER SEARCH PANEL */}
+                            <StoreHeaderSearchPanel
+                              isOpen={headerSearchOpen}
+                              onClose={() => setHeaderSearchOpen(false)}
+                            />
 
                             {/* STUDIO DRAWER */}
                             <StudioDrawer
