@@ -767,8 +767,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
-              top: isLibraryExpanded && activeTab === 'library' ? '280px' : 'auto',
-              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 328px)' : 'auto',
+              top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
+              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 312px)' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
             }}
