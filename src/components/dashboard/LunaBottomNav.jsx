@@ -193,6 +193,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [developerSearch, setDeveloperSearch] = useState('');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const GENRE_FILTERS = [
     { id: 'action', label: 'Action' },
@@ -766,14 +767,17 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
+              top: isExpanded ? '264px' : 'auto',
+              bottom: isExpanded ? 'auto' : '48px',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
+              transition: 'top 0.3s ease, bottom 0.3s ease',
             }}
             onWheel={handleWheel}
           >
             {/* ── Persistent filter bar — always visible ── */}
             <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-              {/* Left: Library icon + label, or Back button when in game detail */}
+              {/* Left: Library icon + label (button), or Back button when in game detail */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {selectedGame ? (
                   <button
@@ -783,10 +787,13 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <ChevronLeft className="w-4 h-4" /> Back
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 text-white text-xs font-bold uppercase tracking-widest transition-all"
+                  >
                     <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
-                    <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
-                  </div>
+                    <span>Store Library</span>
+                  </button>
                 )}
               </div>
 
