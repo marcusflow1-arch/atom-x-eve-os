@@ -152,10 +152,26 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
 
   const getItems = () => {
     if (activeTab === 'library') {
-      const all = games.map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }));
+      let all = games.map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }));
+      // Filter by selected developer
+      if (selectedDeveloper) {
+        const devName = selectedDeveloper.name.toLowerCase();
+        all = all.filter(g =>
+          g.tags?.some(t => t.toLowerCase().includes(devName)) ||
+          g.description?.toLowerCase().includes(devName) ||
+          // fallback: show all but mark — for mock data just show a subset by id mod
+          (g.id && selectedDeveloper.id && (parseInt(g.id, 36) % MOCK_DEVELOPERS.length) + 1 === selectedDeveloper.id)
+        );
+        // If no real matches, use id-based bucketing so each dev shows something
+        if (all.length === 0) {
+          all = games
+            .map(g => ({ ...g, displayTitle: g.title, displayImage: g.cover_image || g.banner_image }))
+            .filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
+        }
+      }
       if (searchTerm && searchTerm.trim()) {
         const term = searchTerm.trim().toLowerCase();
-        return all.filter(g => g.displayTitle?.toLowerCase().includes(term) || g.genre?.toLowerCase().includes(term));
+        all = all.filter(g => g.displayTitle?.toLowerCase().includes(term) || g.genre?.toLowerCase().includes(term));
       }
       return all;
     }
@@ -595,6 +611,17 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     <h3 className="text-white font-bold tracking-widest uppercase text-sm">
                       {activeTab === 'library' ? (libraryLabel || 'Library Games') : 'Environment Hubs'}
                     </h3>
+                    {selectedDeveloper && activeTab === 'library' && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-bold">
+                        <span>{selectedDeveloper.name}</span>
+                        <button
+                          onClick={() => setSelectedDeveloper(null)}
+                          className="w-3.5 h-3.5 rounded-full bg-cyan-400/20 hover:bg-cyan-400/40 flex items-center justify-center transition-all"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
