@@ -643,10 +643,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                       className="absolute inset-0 flex flex-col items-center justify-center gap-3"
                       style={{ background: 'rgba(255,255,255,0.02)' }}
                     >
-                      <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
-                        <Search className="w-6 h-6 text-white/20" />
-                      </div>
-                      <p className="text-white/25 text-xs font-medium">Select a studio to preview</p>
+
                     </motion.div>
                   )}
                 </AnimatePresence>
