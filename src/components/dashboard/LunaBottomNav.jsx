@@ -193,6 +193,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [developerSearch, setDeveloperSearch] = useState('');
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
+  const [isLibraryExpanded, setIsLibraryExpanded] = useState(false);
 
   const GENRE_FILTERS = [
     { id: 'action', label: 'Action' },
@@ -766,6 +767,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
+              top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
             }}
@@ -785,7 +787,12 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 ) : (
                   <div className="flex items-center gap-2">
                     <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
-                    <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
+                    <button
+                      onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                      className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                    >
+                      Store Library
+                    </button>
                   </div>
                 )}
               </div>
