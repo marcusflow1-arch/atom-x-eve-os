@@ -774,65 +774,82 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             }}
             onWheel={handleWheel}
           >
-            {/* ── Persistent filter bar — always visible ── */}
-            <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-              {/* Left: Library icon + label, or Back button when in game detail */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {selectedGame ? (
-                  <button
-                    onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
-                    className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Back
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+            {/* ── Persistent filter bar — always visible (hidden in expanded library) ── */}
+            {!(isLibraryExpanded && activeTab === 'library') && (
+              <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
+                {/* Left: Library icon + label, or Back button when in game detail */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {selectedGame ? (
                     <button
-                      onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-                      className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
+                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
                     >
-                      Store Library
+                      <ChevronLeft className="w-4 h-4" /> Back
                     </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                      <button
+                        onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                        className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                      >
+                        Store Library
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Vertical divider */}
+                <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
+
+                {/* Genre filter pills — left of center, scrollable */}
+                <div
+                  className="flex gap-2 overflow-x-auto"
+                  style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
+                >
+                  {GENRE_FILTERS.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                      className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                        selectedGenreFilter === g.id
+                          ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                          : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Spacer pushes row nav to far right */}
+                <div className="flex-1" />
+
+                {/* Row nav */}
+                <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
+                  {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
+                  <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
+                    <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
                   </div>
-                )}
-              </div>
-
-              {/* Vertical divider */}
-              <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
-
-              {/* Genre filter pills — left of center, scrollable */}
-              <div
-                className="flex gap-2 overflow-x-auto"
-                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
-              >
-                {GENRE_FILTERS.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                      selectedGenreFilter === g.id
-                        ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                        : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
-                    }`}
-                  >
-                    {g.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Spacer pushes row nav to far right */}
-              <div className="flex-1" />
-
-              {/* Row nav */}
-              <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
-                {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
-                <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
-                  <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
-            </div>
+            )}
+            
+            {/* Only show Store Library label in expanded mode */}
+            {isLibraryExpanded && activeTab === 'library' && (
+              <div className="w-full max-w-[1400px] mx-auto mb-3 px-2">
+                <div className="flex items-center gap-2">
+                  <Library className="w-4 h-4 text-cyan-400" />
+                  <button
+                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                    className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                  >
+                    Store Library
+                  </button>
+                </div>
+              </div>
+            )}
             {selectedGame && !isLibraryExpanded ? (
               /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
               <div
