@@ -799,29 +799,6 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   )}
                 </div>
 
-                {/* Vertical divider */}
-                <div className="w-px h-5 bg-white/20 flex-shrink-0 mx-1" />
-
-                {/* Genre filter pills — left of center, scrollable */}
-                <div
-                  className="flex gap-2 overflow-x-auto"
-                  style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', maxWidth: '55%' }}
-                >
-                  {GENRE_FILTERS.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
-                      className={`flex-shrink-0 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                        selectedGenreFilter === g.id
-                          ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                          : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white hover:border-white/20'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-
                 {/* Spacer pushes row nav to far right */}
                 <div className="flex-1" />
 
