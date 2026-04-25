@@ -517,7 +517,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
-      {/* ── TOP panel (drops from header) — Gaming Studios ── */}
+      {/* ── TOP panel (drops from header) — Gaming Studios 50/50 ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
@@ -525,47 +525,113 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed top-[64px] right-0 z-[34] px-8 py-4"
+            className="fixed top-[64px] right-0 z-[34]"
             style={{
               left: '5%',
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 80%, transparent 100%)',
-              backdropFilter: 'blur(16px)',
+              height: '200px',
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.90) 80%, transparent 100%)',
+              backdropFilter: 'blur(20px)',
             }}
           >
-            <div className="w-full max-w-[1400px] mx-auto">
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-white tracking-widest uppercase">Gaming Studios</h3>
-                <div className="relative w-52">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                  <input
-                    type="text"
-                    placeholder="Search studios..."
-                    value={developerSearch}
-                    onChange={(e) => setDeveloperSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-white/40 focus:outline-none focus:border-cyan-400/50 transition-all"
-                  />
+            <div className="w-full h-full max-w-[1400px] mx-auto flex gap-0 overflow-hidden">
+
+              {/* LEFT 50% — Studios list */}
+              <div className="w-1/2 flex flex-col h-full border-r border-white/8 px-6 py-3">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                  <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
+                  <div className="relative w-44">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
+                    <input
+                      type="text"
+                      placeholder="Search studios..."
+                      value={developerSearch}
+                      onChange={(e) => setDeveloperSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/35 focus:outline-none focus:border-cyan-400/50 transition-all"
+                    />
+                  </div>
+                </div>
+                {/* Studios scrollable grid */}
+                <div className="flex flex-wrap gap-2 overflow-y-auto flex-1" style={{ scrollbarWidth: 'none' }}>
+                  {filteredDevelopers.map((dev) => (
+                    <motion.div
+                      key={dev.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all cursor-pointer flex-shrink-0 ${
+                        selectedDeveloper?.id === dev.id
+                          ? 'bg-cyan-500/20 border-cyan-400/50 shadow-[0_0_12px_rgba(34,211,238,0.25)]'
+                          : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/30'
+                      }`}
+                    >
+                      <img src={dev.logo} alt={dev.name} className="w-6 h-6 rounded-md object-cover bg-white/10 flex-shrink-0" />
+                      <p className={`text-[10px] font-semibold whitespace-nowrap ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/80'}`}>{dev.name}</p>
+                      {selectedDeveloper?.id === dev.id && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse flex-shrink-0" />
+                      )}
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-              {/* Studios grid */}
-              <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                {filteredDevelopers.map((dev) => (
-                  <motion.div
-                    key={dev.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
-                    className={`flex-shrink-0 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer w-[88px] ${
-                      selectedDeveloper?.id === dev.id
-                        ? 'bg-cyan-500/20 border-cyan-400/50 shadow-lg shadow-cyan-500/20'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-cyan-400/30'
-                    }`}
-                  >
-                    <img src={dev.logo} alt={dev.name} className="w-10 h-10 rounded-lg object-cover bg-white/10" />
-                    <p className="text-[9px] font-medium text-white text-center line-clamp-2 leading-tight">{dev.name}</p>
-                  </motion.div>
-                ))}
+
+              {/* RIGHT 50% — Studio banner / spotlight */}
+              <div className="w-1/2 h-full relative overflow-hidden">
+                <AnimatePresence mode="wait">
+                  {selectedDeveloper ? (
+                    <motion.div
+                      key={selectedDeveloper.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                      className="absolute inset-0"
+                    >
+                      {/* Banner image — use first matching game's banner or a genre image */}
+                      {(() => {
+                        const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
+                        const bannerImg = devGames[0]?.banner_image || devGames[0]?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
+                        return (
+                          <>
+                            <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.1) 100%)' }} />
+                            <div className="absolute inset-0 flex flex-col justify-center px-8">
+                              <div className="flex items-center gap-3 mb-3">
+                                <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-12 h-12 rounded-xl border border-white/20 object-cover bg-white/10" />
+                                <div>
+                                  <p className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Studio Spotlight</p>
+                                  <h2 className="text-white font-black text-xl tracking-wide">{selectedDeveloper.name}</h2>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="px-2 py-0.5 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-[9px] font-bold uppercase rounded-full">
+                                  {devGames.length} Game{devGames.length !== 1 ? 's' : ''}
+                                </span>
+                                <span className="px-2 py-0.5 bg-white/10 border border-white/15 text-white/70 text-[9px] font-bold uppercase rounded-full">View Library ↓</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="placeholder"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+                      style={{ background: 'rgba(255,255,255,0.02)' }}
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                        <Search className="w-6 h-6 text-white/20" />
+                      </div>
+                      <p className="text-white/25 text-xs font-medium">Select a studio to preview</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
+
             </div>
           </motion.div>
         )}
