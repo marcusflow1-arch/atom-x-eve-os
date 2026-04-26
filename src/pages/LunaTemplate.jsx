@@ -79,7 +79,6 @@ import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOffli
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
-import GlobalGameSearch from '../components/shared/GlobalGameSearch';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -591,12 +590,7 @@ export default function LunaTemplate() {
 
   return (
     <PageErrorBoundary pageName="LunaTemplate">
-    <GlassPageFrame bottomContent={
-      <div className="flex items-center w-full h-full gap-3">
-        <div className="flex-1 min-w-0"><LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} /></div>
-        <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
-      </div>
-    }>
+    <GlassPageFrame bottomContent={<LunaBottomNav isEnvironmentActive={isEnvironmentActive} searchTerm={librarySearchTerm} onSearchChange={setLibrarySearchTerm} />}>
     {/* Combat XP handler — listens for kill events and updates AvatarProgression */}
     <CombatXPHandler />
     <MultiplayerSystem envUrl={roomModelUrl} />

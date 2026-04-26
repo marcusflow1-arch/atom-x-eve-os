@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
@@ -167,12 +166,7 @@ export default function GenreMastery({ onClose }) {
   }, [marketView]);
 
   return (
-    <GlassPageFrame bottomContent={
-      <div className="flex items-center w-full h-full gap-3">
-        <div className="flex-1 min-w-0"><GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} /></div>
-        <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
-      </div>
-    }>
+    <GlassPageFrame bottomContent={<GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} />}>
       <div className="flex w-full h-full">
         {/* 5% Left Sidebar for Global Icons */}
         <div className={`transition-all duration-500 ${isSidebarCollapsed ? 'w-0 min-w-0 border-none opacity-0' : 'w-[5%] min-w-[80px] border-r border-white/10'} flex-shrink-0 relative z-50 flex flex-col items-center bg-black/20 backdrop-blur-sm`}>
