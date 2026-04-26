@@ -1,0 +1,105 @@
+{
+  "name": "AnimationKeybind",
+  "type": "object",
+  "properties": {
+    "modelId": {
+      "type": "string",
+      "description": "ID of the Model3D entity this keybind applies to"
+    },
+    "modelName": {
+      "type": "string",
+      "description": "Display name of the model for readability"
+    },
+    "key": {
+      "type": "string",
+      "description": "The keyboard key code assigned (e.g. Space, KeyC, ShiftLeft)"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable label for this keybind (e.g. Jump Combo, Attack Sequence)"
+    },
+    "playbackType": {
+      "type": "string",
+      "enum": [
+        "tap",
+        "hold",
+        "toggle"
+      ],
+      "default": "tap",
+      "description": "Tap = play once, Hold = sustain while pressed, Toggle = press to start / press again to stop"
+    },
+    "interruptible": {
+      "type": "boolean",
+      "default": true,
+      "description": "If false, no other animation can interrupt this keybind while active"
+    },
+    "animationSequence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "animationId": {
+            "type": "string"
+          },
+          "animationName": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "loop": {
+            "type": "boolean",
+            "default": false
+          },
+          "movementBehavior": {
+            "type": "string",
+            "enum": [
+              "in_place",
+              "root_motion",
+              "snap_back"
+            ],
+            "default": "in_place",
+            "description": "in_place = no movement, root_motion = animation moves character, snap_back = return to origin after"
+          },
+          "snapBehavior": {
+            "type": "string",
+            "enum": [
+              "snap_to_origin",
+              "maintain_end",
+              "blend_to_idle_pos"
+            ],
+            "default": "maintain_end",
+            "description": "Post-animation position handling"
+          },
+          "returnState": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "previous",
+              "freeze",
+              "specific"
+            ],
+            "default": "idle",
+            "description": "What state to transition to after this animation completes"
+          },
+          "returnAnimationName": {
+            "type": "string",
+            "description": "If returnState is 'specific', the name of the animation to transition to"
+          }
+        },
+        "required": [
+          "animationId",
+          "animationName",
+          "fileUrl"
+        ]
+      },
+      "default": [],
+      "description": "Ordered list of animations to play sequentially when key is pressed"
+    }
+  },
+  "required": [
+    "modelId",
+    "key",
+    "animationSequence"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "AnimationFolder",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the folder"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description of what animations this folder contains"
+    },
+    "color": {
+      "type": "string",
+      "default": "purple",
+      "description": "Color label for the folder"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

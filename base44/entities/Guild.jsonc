@@ -1,0 +1,35 @@
+{
+  "name": "Guild",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the guild"
+    },
+    "description": {
+      "type": "string",
+      "description": "Guild description"
+    },
+    "leader_id": {
+      "type": "string",
+      "description": "ID of the guild leader"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "URL to guild logo"
+    },
+    "resources": {
+      "type": "object",
+      "description": "Shared resources (e.g., { gold: 1000, materials: 50 })",
+      "default": {}
+    }
+  },
+  "required": [
+    "name",
+    "leader_id"
+  ]
+}

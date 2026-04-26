@@ -1,0 +1,157 @@
+{
+  "name": "Division",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the clan/division"
+    },
+    "tag": {
+      "type": "string",
+      "description": "Short clan tag (e.g. [AXE])"
+    },
+    "motto": {
+      "type": "string",
+      "description": "Short phrase shown under clan name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Public description"
+    },
+    "leaderId": {
+      "type": "string",
+      "description": "User ID of the clan leader"
+    },
+    "playstyles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Clan playstyles (Casual, Hardcore, etc)"
+    },
+    "genres": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Preferred game genres"
+    },
+    "gameTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Games this clan focuses on"
+    },
+    "activities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Primary clan activities"
+    },
+    "focusTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Legacy tag for playstyles"
+    },
+    "isPrivate": {
+      "type": "boolean",
+      "default": false
+    },
+    "recruitmentStatus": {
+      "type": "string",
+      "enum": [
+        "Public",
+        "Request to Join",
+        "Invite Only"
+      ],
+      "default": "Public"
+    },
+    "sizeLimit": {
+      "type": "number",
+      "default": 100
+    },
+    "is_development": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flag to hide clans created during development/testing"
+    },
+    "icon": {
+      "type": "string",
+      "description": "URL to icon/emblem"
+    },
+    "banner": {
+      "type": "string",
+      "description": "URL to banner image"
+    },
+    "primaryColor": {
+      "type": "string",
+      "description": "Clan primary color"
+    },
+    "secondaryColor": {
+      "type": "string",
+      "description": "Clan secondary color"
+    },
+    "customRoles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Custom clan roles"
+    },
+    "searchTags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for search and discovery"
+    },
+    "enableStronghold": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable 3D Clan Headquarters"
+    },
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "reputation": {
+      "type": "number",
+      "default": 0,
+      "description": "Clan social reputation score"
+    },
+    "memberCount": {
+      "type": "number",
+      "default": 1
+    },
+    "clanAchievements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "name",
+    "leaderId"
+  ]
+}

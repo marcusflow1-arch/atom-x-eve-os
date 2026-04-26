@@ -613,6 +613,23 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
+      {/* ── Blur overlay behind panels ── */}
+      <AnimatePresence>
+        {activeTab !== 'home' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[33] pointer-events-none"
+            style={{
+              background: 'rgba(0, 0, 0, 0.4)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── TOP panel (drops from header) — Gaming Studios 50/50 ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (

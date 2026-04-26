@@ -1,0 +1,211 @@
+{
+  "name": "SceneLayout",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the scene configuration"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the scene"
+    },
+    "environment_model_id": {
+      "type": "string",
+      "description": "ID of the Model3D or ModelFBX used as the environment"
+    },
+    "environment_url": {
+      "type": "string",
+      "description": "Direct URL of the environment model"
+    },
+    "environment_transform": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        },
+        "rotation": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        },
+        "scale": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "z": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "default": {
+        "position": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "scale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "model_id": {
+            "type": "string"
+          },
+          "model_url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "instance_name": {
+            "type": "string",
+            "description": "Unique instance label (e.g., YBot_Player, YBot_NPC_01)"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "player",
+              "npc",
+              "autonomous",
+              "static"
+            ],
+            "default": "static",
+            "description": "Behavior role for this instance"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "static",
+              "interactive",
+              "spawn_point"
+            ],
+            "default": "static"
+          },
+          "transform": {
+            "type": "object",
+            "properties": {
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                }
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                }
+              },
+              "scale": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "scripts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "script_id": {
+                  "type": "string",
+                  "description": "ID of Model3DScript to attach"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Optional parameters for the script"
+                }
+              },
+              "required": [
+                "script_id"
+              ]
+            },
+            "default": []
+          }
+        },
+        "required": [
+          "id",
+          "model_url"
+        ]
+      },
+      "default": []
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this is the active scene for the app"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

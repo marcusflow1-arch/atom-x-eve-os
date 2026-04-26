@@ -1,0 +1,66 @@
+{
+  "name": "EngineChatMessage",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "user",
+        "assistant",
+        "system"
+      ],
+      "description": "Who sent the message"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "actions_taken": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "e.g. add_primitive, add_model, create_terrain, create_blueprint"
+          },
+          "description": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "default": [],
+      "description": "Actions the AI took in the scene as a result of this message"
+    },
+    "knowledge_used": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "IDs of KnowledgeEntry or GameKnowledge records that informed the response"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Groups messages into a conversation session"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "executed",
+        "failed"
+      ],
+      "default": "executed",
+      "description": "Execution status of the command"
+    }
+  },
+  "required": [
+    "role",
+    "content"
+  ]
+}

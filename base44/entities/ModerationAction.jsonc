@@ -1,0 +1,68 @@
+{
+  "name": "ModerationAction",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "mute",
+        "delete_message",
+        "zone_ban",
+        "clan_ban",
+        "warning"
+      ],
+      "description": "The type of moderation action taken"
+    },
+    "target_user_id": {
+      "type": "string",
+      "description": "ID of the user being moderated"
+    },
+    "moderator_id": {
+      "type": "string",
+      "description": "ID of the moderator performing the action"
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": [
+        "global",
+        "clan",
+        "zone"
+      ],
+      "description": "The scope level of the action"
+    },
+    "scope_id": {
+      "type": "string",
+      "description": "ID of the specific clan or zone (context)"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the moderation action"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the action expires (for temp mutes/bans). Null for permanent or immediate actions."
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the action was reversed/revoked"
+    },
+    "revoked_by": {
+      "type": "string",
+      "description": "ID of the moderator who revoked the action"
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "ID of the related entity (e.g., the deleted message ID)"
+    }
+  },
+  "required": [
+    "type",
+    "target_user_id",
+    "moderator_id",
+    "scope_type",
+    "scope_id",
+    "reason"
+  ]
+}

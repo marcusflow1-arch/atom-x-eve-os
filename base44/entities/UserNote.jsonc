@@ -1,0 +1,27 @@
+{
+  "name": "UserNote",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "content": {
+      "type": "string",
+      "description": "Note content (markdown supported)"
+    },
+    "linked_event_id": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "user_id",
+    "content"
+  ]
+}

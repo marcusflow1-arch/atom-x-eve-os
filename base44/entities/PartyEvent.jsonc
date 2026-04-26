@@ -1,0 +1,37 @@
+{
+  "name": "PartyEvent",
+  "type": "object",
+  "properties": {
+    "party_id": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "launch"
+      ],
+      "default": "launch"
+    },
+    "target_user_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "acknowledged",
+        "dismissed"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "party_id",
+    "game_id",
+    "type",
+    "target_user_id"
+  ]
+}

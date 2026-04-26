@@ -1,0 +1,35 @@
+{
+  "name": "ClanApplication",
+  "type": "object",
+  "properties": {
+    "divisionId": {
+      "type": "string",
+      "description": "The ID of the clan being applied to"
+    },
+    "userId": {
+      "type": "string",
+      "description": "The ID of the user applying"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional message from the applicant"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "divisionId",
+    "userId"
+  ]
+}

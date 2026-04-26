@@ -1,0 +1,73 @@
+{
+  "name": "CraftingProject",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Name of the crafting project"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the item being crafted"
+    },
+    "initiator_id": {
+      "type": "string",
+      "description": "User ID who started the project"
+    },
+    "target_item_type": {
+      "type": "string",
+      "description": "Type of item to be crafted"
+    },
+    "required_materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "material_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "contributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "material_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      },
+      "default": []
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planning",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planning"
+    },
+    "result_item_id": {
+      "type": "string",
+      "description": "ID of the created item when completed"
+    }
+  },
+  "required": [
+    "title",
+    "initiator_id",
+    "required_materials"
+  ]
+}

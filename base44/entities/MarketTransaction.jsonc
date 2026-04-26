@@ -1,0 +1,46 @@
+{
+  "name": "MarketTransaction",
+  "type": "object",
+  "properties": {
+    "buyer_id": {
+      "type": "string",
+      "description": "ID of the user who bought the item"
+    },
+    "seller_id": {
+      "type": "string",
+      "description": "ID of the user who sold the item"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "ID of the item sold"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Name of the item sold (snapshot)"
+    },
+    "price": {
+      "type": "number",
+      "description": "Transaction price"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": [
+        "purchase",
+        "sale",
+        "bid_win"
+      ],
+      "description": "Type of transaction"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "buyer_id",
+    "seller_id",
+    "item_id",
+    "price",
+    "transaction_type"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "name": "Enchantment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Enchantment name"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the enchantment does"
+    },
+    "element": {
+      "type": "string",
+      "enum": [
+        "fire",
+        "ice",
+        "lightning",
+        "poison",
+        "holy",
+        "shadow",
+        "plasma",
+        "emp",
+        "gravitic",
+        "ionic",
+        "bleed",
+        "piercing",
+        "force"
+      ],
+      "description": "Enchantment element type"
+    },
+    "genre_pools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Which genres this enchantment can be applied to"
+    },
+    "slot_cost": {
+      "type": "number",
+      "default": 1,
+      "description": "How many enchantment slots this takes"
+    },
+    "modifiers": {
+      "type": "object",
+      "description": "Stat modifications this enchantment provides"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Epic",
+        "Legendary"
+      ],
+      "description": "Enchantment rarity"
+    },
+    "allowed_item_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Item types this can be applied to"
+    },
+    "material_cost": {
+      "type": "object",
+      "description": "Materials required to apply this enchantment"
+    }
+  },
+  "required": [
+    "name",
+    "element",
+    "genre_pools",
+    "modifiers",
+    "allowed_item_types"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "AnimationFBX",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the animation"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what the animation does"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the uploaded FBX file"
+    },
+    "animation_type": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "walk",
+        "run",
+        "jump",
+        "attack",
+        "swing",
+        "dance",
+        "emote",
+        "other"
+      ],
+      "description": "Type of animation"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Duration of the animation in seconds"
+    },
+    "is_loopable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the animation loops"
+    },
+    "compatible_models": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "IDs of 3D models this animation is compatible with"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Tags for searching animations"
+    },
+    "folder": {
+      "type": "string",
+      "default": "",
+      "description": "Folder name to organize animations into groups (e.g. 'Warrior Attacks', 'NPC Idle Set')"
+    }
+  },
+  "required": [
+    "name",
+    "file_url",
+    "animation_type"
+  ]
+}
