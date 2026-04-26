@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User, Trees } from 'lucide-react';
-
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -195,8 +194,6 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(false);
-  const [isEnvExpanded, setIsEnvExpanded] = useState(false);
-  const [selectedEnv, setSelectedEnv] = useState(null);
 
   const GENRE_FILTERS = [
     { id: 'action', label: 'Action' },
@@ -229,15 +226,12 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const handleTabClick = (tab) => {
     setSelectedItem(null);
     setSelectedGame(null);
-    setIsEnvExpanded(false);
-    setSelectedEnv(null);
     if (tab === 'home') {
       if (!hideNav) navigate(createPageUrl('LunaTemplate'));
     } else {
       // If clicking the same tab that's already active, close it (go home)
       if (activeTab === tab) {
         setActiveTab('home');
-        setIsLibraryExpanded(false);
         onLibraryClose?.();
         // Dispatch event to notify pages to close their panels
         window.dispatchEvent(new CustomEvent('libraryPanelClose'));
@@ -881,200 +875,6 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
-      {/* ── ENVIRONMENT HUB expanded overlay — slides up from bottom nav ── */}
-      <AnimatePresence>
-        {isEnvExpanded && activeTab === 'environment' && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[35]"
-              onClick={() => { setIsEnvExpanded(false); setSelectedEnv(null); }}
-            />
-            {/* Panel slides up */}
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-              className="fixed z-[36] flex flex-col overflow-hidden"
-              style={{
-                left: '5%',
-                right: 0,
-                bottom: '48px',
-                height: 'calc(100vh - 130px)',
-                background: 'rgba(8,12,20,0.98)',
-                backdropFilter: 'blur(28px)',
-                borderTop: '1px solid rgba(168,85,247,0.25)',
-                borderLeft: '1px solid rgba(168,85,247,0.15)',
-                borderRight: '1px solid rgba(168,85,247,0.15)',
-                borderRadius: '20px 20px 0 0',
-                boxShadow: '0 -8px 40px rgba(168,85,247,0.15)',
-              }}
-            >
-              {/* Header bar */}
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-white/10 flex-shrink-0">
-                <Globe className="w-4 h-4 text-purple-400" />
-                <span className="text-white font-black text-sm uppercase tracking-widest">Environment Hub</span>
-                <div className="flex-1" />
-                <button
-                  onClick={() => { setIsEnvExpanded(false); setSelectedEnv(null); }}
-                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* 50/50 split body */}
-              <div className="flex flex-1 min-h-0 overflow-hidden">
-
-                {/* LEFT 50% — Environment Selector */}
-                <div className="w-1/2 flex flex-col border-r border-white/10 overflow-hidden">
-                  <div className="px-5 py-3 border-b border-white/[0.08] flex-shrink-0">
-                    <p className="text-purple-400/80 text-[10px] font-black uppercase tracking-widest">Select Environment</p>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 grid grid-cols-3 gap-3 content-start" style={{ scrollbarWidth: 'none' }}>
-                    {ENV_GENRES.map((env) => (
-                      <div
-                        key={env.id}
-                        onClick={() => setSelectedEnv(env)}
-                        className={`relative cursor-pointer group rounded-xl overflow-hidden border transition-all duration-200 ${
-                          selectedEnv?.id === env.id
-                            ? 'border-purple-400/70 shadow-[0_0_16px_rgba(192,132,252,0.3)] scale-[1.02]'
-                            : 'border-white/10 hover:border-purple-400/40 hover:scale-[1.01]'
-                        }`}
-                      >
-                        <div className="aspect-video relative">
-                          <img src={env.image} alt={env.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                          {selectedEnv?.id === env.id && (
-                            <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center shadow-[0_0_8px_rgba(168,85,247,0.8)]">
-                              <div className="w-2 h-2 rounded-full bg-white" />
-                            </div>
-                          )}
-                          <p className="absolute bottom-2 left-3 text-white font-bold text-xs drop-shadow-lg">{env.name}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* RIGHT 50% — Unlocks & Upgrades */}
-                <div className="w-1/2 flex flex-col overflow-hidden">
-                  <div className="px-5 py-3 border-b border-white/[0.08] flex-shrink-0 flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <p className="text-purple-400/80 text-[10px] font-black uppercase tracking-widest">Unlocks & Upgrades</p>
-                    {selectedEnv && <span className="ml-2 text-white/40 text-[10px]">— {selectedEnv.name}</span>}
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3" style={{ scrollbarWidth: 'none' }}>
-
-                    {/* Active env banner */}
-                    {selectedEnv ? (
-                      <div className="relative rounded-2xl overflow-hidden flex-shrink-0 border border-purple-500/30" style={{ minHeight: '120px' }}>
-                        <img src={selectedEnv.image} alt={selectedEnv.name} className="absolute inset-0 w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-                        <div className="relative p-4 flex flex-col justify-end h-full" style={{ minHeight: '120px' }}>
-                          <p className="text-white/50 text-[9px] font-bold uppercase tracking-widest">Selected Environment</p>
-                          <h3 className="text-white font-black text-xl leading-tight">{selectedEnv.name}</h3>
-                          <button className="mt-2 self-start px-4 py-1.5 rounded-lg bg-purple-500 hover:bg-purple-400 text-white font-bold text-xs transition-all shadow-[0_0_16px_rgba(168,85,247,0.4)]">
-                            Enter Environment
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-2xl border border-white/8 flex items-center justify-center gap-3 p-6 flex-shrink-0" style={{ background: 'rgba(168,85,247,0.04)', minHeight: '120px' }}>
-                        <Globe className="w-8 h-8 text-purple-400/30" />
-                        <p className="text-white/25 text-sm">Select an environment to see unlocks</p>
-                      </div>
-                    )}
-
-                    {/* Unlocks section */}
-                    <div className="flex items-center gap-2 mt-1 flex-shrink-0">
-                      <Lock className="w-3.5 h-3.5 text-yellow-400" />
-                      <span className="text-white/60 text-[10px] font-black uppercase tracking-widest">Unlockable Features</span>
-                    </div>
-                    {[
-                      { name: 'Custom Skybox', desc: 'Change the sky atmosphere of your environment', icon: Star, locked: false, rarity: 'common' },
-                      { name: 'Weather System', desc: 'Add rain, snow, fog and dynamic weather', icon: Zap, locked: false, rarity: 'uncommon' },
-                      { name: 'NPC Population', desc: 'Spawn AI-driven characters in your world', icon: Users, locked: true, rarity: 'rare' },
-                      { name: 'Physics Engine', desc: 'Enable realistic object interactions', icon: Activity, locked: true, rarity: 'epic' },
-                      { name: 'Multiplayer Zone', desc: 'Invite friends into your environment', icon: Globe, locked: true, rarity: 'legendary' },
-                    ].map((feature) => {
-                      const style = RARITY_STYLES[feature.rarity];
-                      const Icon = feature.icon;
-                      return (
-                        <div
-                          key={feature.name}
-                          className="flex items-center gap-3 rounded-xl p-3 border transition-all flex-shrink-0"
-                          style={{
-                            background: feature.locked ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)',
-                            border: feature.locked ? '1px solid rgba(255,255,255,0.06)' : `1px solid ${style.border}`,
-                            boxShadow: feature.locked ? 'none' : `0 0 10px ${style.glow}`,
-                            opacity: feature.locked ? 0.55 : 1,
-                          }}
-                        >
-                          <div
-                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: feature.locked ? 'rgba(255,255,255,0.04)' : style.glow, border: `1px solid ${feature.locked ? 'rgba(255,255,255,0.08)' : style.border}` }}
-                          >
-                            {feature.locked ? <Lock className="w-4 h-4 text-white/25" /> : <Icon className="w-4 h-4" style={{ color: style.text }} />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold truncate" style={{ color: feature.locked ? 'rgba(255,255,255,0.3)' : style.text }}>{feature.name}</p>
-                              <span
-                                className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                style={{ background: feature.locked ? 'rgba(255,255,255,0.04)' : style.glow, color: feature.locked ? 'rgba(255,255,255,0.2)' : style.text, border: `1px solid ${feature.locked ? 'rgba(255,255,255,0.06)' : style.border}` }}
-                              >{feature.rarity}</span>
-                            </div>
-                            <p className="text-white/30 text-[10px] truncate">{feature.desc}</p>
-                          </div>
-                          {feature.locked ? (
-                            <button className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] font-bold border border-purple-500/20 transition-all">
-                              Unlock
-                            </button>
-                          ) : (
-                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
-                              <div className="w-2 h-2 rounded-full bg-green-400" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* Upgrades section */}
-                    <div className="flex items-center gap-2 mt-2 flex-shrink-0">
-                      <Crown className="w-3.5 h-3.5 text-yellow-400" />
-                      <span className="text-white/60 text-[10px] font-black uppercase tracking-widest">Environment Upgrades</span>
-                    </div>
-                    {[
-                      { name: 'Render Quality +1', cost: 500, desc: 'Boost texture and shadow resolution' },
-                      { name: 'Expanded Draw Distance', cost: 1200, desc: 'See further into the horizon' },
-                      { name: 'Ambient Sound Pack', cost: 300, desc: 'Add immersive environment audio' },
-                    ].map((upgrade) => (
-                      <div key={upgrade.name} className="flex items-center gap-3 rounded-xl p-3 border border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <div className="w-9 h-9 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                          <Crown className="w-4 h-4 text-yellow-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-xs font-bold truncate">{upgrade.name}</p>
-                          <p className="text-white/35 text-[10px] truncate">{upgrade.desc}</p>
-                        </div>
-                        <button className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 text-[10px] font-bold border border-yellow-500/20 transition-all whitespace-nowrap">
-                          {upgrade.cost} AGP
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* ── BOTTOM panel (pulls up from bottom nav) — full interactive content ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
@@ -1086,77 +886,29 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
-              top: isLibraryExpanded && activeTab === 'library' ? '72px' : 'auto',
-              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 120px)' : 'auto',
+              top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
+              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 312px)' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
             }}
             onWheel={handleWheel}
           >
-            {/* ── Persistent filter bar — always visible (hidden in expanded library mode) ── */}
+            {/* ── Persistent filter bar — always visible (hidden in expanded library) ── */}
             {!(isLibraryExpanded && activeTab === 'library') && (
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-                {/* Left: icon + label */}
+                {/* Left: Library icon + label, or Back button when in game detail */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {activeTab === 'environment' ? (
-                    <Globe className="w-4 h-4 text-purple-400" />
-                  ) : (
-                    <Library className="w-4 h-4 text-cyan-400" />
-                  )}
+                  <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
                   <button
-                    onClick={() => {
-                      if (activeTab === 'environment') setIsEnvExpanded(true);
-                      else setIsLibraryExpanded(!isLibraryExpanded);
-                    }}
+                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    {activeTab === 'environment' ? 'Environment Hub' : 'Library'}
+                    Store Library
                   </button>
                 </div>
 
-                {/* Genre chips — only shown in environment tab (non-expanded) */}
-                {activeTab === 'environment' ? (
-                  <div className="flex items-center gap-1.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                    {ENV_GENRES.map((env) => (
-                      <button
-                        key={env.id}
-                        onClick={() => setSelectedEnv(selectedEnv?.id === env.id ? null : env)}
-                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-                          selectedEnv?.id === env.id
-                            ? 'bg-purple-500/25 border-purple-400/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.3)]'
-                            : 'bg-white/[0.05] border-white/10 text-white/50 hover:bg-purple-500/10 hover:border-purple-400/30 hover:text-purple-300'
-                        }`}
-                      >
-                        <div
-                          className="w-3 h-3 rounded-sm overflow-hidden flex-shrink-0"
-                          style={{ backgroundImage: `url(${env.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-                        />
-                        {env.name}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  /* Search bar — shown in library tab non-expanded state */
-                  activeTab === 'library' ? (
-                    <div className="flex items-center gap-1.5 flex-1 max-w-xs px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] mx-3">
-                      <Search className="w-3 h-3 flex-shrink-0 text-white/30" />
-                      <input
-                        type="text"
-                        placeholder="Search store..."
-                        value={searchTerm || ''}
-                        onChange={(e) => onSearchChange?.(e.target.value)}
-                        className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none min-w-0"
-                      />
-                      {searchTerm && (
-                        <button onClick={() => onSearchChange?.('')} className="text-white/30 hover:text-white transition-colors">
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex-1" />
-                  )
-                )}
+                {/* Spacer pushes row nav to far right */}
+                <div className="flex-1" />
 
                 {/* Row nav */}
                 <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
@@ -1168,24 +920,24 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             )}
-
-            {/* Expanded header label for library */}
+            
+            {/* Only show Store Library label in expanded mode */}
             {isLibraryExpanded && activeTab === 'library' && (
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2">
                 <div className="flex items-center gap-2">
                   <Library className="w-4 h-4 text-cyan-400" />
                   <button
-                    onClick={() => setIsLibraryExpanded(false)}
+                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    Library
+                    Store Library
                   </button>
                 </div>
               </div>
             )}
-
-            {isLibraryExpanded && activeTab === 'library' ? (
-              /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
+            {(
+              isLibraryExpanded && activeTab === 'library' ? (
+                /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
                 <div className="w-full h-full flex gap-4">
                   {/* LEFT: Games Grid */}
                   <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
@@ -1265,16 +1017,17 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     </div>
                   </div>
                 </div>
-            ) : (
-              <TwoRowGrid
-                items={items}
-                currentRow={currentRow}
-                itemsPerRow={itemsPerRow}
-                selectedGame={selectedGame}
-                activeTab={activeTab}
-                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); setIsLibraryExpanded(true); }}
-                onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
-              />
+              ) : (
+                <TwoRowGrid
+                  items={items}
+                  currentRow={currentRow}
+                  itemsPerRow={itemsPerRow}
+                  selectedGame={selectedGame}
+                  activeTab={activeTab}
+                  onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
+                  onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
+                />
+              )
             )}
           </motion.div>
         )}

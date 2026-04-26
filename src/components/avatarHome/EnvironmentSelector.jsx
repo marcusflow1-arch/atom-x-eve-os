@@ -121,7 +121,7 @@ export default function EnvironmentSelector({ currentEnvId, onSelect, isEnvironm
         </button>
       )}
       
-      {/* Trigger Button — clicking the label text opens the full hub overlay */}
+      {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(v => !v)}
         className="w-full flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 group mt-2"
@@ -140,11 +140,7 @@ export default function EnvironmentSelector({ currentEnvId, onSelect, isEnvironm
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round" className="text-[#A0A8B4]"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
           </div>
           <div className="flex flex-col text-left">
-            <span
-              className="text-white text-sm font-bold tracking-wide hover:text-cyan-300 transition-colors cursor-pointer"
-              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
-              onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('openEnvironmentHub')); }}
-            >
+            <span className="text-white text-sm font-bold tracking-wide" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
               Environment Hub
             </span>
             <span className="text-white/50 text-[10px]">
