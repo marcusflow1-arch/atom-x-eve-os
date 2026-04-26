@@ -309,6 +309,29 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
     };
   }, []);
 
+  // Listen for global search bar clicks from other pages
+  useEffect(() => {
+    const handleOpen = () => {
+      setActiveTab('library');
+      setCurrentRow(0);
+      setSelectedItem(null);
+      setSelectedGame(null);
+    };
+    const handleChange = (e) => {
+      const value = e.detail?.value || '';
+      // Propagate to the parent's searchTerm via onSearchChange if available
+      onSearchChange?.(value);
+      setActiveTab('library');
+      setCurrentRow(0);
+    };
+    window.addEventListener('globalSearchOpen', handleOpen);
+    window.addEventListener('globalSearchChange', handleChange);
+    return () => {
+      window.removeEventListener('globalSearchOpen', handleOpen);
+      window.removeEventListener('globalSearchChange', handleChange);
+    };
+  }, [onSearchChange]);
+
   const renderSlots = () => {
     const slots = [];
     if (selectedGame) {
