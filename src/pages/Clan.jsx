@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
+import UniversalStoreNav from '@/components/shared/UniversalStoreNav';
 
 export default function ClanPage() {
     const { user, updatePresenceContext } = useAuth();
@@ -388,7 +388,7 @@ export default function ClanPage() {
         <GlassPageFrame bottomContent={
             <div className="flex items-center w-full h-full gap-3">
               <div className="flex-1 min-w-0"><ClanBottomNav activeTab={bottomTab} onTabSelect={setBottomTab} isRosterOpen={isRosterOpen} onToggleRoster={() => setIsRosterOpen(!isRosterOpen)} isStrongholdEnabled={isStrongholdEnabled} isPrivileged={isPrivileged} /></div>
-              <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
+              <div className="flex-shrink-0"><UniversalStoreNav /></div>
             </div>
         }>
         <div className="h-screen w-full flex relative overflow-hidden text-white font-sans selection:bg-cyan-500/30" style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}>

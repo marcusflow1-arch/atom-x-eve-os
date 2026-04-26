@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
+import UniversalStoreNav from '@/components/shared/UniversalStoreNav';
 import SidebarOverlays from '@/components/dashboard/SidebarOverlays';
 import GenreGameDetail from '@/components/genremastery/GenreGameDetail';
 import SkillTreeContent from '@/components/genremastery/SkillTreeContent';
@@ -170,7 +170,7 @@ export default function GenreMastery({ onClose }) {
     <GlassPageFrame bottomContent={
       <div className="flex items-center w-full h-full gap-3">
         <div className="flex-1 min-w-0"><GenreBottomNav activeTab={rightPanel} onTabSelect={setRightPanel} marketView={marketView} cardSearchQuery={cardSearchQuery} onCardSearch={setCardSearchQuery} /></div>
-        <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
+        <div className="flex-shrink-0"><UniversalStoreNav /></div>
       </div>
     }>
       <div className="flex w-full h-full">

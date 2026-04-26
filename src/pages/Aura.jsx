@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import StreamingGamesLive from '@/components/streaming/StreamingGamesLive';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
+import UniversalStoreNav from '@/components/shared/UniversalStoreNav';
 
 import AuraBottomNav from '@/components/streaming/AuraBottomNav.jsx';
 import SideAccessMenu from '@/components/dashboard/SideAccessMenu';
@@ -16,7 +16,7 @@ export default function Aura() {
     <GlassPageFrame bottomContent={
       <div className="flex items-center w-full h-full gap-3">
         <div className="flex-1 min-w-0"><AuraBottomNav /></div>
-        <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
+        <div className="flex-shrink-0"><UniversalStoreNav /></div>
       </div>
     }>
     <SideAccessMenu />

@@ -7,7 +7,7 @@ import FarmGameView from '@/components/farm/FarmGameView';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { getFarmGameById } from '@/components/farm/farmData';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
-import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
+import UniversalStoreNav from '@/components/shared/UniversalStoreNav';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
 import { ChevronLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -83,7 +83,7 @@ export default function FarmPage() {
             <GlassPageFrame bottomContent={
               <div className="flex items-center w-full h-full gap-3">
                 <div className="flex-1 min-w-0"><ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} /></div>
-                <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
+                <div className="flex-shrink-0"><UniversalStoreNav /></div>
               </div>
             }>
             <div 
