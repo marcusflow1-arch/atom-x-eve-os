@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Mic, MicOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LiveStreamBox from './LiveStreamBox';
+import StudioOverlayContent from './StudioOverlayContent';
 
 export const glassStyle = {
   background: 'rgba(8, 12, 18, 0.42)',
@@ -264,9 +265,7 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
               <LiveStreamBox game={gameData} />
             )}
             {overlay === 'studio' && (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="text-white/10 text-xs uppercase tracking-widest font-bold">Studio</span>
-              </div>
+              <StudioOverlayContent />
             )}
           </motion.div>
         )}
