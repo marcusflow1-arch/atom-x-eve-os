@@ -613,415 +613,356 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
         )}
       </AnimatePresence>
 
-      {/* ── TOP panel (drops from header) — Gaming Studios 50/50 ── */}
+      {/* ── UNIFIED FULL-SCREEN LIBRARY PANEL ── */}
       <AnimatePresence>
         {activeTab !== 'home' && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed top-[64px] right-0 z-[34]"
+            key="unified-panel"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed z-[34] flex flex-col"
             style={{
+              top: '64px',
+              bottom: '48px',
               left: '5%',
-              height: '200px',
-              background: 'linear-gradient(to bottom, rgba(0,0,0,0.97) 0%, rgba(0,0,0,0.90) 80%, transparent 100%)',
-              backdropFilter: 'blur(20px)',
+              right: 0,
+              background: 'rgba(6,10,18,0.97)',
+              backdropFilter: 'blur(24px)',
             }}
+            onWheel={handleWheel}
           >
-            <div className="w-full h-full max-w-[1400px] mx-auto flex gap-0 overflow-hidden">
+            {/* ── TOP SECTION: Game Detail (when selected) OR Gaming Studios ── */}
+            <div className="flex-shrink-0 border-b border-white/8" style={{ height: '200px' }}>
+              <AnimatePresence mode="wait">
+                {selectedGame ? (
+                  /* GAME DETAIL top banner */
+                  <motion.div
+                    key={selectedGame.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="absolute inset-0 flex overflow-hidden"
+                    style={{ height: '200px' }}
+                  >
+                    {/* LEFT: Screenshot BG + info + buttons + achievements */}
+                    <div className="flex-1 relative overflow-hidden">
+                      <img
+                        src={selectedGame.banner_image || selectedGame.displayImage}
+                        alt={selectedGame.displayTitle}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.75) 50%, rgba(0,0,0,0.3) 100%)' }} />
+                      <div className="absolute inset-0 flex flex-col justify-between p-5">
+                        {/* Title + actions */}
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/20 flex-shrink-0 shadow-lg">
+                            <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-white font-black text-lg leading-tight truncate">{selectedGame.displayTitle}</h2>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/30 text-[9px] text-cyan-300 font-bold uppercase">{selectedGame.genre || 'Action'}</span>
+                              {selectedGame.original_year && <span className="text-white/40 text-[9px]">{selectedGame.original_year}</span>}
+                              {selectedGame.price > 0 && <span className="text-green-400 font-black text-xs">${selectedGame.price}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => navigate(createPageUrl('GameDetail') + '?id=' + selectedGame.id + '&from=library')}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-[10px] font-semibold transition-all"
+                            >
+                              <ShoppingBag className="w-3 h-3" /> Store Page
+                            </button>
+                            <button
+                              onClick={() => addToCart({ id: selectedGame.id, title: selectedGame.displayTitle, price: selectedGame.price || 0, cover_image: selectedGame.displayImage, type: 'game' })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] transition-all shadow-[0_0_14px_rgba(34,211,238,0.3)]"
+                            >
+                              <ShoppingCart className="w-3 h-3" /> Buy ${selectedGame.price || '0.00'}
+                            </button>
+                            <button
+                              onClick={() => setSelectedGame(null)}
+                              className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white border border-white/10 transition-all"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
 
-              {/* LEFT 50% — Studios list */}
-              <div className="w-1/2 flex flex-col h-full px-6 py-3">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                  <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
-                  <div className="relative w-44">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
-                    <input
-                      type="text"
-                      placeholder="Search studios..."
-                      value={developerSearch}
-                      onChange={(e) => setDeveloperSearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/35 focus:outline-none focus:border-cyan-400/50 transition-all"
-                    />
-                  </div>
-                </div>
-                {/* Studios — 5-per-row grid, scrollable, min 2 rows visible */}
-                <div
-                  className="grid overflow-y-auto flex-1"
-                  style={{
-                    gridTemplateColumns: 'repeat(5, 1fr)',
-                    gap: '6px',
-                    scrollbarWidth: 'none',
-                    minHeight: '80px',
-                  }}
-                >
-                  {filteredDevelopers.map((dev) => (
-                    <div
-                      key={dev.id}
-                      onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all cursor-pointer ${
-                        selectedDeveloper?.id === dev.id
-                          ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                          : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/10'
-                      }`}
-                    >
-                      <img src={dev.logo} alt={dev.name} className="w-7 h-7 rounded-md object-cover bg-white/10 flex-shrink-0" />
-                      <p className={`text-[9px] font-semibold leading-tight line-clamp-2 ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/75'}`}>{dev.name}</p>
+                        {/* Description + Achievements row */}
+                        <div className="flex items-end gap-4">
+                          <p className="text-white/50 text-[10px] leading-relaxed flex-1 line-clamp-2">
+                            {selectedGame.description || 'An immersive gaming experience featuring stunning visuals, deep gameplay mechanics and an unforgettable story.'}
+                          </p>
+                          {/* Mini achievement strip */}
+                          <div className="flex gap-1.5 flex-shrink-0">
+                            {MOCK_ACHIEVEMENTS.slice(0, 5).map((ach) => {
+                              const style = RARITY_STYLES[ach.rarity];
+                              const Icon = ach.icon;
+                              return (
+                                <div
+                                  key={ach.id}
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center border"
+                                  style={{
+                                    background: ach.unlocked ? style.glow : 'rgba(255,255,255,0.04)',
+                                    border: `1px solid ${ach.unlocked ? style.border : 'rgba(255,255,255,0.08)'}`,
+                                    opacity: ach.unlocked ? 1 : 0.4,
+                                  }}
+                                  title={ach.title}
+                                >
+                                  {ach.unlocked ? <Icon className="w-3.5 h-3.5" style={{ color: style.text }} /> : <Lock className="w-3 h-3 text-white/20" />}
+                                </div>
+                              );
+                            })}
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/8 bg-white/3">
+                              <span className="text-white/30 text-[8px] font-bold">+{MOCK_ACHIEVEMENTS.length - 5}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* RIGHT 50% — Studio banner / spotlight */}
-              <div className="w-1/2 h-full relative overflow-hidden">
-                <AnimatePresence mode="wait">
-                  {selectedDeveloper ? (
-                    <motion.div
-                      key={selectedDeveloper.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute inset-0"
-                    >
-                      {/* Banner: dev info + latest game */}
+                    {/* RIGHT: Studio info */}
+                    <div className="w-[320px] flex-shrink-0 relative overflow-hidden border-l border-white/8">
                       {(() => {
-                        const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
-                        // Sort by original_year descending to get newest game
-                        const sorted = [...devGames].sort((a, b) => (b.original_year || 0) - (a.original_year || 0));
-                        const latestGame = sorted[0];
-                        const bannerImg = latestGame?.banner_image || latestGame?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
+                        const devIdx = games.findIndex(g => g.id === selectedGame.id) % MOCK_DEVELOPERS.length;
+                        const studio = MOCK_DEVELOPERS[devIdx] || MOCK_DEVELOPERS[0];
+                        const bannerImg = selectedGame.banner_image || selectedGame.displayImage;
                         return (
                           <>
-                            <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
-                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 100%)' }} />
-                            <div className="absolute inset-0 flex flex-col justify-center px-6 gap-3">
-
-                              {/* Developer info */}
+                            <img src={bannerImg} alt={studio.name} className="absolute inset-0 w-full h-full object-cover opacity-30" />
+                            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%)' }} />
+                            <div className="absolute inset-0 flex flex-col justify-center px-5 gap-3">
+                              <p className="text-white/35 text-[9px] font-bold uppercase tracking-widest">Developer</p>
                               <div className="flex items-center gap-3">
-                                <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-10 h-10 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0" />
+                                <img src={studio.logo} alt={studio.name} className="w-12 h-12 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0 shadow-lg" />
                                 <div>
-                                  <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Developer</p>
-                                  <h2 className="text-white font-black text-base tracking-wide leading-tight">{selectedDeveloper.name}</h2>
-                                  <span className="text-white/50 text-[9px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''} in library</span>
+                                  <h3 className="text-white font-black text-base leading-tight">{studio.name}</h3>
+                                  <p className="text-white/40 text-[9px] mt-0.5">Game Studio</p>
                                 </div>
                               </div>
-
-                              {/* Divider */}
                               <div className="w-full h-px bg-white/10" />
-
-                              {/* Latest game */}
-                              {latestGame && (
-                                <div>
-                                  <p className="text-cyan-400/80 text-[9px] font-bold uppercase tracking-widest mb-1.5">Latest Release</p>
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
-                                      <img src={latestGame.cover_image || latestGame.banner_image} alt={latestGame.title} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="text-white font-bold text-xs truncate">{latestGame.title}</p>
-                                      <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{latestGame.genre || 'Action'}</span>
-                                        {latestGame.original_year && <span className="text-white/35 text-[9px]">{latestGame.original_year}</span>}
-                                        {latestGame.price > 0 && <span className="text-green-400 font-black text-[9px]">${latestGame.price}</span>}
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
+                              <p className="text-white/40 text-[9px] leading-relaxed">
+                                Known for delivering innovative and critically acclaimed gaming experiences across multiple genres and platforms.
+                              </p>
                             </div>
                           </>
                         );
                       })()}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="placeholder"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                      <StudioGameCarousel games={games} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── BOTTOM panel (pulls up from bottom nav) — full interactive content ── */}
-      <AnimatePresence>
-        {activeTab !== 'home' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
-            style={{ 
-              left: '5%',
-              top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
-              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 312px)' : 'auto',
-              background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
-              backdropFilter: 'blur(12px)',
-            }}
-            onWheel={handleWheel}
-          >
-            {/* ── Persistent filter bar — always visible (hidden in expanded library) ── */}
-            {!(isLibraryExpanded && activeTab === 'library') && (
-              <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-                {/* Left: Library icon + label, or Back button when in game detail */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {selectedGame ? (
-                    <button
-                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
-                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Back
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
-                      <button
-                        onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-                        className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
-                      >
-                        Store Library
-                      </button>
                     </div>
-                  )}
-                </div>
-
-                {/* Spacer pushes row nav to far right */}
-                <div className="flex-1" />
-
-                {/* Row nav */}
-                <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
-                  {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
-                  <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
-                    <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Only show Store Library label in expanded mode */}
-            {isLibraryExpanded && activeTab === 'library' && (
-              <div className="w-full max-w-[1400px] mx-auto mb-3 px-2">
-                <div className="flex items-center gap-2">
-                  <Library className="w-4 h-4 text-cyan-400" />
-                  <button
-                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-                    className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                  </motion.div>
+                ) : (
+                  /* GAMING STUDIOS default top section */
+                  <motion.div
+                    key="studios"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full flex overflow-hidden"
                   >
-                    Store Library
-                  </button>
-                </div>
-              </div>
-            )}
-            {selectedGame && !isLibraryExpanded ? (
-              /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
-              <div
-                className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden flex"
-                style={{
-                  height: '280px',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)',
-                  backdropFilter: 'blur(32px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2)',
-                }}
-              >
-                {/* LEFT — Game Content Cards */}
-                <GameContentCards selectedGame={selectedGame} />
-
-                {/* RIGHT — Store Content (never touched) */}
-                <div className="flex-1 flex flex-col min-h-0">
-                  {/* Top bar: game info + action buttons */}
-                  <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
-                      <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-black text-sm truncate">{selectedGame.displayTitle}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[9px] text-cyan-300 font-bold uppercase">{selectedGame.genre || 'Action'}</span>
-                        {selectedGame.price > 0 && <span className="text-green-400 font-black text-xs">${selectedGame.price}</span>}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => navigate(createPageUrl('GameDetail') + '?id=' + selectedGame.id + '&from=library')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-[10px] font-semibold transition-all flex-shrink-0"
-                    >
-                      <ShoppingBag className="w-3 h-3" /> Store
-                    </button>
-                    <button
-                      onClick={() => addToCart({ id: selectedGame.id, title: selectedGame.displayTitle, price: selectedGame.price || 0, cover_image: selectedGame.displayImage, type: 'game' })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] transition-all shadow-[0_0_14px_rgba(34,211,238,0.3)] flex-shrink-0"
-                    >
-                      <ShoppingCart className="w-3 h-3" /> Buy ${selectedGame.price || '0.00'}
-                    </button>
-                  </div>
-
-                  {/* Content: DLC + News */}
-                  <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ scrollbarWidth: 'none' }}>
-                    {/* What's New */}
-                    <div className="rounded-xl p-3 border border-white/8 flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.10), rgba(34,211,238,0.05))' }}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase rounded">Latest Update</span>
-                        <span className="text-white/25 text-[9px]">2 days ago</span>
-                      </div>
-                      <p className="text-white font-bold text-[10px]">Season 4: Cyber Dawn</p>
-                      <p className="text-white/45 text-[9px] leading-relaxed mt-0.5">New maps, weapon balance fixes, cybernetic implants added to marketplace.</p>
-                    </div>
-
-                    {/* DLC */}
-                    <div className="flex items-center gap-1.5">
-                      <Package className="w-3 h-3 text-purple-400" />
-                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">DLC</span>
-                    </div>
-                    {[
-                      { name: 'Neon District Pack', desc: '3 new maps + exclusive skins', price: 9.99 },
-                      { name: 'Cyber Armory Bundle', desc: 'Weapon skins & gear set', price: 14.99 },
-                      { name: 'Season Pass Vol.4', desc: 'Full season content unlock', price: 24.99 },
-                    ].map((dlc) => (
-                      <div key={dlc.name} className="flex items-center gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                        <div className="w-8 h-8 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
-                          <Package className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-[10px] font-bold truncate">{dlc.name}</p>
-                          <p className="text-white/35 text-[9px]">{dlc.desc}</p>
-                        </div>
-                        <button
-                          onClick={() => addToCart({ id: selectedGame.id + '-' + dlc.name, title: dlc.name, price: dlc.price, type: 'dlc' })}
-                          className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[9px] font-bold border border-cyan-500/20 transition-all"
-                        >${dlc.price}</button>
-                      </div>
-                    ))}
-
-                    {/* News */}
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Newspaper className="w-3 h-3 text-blue-400" />
-                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">News</span>
-                    </div>
-                    {[
-                      { headline: 'Server Maintenance Tomorrow', body: 'Scheduled downtime 03:00–05:00 AM UTC.', dot: 'bg-yellow-400' },
-                      { headline: 'Double XP Weekend', body: 'Earn 2× XP on all modes this weekend.', dot: 'bg-green-400' },
-                    ].map((item) => (
-                      <div key={item.headline} className="flex items-start gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03]">
-                        <div className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse ${item.dot}`} />
-                        <div>
-                          <p className="text-white text-[10px] font-bold">{item.headline}</p>
-                          <p className="text-white/40 text-[9px]">{item.body}</p>
+                    {/* LEFT: Studios list */}
+                    <div className="w-1/2 flex flex-col h-full px-6 py-3">
+                      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                        <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
+                        <div className="relative w-44">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
+                          <input
+                            type="text"
+                            placeholder="Search studios..."
+                            value={developerSearch}
+                            onChange={(e) => setDeveloperSearch(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/35 focus:outline-none focus:border-cyan-400/50 transition-all"
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              isLibraryExpanded && activeTab === 'library' ? (
-                /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
-                <div className="w-full h-full flex gap-4">
-                  {/* LEFT: Games Grid */}
-                  <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
-                    <div className="flex flex-col gap-4">
-                      {[0, 1, 2, 3].map((rowIdx) => {
-                        const start = (currentRow + rowIdx) * itemsPerRow;
-                        const rowItems = items.slice(start, start + itemsPerRow);
-                        if (rowItems.length === 0) return null;
-                        return (
-                          <div key={`expanded-row-${rowIdx}`} className="flex gap-3">
-                            {rowItems.map((item) => (
-                              <div
-                                key={item.id}
-                                className="flex-1 relative cursor-pointer group transition-all"
-                                onClick={() => { setSelectedGame(item); setCurrentRow(0); }}
-                              >
-                                <div className="aspect-[16/9] rounded-lg overflow-hidden border border-white/10 group-hover:border-cyan-400/50 shadow-lg">
-                                  <img
-                                    src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'}
-                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                    alt={item.displayTitle}
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                                  <div className="absolute bottom-2 left-2 right-2">
-                                    <p className="text-white text-xs font-bold truncate">{item.displayTitle}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* RIGHT: Filter Panel */}
-                  <div className="w-56 flex flex-col gap-4 p-4 overflow-y-auto border-l border-white/10" style={{ scrollbarWidth: 'none' }}>
-                    <div>
-                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Filters</p>
-                      <div className="flex flex-col gap-2">
-                        {GENRE_FILTERS.map((g) => (
-                          <button
-                            key={g.id}
-                            onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
-                            className={`w-full px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all text-left ${
-                              selectedGenreFilter === g.id
-                                ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300'
-                                : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white'
-                            }`}
-                          >
-                            {g.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="w-full h-px bg-white/10" />
-
-                    <div>
-                      <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Studios</p>
-                      <div className="flex flex-col gap-2 max-h-48 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-                        {filteredDevelopers.slice(0, 6).map((dev) => (
-                          <button
+                      <div
+                        className="grid overflow-y-auto flex-1"
+                        style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', scrollbarWidth: 'none' }}
+                      >
+                        {filteredDevelopers.map((dev) => (
+                          <div
                             key={dev.id}
                             onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
-                            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left text-[9px] ${
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all cursor-pointer ${
                               selectedDeveloper?.id === dev.id
-                                ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300'
-                                : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08]'
+                                ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                                : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/10'
                             }`}
                           >
-                            <img src={dev.logo} alt={dev.name} className="w-5 h-5 rounded object-cover flex-shrink-0" />
-                            <span className="truncate">{dev.name}</span>
-                          </button>
+                            <img src={dev.logo} alt={dev.name} className="w-7 h-7 rounded-md object-cover bg-white/10 flex-shrink-0" />
+                            <p className={`text-[9px] font-semibold leading-tight line-clamp-2 ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/75'}`}>{dev.name}</p>
+                          </div>
                         ))}
                       </div>
                     </div>
+
+                    {/* RIGHT: Studio spotlight */}
+                    <div className="w-1/2 h-full relative overflow-hidden border-l border-white/8">
+                      <AnimatePresence mode="wait">
+                        {selectedDeveloper ? (
+                          <motion.div
+                            key={selectedDeveloper.id}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25 }}
+                            className="absolute inset-0"
+                          >
+                            {(() => {
+                              const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
+                              const sorted = [...devGames].sort((a, b) => (b.original_year || 0) - (a.original_year || 0));
+                              const latestGame = sorted[0];
+                              const bannerImg = latestGame?.banner_image || latestGame?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
+                              return (
+                                <>
+                                  <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
+                                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 100%)' }} />
+                                  <div className="absolute inset-0 flex flex-col justify-center px-6 gap-3">
+                                    <div className="flex items-center gap-3">
+                                      <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-10 h-10 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0" />
+                                      <div>
+                                        <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Developer</p>
+                                        <h2 className="text-white font-black text-base tracking-wide leading-tight">{selectedDeveloper.name}</h2>
+                                        <span className="text-white/50 text-[9px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''} in library</span>
+                                      </div>
+                                    </div>
+                                    <div className="w-full h-px bg-white/10" />
+                                    {latestGame && (
+                                      <div>
+                                        <p className="text-cyan-400/80 text-[9px] font-bold uppercase tracking-widest mb-1.5">Latest Release</p>
+                                        <div className="flex items-center gap-2.5">
+                                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
+                                            <img src={latestGame.cover_image || latestGame.banner_image} alt={latestGame.title} className="w-full h-full object-cover" />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <p className="text-white font-bold text-xs truncate">{latestGame.title}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                              <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{latestGame.genre || 'Action'}</span>
+                                              {latestGame.original_year && <span className="text-white/35 text-[9px]">{latestGame.original_year}</span>}
+                                              {latestGame.price > 0 && <span className="text-green-400 font-black text-[9px]">${latestGame.price}</span>}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </>
+                              );
+                            })()}
+                          </motion.div>
+                        ) : (
+                          <motion.div key="carousel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+                            <StudioGameCarousel games={games} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* ── BOTTOM SECTION: Games grid + filters ── */}
+            <div className="flex flex-1 min-h-0 overflow-hidden">
+              {/* Games Grid */}
+              <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
+                {/* Header row */}
+                <div className="flex items-center gap-3 mb-3">
+                  <Library className="w-4 h-4 text-cyan-400" />
+                  <span className="text-white font-bold text-xs uppercase tracking-widest">Store Library</span>
+                  <div className="flex-1" />
+                  <div className="flex items-center gap-1 text-white/30 text-[10px]">
+                    <span>{currentRow + 1}/{totalRows}</span>
+                    <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10 ml-1">
+                      <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <TwoRowGrid
-                  items={items}
-                  currentRow={currentRow}
-                  itemsPerRow={itemsPerRow}
-                  selectedGame={selectedGame}
-                  activeTab={activeTab}
-                  onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
-                  onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
-                />
-              )
-            )}
+
+                <div className="flex flex-col gap-3">
+                  {[0, 1, 2, 3].map((rowIdx) => {
+                    const start = (currentRow + rowIdx) * itemsPerRow;
+                    const rowItems = items.slice(start, start + itemsPerRow);
+                    if (rowItems.length === 0) return null;
+                    return (
+                      <div key={`row-${rowIdx}`} className="flex gap-3">
+                        {rowItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`flex-1 relative cursor-pointer group transition-all ${selectedGame?.id === item.id ? 'ring-2 ring-cyan-400 rounded-xl' : ''}`}
+                            onClick={() => { setSelectedGame(item); setCurrentRow(0); }}
+                          >
+                            <div className="aspect-[16/9] rounded-xl overflow-hidden relative border border-white/10 group-hover:border-cyan-400/50 shadow-lg">
+                              <img
+                                src={item.displayImage || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600'}
+                                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                alt={item.displayTitle}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                              <div className="absolute bottom-2 left-2 right-2">
+                                <p className="text-white text-[10px] font-bold truncate">{item.displayTitle}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {/* Fill empty slots */}
+                        {Array.from({ length: itemsPerRow - rowItems.length }).map((_, i) => (
+                          <div key={`empty-${rowIdx}-${i}`} className="flex-1 aspect-[16/9] rounded-xl border border-white/5" style={{ background: 'rgba(255,255,255,0.02)' }} />
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Right Filter Panel */}
+              <div className="w-52 flex-shrink-0 flex flex-col gap-4 p-4 overflow-y-auto border-l border-white/8" style={{ scrollbarWidth: 'none' }}>
+                <div>
+                  <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Filters</p>
+                  <div className="flex flex-col gap-1.5">
+                    {GENRE_FILTERS.map((g) => (
+                      <button
+                        key={g.id}
+                        onClick={() => setSelectedGenreFilter(selectedGenreFilter === g.id ? null : g.id)}
+                        className={`w-full px-3 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all text-left ${
+                          selectedGenreFilter === g.id
+                            ? 'bg-cyan-500/25 border-cyan-400/60 text-cyan-300'
+                            : 'bg-white/[0.05] border-white/10 text-white/55 hover:bg-white/[0.09] hover:text-white'
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-full h-px bg-white/10" />
+
+                <div>
+                  <p className="text-white text-xs font-bold uppercase tracking-widest mb-3">Studios</p>
+                  <div className="flex flex-col gap-1.5 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                    {filteredDevelopers.map((dev) => (
+                      <button
+                        key={dev.id}
+                        onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left text-[9px] ${
+                          selectedDeveloper?.id === dev.id
+                            ? 'bg-cyan-500/20 border border-cyan-400/50 text-cyan-300'
+                            : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] text-white/60 hover:text-white'
+                        }`}
+                      >
+                        <img src={dev.logo} alt={dev.name} className="w-5 h-5 rounded object-cover flex-shrink-0" />
+                        <span className="truncate">{dev.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
