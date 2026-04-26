@@ -721,52 +721,6 @@ export default function TradingPostContent() {
 
       {/* MAIN CONTENT - Flex with sidebar controls below header */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        {/* SIDEBAR CONTROLS (Below header) */}
-        <div className="px-6 py-4 border-b border-white/10 bg-white/[0.02]">
-           <TabsContent value="board" className="m-0 data-[state=inactive]:hidden">
-              {crossViewLevel === 0 ? (
-                // LEVEL 0: Genre Selection Sidebar
-                <div className="flex items-center gap-3">
-                  <Grid className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                  <h3 className="text-white font-semibold text-sm uppercase tracking-wider flex-shrink-0">Game Genres:</h3>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {crossData.map((genre, idx) => (
-                      <button
-                        key={genre.id}
-                        onClick={() => setActiveGenreIndex(idx)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all flex-shrink-0 ${
-                          activeGenreIndex === idx 
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-medium' 
-                            : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'
-                        }`}
-                      >
-                        <genre.icon className={`w-3.5 h-3.5 ${activeGenreIndex === idx ? 'text-cyan-400' : 'text-slate-500'}`} />
-                        <span>{genre.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                // LEVEL 1: Show filter label
-                <div className="flex items-center gap-3">
-                  <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-                  <h3 className="text-white font-semibold text-sm uppercase tracking-wider">Item Filters</h3>
-                </div>
-              )}
-           </TabsContent>
-
-           <TabsContent value="subtab" className="m-0 data-[state=inactive]:hidden">
-              <div className="flex items-center gap-3">
-                <Search className="w-4 h-4 text-slate-400" />
-                <Input 
-                  placeholder="Search inventory..." 
-                  value={inventorySearch}
-                  onChange={(e) => setInventorySearch(e.target.value)}
-                  className="pl-0 h-8 bg-transparent border-0 border-b border-white/20 text-white placeholder:text-slate-500 rounded-none focus:border-cyan-400 focus:ring-0"
-                />
-              </div>
-           </TabsContent>
-        </div>
 
         {/* MAIN CONTENT AREA */}
         <div className="flex-1 flex flex-col overflow-hidden">
