@@ -1272,7 +1272,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 itemsPerRow={itemsPerRow}
                 selectedGame={selectedGame}
                 activeTab={activeTab}
-                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
+                onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); setIsLibraryExpanded(true); }}
                 onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
               />
             )}
