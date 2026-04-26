@@ -1136,7 +1136,26 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     ))}
                   </div>
                 ) : (
-                  <div className="flex-1" />
+                  /* Search bar — shown in library tab non-expanded state */
+                  activeTab === 'library' ? (
+                    <div className="flex items-center gap-1.5 flex-1 max-w-xs px-2 py-1 rounded-lg border border-white/10 bg-white/[0.04] mx-3">
+                      <Search className="w-3 h-3 flex-shrink-0 text-white/30" />
+                      <input
+                        type="text"
+                        placeholder="Search store..."
+                        value={searchTerm || ''}
+                        onChange={(e) => onSearchChange?.(e.target.value)}
+                        className="flex-1 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none min-w-0"
+                      />
+                      {searchTerm && (
+                        <button onClick={() => onSearchChange?.('')} className="text-white/30 hover:text-white transition-colors">
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex-1" />
+                  )
                 )}
 
                 {/* Row nav */}
