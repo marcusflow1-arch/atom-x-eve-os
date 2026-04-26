@@ -710,42 +710,51 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                         </div>
                       </div>
 
-                      {/* Achievements — card strip style */}
-                      <div className="flex-1 min-h-0">
-                        <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest mb-1.5">Achievements</p>
-                        <div className="grid grid-cols-4 gap-1.5 overflow-hidden" style={{ height: 'calc(100% - 18px)' }}>
-                          {MOCK_ACHIEVEMENTS.slice(0, 8).map((ach) => {
-                            const achTypeMap = {
-                              1: { icon: Sword, color: '#22d3ee' },
-                              2: { icon: Shield, color: '#a78bfa' },
-                              3: { icon: Flame, color: '#fb923c' },
-                              4: { icon: Target, color: '#f87171' },
-                              5: { icon: Zap, color: '#facc15' },
-                              6: { icon: Crown, color: '#fbbf24' },
-                              7: { icon: Gem, color: '#c084fc' },
-                              8: { icon: Skull, color: '#94a3b8' },
-                            };
-                            const cfg = achTypeMap[ach.id] || { icon: Trophy, color: '#22d3ee' };
-                            const Icon = cfg.icon;
-                            return (
-                              <div
-                                key={ach.id}
-                                className="flex flex-col items-center justify-center gap-1 rounded-xl p-1.5 cursor-default"
-                                style={{
-                                  background: 'rgba(255,255,255,0.04)',
-                                  border: '1px solid rgba(255,255,255,0.08)',
-                                }}
-                              >
+                      {/* Achievements — single scrollable row of 4 */}
+                      <div className="flex-1 min-h-0 flex flex-col">
+                        <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest mb-1.5 flex-shrink-0">Achievements</p>
+                        <div
+                          className="flex-1 overflow-y-auto"
+                          style={{ scrollbarWidth: 'none' }}
+                        >
+                          <div className="grid gap-1.5" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                            {MOCK_ACHIEVEMENTS.map((ach) => {
+                              const achTypeMap = {
+                                1: { icon: Sword, color: '#22d3ee' },
+                                2: { icon: Shield, color: '#a78bfa' },
+                                3: { icon: Flame, color: '#fb923c' },
+                                4: { icon: Target, color: '#f87171' },
+                                5: { icon: Zap, color: '#facc15' },
+                                6: { icon: Crown, color: '#fbbf24' },
+                                7: { icon: Gem, color: '#c084fc' },
+                                8: { icon: Skull, color: '#94a3b8' },
+                                9: { icon: Trophy, color: '#22d3ee' },
+                                10: { icon: Star, color: '#fbbf24' },
+                                11: { icon: Zap, color: '#a78bfa' },
+                                12: { icon: Shield, color: '#4ade80' },
+                              };
+                              const cfg = achTypeMap[ach.id] || { icon: Trophy, color: '#22d3ee' };
+                              const Icon = cfg.icon;
+                              return (
                                 <div
-                                  className="w-7 h-7 rounded-full flex items-center justify-center"
-                                  style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}30` }}
+                                  key={ach.id}
+                                  className="flex flex-col items-center justify-center gap-1 rounded-xl p-1.5 cursor-default"
+                                  style={{
+                                    background: 'rgba(255,255,255,0.04)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                  }}
                                 >
-                                  <Icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                                  <div
+                                    className="w-7 h-7 rounded-full flex items-center justify-center"
+                                    style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}30` }}
+                                  >
+                                    <Icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                                  </div>
+                                  <p className="text-white/50 text-[7px] font-bold text-center leading-tight truncate w-full px-0.5">{ach.title}</p>
                                 </div>
-                                <p className="text-white/50 text-[7px] font-bold text-center leading-tight truncate w-full px-0.5">{ach.title}</p>
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
