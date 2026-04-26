@@ -440,7 +440,7 @@ export default function LibrarySidebar() {
           )}
 
           {/* Center Group: Navigation Buttons (ALWAYS CENTERED FOR ALL PAGES) */}
-          {!pathname.includes('/store') && <motion.div
+          <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -714,7 +714,7 @@ export default function LibrarySidebar() {
               <span className="text-[7px] font-bold uppercase tracking-wider">Entertain</span>
             </button>
 
-          </motion.div>}
+          </motion.div>
 
           {/* Full-height expanded panel — extends from top header to bottom, same glass as sidebar */}
           <AnimatePresence>
