@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Mic, MicOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useRef, useEffect } from 'react';
 import LiveStreamBox from './LiveStreamBox';
 import GlobalSearchBar from './GlobalSearchBar';
 
