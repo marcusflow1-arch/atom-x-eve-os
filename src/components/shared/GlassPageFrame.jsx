@@ -200,8 +200,15 @@ export default function GlassPageFrame({ children, bottomContent, topContent, sh
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') closeAll();
     };
+    const handleOpenSearch = () => {
+      setSearchOpen(true);
+    };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('openGlobalSearch', handleOpenSearch);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('openGlobalSearch', handleOpenSearch);
+    };
   }, []);
 
   const toggleOverlay = (name) => {

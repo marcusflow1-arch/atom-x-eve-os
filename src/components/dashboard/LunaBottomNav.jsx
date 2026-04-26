@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User, Trees } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -1089,6 +1089,18 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             )}
             <Globe className="w-4 h-4" />
             <span>Environment Hubs</span>
+          </button>
+
+          {/* Divider */}
+          <div className="w-px h-5 bg-white/10 mx-2" />
+
+          {/* Global Search Bar */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('openGlobalSearch'))}
+            className="px-3 py-1.5 flex items-center gap-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/60 hover:text-white text-xs font-semibold transition-all"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Search</span>
           </button>
         </div>
       </div>}
