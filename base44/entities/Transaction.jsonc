@@ -1,0 +1,53 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user making the purchase"
+    },
+    "item_id": {
+      "type": "string",
+      "description": "ID of the item/game purchased"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "game",
+        "subscription",
+        "item"
+      ],
+      "default": "game"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Cost of the transaction"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "transaction_hash": {
+      "type": "string",
+      "description": "Unique hash for the transaction receipt"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "Method used (e.g., 'wallet', 'credit_card', 'system_grant')"
+    }
+  },
+  "required": [
+    "user_id",
+    "item_id",
+    "amount"
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "name": "AIBehaviorState",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The user this AI state belongs to"
+    },
+    "avatar_id": {
+      "type": "string",
+      "description": "The avatar this behavior state is linked to"
+    },
+    "current_mood": {
+      "type": "string",
+      "enum": [
+        "joyful",
+        "content",
+        "neutral",
+        "melancholic",
+        "irritable",
+        "aggressive",
+        "contemplative",
+        "energetic",
+        "tired",
+        "curious"
+      ],
+      "default": "neutral",
+      "description": "Current emotional state of the AI"
+    },
+    "mood_intensity": {
+      "type": "number",
+      "default": 50,
+      "description": "Intensity of current mood (0-100)"
+    },
+    "energy_level": {
+      "type": "number",
+      "default": 75,
+      "description": "Current energy level (0-100), affected by time of day"
+    },
+    "moral_alignment": {
+      "type": "number",
+      "default": 0,
+      "description": "Moral alignment scale (-100 evil to +100 good)"
+    },
+    "aggression_tendency": {
+      "type": "number",
+      "default": 30,
+      "description": "How likely AI is to choose aggressive options (0-100)"
+    },
+    "risk_tolerance": {
+      "type": "number",
+      "default": 50,
+      "description": "Willingness to take risks (0-100)"
+    },
+    "empathy_level": {
+      "type": "number",
+      "default": 50,
+      "description": "How empathetic AI responses are (0-100)"
+    },
+    "environmental_factors": {
+      "type": "object",
+      "properties": {
+        "last_weather": {
+          "type": "string",
+          "enum": [
+            "clear",
+            "cloudy",
+            "rainy",
+            "stormy",
+            "snowy",
+            "foggy",
+            "windy"
+          ],
+          "default": "clear"
+        },
+        "last_temperature": {
+          "type": "string",
+          "enum": [
+            "freezing",
+            "cold",
+            "cool",
+            "mild",
+            "warm",
+            "hot",
+            "scorching"
+          ],
+          "default": "mild"
+        },
+        "time_of_day_preference": {
+          "type": "string",
+          "enum": [
+            "morning",
+            "afternoon",
+            "evening",
+            "night"
+          ],
+          "default": "afternoon"
+        },
+        "seasonal_mood_modifier": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "description": "Environmental factors affecting AI mood"
+    },
+    "behavioral_traits": {
+      "type": "object",
+      "properties": {
+        "loyalty": {
+          "type": "number",
+          "default": 50
+        },
+        "curiosity": {
+          "type": "number",
+          "default": 50
+        },
+        "caution": {
+          "type": "number",
+          "default": 50
+        },
+        "humor": {
+          "type": "number",
+          "default": 50
+        },
+        "wisdom": {
+          "type": "number",
+          "default": 50
+        },
+        "impulsiveness": {
+          "type": "number",
+          "default": 50
+        }
+      },
+      "description": "Core personality traits that evolve over time"
+    },
+    "mood_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "mood": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "trigger": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Recent mood changes for pattern analysis"
+    },
+    "last_environmental_update": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When environmental factors were last processed"
+    },
+    "last_decision_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the AI last processed a player decision"
+    }
+  },
+  "required": [
+    "user_id",
+    "avatar_id"
+  ]
+}

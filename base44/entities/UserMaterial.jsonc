@@ -1,0 +1,39 @@
+{
+  "name": "UserMaterial",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Owner of this material stack"
+    },
+    "material_id": {
+      "type": "string",
+      "description": "Reference to Material entity"
+    },
+    "material_type": {
+      "type": "string",
+      "description": "Cached material type for quick filtering"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 0
+    },
+    "source_game": {
+      "type": "string",
+      "description": "Game title where material was earned"
+    },
+    "source_achievement": {
+      "type": "string",
+      "description": "Achievement that granted this material"
+    },
+    "is_tradable": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_id",
+    "material_id",
+    "quantity"
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "name": "Game",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Game title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed game description"
+    },
+    "original_year": {
+      "type": "number",
+      "description": "Original release year"
+    },
+    "genre": {
+      "type": "string",
+      "enum": [
+        "shooting",
+        "fighting",
+        "sci-fi",
+        "mmo",
+        "mmorpg",
+        "adventure",
+        "action",
+        "fantasy",
+        "rpg",
+        "strategy",
+        "simulation",
+        "sports",
+        "racing",
+        "horror",
+        "puzzle",
+        "platformer",
+        "survival",
+        "open_world",
+        "sandbox",
+        "other"
+      ],
+      "description": "Primary genre of the game"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "reconstructed",
+        "in_development",
+        "planned",
+        "available"
+      ],
+      "default": "available"
+    },
+    "cover_image": {
+      "type": "string",
+      "description": "URL for the game's primary cover image"
+    },
+    "banner_image": {
+      "type": "string",
+      "description": "URL for the game's wide banner/background image"
+    },
+    "screenshots": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of URLs for game screenshots"
+    },
+    "video_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of URLs for game videos/trailers (YouTube, etc.)"
+    },
+    "trailer_url": {
+      "type": "string",
+      "description": "URL for the game's main trailer (Legacy)"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price of the game in USD"
+    },
+    "play_link": {
+      "type": "string",
+      "description": "URL or command to launch the game"
+    },
+    "system_requirements": {
+      "type": "object",
+      "properties": {
+        "os": {
+          "type": "string"
+        },
+        "processor": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string"
+        },
+        "graphics": {
+          "type": "string"
+        },
+        "storage": {
+          "type": "string"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional tags for categorization"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "genre",
+    "status",
+    "cover_image"
+  ]
+}

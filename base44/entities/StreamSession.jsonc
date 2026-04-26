@@ -1,0 +1,41 @@
+{
+  "name": "StreamSession",
+  "type": "object",
+  "properties": {
+    "streamer_id": {
+      "type": "string"
+    },
+    "game_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "is_live": {
+      "type": "boolean",
+      "default": false
+    },
+    "viewer_count": {
+      "type": "number",
+      "default": 0
+    },
+    "active_perk_modifiers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "streamer_id",
+    "is_live"
+  ]
+}

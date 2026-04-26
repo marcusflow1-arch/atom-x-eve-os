@@ -1,0 +1,26 @@
+{
+  "name": "AssetFile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the uploaded asset file"
+    },
+    "size": {
+      "type": "string",
+      "description": "File size as a formatted string"
+    },
+    "type": {
+      "type": "string",
+      "description": "MIME type of the file"
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL of the uploaded file"
+    }
+  },
+  "required": [
+    "name",
+    "url"
+  ]
+}

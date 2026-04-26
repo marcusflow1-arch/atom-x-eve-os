@@ -1,0 +1,109 @@
+{
+  "name": "Avatar",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The ID of the user this avatar belongs to. Each user has one avatar."
+    },
+    "name": {
+      "type": "string",
+      "description": "The avatar's name, chosen by the user."
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female"
+      ],
+      "description": "The avatar's gender, which determines the AI companion type (Atum/Eve)."
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "The avatar's current level, increased by experience points."
+    },
+    "experience": {
+      "type": "number",
+      "default": 0,
+      "description": "Total experience points earned from achievements."
+    },
+    "social_influence": {
+      "type": "number",
+      "default": 0,
+      "description": "Metric based on interactions, crafting, and community involvement."
+    },
+    "reputation_badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Badges earned for community contributions."
+    },
+    "model_url": {
+      "type": "string",
+      "default": "base_humanoid.glb",
+      "description": "URL to the avatar's 3D model GLB file."
+    },
+    "skin_tone": {
+      "type": "string",
+      "default": "#ffdbac",
+      "description": "Hex color code for avatar's skin tone."
+    },
+    "hair_color": {
+      "type": "string",
+      "default": "#111111",
+      "description": "Hex color code for avatar's hair color."
+    },
+    "equipped_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "A list of IDs for Equipment items currently equipped by the avatar."
+    },
+    "unlocked_abilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "A list of IDs for Ability items the avatar has unlocked."
+    },
+    "active_companions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "A list of IDs for Companion items currently active."
+    },
+    "morph_targets": {
+      "type": "object",
+      "default": {},
+      "description": "3D model morph targets for facial expressions and customization."
+    },
+    "current_mode": {
+      "type": "string",
+      "enum": [
+        "Idle",
+        "Story",
+        "Battle",
+        "Adaptive"
+      ],
+      "default": "Idle",
+      "description": "The current operational mode of the AI."
+    },
+    "active_memory_id": {
+      "type": "string",
+      "description": "ID of the currently active memory influence."
+    }
+  },
+  "required": [
+    "user_id",
+    "name",
+    "gender"
+  ]
+}

@@ -194,6 +194,8 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const [selectedDeveloper, setSelectedDeveloper] = useState(null);
   const [selectedGenreFilter, setSelectedGenreFilter] = useState(null);
   const [isLibraryExpanded, setIsLibraryExpanded] = useState(false);
+  const [isEnvExpanded, setIsEnvExpanded] = useState(false);
+  const [selectedEnv, setSelectedEnv] = useState(null);
 
   const GENRE_FILTERS = [
     { id: 'action', label: 'Action' },
@@ -226,12 +228,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
   const handleTabClick = (tab) => {
     setSelectedItem(null);
     setSelectedGame(null);
+    setIsEnvExpanded(false);
+    setSelectedEnv(null);
     if (tab === 'home') {
       if (!hideNav) navigate(createPageUrl('LunaTemplate'));
     } else {
       // If clicking the same tab that's already active, close it (go home)
       if (activeTab === tab) {
         setActiveTab('home');
+        setIsLibraryExpanded(false);
         onLibraryClose?.();
         // Dispatch event to notify pages to close their panels
         window.dispatchEvent(new CustomEvent('libraryPanelClose'));
@@ -886,24 +891,31 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
-              top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
-              height: isLibraryExpanded && activeTab === 'library' ? 'calc(100vh - 312px)' : 'auto',
+              top: (isLibraryExpanded && activeTab === 'library') || (isEnvExpanded && activeTab === 'environment') ? '72px' : 'auto',
+              height: (isLibraryExpanded && activeTab === 'library') || (isEnvExpanded && activeTab === 'environment') ? 'calc(100vh - 120px)' : 'auto',
               background: 'linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.7) 70%, transparent 100%)',
               backdropFilter: 'blur(12px)',
             }}
             onWheel={handleWheel}
           >
-            {/* ── Persistent filter bar — always visible (hidden in expanded library) ── */}
-            {!(isLibraryExpanded && activeTab === 'library') && (
+            {/* ── Persistent filter bar — always visible (hidden in expanded modes) ── */}
+            {!(isLibraryExpanded && activeTab === 'library') && !(isEnvExpanded && activeTab === 'environment') && (
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
-                {/* Left: Library icon + label, or Back button when in game detail */}
+                {/* Left: icon + label */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                  {activeTab === 'environment' ? (
+                    <Globe className="w-4 h-4 text-purple-400" />
+                  ) : (
+                    <Library className="w-4 h-4 text-cyan-400" />
+                  )}
                   <button
-                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                    onClick={() => {
+                      if (activeTab === 'environment') setIsEnvExpanded(true);
+                      else setIsLibraryExpanded(!isLibraryExpanded);
+                    }}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    Store Library
+                    {activeTab === 'environment' ? 'Environment Hub' : 'Environment Hub'}
                   </button>
                 </div>
 
@@ -920,24 +932,119 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             )}
-            
-            {/* Only show Store Library label in expanded mode */}
+
+            {/* Expanded header label for library */}
             {isLibraryExpanded && activeTab === 'library' && (
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2">
                 <div className="flex items-center gap-2">
                   <Library className="w-4 h-4 text-cyan-400" />
                   <button
-                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                    onClick={() => setIsLibraryExpanded(false)}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    Store Library
+                    Environment Hub
                   </button>
                 </div>
               </div>
             )}
-            {(
-              isLibraryExpanded && activeTab === 'library' ? (
-                /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
+
+            {/* Expanded header label for environment */}
+            {isEnvExpanded && activeTab === 'environment' && (
+              <div className="w-full mx-auto mb-3 px-2 flex items-center gap-3 flex-shrink-0">
+                <Globe className="w-4 h-4 text-purple-400" />
+                <button
+                  onClick={() => setIsEnvExpanded(false)}
+                  className="text-white font-bold text-xs uppercase tracking-widest hover:text-purple-400 transition-colors"
+                >
+                  Environment Hub
+                </button>
+                <div className="flex-1" />
+                <button
+                  onClick={() => { setIsEnvExpanded(false); setSelectedEnv(null); }}
+                  className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* ── EXPANDED ENVIRONMENT HUB: 50/50 split ── */}
+            {isEnvExpanded && activeTab === 'environment' ? (
+              <div className="w-full flex-1 flex gap-0 overflow-hidden rounded-2xl border border-white/10" style={{ background: 'rgba(10,14,22,0.97)', minHeight: 0 }}>
+                {/* LEFT 50% — Environment list */}
+                <div className="w-1/2 flex flex-col border-r border-white/10 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/10 flex-shrink-0">
+                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">Select Environment</p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-3 content-start" style={{ scrollbarWidth: 'none' }}>
+                    {ENV_GENRES.map((env) => (
+                      <div
+                        key={env.id}
+                        onClick={() => setSelectedEnv(env)}
+                        className={`relative cursor-pointer group rounded-xl overflow-hidden border transition-all ${
+                          selectedEnv?.id === env.id
+                            ? 'border-purple-400/70 shadow-[0_0_16px_rgba(192,132,252,0.25)]'
+                            : 'border-white/10 hover:border-purple-400/40'
+                        }`}
+                      >
+                        <div className="aspect-video relative">
+                          <img src={env.image} alt={env.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                          {selectedEnv?.id === env.id && (
+                            <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white" />
+                            </div>
+                          )}
+                          <p className="absolute bottom-2 left-3 text-white font-bold text-xs">{env.name}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RIGHT 50% — 3D Environment Preview */}
+                <div className="w-1/2 flex flex-col overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/10 flex-shrink-0 flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-purple-400" />
+                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest">3D Preview</p>
+                    {selectedEnv && <span className="ml-2 text-purple-300 text-[10px] font-bold">{selectedEnv.name}</span>}
+                  </div>
+                  <div className="flex-1 relative overflow-hidden">
+                    {selectedEnv ? (
+                      <>
+                        <img
+                          src={selectedEnv.image}
+                          alt={selectedEnv.name}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                          <div className="w-16 h-16 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center">
+                            <Globe className="w-8 h-8 text-purple-400" />
+                          </div>
+                          <p className="text-white font-black text-lg">{selectedEnv.name}</p>
+                          <p className="text-white/40 text-xs">3D Environment Loading...</p>
+                          <div className="flex gap-2 mt-2">
+                            <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          <button className="mt-2 px-5 py-2 rounded-xl bg-purple-500 hover:bg-purple-400 text-white font-bold text-sm transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+                            Enter Environment
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-8">
+                        <Globe className="w-12 h-12 text-white/10" />
+                        <p className="text-white/30 text-sm">Select an environment on the left to preview it in 3D</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : isLibraryExpanded && activeTab === 'library' ? (
+              /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
                 <div className="w-full h-full flex gap-4">
                   {/* LEFT: Games Grid */}
                   <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none' }}>
@@ -1027,9 +1134,9 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   onSelectGame={(item) => { setSelectedGame(item); setCurrentRow(0); setSelectedItem(null); }}
                   onSelectItem={(item) => { setSelectedItem(item); setSelectedGame(null); }}
                 />
-              )
-            )}
-          </motion.div>
+                )
+                }
+                </motion.div>
         )}
       </AnimatePresence>
 

@@ -1,0 +1,51 @@
+{
+  "name": "PlayerState",
+  "type": "object",
+  "properties": {
+    "player_id": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "model_url": {
+      "type": "string"
+    },
+    "channel_id": {
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    },
+    "z": {
+      "type": "number"
+    },
+    "yaw": {
+      "type": "number"
+    },
+    "anim": {
+      "type": "string"
+    },
+    "env_url": {
+      "type": "string"
+    },
+    "last_update": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "default": "online"
+    }
+  },
+  "required": [
+    "player_id",
+    "channel_id",
+    "last_update"
+  ]
+}

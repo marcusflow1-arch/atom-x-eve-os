@@ -1,0 +1,150 @@
+{
+  "name": "EngineBlueprint",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Blueprint name (e.g. 'Player Controller', 'Enemy AI')"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this blueprint does"
+    },
+    "blueprint_type": {
+      "type": "string",
+      "enum": [
+        "actor",
+        "character",
+        "game_mode",
+        "widget",
+        "component",
+        "system",
+        "material",
+        "animation",
+        "ai_behavior",
+        "custom"
+      ],
+      "default": "actor",
+      "description": "Type of blueprint, modeled after Unreal Engine blueprint types"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "description": "Node type: event, function, variable, branch, loop, action, custom"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          },
+          "properties": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Node-specific properties (values, settings)"
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "connected_to": {
+                  "type": "string",
+                  "description": "output_id of connected node"
+                }
+              }
+            },
+            "default": []
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              }
+            },
+            "default": []
+          }
+        }
+      },
+      "default": [],
+      "description": "Visual scripting nodes in this blueprint"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "default_value": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Blueprint variables"
+    },
+    "generated_code": {
+      "type": "string",
+      "description": "Three.js / JavaScript code generated from this blueprint"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this blueprint is currently active in the scene"
+    },
+    "linked_model_id": {
+      "type": "string",
+      "description": "Optional Model3D ID this blueprint is attached to"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "name",
+    "blueprint_type"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "Clan",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the clan"
+    },
+    "description": {
+      "type": "string",
+      "description": "Clan description or manifesto"
+    },
+    "emblem_url": {
+      "type": "string",
+      "description": "URL to the clan's icon/emblem"
+    },
+    "banner_url": {
+      "type": "string",
+      "description": "URL to the clan's banner image"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "Current clan level"
+    },
+    "xp": {
+      "type": "number",
+      "default": 0,
+      "description": "Current clan XP"
+    },
+    "owner_id": {
+      "type": "string",
+      "description": "ID of the user who owns/leads the clan"
+    },
+    "main_chat_channel_id": {
+      "type": "string",
+      "description": "ID of the clan-wide general chat channel"
+    },
+    "main_voice_room_id": {
+      "type": "string",
+      "description": "ID of the clan-wide general voice room"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the clan is open for anyone to join"
+    }
+  },
+  "required": [
+    "name",
+    "owner_id"
+  ]
+}

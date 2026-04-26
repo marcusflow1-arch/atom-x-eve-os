@@ -1,0 +1,35 @@
+{
+  "name": "StoryProgress",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user"
+    },
+    "story_id": {
+      "type": "string",
+      "default": "main",
+      "description": "ID of the story (e.g., 'main')"
+    },
+    "current_chapter_id": {
+      "type": "string",
+      "description": "The ID of the current chapter the user is on (e.g., '1', '1A')"
+    },
+    "completed_chapter_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of completed chapter IDs"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "current_chapter_id"
+  ]
+}

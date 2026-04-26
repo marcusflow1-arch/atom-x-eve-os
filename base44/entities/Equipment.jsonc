@@ -1,0 +1,50 @@
+{
+  "name": "Equipment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "slot": {
+      "type": "string",
+      "enum": [
+        "Head",
+        "Cape",
+        "Armor",
+        "Gloves",
+        "Pants",
+        "Boots",
+        "Weapon"
+      ]
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Epic",
+        "Legendary"
+      ]
+    },
+    "genre": {
+      "type": "string"
+    },
+    "stats": {
+      "type": "object"
+    },
+    "icon_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "slot",
+    "rarity",
+    "genre"
+  ]
+}

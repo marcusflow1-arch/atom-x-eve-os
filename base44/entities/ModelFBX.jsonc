@@ -1,0 +1,51 @@
+{
+  "name": "ModelFBX",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the FBX model"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the model"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the uploaded FBX file"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Preview thumbnail image URL"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category (e.g., character, weapon, environment)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Tags for searching"
+    },
+    "is_rigged": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the model has a skeleton/rig"
+    },
+    "textures": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of texture image URLs associated with the model"
+    }
+  },
+  "required": [
+    "name",
+    "file_url"
+  ]
+}

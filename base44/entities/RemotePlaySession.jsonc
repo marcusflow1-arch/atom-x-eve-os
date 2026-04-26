@@ -1,0 +1,68 @@
+{
+  "name": "RemotePlaySession",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user initiating the stream"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "ID of the game being streamed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "initializing",
+        "connecting",
+        "active",
+        "paused",
+        "ended"
+      ],
+      "default": "initializing",
+      "description": "Current status of the streaming session"
+    },
+    "quality_settings": {
+      "type": "object",
+      "properties": {
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "720p",
+            "1080p",
+            "1440p",
+            "4k"
+          ],
+          "default": "1080p"
+        },
+        "framerate": {
+          "type": "number",
+          "enum": [
+            30,
+            60,
+            120
+          ],
+          "default": 60
+        },
+        "bitrate_mbps": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 50
+        }
+      }
+    },
+    "host_device_name": {
+      "type": "string",
+      "description": "Name of the PC hosting the game"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "game_id"
+  ]
+}

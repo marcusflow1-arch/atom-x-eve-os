@@ -1,0 +1,61 @@
+{
+  "name": "StreamerProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Reference to User entity"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Streamer display name"
+    },
+    "tagline": {
+      "type": "string",
+      "description": "Personal tagline or motto"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Personal story and identity - the person behind the stream"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Profile image URL"
+    },
+    "cover_image_url": {
+      "type": "string",
+      "description": "Cover/banner image URL"
+    },
+    "passions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Personal interests and passions beyond gaming"
+    },
+    "personality_traits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Personality descriptors"
+    },
+    "streaming_story": {
+      "type": "string",
+      "description": "Why they started streaming, their journey"
+    },
+    "is_live": {
+      "type": "boolean",
+      "default": false,
+      "description": "Currently streaming"
+    },
+    "follower_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_id",
+    "display_name"
+  ]
+}

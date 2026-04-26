@@ -1,0 +1,35 @@
+{
+  "name": "Reaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "memory",
+        "contract",
+        "post"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "love",
+        "fire",
+        "funny"
+      ],
+      "default": "like"
+    }
+  },
+  "required": [
+    "user_id",
+    "target_id",
+    "target_type"
+  ]
+}

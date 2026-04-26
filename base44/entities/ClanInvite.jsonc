@@ -1,0 +1,34 @@
+{
+  "name": "ClanInvite",
+  "type": "object",
+  "properties": {
+    "divisionId": {
+      "type": "string"
+    },
+    "inviterId": {
+      "type": "string"
+    },
+    "inviteeId": {
+      "type": "string",
+      "description": "User ID of the invited person"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "divisionId",
+    "inviterId",
+    "inviteeId"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "name": "GameZone",
+  "type": "object",
+  "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "The workspace this zone belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the zone"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "exploration",
+        "farming",
+        "strategy",
+        "party_formation",
+        "general_chat"
+      ],
+      "description": "The functional type of the zone"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "ID of the linked chat channel for message history"
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "type": "string",
+          "enum": [
+            "member",
+            "officer",
+            "leader"
+          ],
+          "default": "member"
+        },
+        "interact": {
+          "type": "string",
+          "enum": [
+            "member",
+            "officer",
+            "leader"
+          ],
+          "default": "member"
+        }
+      },
+      "default": {
+        "view": "member",
+        "interact": "member"
+      },
+      "description": "Role-based permissions for this zone"
+    },
+    "state": {
+      "type": "object",
+      "default": {},
+      "description": "Zone-specific state (e.g., map coordinates, filters, active strategy board id)"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "type",
+    "channel_id"
+  ]
+}

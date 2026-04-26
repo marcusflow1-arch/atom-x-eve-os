@@ -1,0 +1,55 @@
+{
+  "name": "StreamChatMessage",
+  "type": "object",
+  "properties": {
+    "stream_id": {
+      "type": "string",
+      "description": "ID of stream this message belongs to"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID of user who sent message"
+    },
+    "username": {
+      "type": "string",
+      "description": "Username of sender (cached for performance)"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "voice",
+        "system",
+        "donation"
+      ],
+      "default": "text",
+      "description": "Type of chat message"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message text content"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL for voice messages or other media"
+    },
+    "media_duration": {
+      "type": "number",
+      "description": "Duration in milliseconds for voice messages"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether message was deleted by moderation"
+    },
+    "donation_amount": {
+      "type": "number",
+      "description": "Amount if this is a donation message"
+    }
+  },
+  "required": [
+    "stream_id",
+    "user_id",
+    "message_type"
+  ]
+}
