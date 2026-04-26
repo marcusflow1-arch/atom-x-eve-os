@@ -42,6 +42,25 @@ const STUDIO_DATA = {
       { id: 2, title: 'Transistor', genre: 'Action RPG', rating: 8.5, image: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=300&h=400&fit=crop' },
       { id: 3, title: 'Bastion', genre: 'Action RPG', rating: 8.7, image: 'https://images.unsplash.com/photo-1516905041604-1c1e1c84c397?w=300&h=400&fit=crop' },
     ]
+  },
+  'bethesda': {
+    id: 'bethesda',
+    name: 'Bethesda Game Studios',
+    tagline: 'Where Worlds Come Alive',
+    description: 'Bethesda Game Studios is a world-renowned developer creating some of the most ambitious and immersive gaming universes. From the expansive worlds of The Elder Scrolls and Fallout franchises to innovative new experiences like Starfield, we craft games that captivate millions of players worldwide.',
+    philosophy: 'We believe in creating living, breathing worlds where players can forge their own paths and stories. Our focus is on player freedom, deep roleplay mechanics, and immersive environments that challenge the boundaries of interactive entertainment.',
+    founded: 1986,
+    location: 'Rockville, Maryland',
+    primaryColor: '#1F5FA0',
+    secondaryColor: '#0D0F12',
+    accentColor: '#FFB81C',
+    heroImage: 'https://images.unsplash.com/photo-1538481527238-c5a6e5a34c16?w=1200&h=600&fit=crop',
+    logo: '🎮',
+    games: [
+      { id: 1, title: 'Starfield', genre: 'Action RPG', rating: 8.4, image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=400&fit=crop' },
+      { id: 2, title: 'The Elder Scrolls V: Skyrim', genre: 'Action RPG', rating: 9.4, image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
+      { id: 3, title: 'Fallout 4', genre: 'Action RPG', rating: 8.9, image: 'https://images.unsplash.com/photo-1556438328-b6760a6eda4e?w=300&h=400&fit=crop' },
+    ]
   }
 };
 
@@ -223,7 +242,7 @@ export default function DevStudio() {
           className="py-16 text-center border-t border-white/10"
         >
           <p className="text-white/60 mb-6">Explore Other Studios</p>
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
             {Object.values(STUDIO_DATA).map(st => (
               <button
                 key={st.id}
