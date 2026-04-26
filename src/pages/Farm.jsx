@@ -7,6 +7,7 @@ import FarmGameView from '@/components/farm/FarmGameView';
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { getFarmGameById } from '@/components/farm/farmData';
 import GlassPageFrame from '@/components/shared/GlassPageFrame';
+import GlobalGameSearch from '@/components/shared/GlobalGameSearch';
 import ForumBottomNav from '@/components/community/ForumBottomNav';
 import { ChevronLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
@@ -79,7 +80,12 @@ export default function FarmPage() {
 
     return (
         <PageErrorBoundary pageName="Farm">
-            <GlassPageFrame bottomContent={<ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} />}>
+            <GlassPageFrame bottomContent={
+              <div className="flex items-center w-full h-full gap-3">
+                <div className="flex-1 min-w-0"><ForumBottomNav activeTab="farm_hub" onTabSelect={handleTabSelect} /></div>
+                <div className="flex-shrink-0 pr-4"><GlobalGameSearch /></div>
+              </div>
+            }>
             <div 
                 className="min-h-screen text-white overflow-hidden relative"
                 style={{ background: 'linear-gradient(135deg, #0f1419 0%, #1a1f2e 25%, #0d1117 50%, #1a1f2e 75%, #0f1419 100%)' }}
