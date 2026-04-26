@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User, Trees } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -710,35 +710,42 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                         </div>
                       </div>
 
-                      {/* Achievements — liquid glass cards */}
+                      {/* Achievements — card strip style */}
                       <div className="flex-1 min-h-0">
                         <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest mb-1.5">Achievements</p>
-                        <div className="grid grid-cols-4 gap-1.5 h-[calc(100%-18px)] overflow-hidden">
-                          {MOCK_ACHIEVEMENTS.slice(0, 8).map((ach) => (
-                            <div
-                              key={ach.id}
-                              className="rounded-xl flex flex-col items-center justify-center gap-1 p-1.5 cursor-default"
-                              style={{
-                                background: 'rgba(255,255,255,0.04)',
-                                backdropFilter: 'blur(20px) saturate(180%)',
-                                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 12px rgba(0,0,0,0.2)',
-                              }}
-                            >
+                        <div className="grid grid-cols-4 gap-1.5 overflow-hidden" style={{ height: 'calc(100% - 18px)' }}>
+                          {MOCK_ACHIEVEMENTS.slice(0, 8).map((ach) => {
+                            const achTypeMap = {
+                              1: { icon: Sword, color: '#22d3ee' },
+                              2: { icon: Shield, color: '#a78bfa' },
+                              3: { icon: Flame, color: '#fb923c' },
+                              4: { icon: Target, color: '#f87171' },
+                              5: { icon: Zap, color: '#facc15' },
+                              6: { icon: Crown, color: '#fbbf24' },
+                              7: { icon: Gem, color: '#c084fc' },
+                              8: { icon: Skull, color: '#94a3b8' },
+                            };
+                            const cfg = achTypeMap[ach.id] || { icon: Trophy, color: '#22d3ee' };
+                            const Icon = cfg.icon;
+                            return (
                               <div
-                                className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                key={ach.id}
+                                className="flex flex-col items-center justify-center gap-1 rounded-xl p-1.5 cursor-default"
                                 style={{
-                                  background: 'rgba(255,255,255,0.06)',
-                                  border: '1px solid rgba(255,255,255,0.12)',
-                                  backdropFilter: 'blur(8px)',
+                                  background: 'rgba(255,255,255,0.04)',
+                                  border: '1px solid rgba(255,255,255,0.08)',
                                 }}
                               >
-                                <span className="text-white/25 text-xs font-black">?</span>
+                                <div
+                                  className="w-7 h-7 rounded-full flex items-center justify-center"
+                                  style={{ background: `${cfg.color}18`, boxShadow: `0 0 10px ${cfg.color}30` }}
+                                >
+                                  <Icon className="w-3.5 h-3.5" style={{ color: cfg.color }} />
+                                </div>
+                                <p className="text-white/50 text-[7px] font-bold text-center leading-tight truncate w-full px-0.5">{ach.title}</p>
                               </div>
-                              <p className="text-white/30 text-[7px] font-semibold text-center leading-tight truncate w-full px-0.5">{ach.title}</p>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
