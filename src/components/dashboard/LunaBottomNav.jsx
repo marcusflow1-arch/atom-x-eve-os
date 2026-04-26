@@ -1110,7 +1110,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     }}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    {activeTab === 'environment' ? 'Environment Hub' : 'Environment Hub'}
+                    {activeTab === 'environment' ? 'Environment Hub' : 'Library'}
                   </button>
                 </div>
 
@@ -1159,7 +1159,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                     onClick={() => setIsLibraryExpanded(false)}
                     className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
                   >
-                    Environment Hub
+                    Library
                   </button>
                 </div>
               </div>
