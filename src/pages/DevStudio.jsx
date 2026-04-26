@@ -55,11 +55,27 @@ const STUDIO_DATA = {
     secondaryColor: '#0D0F12',
     accentColor: '#FFB81C',
     heroImage: 'https://images.unsplash.com/photo-1538481527238-c5a6e5a34c16?w=1200&h=600&fit=crop',
+    heroTitle: 'Starfield is Available Now on PlayStation 5',
+    heroSubtitle: 'Starfield is now available on PlayStation 5, welcoming a new generation of explorers into Bethesda Game Studios\' most ambitious universe.',
     logo: '🎮',
     games: [
       { id: 1, title: 'Starfield', genre: 'Action RPG', rating: 8.4, image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=400&fit=crop' },
       { id: 2, title: 'The Elder Scrolls V: Skyrim', genre: 'Action RPG', rating: 9.4, image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
       { id: 3, title: 'Fallout 4', genre: 'Action RPG', rating: 8.9, image: 'https://images.unsplash.com/photo-1556438328-b6760a6eda4e?w=300&h=400&fit=crop' },
+      { id: 4, title: 'The Elder Scrolls Online', genre: 'MMO RPG', rating: 8.2, image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop' },
+      { id: 5, title: 'Fallout 76', genre: 'Online Action RPG', rating: 7.8, image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300&h=400&fit=crop' },
+      { id: 6, title: 'The Elder Scrolls: Oblivion', genre: 'Action RPG', rating: 9.1, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=400&fit=crop' },
+    ],
+    events: [
+      { id: 1, title: 'Fallout 76: Rip Daring vs Aliens C.A.M.P. Showdown', status: 'Live Now', date: 'Apr 15', description: 'Submit a rip daring-inspired or alien-inspired C.A.M.P or shelter for a chance at atoms and an exclusive C.A.M.P title.' },
+      { id: 2, title: 'Season Zero: Dawn and Dusk', status: 'Live Now', game: 'The Elder Scrolls Online', description: 'A new way to adventure and earn rewards. Free for all base-game players.' },
+      { id: 3, title: 'Slayers Club Live with Hugo Martin', date: 'Apr 30', description: 'Hugo Martin plays through DOOM games while providing his unique insights.' },
+    ],
+    studios: [
+      { name: 'Bethesda', logo: '🎮' },
+      { name: 'id Software', logo: '💥' },
+      { name: 'ZeniMax', logo: '⚡' },
+      { name: 'Arkane', logo: '🔮' },
     ]
   }
 };
@@ -129,29 +145,18 @@ export default function DevStudio() {
             transition={{ duration: 0.8 }}
             className="max-w-2xl"
           >
-            <div className="flex items-center gap-4 mb-6">
-              <div 
-                className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold shadow-lg"
-                style={{ background: `linear-gradient(135deg, ${studio.primaryColor}, ${studio.accentColor})` }}
-              >
-                {studio.logo}
-              </div>
-              <div>
-                <h1 className="text-5xl font-black text-white tracking-tight mb-2">{studio.name}</h1>
-                <p className="text-xl text-white/80">{studio.tagline}</p>
-              </div>
-            </div>
+            <h1 className="text-5xl font-black text-white tracking-tight mb-4">{studio.heroTitle || studio.name}</h1>
+            {studio.heroSubtitle && <p className="text-lg text-white/80 mb-8">{studio.heroSubtitle}</p>}
 
             <div className="flex items-center gap-4 mt-8">
               <button 
                 className="px-6 py-3 rounded-lg font-bold text-white transition-all hover:scale-105"
                 style={{ background: `linear-gradient(135deg, ${studio.primaryColor}, ${studio.accentColor})`, boxShadow: `0 0 30px ${studio.primaryColor}40` }}
               >
-                View Portfolio
+                Watch Trailer
               </button>
-              <button className="px-6 py-3 rounded-lg font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-all flex items-center gap-2">
-                <ExternalLink className="w-4 h-4" />
-                Official Site
+              <button className="px-6 py-3 rounded-lg font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-all">
+                Buy Now
               </button>
             </div>
           </motion.div>
@@ -210,6 +215,37 @@ export default function DevStudio() {
           </div>
         </motion.div>
 
+        {/* Events Section */}
+        {studio.events && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-16"
+          >
+            <h2 className="text-3xl font-black text-white mb-8 uppercase tracking-wide">Events</h2>
+            <div className="grid grid-cols-3 gap-6">
+              {studio.events.map((event, idx) => (
+                <motion.div
+                  key={event.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.35 + idx * 0.05 }}
+                  className="p-6 rounded-lg border"
+                  style={{
+                    background: `${studio.primaryColor}15`,
+                    borderColor: `${studio.primaryColor}40`
+                  }}
+                >
+                  {event.status && <span className="text-xs text-white/60 uppercase tracking-wider">{event.status}</span>}
+                  <h4 className="text-white font-bold mt-2 mb-3">{event.title}</h4>
+                  <p className="text-white/60 text-sm">{event.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Games Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -217,12 +253,9 @@ export default function DevStudio() {
           transition={{ delay: 0.4 }}
         >
           <div className="flex items-center justify-between mb-10">
-            <div>
-              <h2 className="text-4xl font-black text-white mb-2">Featured Games</h2>
-              <p className="text-white/60">Explore the incredible portfolio</p>
-            </div>
+            <h2 className="text-3xl font-black text-white uppercase tracking-wide">Games</h2>
             <button className="px-6 py-3 rounded-lg text-white/80 border border-white/20 hover:bg-white/10 transition-all flex items-center gap-2 group">
-              View All
+              All Games
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -231,6 +264,51 @@ export default function DevStudio() {
             {studio.games.map((game, idx) => (
               <StudioGameCard key={game.id} game={game} studioColor={studio.primaryColor} />
             ))}
+          </div>
+        </motion.div>
+
+        {/* Studios Grid */}
+        {studio.studios && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-16"
+          >
+            <h2 className="text-3xl font-black text-white mb-8 uppercase tracking-wide">Studios</h2>
+            <div className="grid grid-cols-4 gap-6">
+              {studio.studios.map((st, idx) => (
+                <div
+                  key={idx}
+                  className="p-8 rounded-lg border flex items-center justify-center"
+                  style={{
+                    background: `${studio.primaryColor}10`,
+                    borderColor: `${studio.primaryColor}40`
+                  }}
+                >
+                  <span className="text-white font-bold text-center">{st.name}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Community Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mb-16 grid grid-cols-2 gap-6"
+        >
+          <div className="p-8 rounded-lg border" style={{ background: `${studio.primaryColor}10`, borderColor: `${studio.primaryColor}40` }}>
+            <h3 className="text-xl font-bold text-white mb-3">Community Hub</h3>
+            <p className="text-white/70 mb-6">Creations and mods. Discord channels, and more! Your Bethesda Community resources all in one place.</p>
+            <button className="px-6 py-2 rounded-lg text-white/80 border border-white/20 hover:bg-white/10 transition-all text-sm font-bold uppercase">Check it Out</button>
+          </div>
+          <div className="p-8 rounded-lg border" style={{ background: `${studio.primaryColor}10`, borderColor: `${studio.primaryColor}40` }}>
+            <h3 className="text-xl font-bold text-white mb-3">Support</h3>
+            <p className="text-white/70 mb-6">Need help with a Bethesda game or service? Find solutions in the Bethesda Support portal.</p>
+            <button className="px-6 py-2 rounded-lg text-white/80 border border-white/20 hover:bg-white/10 transition-all text-sm font-bold uppercase">Get Help</button>
           </div>
         </motion.div>
 
