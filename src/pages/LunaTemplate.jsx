@@ -79,6 +79,7 @@ import LunaDashboardOfflineView from '../components/dashboard/LunaDashboardOffli
 import FriendsNetworkWidget from '../components/dashboard/FriendsNetworkWidget';
 import SidebarOverlays from '../components/dashboard/SidebarOverlays';
 import LunaLeftRail from '../components/dashboard/LunaLeftRail';
+import EnvironmentHubOverlay from '../components/environment/EnvironmentHubOverlay';
 // Orbital Menu Items
 const ORBITAL_ITEMS = [
 {
@@ -180,6 +181,7 @@ export default function LunaTemplate() {
   const [showSkillTreeBlankUI, setShowSkillTreeBlankUI] = useState(false);
   const [isEnvironmentActive, setIsEnvironmentActive] = useState(true);
   const [librarySearchTerm, setLibrarySearchTerm] = useState('');
+  const [showEnvironmentHub, setShowEnvironmentHub] = useState(false);
 
   // Stream Player State
   const [isLive, setIsLive] = useState(false);
@@ -444,6 +446,12 @@ export default function LunaTemplate() {
     };
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    const handler = () => setShowEnvironmentHub(true);
+    window.addEventListener('openEnvironmentHub', handler);
+    return () => window.removeEventListener('openEnvironmentHub', handler);
+  }, []);
 
   useEffect(() => {
     const handleEnvChange = (e) => {
@@ -1925,6 +1933,17 @@ export default function LunaTemplate() {
             </button>
           </motion.div>
                 }
+      </AnimatePresence>
+
+      {/* Environment Hub Full-Page Overlay */}
+      <AnimatePresence>
+        {showEnvironmentHub && (
+          <EnvironmentHubOverlay
+            currentEnvId={currentEnvId}
+            onSelectEnv={handleEnvSelect}
+            onClose={() => setShowEnvironmentHub(false)}
+          />
+        )}
       </AnimatePresence>
 
       {/* Side Access Menu - Minimally invasive left edge interaction */}
