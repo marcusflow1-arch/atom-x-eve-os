@@ -5,11 +5,12 @@ export const enhancedMockGameData = {
     tagline: 'Live Another Life, in Another World',
     price: 59.99,
     originalPrice: 79.99,
-    modes: ['Single Player', 'Multiplayer', 'Co-Op'], // ADDED
+    modes: ['Single Player', 'Multiplayer', 'Co-Op'],
     banner: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=400&fit=crop',
     cover_image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
     description: 'Step into the world of Oblivion and explore the vast empire of Tamriel. Make choices that shape the destiny of kingdoms in this epic open-world fantasy RPG. Experience one of gaming\'s most immersive worlds where every decision matters.',
     developer: 'Bethesda Game Studios',
+    developerKey: 'bethesda_game_studios',
     publisher: 'Bethesda Softworks',
     releaseDate: '2024-03-15',
     genre: 'Fantasy RPG',

@@ -1,6 +1,57 @@
 import { enhancedMockGameData } from './mockGameDetailData';
 import { googlePlayGames } from './androidGamesData';
 
+// Developer to Studio Mapping
+export const developerStudioMap = {
+  // AAA Publishers & Studios
+  'capcom': { name: 'Capcom', type: 'Publisher/Developer', parent: null },
+  'fromsoftware': { name: 'FromSoftware', type: 'Developer', parent: 'Bandai Namco' },
+  'game_science': { name: 'Game Science', type: 'Developer', parent: null },
+  'arrowhead': { name: 'Arrowhead Game Studios', type: 'Developer', parent: 'Sony Interactive' },
+  'firaxis': { name: 'Firaxis Games', type: 'Developer', parent: '2K Games' },
+  'warhorse_studios': { name: 'Warhorse Studios', type: 'Developer', parent: null },
+  'pocketpair': { name: 'Pocketpair', type: 'Developer', parent: null },
+  'dice': { name: 'DICE', type: 'Developer', parent: 'Electronic Arts' },
+  'rockstar_games': { name: 'Rockstar Games', type: 'Publisher/Developer', parent: null },
+  'cd_projekt_red': { name: 'CD Projekt Red', type: 'Developer', parent: 'CD Projekt' },
+  'larian_studios': { name: 'Larian Studios', type: 'Developer', parent: null },
+  'ubisoft_quebec': { name: 'Ubisoft Quebec', type: 'Developer', parent: 'Ubisoft' },
+  'bungie': { name: 'Bungie', type: 'Developer', parent: 'Sony/Bungie' },
+  'bethesda_game_studios': { name: 'Bethesda Game Studios', type: 'Developer', parent: 'Microsoft/ZeniMax' },
+  'obsidian': { name: 'Obsidian Entertainment', type: 'Developer', parent: 'Microsoft' },
+  'retro_studios': { name: 'Retro Studios', type: 'Developer', parent: 'Nintendo' },
+  'mojang_studios': { name: 'Mojang Studios', type: 'Developer', parent: 'Microsoft' },
+  'avalanche_software': { name: 'Avalanche Software', type: 'Developer', parent: 'Hogwarts Legacy' },
+  'naughty_dog': { name: 'Naughty Dog', type: 'Developer', parent: 'Sony Interactive' },
+  'insomniac_games': { name: 'Insomniac Games', type: 'Developer', parent: 'Sony Interactive' },
+  'guerrilla_games': { name: 'Guerrilla Games', type: 'Developer', parent: 'Sony Interactive' },
+  'sucker_punch': { name: 'Sucker Punch Productions', type: 'Developer', parent: 'Sony Interactive' },
+  
+  // Mobile & Indie
+  'plarium': { name: 'Plarium Global Ltd', type: 'Developer', parent: null },
+  'netease': { name: 'NetEase Games', type: 'Developer', parent: 'NetEase' },
+  'roblox_corp': { name: 'Roblox Corporation', type: 'Developer', parent: null },
+  'activision': { name: 'Activision Publishing', type: 'Developer', parent: 'Microsoft' },
+  'niantic': { name: 'Niantic', type: 'Developer', parent: null },
+  'supercell': { name: 'Supercell', type: 'Developer', parent: null },
+  'tencent_games': { name: 'Tencent Games', type: 'Developer', parent: 'Tencent' },
+  'garena': { name: 'Garena International', type: 'Developer', parent: 'Garena/Tencent' },
+  'king': { name: 'King', type: 'Developer', parent: 'Activision Blizzard' },
+  'dream_games': { name: 'Dream Games', type: 'Developer', parent: null },
+  'miniclip': { name: 'Miniclip.com', type: 'Developer', parent: null },
+  'igg': { name: 'IGG.COM', type: 'Developer', parent: 'IGG' },
+  'playrix': { name: 'Playrix', type: 'Developer', parent: null },
+  'peak_games': { name: 'Peak Games', type: 'Developer', parent: null },
+  'hungry_studio': { name: 'Hungry Studio', type: 'Developer', parent: null },
+  'everstone_studio': { name: 'Everstone Studio', type: 'Developer', parent: null },
+  'hoyoverse': { name: 'HoYoverse', type: 'Developer', parent: null },
+  'deepmind_studios': { name: 'DeepMind Studios', type: 'Developer', parent: 'Google/DeepMind' },
+  'velocity_labs': { name: 'Velocity Labs', type: 'Developer', parent: null },
+  'synth_logic': { name: 'Synth Logic', type: 'Developer', parent: null },
+  'galactic_core': { name: 'Galactic Core', type: 'Developer', parent: null },
+  'marvel_games': { name: 'Marvel Games', type: 'Developer', parent: 'Marvel/Disney' },
+};
+
 // Trending & Best Sellers 2024-2025
 export const trendingGames = [
   {
@@ -12,6 +63,7 @@ export const trendingGames = [
     genre: 'Action RPG',
     rating: 4.9,
     developer: 'Capcom',
+    developerKey: 'capcom',
     releaseDate: '2025',
     tags: ['Co-Op', 'Open World', 'Monster Hunting']
   },
@@ -24,6 +76,7 @@ export const trendingGames = [
     genre: 'Action RPG',
     rating: 4.8,
     developer: 'FromSoftware',
+    developerKey: 'fromsoftware',
     releaseDate: '2025',
     tags: ['Souls-like', 'Co-Op', 'Fantasy']
   },
@@ -36,6 +89,7 @@ export const trendingGames = [
     genre: 'Action RPG',
     rating: 4.9,
     developer: 'Game Science',
+    developerKey: 'game_science',
     releaseDate: '2024',
     tags: ['Mythology', 'Action', 'Single Player']
   },
@@ -47,7 +101,8 @@ export const trendingGames = [
     cover_image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=600&h=800&fit=crop',
     genre: 'Shooter',
     rating: 4.7,
-    developer: 'Arrowhead',
+    developer: 'Arrowhead Game Studios',
+    developerKey: 'arrowhead',
     releaseDate: '2024',
     tags: ['Co-Op', 'Third Person', 'Sci-Fi']
   },
@@ -59,7 +114,8 @@ export const trendingGames = [
     cover_image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=800&fit=crop',
     genre: 'Strategy',
     rating: 4.8,
-    developer: 'Firaxis',
+    developer: 'Firaxis Games',
+    developerKey: 'firaxis',
     releaseDate: '2025',
     tags: ['4X', 'Turn-Based', 'Historical']
   },
@@ -72,6 +128,7 @@ export const trendingGames = [
     genre: 'RPG',
     rating: 4.6,
     developer: 'Warhorse Studios',
+    developerKey: 'warhorse_studios',
     releaseDate: '2025',
     tags: ['Medieval', 'Realistic', 'Open World']
   },
@@ -84,6 +141,7 @@ export const trendingGames = [
     genre: 'Survival',
     rating: 4.5,
     developer: 'Pocketpair',
+    developerKey: 'pocketpair',
     releaseDate: '2024',
     tags: ['Survival', 'Crafting', 'Creatures']
   },
@@ -96,6 +154,7 @@ export const trendingGames = [
     genre: 'FPS',
     rating: 4.4,
     developer: 'DICE',
+    developerKey: 'dice',
     releaseDate: '2025',
     tags: ['Multiplayer', 'Warfare', 'Destruction']
   }
@@ -112,6 +171,7 @@ export const newReleases = [
     genre: 'Action',
     rating: 4.6,
     developer: 'Marvel Games',
+    developerKey: 'marvel_games',
     releaseDate: '2025',
     tags: ['Superhero', 'Action', 'Co-Op']
   },
@@ -124,6 +184,7 @@ export const newReleases = [
     genre: 'Action Adventure',
     rating: 4.9,
     developer: 'Retro Studios',
+    developerKey: 'retro_studios',
     releaseDate: '2025',
     tags: ['Sci-Fi', 'Exploration', 'First Person']
   },
@@ -136,6 +197,7 @@ export const newReleases = [
     genre: 'Action RPG',
     rating: 4.7,
     developer: 'Ubisoft Quebec',
+    developerKey: 'ubisoft_quebec',
     releaseDate: '2025',
     tags: ['Japan', 'Stealth', 'Open World']
   },
@@ -147,7 +209,8 @@ export const newReleases = [
     cover_image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=800&fit=crop',
     genre: 'RPG',
     rating: 4.5,
-    developer: 'Obsidian',
+    developer: 'Obsidian Entertainment',
+    developerKey: 'obsidian',
     releaseDate: '2025',
     tags: ['Fantasy', 'First Person', 'Choices Matter']
   },
@@ -160,6 +223,7 @@ export const newReleases = [
     genre: 'Looter Shooter',
     rating: 4.4,
     developer: 'Bungie',
+    developerKey: 'bungie',
     releaseDate: '2025',
     tags: ['MMO', 'Shooter', 'Sci-Fi']
   },
@@ -172,6 +236,7 @@ export const newReleases = [
     genre: 'Action Adventure',
     rating: 4.9,
     developer: 'Rockstar Games',
+    developerKey: 'rockstar_games',
     releaseDate: '2025',
     tags: ['Open World', 'Crime', 'Multiplayer']
   }
@@ -188,6 +253,7 @@ export const classicBestSellers = [
     genre: 'Sandbox',
     rating: 4.9,
     developer: 'Mojang Studios',
+    developerKey: 'mojang_studios',
     releaseDate: '2011',
     tags: ['Creative', 'Survival', 'Multiplayer']
   },
@@ -200,6 +266,7 @@ export const classicBestSellers = [
     genre: 'Action RPG',
     rating: 4.7,
     developer: 'Avalanche Software',
+    developerKey: 'avalanche_software',
     releaseDate: '2023',
     tags: ['Harry Potter', 'Magic', 'Open World']
   },
@@ -212,6 +279,7 @@ export const classicBestSellers = [
     genre: 'Action RPG',
     rating: 4.6,
     developer: 'CD Projekt Red',
+    developerKey: 'cd_projekt_red',
     releaseDate: '2020',
     tags: ['Cyberpunk', 'Open World', 'Story Rich']
   },
@@ -224,6 +292,7 @@ export const classicBestSellers = [
     genre: 'RPG',
     rating: 4.9,
     developer: 'Larian Studios',
+    developerKey: 'larian_studios',
     releaseDate: '2023',
     tags: ['D&D', 'Turn-Based', 'Co-Op']
   }
@@ -241,6 +310,7 @@ export const aiGamesList = [
     rating: 4.9,
     aiEnhanced: true,
     developer: 'DeepMind Studios',
+    developerKey: 'deepmind_studios',
     releaseDate: '2024',
     tags: ['Story Rich', 'Choices Matter', 'Fantasy']
   },
@@ -254,6 +324,7 @@ export const aiGamesList = [
     rating: 4.7,
     aiEnhanced: true,
     developer: 'Velocity Labs',
+    developerKey: 'velocity_labs',
     releaseDate: '2024',
     tags: ['Simulation', 'Sports', 'Competitive']
   },
@@ -267,6 +338,7 @@ export const aiGamesList = [
     rating: 4.5,
     aiEnhanced: true,
     developer: 'Synth Logic',
+    developerKey: 'synth_logic',
     releaseDate: '2023',
     tags: ['Cyberpunk', 'Investigation', 'Noir']
   },
@@ -280,6 +352,7 @@ export const aiGamesList = [
     rating: 4.8,
     aiEnhanced: true,
     developer: 'Galactic Core',
+    developerKey: 'galactic_core',
     releaseDate: '2025',
     tags: ['Space', 'RTS', 'Sci-Fi']
   }
@@ -297,6 +370,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1614294148960-9aa740632a87?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'PlayStation', 'iOS'],
+    developer: 'HoYoverse',
+    developerKey: 'hoyoverse',
     isMobile: true,
     aiEnhanced: true,
     original_year: 2020
@@ -312,6 +387,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'iOS'],
+    developer: 'Tencent Games',
+    developerKey: 'tencent_games',
     isMobile: true,
     original_year: 2018
   },
@@ -326,6 +403,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'iOS'],
+    developer: 'Activision Publishing',
+    developerKey: 'activision',
     isMobile: true,
     original_year: 2019
   },
@@ -340,6 +419,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1627850604058-52e40de1b847?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1627850604058-52e40de1b847?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Xbox', 'PlayStation', 'iOS'],
+    developer: 'Mojang Studios',
+    developerKey: 'mojang_studios',
     isMobile: true,
     original_year: 2011
   },
@@ -354,6 +435,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Switch', 'iOS'],
+    developer: 'ConcernedApe',
+    developerKey: null,
     isMobile: true,
     original_year: 2016
   },
@@ -368,6 +451,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Switch', 'iOS'],
+    developer: 'Innersloth',
+    developerKey: null,
     isMobile: true,
     original_year: 2018
   },
@@ -382,6 +467,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1555597673-b21d5c935865?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Xbox', 'PlayStation', 'Switch', 'iOS'],
+    developer: 'Blue Mammoth Games',
+    developerKey: null,
     isMobile: true,
     original_year: 2017
   },
@@ -396,6 +483,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Xbox', 'PlayStation', 'Switch', 'iOS'],
+    developer: 'Re-Logic',
+    developerKey: null,
     isMobile: true,
     original_year: 2011
   },
@@ -410,6 +499,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'PC', 'Switch', 'iOS'],
+    developer: 'Motion Twin',
+    developerKey: null,
     isMobile: true,
     original_year: 2018
   },
@@ -424,6 +515,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'iOS', 'PC'],
+    developer: 'Gameloft',
+    developerKey: null,
     isMobile: true,
     original_year: 2018
   },
@@ -438,6 +531,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'iOS', 'PC'],
+    developer: 'HoYoverse',
+    developerKey: 'hoyoverse',
     isMobile: true,
     aiEnhanced: true,
     original_year: 2023
@@ -453,6 +548,8 @@ export const androidGames = [
     cover_image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=800&h=1200&fit=crop',
     banner: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1920&h=1080&fit=crop',
     platforms: ['Android', 'iOS'],
+    developer: 'Moonton Games',
+    developerKey: null,
     isMobile: true,
     original_year: 2016
   }
