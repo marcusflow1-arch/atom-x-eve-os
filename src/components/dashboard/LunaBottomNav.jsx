@@ -1114,8 +1114,30 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                   </button>
                 </div>
 
-                {/* Spacer pushes row nav to far right */}
-                <div className="flex-1" />
+                {/* Genre chips — only shown in environment tab (non-expanded) */}
+                {activeTab === 'environment' ? (
+                  <div className="flex items-center gap-1.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                    {ENV_GENRES.map((env) => (
+                      <button
+                        key={env.id}
+                        onClick={() => setSelectedEnv(selectedEnv?.id === env.id ? null : env)}
+                        className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                          selectedEnv?.id === env.id
+                            ? 'bg-purple-500/25 border-purple-400/60 text-purple-300 shadow-[0_0_8px_rgba(168,85,247,0.3)]'
+                            : 'bg-white/[0.05] border-white/10 text-white/50 hover:bg-purple-500/10 hover:border-purple-400/30 hover:text-purple-300'
+                        }`}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-sm overflow-hidden flex-shrink-0"
+                          style={{ backgroundImage: `url(${env.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+                        />
+                        {env.name}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex-1" />
+                )}
 
                 {/* Row nav */}
                 <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
