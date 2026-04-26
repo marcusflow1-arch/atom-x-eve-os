@@ -12,6 +12,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import DepsArt from './pages/DepsArt';
 import GameHub from './pages/GameHub';
 import Studio from './pages/Studio';
+import DevStudio from './pages/DevStudio';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -84,6 +85,14 @@ const AuthenticatedApp = () => {
         element={
           <LayoutWrapper currentPageName="Studio">
             <Studio />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/dev-studio/:studioId"
+        element={
+          <LayoutWrapper currentPageName="DevStudio">
+            <DevStudio />
           </LayoutWrapper>
         }
       />
