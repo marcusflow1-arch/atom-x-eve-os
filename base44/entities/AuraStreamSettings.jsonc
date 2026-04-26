@@ -1,0 +1,91 @@
+{
+  "name": "AuraStreamSettings",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Reference to User entity"
+    },
+    "stream_title": {
+      "type": "string",
+      "description": "Current stream title"
+    },
+    "stream_description": {
+      "type": "string",
+      "description": "Stream description"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "Currently streaming game"
+    },
+    "video_quality": {
+      "type": "string",
+      "enum": [
+        "720p",
+        "1080p",
+        "1440p",
+        "4K"
+      ],
+      "default": "1080p",
+      "description": "Stream video quality"
+    },
+    "bitrate": {
+      "type": "number",
+      "default": 6000,
+      "description": "Stream bitrate in kbps"
+    },
+    "fps": {
+      "type": "number",
+      "enum": [
+        30,
+        60,
+        120
+      ],
+      "default": 60,
+      "description": "Frames per second"
+    },
+    "encoder": {
+      "type": "string",
+      "enum": [
+        "hardware",
+        "software"
+      ],
+      "default": "hardware",
+      "description": "Encoding method"
+    },
+    "audio_bitrate": {
+      "type": "number",
+      "default": 160,
+      "description": "Audio bitrate in kbps"
+    },
+    "overlays": {
+      "type": "object",
+      "properties": {
+        "text_overlay": {
+          "type": "string"
+        },
+        "background_url": {
+          "type": "string"
+        },
+        "filter": {
+          "type": "string",
+          "enum": [
+            "none",
+            "vintage",
+            "cinematic",
+            "vibrant",
+            "noir"
+          ]
+        }
+      },
+      "description": "Stream overlay settings"
+    },
+    "notifications_enabled": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

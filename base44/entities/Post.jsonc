@@ -1,0 +1,99 @@
+{
+  "name": "Post",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The title of the discussion post"
+    },
+    "content": {
+      "type": "string",
+      "description": "The main body content of the post"
+    },
+    "community": {
+      "type": "string",
+      "enum": [
+        "general",
+        "feedback",
+        "gameplay",
+        "bugs",
+        "reviews",
+        "discussions",
+        "guide",
+        "tips",
+        "question",
+        "achievements",
+        "farming",
+        "recruitment",
+        "events",
+        "content"
+      ],
+      "default": "general",
+      "description": "The sub-category or tag of the post."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "game_review",
+        "game_discussion",
+        "general_discussion",
+        "achievement_discussion",
+        "achievement_share",
+        "challenge",
+        "bug",
+        "tip",
+        "help",
+        "discussion"
+      ],
+      "default": "general_discussion",
+      "description": "The main section the post belongs to."
+    },
+    "game_title": {
+      "type": "string",
+      "description": "The title of the game being reviewed or discussed. Required for 'game_review' and 'game_discussion'."
+    },
+    "genre": {
+      "type": "string",
+      "description": "The genre of the game (e.g. RPG, FPS) to help with filtering."
+    },
+    "rating": {
+      "type": "number",
+      "description": "A star rating from 1 to 5. Required for 'game_review'."
+    },
+    "score": {
+      "type": "number",
+      "default": 1,
+      "description": "The total score of the post (upvotes - downvotes)"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "An optional image URL for the post"
+    },
+    "achievement_id": {
+      "type": "string",
+      "description": "ID of the achievement being shared or challenged"
+    },
+    "achievement_data": {
+      "type": "object",
+      "description": "Snapshot of achievement data at time of posting"
+    },
+    "challenge_target_user_id": {
+      "type": "string",
+      "description": "ID of the user being challenged"
+    },
+    "is_ai_generated": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_farm_hub": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the post was created in the Farm Hub"
+    }
+  },
+  "required": [
+    "title",
+    "content",
+    "type"
+  ]
+}

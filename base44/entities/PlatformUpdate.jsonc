@@ -1,0 +1,55 @@
+{
+  "name": "PlatformUpdate",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Update title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description"
+    },
+    "full_content": {
+      "type": "string",
+      "description": "Full article content"
+    },
+    "update_type": {
+      "type": "string",
+      "enum": [
+        "update",
+        "feature",
+        "required",
+        "maintenance",
+        "announcement"
+      ],
+      "default": "update"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version number if applicable"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Featured image"
+    },
+    "published": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title",
+    "description"
+  ]
+}

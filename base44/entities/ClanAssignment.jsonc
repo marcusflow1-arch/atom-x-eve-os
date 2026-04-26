@@ -1,0 +1,68 @@
+{
+  "name": "ClanAssignment",
+  "type": "object",
+  "properties": {
+    "clanId": {
+      "type": "string",
+      "description": "ID of the clan"
+    },
+    "creatorId": {
+      "type": "string",
+      "description": "ID of the leader/officer who created the assignment"
+    },
+    "assigneeId": {
+      "type": "string",
+      "description": "ID of the member assigned. Null for open/all."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "game",
+        "objective",
+        "achievement"
+      ],
+      "description": "Type of assignment"
+    },
+    "targetId": {
+      "type": "string",
+      "description": "ID of the game or objective"
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Display name of the target game/objective"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "optional",
+        "recommended",
+        "priority",
+        "critical"
+      ],
+      "default": "recommended"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "dueDate": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "clanId",
+    "type",
+    "targetId",
+    "status"
+  ]
+}

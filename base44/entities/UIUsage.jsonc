@@ -1,0 +1,36 @@
+{
+  "name": "UIUsage",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Page or component name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "page",
+        "component"
+      ],
+      "description": "Usage target type"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "Path to source file (e.g., pages/Home or components/foo/Bar)"
+    },
+    "use_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total times used"
+    },
+    "last_used_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last usage timestamp"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

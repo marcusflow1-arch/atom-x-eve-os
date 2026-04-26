@@ -1,0 +1,166 @@
+{
+  "name": "DamageReactor",
+  "type": "object",
+  "properties": {
+    "character_model_id": {
+      "type": "string",
+      "description": "ID of the Model3D entity this reactor is attached to"
+    },
+    "character_name": {
+      "type": "string",
+      "description": "Display name of the character (e.g. C1, White Bot)"
+    },
+    "bone_name": {
+      "type": "string",
+      "description": "Name of the rig bone this reactor is attached to (e.g. RightHand, LeftFoot)"
+    },
+    "animation_name": {
+      "type": "string",
+      "description": "Name of the animation that triggers this reactor"
+    },
+    "animation_id": {
+      "type": "string",
+      "description": "ID of the AnimationFBX entity"
+    },
+    "trigger_time": {
+      "type": "number",
+      "default": 0.5,
+      "description": "Normalized time (0.0-1.0) when the reactor activates during animation"
+    },
+    "trigger_end_time": {
+      "type": "number",
+      "default": 0.6,
+      "description": "Normalized time when the reactor deactivates"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "on_start",
+        "on_end",
+        "on_custom_frame"
+      ],
+      "default": "on_custom_frame"
+    },
+    "collider_type": {
+      "type": "string",
+      "enum": [
+        "sphere",
+        "capsule",
+        "box"
+      ],
+      "default": "sphere"
+    },
+    "collider_radius": {
+      "type": "number",
+      "default": 1.5,
+      "description": "Radius of the reactor collider"
+    },
+    "collider_offset": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "default": 0
+        },
+        "y": {
+          "type": "number",
+          "default": 0
+        },
+        "z": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "default": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "base_damage": {
+      "type": "number",
+      "default": 50,
+      "description": "Base damage dealt by this reactor"
+    },
+    "scaled_damage_per_level": {
+      "type": "number",
+      "default": 5,
+      "description": "Additional damage per character level"
+    },
+    "damage_type": {
+      "type": "string",
+      "enum": [
+        "physical",
+        "energy",
+        "lightning",
+        "fire",
+        "ice",
+        "true_damage",
+        "poison",
+        "holy"
+      ],
+      "default": "physical"
+    },
+    "critical_chance": {
+      "type": "number",
+      "default": 0.1,
+      "description": "Chance of critical hit (0.0-1.0)"
+    },
+    "critical_multiplier": {
+      "type": "number",
+      "default": 2.0,
+      "description": "Damage multiplier on critical hit"
+    },
+    "xp_reward": {
+      "type": "number",
+      "default": 20,
+      "description": "Experience points awarded on hit"
+    },
+    "knockback_force": {
+      "type": "number",
+      "default": 0,
+      "description": "Knockback force applied to target"
+    },
+    "status_effect": {
+      "type": "string",
+      "enum": [
+        "none",
+        "burn",
+        "stun",
+        "slow",
+        "bleed",
+        "poison",
+        "freeze"
+      ],
+      "default": "none"
+    },
+    "status_duration": {
+      "type": "number",
+      "default": 0,
+      "description": "Duration of status effect in seconds"
+    },
+    "fx_id": {
+      "type": "string",
+      "description": "ID of the ReactorFX to spawn"
+    },
+    "fx_name": {
+      "type": "string",
+      "description": "Display name of the FX effect"
+    },
+    "cooldown": {
+      "type": "number",
+      "default": 0,
+      "description": "Cooldown in seconds before reactor can fire again"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "character_model_id",
+    "bone_name",
+    "animation_name",
+    "base_damage"
+  ]
+}

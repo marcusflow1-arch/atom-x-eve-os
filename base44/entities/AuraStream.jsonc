@@ -1,0 +1,53 @@
+{
+  "name": "AuraStream",
+  "type": "object",
+  "properties": {
+    "streamer_id": {
+      "type": "string",
+      "description": "Reference to User/StreamerProfile"
+    },
+    "title": {
+      "type": "string",
+      "description": "Stream title"
+    },
+    "description": {
+      "type": "string",
+      "description": "What this stream is about"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Stream thumbnail"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Live stream video URL"
+    },
+    "category": {
+      "type": "string",
+      "description": "Stream category (Gaming, Just Chatting, Creative, etc.)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Stream tags"
+    },
+    "viewer_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_live": {
+      "type": "boolean",
+      "default": true
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "streamer_id",
+    "title"
+  ]
+}

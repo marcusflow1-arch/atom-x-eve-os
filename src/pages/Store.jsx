@@ -440,6 +440,10 @@ export default function Store() {
         <PageErrorBoundary pageName="Store">
           <WishlistProvider>
             <GlassPageFrame
+              onGlobalSearch={(query) => {
+                setSearchTerm(query);
+                setStoreLibraryOpen(true);
+              }}
               topContent={
                 <div className="flex items-center justify-between w-full gap-4">
                   <div className="flex items-center gap-6">

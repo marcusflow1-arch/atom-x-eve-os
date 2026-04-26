@@ -1,0 +1,52 @@
+{
+  "name": "ClanVote",
+  "type": "object",
+  "properties": {
+    "divisionId": {
+      "type": "string",
+      "description": "ID of the clan"
+    },
+    "creatorId": {
+      "type": "string",
+      "description": "User ID of the creator"
+    },
+    "title": {
+      "type": "string",
+      "description": "Poll title/question"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional details"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of voting options"
+    },
+    "votes": {
+      "type": "object",
+      "description": "Map of userId to optionIndex",
+      "default": {}
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closed"
+      ],
+      "default": "active"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "divisionId",
+    "creatorId",
+    "title",
+    "options"
+  ]
+}

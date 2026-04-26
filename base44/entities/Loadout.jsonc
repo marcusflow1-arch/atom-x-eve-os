@@ -1,0 +1,43 @@
+{
+  "name": "Loadout",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Loadout name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Loadout description"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "Game this loadout is for"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Genre this loadout targets"
+    },
+    "equipped_items": {
+      "type": "object",
+      "description": "Mapping of equipment slots to item IDs"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this loadout is currently equipped"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Loadout tags (PvP, PvE, etc.)"
+    }
+  },
+  "required": [
+    "name",
+    "equipped_items"
+  ]
+}

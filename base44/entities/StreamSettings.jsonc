@@ -1,0 +1,134 @@
+{
+  "name": "StreamSettings",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "The user ID this settings profile belongs to"
+    },
+    "default_title": {
+      "type": "string",
+      "default": "Live Stream",
+      "description": "Default stream title"
+    },
+    "default_game": {
+      "type": "string",
+      "description": "Default game category"
+    },
+    "stream_focus": {
+      "type": "string",
+      "enum": [
+        "Card Collector",
+        "Underrated Games Explorer",
+        "Achievement Completionist",
+        "PvE Build Specialist",
+        "PvP Strategist",
+        "Economy Expert",
+        "Variety",
+        "Indie Discovery",
+        "Chill Grinding",
+        "Lore Focused",
+        "Competitive",
+        "Speedrun",
+        "Casual",
+        "Creative"
+      ],
+      "default": "Variety",
+      "description": "The streamer's primary focus or identity mode"
+    },
+    "intro_video_url": {
+      "type": "string",
+      "description": "URL for the short intro video (30-60s)"
+    },
+    "bio_short": {
+      "type": "string",
+      "maxLength": 280,
+      "description": "Short, personality-focused bio for the stream card"
+    },
+    "context_disclaimer": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Optional disclaimer about stream persona vs real self"
+    },
+    "default_visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private",
+        "draft"
+      ],
+      "default": "private",
+      "description": "Default video visibility"
+    },
+    "video_bitrate": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Default video bitrate"
+    },
+    "audio_bitrate": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Default audio bitrate"
+    },
+    "auto_record": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically record live streams"
+    },
+    "max_stream_duration": {
+      "type": "number",
+      "default": 3600,
+      "description": "Max stream duration in seconds"
+    },
+    "connected_platforms": {
+      "type": "object",
+      "properties": {
+        "youtube": {
+          "type": "object",
+          "properties": {
+            "connected": {
+              "type": "boolean"
+            },
+            "access_token": {
+              "type": "string"
+            },
+            "refresh_token": {
+              "type": "string"
+            },
+            "channel_id": {
+              "type": "string"
+            }
+          }
+        },
+        "tiktok": {
+          "type": "object",
+          "properties": {
+            "connected": {
+              "type": "boolean"
+            },
+            "access_token": {
+              "type": "string"
+            },
+            "user_id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "description": "Connected social media platforms"
+    }
+  },
+  "required": [
+    "user_id"
+  ]
+}

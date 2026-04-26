@@ -1,0 +1,42 @@
+{
+  "name": "TradingCard",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Epic",
+        "Legendary",
+        "Unique"
+      ]
+    },
+    "edition_size": {
+      "type": "number",
+      "description": "Total number of cards available (null for unlimited)"
+    },
+    "achievement_id": {
+      "type": "string",
+      "description": "Linked achievement ID"
+    },
+    "series": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "image_url",
+    "rarity"
+  ]
+}

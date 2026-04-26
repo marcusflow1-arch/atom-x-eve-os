@@ -1,0 +1,63 @@
+{
+  "name": "UserTask",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "Task title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Task description"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "linked_event_id": {
+      "type": "string"
+    },
+    "linked_game_id": {
+      "type": "string"
+    },
+    "linked_story_node": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string",
+      "enum": [
+        "user",
+        "ai",
+        "game"
+      ],
+      "default": "user"
+    }
+  },
+  "required": [
+    "user_id",
+    "title"
+  ]
+}

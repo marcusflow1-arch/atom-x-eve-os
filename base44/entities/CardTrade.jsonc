@@ -1,0 +1,110 @@
+{
+  "name": "CardTrade",
+  "type": "object",
+  "properties": {
+    "seller_id": {
+      "type": "string"
+    },
+    "buyer_id": {
+      "type": "string",
+      "description": "Null until trade completes"
+    },
+    "card_id": {
+      "type": "string",
+      "description": "UserCard being traded"
+    },
+    "card_snapshot": {
+      "type": "object",
+      "description": "Full card state at listing time",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "rarity": {
+          "type": "string"
+        },
+        "level": {
+          "type": "number"
+        },
+        "stars": {
+          "type": "number"
+        },
+        "ascension": {
+          "type": "number"
+        },
+        "enhanced_stats": {
+          "type": "object"
+        },
+        "origin_game": {
+          "type": "string"
+        },
+        "origin_achievement": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        }
+      }
+    },
+    "listing_type": {
+      "type": "string",
+      "enum": [
+        "fixed_price",
+        "auction",
+        "trade_offer"
+      ],
+      "default": "fixed_price"
+    },
+    "asking_price": {
+      "type": "number",
+      "description": "Price in platform currency"
+    },
+    "asking_materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "material_type": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Materials requested for trade"
+    },
+    "market_value_score": {
+      "type": "number",
+      "description": "Calculated value at listing"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "sold",
+        "cancelled",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "views": {
+      "type": "number",
+      "default": 0
+    },
+    "trade_cooldown_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Anti-flip protection"
+    }
+  },
+  "required": [
+    "seller_id",
+    "card_id",
+    "listing_type"
+  ]
+}

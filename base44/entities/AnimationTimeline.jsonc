@@ -1,0 +1,87 @@
+{
+  "name": "AnimationTimeline",
+  "type": "object",
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "description": "ID of the Model3D entity"
+    },
+    "model_name": {
+      "type": "string",
+      "description": "Display name of the model"
+    },
+    "animation_id": {
+      "type": "string",
+      "description": "ID of the AnimationFBX entity"
+    },
+    "animation_name": {
+      "type": "string",
+      "description": "Name of the animation"
+    },
+    "animation_url": {
+      "type": "string",
+      "description": "URL of the animation FBX file"
+    },
+    "animation_duration": {
+      "type": "number",
+      "default": 0,
+      "description": "Duration of the animation in seconds"
+    },
+    "fx_blocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "fx_id": {
+            "type": "string"
+          },
+          "fx_name": {
+            "type": "string"
+          },
+          "effect_type": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "start_time": {
+            "type": "number"
+          },
+          "duration_norm": {
+            "type": "number"
+          },
+          "bone": {
+            "type": "string"
+          },
+          "is_looping": {
+            "type": "boolean"
+          },
+          "linked_reactor_id": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "FX effect blocks placed on the timeline"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this timeline config is active at runtime"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": [
+    "model_id",
+    "animation_name"
+  ]
+}

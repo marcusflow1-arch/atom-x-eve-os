@@ -1,0 +1,135 @@
+{
+  "name": "TradeOffer",
+  "type": "object",
+  "properties": {
+    "trader_id": {
+      "type": "string",
+      "description": "ID of the user creating the trade offer"
+    },
+    "trader_name": {
+      "type": "string",
+      "description": "Name of the trader for display"
+    },
+    "trader_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the trader"
+    },
+    "item_name": {
+      "type": "string",
+      "description": "Name of the item being offered"
+    },
+    "item_type": {
+      "type": "string",
+      "description": "Type of item (Weapon, Armor, Ability, etc.)"
+    },
+    "item_rarity": {
+      "type": "string",
+      "enum": [
+        "Common",
+        "Uncommon",
+        "Rare",
+        "Epic",
+        "Legendary",
+        "Mythic"
+      ],
+      "description": "Rarity of the item"
+    },
+    "item_image": {
+      "type": "string",
+      "description": "Image URL of the item"
+    },
+    "item_description": {
+      "type": "string",
+      "description": "Description of the item"
+    },
+    "item_level": {
+      "type": "number",
+      "description": "Level of the item"
+    },
+    "item_power": {
+      "type": "number",
+      "description": "Power stat of the item"
+    },
+    "game_name": {
+      "type": "string",
+      "description": "Game the item is from"
+    },
+    "game_genre": {
+      "type": "string",
+      "description": "Genre of the game"
+    },
+    "offer_type": {
+      "type": "string",
+      "enum": [
+        "sale",
+        "trade",
+        "bid"
+      ],
+      "description": "Type of offer"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price for sale offers (in AGP)"
+    },
+    "current_bid": {
+      "type": "number",
+      "description": "Current highest bid for auction offers"
+    },
+    "buyout_price": {
+      "type": "number",
+      "description": "Buyout price for auction offers"
+    },
+    "seeking_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Items the trader is seeking for trade offers"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the offer"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "cancelled",
+        "expired"
+      ],
+      "default": "active",
+      "description": "Current status of the trade offer"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this trade offer expires"
+    },
+    "last_bid_price": {
+      "type": "number",
+      "description": "Most recent bid price for this item globally"
+    },
+    "last_sale_price": {
+      "type": "number",
+      "description": "Most recent sale price for this item globally"
+    },
+    "views": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of views this offer has received"
+    },
+    "offers_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of counter-offers received"
+    }
+  },
+  "required": [
+    "trader_id",
+    "item_name",
+    "game_name",
+    "offer_type"
+  ]
+}

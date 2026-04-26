@@ -1,0 +1,47 @@
+{
+  "name": "Friend",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID of the user who owns this friendship"
+    },
+    "friend_id": {
+      "type": "string",
+      "description": "ID of the friend user"
+    },
+    "friend_name": {
+      "type": "string",
+      "description": "Display name of the friend"
+    },
+    "friend_avatar": {
+      "type": "string",
+      "description": "Avatar URL of the friend"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "offline",
+        "away",
+        "busy"
+      ],
+      "default": "offline",
+      "description": "Current online status"
+    },
+    "current_game": {
+      "type": "string",
+      "description": "Game currently being played"
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marked as favorite friend"
+    }
+  },
+  "required": [
+    "user_id",
+    "friend_id",
+    "friend_name"
+  ]
+}

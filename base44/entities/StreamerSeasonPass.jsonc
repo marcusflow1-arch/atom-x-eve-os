@@ -1,0 +1,47 @@
+{
+  "name": "StreamerSeasonPass",
+  "type": "object",
+  "properties": {
+    "streamer_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "number"
+          },
+          "xp_required": {
+            "type": "number"
+          },
+          "reward": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "image_url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "streamer_id",
+    "title"
+  ]
+}

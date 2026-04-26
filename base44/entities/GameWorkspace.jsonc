@@ -1,0 +1,74 @@
+{
+  "name": "GameWorkspace",
+  "type": "object",
+  "properties": {
+    "clan_id": {
+      "type": "string",
+      "description": "ID of the clan this workspace belongs to"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "ID of the game this workspace is for"
+    },
+    "active_member_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of IDs of members currently active in this workspace"
+    },
+    "active_zone_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of active GameZone IDs for this workspace"
+    },
+    "active_voice_room_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of active voice room IDs in this workspace"
+    },
+    "active_party_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of active party IDs in this workspace"
+    },
+    "active_assignment_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "List of active assignment IDs specific to this workspace"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Lifecycle status of the workspace"
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the last activity in this workspace"
+    }
+  },
+  "required": [
+    "clan_id",
+    "game_id",
+    "status"
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "name": "KnowledgeEntry",
+  "type": "object",
+  "properties": {
+    "source_filename": {
+      "type": "string",
+      "description": "Original filename that was analyzed"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "File extension / type (js, json, csv, etc.)"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "Original file size in bytes"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short summary of what the file contains"
+    },
+    "full_analysis": {
+      "type": "string",
+      "description": "Complete AI analysis and extracted knowledge from the file"
+    },
+    "extracted_code": {
+      "type": "string",
+      "description": "Key code snippets, schemas, configs extracted from the file"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Auto-generated tags for searching (e.g. 'react', 'three.js', 'game-data')"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "code",
+        "data",
+        "config",
+        "asset",
+        "documentation",
+        "design",
+        "other"
+      ],
+      "default": "other",
+      "description": "Category of knowledge"
+    },
+    "knowledge_domain": {
+      "type": "string",
+      "enum": [
+        "game_reference",
+        "engine_building",
+        "general"
+      ],
+      "default": "general",
+      "description": "game_reference = studying how existing games were built (Unreal projects, game source). engine_building = knowledge for constructing things in our engine (blueprints, systems, Three.js patterns). general = other knowledge."
+    },
+    "analyzed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this file was analyzed and added to the knowledge bank"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pin important knowledge entries for quick access"
+    }
+  },
+  "required": [
+    "source_filename",
+    "full_analysis"
+  ]
+}

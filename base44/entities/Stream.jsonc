@@ -1,0 +1,82 @@
+{
+  "name": "Stream",
+  "type": "object",
+  "properties": {
+    "streamer_id": {
+      "type": "string",
+      "description": "The ID of the user who is streaming"
+    },
+    "title": {
+      "type": "string",
+      "description": "Stream title set by streamer"
+    },
+    "game_id": {
+      "type": "string",
+      "description": "The game being streamed"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Stream tags for categorization"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "streaming",
+        "talking"
+      ],
+      "default": "streaming",
+      "description": "Stream type: gameplay or just chatting"
+    },
+    "language": {
+      "type": "string",
+      "default": "en",
+      "description": "Stream language"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When stream started"
+    },
+    "ended_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When stream ended (null if live)"
+    },
+    "is_live": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether stream is currently live"
+    },
+    "viewer_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Current viewer count"
+    },
+    "preview_image_url": {
+      "type": "string",
+      "description": "Stream thumbnail/preview image"
+    },
+    "stream_key": {
+      "type": "string",
+      "description": "Unique stream identifier for media pipeline"
+    },
+    "max_viewers": {
+      "type": "number",
+      "default": 0,
+      "description": "Peak concurrent viewers for this stream"
+    },
+    "total_watch_time": {
+      "type": "number",
+      "default": 0,
+      "description": "Total watch minutes across all viewers"
+    }
+  },
+  "required": [
+    "streamer_id",
+    "title"
+  ]
+}

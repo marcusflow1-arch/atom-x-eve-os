@@ -1,0 +1,28 @@
+{
+  "name": "VoiceSignal",
+  "type": "object",
+  "properties": {
+    "channel_id": {
+      "type": "string"
+    },
+    "sender_id": {
+      "type": "string"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "channel_id",
+    "sender_id",
+    "target_id",
+    "type",
+    "payload"
+  ]
+}

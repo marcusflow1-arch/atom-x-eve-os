@@ -1,0 +1,32 @@
+{
+  "name": "AgentLog",
+  "type": "object",
+  "properties": {
+    "job_id": {
+      "type": "string",
+      "description": "ID of the AgentJob this log belongs to"
+    },
+    "message": {
+      "type": "string",
+      "description": "Log message to display"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "info",
+        "success",
+        "error",
+        "warning"
+      ],
+      "default": "info"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Optional structured data (e.g. the game object found)"
+    }
+  },
+  "required": [
+    "job_id",
+    "message"
+  ]
+}
