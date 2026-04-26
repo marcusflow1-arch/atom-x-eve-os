@@ -631,125 +631,228 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
           >
             <div className="w-full h-full max-w-[1400px] mx-auto flex gap-0 overflow-hidden">
 
-              {/* LEFT 50% — Studios list */}
-              <div className="w-1/2 flex flex-col h-full px-6 py-3">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                  <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
-                  <div className="relative w-44">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
-                    <input
-                      type="text"
-                      placeholder="Search studios..."
-                      value={developerSearch}
-                      onChange={(e) => setDeveloperSearch(e.target.value)}
-                      className="w-full pl-8 pr-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/35 focus:outline-none focus:border-cyan-400/50 transition-all"
-                    />
-                  </div>
-                </div>
-                {/* Studios — 5-per-row grid, scrollable, min 2 rows visible */}
-                <div
-                  className="grid overflow-y-auto flex-1"
-                  style={{
-                    gridTemplateColumns: 'repeat(5, 1fr)',
-                    gap: '6px',
-                    scrollbarWidth: 'none',
-                    minHeight: '80px',
-                  }}
-                >
-                  {filteredDevelopers.map((dev) => (
-                    <div
-                      key={dev.id}
-                      onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all cursor-pointer ${
-                        selectedDeveloper?.id === dev.id
-                          ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
-                          : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/10'
-                      }`}
-                    >
-                      <img src={dev.logo} alt={dev.name} className="w-7 h-7 rounded-md object-cover bg-white/10 flex-shrink-0" />
-                      <p className={`text-[9px] font-semibold leading-tight line-clamp-2 ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/75'}`}>{dev.name}</p>
+              <AnimatePresence mode="wait">
+                {selectedGame ? (
+                  /* ── GAME SELECTED: Left = trailer+screenshots, Right = actions+achievements ── */
+                  <motion.div
+                    key="game-detail"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full h-full flex"
+                  >
+                    {/* LEFT — Trailer + screenshots */}
+                    <div className="w-[55%] h-full flex gap-2 px-4 py-3 overflow-hidden">
+                      {/* Main trailer/banner */}
+                      <div className="flex-1 relative rounded-xl overflow-hidden border border-white/10 group cursor-pointer">
+                        <img
+                          src={selectedGame.banner_image || selectedGame.cover_image || selectedGame.displayImage}
+                          alt={selectedGame.displayTitle}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-all">
+                          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                            <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                          </div>
+                        </div>
+                        <div className="absolute bottom-2 left-3">
+                          <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">Official Trailer</span>
+                        </div>
+                      </div>
+                      {/* Screenshots column */}
+                      <div className="flex flex-col gap-2 w-24">
+                        {[
+                          selectedGame.cover_image,
+                          ...(selectedGame.screenshots || []),
+                          'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400',
+                          'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+                        ].filter(Boolean).slice(0, 3).map((img, i) => (
+                          <div key={i} className="flex-1 rounded-lg overflow-hidden border border-white/10 relative group cursor-pointer">
+                            <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* RIGHT 50% — Studio banner / spotlight */}
-              <div className="w-1/2 h-full relative overflow-hidden">
-                <AnimatePresence mode="wait">
-                  {selectedDeveloper ? (
-                    <motion.div
-                      key={selectedDeveloper.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      transition={{ duration: 0.3 }}
-                      className="absolute inset-0"
-                    >
-                      {/* Banner: dev info + latest game */}
-                      {(() => {
-                        const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
-                        // Sort by original_year descending to get newest game
-                        const sorted = [...devGames].sort((a, b) => (b.original_year || 0) - (a.original_year || 0));
-                        const latestGame = sorted[0];
-                        const bannerImg = latestGame?.banner_image || latestGame?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
-                        return (
-                          <>
-                            <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
-                            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 100%)' }} />
-                            <div className="absolute inset-0 flex flex-col justify-center px-6 gap-3">
+                    {/* RIGHT — Actions + Achievements */}
+                    <div className="flex-1 h-full flex flex-col px-4 py-3 gap-3 overflow-hidden">
+                      {/* Game title + actions */}
+                      <div className="flex-shrink-0">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="min-w-0">
+                            <h3 className="text-white font-black text-sm truncate">{selectedGame.displayTitle}</h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{selectedGame.genre || 'Action'}</span>
+                              {selectedGame.price > 0 && <span className="text-green-400 font-black text-xs">${selectedGame.price}</span>}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setSelectedGame(null)}
+                            className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all flex-shrink-0 border border-white/10"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => addToCart({ id: selectedGame.id, title: selectedGame.displayTitle, price: selectedGame.price || 0, cover_image: selectedGame.displayImage, type: 'game' })}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] transition-all shadow-[0_0_12px_rgba(34,211,238,0.3)]"
+                          >
+                            <ShoppingCart className="w-3 h-3" /> Buy ${selectedGame.price || '0.00'}
+                          </button>
+                          <button
+                            onClick={() => navigate(createPageUrl('GameDetail') + '?id=' + selectedGame.id + '&from=library')}
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-[10px] font-semibold transition-all"
+                          >
+                            <ShoppingBag className="w-3 h-3" /> Store Page
+                          </button>
+                        </div>
+                      </div>
 
-                              {/* Developer info */}
-                              <div className="flex items-center gap-3">
-                                <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-10 h-10 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0" />
-                                <div>
-                                  <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Developer</p>
-                                  <h2 className="text-white font-black text-base tracking-wide leading-tight">{selectedDeveloper.name}</h2>
-                                  <span className="text-white/50 text-[9px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''} in library</span>
-                                </div>
+                      {/* Achievements — liquid glass cards */}
+                      <div className="flex-1 min-h-0">
+                        <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest mb-1.5">Achievements</p>
+                        <div className="grid grid-cols-4 gap-1.5 h-[calc(100%-18px)] overflow-hidden">
+                          {MOCK_ACHIEVEMENTS.slice(0, 8).map((ach) => (
+                            <div
+                              key={ach.id}
+                              className="rounded-xl flex flex-col items-center justify-center gap-1 p-1.5 cursor-default"
+                              style={{
+                                background: 'rgba(255,255,255,0.04)',
+                                backdropFilter: 'blur(20px) saturate(180%)',
+                                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 12px rgba(0,0,0,0.2)',
+                              }}
+                            >
+                              <div
+                                className="w-6 h-6 rounded-lg flex items-center justify-center"
+                                style={{
+                                  background: 'rgba(255,255,255,0.06)',
+                                  border: '1px solid rgba(255,255,255,0.12)',
+                                  backdropFilter: 'blur(8px)',
+                                }}
+                              >
+                                <span className="text-white/25 text-xs font-black">?</span>
                               </div>
+                              <p className="text-white/30 text-[7px] font-semibold text-center leading-tight truncate w-full px-0.5">{ach.title}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* ── DEFAULT: Studios list + spotlight ── */
+                  <motion.div
+                    key="studios"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="w-full h-full flex"
+                  >
+                    {/* LEFT 50% — Studios list */}
+                    <div className="w-1/2 flex flex-col h-full px-6 py-3">
+                      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                        <h3 className="text-xs font-black text-white tracking-widest uppercase">Gaming Studios</h3>
+                        <div className="relative w-44">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
+                          <input
+                            type="text"
+                            placeholder="Search studios..."
+                            value={developerSearch}
+                            onChange={(e) => setDeveloperSearch(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] placeholder-white/35 focus:outline-none focus:border-cyan-400/50 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="grid overflow-y-auto flex-1"
+                        style={{ gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px', scrollbarWidth: 'none', minHeight: '80px' }}
+                      >
+                        {filteredDevelopers.map((dev) => (
+                          <div
+                            key={dev.id}
+                            onClick={() => setSelectedDeveloper(selectedDeveloper?.id === dev.id ? null : dev)}
+                            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all cursor-pointer ${
+                              selectedDeveloper?.id === dev.id
+                                ? 'bg-cyan-500/20 border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                                : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.08] hover:border-white/10'
+                            }`}
+                          >
+                            <img src={dev.logo} alt={dev.name} className="w-7 h-7 rounded-md object-cover bg-white/10 flex-shrink-0" />
+                            <p className={`text-[9px] font-semibold leading-tight line-clamp-2 ${selectedDeveloper?.id === dev.id ? 'text-cyan-300' : 'text-white/75'}`}>{dev.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                              {/* Divider */}
-                              <div className="w-full h-px bg-white/10" />
-
-                              {/* Latest game */}
-                              {latestGame && (
-                                <div>
-                                  <p className="text-cyan-400/80 text-[9px] font-bold uppercase tracking-widest mb-1.5">Latest Release</p>
-                                  <div className="flex items-center gap-2.5">
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
-                                      <img src={latestGame.cover_image || latestGame.banner_image} alt={latestGame.title} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <p className="text-white font-bold text-xs truncate">{latestGame.title}</p>
-                                      <div className="flex items-center gap-1.5 mt-0.5">
-                                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{latestGame.genre || 'Action'}</span>
-                                        {latestGame.original_year && <span className="text-white/35 text-[9px]">{latestGame.original_year}</span>}
-                                        {latestGame.price > 0 && <span className="text-green-400 font-black text-[9px]">${latestGame.price}</span>}
+                    {/* RIGHT 50% — Studio banner / spotlight */}
+                    <div className="w-1/2 h-full relative overflow-hidden">
+                      <AnimatePresence mode="wait">
+                        {selectedDeveloper ? (
+                          <motion.div
+                            key={selectedDeveloper.id}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute inset-0"
+                          >
+                            {(() => {
+                              const devGames = games.filter((_, idx) => idx % MOCK_DEVELOPERS.length === (selectedDeveloper.id - 1) % MOCK_DEVELOPERS.length);
+                              const sorted = [...devGames].sort((a, b) => (b.original_year || 0) - (a.original_year || 0));
+                              const latestGame = sorted[0];
+                              const bannerImg = latestGame?.banner_image || latestGame?.cover_image || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200';
+                              return (
+                                <>
+                                  <img src={bannerImg} alt={selectedDeveloper.name} className="absolute inset-0 w-full h-full object-cover" />
+                                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.2) 100%)' }} />
+                                  <div className="absolute inset-0 flex flex-col justify-center px-6 gap-3">
+                                    <div className="flex items-center gap-3">
+                                      <img src={selectedDeveloper.logo} alt={selectedDeveloper.name} className="w-10 h-10 rounded-xl border border-white/20 object-cover bg-white/10 flex-shrink-0" />
+                                      <div>
+                                        <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Developer</p>
+                                        <h2 className="text-white font-black text-base tracking-wide leading-tight">{selectedDeveloper.name}</h2>
+                                        <span className="text-white/50 text-[9px]">{devGames.length} game{devGames.length !== 1 ? 's' : ''} in library</span>
                                       </div>
                                     </div>
+                                    <div className="w-full h-px bg-white/10" />
+                                    {latestGame && (
+                                      <div>
+                                        <p className="text-cyan-400/80 text-[9px] font-bold uppercase tracking-widest mb-1.5">Latest Release</p>
+                                        <div className="flex items-center gap-2.5">
+                                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
+                                            <img src={latestGame.cover_image || latestGame.banner_image} alt={latestGame.title} className="w-full h-full object-cover" />
+                                          </div>
+                                          <div className="min-w-0">
+                                            <p className="text-white font-bold text-xs truncate">{latestGame.title}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                              <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[8px] text-cyan-300 font-bold uppercase">{latestGame.genre || 'Action'}</span>
+                                              {latestGame.original_year && <span className="text-white/35 text-[9px]">{latestGame.original_year}</span>}
+                                              {latestGame.price > 0 && <span className="text-green-400 font-black text-[9px]">${latestGame.price}</span>}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                </div>
-                              )}
-
-                            </div>
-                          </>
-                        );
-                      })()}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="placeholder"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0"
-                    >
-                      <StudioGameCarousel games={games} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                                </>
+                              );
+                            })()}
+                          </motion.div>
+                        ) : (
+                          <motion.div key="placeholder" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
+                            <StudioGameCarousel games={games} />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
             </div>
           </motion.div>
@@ -779,24 +882,13 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
               <div className="w-full max-w-[1400px] mx-auto mb-3 px-2 flex items-center gap-3">
                 {/* Left: Library icon + label, or Back button when in game detail */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {selectedGame ? (
-                    <button
-                      onClick={() => { setSelectedGame(null); setCurrentRow(0); }}
-                      className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" /> Back
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
-                      <button
-                        onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-                        className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
-                      >
-                        Store Library
-                      </button>
-                    </div>
-                  )}
+                  <Library className={`w-4 h-4 ${activeTab === 'library' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                  <button
+                    onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
+                    className="text-white font-bold text-xs uppercase tracking-widest hover:text-cyan-400 transition-colors"
+                  >
+                    Store Library
+                  </button>
                 </div>
 
                 {/* Spacer pushes row nav to far right */}
@@ -804,7 +896,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
 
                 {/* Row nav */}
                 <div className="flex items-center gap-2 flex-shrink-0 text-white/40 text-[10px]">
-                  {!selectedGame && <span>{currentRow + 1}/{totalRows}</span>}
+                  <span>{currentRow + 1}/{totalRows}</span>
                   <div className="flex gap-0.5 bg-white/5 rounded-lg p-0.5 border border-white/10">
                     <button onClick={() => setCurrentRow(p => Math.max(0, p - 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronLeft className="w-3.5 h-3.5" /></button>
                     <button onClick={() => setCurrentRow(p => Math.min(totalRows - 1, p + 1))} className="p-1 hover:bg-white/10 hover:text-white rounded transition-colors"><ChevronRight className="w-3.5 h-3.5" /></button>
@@ -827,108 +919,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
                 </div>
               </div>
             )}
-            {selectedGame && !isLibraryExpanded ? (
-              /* ── GAME DETAIL PANEL: Achievements left | Content right ── */
-              <div
-                className="w-full max-w-[1400px] mx-auto px-2 rounded-2xl overflow-hidden flex"
-                style={{
-                  height: '280px',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)',
-                  backdropFilter: 'blur(32px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2)',
-                }}
-              >
-                {/* LEFT — Game Content Cards */}
-                <GameContentCards selectedGame={selectedGame} />
-
-                {/* RIGHT — Store Content (never touched) */}
-                <div className="flex-1 flex flex-col min-h-0">
-                  {/* Top bar: game info + action buttons */}
-                  <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/8 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/15 flex-shrink-0">
-                      <img src={selectedGame.displayImage} alt={selectedGame.displayTitle} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-black text-sm truncate">{selectedGame.displayTitle}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-500/25 text-[9px] text-cyan-300 font-bold uppercase">{selectedGame.genre || 'Action'}</span>
-                        {selectedGame.price > 0 && <span className="text-green-400 font-black text-xs">${selectedGame.price}</span>}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => navigate(createPageUrl('GameDetail') + '?id=' + selectedGame.id + '&from=library')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 text-white text-[10px] font-semibold transition-all flex-shrink-0"
-                    >
-                      <ShoppingBag className="w-3 h-3" /> Store
-                    </button>
-                    <button
-                      onClick={() => addToCart({ id: selectedGame.id, title: selectedGame.displayTitle, price: selectedGame.price || 0, cover_image: selectedGame.displayImage, type: 'game' })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-black font-black text-[10px] transition-all shadow-[0_0_14px_rgba(34,211,238,0.3)] flex-shrink-0"
-                    >
-                      <ShoppingCart className="w-3 h-3" /> Buy ${selectedGame.price || '0.00'}
-                    </button>
-                  </div>
-
-                  {/* Content: DLC + News */}
-                  <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2" style={{ scrollbarWidth: 'none' }}>
-                    {/* What's New */}
-                    <div className="rounded-xl p-3 border border-white/8 flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.10), rgba(34,211,238,0.05))' }}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[9px] font-bold uppercase rounded">Latest Update</span>
-                        <span className="text-white/25 text-[9px]">2 days ago</span>
-                      </div>
-                      <p className="text-white font-bold text-[10px]">Season 4: Cyber Dawn</p>
-                      <p className="text-white/45 text-[9px] leading-relaxed mt-0.5">New maps, weapon balance fixes, cybernetic implants added to marketplace.</p>
-                    </div>
-
-                    {/* DLC */}
-                    <div className="flex items-center gap-1.5">
-                      <Package className="w-3 h-3 text-purple-400" />
-                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">DLC</span>
-                    </div>
-                    {[
-                      { name: 'Neon District Pack', desc: '3 new maps + exclusive skins', price: 9.99 },
-                      { name: 'Cyber Armory Bundle', desc: 'Weapon skins & gear set', price: 14.99 },
-                      { name: 'Season Pass Vol.4', desc: 'Full season content unlock', price: 24.99 },
-                    ].map((dlc) => (
-                      <div key={dlc.name} className="flex items-center gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03] hover:bg-white/[0.06] transition-all">
-                        <div className="w-8 h-8 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
-                          <Package className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-[10px] font-bold truncate">{dlc.name}</p>
-                          <p className="text-white/35 text-[9px]">{dlc.desc}</p>
-                        </div>
-                        <button
-                          onClick={() => addToCart({ id: selectedGame.id + '-' + dlc.name, title: dlc.name, price: dlc.price, type: 'dlc' })}
-                          className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-[9px] font-bold border border-cyan-500/20 transition-all"
-                        >${dlc.price}</button>
-                      </div>
-                    ))}
-
-                    {/* News */}
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <Newspaper className="w-3 h-3 text-blue-400" />
-                      <span className="text-white/50 text-[9px] font-bold uppercase tracking-widest">News</span>
-                    </div>
-                    {[
-                      { headline: 'Server Maintenance Tomorrow', body: 'Scheduled downtime 03:00–05:00 AM UTC.', dot: 'bg-yellow-400' },
-                      { headline: 'Double XP Weekend', body: 'Earn 2× XP on all modes this weekend.', dot: 'bg-green-400' },
-                    ].map((item) => (
-                      <div key={item.headline} className="flex items-start gap-2 rounded-lg p-2 border border-white/8 bg-white/[0.03]">
-                        <div className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 animate-pulse ${item.dot}`} />
-                        <div>
-                          <p className="text-white text-[10px] font-bold">{item.headline}</p>
-                          <p className="text-white/40 text-[9px]">{item.body}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
+            {(
               isLibraryExpanded && activeTab === 'library' ? (
                 /* ── EXPANDED LIBRARY VIEW: Games grid left | Filters right ── */
                 <div className="w-full h-full flex gap-4">
