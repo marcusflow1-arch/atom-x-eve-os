@@ -1023,7 +1023,13 @@ export default function GameDetailPanel({ gameId, onClose }) {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-white/40 uppercase tracking-wider w-24">Developer:</span>
-                        <span className="text-cyan-300 hover:underline cursor-pointer">{game.developer || 'Studio Unknown'}</span>
+                        <button 
+                          onClick={() => { if (game.developerKey) window.location.href = `/dev-studio/${game.developerKey}`; }}
+                          className="text-cyan-300 hover:underline cursor-pointer hover:text-cyan-200 transition-colors"
+                          title={game.developerKey ? `View ${game.developer} studio` : 'Developer information unavailable'}
+                        >
+                          {game.developer || 'Studio Unknown'}
+                        </button>
                       </div>
                       <div className="flex gap-2">
                         <span className="text-white/40 uppercase tracking-wider w-24">Publisher:</span>
