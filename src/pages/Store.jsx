@@ -40,6 +40,7 @@ import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
 import DevCardsContent from '../components/store/DevCardsContent';
+import ShooterContent from '../components/store/ShooterContent';
 import { DollarSign, Building2 } from 'lucide-react';
 import StudioDrawer, { MOCK_STUDIOS } from '../components/store/StudioDrawer';
 import StoreHeaderSearchPanel from '../components/store/StoreHeaderSearchPanel';
@@ -455,7 +456,8 @@ export default function Store() {
                     <button onClick={() => navigate(createPageUrl('Farm'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Farm</button>
                     <button onClick={() => navigate(createPageUrl('Aura'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Aura</button>
                     <button onClick={() => navigate(createPageUrl('GenreMastery'))} className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white">Cards</button>
-                  </div>
+                    <button onClick={() => { setStoreMode('shooter'); setShowOverview(false); }} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${storeMode === 'shooter' ? 'bg-red-500/20 border-red-500/30 text-red-300' : 'bg-transparent border-transparent text-white/50 hover:bg-white/5 hover:text-white'}`}>Shooter</button>
+                    </div>
                   <div className="flex items-center gap-3">
                     <CategorySearchBar
                       activeCategoryOverlay={activeCategoryOverlay}
@@ -821,6 +823,10 @@ export default function Store() {
                                                                 )}
                                                                 </motion.div>
                                     )
+                                ) : storeMode === 'shooter' ? (
+                                    <motion.div key="shooter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full w-full overflow-hidden pt-16">
+                                        <ShooterContent games={games} onNavigateToGame={handleNavigateToGame} />
+                                    </motion.div>
                                 ) : storeMode === 'marketplace' ? (
                                     <motion.div key="marketplace" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1920px] mx-auto px-4 md:px-6 py-24 overflow-y-auto h-full custom-scrollbar">
                                         <MarketplaceContent searchTerm={marketplaceSearchTerm} onSearchChange={setMarketplaceSearchTerm} />
