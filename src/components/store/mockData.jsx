@@ -181,7 +181,7 @@ export const trendingGames = [
     cover_image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=800&fit=crop',
     genre: 'FPS',
     rating: 4.4,
-    developer: 'DICE',
+    developer: 'DICE / Electronic Arts',
     developerKey: 'dice',
     releaseDate: '2025',
     tags: ['Multiplayer', 'Warfare', 'Destruction']
@@ -224,8 +224,8 @@ export const newReleases = [
     cover_image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=800&fit=crop',
     genre: 'Action RPG',
     rating: 4.7,
-    developer: 'Ubisoft Quebec',
-    developerKey: 'ubisoft_quebec',
+    developer: 'Ubisoft Quebec / Ubisoft',
+    developerKey: 'ubisoft',
     releaseDate: '2025',
     tags: ['Japan', 'Stealth', 'Open World']
   },

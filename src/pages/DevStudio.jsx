@@ -19,9 +19,10 @@ const STUDIO_DATA = {
     heroImage: 'https://images.unsplash.com/photo-1538481527238-c5a6e5a34c16?w=1200&h=600&fit=crop',
     logo: '🎮',
     games: [
-      { id: 1, title: 'The Last of Us Part II', genre: 'Action-Adventure', rating: 9.2, image: 'https://images.unsplash.com/photo-1460925895917-adf4e5e3c9b5?w=300&h=400&fit=crop' },
-      { id: 2, title: 'Uncharted 4', genre: 'Action-Adventure', rating: 9.3, image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
-      { id: 3, title: 'Intergalactic: The Heretic Prophet', genre: 'Action-Adventure', rating: 8.8, image: 'https://images.unsplash.com/photo-1556438328-b6760a6eda4e?w=300&h=400&fit=crop' },
+      { id: 1, title: 'Crash Bandicoot', genre: 'Platformer', rating: 8.9, image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=300&h=400&fit=crop' },
+      { id: 2, title: 'Jak and Daxter', genre: 'Action-Adventure', rating: 8.7, image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=400&fit=crop' },
+      { id: 3, title: 'Uncharted 4', genre: 'Action-Adventure', rating: 9.3, image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
+      { id: 4, title: 'The Last of Us Part II', genre: 'Action-Adventure', rating: 9.2, image: 'https://images.unsplash.com/photo-1460925895917-adf4e5e3c9b5?w=300&h=400&fit=crop' },
     ]
   },
   'supergiant': {
@@ -38,9 +39,11 @@ const STUDIO_DATA = {
     heroImage: 'https://images.unsplash.com/photo-1535869797c3-4b61b3f0fbf9?w=1200&h=600&fit=crop',
     logo: '✨',
     games: [
-      { id: 1, title: 'Hades II', genre: 'Roguelike', rating: 9.1, image: 'https://images.unsplash.com/photo-1551863775-4ac6e30696b6?w=300&h=400&fit=crop' },
+      { id: 1, title: 'Bastion', genre: 'Action RPG', rating: 8.7, image: 'https://images.unsplash.com/photo-1516905041604-1c1e1c84c397?w=300&h=400&fit=crop' },
       { id: 2, title: 'Transistor', genre: 'Action RPG', rating: 8.5, image: 'https://images.unsplash.com/photo-1511379938547-c1f69b13d835?w=300&h=400&fit=crop' },
-      { id: 3, title: 'Bastion', genre: 'Action RPG', rating: 8.7, image: 'https://images.unsplash.com/photo-1516905041604-1c1e1c84c397?w=300&h=400&fit=crop' },
+      { id: 3, title: 'Pyre', genre: 'RPG', rating: 8.3, image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=400&fit=crop' },
+      { id: 4, title: 'Hades', genre: 'Roguelike', rating: 9.4, image: 'https://images.unsplash.com/photo-1551863775-4ac6e30696b6?w=300&h=400&fit=crop' },
+      { id: 5, title: 'Hades II', genre: 'Roguelike', rating: 9.1, image: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=300&h=400&fit=crop' },
     ]
   },
   'bethesda': {
@@ -59,12 +62,11 @@ const STUDIO_DATA = {
     heroSubtitle: 'Starfield is now available on PlayStation 5, welcoming a new generation of explorers into Bethesda Game Studios\' most ambitious universe.',
     logo: '🎮',
     games: [
-      { id: 1, title: 'Starfield', genre: 'Action RPG', rating: 8.4, image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=400&fit=crop' },
+      { id: 1, title: 'The Elder Scrolls: Oblivion', genre: 'Action RPG', rating: 9.1, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=400&fit=crop' },
       { id: 2, title: 'The Elder Scrolls V: Skyrim', genre: 'Action RPG', rating: 9.4, image: 'https://images.unsplash.com/photo-1552820728-8ac41f1ce891?w=300&h=400&fit=crop' },
       { id: 3, title: 'Fallout 4', genre: 'Action RPG', rating: 8.9, image: 'https://images.unsplash.com/photo-1556438328-b6760a6eda4e?w=300&h=400&fit=crop' },
-      { id: 4, title: 'The Elder Scrolls Online', genre: 'MMO RPG', rating: 8.2, image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop' },
-      { id: 5, title: 'Fallout 76', genre: 'Online Action RPG', rating: 7.8, image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300&h=400&fit=crop' },
-      { id: 6, title: 'The Elder Scrolls: Oblivion', genre: 'Action RPG', rating: 9.1, image: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=300&h=400&fit=crop' },
+      { id: 4, title: 'Fallout 76', genre: 'Online RPG', rating: 7.8, image: 'https://images.unsplash.com/photo-1542751371-331572b78519?w=300&h=400&fit=crop' },
+      { id: 5, title: 'Starfield', genre: 'Action RPG', rating: 8.4, image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=400&fit=crop' },
     ],
     events: [
       { id: 1, title: 'Fallout 76: Rip Daring vs Aliens C.A.M.P. Showdown', status: 'Live Now', date: 'Apr 15', description: 'Submit a rip daring-inspired or alien-inspired C.A.M.P or shelter for a chance at atoms and an exclusive C.A.M.P title.' },

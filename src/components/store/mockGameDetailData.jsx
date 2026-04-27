@@ -11,7 +11,7 @@ export const enhancedMockGameData = {
     description: 'Step into the world of Oblivion and explore the vast empire of Tamriel. Make choices that shape the destiny of kingdoms in this epic open-world fantasy RPG. Experience one of gaming\'s most immersive worlds where every decision matters.',
     developer: 'Bethesda Game Studios',
     developerKey: 'bethesda_game_studios',
-    publisher: 'Bethesda Softworks',
+    publisher: 'Bethesda Softworks / Xbox Game Studios',
     releaseDate: '2024-03-15',
     genre: 'Fantasy RPG',
     rating: 4.8,
