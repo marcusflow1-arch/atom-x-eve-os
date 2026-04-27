@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 const MODEL_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/mp/public/6876751a602125f45f1861b9/c586602ff_tomb_raider_laracroft.glb';
+const IDLE_ANIM_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/b7fd6fb1f_standingidle01.fbx';
 
 export default function StoreIdleViewer() {
   const containerRef = useRef(null);
@@ -40,8 +42,9 @@ export default function StoreIdleViewer() {
     let animFrameId;
     const clock = new THREE.Clock();
 
-    // --- Load GLB model ---
+    // --- Load GLB model then FBX idle animation ---
     const gltfLoader = new GLTFLoader();
+    const fbxLoader = new FBXLoader();
 
     gltfLoader.load(MODEL_URL, (gltf) => {
       const model = gltf.scene;
@@ -56,14 +59,30 @@ export default function StoreIdleViewer() {
       model.position.sub(center.multiplyScalar(scale));
 
       scene.add(model);
+      mixer = new THREE.AnimationMixer(model);
 
-      // Play idle animation (find idle clip or fall back to first)
+      // If the GLB has its own idle, use it first
       if (gltf.animations?.length > 0) {
-        mixer = new THREE.AnimationMixer(model);
         const idleClip = gltf.animations.find(a => /idle/i.test(a.name)) || gltf.animations[0];
         const action = mixer.clipAction(idleClip);
         action.setLoop(THREE.LoopRepeat, Infinity);
         action.play();
+      } else {
+        // Load external FBX idle animation and retarget to GLB skeleton
+        fbxLoader.load(IDLE_ANIM_URL, (fbx) => {
+          if (fbx.animations?.length > 0) {
+            const clip = fbx.animations[0];
+            // Retarget tracks to match GLB bone names
+            clip.tracks = clip.tracks.map(track => {
+              // FBX mixamo rigs often have "mixamorig:" prefix
+              const name = track.name.replace(/^mixamorig[: ]/i, '');
+              return new track.constructor(name, track.times, track.values, track.interpolation);
+            });
+            const action = mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.play();
+          }
+        }, undefined, (err) => console.warn('StoreIdleViewer: FBX anim load error', err));
       }
     }, undefined, (err) => console.error('StoreIdleViewer: model load error', err));
 
