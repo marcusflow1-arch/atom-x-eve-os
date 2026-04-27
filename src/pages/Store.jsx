@@ -502,7 +502,7 @@ export default function Store() {
                     />
 
                     {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
-                    <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
+                    {!inPageStoreGameId && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
@@ -545,13 +545,13 @@ export default function Store() {
 
                             <div className="mt-3 w-8 h-px" style={{ background: 'rgba(200,210,220,0.2)' }} />
                         </div>
-                    </div>
+                    </div>}
 
                     {/* 95% Main Area */}
                     <div className="flex-1 relative h-full overflow-hidden flex flex-col">
 
                         {/* ═══ GENRE MASTERY SUB-NAV (matches Depth Cards style) ═══ */}
-                        <div className="flex-shrink-0 mt-16 relative z-30">
+                        {!inPageStoreGameId && <div className="flex-shrink-0 mt-16 relative z-30">
                           <div className="flex items-center px-6 py-2 gap-0"
                             style={{
                               background: 'rgba(8, 12, 18, 0.5)',
@@ -621,7 +621,7 @@ export default function Store() {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </div>}
 
                         {/* Main Content */}
                         <div className="flex-1 overflow-hidden">
