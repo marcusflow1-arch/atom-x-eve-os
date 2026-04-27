@@ -1107,6 +1107,24 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <Globe className="w-4 h-4" />
             <span>Environment Hubs</span>
           </button>
+
+          <div className="w-px h-5 bg-white/10 mx-2" />
+
+          <button
+            onClick={() => handleTabClick('library')}
+            className={`relative px-6 py-2 flex items-center gap-2 text-sm font-medium tracking-wide uppercase transition-all duration-300 mx-1 ${
+              activeTab === 'library'
+                ? 'text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]'
+                : 'text-white/60 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]'
+            }`}
+            title="Search Library & Gaming Studios"
+          >
+            {activeTab === 'library' && (
+              <div className="absolute inset-0 bg-cyan-400/20 blur-md rounded-full -z-10 pointer-events-none" />
+            )}
+            <Search className="w-4 h-4" />
+            <span>Search</span>
+          </button>
         </div>
       </div>}
     </>
