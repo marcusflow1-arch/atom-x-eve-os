@@ -334,13 +334,13 @@ export default function LibrarySidebar() {
       {/* Trigger Buttons (Fixed on left) */}
       {!isOpen && !overlayActive && showLeftNav && (
         <>
-          {/* Top Section for Clan/Forum/Cards/Farm: Boxes only */}
           {(isClan || isForum || isGenreMastery || isFarm) && !isSidebarCollapsed && (
             <motion.div
               initial={{ x: -100, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={`${positionClass} left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100`}
+              className={`${positionClass} left-6 z-[70] flex flex-col items-center gap-3 w-10 transition-all duration-500 top-[80px] opacity-100 overflow-y-auto`}
+              style={{ bottom: 'calc(55% + 24px)', scrollbarWidth: 'none' }}
             >
               <button 
                 onClick={() => setSidebarMode(m => m === 'context' ? 'recent' : 'context')}
@@ -429,12 +429,11 @@ export default function LibrarySidebar() {
               ) : (
                 <>
                   {[1, 2, 3, 4, 5].map(i => (
-                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
-                      <span className="text-white/30 text-lg font-bold">?</span>
-                    </div>
+                    <div key={`played-${i}`} className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center"><span className="text-white/30 text-lg font-bold">?</span></div>
                   ))}
                 </>
               )}
+              <div className="w-14 h-px bg-white/25 mt-2 flex-shrink-0" />
             </motion.div>
           )}
 
