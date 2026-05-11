@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Coins } from 'lucide-react';
+import { subscribePlayerHUD } from './playerHUDStore';
 
 /**
  * SkillSlotHUD - Recreates the SMITE 2 bottom hotbar:
@@ -16,8 +17,16 @@ export default function SkillSlotHUD({
   mana = 296,
   maxMana = 296,
   gold = 100000,
+  level: levelProp,
+  xp: xpProp,
+  xpForNext: xpForNextProp,
   onAbility,
 }) {
+  const [hud, setHud] = useState({ level: 1, xp: 0, xpForNext: 5 });
+  useEffect(() => subscribePlayerHUD(setHud), []);
+  const level = levelProp ?? hud.level;
+  const xp = xpProp ?? hud.xp;
+  const xpForNext = xpForNextProp ?? hud.xpForNext;
   const abilities = [
     { key: '1', label: 'BOOT', color: '#4a90e2' },
     { key: '2', label: 'BUFF', color: '#7ed321' },
@@ -63,8 +72,9 @@ export default function SkillSlotHUD({
 
           {/* Bars + ability slots */}
           <div className="flex flex-col gap-1.5">
-            {/* HP/Mana bars */}
+            {/* XP / HP / Mana bars */}
             <div className="flex flex-col gap-1 w-[440px]">
+              <XPBar level={level} xp={xp} xpForNext={xpForNext} />
               <ResourceBar value={hp} max={maxHp} color="#4caf50" />
               <ResourceBar value={mana} max={maxMana} color="#3a9ee6" />
             </div>
@@ -188,6 +198,45 @@ function ResourceBar({ value, max, color }) {
       </div>
       <div className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-white/70 font-bold">
         +1.7s
+      </div>
+    </div>
+  );
+}
+
+function XPBar({ level, xp, xpForNext }) {
+  const pct = xpForNext > 0 ? Math.max(0, Math.min(100, (xp / xpForNext) * 100)) : 0;
+  return (
+    <div
+      className="relative w-full h-3 rounded-sm overflow-hidden"
+      style={{
+        background: 'rgba(40, 28, 0, 0.7)',
+        border: '1px solid rgba(180, 140, 80, 0.5)',
+        boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.6)',
+      }}
+    >
+      {/* Yellow-sapphire fill — faceted gem-like gradient */}
+      <motion.div
+        className="absolute inset-y-0 left-0"
+        style={{
+          background: 'linear-gradient(180deg, #fff7b0 0%, #ffe14a 18%, #f5b800 50%, #c98a00 82%, #7a5200 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -1px 2px rgba(120,80,0,0.6), 0 0 10px rgba(255, 210, 70, 0.7)',
+        }}
+        animate={{ width: `${pct}%` }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Faceted gemstone shimmer overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'repeating-linear-gradient(115deg, rgba(255,255,255,0.18) 0px, rgba(255,255,255,0.18) 2px, transparent 2px, transparent 8px), linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 45%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+      </motion.div>
+      <div className="absolute inset-0 flex items-center justify-between px-2 text-[10px] font-bold tabular-nums drop-shadow-md">
+        <span className="text-yellow-100" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>LVL {level}</span>
+        <span className="text-yellow-50" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>{xp}/{xpForNext} XP</span>
       </div>
     </div>
   );

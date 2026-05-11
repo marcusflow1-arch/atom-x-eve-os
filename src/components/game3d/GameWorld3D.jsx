@@ -4,6 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
+import { setPlayerHUD } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
   ENEMY_STAT_TEMPLATES,
@@ -687,6 +688,7 @@ export default function GameWorld3D() {
               playerLevelRef.current = newLevel;
               setPlayerXP(newXP);
               setPlayerLevel(newLevel);
+              setPlayerHUD({ level: newLevel, xp: newXP, xpForNext: xpForLevel(newLevel) });
             }
           }
         }
