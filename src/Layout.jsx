@@ -1037,6 +1037,15 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
+                          {/* Game — opens 3D viewer page */}
+                          <button
+                            onClick={() => navigate(createPageUrl('GameView'))}
+                            className="hidden xl:flex shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all backdrop-blur-md border bg-cyan-500/20 border-cyan-400/30 text-cyan-300 hover:bg-cyan-500/30 hover:text-white items-center gap-2"
+                          >
+                            <Gamepad2 className="w-4 h-4" />
+                            Game
+                          </button>
+
                           {/* Discord */}
                           <a
                             href="https://discord.gg/tPqMDr6yJ"

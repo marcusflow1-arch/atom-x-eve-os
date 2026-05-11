@@ -75,6 +75,7 @@ import Farm from './pages/Farm';
 import Friends from './pages/Friends';
 import GameDetail from './pages/GameDetail';
 import GameDevHub from './pages/GameDevHub';
+import GameView from './pages/GameView';
 import GameProfile from './pages/GameProfile';
 import GeneratedUI from './pages/GeneratedUI';
 import GenreMastery from './pages/GenreMastery';
@@ -136,6 +137,7 @@ export const PAGES = {
     "Friends": Friends,
     "GameDetail": GameDetail,
     "GameDevHub": GameDevHub,
+    "GameView": GameView,
     "GameProfile": GameProfile,
     "GeneratedUI": GeneratedUI,
     "GenreMastery": GenreMastery,
