@@ -1,5 +1,6 @@
-import React from 'react';
-import { ScrollText, Check, X, Volume2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ScrollText, Check, X, Volume2, VolumeX } from 'lucide-react';
+import { getQuestAudio } from './questAudioStore';
 
 /**
  * QuestDialogueBox — liquid-glass dialogue panel for quest offers,
@@ -18,7 +19,42 @@ export default function QuestDialogueBox({
   onClaim,
   onPlayVoice, // optional: hook up TTS later
 }) {
+  // Hooks must run unconditionally — call them before any early return.
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioUrl = quest ? getQuestAudio(quest.id) : null;
+
+  useEffect(() => {
+    if (!audioUrl) return;
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    audio.onended = () => setIsPlaying(false);
+    audio.onpause = () => setIsPlaying(false);
+    audio.onplay = () => setIsPlaying(true);
+    audio.play().catch(() => {}); // user-gesture should already have happened (E key / click)
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, [audioUrl, quest?.id]);
+
   if (!quest) return null;
+
+  const toggleVoice = () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      if (onPlayVoice) onPlayVoice();
+      return;
+    }
+    if (audio.paused) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  };
+
+  const hasVoice = !!audioUrl || !!onPlayVoice;
 
   const objectiveText = (() => {
     const o = quest.objective;
@@ -55,13 +91,17 @@ export default function QuestDialogueBox({
             <div className="text-lg font-bold text-white tracking-wide">{quest.title}</div>
           </div>
         </div>
-        {onPlayVoice && (
+        {hasVoice && (
           <button
-            onClick={onPlayVoice}
+            onClick={toggleVoice}
             className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 transition-all"
-            title="Read aloud"
+            title={isPlaying ? 'Pause voice' : 'Play voice'}
           >
-            <Volume2 className="w-3.5 h-3.5 text-white/70" />
+            {isPlaying ? (
+              <VolumeX className="w-3.5 h-3.5 text-yellow-300" />
+            ) : (
+              <Volume2 className="w-3.5 h-3.5 text-white/70" />
+            )}
           </button>
         )}
       </div>
