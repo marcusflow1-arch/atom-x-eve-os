@@ -4,7 +4,16 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
-const IDLE_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx';
+const ANIMATION_URLS = {
+  idle: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx',
+  run:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/4edd51169_Running.fbx',
+  jump: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/b1e388a25_Jumping.fbx',
+};
+
+const WALK_SPEED = 2.8;
+const RUN_SPEED = 6.2;
+const ROT_SMOOTH = 0.18;
+const BLEND = 0.2;
 
 /**
  * GameWorld3D - Renders a 3D game world with the female archer character.
@@ -90,11 +99,25 @@ export default function GameWorld3D() {
       scene.add(rock);
     }
 
-    // Load the female archer
+    // Load the female archer + animations
     let mixer;
     let model;
+    const actions = {};
+    let currentActionName = 'idle';
     const clock = new THREE.Clock();
     const loader = new FBXLoader();
+
+    const playAction = (name, timeScale = 1) => {
+      const next = actions[name];
+      if (!next || currentActionName === name) return;
+      const prev = actions[currentActionName];
+      next.enabled = true;
+      next.setEffectiveTimeScale(timeScale);
+      next.setEffectiveWeight(1);
+      next.reset().fadeIn(BLEND).play();
+      if (prev) prev.fadeOut(BLEND);
+      currentActionName = name;
+    };
 
     loader.load(ARCHER_URL, (fbx) => {
       model = fbx;
@@ -115,19 +138,50 @@ export default function GameWorld3D() {
       scene.add(fbx);
       mixer = new THREE.AnimationMixer(fbx);
 
-      loader.load(IDLE_URL, (idleFbx) => {
-        if (idleFbx.animations?.length > 0) {
-          mixer.clipAction(idleFbx.animations[0]).play();
-        }
-        setLoading(false);
-      }, undefined, () => setLoading(false));
+      // Load all animations in parallel
+      const entries = Object.entries(ANIMATION_URLS);
+      let loaded = 0;
+      entries.forEach(([name, url]) => {
+        loader.load(url, (animFbx) => {
+          if (animFbx.animations?.length > 0) {
+            const clip = animFbx.animations[0];
+            clip.name = name;
+            const action = mixer.clipAction(clip);
+            if (name === 'jump') {
+              action.setLoop(THREE.LoopOnce);
+              action.clampWhenFinished = true;
+            }
+            actions[name] = action;
+          }
+          loaded++;
+          if (loaded === entries.length) {
+            if (actions.idle) {
+              actions.idle.reset().fadeIn(0.2).play();
+              currentActionName = 'idle';
+            }
+            setLoading(false);
+          }
+        }, undefined, () => {
+          loaded++;
+          if (loaded === entries.length) setLoading(false);
+        });
+      });
     }, undefined, (err) => {
       console.error('Archer load error:', err);
       setLoading(false);
     });
 
     // Controls
-    const onKeyDown = (e) => { keys.current[e.key.toLowerCase()] = true; };
+    const onKeyDown = (e) => {
+      if (e.target?.matches?.('input, textarea')) return;
+      const k = e.key.toLowerCase();
+      keys.current[k] = true;
+      // Space = jump (one-shot)
+      if (k === ' ' && actions.jump && model) {
+        actions.jump.reset().fadeIn(0.1).play();
+        e.preventDefault();
+      }
+    };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     const onMouseDown = (e) => {
       drag.current = { active: true, x: e.clientX, y: e.clientY };
@@ -165,7 +219,8 @@ export default function GameWorld3D() {
 
       // Movement
       if (model) {
-        const speed = 3 * delta;
+        const isRunning = !!keys.current['shift'];
+        const speed = isRunning ? RUN_SPEED : WALK_SPEED;
         const yaw = orbit.current.yaw;
         const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
         const rx = -Math.cos(yaw), rz = Math.sin(yaw);
@@ -174,13 +229,23 @@ export default function GameWorld3D() {
         if (keys.current['s']) { move.x -= fx; move.z -= fz; }
         if (keys.current['a']) { move.x += rx; move.z += rz; }
         if (keys.current['d']) { move.x -= rx; move.z -= rz; }
-        if (move.lengthSq() > 0) {
+
+        const isMoving = move.lengthSq() > 0;
+        if (isMoving) {
           move.normalize();
-          model.position.x += move.x * speed;
-          model.position.z += move.z * speed;
+          model.position.x += move.x * speed * delta;
+          model.position.z += move.z * speed * delta;
           const angle = Math.atan2(move.x, move.z);
           const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle);
-          model.quaternion.slerp(targetQ, 0.2);
+          model.quaternion.slerp(targetQ, ROT_SMOOTH);
+        }
+
+        // Animation state machine
+        if (isMoving) {
+          // Use 'run' clip, slowed for walk
+          playAction('run', isRunning ? 1 : 0.55);
+        } else {
+          playAction('idle', 1);
         }
 
         // Camera follow
