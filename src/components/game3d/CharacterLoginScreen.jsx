@@ -35,9 +35,9 @@ export default function CharacterLoginScreen({ onPlay }) {
     renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(28, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.55, -3.2);
-    camera.lookAt(0, 1.3, 0);
+    const camera = new THREE.PerspectiveCamera(32, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 1.4, -6.5);
+    camera.lookAt(0, 1.1, 0);
 
     // Lighting — cinematic 3-point
     scene.add(new THREE.AmbientLight(0xffffff, 0.5));
