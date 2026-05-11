@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search, X } from 'lucide-react';
+import { Eye, Store, ShoppingBag, ArrowRightLeft, Mic, MicOff, Search, X, Sparkles, Clock, Trophy, Flame, Gem } from 'lucide-react';
+
+const CATEGORY_PILLS = [
+  { id: 'new_releases', label: 'New Release', icon: Clock },
+  { id: 'recommended', label: 'Recommended', icon: Sparkles },
+  { id: 'hidden_gems', label: 'Hidden Gems', icon: Gem },
+  { id: 'trending', label: 'Trendy', icon: Flame },
+  { id: 'top_rated', label: 'Top Rated', icon: Trophy },
+];
 
 function SearchDropdownPanel({ onClose }) {
   const [searchValue, setSearchValue] = useState('');
@@ -72,7 +80,7 @@ function SearchDropdownPanel({ onClose }) {
   );
 }
 
-export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false }) {
+export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, onLibraryToggle, onSearch, activeFilters, onFilterChange, showDevLabel = false, activeCategory, onCategoryChange }) {
   const [searchValue, setSearchValue] = useState('');
   const [isListening, setIsListening] = useState(false);
 
@@ -137,6 +145,30 @@ export default function StoreBottomNav({ activeTab, onTabChange, libraryActive, 
         </div>
       )}
       <div className="flex items-center justify-center gap-2 relative">
+        {/* ── CATEGORY PILLS (left of Store) ── */}
+        <div className="flex items-center gap-1.5 mr-1">
+          {CATEGORY_PILLS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeCategory === id;
+            return (
+              <button
+                key={id}
+                onClick={() => onCategoryChange?.(isActive ? null : id)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+                  isActive
+                    ? 'bg-cyan-500/15 border-cyan-400/40 text-cyan-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]'
+                    : 'bg-white/5 border-white/10 text-white/55 hover:bg-white/10 hover:text-white hover:border-white/20'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Vertical divider */}
+        <div className="w-px h-6 bg-white/15 mx-1" />
+
         {tabs.slice(0, 2).map((tab) => {
           const isActive = activeTab === tab.id;
           return (

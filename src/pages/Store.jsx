@@ -39,6 +39,7 @@ import { WishlistProvider } from '../components/store/WishlistContext';
 import PlayerInteractionsPanel from '../components/store/PlayerInteractionsPanel';
 import StoreRecommendationsSidebar from '../components/store/StoreRecommendationsSidebar';
 import CategorySearchBar from '../components/store/CategorySearchBar';
+import RecentlyPlayedSidebar from '../components/store/RecentlyPlayedSidebar';
 import DevCardsContent from '../components/store/DevCardsContent';
 import ShooterContent from '../components/store/ShooterContent';
 import { DollarSign, Building2 } from 'lucide-react';
@@ -486,6 +487,8 @@ export default function Store() {
                 onLibraryToggle={() => setStoreLibraryOpen(v => !v)}
                 activeFilters={storeFilters}
                 onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
+                activeCategory={activeCategoryOverlay}
+                onCategoryChange={setActiveCategoryOverlay}
                 showDevLabel={true}
               />
             }>
@@ -513,40 +516,7 @@ export default function Store() {
                             boxShadow: '4px 0 20px rgba(0,0,0,0.35), inset 1px 0 0 rgba(255,255,255,0.08)'
                         }}
                     >
-                        <div className="mt-12 px-2 flex flex-col items-center w-full">
-                            <span className="text-[10px] uppercase tracking-wider text-white/50 font-bold text-center mb-1">Browse</span>
-                            <div className="w-8 h-px mb-3" style={{ background: 'rgba(200,210,220,0.2)' }} />
-
-                            <div className="flex flex-col gap-2 w-full items-center">
-                                {CATEGORIES.map(cat => {
-                                    const Icon = cat.icon;
-                                    const isActive = activeCategoryOverlay === cat.id;
-                                    return (
-                                        <button
-                                            key={cat.id}
-                                            onClick={() => setActiveCategoryOverlay(isActive ? null : cat.id)}
-                                            title={cat.label}
-                                            className={`group w-11 h-11 rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all ${
-                                                isActive
-                                                    ? 'border-white/30 shadow-lg'
-                                                    : 'border-white/10 hover:border-white/20'
-                                            }`}
-                                            style={isActive ? {
-                                                background: 'linear-gradient(135deg, rgba(180,190,210,0.22) 0%, rgba(140,155,175,0.15) 100%)',
-                                                boxShadow: '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12)'
-                                            } : {
-                                                background: 'rgba(255,255,255,0.05)'
-                                            }}
-                                        >
-                                            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white/50 group-hover:text-white'}`} />
-                                            <span className="text-[7px] text-white/40 group-hover:text-white/70 truncate max-w-[36px] text-center leading-tight">{cat.label.split(' ')[0]}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="mt-3 w-8 h-px" style={{ background: 'rgba(200,210,220,0.2)' }} />
-                        </div>
+                        <RecentlyPlayedSidebar games={games} onGameClick={handleNavigateToGame} />
                     </div>}
 
                     {/* 95% Main Area */}
