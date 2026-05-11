@@ -4,7 +4,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
-import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD } from './playerHUDStore';
+import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
   ENEMY_STAT_TEMPLATES,
@@ -96,6 +96,10 @@ const ENEMY_IDLE_TIME = 5.0;   // seconds idle
 const ENEMY_WANDER_RADIUS = 4; // how far they pick a new walk target
 const NPC_INTERACT_RANGE = 3.5;
 const ENEMY_ATTACK_RANGE = 2.0;
+const ENEMY_ATTACK_COOLDOWN = 2.2;     // seconds between enemy attacks
+const ENEMY_ATTACK_WINDUP = 0.4;       // seconds before damage actually lands (mid-anim)
+const PLAYER_ATTACK_COOLDOWN = 0.6;    // seconds between player left-click attacks
+const PLAYER_INVUL_AFTER_HIT = 0.5;    // brief i-frames after taking a hit
 
 export default function GameWorld3D() {
   const containerRef = useRef(null);
@@ -123,6 +127,8 @@ export default function GameWorld3D() {
   const interactPressed = useRef(false);
   const attackPressed = useRef(false);
   const oneShotPlaying = useRef(false);
+  const playerAttackCooldown = useRef(0);
+  const playerInvulTimer = useRef(0);
 
   // Seed the shared progression store with the player's initial state so the
   // HUD and Character Progression menu have real data from the start.
@@ -266,9 +272,14 @@ export default function GameWorld3D() {
     const deathClipPromise = new Promise((resolve) => {
       loader.load(ANIMATION_URLS.death, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
-    // Cache the death clip once it loads so we can reuse it per-enemy
+    const attackClipPromise = new Promise((resolve) => {
+      loader.load(ANIMATION_URLS.kick, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+    });
+    // Cache the death + attack clips once they load so we can reuse them per-enemy
     let cachedDeathClip = null;
+    let cachedAttackClip = null;
     deathClipPromise.then((clip) => { cachedDeathClip = clip; });
+    attackClipPromise.then((clip) => { cachedAttackClip = clip; });
 
     // Helper: pick a random wander point inside the enemy's zone
     const pickWanderTarget = (enemy) => {
@@ -362,6 +373,9 @@ export default function GameWorld3D() {
           maxHp: enemyDerived.maxHP,
           derived: enemyDerived,
           xpReward: tier.xp,
+          attackCooldown: Math.random() * 1.5, // stagger initial attacks
+          attacking: false,
+          attackWindupTimer: 0,
         };
         enemies.push(enemyEntry);
         if (startsWalking) pickWanderTarget(enemyEntry);
@@ -495,7 +509,12 @@ export default function GameWorld3D() {
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     const onMouseDown = (e) => {
-      drag.current = { active: true, x: e.clientX, y: e.clientY };
+      // Left click = attack, right/middle click = orbit camera drag
+      if (e.button === 0) {
+        attackPressed.current = true;
+      } else {
+        drag.current = { active: true, x: e.clientX, y: e.clientY };
+      }
     };
     const onMouseUp = () => { drag.current.active = false; };
     const onMouseMove = (e) => {
@@ -618,6 +637,62 @@ export default function GameWorld3D() {
             return; // skip wander logic while dying
           }
 
+          // ─── Enemy attack player when in range ───
+          if (enemy.attackCooldown > 0) enemy.attackCooldown -= delta;
+          const dxP = model.position.x - enemy.group.position.x;
+          const dzP = model.position.z - enemy.group.position.z;
+          const distToPlayer = Math.sqrt(dxP * dxP + dzP * dzP);
+          const playerInRange = distToPlayer < ENEMY_ATTACK_RANGE;
+
+          if (playerInRange) {
+            // Face the player
+            const faceAngle = Math.atan2(dxP, dzP);
+            const faceQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), faceAngle);
+            enemy.group.quaternion.slerp(faceQ, 0.15);
+
+            // Start attack if cooldown ready and not already attacking
+            if (!enemy.attacking && enemy.attackCooldown <= 0 && cachedAttackClip && enemy.mixer) {
+              enemy.attacking = true;
+              enemy.attackWindupTimer = ENEMY_ATTACK_WINDUP;
+              enemy.attackCooldown = ENEMY_ATTACK_COOLDOWN;
+              if (enemy.walkAction) enemy.walkAction.fadeOut(0.1);
+              if (enemy.idleAction) enemy.idleAction.fadeOut(0.1);
+              const atkAction = enemy.mixer.clipAction(cachedAttackClip);
+              atkAction.setLoop(THREE.LoopOnce);
+              atkAction.clampWhenFinished = false;
+              atkAction.reset().fadeIn(0.1).play();
+              enemy.attackAction = atkAction;
+            }
+          }
+
+          // Mid-attack: when windup ends, deal damage to player
+          if (enemy.attacking) {
+            enemy.attackWindupTimer -= delta;
+            if (enemy.attackWindupTimer <= 0) {
+              // Damage lands — only if player still in range and not invulnerable
+              if (playerInRange && playerInvulTimer.current <= 0) {
+                const playerDerived = getPlayerHUD().derived || playerDerivedRef.current;
+                let dmg = calculateHit(enemy.derived, playerDerived);
+                // Scale by level difference: enemies higher level hit harder
+                const levelDiff = enemy.level - playerLevelRef.current;
+                if (levelDiff > 0) dmg = Math.round(dmg * (1 + levelDiff * 0.25));
+                else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
+                const newHP = Math.max(0, getPlayerHUD().hp - dmg);
+                setHP(newHP);
+                playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
+              }
+              // End attack ~0.4s after damage so anim has time to complete
+              enemy.attacking = false;
+              if (enemy.attackAction) enemy.attackAction.fadeOut(0.2);
+              if (enemy.idleAction) enemy.idleAction.reset().fadeIn(0.2).play();
+            }
+            // While attacking, skip wander state updates this frame
+            const glow = enemy.hitCooldown > 0 ? 0.8 : 0.3;
+            if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
+            enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
+            return;
+          }
+
           enemy.stateTimer += delta;
 
           if (enemy.state === 'walk') {
@@ -659,9 +734,18 @@ export default function GameWorld3D() {
           enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
         });
 
-        // ─── Player attack: F deals damage; on lethal hit plays death anim + awards XP ───
+        // ─── Tick player cooldowns ───
+        if (playerAttackCooldown.current > 0) playerAttackCooldown.current -= delta;
+        if (playerInvulTimer.current > 0) playerInvulTimer.current -= delta;
+
+        // ─── Player attack: Left-click or F. Plays kick animation + damages nearest enemy in range ───
         if (attackPressed.current) {
           attackPressed.current = false;
+          if (playerAttackCooldown.current <= 0) {
+            playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN;
+            // Play attack animation (reusing kick as the melee attack)
+            playOneShot('kick', 1.4);
+          }
           let closestEnemy = null;
           let closestEnemyDist = ENEMY_ATTACK_RANGE;
           enemies.forEach((enemy) => {
@@ -808,7 +892,7 @@ export default function GameWorld3D() {
           <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
           <div className="text-xs text-white/80 space-y-0.5">
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
-            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-cyan-300 font-mono">F</span> Attack</div>
+            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-red-300 font-mono">L-Click</span>/<span className="text-cyan-300 font-mono">F</span> Attack</div>
             <div><span className="text-cyan-300 font-mono">Q</span> Kick · <span className="text-cyan-300 font-mono">R</span> Roll</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC · <span className="text-yellow-300 font-mono">C</span> Character</div>
           </div>
