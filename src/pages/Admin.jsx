@@ -23,7 +23,7 @@ import ReactorEditor from '../components/admin/ReactorEditor';
 import AttachmentEditor from '../components/admin/AttachmentEditor';
 import AssetFilesManager from '../components/admin/AssetFilesManager';
 import VideoAnalyzer from '../components/admin/VideoAnalyzer';
-import QuestAudioManager from '../components/admin/QuestAudioManager';
+import NPCActionAudioManager from '../components/admin/NPCActionAudioManager';
 
 import PageErrorBoundary from '@/components/error/PageErrorBoundary';
 import { showError, showSuccess } from '@/components/error/ErrorToast';
@@ -463,7 +463,7 @@ export default function Admin() {
             <TabsTrigger value="attachment-editor">Attachment Editor</TabsTrigger>
             <TabsTrigger value="asset-files">Asset Files</TabsTrigger>
             <TabsTrigger value="video-analyzer">Video Analyzer</TabsTrigger>
-            <TabsTrigger value="quest-audio">Quest Audio</TabsTrigger>
+            <TabsTrigger value="quest-audio">NPC & Action Audio</TabsTrigger>
           </TabsList>
 
           <TabsContent value="backgrounds">
@@ -972,7 +972,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="quest-audio">
-            <QuestAudioManager />
+            <NPCActionAudioManager />
           </TabsContent>
 
                     </Tabs>

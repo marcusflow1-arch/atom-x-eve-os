@@ -21,6 +21,7 @@ import {
   subscribeQuests,
   getQuestState,
 } from './useQuestStore';
+import { playActionSound, startLoopSound, stopLoopSound } from './combatAudioStore';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -597,7 +598,7 @@ export default function GameWorld3D() {
       const k = e.key.toLowerCase();
       keys.current[k] = true;
       // Space = jump (one-shot)
-      if (k === ' ') { playOneShot('jump', 1); e.preventDefault(); }
+      if (k === ' ') { playOneShot('jump', 1); playActionSound('player_jump'); e.preventDefault(); }
       // Q = kick
       if (k === 'q') playOneShot('kick', 1.2);
       // R = roll
@@ -679,6 +680,13 @@ export default function GameWorld3D() {
           } else {
             playAction('idle', 1);
           }
+        }
+
+        // Walk/run SFX loop — start/stop based on movement
+        if (isMoving) {
+          startLoopSound('player_walk', { volume: isRunning ? 0.6 : 0.4 });
+        } else {
+          stopLoopSound('player_walk');
         }
 
         // Camera follow
@@ -807,6 +815,7 @@ export default function GameWorld3D() {
               enemy.attacking = true;
               enemy.attackWindupTimer = ENEMY_ATTACK_WINDUP;
               enemy.attackCooldown = ENEMY_ATTACK_COOLDOWN;
+              playActionSound('enemy_attack');
               if (enemy.walkAction) enemy.walkAction.fadeOut(0.1);
               if (enemy.idleAction) enemy.idleAction.fadeOut(0.1);
               const atkAction = enemy.mixer.clipAction(cachedAttackClip);
@@ -831,6 +840,7 @@ export default function GameWorld3D() {
                 else if (levelDiff < 0) dmg = Math.max(1, Math.round(dmg * Math.max(0.4, 1 + levelDiff * 0.15)));
                 const newHP = Math.max(0, getPlayerHUD().hp - dmg);
                 setHP(newHP);
+                playActionSound('player_hit');
                 playerInvulTimer.current = PLAYER_INVUL_AFTER_HIT;
               }
               // End attack ~0.4s after damage so anim has time to complete
@@ -897,6 +907,7 @@ export default function GameWorld3D() {
             playerAttackCooldown.current = PLAYER_ATTACK_COOLDOWN;
             // Play attack animation (reusing kick as the melee attack)
             playOneShot('kick', 1.4);
+            playActionSound('player_attack');
           }
           let closestEnemy = null;
           let closestEnemyDist = ENEMY_ATTACK_RANGE;
@@ -913,7 +924,9 @@ export default function GameWorld3D() {
             const dmg = calculateHit(liveDerived, closestEnemy.derived);
             closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
+            playActionSound('enemy_hit');
             if (closestEnemy.hp <= 0) {
+              playActionSound('enemy_death');
               // Lethal — start death sequence
               closestEnemy.hp = 0;
               closestEnemy.dying = true;
@@ -947,6 +960,7 @@ export default function GameWorld3D() {
               setPlayerXP(newXP);
               setPlayerLevel(newLevel);
               awardXP({ newLevel, newXP, xpForNext: xpForLevel(newLevel), levelsGained });
+              if (levelsGained > 0) playActionSound('level_up');
             }
           }
         }
@@ -1033,6 +1047,7 @@ export default function GameWorld3D() {
       renderer.domElement.removeEventListener('contextmenu', onContext);
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
       renderer.dispose();
+      stopLoopSound('player_walk');
     };
   }, []);
 
@@ -1127,6 +1142,7 @@ export default function GameWorld3D() {
           progress={activeQuestDialogue.progress}
           onAccept={() => {
             acceptQuest(activeQuestDialogue.quest.id);
+            playActionSound('quest_accept');
             setActiveQuestDialogue(null);
           }}
           onDecline={() => setActiveQuestDialogue(null)}
@@ -1157,6 +1173,8 @@ export default function GameWorld3D() {
               levelsGained,
               bonusPoints: q.reward.points,
             });
+            playActionSound('quest_complete');
+            if (levelsGained > 0) playActionSound('level_up');
             setActiveQuestDialogue(null);
           }}
         />

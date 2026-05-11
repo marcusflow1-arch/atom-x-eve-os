@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollText, Check, X, Volume2, VolumeX } from 'lucide-react';
 import { getQuestAudio } from './questAudioStore';
+import { getQuestDialogue } from './questDialogueStore';
 
 /**
  * QuestDialogueBox — liquid-glass dialogue panel for quest offers,
@@ -106,9 +107,9 @@ export default function QuestDialogueBox({
         )}
       </div>
 
-      {/* Body / dialogue text */}
+      {/* Body / dialogue text (uses admin override if set) */}
       <div className="text-sm text-white/85 leading-relaxed mb-4 italic">
-        "{quest.description}"
+        "{getQuestDialogue(quest.id, quest.description)}"
       </div>
 
       {/* Objective + reward */}
