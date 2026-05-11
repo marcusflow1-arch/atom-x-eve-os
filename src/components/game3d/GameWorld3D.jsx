@@ -20,12 +20,38 @@ const BLEND = 0.2;
  * Camera follows behind the character. WASD to move (rotates character),
  * mouse drag to orbit camera.
  */
+// NPC spawn positions + dialogue
+const NPC_SPAWNS = [
+  { id: 'npc_elara', name: 'Elara the Guide', pos: [6, 0.3, 6], color: 0x4a90e2, dialogue: "Welcome, traveler! The arena ahead is full of restless spirits — defeat them to prove your worth." },
+  { id: 'npc_borin', name: 'Borin the Blacksmith', pos: [-7, 0.3, 4], color: 0xe2a04a, dialogue: "Need stronger arrows? Come back when you've slain a few enemies and I'll forge you something special." },
+  { id: 'npc_sage', name: 'Sage Mira', pos: [0, 0.3, 12], color: 0xa04ae2, dialogue: "The runes whisper of an ancient power buried beneath the platform. Be careful where you tread." },
+];
+
+// Enemy spawn zones — each enemy patrols between waypoints
+const ENEMY_SPAWNS = [
+  { id: 'enemy_1', home: [12, 0.3, -8], patrol: [[12, 0.3, -8], [16, 0.3, -4], [12, 0.3, -8], [8, 0.3, -10]] },
+  { id: 'enemy_2', home: [-12, 0.3, -8], patrol: [[-12, 0.3, -8], [-16, 0.3, -4], [-12, 0.3, -8], [-8, 0.3, -10]] },
+  { id: 'enemy_3', home: [0, 0.3, -14], patrol: [[0, 0.3, -14], [4, 0.3, -16], [0, 0.3, -14], [-4, 0.3, -16]] },
+  { id: 'enemy_4', home: [10, 0.3, 10], patrol: [[10, 0.3, 10], [14, 0.3, 14], [10, 0.3, 10], [6, 0.3, 12]] },
+];
+
+const ENEMY_SPEED = 1.5;
+const NPC_INTERACT_RANGE = 3.5;
+const ENEMY_ATTACK_RANGE = 2.0;
+
 export default function GameWorld3D() {
   const containerRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const [activeDialogue, setActiveDialogue] = useState(null); // { name, text }
+  const [nearbyNPC, setNearbyNPC] = useState(null);
+  const [enemyCount, setEnemyCount] = useState(ENEMY_SPAWNS.length);
+  const [score, setScore] = useState(0);
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
+  const nearbyNPCRef = useRef(null);
+  const interactPressed = useRef(false);
+  const attackPressed = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -98,6 +124,82 @@ export default function GameWorld3D() {
       rock.receiveShadow = true;
       scene.add(rock);
     }
+
+    // ─────────────────────────────────────────────
+    // NPC SPAWNS (talk targets — blue/orange/purple capsules with name label)
+    // ─────────────────────────────────────────────
+    const npcs = []; // { id, name, dialogue, mesh, ringMesh }
+    NPC_SPAWNS.forEach((spawn) => {
+      const group = new THREE.Group();
+      group.position.set(spawn.pos[0], spawn.pos[1], spawn.pos[2]);
+
+      // Body
+      const bodyGeo = new THREE.CapsuleGeometry(0.45, 1.0, 4, 8);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: spawn.color, roughness: 0.6, emissive: spawn.color, emissiveIntensity: 0.15 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.95;
+      body.castShadow = true;
+      group.add(body);
+
+      // Head
+      const headGeo = new THREE.SphereGeometry(0.3, 12, 12);
+      const head = new THREE.Mesh(headGeo, bodyMat);
+      head.position.y = 1.85;
+      head.castShadow = true;
+      group.add(head);
+
+      // Friendly indicator ring (glowing on ground)
+      const ringGeo = new THREE.RingGeometry(0.7, 0.9, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.02;
+      group.add(ring);
+
+      scene.add(group);
+      npcs.push({ ...spawn, mesh: group, ringMesh: ring });
+    });
+
+    // ─────────────────────────────────────────────
+    // ENEMY SPAWNS (red capsules patrolling between waypoints)
+    // ─────────────────────────────────────────────
+    const enemies = []; // { id, mesh, patrol, waypointIdx, alive, hitCooldown }
+    ENEMY_SPAWNS.forEach((spawn) => {
+      const group = new THREE.Group();
+      group.position.set(spawn.home[0], spawn.home[1], spawn.home[2]);
+
+      const bodyGeo = new THREE.CapsuleGeometry(0.5, 1.1, 4, 8);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc0392b, roughness: 0.5, emissive: 0x661111, emissiveIntensity: 0.3 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 1.0;
+      body.castShadow = true;
+      group.add(body);
+
+      const headGeo = new THREE.SphereGeometry(0.32, 12, 12);
+      const head = new THREE.Mesh(headGeo, bodyMat);
+      head.position.y = 1.95;
+      head.castShadow = true;
+      group.add(head);
+
+      // Hostile ring (red)
+      const ringGeo = new THREE.RingGeometry(0.7, 0.9, 24);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0xff3030, side: THREE.DoubleSide, transparent: true, opacity: 0.55 });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.02;
+      group.add(ring);
+
+      scene.add(group);
+      enemies.push({
+        id: spawn.id,
+        mesh: group,
+        patrol: spawn.patrol.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+        waypointIdx: 0,
+        alive: true,
+        hitCooldown: 0,
+        bodyMat,
+      });
+    });
 
     // Load the female archer + animations
     let mixer;
@@ -181,6 +283,10 @@ export default function GameWorld3D() {
         actions.jump.reset().fadeIn(0.1).play();
         e.preventDefault();
       }
+      // E = interact with nearby NPC
+      if (k === 'e') interactPressed.current = true;
+      // F = attack nearest enemy
+      if (k === 'f') attackPressed.current = true;
     };
     const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
     const onMouseDown = (e) => {
@@ -255,6 +361,74 @@ export default function GameWorld3D() {
         const camZ = model.position.z + o.distance * Math.cos(o.yaw) * Math.cos(o.pitch);
         camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.15);
         camera.lookAt(model.position.x, model.position.y + 1, model.position.z);
+
+        // ─── NPC proximity & interaction ───
+        let closestNPC = null;
+        let closestNPCDist = NPC_INTERACT_RANGE;
+        npcs.forEach((npc) => {
+          const dx = npc.mesh.position.x - model.position.x;
+          const dz = npc.mesh.position.z - model.position.z;
+          const d = Math.sqrt(dx * dx + dz * dz);
+          if (d < closestNPCDist) { closestNPCDist = d; closestNPC = npc; }
+          // pulse the ring
+          npc.ringMesh.material.opacity = 0.4 + Math.sin(clock.elapsedTime * 2) * 0.2;
+        });
+        if (closestNPC?.id !== nearbyNPCRef.current?.id) {
+          nearbyNPCRef.current = closestNPC;
+          setNearbyNPC(closestNPC ? { id: closestNPC.id, name: closestNPC.name } : null);
+        }
+        if (interactPressed.current) {
+          interactPressed.current = false;
+          if (closestNPC) {
+            setActiveDialogue({ name: closestNPC.name, text: closestNPC.dialogue });
+          }
+        }
+
+        // ─── Enemy AI: patrol back-and-forth between waypoints ───
+        enemies.forEach((enemy) => {
+          if (!enemy.alive) return;
+          const target = enemy.patrol[enemy.waypointIdx];
+          const dx = target.x - enemy.mesh.position.x;
+          const dz = target.z - enemy.mesh.position.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < 0.3) {
+            // reached waypoint — advance (loops the patrol array, which gives back-and-forth pattern)
+            enemy.waypointIdx = (enemy.waypointIdx + 1) % enemy.patrol.length;
+          } else {
+            const nx = dx / dist, nz = dz / dist;
+            enemy.mesh.position.x += nx * ENEMY_SPEED * delta;
+            enemy.mesh.position.z += nz * ENEMY_SPEED * delta;
+            // face direction of travel
+            enemy.mesh.rotation.y = Math.atan2(nx, nz);
+          }
+          if (enemy.hitCooldown > 0) {
+            enemy.hitCooldown -= delta;
+            enemy.bodyMat.emissiveIntensity = 0.8;
+          } else {
+            enemy.bodyMat.emissiveIntensity = 0.3;
+          }
+        });
+
+        // ─── Player attack: F key kills nearest enemy in range ───
+        if (attackPressed.current) {
+          attackPressed.current = false;
+          let closestEnemy = null;
+          let closestEnemyDist = ENEMY_ATTACK_RANGE;
+          enemies.forEach((enemy) => {
+            if (!enemy.alive) return;
+            const dx = enemy.mesh.position.x - model.position.x;
+            const dz = enemy.mesh.position.z - model.position.z;
+            const d = Math.sqrt(dx * dx + dz * dz);
+            if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
+          });
+          if (closestEnemy) {
+            closestEnemy.alive = false;
+            scene.remove(closestEnemy.mesh);
+            const aliveCount = enemies.filter(e => e.alive).length;
+            setEnemyCount(aliveCount);
+            setScore(prev => prev + 100);
+          }
+        }
       }
 
       renderer.render(scene, camera);
@@ -286,6 +460,57 @@ export default function GameWorld3D() {
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
+
+      {/* HUD: Score + Enemy count */}
+      {!loading && (
+        <div className="absolute top-4 left-4 flex gap-3 pointer-events-none">
+          <div className="px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
+            <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase">Score</div>
+            <div className="text-xl font-bold text-yellow-300">{score}</div>
+          </div>
+          <div className="px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-red-500/30">
+            <div className="text-[10px] text-red-300/70 font-bold tracking-[0.2em] uppercase">Enemies</div>
+            <div className="text-xl font-bold text-red-300">{enemyCount}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Controls hint */}
+      {!loading && (
+        <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 pointer-events-none">
+          <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-1">Controls</div>
+          <div className="text-xs text-white/80 space-y-0.5">
+            <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
+            <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-cyan-300 font-mono">F</span> Attack</div>
+            <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC</div>
+          </div>
+        </div>
+      )}
+
+      {/* NPC interact prompt */}
+      {!loading && nearbyNPC && !activeDialogue && (
+        <div className="absolute left-1/2 bottom-32 -translate-x-1/2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-md border border-cyan-400/50 pointer-events-none">
+          <div className="flex items-center gap-2 text-sm text-white">
+            <span className="px-2 py-0.5 rounded bg-cyan-500/30 border border-cyan-400/40 font-mono text-xs">E</span>
+            <span>Talk to <span className="text-cyan-300 font-semibold">{nearbyNPC.name}</span></span>
+          </div>
+        </div>
+      )}
+
+      {/* Dialogue box */}
+      {activeDialogue && (
+        <div className="absolute left-1/2 bottom-8 -translate-x-1/2 w-[600px] max-w-[90%] rounded-xl bg-black/80 backdrop-blur-md border border-cyan-400/40 p-5">
+          <div className="text-cyan-300 font-bold text-sm tracking-wider uppercase mb-2">{activeDialogue.name}</div>
+          <div className="text-white/90 text-sm leading-relaxed mb-3">{activeDialogue.text}</div>
+          <button
+            onClick={() => setActiveDialogue(null)}
+            className="px-4 py-1.5 rounded bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs font-bold tracking-wider uppercase transition-all"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
