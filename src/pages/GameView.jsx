@@ -1,49 +1,61 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gamepad2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import GameViewer3D from '../components/game3d/GameViewer3D';
+import CharacterLoginScreen from '../components/game3d/CharacterLoginScreen';
+import GameWorld3D from '../components/game3d/GameWorld3D';
+import SkillSlotHUD from '../components/game3d/SkillSlotHUD';
+import StoreMenuOverlay from '../components/game3d/StoreMenuOverlay';
 
 export default function GameView() {
   const navigate = useNavigate();
+  const [phase, setPhase] = useState('login'); // 'login' | 'world'
+  const [storeOpen, setStoreOpen] = useState(false);
 
-  return (
-    <div
-      className="fixed inset-0 flex flex-col"
-      style={{
-        background: 'linear-gradient(135deg, #0a0e1a 0%, #111827 50%, #0a0e1a 100%)',
-      }}
-    >
-      {/* Top bar */}
-      <div
-        className="flex items-center justify-between px-6 py-4 flex-shrink-0"
-        style={{
-          background: 'rgba(10, 14, 26, 0.6)',
-          backdropFilter: 'blur(20px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
+  // TAB key toggles the store/build menu while in-game
+  useEffect(() => {
+    if (phase !== 'world') return;
+    const onKey = (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        setStoreOpen((v) => !v);
+      } else if (e.key === 'Escape' && storeOpen) {
+        setStoreOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [phase, storeOpen]);
+
+  if (phase === 'login') {
+    return (
+      <div className="fixed inset-0 bg-black">
+        <CharacterLoginScreen onPlay={() => setPhase('world')} />
         <button
           onClick={() => navigate(createPageUrl('LunaTemplate'))}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-all"
+          className="absolute top-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/60 hover:text-white text-xs flex items-center gap-1.5 z-20"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">Back</span>
+          <ArrowLeft className="w-3 h-3" />
+          Back to Luna
         </button>
-
-        <div className="flex items-center gap-2">
-          <Gamepad2 className="w-5 h-5 text-cyan-400" />
-          <span className="text-white font-bold tracking-wider">Game View</span>
-        </div>
-
-        <div className="w-[88px]" />
       </div>
+    );
+  }
 
-      {/* 3D Viewer fills the rest of the screen */}
-      <div className="flex-1 relative overflow-hidden">
-        <GameViewer3D />
-      </div>
+  return (
+    <div className="fixed inset-0 bg-black overflow-hidden">
+      <GameWorld3D />
+      <SkillSlotHUD />
+      <StoreMenuOverlay isOpen={storeOpen} onClose={() => setStoreOpen(false)} />
+
+      {/* Back button */}
+      <button
+        onClick={() => navigate(createPageUrl('LunaTemplate'))}
+        className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/70 hover:text-white text-xs flex items-center gap-1.5 z-20"
+      >
+        <ArrowLeft className="w-3 h-3" />
+        Back
+      </button>
     </div>
   );
 }
