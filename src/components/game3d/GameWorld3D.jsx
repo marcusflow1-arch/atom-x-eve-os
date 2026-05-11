@@ -27,15 +27,35 @@ const NPC_SPAWNS = [
   { id: 'npc_sage', name: 'Sage Mira', pos: [0, 0.3, 12], color: 0xa04ae2, dialogue: "The runes whisper of an ancient power buried beneath the platform. Be careful where you tread." },
 ];
 
-// Enemy spawn zones — each enemy patrols between waypoints
-const ENEMY_SPAWNS = [
-  { id: 'enemy_1', home: [12, 0.3, -8], patrol: [[12, 0.3, -8], [16, 0.3, -4], [12, 0.3, -8], [8, 0.3, -10]] },
-  { id: 'enemy_2', home: [-12, 0.3, -8], patrol: [[-12, 0.3, -8], [-16, 0.3, -4], [-12, 0.3, -8], [-8, 0.3, -10]] },
-  { id: 'enemy_3', home: [0, 0.3, -14], patrol: [[0, 0.3, -14], [4, 0.3, -16], [0, 0.3, -14], [-4, 0.3, -16]] },
-  { id: 'enemy_4', home: [10, 0.3, 10], patrol: [[10, 0.3, 10], [14, 0.3, 14], [10, 0.3, 10], [6, 0.3, 12]] },
+// Enemy zones — each zone spawns ~15 mobs roaming around a center point.
+const ENEMY_ZONES = [
+  { id: 'zone_north', center: [14, 0.3, -10], radius: 9, count: 15 },
+  { id: 'zone_south', center: [-12, 0.3, 12],  radius: 9, count: 15 },
 ];
 
-const ENEMY_SPEED = 1.5;
+// Build flat spawn list with randomized positions inside each zone.
+const ENEMY_SPAWNS = ENEMY_ZONES.flatMap((zone) =>
+  Array.from({ length: zone.count }, (_, i) => {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * zone.radius;
+    return {
+      id: `${zone.id}_${i}`,
+      zoneId: zone.id,
+      zoneCenter: zone.center,
+      zoneRadius: zone.radius,
+      home: [
+        zone.center[0] + Math.cos(angle) * dist,
+        zone.center[1],
+        zone.center[2] + Math.sin(angle) * dist,
+      ],
+    };
+  })
+);
+
+const ENEMY_SPEED = 1.2;
+const ENEMY_WALK_TIME = 3.0;   // seconds walking
+const ENEMY_IDLE_TIME = 5.0;   // seconds idle
+const ENEMY_WANDER_RADIUS = 4; // how far they pick a new walk target
 const NPC_INTERACT_RANGE = 3.5;
 const ENEMY_ATTACK_RANGE = 2.0;
 
@@ -168,12 +188,37 @@ export default function GameWorld3D() {
     // ENEMY SPAWNS (female archer model patrolling between waypoints)
     // Same archer FBX as the player, tinted red, with walk (Running.fbx) animation looped
     // ─────────────────────────────────────────────
-    const enemies = []; // { id, group, mixer, walkAction, patrol, waypointIdx, alive, hitCooldown, tintMaterials }
+    const enemies = []; // { id, group, mixer, walkAction, idleAction, state, stateTimer, target, alive, hitCooldown, tintMaterials, zoneCenter, zoneRadius }
+
+    // Pre-load walk + idle clips once (shared across all enemies)
     const walkClipPromise = new Promise((resolve) => {
-      loader.load(ANIMATION_URLS.run, (animFbx) => {
-        resolve(animFbx.animations?.[0] || null);
-      }, undefined, () => resolve(null));
+      loader.load(ANIMATION_URLS.run, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
+    const idleClipPromise = new Promise((resolve) => {
+      loader.load(ANIMATION_URLS.idle, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+    });
+
+    // Helper: pick a random wander point inside the enemy's zone
+    const pickWanderTarget = (enemy) => {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * ENEMY_WANDER_RADIUS;
+      const tx = enemy.group.position.x + Math.cos(angle) * dist;
+      const tz = enemy.group.position.z + Math.sin(angle) * dist;
+      // Clamp to zone bounds
+      const dx = tx - enemy.zoneCenter[0];
+      const dz = tz - enemy.zoneCenter[2];
+      const d = Math.sqrt(dx * dx + dz * dz);
+      if (d > enemy.zoneRadius) {
+        const k = enemy.zoneRadius / d;
+        enemy.target = new THREE.Vector3(
+          enemy.zoneCenter[0] + dx * k,
+          enemy.group.position.y,
+          enemy.zoneCenter[2] + dz * k,
+        );
+      } else {
+        enemy.target = new THREE.Vector3(tx, enemy.group.position.y, tz);
+      }
+    };
 
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(ARCHER_URL, (fbx) => {
@@ -190,7 +235,6 @@ export default function GameWorld3D() {
           if (node.isMesh) {
             node.castShadow = !node.isSkinnedMesh;
             node.receiveShadow = true;
-            // Apply red tint to indicate hostile
             if (node.material) {
               const mats = Array.isArray(node.material) ? node.material : [node.material];
               mats.forEach((m) => {
@@ -218,27 +262,39 @@ export default function GameWorld3D() {
         scene.add(enemyModel);
 
         const enemyMixer = new THREE.AnimationMixer(enemyModel);
+        // Randomize initial state + timer so the herd isn't synced
+        const startsWalking = Math.random() < 0.5;
         const enemyEntry = {
           id: spawn.id,
           group: enemyModel,
           mixer: enemyMixer,
           walkAction: null,
-          patrol: spawn.patrol.map(p => new THREE.Vector3(p[0], p[1], p[2])),
-          waypointIdx: 0,
+          idleAction: null,
+          state: startsWalking ? 'walk' : 'idle',
+          stateTimer: Math.random() * (startsWalking ? ENEMY_WALK_TIME : ENEMY_IDLE_TIME),
+          target: null,
           alive: true,
           hitCooldown: 0,
           tintMaterials,
+          zoneCenter: spawn.zoneCenter,
+          zoneRadius: spawn.zoneRadius,
         };
         enemies.push(enemyEntry);
+        if (startsWalking) pickWanderTarget(enemyEntry);
 
-        // Attach walk animation when ready
-        walkClipPromise.then((clip) => {
-          if (clip) {
-            const action = enemyMixer.clipAction(clip);
-            action.setEffectiveTimeScale(0.6); // slower = walking, not sprinting
-            action.play();
-            enemyEntry.walkAction = action;
+        // Attach animations when ready
+        Promise.all([walkClipPromise, idleClipPromise]).then(([walkClip, idleClip]) => {
+          if (walkClip) {
+            const wa = enemyMixer.clipAction(walkClip);
+            wa.setEffectiveTimeScale(0.55); // slow it down → walk, not sprint
+            enemyEntry.walkAction = wa;
           }
+          if (idleClip) {
+            enemyEntry.idleAction = enemyMixer.clipAction(idleClip);
+          }
+          // Play whichever matches initial state
+          const initial = enemyEntry.state === 'walk' ? enemyEntry.walkAction : enemyEntry.idleAction;
+          if (initial) initial.reset().fadeIn(0.2).play();
         });
       });
     });
@@ -424,27 +480,46 @@ export default function GameWorld3D() {
           }
         }
 
-        // ─── Enemy AI: patrol back-and-forth between waypoints (archer model) ───
+        // ─── Enemy AI: wander state machine (walk ~3s → idle ~5s → repeat) ───
         enemies.forEach((enemy) => {
           if (!enemy.alive) return;
           if (enemy.mixer) enemy.mixer.update(delta);
 
-          const target = enemy.patrol[enemy.waypointIdx];
-          const dx = target.x - enemy.group.position.x;
-          const dz = target.z - enemy.group.position.z;
-          const dist = Math.sqrt(dx * dx + dz * dz);
-          if (dist < 0.3) {
-            // reached waypoint — advance (loops patrol array → back-and-forth pattern)
-            enemy.waypointIdx = (enemy.waypointIdx + 1) % enemy.patrol.length;
+          enemy.stateTimer += delta;
+
+          if (enemy.state === 'walk') {
+            // Move toward current wander target
+            if (enemy.target) {
+              const dx = enemy.target.x - enemy.group.position.x;
+              const dz = enemy.target.z - enemy.group.position.z;
+              const dist = Math.sqrt(dx * dx + dz * dz);
+              if (dist > 0.15) {
+                const nx = dx / dist, nz = dz / dist;
+                enemy.group.position.x += nx * ENEMY_SPEED * delta;
+                enemy.group.position.z += nz * ENEMY_SPEED * delta;
+                const targetAngle = Math.atan2(nx, nz);
+                const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
+                enemy.group.quaternion.slerp(targetQ, 0.15);
+              }
+            }
+            // After walk duration → switch to idle
+            if (enemy.stateTimer >= ENEMY_WALK_TIME) {
+              enemy.state = 'idle';
+              enemy.stateTimer = 0;
+              if (enemy.walkAction) enemy.walkAction.fadeOut(0.2);
+              if (enemy.idleAction) enemy.idleAction.reset().fadeIn(0.2).play();
+            }
           } else {
-            const nx = dx / dist, nz = dz / dist;
-            enemy.group.position.x += nx * ENEMY_SPEED * delta;
-            enemy.group.position.z += nz * ENEMY_SPEED * delta;
-            // face direction of travel (smoothly)
-            const targetAngle = Math.atan2(nx, nz);
-            const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
-            enemy.group.quaternion.slerp(targetQ, 0.15);
+            // idle state — wait
+            if (enemy.stateTimer >= ENEMY_IDLE_TIME) {
+              enemy.state = 'walk';
+              enemy.stateTimer = 0;
+              pickWanderTarget(enemy);
+              if (enemy.idleAction) enemy.idleAction.fadeOut(0.2);
+              if (enemy.walkAction) enemy.walkAction.reset().fadeIn(0.2).play();
+            }
           }
+
           // Hit-flash tint glow
           const glow = enemy.hitCooldown > 0 ? 0.8 : 0.3;
           if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
