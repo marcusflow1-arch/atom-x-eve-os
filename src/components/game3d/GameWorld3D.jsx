@@ -161,43 +161,81 @@ export default function GameWorld3D() {
     });
 
     // ─────────────────────────────────────────────
-    // ENEMY SPAWNS (red capsules patrolling between waypoints)
+    // ENEMY SPAWNS (female archer model patrolling between waypoints)
+    // Same archer FBX as the player, tinted red, with walk (Running.fbx) animation looped
     // ─────────────────────────────────────────────
-    const enemies = []; // { id, mesh, patrol, waypointIdx, alive, hitCooldown }
+    const enemies = []; // { id, group, mixer, walkAction, patrol, waypointIdx, alive, hitCooldown, tintMaterials }
+    const walkClipPromise = new Promise((resolve) => {
+      loader.load(ANIMATION_URLS.run, (animFbx) => {
+        resolve(animFbx.animations?.[0] || null);
+      }, undefined, () => resolve(null));
+    });
+
     ENEMY_SPAWNS.forEach((spawn) => {
-      const group = new THREE.Group();
-      group.position.set(spawn.home[0], spawn.home[1], spawn.home[2]);
+      loader.load(ARCHER_URL, (fbx) => {
+        const enemyModel = fbx;
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.7 / maxDim;
+        enemyModel.scale.setScalar(scale);
+        enemyModel.position.set(spawn.home[0], spawn.home[1], spawn.home[2]);
 
-      const bodyGeo = new THREE.CapsuleGeometry(0.5, 1.1, 4, 8);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc0392b, roughness: 0.5, emissive: 0x661111, emissiveIntensity: 0.3 });
-      const body = new THREE.Mesh(bodyGeo, bodyMat);
-      body.position.y = 1.0;
-      body.castShadow = true;
-      group.add(body);
+        const tintMaterials = [];
+        enemyModel.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = !node.isSkinnedMesh;
+            node.receiveShadow = true;
+            // Apply red tint to indicate hostile
+            if (node.material) {
+              const mats = Array.isArray(node.material) ? node.material : [node.material];
+              mats.forEach((m) => {
+                const cloned = m.clone();
+                if (cloned.color) cloned.color.lerp(new THREE.Color(0xff4040), 0.55);
+                cloned.emissive = new THREE.Color(0x661111);
+                cloned.emissiveIntensity = 0.3;
+                tintMaterials.push(cloned);
+              });
+              node.material = Array.isArray(node.material)
+                ? tintMaterials.slice(-node.material.length)
+                : tintMaterials[tintMaterials.length - 1];
+            }
+          }
+        });
 
-      const headGeo = new THREE.SphereGeometry(0.32, 12, 12);
-      const head = new THREE.Mesh(headGeo, bodyMat);
-      head.position.y = 1.95;
-      head.castShadow = true;
-      group.add(head);
+        // Hostile red ground ring
+        const ringGeo = new THREE.RingGeometry(0.7 / scale, 0.9 / scale, 24);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xff3030, side: THREE.DoubleSide, transparent: true, opacity: 0.55 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.02 / scale;
+        enemyModel.add(ring);
 
-      // Hostile ring (red)
-      const ringGeo = new THREE.RingGeometry(0.7, 0.9, 24);
-      const ringMat = new THREE.MeshBasicMaterial({ color: 0xff3030, side: THREE.DoubleSide, transparent: true, opacity: 0.55 });
-      const ring = new THREE.Mesh(ringGeo, ringMat);
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.02;
-      group.add(ring);
+        scene.add(enemyModel);
 
-      scene.add(group);
-      enemies.push({
-        id: spawn.id,
-        mesh: group,
-        patrol: spawn.patrol.map(p => new THREE.Vector3(p[0], p[1], p[2])),
-        waypointIdx: 0,
-        alive: true,
-        hitCooldown: 0,
-        bodyMat,
+        const enemyMixer = new THREE.AnimationMixer(enemyModel);
+        const enemyEntry = {
+          id: spawn.id,
+          group: enemyModel,
+          mixer: enemyMixer,
+          walkAction: null,
+          patrol: spawn.patrol.map(p => new THREE.Vector3(p[0], p[1], p[2])),
+          waypointIdx: 0,
+          alive: true,
+          hitCooldown: 0,
+          tintMaterials,
+        };
+        enemies.push(enemyEntry);
+
+        // Attach walk animation when ready
+        walkClipPromise.then((clip) => {
+          if (clip) {
+            const action = enemyMixer.clipAction(clip);
+            action.setEffectiveTimeScale(0.6); // slower = walking, not sprinting
+            action.play();
+            enemyEntry.walkAction = action;
+          }
+        });
       });
     });
 
@@ -384,29 +422,31 @@ export default function GameWorld3D() {
           }
         }
 
-        // ─── Enemy AI: patrol back-and-forth between waypoints ───
+        // ─── Enemy AI: patrol back-and-forth between waypoints (archer model) ───
         enemies.forEach((enemy) => {
           if (!enemy.alive) return;
+          if (enemy.mixer) enemy.mixer.update(delta);
+
           const target = enemy.patrol[enemy.waypointIdx];
-          const dx = target.x - enemy.mesh.position.x;
-          const dz = target.z - enemy.mesh.position.z;
+          const dx = target.x - enemy.group.position.x;
+          const dz = target.z - enemy.group.position.z;
           const dist = Math.sqrt(dx * dx + dz * dz);
           if (dist < 0.3) {
-            // reached waypoint — advance (loops the patrol array, which gives back-and-forth pattern)
+            // reached waypoint — advance (loops patrol array → back-and-forth pattern)
             enemy.waypointIdx = (enemy.waypointIdx + 1) % enemy.patrol.length;
           } else {
             const nx = dx / dist, nz = dz / dist;
-            enemy.mesh.position.x += nx * ENEMY_SPEED * delta;
-            enemy.mesh.position.z += nz * ENEMY_SPEED * delta;
-            // face direction of travel
-            enemy.mesh.rotation.y = Math.atan2(nx, nz);
+            enemy.group.position.x += nx * ENEMY_SPEED * delta;
+            enemy.group.position.z += nz * ENEMY_SPEED * delta;
+            // face direction of travel (smoothly)
+            const targetAngle = Math.atan2(nx, nz);
+            const targetQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetAngle);
+            enemy.group.quaternion.slerp(targetQ, 0.15);
           }
-          if (enemy.hitCooldown > 0) {
-            enemy.hitCooldown -= delta;
-            enemy.bodyMat.emissiveIntensity = 0.8;
-          } else {
-            enemy.bodyMat.emissiveIntensity = 0.3;
-          }
+          // Hit-flash tint glow
+          const glow = enemy.hitCooldown > 0 ? 0.8 : 0.3;
+          if (enemy.hitCooldown > 0) enemy.hitCooldown -= delta;
+          enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
         });
 
         // ─── Player attack: F key kills nearest enemy in range ───
@@ -416,14 +456,15 @@ export default function GameWorld3D() {
           let closestEnemyDist = ENEMY_ATTACK_RANGE;
           enemies.forEach((enemy) => {
             if (!enemy.alive) return;
-            const dx = enemy.mesh.position.x - model.position.x;
-            const dz = enemy.mesh.position.z - model.position.z;
+            const dx = enemy.group.position.x - model.position.x;
+            const dz = enemy.group.position.z - model.position.z;
             const d = Math.sqrt(dx * dx + dz * dz);
             if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
           });
           if (closestEnemy) {
             closestEnemy.alive = false;
-            scene.remove(closestEnemy.mesh);
+            scene.remove(closestEnemy.group);
+            if (closestEnemy.mixer) closestEnemy.mixer.stopAllAction();
             const aliveCount = enemies.filter(e => e.alive).length;
             setEnemyCount(aliveCount);
             setScore(prev => prev + 100);
