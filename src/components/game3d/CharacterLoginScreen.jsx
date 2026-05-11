@@ -17,6 +17,29 @@ export default function CharacterLoginScreen({ onPlay }) {
   const [loading, setLoading] = useState(true);
   const [selectedCharIdx, setSelectedCharIdx] = useState(0);
 
+  const REGIONS = [
+    { name: 'US East', count: '2/3', ping: 28 },
+    { name: 'US West', count: '1/3', ping: 64 },
+    { name: 'EU Central', count: '3/3', ping: 110 },
+    { name: 'South America', count: '0/2', ping: 145 },
+    { name: 'Asia Pacific', count: '2/4', ping: 180 },
+    { name: 'Australia', count: '1/2', ping: 220 },
+  ];
+
+  const SERVERS = [
+    { name: 'Nightveil Hallow', players: 1842, status: 'High' },
+    { name: 'Maramma', players: 1203, status: 'Medium' },
+    { name: 'Valhalla', players: 987, status: 'Medium' },
+    { name: 'El Dorado', players: 432, status: 'Low' },
+    { name: 'Castle of Steel', players: 1567, status: 'High' },
+    { name: 'Aeternum Prime', players: 2100, status: 'Full' },
+  ];
+
+  const [selectedRegionIdx, setSelectedRegionIdx] = useState(0);
+  const [selectedServerIdx, setSelectedServerIdx] = useState(0);
+  const [regionOpen, setRegionOpen] = useState(false);
+  const [serverOpen, setServerOpen] = useState(false);
+
   const characters = [
     { name: 'Erika', region: 'Maramma', level: 65 },
     { name: 'Belghast', region: 'Valhalla', level: 60 },
@@ -214,22 +237,63 @@ export default function CharacterLoginScreen({ onPlay }) {
           }}
         >
           {/* Region selector */}
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-white/10 relative">
             <div className="text-[10px] text-white/50 font-bold tracking-[0.2em] uppercase mb-2">Region</div>
-            <button className="w-full flex items-center justify-between px-3 py-2 rounded bg-black/30 border border-white/10 hover:border-cyan-400/40 transition-all">
+            <button
+              onClick={() => { setRegionOpen(v => !v); setServerOpen(false); }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded bg-black/30 border transition-all ${regionOpen ? 'border-cyan-400/60' : 'border-white/10 hover:border-cyan-400/40'}`}
+            >
               <div className="flex items-center gap-2">
                 <div className="flex flex-col gap-0.5">
                   <span className="w-3 h-[2px] bg-cyan-300" />
                   <span className="w-3 h-[2px] bg-cyan-300/70" />
                   <span className="w-3 h-[2px] bg-cyan-300/40" />
                 </div>
-                <span className="text-white text-sm font-medium">US East</span>
+                <span className="text-white text-sm font-medium">{REGIONS[selectedRegionIdx].name}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-white/60 text-xs">2/3</span>
-                <ChevronDown className="w-4 h-4 text-white/60" />
+                <span className="text-white/60 text-xs">{REGIONS[selectedRegionIdx].count}</span>
+                <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${regionOpen ? 'rotate-180' : ''}`} />
               </div>
             </button>
+
+            {regionOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute left-4 right-4 top-full mt-1 z-30 rounded overflow-hidden"
+                style={{
+                  background: 'rgba(15, 25, 40, 0.98)',
+                  backdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(120, 200, 240, 0.35)',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+                }}
+              >
+                <div className="px-3 py-2 border-b border-white/10 text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase">
+                  {REGIONS.length} Regions Available
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  {REGIONS.map((r, idx) => (
+                    <button
+                      key={r.name}
+                      onClick={() => { setSelectedRegionIdx(idx); setRegionOpen(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-all ${
+                        idx === selectedRegionIdx ? 'bg-cyan-500/15 text-white' : 'text-white/75 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full ${r.ping < 80 ? 'bg-green-400' : r.ping < 150 ? 'bg-yellow-400' : 'bg-red-400'}`} />
+                        <span className="text-sm font-medium">{r.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-white/50">
+                        <span>{r.ping}ms</span>
+                        <span>{r.count}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* Characters */}
@@ -290,10 +354,56 @@ export default function CharacterLoginScreen({ onPlay }) {
         transition={{ delay: 0.3, duration: 0.6 }}
         className="absolute bottom-8 right-8 w-[280px] z-10 space-y-3"
       >
-        <button className="w-full flex items-center gap-2 px-4 py-3 rounded bg-black/40 backdrop-blur-md border border-white/15 text-white/80 text-sm hover:bg-black/60 transition-all">
-          <div className="w-4 h-4 rounded-full border border-white/40 flex items-center justify-center text-[10px] text-white/60">?</div>
-          <span>Nightveil Hallow</span>
-        </button>
+        <div className="relative">
+          {serverOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded overflow-hidden"
+              style={{
+                background: 'rgba(15, 25, 40, 0.98)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(120, 200, 240, 0.35)',
+                boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
+              }}
+            >
+              <div className="px-3 py-2 border-b border-white/10 text-[10px] text-white/40 font-bold tracking-[0.2em] uppercase">
+                {SERVERS.length} Servers — {REGIONS[selectedRegionIdx].name}
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {SERVERS.map((s, idx) => (
+                  <button
+                    key={s.name}
+                    onClick={() => { setSelectedServerIdx(idx); setServerOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-all ${
+                      idx === selectedServerIdx ? 'bg-cyan-500/15 text-white' : 'text-white/75 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-1.5 h-1.5 rounded-full ${s.status === 'Full' ? 'bg-red-400' : s.status === 'High' ? 'bg-orange-400' : s.status === 'Medium' ? 'bg-yellow-400' : 'bg-green-400'}`} />
+                      <span className="text-sm font-medium">{s.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-white/50">
+                      <span>{s.players.toLocaleString()}</span>
+                      <span>{s.status}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          <button
+            onClick={() => { setServerOpen(v => !v); setRegionOpen(false); }}
+            className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded bg-black/40 backdrop-blur-md border text-white/80 text-sm hover:bg-black/60 transition-all ${serverOpen ? 'border-cyan-400/60' : 'border-white/15'}`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full border border-white/40 flex items-center justify-center text-[10px] text-white/60">?</div>
+              <span>{SERVERS[selectedServerIdx].name}</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-white/60 transition-transform ${serverOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
 
         <motion.button
           onClick={onPlay}
