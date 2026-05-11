@@ -4,6 +4,8 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
+import QuestFloatingLabel from './QuestFloatingLabel';
+import QuestDialogueBox from './QuestDialogueBox';
 import { setPlayerHUD, awardXP, subscribePlayerHUD, getPlayerHUD, setHP } from './playerHUDStore';
 import {
   DEFAULT_PLAYER_STATS,
@@ -11,6 +13,14 @@ import {
   computeDerivedStats,
   calculateHit,
 } from './statsSystem';
+import { QUEST_NPCS, QUESTS, getAvailableQuestForNPC } from './questData';
+import {
+  acceptQuest,
+  completeQuest,
+  reportEnemyKill,
+  subscribeQuests,
+  getQuestState,
+} from './useQuestStore';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -111,6 +121,10 @@ export default function GameWorld3D() {
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerXP, setPlayerXP] = useState(0);
   const [enemiesUI, setEnemiesUI] = useState([]); // [{ id, x, y, hp, maxHp, level, visible }]
+  const [questNPCsUI, setQuestNPCsUI] = useState([]); // [{ id, x, y, status }]
+  const [nearbyQuestNPC, setNearbyQuestNPC] = useState(null); // { id, name }
+  const [activeQuestDialogue, setActiveQuestDialogue] = useState(null); // { npcName, quest, mode, progress }
+  const [questState, setQuestState] = useState(getQuestState());
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
   // Player stats: base allocation + equipped gear → derived combat values.
@@ -129,6 +143,8 @@ export default function GameWorld3D() {
   const oneShotPlaying = useRef(false);
   const playerAttackCooldown = useRef(0);
   const playerInvulTimer = useRef(0);
+  const nearbyQuestNPCRef = useRef(null);
+  const playerLevelStateRef = useRef(1); // kept in sync with playerLevel for quest gating
 
   // Seed the shared progression store with the player's initial state so the
   // HUD and Character Progression menu have real data from the start.
@@ -144,6 +160,16 @@ export default function GameWorld3D() {
       maxHP: playerDerivedRef.current.maxHP,
     });
   }, []);
+
+  // Subscribe to quest store so React re-renders when quests are accepted/completed
+  useEffect(() => {
+    return subscribeQuests((s) => setQuestState({ ...s }));
+  }, []);
+
+  // Keep a ref of the latest player level for the animation loop to read
+  useEffect(() => {
+    playerLevelStateRef.current = playerLevel;
+  }, [playerLevel]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -252,9 +278,83 @@ export default function GameWorld3D() {
       npcs.push({ ...spawn, mesh: group, ringMesh: ring });
     });
 
-    // Shared FBX loader (used for player + enemies)
+    // Shared FBX loader (used for player + enemies + quest NPCs)
     const loader = new FBXLoader();
     const clock = new THREE.Clock();
+
+    // ─────────────────────────────────────────────
+    // QUEST NPCs — 5 female archers at fixed positions, idle animation,
+    // NATURAL COLOR (no red tint). Floating "QUEST" label rendered in DOM.
+    // ─────────────────────────────────────────────
+    const questNPCs = []; // { id, name, group, mixer, idleAction }
+    QUEST_NPCS.forEach((spawn) => {
+      loader.load(ARCHER_URL, (fbx) => {
+        const m = fbx;
+        const box = new THREE.Box3().setFromObject(fbx);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const scale = 1.7 / maxDim;
+        m.scale.setScalar(scale);
+        m.position.set(spawn.pos[0], spawn.pos[1], spawn.pos[2]);
+        // Random facing so they don't all look the same way
+        m.rotation.y = Math.random() * Math.PI * 2;
+
+        // Light emissive tint per NPC so each is visually distinct (subtle, not red)
+        m.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = !node.isSkinnedMesh;
+            node.receiveShadow = true;
+            if (node.material) {
+              const mats = Array.isArray(node.material) ? node.material : [node.material];
+              const tinted = mats.map((mat) => {
+                const c = mat.clone();
+                c.emissive = new THREE.Color(spawn.tint);
+                c.emissiveIntensity = 0.08;
+                return c;
+              });
+              node.material = Array.isArray(node.material) ? tinted : tinted[0];
+            }
+          }
+        });
+
+        // Friendly golden ground ring marking this as a quest giver
+        const ringGeo = new THREE.RingGeometry(0.7 / scale, 0.95 / scale, 32);
+        const ringMat = new THREE.MeshBasicMaterial({
+          color: 0xfacc15,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.55,
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.02 / scale;
+        m.add(ring);
+
+        scene.add(m);
+
+        const npcMixer = new THREE.AnimationMixer(m);
+        const npcEntry = {
+          id: spawn.id,
+          name: spawn.name,
+          group: m,
+          mixer: npcMixer,
+          idleAction: null,
+          ringMesh: ring,
+        };
+        questNPCs.push(npcEntry);
+
+        // Attach idle once it loads
+        idleClipPromise.then((clip) => {
+          if (clip && npcMixer) {
+            const action = npcMixer.clipAction(clip);
+            // Slightly randomize timeScale so they don't all idle in sync
+            action.setEffectiveTimeScale(0.9 + Math.random() * 0.2);
+            npcEntry.idleAction = action;
+            action.reset().fadeIn(0.3).play();
+          }
+        });
+      });
+    });
 
     // ─────────────────────────────────────────────
     // ENEMY SPAWNS (female archer model patrolling between waypoints)
@@ -604,9 +704,61 @@ export default function GameWorld3D() {
           nearbyNPCRef.current = closestNPC;
           setNearbyNPC(closestNPC ? { id: closestNPC.id, name: closestNPC.name } : null);
         }
+        // ─── Quest NPC proximity ───
+        let closestQuestNPC = null;
+        let closestQuestDist = NPC_INTERACT_RANGE;
+        questNPCs.forEach((qn) => {
+          if (qn.mixer) qn.mixer.update(delta);
+          const dx = qn.group.position.x - model.position.x;
+          const dz = qn.group.position.z - model.position.z;
+          const d = Math.sqrt(dx * dx + dz * dz);
+          if (d < closestQuestDist) { closestQuestDist = d; closestQuestNPC = qn; }
+          if (qn.ringMesh) qn.ringMesh.material.opacity = 0.4 + Math.sin(clock.elapsedTime * 2) * 0.2;
+        });
+        if (closestQuestNPC?.id !== nearbyQuestNPCRef.current?.id) {
+          nearbyQuestNPCRef.current = closestQuestNPC;
+          setNearbyQuestNPC(closestQuestNPC ? { id: closestQuestNPC.id, name: closestQuestNPC.name } : null);
+        }
+
         if (interactPressed.current) {
           interactPressed.current = false;
-          if (closestNPC) {
+          // Prefer quest NPC if also nearby (they take priority over generic NPCs)
+          if (closestQuestNPC) {
+            const qs = getQuestState();
+            const lvl = playerLevelStateRef.current;
+            // Is there an accepted quest from this NPC that's now complete? → turn_in
+            const acceptedFromHere = QUESTS.find(
+              (q) => q.npcId === closestQuestNPC.id && qs.acceptedIds.includes(q.id)
+            );
+            if (acceptedFromHere) {
+              const prog = qs.progress[acceptedFromHere.id] || 0;
+              const isDone = prog >= acceptedFromHere.objective.count;
+              setActiveQuestDialogue({
+                npcName: closestQuestNPC.name,
+                quest: acceptedFromHere,
+                mode: isDone ? 'turn_in' : 'in_progress',
+                progress: prog,
+              });
+            } else {
+              // Offer the next available quest, or fall back to a generic "no quests" message
+              const available = getAvailableQuestForNPC(
+                closestQuestNPC.id, lvl, qs.acceptedIds, qs.completedIds
+              );
+              if (available) {
+                setActiveQuestDialogue({
+                  npcName: closestQuestNPC.name,
+                  quest: available,
+                  mode: 'offer',
+                  progress: 0,
+                });
+              } else {
+                setActiveDialogue({
+                  name: closestQuestNPC.name,
+                  text: "I've nothing for you right now, traveler. Return when you've grown stronger.",
+                });
+              }
+            }
+          } else if (closestNPC) {
             setActiveDialogue({ name: closestNPC.name, text: closestNPC.dialogue });
           }
         }
@@ -776,6 +928,8 @@ export default function GameWorld3D() {
                 closestEnemy.deathAction = deathAction;
               }
               setScore(prev => prev + 100 * closestEnemy.xpReward);
+              // Tell the quest store about this kill (advances any active kill quests)
+              reportEnemyKill(QUESTS, closestEnemy.tier);
               // Award XP, handle level-ups against the custom curve.
               // Each level-up grants stat points (handled inside awardXP).
               let newXP = playerXPRef.current + closestEnemy.xpReward;
@@ -822,6 +976,38 @@ export default function GameWorld3D() {
           });
         });
         setEnemiesUI(ui);
+
+        // ─── Project quest NPC heads → screen-space for floating "QUEST" labels ───
+        const qs = getQuestState();
+        const lvl = playerLevelStateRef.current;
+        const qUI = [];
+        questNPCs.forEach((qn) => {
+          if (!qn.group) return;
+          // Decide label status: turn_in > available > nothing
+          const acceptedFromHere = QUESTS.find(
+            (q) => q.npcId === qn.id && qs.acceptedIds.includes(q.id)
+          );
+          let status = null;
+          if (acceptedFromHere) {
+            const prog = qs.progress[acceptedFromHere.id] || 0;
+            status = prog >= acceptedFromHere.objective.count ? 'turn_in' : 'in_progress';
+          } else {
+            const available = getAvailableQuestForNPC(qn.id, lvl, qs.acceptedIds, qs.completedIds);
+            if (available) status = 'available';
+          }
+          if (!status) return;
+          tmpVec.set(qn.group.position.x, qn.group.position.y + 2.4, qn.group.position.z);
+          tmpVec.project(camera);
+          const inView = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
+          if (!inView) return;
+          qUI.push({
+            id: qn.id,
+            x: (tmpVec.x * 0.5 + 0.5) * w,
+            y: (-tmpVec.y * 0.5 + 0.5) * h,
+            status,
+          });
+        });
+        setQuestNPCsUI(qUI);
       }
 
       renderer.render(scene, camera);
@@ -883,6 +1069,10 @@ export default function GameWorld3D() {
               visible
             />
           ))}
+          {/* Floating "QUEST" labels above quest NPCs */}
+          {questNPCsUI.map((q) => (
+            <QuestFloatingLabel key={q.id} x={q.x} y={q.y} status={q.status} />
+          ))}
         </div>
       )}
 
@@ -899,14 +1089,77 @@ export default function GameWorld3D() {
         </div>
       )}
 
-      {/* NPC interact prompt */}
-      {!loading && nearbyNPC && !activeDialogue && (
+      {/* NPC interact prompt (generic NPCs) */}
+      {!loading && nearbyNPC && !nearbyQuestNPC && !activeDialogue && !activeQuestDialogue && (
         <div className="absolute left-1/2 bottom-32 -translate-x-1/2 px-5 py-2.5 rounded-full bg-black/70 backdrop-blur-md border border-cyan-400/50 pointer-events-none">
           <div className="flex items-center gap-2 text-sm text-white">
             <span className="px-2 py-0.5 rounded bg-cyan-500/30 border border-cyan-400/40 font-mono text-xs">E</span>
             <span>Talk to <span className="text-cyan-300 font-semibold">{nearbyNPC.name}</span></span>
           </div>
         </div>
+      )}
+
+      {/* Quest NPC interact prompt (golden) */}
+      {!loading && nearbyQuestNPC && !activeQuestDialogue && !activeDialogue && (
+        <div
+          className="absolute left-1/2 bottom-32 -translate-x-1/2 px-5 py-2.5 rounded-full pointer-events-none"
+          style={{
+            background: 'rgba(15, 20, 30, 0.7)',
+            backdropFilter: 'blur(14px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(160%)',
+            border: '1px solid rgba(250, 204, 21, 0.5)',
+            boxShadow: '0 4px 18px rgba(250, 204, 21, 0.25)',
+          }}
+        >
+          <div className="flex items-center gap-2 text-sm text-white">
+            <span className="px-2 py-0.5 rounded bg-yellow-500/25 border border-yellow-400/40 font-mono text-xs text-yellow-200">E</span>
+            <span>Speak with <span className="text-yellow-300 font-semibold">{nearbyQuestNPC.name}</span></span>
+          </div>
+        </div>
+      )}
+
+      {/* Quest dialogue box */}
+      {activeQuestDialogue && (
+        <QuestDialogueBox
+          npcName={activeQuestDialogue.npcName}
+          quest={activeQuestDialogue.quest}
+          mode={activeQuestDialogue.mode}
+          progress={activeQuestDialogue.progress}
+          onAccept={() => {
+            acceptQuest(activeQuestDialogue.quest.id);
+            setActiveQuestDialogue(null);
+          }}
+          onDecline={() => setActiveQuestDialogue(null)}
+          onClose={() => setActiveQuestDialogue(null)}
+          onClaim={() => {
+            const q = activeQuestDialogue.quest;
+            completeQuest(q.id);
+            // Pay the reward: XP + stat points
+            let newXP = playerXPRef.current + q.reward.xp;
+            let newLevel = playerLevelRef.current;
+            let needed = xpForLevel(newLevel);
+            let levelsGained = 0;
+            while (newXP >= needed) {
+              newXP -= needed;
+              newLevel += 1;
+              levelsGained += 1;
+              needed = xpForLevel(newLevel);
+            }
+            playerXPRef.current = newXP;
+            playerLevelRef.current = newLevel;
+            setPlayerXP(newXP);
+            setPlayerLevel(newLevel);
+            // Award levels-from-XP plus the quest's direct stat points bonus
+            awardXP({
+              newLevel,
+              newXP,
+              xpForNext: xpForLevel(newLevel),
+              levelsGained,
+              bonusPoints: q.reward.points,
+            });
+            setActiveQuestDialogue(null);
+          }}
+        />
       )}
 
       {/* Dialogue box */}

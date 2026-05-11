@@ -24,8 +24,8 @@ export function setPlayerHUD(next) {
 }
 
 // Called by GameWorld3D when player gains XP. Handles level-ups and awards points.
-export function awardXP({ newLevel, newXP, xpForNext, levelsGained }) {
-  const points = Math.max(0, levelsGained || 0) * STAT_POINTS_PER_LEVEL;
+export function awardXP({ newLevel, newXP, xpForNext, levelsGained, bonusPoints = 0 }) {
+  const points = Math.max(0, levelsGained || 0) * STAT_POINTS_PER_LEVEL + Math.max(0, bonusPoints);
   state = {
     ...state,
     level: newLevel,
