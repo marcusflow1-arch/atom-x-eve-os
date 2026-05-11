@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User, Trees } from 'lucide-react';
+import { Home, Library, Globe, ChevronLeft, ChevronRight, X, Play, Info, Trophy, Newspaper, Star, Calendar, Users, Clock, Activity, Settings, Lock, Zap, Shield, Sword, Flame, Crown, Target, Award, Gem, Skull, Search, ShoppingCart, ShoppingBag, Package, Sparkles, User, Trees, Mic, MicOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -174,6 +174,59 @@ function TwoRowGrid({ items, currentRow, itemsPerRow, selectedGame, activeTab, o
   return (
     <div className="flex flex-col gap-3 w-full max-w-[1400px] mx-auto px-2">
       {rows}
+    </div>
+  );
+}
+
+function LunaSearchBar({ isLibraryActive, onFocus, value, onChange }) {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const handleMic = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      onChange?.(text);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    rec.start();
+    setIsListening(true);
+  };
+
+  return (
+    <div
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+        isLibraryActive ? 'border-white/10 bg-white/[0.04]' : 'border-transparent bg-transparent'
+      }`}
+      style={{ minWidth: '220px' }}
+    >
+      <Search className="w-4 h-4 flex-shrink-0 text-white/30" />
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange?.(e.target.value)}
+        onFocus={onFocus}
+        placeholder="Search bar"
+        className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+      />
+      <button
+        onClick={(e) => { e.stopPropagation(); handleMic(); }}
+        className={`flex-shrink-0 transition-colors ${isListening ? 'text-red-400' : 'text-white/40 hover:text-white'}`}
+      >
+        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+      </button>
     </div>
   );
 }
@@ -1107,6 +1160,15 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             <Globe className="w-4 h-4" />
             <span>Environment Hubs</span>
           </button>
+
+          <div className="w-px h-5 bg-white/10 mx-2" />
+
+          <LunaSearchBar
+            isLibraryActive={activeTab === 'library'}
+            onFocus={() => { if (activeTab !== 'library') handleTabClick('library'); }}
+            value={searchTerm || ''}
+            onChange={onSearchChange}
+          />
         </div>
       </div>}
     </>
