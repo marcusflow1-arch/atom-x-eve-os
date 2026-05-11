@@ -2,6 +2,33 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
+import EnemyHealthBar from './EnemyHealthBar';
+import PlayerXPHUD from './PlayerXPHUD';
+
+// ─────────────────────────────────────────────
+// XP / Level system
+// XP_TABLE[n] = XP required to reach level n+2 from level n+1.
+// Hand-tuned (non-multiplicative) curve: 5, 7, 14, 22, 35, 50, 70, 95, 125, 160.
+// Normal enemies drop 1 XP, elites 3 XP, champions 5 XP — so stronger enemies
+// level you with only 4-5 kills.
+// ─────────────────────────────────────────────
+const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
+const xpForLevel = (level) => XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200;
+
+// Enemy tier definitions
+const ENEMY_TIERS = [
+  { name: 'normal',   weight: 0.70, maxHp: 3, xp: 1, level: 1, scale: 1.0,  tintMix: 0.55 },
+  { name: 'elite',    weight: 0.22, maxHp: 5, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
+  { name: 'champion', weight: 0.08, maxHp: 7, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
+];
+const pickTier = () => {
+  const r = Math.random();
+  let acc = 0;
+  for (const t of ENEMY_TIERS) { acc += t.weight; if (r < acc) return t; }
+  return ENEMY_TIERS[0];
+};
+
+const PLAYER_ATTACK_DAMAGE = 1; // 1 damage per F press
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const ANIMATION_URLS = {
@@ -71,6 +98,11 @@ export default function GameWorld3D() {
   const [nearbyNPC, setNearbyNPC] = useState(null);
   const [enemyCount, setEnemyCount] = useState(ENEMY_SPAWNS.length);
   const [score, setScore] = useState(0);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerXP, setPlayerXP] = useState(0);
+  const [enemiesUI, setEnemiesUI] = useState([]); // [{ id, x, y, hp, maxHp, level, visible }]
+  const playerLevelRef = useRef(1);
+  const playerXPRef = useRef(0);
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
@@ -235,10 +267,13 @@ export default function GameWorld3D() {
     ENEMY_SPAWNS.forEach((spawn) => {
       loader.load(ARCHER_URL, (fbx) => {
         const enemyModel = fbx;
+        const tier = pickTier();
+        // Randomize level a bit around the tier's base
+        const enemyLevel = tier.level + Math.floor(Math.random() * 2); // tier.level or tier.level+1
         const box = new THREE.Box3().setFromObject(fbx);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = 1.7 / maxDim;
+        const scale = (1.7 / maxDim) * tier.scale;
         enemyModel.scale.setScalar(scale);
         enemyModel.position.set(spawn.home[0], spawn.home[1], spawn.home[2]);
 
@@ -251,7 +286,7 @@ export default function GameWorld3D() {
               const mats = Array.isArray(node.material) ? node.material : [node.material];
               mats.forEach((m) => {
                 const cloned = m.clone();
-                if (cloned.color) cloned.color.lerp(new THREE.Color(0xff4040), 0.55);
+                if (cloned.color) cloned.color.lerp(new THREE.Color(0xff4040), tier.tintMix);
                 cloned.emissive = new THREE.Color(0x661111);
                 cloned.emissiveIntensity = 0.3;
                 tintMaterials.push(cloned);
@@ -290,6 +325,11 @@ export default function GameWorld3D() {
           tintMaterials,
           zoneCenter: spawn.zoneCenter,
           zoneRadius: spawn.zoneRadius,
+          tier: tier.name,
+          level: enemyLevel,
+          hp: tier.maxHp,
+          maxHp: tier.maxHp,
+          xpReward: tier.xp,
         };
         enemies.push(enemyEntry);
         if (startsWalking) pickWanderTarget(enemyEntry);
@@ -451,6 +491,7 @@ export default function GameWorld3D() {
 
     // Animation loop
     let frameId;
+    let uiFrameCounter = 0;
     const animate = () => {
       frameId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
@@ -586,7 +627,7 @@ export default function GameWorld3D() {
           enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
         });
 
-        // ─── Player attack: F key kills nearest enemy in range (plays death anim, fades after 5s) ───
+        // ─── Player attack: F deals damage; on lethal hit plays death anim + awards XP ───
         if (attackPressed.current) {
           attackPressed.current = false;
           let closestEnemy = null;
@@ -599,22 +640,65 @@ export default function GameWorld3D() {
             if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
           });
           if (closestEnemy) {
-            // Stop AI, start death sequence
-            closestEnemy.dying = true;
-            closestEnemy.deathTimer = 0;
-            if (closestEnemy.walkAction) closestEnemy.walkAction.fadeOut(0.15);
-            if (closestEnemy.idleAction) closestEnemy.idleAction.fadeOut(0.15);
-            if (cachedDeathClip && closestEnemy.mixer) {
-              const deathAction = closestEnemy.mixer.clipAction(cachedDeathClip);
-              deathAction.setLoop(THREE.LoopOnce);
-              deathAction.clampWhenFinished = true;
-              deathAction.reset().fadeIn(0.15).play();
-              closestEnemy.deathAction = deathAction;
+            closestEnemy.hp -= PLAYER_ATTACK_DAMAGE;
+            closestEnemy.hitCooldown = 0.25;
+            if (closestEnemy.hp <= 0) {
+              // Lethal — start death sequence
+              closestEnemy.hp = 0;
+              closestEnemy.dying = true;
+              closestEnemy.deathTimer = 0;
+              if (closestEnemy.walkAction) closestEnemy.walkAction.fadeOut(0.15);
+              if (closestEnemy.idleAction) closestEnemy.idleAction.fadeOut(0.15);
+              if (cachedDeathClip && closestEnemy.mixer) {
+                const deathAction = closestEnemy.mixer.clipAction(cachedDeathClip);
+                deathAction.setLoop(THREE.LoopOnce);
+                deathAction.clampWhenFinished = true;
+                deathAction.reset().fadeIn(0.15).play();
+                closestEnemy.deathAction = deathAction;
+              }
+              setScore(prev => prev + 100 * closestEnemy.xpReward);
+              // Award XP, handle level-ups against the custom curve
+              let newXP = playerXPRef.current + closestEnemy.xpReward;
+              let newLevel = playerLevelRef.current;
+              let needed = xpForLevel(newLevel);
+              while (newXP >= needed) {
+                newXP -= needed;
+                newLevel += 1;
+                needed = xpForLevel(newLevel);
+              }
+              playerXPRef.current = newXP;
+              playerLevelRef.current = newLevel;
+              setPlayerXP(newXP);
+              setPlayerLevel(newLevel);
             }
-            // Update score immediately; enemy count decrements when corpse vanishes
-            setScore(prev => prev + 100);
           }
         }
+      }
+
+      // ─── Project enemy world positions → screen-space for HP bars (throttled) ───
+      uiFrameCounter++;
+      if (uiFrameCounter % 3 === 0) {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        const ui = [];
+        const tmpVec = new THREE.Vector3();
+        enemies.forEach((enemy) => {
+          if (!enemy.alive || enemy.dying || !enemy.group) return;
+          // Position above head — model height ~1.7, scaled
+          tmpVec.set(enemy.group.position.x, enemy.group.position.y + 2.2, enemy.group.position.z);
+          tmpVec.project(camera);
+          const inView = tmpVec.z > -1 && tmpVec.z < 1 && Math.abs(tmpVec.x) < 1.2 && Math.abs(tmpVec.y) < 1.2;
+          if (!inView) return;
+          ui.push({
+            id: enemy.id,
+            x: (tmpVec.x * 0.5 + 0.5) * w,
+            y: (-tmpVec.y * 0.5 + 0.5) * h,
+            hp: enemy.hp,
+            maxHp: enemy.maxHp,
+            level: enemy.level,
+          });
+        });
+        setEnemiesUI(ui);
       }
 
       renderer.render(scene, camera);
@@ -647,7 +731,7 @@ export default function GameWorld3D() {
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* HUD: Score + Enemy count */}
+      {/* HUD: Score + Enemy count + Player Level/XP */}
       {!loading && (
         <div className="absolute top-4 left-4 flex gap-3 pointer-events-none">
           <div className="px-4 py-2 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
@@ -658,6 +742,24 @@ export default function GameWorld3D() {
             <div className="text-[10px] text-red-300/70 font-bold tracking-[0.2em] uppercase">Enemies</div>
             <div className="text-xl font-bold text-red-300">{enemyCount}</div>
           </div>
+          <PlayerXPHUD level={playerLevel} xp={playerXP} xpForNext={xpForLevel(playerLevel)} />
+        </div>
+      )}
+
+      {/* Enemy HP bars (liquid-glass) — projected above each enemy's head */}
+      {!loading && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {enemiesUI.map((e) => (
+            <EnemyHealthBar
+              key={e.id}
+              x={e.x}
+              y={e.y}
+              hp={e.hp}
+              maxHp={e.maxHp}
+              level={e.level}
+              visible
+            />
+          ))}
         </div>
       )}
 
