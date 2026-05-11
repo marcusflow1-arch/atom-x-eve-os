@@ -673,7 +673,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[33] pointer-events-none"
+            className="fixed inset-0 z-[45] pointer-events-none"
             style={{
               background: 'rgba(0, 0, 0, 0.4)',
               backdropFilter: 'blur(6px)',
@@ -691,7 +691,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed top-[64px] right-0 z-[34]"
+            className="fixed top-[64px] right-0 z-[46]"
             style={{
               left: '5%',
               height: '200px',
@@ -953,7 +953,7 @@ export default function LunaBottomNav({ isEnvironmentActive, libraryLabel, force
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="fixed bottom-[48px] right-0 z-[34] p-6 flex flex-col justify-end"
+            className="fixed bottom-[48px] right-0 z-[46] p-6 flex flex-col justify-end"
             style={{ 
               left: '5%',
               top: isLibraryExpanded && activeTab === 'library' ? '264px' : 'auto',
