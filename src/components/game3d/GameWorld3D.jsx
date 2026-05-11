@@ -5,10 +5,15 @@ import { Loader2 } from 'lucide-react';
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const ANIMATION_URLS = {
-  idle: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx',
-  run:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/4edd51169_Running.fbx',
-  jump: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/b1e388a25_Jumping.fbx',
+  idle:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/9922e6dd0_Idle.fbx',
+  run:   'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/4edd51169_Running.fbx',
+  jump:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/b1e388a25_Jumping.fbx',
+  kick:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/d4d6d9112_standingmeleekick.fbx',
+  roll:  'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/c9ba745cd_SprintingForwardRoll.fbx',
+  death: 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/183d60083_standingdeathforward01.fbx',
 };
+
+const DEATH_FADE_DELAY = 5.0; // seconds the corpse stays on the ground before vanishing
 
 const WALK_SPEED = 2.8;
 const RUN_SPEED = 6.2;
@@ -72,6 +77,7 @@ export default function GameWorld3D() {
   const nearbyNPCRef = useRef(null);
   const interactPressed = useRef(false);
   const attackPressed = useRef(false);
+  const oneShotPlaying = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -190,13 +196,19 @@ export default function GameWorld3D() {
     // ─────────────────────────────────────────────
     const enemies = []; // { id, group, mixer, walkAction, idleAction, state, stateTimer, target, alive, hitCooldown, tintMaterials, zoneCenter, zoneRadius }
 
-    // Pre-load walk + idle clips once (shared across all enemies)
+    // Pre-load walk + idle + death clips once (shared across all enemies)
     const walkClipPromise = new Promise((resolve) => {
       loader.load(ANIMATION_URLS.run, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
     const idleClipPromise = new Promise((resolve) => {
       loader.load(ANIMATION_URLS.idle, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
     });
+    const deathClipPromise = new Promise((resolve) => {
+      loader.load(ANIMATION_URLS.death, (animFbx) => resolve(animFbx.animations?.[0] || null), undefined, () => resolve(null));
+    });
+    // Cache the death clip once it loads so we can reuse it per-enemy
+    let cachedDeathClip = null;
+    deathClipPromise.then((clip) => { cachedDeathClip = clip; });
 
     // Helper: pick a random wander point inside the enemy's zone
     const pickWanderTarget = (enemy) => {
@@ -336,8 +348,9 @@ export default function GameWorld3D() {
       scene.add(fbx);
       mixer = new THREE.AnimationMixer(fbx);
 
-      // Load all animations in parallel
-      const entries = Object.entries(ANIMATION_URLS);
+      // Load all animations in parallel — skip 'death' (used only on enemies)
+      const entries = Object.entries(ANIMATION_URLS).filter(([n]) => n !== 'death');
+      const ONE_SHOTS = new Set(['jump', 'kick', 'roll']);
       let loaded = 0;
       entries.forEach(([name, url]) => {
         loader.load(url, (animFbx) => {
@@ -345,7 +358,7 @@ export default function GameWorld3D() {
             const clip = animFbx.animations[0];
             clip.name = name;
             const action = mixer.clipAction(clip);
-            if (name === 'jump') {
+            if (ONE_SHOTS.has(name)) {
               action.setLoop(THREE.LoopOnce);
               action.clampWhenFinished = true;
             }
@@ -364,21 +377,45 @@ export default function GameWorld3D() {
           if (loaded === entries.length) setLoading(false);
         });
       });
+
+      // When any one-shot finishes, release the lock and blend back to idle
+      mixer.addEventListener('finished', (e) => {
+        const finishedName = e.action?.getClip()?.name;
+        if (ONE_SHOTS.has(finishedName)) {
+          oneShotPlaying.current = false;
+          if (actions.idle) {
+            actions.idle.reset().fadeIn(0.15).play();
+            currentActionName = 'idle';
+          }
+        }
+      });
     }, undefined, (err) => {
       console.error('Archer load error:', err);
       setLoading(false);
     });
 
     // Controls
+    const playOneShot = (name, timeScale = 1) => {
+      const action = actions[name];
+      if (!action || !model || oneShotPlaying.current) return;
+      oneShotPlaying.current = true;
+      const prev = actions[currentActionName];
+      if (prev && prev !== action) prev.fadeOut(0.1);
+      action.setEffectiveTimeScale(timeScale);
+      action.reset().fadeIn(0.1).play();
+      currentActionName = name;
+    };
+
     const onKeyDown = (e) => {
       if (e.target?.matches?.('input, textarea')) return;
       const k = e.key.toLowerCase();
       keys.current[k] = true;
       // Space = jump (one-shot)
-      if (k === ' ' && actions.jump && model) {
-        actions.jump.reset().fadeIn(0.1).play();
-        e.preventDefault();
-      }
+      if (k === ' ') { playOneShot('jump', 1); e.preventDefault(); }
+      // Q = kick
+      if (k === 'q') playOneShot('kick', 1.2);
+      // R = roll
+      if (k === 'r') playOneShot('roll', 1.3);
       // E = interact with nearby NPC
       if (k === 'e') interactPressed.current = true;
       // F = attack nearest enemy
@@ -442,12 +479,14 @@ export default function GameWorld3D() {
           model.quaternion.slerp(targetQ, ROT_SMOOTH);
         }
 
-        // Animation state machine
-        if (isMoving) {
-          // Use 'run' clip, slowed for walk
-          playAction('run', isRunning ? 1 : 0.55);
-        } else {
-          playAction('idle', 1);
+        // Animation state machine — only when not playing a one-shot (kick/roll)
+        if (!oneShotPlaying.current) {
+          if (isMoving) {
+            // Speed up the run clip so animation matches actual movement speed
+            playAction('run', isRunning ? 1.6 : 1.0);
+          } else {
+            playAction('idle', 1);
+          }
         }
 
         // Camera follow
@@ -484,6 +523,27 @@ export default function GameWorld3D() {
         enemies.forEach((enemy) => {
           if (!enemy.alive) return;
           if (enemy.mixer) enemy.mixer.update(delta);
+
+          // Death sequence: play death anim, wait 5s on the ground, then fade out & remove
+          if (enemy.dying) {
+            enemy.deathTimer += delta;
+            if (enemy.deathTimer >= DEATH_FADE_DELAY) {
+              // Fade out over ~0.8s by decreasing material opacity
+              const fadeT = Math.min(1, (enemy.deathTimer - DEATH_FADE_DELAY) / 0.8);
+              enemy.tintMaterials.forEach(m => {
+                m.transparent = true;
+                m.opacity = 1 - fadeT;
+              });
+              if (fadeT >= 1) {
+                enemy.alive = false;
+                scene.remove(enemy.group);
+                if (enemy.mixer) enemy.mixer.stopAllAction();
+                const aliveCount = enemies.filter(e => e.alive && !e.dying).length;
+                setEnemyCount(aliveCount);
+              }
+            }
+            return; // skip wander logic while dying
+          }
 
           enemy.stateTimer += delta;
 
@@ -526,24 +586,32 @@ export default function GameWorld3D() {
           enemy.tintMaterials.forEach(m => { m.emissiveIntensity = glow; });
         });
 
-        // ─── Player attack: F key kills nearest enemy in range ───
+        // ─── Player attack: F key kills nearest enemy in range (plays death anim, fades after 5s) ───
         if (attackPressed.current) {
           attackPressed.current = false;
           let closestEnemy = null;
           let closestEnemyDist = ENEMY_ATTACK_RANGE;
           enemies.forEach((enemy) => {
-            if (!enemy.alive) return;
+            if (!enemy.alive || enemy.dying) return;
             const dx = enemy.group.position.x - model.position.x;
             const dz = enemy.group.position.z - model.position.z;
             const d = Math.sqrt(dx * dx + dz * dz);
             if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
           });
           if (closestEnemy) {
-            closestEnemy.alive = false;
-            scene.remove(closestEnemy.group);
-            if (closestEnemy.mixer) closestEnemy.mixer.stopAllAction();
-            const aliveCount = enemies.filter(e => e.alive).length;
-            setEnemyCount(aliveCount);
+            // Stop AI, start death sequence
+            closestEnemy.dying = true;
+            closestEnemy.deathTimer = 0;
+            if (closestEnemy.walkAction) closestEnemy.walkAction.fadeOut(0.15);
+            if (closestEnemy.idleAction) closestEnemy.idleAction.fadeOut(0.15);
+            if (cachedDeathClip && closestEnemy.mixer) {
+              const deathAction = closestEnemy.mixer.clipAction(cachedDeathClip);
+              deathAction.setLoop(THREE.LoopOnce);
+              deathAction.clampWhenFinished = true;
+              deathAction.reset().fadeIn(0.15).play();
+              closestEnemy.deathAction = deathAction;
+            }
+            // Update score immediately; enemy count decrements when corpse vanishes
             setScore(prev => prev + 100);
           }
         }
@@ -600,6 +668,7 @@ export default function GameWorld3D() {
           <div className="text-xs text-white/80 space-y-0.5">
             <div><span className="text-cyan-300 font-mono">WASD</span> Move · <span className="text-cyan-300 font-mono">Shift</span> Run</div>
             <div><span className="text-cyan-300 font-mono">Space</span> Jump · <span className="text-cyan-300 font-mono">F</span> Attack</div>
+            <div><span className="text-cyan-300 font-mono">Q</span> Kick · <span className="text-cyan-300 font-mono">R</span> Roll</div>
             <div><span className="text-cyan-300 font-mono">E</span> Talk to NPC</div>
           </div>
         </div>
