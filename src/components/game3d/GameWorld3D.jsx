@@ -4,6 +4,12 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import { Loader2 } from 'lucide-react';
 import EnemyHealthBar from './EnemyHealthBar';
 import PlayerXPHUD from './PlayerXPHUD';
+import {
+  DEFAULT_PLAYER_STATS,
+  ENEMY_STAT_TEMPLATES,
+  computeDerivedStats,
+  calculateHit,
+} from './statsSystem';
 
 // ─────────────────────────────────────────────
 // XP / Level system
@@ -15,11 +21,12 @@ import PlayerXPHUD from './PlayerXPHUD';
 const XP_TABLE = [5, 7, 14, 22, 35, 50, 70, 95, 125, 160];
 const xpForLevel = (level) => XP_TABLE[Math.min(level - 1, XP_TABLE.length - 1)] || 200;
 
-// Enemy tier definitions
+// Enemy tier definitions — HP/damage/defense now come from ENEMY_STAT_TEMPLATES
+// via the shared statsSystem. Only visual + XP/level metadata lives here.
 const ENEMY_TIERS = [
-  { name: 'normal',   weight: 0.70, maxHp: 3, xp: 1, level: 1, scale: 1.0,  tintMix: 0.55 },
-  { name: 'elite',    weight: 0.22, maxHp: 5, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
-  { name: 'champion', weight: 0.08, maxHp: 7, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
+  { name: 'normal',   weight: 0.70, xp: 1, level: 1, scale: 1.0,  tintMix: 0.55 },
+  { name: 'elite',    weight: 0.22, xp: 3, level: 2, scale: 1.15, tintMix: 0.70 },
+  { name: 'champion', weight: 0.08, xp: 5, level: 4, scale: 1.30, tintMix: 0.85 },
 ];
 const pickTier = () => {
   const r = Math.random();
@@ -27,8 +34,6 @@ const pickTier = () => {
   for (const t of ENEMY_TIERS) { acc += t.weight; if (r < acc) return t; }
   return ENEMY_TIERS[0];
 };
-
-const PLAYER_ATTACK_DAMAGE = 1; // 1 damage per F press
 
 const ARCHER_URL = 'https://base44.app/api/apps/6876751a602125f45f1861b9/files/public/6876751a602125f45f1861b9/3f915913a_ErikaArcher.fbx';
 const ANIMATION_URLS = {
@@ -103,6 +108,13 @@ export default function GameWorld3D() {
   const [enemiesUI, setEnemiesUI] = useState([]); // [{ id, x, y, hp, maxHp, level, visible }]
   const playerLevelRef = useRef(1);
   const playerXPRef = useRef(0);
+  // Player stats: base allocation + equipped gear → derived combat values.
+  // (Equipment is empty for now — plug in your equip system here later.)
+  const playerBaseStatsRef = useRef({ ...DEFAULT_PLAYER_STATS });
+  const playerEquipmentRef = useRef([]);
+  const playerDerivedRef = useRef(
+    computeDerivedStats(DEFAULT_PLAYER_STATS, [])
+  );
   const keys = useRef({});
   const drag = useRef({ active: false, x: 0, y: 0 });
   const orbit = useRef({ yaw: 0, pitch: 0.4, distance: 4.5 });
@@ -270,6 +282,9 @@ export default function GameWorld3D() {
         const tier = pickTier();
         // Randomize level a bit around the tier's base
         const enemyLevel = tier.level + Math.floor(Math.random() * 2); // tier.level or tier.level+1
+        // Derive enemy combat stats from the shared stat system
+        const enemyBaseStats = ENEMY_STAT_TEMPLATES[tier.name];
+        const enemyDerived = computeDerivedStats(enemyBaseStats, []);
         const box = new THREE.Box3().setFromObject(fbx);
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
@@ -327,8 +342,9 @@ export default function GameWorld3D() {
           zoneRadius: spawn.zoneRadius,
           tier: tier.name,
           level: enemyLevel,
-          hp: tier.maxHp,
-          maxHp: tier.maxHp,
+          hp: enemyDerived.maxHP,
+          maxHp: enemyDerived.maxHP,
+          derived: enemyDerived,
           xpReward: tier.xp,
         };
         enemies.push(enemyEntry);
@@ -640,7 +656,8 @@ export default function GameWorld3D() {
             if (d < closestEnemyDist) { closestEnemyDist = d; closestEnemy = enemy; }
           });
           if (closestEnemy) {
-            closestEnemy.hp -= PLAYER_ATTACK_DAMAGE;
+            const dmg = calculateHit(playerDerivedRef.current, closestEnemy.derived);
+            closestEnemy.hp -= dmg;
             closestEnemy.hitCooldown = 0.25;
             if (closestEnemy.hp <= 0) {
               // Lethal — start death sequence
