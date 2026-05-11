@@ -435,7 +435,6 @@ export default function LibrarySidebar() {
                   ))}
                 </>
               )}
-
             </motion.div>
           )}
 

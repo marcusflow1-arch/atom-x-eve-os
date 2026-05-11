@@ -506,8 +506,8 @@ export default function Store() {
                       onFilterChange={(key, val) => setStoreFilters(prev => ({ ...prev, [key]: val }))}
                     />
 
-                    {/* 5% Left Sidebar — liquid glass silver, categories like LunaLeftRail */}
-                    {!inPageStoreGameId && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center py-6"
+                    {/* 5% Left Sidebar — split into 3 bounded sections (Recently Played | Launch zone | Options) */}
+                    {!inPageStoreGameId && <div className="w-[5%] min-w-[80px] h-full border-r relative z-40 flex-shrink-0 flex flex-col items-center"
                         style={{
                             background: 'linear-gradient(160deg, rgba(180,185,195,0.13) 0%, rgba(140,148,160,0.08) 100%)',
                             backdropFilter: 'blur(24px) saturate(160%)',
@@ -516,7 +516,16 @@ export default function Store() {
                             boxShadow: '4px 0 20px rgba(0,0,0,0.35), inset 1px 0 0 rgba(255,255,255,0.08)'
                         }}
                     >
-                        <RecentlyPlayedSidebar games={games} onGameClick={handleNavigateToGame} />
+                        {/* TOP — Recently Played (bounded, scrollable, ends above center) */}
+                        <div className="w-full flex-1 min-h-0 overflow-y-auto pt-4 pb-2" style={{ scrollbarWidth: 'none' }}>
+                            <RecentlyPlayedSidebar games={games} onGameClick={handleNavigateToGame} />
+                        </div>
+
+                        {/* MIDDLE — Reserved zone for Launch button (floating LibrarySidebar renders here at top-[45%]) */}
+                        <div className="w-full flex-shrink-0 h-24" aria-hidden="true" />
+
+                        {/* BOTTOM — Reserved for Library/Entertainment/Rewards options (floating LibrarySidebar) */}
+                        <div className="w-full flex-1 min-h-0" aria-hidden="true" />
                     </div>}
 
                     {/* 95% Main Area */}
